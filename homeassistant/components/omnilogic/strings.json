@@ -14,8 +14,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
   "options": {
@@ -24,6 +23,18 @@
         "data": {
           "polling_interval": "Polling interval (in seconds)",
           "ph_offset": "pH offset (positive or negative)"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_pump_speed": {
+      "name": "Set pump speed",
+      "description": "Sets the run speed of a variable speed pump.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "Speed for the VSP between min and max speed."
         }
       }
     }

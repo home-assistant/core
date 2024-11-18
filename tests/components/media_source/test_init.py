@@ -1,4 +1,5 @@
 """Test Media Source initialization."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -95,7 +96,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     media = await media_source.async_browse_media(hass, const.URI_SCHEME)
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert len(media.children) == 1
-    assert media.children[0].title == "Local Media"
+    assert media.children[0].title == "My media"
 
 
 async def test_async_resolve_media(hass: HomeAssistant) -> None:
@@ -121,17 +122,13 @@ async def test_async_resolve_media_no_entity(
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
 
-    media = await media_source.async_resolve_media(
-        hass,
-        media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
-    )
-    assert isinstance(media, media_source.models.PlayMedia)
-    assert media.url == "/media/local/test.mp3"
-    assert media.mime_type == "audio/mpeg"
-    assert (
-        "calls media_source.async_resolve_media without passing an entity_id"
-        in caplog.text
-    )
+    with pytest.raises(RuntimeError):
+        await media_source.async_resolve_media(
+            hass,
+            media_source.generate_media_source_id(
+                media_source.DOMAIN, "local/test.mp3"
+            ),
+        )
 
 
 async def test_async_unresolve_media(hass: HomeAssistant) -> None:

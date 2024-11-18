@@ -1,17 +1,10 @@
 update_file_path:
-  name: Update file path
-  description: Use this service to change the file displayed by the camera.
+  target:
+    entity:
+      integration: local_file
+      domain: camera
   fields:
-    entity_id:
-      name: Entity
-      description: Name of the entity_id of the camera to update.
-      required: true
-      selector:
-        entity:
-          domain: camera
     file_path:
-      name: file path
-      description: The full path to the new image file to be displayed.
       required: true
       example: "/config/www/images/image.jpg"
       selector:

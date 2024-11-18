@@ -1,45 +1,54 @@
 """Base entity for Sensibo integration."""
+
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
-import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
-_T = TypeVar("_T", bound="SensiboDeviceBaseEntity")
-_P = ParamSpec("_P")
 
-
-def async_handle_api_call(
-    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]
+def async_handle_api_call[_T: SensiboDeviceBaseEntity, **_P](
+    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls."""
 
-    async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
+    async def wrap_api_call(entity: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap services for api calls."""
         res: bool = False
+        if TYPE_CHECKING:
+            assert isinstance(entity.name, str)
         try:
-            async with async_timeout.timeout(TIMEOUT):
-                res = await function(*args, **kwargs)
+            async with asyncio.timeout(TIMEOUT):
+                res = await function(entity, *args, **kwargs)
         except SENSIBO_ERRORS as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_raised",
+                translation_placeholders={"error": str(err), "name": entity.name},
+            ) from err
 
-        LOGGER.debug("Result %s for entity %s with arguments %s", res, args[0], kwargs)
-        entity: SensiboDeviceBaseEntity = args[0]
+        LOGGER.debug("Result %s for entity %s with arguments %s", res, entity, kwargs)
         if res is not True:
-            raise HomeAssistantError(f"Could not execute service for {entity.name}")
-        if kwargs.get("key") is not None and kwargs.get("value") is not None:
-            setattr(entity.device_data, kwargs["key"], kwargs["value"])
-            LOGGER.debug("Debug check key %s is now %s", kwargs["key"], kwargs["value"])
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_result_not_true",
+                translation_placeholders={"name": entity.name},
+            )
+        if (
+            isinstance(key := kwargs.get("key"), str)
+            and (value := kwargs.get("value")) is not None
+        ):
+            setattr(entity.device_data, key, value)
+            LOGGER.debug("Debug check key %s is now %s", key, value)
             entity.async_write_ha_state()
             await entity.coordinator.async_request_refresh()
 
@@ -48,6 +57,8 @@ def async_handle_api_call(
 
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
     """Representation of a Sensibo Base Entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -68,8 +79,6 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Device."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
@@ -87,13 +96,12 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             sw_version=self.device_data.fw_ver,
             hw_version=self.device_data.fw_type,
             suggested_area=self.device_data.name,
+            serial_number=self.device_data.serial,
         )
 
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Motion Entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

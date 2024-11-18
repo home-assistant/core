@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "signal_percent": {
+        "default": "mdi:signal-cellular-3"
+      },
+      "cid": {
+        "default": "mdi:radio-tower"
+      }
+    }
+  }
+}

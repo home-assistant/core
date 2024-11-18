@@ -1,4 +1,5 @@
 """Select sensor entities for LIFX integration."""
+
 from __future__ import annotations
 
 from aiolifx_themes.themes import ThemeLibrary
@@ -23,14 +24,14 @@ THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
 
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
-    name="Infrared brightness",
+    translation_key="infrared_brightness",
     entity_category=EntityCategory.CONFIG,
     options=list(INFRARED_BRIGHTNESS_VALUES_MAP.values()),
 )
 
 THEME_ENTITY = SelectEntityDescription(
     key=ATTR_THEME,
-    name="Theme",
+    translation_key="theme",
     entity_category=EntityCategory.CONFIG,
     options=THEME_NAMES,
 )
@@ -49,7 +50,10 @@ async def async_setup_entry(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
-    if lifx_features(coordinator.device)["multizone"] is True:
+    if (
+        lifx_features(coordinator.device)["multizone"] is True
+        or lifx_features(coordinator.device)["matrix"] is True
+    ):
         entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
 
     async_add_entities(entities)
@@ -57,8 +61,6 @@ async def async_setup_entry(
 
 class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -89,8 +91,6 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
 
 class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
     """Theme entity for LIFX multizone devices."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

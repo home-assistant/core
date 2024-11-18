@@ -1,0 +1,9 @@
+{
+  "domain": "aosmith",
+  "name": "A. O. Smith",
+  "codeowners": ["@bdr99"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aosmith",
+  "iot_class": "cloud_polling",
+  "requirements": ["py-aosmith==1.0.10"]
+}

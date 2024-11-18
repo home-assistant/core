@@ -1,11 +1,11 @@
 """Hassfest utils."""
+
 from __future__ import annotations
 
 from collections.abc import Collection, Iterable, Mapping
+import shutil
+import subprocess
 from typing import Any
-
-import black
-from black.mode import Mode
 
 DEFAULT_GENERATOR = "script.hassfest"
 
@@ -72,7 +72,14 @@ To update, run python3 -m {generator}
 
 {content}
 """
-    return black.format_str(content.strip(), mode=Mode())
+    ruff = shutil.which("ruff")
+    if not ruff:
+        raise RuntimeError("ruff not found")
+    return subprocess.check_output(
+        [ruff, "format", "-"],
+        input=content.strip(),
+        encoding="utf-8",
+    )
 
 
 def format_python_namespace(
@@ -91,10 +98,10 @@ def format_python_namespace(
         return f": {annotation}" if annotation else ""
 
     code = "\n\n".join(
-        f"{key}{_get_annotation(key)}" f" = {to_string(value)}"
+        f"{key}{_get_annotation(key)} = {to_string(value)}"
         for key, value in sorted(content.items())
     )
     if annotations:
-        # If we had any annotations, add the __future__ import.
-        code = f"from __future__ import annotations\n{code}"
+        # If we had any annotations, add __future__ and typing imports.
+        code = f"from __future__ import annotations\n\nfrom typing import Final\n{code}"
     return format_python(code, generator=generator)

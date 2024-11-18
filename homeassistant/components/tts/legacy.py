@@ -1,4 +1,5 @@
 """Provide the legacy TTS service provider interface."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -6,10 +7,9 @@ from collections.abc import Coroutine, Mapping
 from functools import partial
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-import yarl
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.config import config_per_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
@@ -26,20 +27,22 @@ from homeassistant.const import (
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util.network import normalize_url
-from homeassistant.util.yaml import load_yaml
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
+from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
     ATTR_CACHE,
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
-    CONF_BASE_URL,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
@@ -53,9 +56,6 @@ from .const import (
 )
 from .media_source import generate_media_source_id
 from .models import Voice
-
-if TYPE_CHECKING:
-    from . import SpeechManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,16 +72,6 @@ def _deprecated_platform(value: str) -> str:
     return value
 
 
-def _valid_base_url(value: str) -> str:
-    """Validate base url, return value."""
-    url = yarl.URL(cv.url(value))
-
-    if url.path != "/":
-        raise vol.Invalid("Path should be empty")
-
-    return normalize_url(value)
-
-
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -90,7 +80,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): _valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )
@@ -112,13 +101,11 @@ SCHEMA_SERVICE_SAY = vol.Schema(
 async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
-    """Set up legacy text to speech providers."""
-    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
+    """Set up legacy text-to-speech providers."""
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
-    services_dict = cast(
-        dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+    services_dict = await hass.async_add_executor_job(
+        load_yaml_dict, str(services_yaml)
     )
 
     async def async_setup_platform(
@@ -132,25 +119,33 @@ async def async_setup_legacy(
 
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
-            _LOGGER.error("Unknown text to speech platform specified")
+            _LOGGER.error("Unknown text-to-speech platform specified")
             return
 
         try:
-            if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(
-                    hass, p_config, discovery_info
-                )
-            else:
-                provider = await hass.async_add_executor_job(
-                    platform.get_engine, hass, p_config, discovery_info
-                )
+            with async_start_setup(
+                hass,
+                integration=p_type,
+                group=str(id(p_config)),
+                phase=SetupPhases.PLATFORM_SETUP,
+            ):
+                if hasattr(platform, "async_get_engine"):
+                    provider = await platform.async_get_engine(
+                        hass, p_config, discovery_info
+                    )
+                else:
+                    provider = await hass.async_add_executor_job(
+                        platform.get_engine, hass, p_config, discovery_info
+                    )
 
-            if provider is None:
-                _LOGGER.error("Error setting up platform: %s", p_type)
-                return
+                if provider is None:
+                    _LOGGER.error("Error setting up platform: %s", p_type)
+                    return
 
-            tts.async_register_legacy_engine(p_type, provider, p_config)
-        except Exception:  # pylint: disable=broad-except
+                hass.data[DATA_TTS_MANAGER].async_register_legacy_engine(
+                    p_type, provider, p_config
+                )
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
@@ -240,13 +235,13 @@ class Provider:
         return None
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 

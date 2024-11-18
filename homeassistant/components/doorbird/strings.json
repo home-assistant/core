@@ -11,27 +11,92 @@
       }
     }
   },
+  "issues": {
+    "error_registering_events": {
+      "title": "DoorBird {name} configuration failure",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::doorbird::issues::error_registering_events::title%]",
+            "description": "Configuring DoorBird {name} failed with error: `{error}`. Please enable the API Operator permission for the DoorBird user and continue to reload the integration."
+          }
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "Device Name",
+          "name": "Device name",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your DoorBird device."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-authenticate DoorBird device {name} at {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "link_local_address": "Link local addresses are not supported",
-      "not_doorbird_device": "This device is not a DoorBird"
+      "not_doorbird_device": "This device is not a DoorBird",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "flow_title": "{name} ({host})",
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "reset_favorites": {
+        "name": "Reset favorites"
+      },
+      "ir": {
+        "name": "IR"
+      }
+    },
+    "camera": {
+      "live": {
+        "name": "live"
+      },
+      "last_ring": {
+        "name": "Last ring"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,26 +22,17 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsEntityDescriptionMixin:
-    """Mixin values for Rituals entities."""
-
-    value_fn: Callable[[Diffuser], int | str]
-
-
-@dataclass
-class RitualsSensorEntityDescription(
-    SensorEntityDescription, RitualsEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RitualsSensorEntityDescription(SensorEntityDescription):
     """Class describing Rituals sensor entities."""
 
     has_fn: Callable[[Diffuser], bool] = lambda _: True
+    value_fn: Callable[[Diffuser], int | str]
 
 
 ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="battery_percentage",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda diffuser: diffuser.battery_percentage,
@@ -48,20 +40,17 @@ ENTITY_DESCRIPTIONS = (
     ),
     RitualsSensorEntityDescription(
         key="fill",
-        name="Fill",
-        icon="mdi:beaker",
+        translation_key="fill",
         value_fn=lambda diffuser: diffuser.fill,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
-        name="Perfume",
-        icon="mdi:tag",
+        translation_key="perfume",
         value_fn=lambda diffuser: diffuser.perfume,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
-        name="Wifi",
-        icon="mdi:wifi",
+        translation_key="wifi_percentage",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda diffuser: diffuser.wifi_percentage,
     ),
@@ -91,15 +80,6 @@ class RitualsSensorEntity(DiffuserEntity, SensorEntity):
 
     entity_description: RitualsSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: RitualsDataUpdateCoordinator,
-        description: RitualsSensorEntityDescription,
-    ) -> None:
-        """Initialize the diffuser sensor."""
-        super().__init__(coordinator, description)
-        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def native_value(self) -> str | int:

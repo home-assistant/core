@@ -1,4 +1,5 @@
 """The Balboa Spa Client integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -13,18 +14,26 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_SYNC_TIME, DEFAULT_SYNC_TIME, DOMAIN
+from .const import CONF_SYNC_TIME, DEFAULT_SYNC_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SELECT,
+]
 
 
 KEEP_ALIVE_INTERVAL = timedelta(minutes=1)
 SYNC_TIME_INTERVAL = timedelta(hours=1)
 
+type BalboaConfigEntry = ConfigEntry[SpaClient]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
     """Set up Balboa Spa from a config entry."""
     host = entry.data[CONF_HOST]
 
@@ -37,41 +46,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to get spa info at %s", host)
         raise ConfigEntryNotReady("Unable to configure")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
+    entry.runtime_data = spa
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_setup_time_sync(hass, entry)
     entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(spa.disconnect)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Disconnecting from spa")
-    spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    await spa.disconnect()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_time_sync(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_time_sync(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Set up the time sync."""
     if not entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
         return
 
     _LOGGER.debug("Setting up daily time sync")
-    spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
+    spa = entry.runtime_data
 
     async def sync_time(now: datetime) -> None:
         now = dt_util.as_local(now)

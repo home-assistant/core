@@ -1,9 +1,12 @@
 """Test the Netatmo config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
+import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
@@ -13,16 +16,16 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import MockConfigEntry
+from .conftest import CLIENT_ID
+
+from tests.common import MockConfigEntry, start_reauth_flow
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 
 VALID_CONFIG = {}
 
@@ -37,15 +40,15 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
     result = await hass.config_entries.flow.async_init(
         "netatmo",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -53,25 +56,17 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "netatmo",
-        {
-            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
 
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}
@@ -148,28 +143,28 @@ async def test_option_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=valid_option
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
@@ -206,47 +201,39 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=valid_option
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "netatmo",
-        {
-            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
 
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}
@@ -290,15 +277,13 @@ async def test_reauth(
 
     new_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert new_entry.state == config_entries.ConfigEntryState.LOADED
+    assert new_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
     # Should show form
-    result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_REAUTH}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    result = await start_reauth_flow(hass, new_entry)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     # Confirm reauth flow
@@ -335,8 +320,8 @@ async def test_reauth(
 
     new_entry2 = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
-    assert new_entry2.state == config_entries.ConfigEntryState.LOADED
+    assert new_entry2.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

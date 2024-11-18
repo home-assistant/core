@@ -1,0 +1,251 @@
+# serializer version: 1
+# name: test_entities[sensor.mealie_categories-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_categories',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Categories',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'categories',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_categories',
+    'unit_of_measurement': 'categories',
+  })
+# ---
+# name: test_entities[sensor.mealie_categories-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Categories',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'categories',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_categories',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_entities[sensor.mealie_recipes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_recipes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recipes',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'recipes',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_recipes',
+    'unit_of_measurement': 'recipes',
+  })
+# ---
+# name: test_entities[sensor.mealie_recipes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Recipes',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'recipes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_recipes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '765',
+  })
+# ---
+# name: test_entities[sensor.mealie_tags-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_tags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tags',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tags',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tags',
+    'unit_of_measurement': 'tags',
+  })
+# ---
+# name: test_entities[sensor.mealie_tags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Tags',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'tags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_tags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '454',
+  })
+# ---
+# name: test_entities[sensor.mealie_tools-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_tools',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tools',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tools',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tools',
+    'unit_of_measurement': 'tools',
+  })
+# ---
+# name: test_entities[sensor.mealie_tools-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Tools',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'tools',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_tools',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_entities[sensor.mealie_users-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mealie_users',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Users',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'users',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_users',
+    'unit_of_measurement': 'users',
+  })
+# ---
+# name: test_entities[sensor.mealie_users-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Users',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'users',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mealie_users',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---

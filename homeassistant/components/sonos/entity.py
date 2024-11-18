@@ -1,4 +1,5 @@
 """Entity representing a Sonos player."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -8,8 +9,9 @@ import logging
 from soco.core import SoCo
 
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError
@@ -75,17 +77,22 @@ class SonosEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
+        suggested_area: str | None = None
+        if not self.speaker.battery_info:
+            # Only set suggested area for non-portable devices
+            suggested_area = self.speaker.zone_name
         return DeviceInfo(
             identifiers={(DOMAIN, self.soco.uid)},
             name=self.speaker.zone_name,
             model=self.speaker.model_name.replace("Sonos ", ""),
+            model_id=self.speaker.model_number,
             sw_version=self.speaker.version,
             connections={
                 (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),
                 (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
             },
             manufacturer="Sonos",
-            suggested_area=self.speaker.zone_name,
+            suggested_area=suggested_area,
             configuration_url=f"http://{self.soco.ip_address}:1400/support/review",
         )
 

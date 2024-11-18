@@ -1,7 +1,9 @@
 """Test the Z-Wave JS update entities."""
+
 import asyncio
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -14,6 +16,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
@@ -23,7 +26,7 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
@@ -38,24 +41,72 @@ UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 LATEST_VERSION_FIRMWARE = {
     "version": "11.2.4",
     "changelog": "blah 2",
+    "channel": "stable",
     "files": [{"target": 0, "url": "https://example2.com", "integrity": "sha2"}],
+    "downgrade": True,
+    "normalizedVersion": "11.2.4",
+    "device": {
+        "manufacturerId": 1,
+        "productType": 2,
+        "productId": 3,
+        "firmwareVersion": "0.4.4",
+        "rfRegion": 1,
+    },
 }
 FIRMWARE_UPDATES = {
     "updates": [
         {
             "version": "10.11.1",
             "changelog": "blah 1",
+            "channel": "stable",
             "files": [
                 {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
             ],
+            "downgrade": True,
+            "normalizedVersion": "10.11.1",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
         },
         LATEST_VERSION_FIRMWARE,
         {
             "version": "11.1.5",
             "changelog": "blah 3",
+            "channel": "stable",
             "files": [
                 {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
             ],
+            "downgrade": True,
+            "normalizedVersion": "11.1.5",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
+        # This firmware update should never show because it's in the beta channel
+        {
+            "version": "999.999.999",
+            "changelog": "blah 3",
+            "channel": "beta",
+            "files": [
+                {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "999.999.999",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
         },
     ]
 }
@@ -63,6 +114,7 @@ FIRMWARE_UPDATES = {
 
 async def test_update_entity_states(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
@@ -104,9 +156,10 @@ async def test_update_entity_states(
     attrs = state.attributes
     assert not attrs[ATTR_AUTO_UPDATE]
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
     await ws_client.send_json(
         {
@@ -127,7 +180,7 @@ async def test_update_entity_states(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}
@@ -144,7 +197,7 @@ async def test_update_entity_states(
     node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
-        async_get(hass).async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.firmware_update",
@@ -262,35 +315,37 @@ async def test_update_entity_ha_not_running(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update occurs only after HA is running."""
-    await hass.async_stop()
+    hass.set_state(CoreState.not_running)
+
+    client.async_send_command.return_value = {"updates": []}
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 1
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 1
 
     # Update should be delayed by a day because HA is not running
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 1
 
-    hass.state = CoreState.running
+    hass.set_state(CoreState.running)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
 
@@ -341,7 +396,9 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -362,6 +419,7 @@ async def test_update_entity_progress(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
     event = Event(
         type="firmware update progress",
@@ -384,7 +442,8 @@ async def test_update_entity_progress(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] == 5
+    assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] == 5
 
     event = Event(
         type="firmware update finished",
@@ -408,6 +467,7 @@ async def test_update_entity_progress(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
@@ -437,7 +497,9 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test install call - we expect it to finish fail
     install_task = hass.async_create_task(
@@ -475,7 +537,8 @@ async def test_update_entity_install_failed(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] == 5
+    assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] == 5
 
     event = Event(
         type="firmware update finished",
@@ -499,6 +562,7 @@ async def test_update_entity_install_failed(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_ON
@@ -537,7 +601,8 @@ async def test_update_entity_reload(
     attrs = state.attributes
     assert not attrs[ATTR_AUTO_UPDATE]
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
 
@@ -574,38 +639,45 @@ async def test_update_entity_delay(
     ge_in_wall_dimmer_switch,
     zen_31,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
-    await hass.async_stop()
+    client.async_send_command.return_value = {"updates": []}
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 2
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 2
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
+    nodes: set[int] = set()
+
+    assert len(client.async_send_command.call_args_list) == 3
+    args = client.async_send_command.call_args_list[2][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == ge_in_wall_dimmer_switch.node_id
+    nodes.add(args["nodeId"])
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[1][0][0]
+    assert len(client.async_send_command.call_args_list) == 4
+    args = client.async_send_command.call_args_list[3][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == zen_31.node_id
+    nodes.add(args["nodeId"])
+
+    assert len(nodes) == 2
+    assert nodes == {ge_in_wall_dimmer_switch.node_id, zen_31.node_id}
 
 
 async def test_update_entity_partial_restore_data(
@@ -637,6 +709,42 @@ async def test_update_entity_partial_restore_data(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_update_entity_partial_restore_data_2(
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test second scenario where update entity has partial restore data."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    UPDATE_ENTITY,
+                    STATE_ON,
+                    {
+                        ATTR_INSTALLED_VERSION: "10.7",
+                        ATTR_LATEST_VERSION: "10.8",
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"latest_version_firmware": None},
+            )
+        ],
+    )
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] is None
 
 
 async def test_update_entity_full_restore_data_skipped_version(
@@ -710,7 +818,9 @@ async def test_update_entity_full_restore_data_update_available(
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {
+        "result": {"status": 255, "success": True, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -731,12 +841,29 @@ async def test_update_entity_full_restore_data_update_available(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is True
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args_list[0][0][0] == {
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[1][0][0] == {
         "command": "controller.firmware_update_ota",
         "nodeId": climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
-        "updates": [{"target": 0, "url": "https://example2.com", "integrity": "sha2"}],
+        "updateInfo": {
+            "version": "11.2.4",
+            "changelog": "blah 2",
+            "channel": "stable",
+            "files": [
+                {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "11.2.4",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
     }
 
     install_task.cancel()
@@ -776,3 +903,55 @@ async def test_update_entity_full_restore_data_no_update_available(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+
+
+async def test_update_entity_no_latest_version(
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test entity with no `latest_version` attr restores state."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    UPDATE_ENTITY,
+                    STATE_OFF,
+                    {
+                        ATTR_INSTALLED_VERSION: "10.7",
+                        ATTR_LATEST_VERSION: None,
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"latest_version_firmware": None},
+            )
+        ],
+    )
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+
+
+async def test_update_entity_unload_asleep_node(
+    hass: HomeAssistant, client, wallmote_central_scene, integration
+) -> None:
+    """Test unloading config entry after attempting an update for an asleep node."""
+    assert len(client.async_send_command.call_args_list) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(wallmote_central_scene._listeners["wake up"]) == 2
+
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert len(wallmote_central_scene._listeners["wake up"]) == 0

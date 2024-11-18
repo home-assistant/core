@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["tailscale==0.2.0"]
+  "requirements": ["tailscale==0.6.1"]
 }

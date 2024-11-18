@@ -1,11 +1,12 @@
 """Fixtures for LaMetric integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import CloudDevice, Device
-from pydantic import parse_raw_as
+from pydantic import parse_raw_as  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -45,7 +46,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.lametric.async_setup_entry", return_value=True
@@ -54,7 +55,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_cloud() -> Generator[MagicMock, None, None]:
+def mock_lametric_cloud() -> Generator[MagicMock]:
     """Return a mocked LaMetric Cloud client."""
     with patch(
         "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
@@ -67,19 +68,29 @@ def mock_lametric_cloud() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric() -> Generator[MagicMock, None, None]:
-    """Return a mocked LaMetric client."""
-    with patch(
-        "homeassistant.components.lametric.coordinator.LaMetricDevice", autospec=True
-    ) as lametric_mock, patch(
-        "homeassistant.components.lametric.config_flow.LaMetricDevice",
-        new=lametric_mock,
+def device_fixture() -> str:
+    """Return the device fixture for a specific device."""
+    return "device"
+
+
+@pytest.fixture
+def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
+    """Return a mocked LaMetric TIME client."""
+    with (
+        patch(
+            "homeassistant.components.lametric.coordinator.LaMetricDevice",
+            autospec=True,
+        ) as lametric_mock,
+        patch(
+            "homeassistant.components.lametric.config_flow.LaMetricDevice",
+            new=lametric_mock,
+        ),
     ):
         lametric = lametric_mock.return_value
         lametric.api_key = "mock-api-key"
         lametric.host = "127.0.0.1"
         lametric.device.return_value = Device.parse_raw(
-            load_fixture("device.json", DOMAIN)
+            load_fixture(f"{device_fixture}.json", DOMAIN)
         )
         yield lametric
 

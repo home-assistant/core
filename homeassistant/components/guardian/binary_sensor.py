@@ -1,7 +1,10 @@
 """Binary sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -15,21 +18,21 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    GuardianData,
-    PairedSensorEntity,
-    ValveControllerEntity,
-    ValveControllerEntityDescription,
-)
+from . import GuardianData
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     CONF_UID,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
+from .coordinator import GuardianDataUpdateCoordinator
+from .entity import (
+    PairedSensorEntity,
+    ValveControllerEntity,
+    ValveControllerEntityDescription,
+)
 from .util import (
     EntityDomainReplacementStrategy,
-    GuardianDataUpdateCoordinator,
     async_finish_entity_domain_replacements,
 )
 
@@ -39,33 +42,45 @@ SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
+class PairedSensorBinarySensorDescription(BinarySensorEntityDescription):
+    """Describe a Guardian paired sensor binary sensor."""
+
+    is_on_fn: Callable[[dict[str, Any]], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerBinarySensorDescription(
     BinarySensorEntityDescription, ValveControllerEntityDescription
 ):
     """Describe a Guardian valve controller binary sensor."""
 
+    is_on_fn: Callable[[dict[str, Any]], bool]
+
 
 PAIRED_SENSOR_DESCRIPTIONS = (
-    BinarySensorEntityDescription(
+    PairedSensorBinarySensorDescription(
         key=SENSOR_KIND_LEAK_DETECTED,
-        name="Leak detected",
+        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
+        is_on_fn=lambda data: data["wet"],
     ),
-    BinarySensorEntityDescription(
+    PairedSensorBinarySensorDescription(
         key=SENSOR_KIND_MOVED,
-        name="Recently moved",
+        translation_key="moved",
         device_class=BinarySensorDeviceClass.MOVING,
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda data: data["moved"],
     ),
 )
 
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerBinarySensorDescription(
         key=SENSOR_KIND_LEAK_DETECTED,
-        name="Leak detected",
+        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
+        is_on_fn=lambda data: data["wet"],
     ),
 )
 
@@ -84,9 +99,6 @@ async def async_setup_entry(
             EntityDomainReplacementStrategy(
                 BINARY_SENSOR_DOMAIN,
                 f"{uid}_ap_enabled",
-                f"switch.guardian_valve_controller_{uid}_onboard_ap",
-                "2022.12.0",
-                remove_old_entity=True,
             ),
         ),
     )
@@ -133,7 +145,7 @@ async def async_setup_entry(
 class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: PairedSensorBinarySensorDescription
 
     def __init__(
         self,
@@ -146,13 +158,10 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
 
         self._attr_is_on = True
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity's underlying data."""
-        if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
-            self._attr_is_on = self.coordinator.data["wet"]
-        elif self.entity_description.key == SENSOR_KIND_MOVED:
-            self._attr_is_on = self.coordinator.data["moved"]
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
 
 
 class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
@@ -171,8 +180,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
 
         self._attr_is_on = True
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
-        if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
-            self._attr_is_on = self.coordinator.data["wet"]
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self.coordinator.data)

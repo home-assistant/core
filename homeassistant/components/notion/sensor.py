@@ -1,7 +1,8 @@
 """Support for Notion sensors."""
+
 from dataclasses import dataclass
 
-from aionotion.sensor.models import ListenerKind
+from aionotion.listener.models import ListenerKind
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,23 +12,27 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NotionEntity
-from .const import DOMAIN, LOGGER, SENSOR_TEMPERATURE
-from .model import NotionEntityDescriptionMixin
+from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
+from .coordinator import NotionDataUpdateCoordinator
+from .entity import NotionEntity, NotionEntityDescription
 
 
-@dataclass
-class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMixin):
+@dataclass(frozen=True, kw_only=True)
+class NotionSensorDescription(SensorEntityDescription, NotionEntityDescription):
     """Describe a Notion sensor."""
 
 
 SENSOR_DESCRIPTIONS = (
     NotionSensorDescription(
+        key=SENSOR_MOLD,
+        translation_key="mold_risk",
+        listener_kind=ListenerKind.MOLD,
+    ),
+    NotionSensorDescription(
         key=SENSOR_TEMPERATURE,
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -40,7 +45,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -49,12 +54,11 @@ async def async_setup_entry(
                 listener_id,
                 sensor.uuid,
                 sensor.bridge.id,
-                sensor.system_id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()
             for description in SENSOR_DESCRIPTIONS
-            if description.listener_kind == listener.listener_kind
+            if description.listener_kind.value == listener.definition_id
             and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
@@ -63,15 +67,24 @@ async def async_setup_entry(
 class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Fetch new state data for the sensor."""
-        listener = self.coordinator.data.listeners[self._listener_id]
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
+            if not self.coordinator.data.user_preferences:
+                return None
+            if self.coordinator.data.user_preferences.celsius_enabled:
+                return UnitOfTemperature.CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return None
 
-        if listener.listener_kind == ListenerKind.TEMPERATURE:
-            self._attr_native_value = round(listener.status.temperature, 1)  # type: ignore[attr-defined]
-        else:
-            LOGGER.error(
-                "Unknown listener type for sensor %s",
-                self.coordinator.data.sensors[self._sensor_id],
-            )
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if not self.listener.status_localized:
+            return None
+        if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
+            # The Notion API only returns a localized string for temperature (e.g.
+            # "70°"); we simply remove the degree symbol:
+            return self.listener.status_localized.state[:-1]
+        return self.listener.status_localized.state

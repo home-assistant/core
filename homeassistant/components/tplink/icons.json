@@ -1,0 +1,131 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "default": "mdi:water-percent",
+        "state": {
+          "on": "mdi:water-percent-alert"
+        }
+      },
+      "temperature_warning": {
+        "default": "mdi:thermometer-check",
+        "state": {
+          "on": "mdi:thermometer-alert"
+        }
+      }
+    },
+    "button": {
+      "test_alarm": {
+        "default": "mdi:bell-alert"
+      },
+      "stop_alarm": {
+        "default": "mdi:bell-cancel"
+      }
+    },
+    "select": {
+      "light_preset": {
+        "default": "mdi:sign-direction"
+      },
+      "alarm_sound": {
+        "default": "mdi:music-note"
+      },
+      "alarm_volume": {
+        "default": "mdi:volume-medium",
+        "state": {
+          "low": "mdi:volume-low",
+          "medium": "mdi:volume-medium",
+          "high": "mdi:volume-high"
+        }
+      }
+    },
+    "switch": {
+      "led": {
+        "default": "mdi:led-off",
+        "state": {
+          "on": "mdi:led-on"
+        }
+      },
+      "auto_update_enabled": {
+        "default": "mdi:autorenew-off",
+        "state": {
+          "on": "mdi:autorenew"
+        }
+      },
+      "auto_off_enabled": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      },
+      "smooth_transitions": {
+        "default": "mdi:transition-masked",
+        "state": {
+          "on": "mdi:transition"
+        }
+      },
+      "fan_sleep_mode": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      }
+    },
+    "sensor": {
+      "on_since": {
+        "default": "mdi:clock"
+      },
+      "ssid": {
+        "default": "mdi:wifi"
+      },
+      "signal_level": {
+        "default": "mdi:signal"
+      },
+      "current_firmware_version": {
+        "default": "mdi:information"
+      },
+      "available_firmware_version": {
+        "default": "mdi:information-outline"
+      },
+      "alarm_source": {
+        "default": "mdi:bell"
+      },
+      "water_alert_timestamp": {
+        "default": "mdi:clock-alert-outline"
+      }
+    },
+    "number": {
+      "smooth_transition_off": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "smooth_transition_on": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "auto_off_minutes": {
+        "default": "mdi:sleep"
+      },
+      "temperature_offset": {
+        "default": "mdi:contrast"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      }
+    }
+  },
+  "services": {
+    "sequence_effect": {
+      "service": "mdi:playlist-play"
+    },
+    "random_effect": {
+      "service": "mdi:shuffle-variant"
+    }
+  }
+}

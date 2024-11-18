@@ -1,4 +1,5 @@
 """Support for Vallox ventilation unit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,8 +13,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
+from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
@@ -21,7 +23,6 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
 
     entity_description: ValloxSwitchEntityDescription
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -42,9 +43,7 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
         return value == 1
@@ -64,23 +63,17 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
-class ValloxMetricKeyMixin:
-    """Dataclass to allow defining metric_key without a default value."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Vallox switch entity."""
 
     metric_key: str
-
-
-@dataclass
-class ValloxSwitchEntityDescription(SwitchEntityDescription, ValloxMetricKeyMixin):
-    """Describes Vallox switch entity."""
 
 
 SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
     ValloxSwitchEntityDescription(
         key="bypass_locked",
-        name="Bypass locked",
-        icon="mdi:arrow-horizontal-lock",
+        translation_key="bypass_locked",
         metric_key="A_CYC_BYPASS_LOCKED",
     ),
 )
@@ -94,12 +87,10 @@ async def async_setup_entry(
     """Set up the switches."""
 
     data = hass.data[DOMAIN][entry.entry_id]
-    client = data["client"]
-    client.set_settable_address("A_CYC_BYPASS_LOCKED", int)
 
     async_add_entities(
-        [
-            ValloxSwitchEntity(data["name"], data["coordinator"], description, client)
-            for description in SWITCH_ENTITIES
-        ]
+        ValloxSwitchEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in SWITCH_ENTITIES
     )

@@ -1,5 +1,5 @@
 """The Smart Meter Texas integration."""
-import asyncio
+
 import logging
 import ssl
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartMeterTexasAuthError:
         _LOGGER.error("Username or password was not accepted")
         return False
-    except asyncio.TimeoutError as error:
+    except TimeoutError as error:
         raise ConfigEntryNotReady from error
 
     await smart_meter_texas_data.setup()
@@ -64,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Smart Meter Texas",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,

@@ -1,4 +1,5 @@
 """Support for an exposed aREST RESTful API of a device."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -8,7 +9,10 @@ from typing import Any
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_RESOURCE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -30,7 +34,7 @@ PIN_FUNCTION_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -161,16 +165,13 @@ class ArestSwitchFunction(ArestSwitchBase):
 class ArestSwitchPin(ArestSwitchBase):
     """Representation of an aREST switch. Based on digital I/O."""
 
-    def __init__(self, resource, location, name, pin, invert):
+    def __init__(self, resource, location, name, pin, invert) -> None:
         """Initialize the switch."""
         super().__init__(resource, location, name)
         self._pin = pin
         self.invert = invert
 
-        request = requests.get(f"{resource}/mode/{pin}/o", timeout=10)
-        if request.status_code != HTTPStatus.OK:
-            _LOGGER.error("Can't set mode")
-            self._attr_available = False
+        self.__set_pin_output()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -200,7 +201,15 @@ class ArestSwitchPin(ArestSwitchBase):
             request = requests.get(f"{self._resource}/digital/{self._pin}", timeout=10)
             status_value = int(self.invert)
             self._attr_is_on = request.json()["return_value"] != status_value
-            self._attr_available = True
+            if self._attr_available is False:
+                self._attr_available = True
+                self.__set_pin_output()
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("No route to device %s", self._resource)
+            self._attr_available = False
+
+    def __set_pin_output(self) -> None:
+        request = requests.get(f"{self._resource}/mode/{self._pin}/o", timeout=10)
+        if request.status_code != HTTPStatus.OK:
+            _LOGGER.error("Can't set mode")
             self._attr_available = False

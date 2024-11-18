@@ -1,5 +1,7 @@
 """Tests for the Heos Media Player platform."""
+
 import asyncio
+from typing import Any
 
 from pyheos import CommandFailedError, const
 from pyheos.error import HeosError
@@ -57,8 +59,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 
-async def setup_platform(hass, config_entry, config):
+
+async def setup_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry, config: dict[str, Any]
+) -> None:
     """Set up the media player platform for testing."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
@@ -249,6 +255,8 @@ async def test_updates_from_players_changed(
 
 async def test_updates_from_players_changed_new_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     config_entry,
     config,
     controller,
@@ -257,13 +265,11 @@ async def test_updates_from_players_changed_new_ids(
 ) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device({(DOMAIN, 1)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 1)})
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -284,7 +290,7 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 2
-    assert device_registry.async_get_device({(DOMAIN, 101)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 101)})
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 2
     assert (
@@ -687,7 +693,7 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 

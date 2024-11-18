@@ -1,4 +1,5 @@
 """Tests for various Plex services."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -45,7 +46,7 @@ async def test_refresh_library(
 
     # Test with non-existent server
     with pytest.raises(HomeAssistantError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
             {"server_name": "Not a Server", "library_name": "Movies"},
@@ -54,7 +55,7 @@ async def test_refresh_library(
     assert not refresh.called
 
     # Test with non-existent library
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         {"library_name": "Not a Library"},
@@ -63,7 +64,7 @@ async def test_refresh_library(
     assert not refresh.called
 
     # Test with valid library
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         {"library_name": "Movies"},
@@ -96,7 +97,7 @@ async def test_refresh_library(
 
     # Test multiple servers available but none specified
     with pytest.raises(HomeAssistantError) as excinfo:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
             {"library_name": "Movies"},
@@ -108,7 +109,7 @@ async def test_refresh_library(
 
 async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
     """Test scan_for_clients service call."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SCAN_CLIENTS,
         blocking=True,
@@ -190,7 +191,11 @@ async def test_lookup_media_for_other_integrations(
     assert result.shuffle
 
     # Test with media not found
-    with patch("plexapi.library.LibrarySection.search", return_value=None):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=None,
+        __qualname__="search",
+    ):
         with pytest.raises(HomeAssistantError) as excinfo:
             process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_MEDIA)
         assert f"No {MediaType.MUSIC} results in 'Music' for" in str(excinfo.value)

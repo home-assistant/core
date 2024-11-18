@@ -1,4 +1,5 @@
 """Support for the Pico TTS speech service."""
+
 import logging
 import os
 import shutil
@@ -7,7 +8,11 @@ import tempfile
 
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +20,7 @@ SUPPORT_LANGUAGES = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
 DEFAULT_LANG = "en-US"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
 )
 
@@ -46,12 +51,12 @@ class PicoProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options):
         """Load TTS using pico2wave."""
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, message]
+        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
         subprocess.call(cmd)
         data = None
         try:

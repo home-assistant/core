@@ -1,4 +1,5 @@
 """Dormakaba dKey integration base entity."""
+
 from __future__ import annotations
 
 import abc
@@ -8,7 +9,7 @@ from py_dormakaba_dkey.commands import Notifications
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,

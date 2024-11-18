@@ -1,21 +1,19 @@
 """Entity for the SleepIQ integration."""
+
 from abc import abstractmethod
-from typing import TypeVar
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ENTITY_TYPES, ICON_OCCUPIED
 from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator
 
-_SleepIQCoordinatorT = TypeVar(
-    "_SleepIQCoordinatorT",
-    bound=SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator,
-)
+type _DataCoordinatorType = SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator
 
 
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
@@ -28,6 +26,14 @@ def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
     )
 
 
+def sleeper_for_side(bed: SleepIQBed, side: str) -> SleepIQSleeper:
+    """Find the sleeper for a side or the first sleeper."""
+    for sleeper in bed.sleepers:
+        if sleeper.side == side:
+            return sleeper
+    return bed.sleepers[0]
+
+
 class SleepIQEntity(Entity):
     """Implementation of a SleepIQ entity."""
 
@@ -37,7 +43,9 @@ class SleepIQEntity(Entity):
         self._attr_device_info = device_from_bed(bed)
 
 
-class SleepIQBedEntity(CoordinatorEntity[_SleepIQCoordinatorT]):
+class SleepIQBedEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
+    CoordinatorEntity[_SleepIQCoordinatorT]
+):
     """Implementation of a SleepIQ sensor."""
 
     _attr_icon = ICON_OCCUPIED
@@ -65,7 +73,9 @@ class SleepIQBedEntity(CoordinatorEntity[_SleepIQCoordinatorT]):
         """Update sensor attributes."""
 
 
-class SleepIQSleeperEntity(SleepIQBedEntity[_SleepIQCoordinatorT]):
+class SleepIQSleeperEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
+    SleepIQBedEntity[_SleepIQCoordinatorT]
+):
     """Implementation of a SleepIQ sensor."""
 
     _attr_icon = ICON_OCCUPIED

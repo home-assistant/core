@@ -1,19 +1,28 @@
 """Helpers for Toon."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any, Concatenate
 
 from toonapi import ToonConnectionError, ToonError
+
+from .entity import ToonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def toon_exception_handler(func):
+def toon_exception_handler[_ToonEntityT: ToonEntity, **_P](
+    func: Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Toon calls to handle Toon exceptions.
 
     A decorator that wraps the passed in function, catches Toon errors,
     and handles the availability of the device in the data coordinator.
     """
 
-    async def handler(self, *args, **kwargs):
+    async def handler(self: _ToonEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
             self.coordinator.async_update_listeners()

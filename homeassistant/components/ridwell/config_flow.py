@@ -1,4 +1,5 @@
 """Config flow for Ridwell integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,9 +9,8 @@ from aioridwell import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -29,8 +29,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for WattTime."""
+class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Ridwell."""
 
     VERSION = 2
 
@@ -41,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate(
         self, error_step_id: str, error_schema: vol.Schema
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate input credentials and proceed accordingly."""
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
@@ -81,16 +81,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         if not user_input:
+            if TYPE_CHECKING:
+                assert self._username
+
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,
@@ -105,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if not user_input:
             return self.async_show_form(

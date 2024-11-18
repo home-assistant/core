@@ -1,28 +1,18 @@
 """The tests for NEW_NAME device conditions."""
+
 from __future__ import annotations
 
-import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_conditions(
@@ -59,10 +49,10 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
 
@@ -113,12 +103,12 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_on - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_on - event - test_event1"
 
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_off - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "is_off - event - test_event2"

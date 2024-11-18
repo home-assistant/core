@@ -1,4 +1,5 @@
 """The Media Source implementation for the Jellyfin integration."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -18,10 +19,11 @@ from homeassistant.components.media_source.models import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import JellyfinConfigEntry
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
-    COLLECTION_TYPE_TVSHOWS,
+    CONF_AUDIO_CODEC,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -46,7 +48,6 @@ from .const import (
     PLAYABLE_ITEM_TYPES,
     SUPPORTED_COLLECTION_TYPES,
 )
-from .models import JellyfinData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,10 +55,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    entry: JellyfinConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client)
+    return JellyfinSource(hass, coordinator.api_client, entry)
 
 
 class JellyfinSource(MediaSource):
@@ -65,11 +66,14 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(self, hass: HomeAssistant, client: JellyfinClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: JellyfinClient, entry: JellyfinConfigEntry
+    ) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
 
         self.hass = hass
+        self.entry = entry
 
         self.client = client
         self.api = client.jellyfin
@@ -155,10 +159,7 @@ class JellyfinSource(MediaSource):
             return await self._build_music_library(library, include_children)
         if collection_type == COLLECTION_TYPE_MOVIES:
             return await self._build_movie_library(library, include_children)
-        if collection_type == COLLECTION_TYPE_TVSHOWS:
-            return await self._build_tv_library(library, include_children)
-
-        raise BrowseError(f"Unsupported collection type {collection_type}")
+        return await self._build_tv_library(library, include_children)
 
     async def _build_music_library(
         self, library: dict[str, Any], include_children: bool
@@ -189,7 +190,15 @@ class JellyfinSource(MediaSource):
     async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all artists in the music library."""
         artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
-        artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        artists = sorted(
+            artists,
+            # Sort by whether an artist has an name first, then by name
+            # This allows for sorting artists with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [await self._build_artist(artist, False) for artist in artists]
 
     async def _build_artist(
@@ -220,7 +229,15 @@ class JellyfinSource(MediaSource):
     async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
         albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
-        albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        albums = sorted(
+            albums,
+            # Sort by whether an album has an name first, then by name
+            # This allows for sorting albums with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [await self._build_album(album, False) for album in albums]
 
     async def _build_album(
@@ -253,9 +270,11 @@ class JellyfinSource(MediaSource):
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
         tracks = sorted(
             tracks,
+            # Sort by whether a track has an index first, then by index
+            # This allows for sorting tracks with, without and with missing indices
             key=lambda k: (
                 ITEM_KEY_INDEX_NUMBER not in k,
-                k.get(ITEM_KEY_INDEX_NUMBER, None),
+                k.get(ITEM_KEY_INDEX_NUMBER),
             ),
         )
         return [
@@ -271,7 +290,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(track)
         thumbnail_url = self._get_thumbnail_url(track)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=track_id,
             media_class=MediaClass.TRACK,
@@ -281,8 +300,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _build_movie_library(
         self, library: dict[str, Any], include_children: bool
@@ -310,7 +327,15 @@ class JellyfinSource(MediaSource):
     async def _build_movies(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all movies in the movie library."""
         movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
-        movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        movies = sorted(
+            movies,
+            # Sort by whether a movies has an name first, then by name
+            # This allows for sorting moveis with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [
             self._build_movie(movie)
             for movie in movies
@@ -324,7 +349,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(movie)
         thumbnail_url = self._get_thumbnail_url(movie)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=movie_id,
             media_class=MediaClass.MOVIE,
@@ -334,8 +359,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _build_tv_library(
         self, library: dict[str, Any], include_children: bool
@@ -363,8 +386,16 @@ class JellyfinSource(MediaSource):
     async def _build_tvshow(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all series in the tv library."""
         series = await self._get_children(library_id, ITEM_TYPE_SERIES)
-        series = sorted(series, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
-        return [await self._build_series(serie, False) for serie in series]
+        series = sorted(
+            series,
+            # Sort by whether a seroes has an name first, then by name
+            # This allows for sorting series with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
+        return [await self._build_series(s, False) for s in series]
 
     async def _build_series(
         self, series: dict[str, Any], include_children: bool
@@ -394,7 +425,15 @@ class JellyfinSource(MediaSource):
     async def _build_seasons(self, series_id: str) -> list[BrowseMediaSource]:
         """Return all seasons in the series."""
         seasons = await self._get_children(series_id, ITEM_TYPE_SEASON)
-        seasons = sorted(seasons, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        seasons = sorted(
+            seasons,
+            # Sort by whether a season has an index first, then by index
+            # This allows for sorting seasons with, without and with missing indices
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER),
+            ),
+        )
         return [await self._build_season(season, False) for season in seasons]
 
     async def _build_season(
@@ -425,7 +464,15 @@ class JellyfinSource(MediaSource):
     async def _build_episodes(self, season_id: str) -> list[BrowseMediaSource]:
         """Return all episode in the season."""
         episodes = await self._get_children(season_id, ITEM_TYPE_EPISODE)
-        episodes = sorted(episodes, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        episodes = sorted(
+            episodes,
+            # Sort by whether an episode has an index first, then by index
+            # This allows for sorting episodes with, without and with missing indices
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER),
+            ),
+        )
         return [
             self._build_episode(episode)
             for episode in episodes
@@ -439,7 +486,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(episode)
         thumbnail_url = self._get_thumbnail_url(episode)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=episode_id,
             media_class=MediaClass.EPISODE,
@@ -449,8 +496,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _get_children(
         self, parent_id: str, item_type: str
@@ -483,6 +528,8 @@ class JellyfinSource(MediaSource):
         item_id = media_item[ITEM_KEY_ID]
 
         if media_type == MEDIA_TYPE_AUDIO:
+            if audio_codec := self.entry.options.get(CONF_AUDIO_CODEC):
+                return self.api.audio_url(item_id, audio_codec=audio_codec)  # type: ignore[no-any-return]
             return self.api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
             return self.api.video_url(item_id)  # type: ignore[no-any-return]

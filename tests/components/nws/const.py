@@ -1,8 +1,11 @@
 """Helpers for interacting with pynws."""
+
 from homeassistant.components.nws.const import CONF_STATION
 from homeassistant.components.weather import (
     ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_DEW_POINT,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
@@ -59,7 +62,11 @@ DEFAULT_OBSERVATION = {
     "windGust": 20,
 }
 
+CLEAR_NIGHT_OBSERVATION = DEFAULT_OBSERVATION.copy()
+CLEAR_NIGHT_OBSERVATION["iconTime"] = "night"
+
 SENSOR_EXPECTED_OBSERVATION_METRIC = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
     "dewpoint": "5",
     "temperature": "10",
     "windChill": "5",
@@ -74,6 +81,7 @@ SENSOR_EXPECTED_OBSERVATION_METRIC = {
 }
 
 SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
     "dewpoint": str(
         round(
             TemperatureConverter.convert(
@@ -179,10 +187,14 @@ DEFAULT_FORECAST = [
         "temperature": 10,
         "windSpeedAvg": 10,
         "windBearing": 180,
+        "shortForecast": "A short forecast.",
         "detailedForecast": "A detailed forecast.",
         "timestamp": "2019-08-12T23:53:00+00:00",
         "iconTime": "night",
         "iconWeather": (("lightning-rainy", 40), ("lightning-rainy", 90)),
+        "probabilityOfPrecipitation": 89,
+        "dewpoint": 4,
+        "relativeHumidity": 75,
     },
 ]
 
@@ -192,7 +204,9 @@ EXPECTED_FORECAST_IMPERIAL = {
     ATTR_FORECAST_TEMP: 10,
     ATTR_FORECAST_WIND_SPEED: 10,
     ATTR_FORECAST_WIND_BEARING: 180,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 90,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 89,
+    ATTR_FORECAST_DEW_POINT: 4,
+    ATTR_FORECAST_HUMIDITY: 75,
 }
 
 EXPECTED_FORECAST_METRIC = {
@@ -211,7 +225,14 @@ EXPECTED_FORECAST_METRIC = {
         2,
     ),
     ATTR_FORECAST_WIND_BEARING: 180,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 90,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 89,
+    ATTR_FORECAST_DEW_POINT: round(
+        TemperatureConverter.convert(
+            4, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+        ),
+        1,
+    ),
+    ATTR_FORECAST_HUMIDITY: 75,
 }
 
 NONE_FORECAST = [{key: None for key in DEFAULT_FORECAST[0]}]

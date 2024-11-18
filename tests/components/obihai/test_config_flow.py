@@ -24,7 +24,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -35,7 +35,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT}
 
@@ -55,7 +55,7 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -73,57 +73,9 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_yaml_import(hass: HomeAssistant) -> None:
-    """Test we get the YAML imported."""
-
-    with patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=USER_INPUT,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert "errors" not in result
-
-
-async def test_yaml_import_auth_fail(hass: HomeAssistant) -> None:
-    """Test the YAML import fails."""
-
-    with patch(VALIDATE_AUTH_PATCH, return_value=False):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=USER_INPUT,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_auth"
-    assert "errors" not in result
-
-
-async def test_yaml_import_connect_fail(
-    hass: HomeAssistant, mock_gaierror: Generator
-) -> None:
-    """Test the YAML import fails with invalid host."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-    assert "errors" not in result
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
@@ -140,7 +92,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         )
 
         flows = hass.config_entries.flow.async_progress()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert len(flows) == 1
         assert (
             get_schema_suggestion(result["data_schema"].schema, CONF_USERNAME)
@@ -162,7 +114,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:

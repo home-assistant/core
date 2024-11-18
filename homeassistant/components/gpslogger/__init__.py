@@ -1,4 +1,5 @@
 """Support for GPSLogger."""
+
 from http import HTTPStatus
 
 from aiohttp import web
@@ -12,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ACCURACY,
@@ -55,13 +55,9 @@ WEBHOOK_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the GPSLogger component."""
-    hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
-    return True
-
-
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook with GPSLogger request."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
@@ -95,6 +91,7 @@ async def handle_webhook(hass, webhook_id, request):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
+    hass.data.setdefault(DOMAIN, {"devices": set(), "unsub_device_tracker": {}})
     webhook.async_register(
         hass, DOMAIN, "GPSLogger", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )

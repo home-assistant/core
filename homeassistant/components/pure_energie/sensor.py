@@ -1,4 +1,5 @@
 """Support for Pure Energie sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,32 +15,25 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PureEnergieData, PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import PureEnergieData, PureEnergieDataUpdateCoordinator
 
 
-@dataclass
-class PureEnergieSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PureEnergieSensorEntityDescription(SensorEntityDescription):
+    """Describes a Pure Energie sensor entity."""
 
     value_fn: Callable[[PureEnergieData], int | float]
-
-
-@dataclass
-class PureEnergieSensorEntityDescription(
-    SensorEntityDescription, PureEnergieSensorEntityDescriptionMixin
-):
-    """Describes a Pure Energie sensor entity."""
 
 
 SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="power_flow",
-        name="Power Flow",
+        translation_key="power_flow",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -47,7 +41,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     ),
     PureEnergieSensorEntityDescription(
         key="energy_consumption_total",
-        name="Energy Consumption",
+        translation_key="energy_consumption_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -55,7 +49,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     ),
     PureEnergieSensorEntityDescription(
         key="energy_production_total",
-        name="Energy Production",
+        translation_key="energy_production_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -83,6 +77,7 @@ class PureEnergieSensorEntity(
 ):
     """Defines an Pure Energie sensor."""
 
+    _attr_has_entity_name = True
     entity_description: PureEnergieSensorEntityDescription
 
     def __init__(

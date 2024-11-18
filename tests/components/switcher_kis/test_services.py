@@ -1,4 +1,5 @@
 """Test the services for the Switcher integration."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import Command
@@ -29,7 +30,7 @@ from .consts import (
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_turn_on_with_timer_service(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the turn on with timer service."""
     await init_integration(hass)
@@ -47,7 +48,7 @@ async def test_turn_on_with_timer_service(
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device"
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
             DOMAIN,
@@ -77,7 +78,7 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown"
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.set_auto_shutdown"
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(
             DOMAIN,
@@ -104,7 +105,7 @@ async def test_set_auto_off_service_fail(
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown",
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.set_auto_shutdown",
         return_value=None,
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(

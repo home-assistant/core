@@ -1,0 +1,14 @@
+{
+  "category": "",
+  "ep_type": "signal",
+  "id": 6,
+  "label": "Détection",
+  "name": "trigger",
+  "ui": {
+    "access": "w",
+    "display": "toggle"
+  },
+  "value": false,
+  "value_type": "bool",
+  "visibility": "normal"
+}

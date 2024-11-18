@@ -1,4 +1,5 @@
 """Websocket API for automation."""
+
 import json
 from typing import Any
 
@@ -25,7 +26,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .. import trace
+from .util import async_get_trace, async_list_contexts, async_list_traces
 
 TRACE_DOMAINS = ("automation", "script")
 
@@ -65,7 +66,7 @@ async def websocket_trace_get(
     run_id = msg["run_id"]
 
     try:
-        requested_trace = await trace.async_get_trace(hass, key, run_id)
+        requested_trace = await async_get_trace(hass, key, run_id)
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "The trace could not be found"
@@ -97,7 +98,7 @@ async def websocket_trace_list(
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    traces = await trace.async_list_traces(hass, wanted_domain, key)
+    traces = await async_list_traces(hass, wanted_domain, key)
 
     connection.send_result(msg["id"], traces)
 
@@ -119,7 +120,7 @@ async def websocket_trace_contexts(
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    contexts = await trace.async_list_contexts(hass, key)
+    contexts = await async_list_contexts(hass, key)
 
     connection.send_result(msg["id"], contexts)
 
@@ -142,8 +143,8 @@ def websocket_breakpoint_set(
 ) -> None:
     """Set breakpoint."""
     key = f"{msg['domain']}.{msg['item_id']}"
-    node = msg["node"]
-    run_id = msg.get("run_id")
+    node: str = msg["node"]
+    run_id: str | None = msg.get("run_id")
 
     if (
         SCRIPT_BREAKPOINT_HIT not in hass.data.get(DATA_DISPATCHER, {})
@@ -173,8 +174,8 @@ def websocket_breakpoint_clear(
 ) -> None:
     """Clear breakpoint."""
     key = f"{msg['domain']}.{msg['item_id']}"
-    node = msg["node"]
-    run_id = msg.get("run_id")
+    node: str = msg["node"]
+    run_id: str | None = msg.get("run_id")
 
     result = breakpoint_clear(hass, key, run_id, node)
 
@@ -211,7 +212,7 @@ def websocket_subscribe_breakpoint_events(
     """Subscribe to breakpoint events."""
 
     @callback
-    def breakpoint_hit(key, run_id, node):
+    def breakpoint_hit(key: str, run_id: str, node: str) -> None:
         """Forward events to websocket."""
         domain, item_id = key.split(".", 1)
         connection.send_message(
@@ -231,7 +232,7 @@ def websocket_subscribe_breakpoint_events(
     )
 
     @callback
-    def unsub():
+    def unsub() -> None:
         """Unsubscribe from breakpoint events."""
         remove_signal()
         if (
@@ -263,7 +264,7 @@ def websocket_debug_continue(
 ) -> None:
     """Resume execution of halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
-    run_id = msg["run_id"]
+    run_id: str = msg["run_id"]
 
     result = debug_continue(hass, key, run_id)
 
@@ -287,7 +288,7 @@ def websocket_debug_step(
 ) -> None:
     """Single step a halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
-    run_id = msg["run_id"]
+    run_id: str = msg["run_id"]
 
     result = debug_step(hass, key, run_id)
 
@@ -311,7 +312,7 @@ def websocket_debug_stop(
 ) -> None:
     """Stop a halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
-    run_id = msg["run_id"]
+    run_id: str = msg["run_id"]
 
     result = debug_stop(hass, key, run_id)
 

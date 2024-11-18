@@ -1,4 +1,5 @@
 """Support for monitoring the state of Digital Ocean droplets."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -33,7 +34,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Droplet"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
 )
 
@@ -65,7 +66,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, do, droplet_id):  # pylint: disable=invalid-name
+    def __init__(self, do, droplet_id):
         """Initialize a new Digital Ocean sensor."""
         self._digital_ocean = do
         self._droplet_id = droplet_id

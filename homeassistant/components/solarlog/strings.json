@@ -5,16 +5,121 @@
         "title": "Define your Solar-Log connection",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "The prefix to be used for your Solar-Log sensors"
+          "name": "The prefix to be used for your Solar-Log sensors",
+          "has_password": "I have the password for the Solar-Log user account."
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Solar-Log device.",
+          "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device."
+        }
+      },
+      "password": {
+        "title": "Define your Solar-Log connection",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for the general user of your Solar-Log device."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update your credentials for Solar-Log device",
+        "data": {
+          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Configure SolarLog",
+        "data": {
+          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "password_error": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_update": {
+        "name": "Last update"
+      },
+      "power_ac": {
+        "name": "Power AC"
+      },
+      "power_dc": {
+        "name": "Power DC"
+      },
+      "voltage_ac": {
+        "name": "Voltage AC"
+      },
+      "voltage_dc": {
+        "name": "Voltage DC"
+      },
+      "yield_day": {
+        "name": "Yield day"
+      },
+      "yield_yesterday": {
+        "name": "Yield yesterday"
+      },
+      "yield_month": {
+        "name": "Yield month"
+      },
+      "yield_year": {
+        "name": "Yield year"
+      },
+      "yield_total": {
+        "name": "Yield total"
+      },
+      "consumption_ac": {
+        "name": "Consumption AC"
+      },
+      "consumption_day": {
+        "name": "Consumption day"
+      },
+      "consumption_yesterday": {
+        "name": "Consumption yesterday"
+      },
+      "consumption_month": {
+        "name": "Consumption month"
+      },
+      "consumption_year": {
+        "name": "Consumption year"
+      },
+      "consumption_total": {
+        "name": "Consumption total"
+      },
+      "self_consumption_year": {
+        "name": "Self-consumption year"
+      },
+      "total_power": {
+        "name": "Installed peak power"
+      },
+      "alternator_loss": {
+        "name": "Alternator loss"
+      },
+      "capacity": {
+        "name": "Capacity"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      },
+      "power_available": {
+        "name": "Power available"
+      },
+      "usage": {
+        "name": "Usage"
+      }
     }
   }
 }

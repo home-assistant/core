@@ -1,8 +1,12 @@
 """Base entity for the LaMetric integration."""
+
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -23,7 +27,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
             },
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             manufacturer="LaMetric Inc.",
-            model=coordinator.data.model,
+            model_id=coordinator.data.model,
             name=coordinator.data.name,
             sw_version=coordinator.data.os_version,
         )

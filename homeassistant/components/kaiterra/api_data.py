@@ -1,9 +1,9 @@
 """Data for all Kaiterra devices."""
+
 import asyncio
 from logging import getLogger
 
 from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
-import async_timeout
 from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES, CONF_TYPE
@@ -53,9 +53,9 @@ class KaiterraApiData:
         """Get the data from Kaiterra API."""
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError) as err:
+        except (ClientResponseError, ClientConnectorError, TimeoutError) as err:
             _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
@@ -87,10 +87,11 @@ class KaiterraApiData:
                         main_pollutant = POLLUTANTS.get(sensor_name)
 
                 level = None
-                for j in range(1, len(self._scale)):
-                    if aqi <= self._scale[j]:
-                        level = self._level[j - 1]
-                        break
+                if aqi is not None:
+                    for j in range(1, len(self._scale)):
+                        if aqi <= self._scale[j]:
+                            level = self._level[j - 1]
+                            break
 
                 device["aqi"] = {"value": aqi}
                 device["aqi_level"] = {"value": level}

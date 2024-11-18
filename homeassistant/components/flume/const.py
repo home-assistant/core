@@ -1,4 +1,5 @@
 """The Flume component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,7 +30,7 @@ FLUME_TYPE_SENSOR = 2
 FLUME_AUTH = "flume_auth"
 FLUME_HTTP_SESSION = "http_session"
 FLUME_DEVICES = "devices"
-
+FLUME_NOTIFICATIONS_COORDINATOR = "notifications_coordinator"
 
 CONF_TOKEN_FILE = "token_filename"
 BASE_TOKEN_FILENAME = "FLUME_TOKEN_FILE"
@@ -47,3 +48,4 @@ NOTIFICATION_BRIDGE_DISCONNECT = "Bridge Disconnection"
 BRIDGE_NOTIFICATION_KEY = "connected"
 BRIDGE_NOTIFICATION_RULE = "Bridge Disconnection"
 NOTIFICATION_LEAK_DETECTED = "Flume Smart Leak Alert"
+NOTIFICATION_LOW_BATTERY = "Low Battery"

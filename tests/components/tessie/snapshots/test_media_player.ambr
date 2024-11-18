@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_media_player[media_player.test_media_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_media_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Media player',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media',
+    'unique_id': 'VINVINVIN-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.test_media_player-paused]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_player[media_player.test_media_player-playing]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'media_album_name': 'Album',
+      'media_artist': 'Artist',
+      'media_duration': 60.0,
+      'media_playlist': 'Playlist',
+      'media_position': 30.0,
+      'media_title': 'Song',
+      'source': 'Spotify',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---

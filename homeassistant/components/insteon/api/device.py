@@ -3,12 +3,14 @@
 from typing import Any
 
 from pyinsteon import devices
+from pyinsteon.address import Address
 from pyinsteon.constants import DeviceAction
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import (
     DEVICE_ADDRESS,
@@ -18,13 +20,18 @@ from ..const import (
     ID,
     INSTEON_DEVICE_NOT_FOUND,
     MULTIPLE,
+    SIGNAL_REMOVE_HA_DEVICE,
+    SIGNAL_REMOVE_INSTEON_DEVICE,
+    SIGNAL_REMOVE_X10_DEVICE,
     TYPE,
 )
+from ..schemas import build_x10_schema
+from ..utils import compute_device_name
+from .config import add_x10_device, remove_device_override, remove_x10_device
 
-
-def compute_device_name(ha_device):
-    """Return the HA device name."""
-    return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
+X10_DEVICE = "x10_device"
+X10_DEVICE_SCHEMA = build_x10_schema()
+REMOVE_ALL_REFS = "remove_all_refs"
 
 
 async def async_add_devices(address, multiple):
@@ -39,18 +46,6 @@ def get_insteon_device_from_ha_device(ha_device):
         if len(identifier) > 1 and identifier[0] == DOMAIN and devices[identifier[1]]:
             return devices[identifier[1]]
     return None
-
-
-async def async_device_name(dev_registry, address):
-    """Get the Insteon device name from a device registry id."""
-    ha_device = dev_registry.async_get_device(
-        identifiers={(DOMAIN, str(address))}, connections=set()
-    )
-    if not ha_device:
-        if device := devices[address]:
-            return f"{device.description} ({device.model})"
-        return ""
-    return compute_device_name(ha_device)
 
 
 def notify_device_not_found(connection, msg, text):
@@ -140,4 +135,62 @@ async def websocket_cancel_add_device(
 ) -> None:
     """Cancel the Insteon all-linking process."""
     await devices.async_cancel_all_linking()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "insteon/device/remove",
+        vol.Required(DEVICE_ADDRESS): str,
+        vol.Required(REMOVE_ALL_REFS): bool,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_remove_device(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Remove an Insteon device."""
+
+    address = msg[DEVICE_ADDRESS]
+    remove_all_refs = msg[REMOVE_ALL_REFS]
+    if address.startswith("X10"):
+        _, housecode, unitcode = address.split(".")
+        unitcode = int(unitcode)
+        async_dispatcher_send(hass, SIGNAL_REMOVE_X10_DEVICE, housecode, unitcode)
+        remove_x10_device(hass, housecode, unitcode)
+    else:
+        address = Address(address)
+        remove_device_override(hass, address)
+        async_dispatcher_send(hass, SIGNAL_REMOVE_HA_DEVICE, address)
+        async_dispatcher_send(
+            hass, SIGNAL_REMOVE_INSTEON_DEVICE, address, remove_all_refs
+        )
+
+    connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "insteon/device/add_x10",
+        vol.Required(X10_DEVICE): X10_DEVICE_SCHEMA,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_add_x10_device(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the schema for the X10 devices configuration."""
+    x10_device = msg[X10_DEVICE]
+    try:
+        add_x10_device(hass, x10_device)
+    except ValueError:
+        connection.send_error(msg[ID], code="duplicate", message="Duplicate X10 device")
+        return
+
     connection.send_result(msg[ID])

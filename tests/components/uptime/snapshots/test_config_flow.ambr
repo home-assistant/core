@@ -10,14 +10,18 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'uptime',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'uptime',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

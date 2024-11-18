@@ -1,9 +1,10 @@
 """Custom DataUpdateCoordinator for the laundrify integration."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
-from laundrify_aio import LaundrifyAPI
+from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
 from homeassistant.core import HomeAssistant
@@ -11,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, REQUEST_TIMEOUT
-from .model import LaundrifyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +34,10 @@ class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice
     async def _async_update_data(self) -> dict[str, LaundrifyDevice]:
         """Fetch data from laundrify API."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(REQUEST_TIMEOUT):
-                return {m["_id"]: m for m in await self.laundrify_api.get_machines()}
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                return {m.id: m for m in await self.laundrify_api.get_machines()}
         except UnauthorizedException as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)

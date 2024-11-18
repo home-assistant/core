@@ -1,18 +1,12 @@
 {
   "config": {
-    "flow_title": "{profile}",
     "step": {
-      "profile": {
-        "title": "User Profile.",
-        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
-        "data": { "profile": "Profile Name" }
-      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+        "description": "The Withings integration needs to re-authenticate your account"
       }
     },
     "error": {
@@ -22,10 +16,308 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "already_configured": "Configuration updated for profile.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_bed": {
+        "name": "In bed"
+      }
+    },
+    "calendar": {
+      "workout": {
+        "name": "Workouts"
+      }
+    },
+    "sensor": {
+      "fat_mass": {
+        "name": "Fat mass"
+      },
+      "fat_free_mass": {
+        "name": "Fat free mass"
+      },
+      "muscle_mass": {
+        "name": "Muscle mass"
+      },
+      "bone_mass": {
+        "name": "Bone mass"
+      },
+      "height": {
+        "name": "Height"
+      },
+      "body_temperature": {
+        "name": "Body temperature"
+      },
+      "skin_temperature": {
+        "name": "Skin temperature"
+      },
+      "fat_ratio": {
+        "name": "Fat ratio"
+      },
+      "diastolic_blood_pressure": {
+        "name": "Diastolic blood pressure"
+      },
+      "systolic_blood_pressure": {
+        "name": "Systolic blood pressure"
+      },
+      "heart_pulse": {
+        "name": "Heart pulse"
+      },
+      "spo2": {
+        "name": "SpO2"
+      },
+      "hydration": {
+        "name": "Hydration"
+      },
+      "pulse_wave_velocity": {
+        "name": "Pulse wave velocity"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
+      },
+      "extracellular_water": {
+        "name": "Extracellular water"
+      },
+      "intracellular_water": {
+        "name": "Intracellular water"
+      },
+      "vascular_age": {
+        "name": "Vascular age"
+      },
+      "visceral_fat_index": {
+        "name": "Visceral fat index"
+      },
+      "electrodermal_activity_feet": {
+        "name": "Electrodermal activity feet"
+      },
+      "electrodermal_activity_left_foot": {
+        "name": "Electrodermal activity left foot"
+      },
+      "electrodermal_activity_right_foot": {
+        "name": "Electrodermal activity right foot"
+      },
+      "muscle_mass_for_segments_torso": {
+        "name": "Muscle mass in torso"
+      },
+      "muscle_mass_for_segments_left_arm": {
+        "name": "Muscle mass in left arm"
+      },
+      "muscle_mass_for_segments_right_arm": {
+        "name": "Muscle mass in right arm"
+      },
+      "muscle_mass_for_segments_left_leg": {
+        "name": "Muscle mass in left leg"
+      },
+      "muscle_mass_for_segments_right_leg": {
+        "name": "Muscle mass in right leg"
+      },
+      "fat_free_mass_for_segments_torso": {
+        "name": "Fat free mass in torso"
+      },
+      "fat_free_mass_for_segments_left_arm": {
+        "name": "Fat free mass in left arm"
+      },
+      "fat_free_mass_for_segments_right_arm": {
+        "name": "Fat free mass in right arm"
+      },
+      "fat_free_mass_for_segments_left_leg": {
+        "name": "Fat free mass in left leg"
+      },
+      "fat_free_mass_for_segments_right_leg": {
+        "name": "Fat free mass in right leg"
+      },
+      "fat_mass_for_segments_torso": {
+        "name": "Fat mass in torso"
+      },
+      "fat_mass_for_segments_left_arm": {
+        "name": "Fat mass in left arm"
+      },
+      "fat_mass_for_segments_right_arm": {
+        "name": "Fat mass in right arm"
+      },
+      "fat_mass_for_segments_left_leg": {
+        "name": "Fat mass in left leg"
+      },
+      "fat_mass_for_segments_right_leg": {
+        "name": "Fat mass in right leg"
+      },
+      "breathing_disturbances_intensity": {
+        "name": "Breathing disturbances intensity"
+      },
+      "deep_sleep": {
+        "name": "Deep sleep"
+      },
+      "time_to_sleep": {
+        "name": "Time to sleep"
+      },
+      "time_to_wakeup": {
+        "name": "Time to wakeup"
+      },
+      "average_heart_rate": {
+        "name": "Average heart rate"
+      },
+      "maximum_heart_rate": {
+        "name": "Maximum heart rate"
+      },
+      "minimum_heart_rate": {
+        "name": "Minimum heart rate"
+      },
+      "light_sleep": {
+        "name": "Light sleep"
+      },
+      "rem_sleep": {
+        "name": "REM sleep"
+      },
+      "average_respiratory_rate": {
+        "name": "Average respiratory rate"
+      },
+      "maximum_respiratory_rate": {
+        "name": "Maximum respiratory rate"
+      },
+      "minimum_respiratory_rate": {
+        "name": "Minimum respiratory rate"
+      },
+      "sleep_score": {
+        "name": "Sleep score"
+      },
+      "snoring": {
+        "name": "Snoring"
+      },
+      "snoring_episode_count": {
+        "name": "Snoring episode count"
+      },
+      "wakeup_count": {
+        "name": "Wakeup count"
+      },
+      "wakeup_time": {
+        "name": "Wakeup time"
+      },
+      "step_goal": {
+        "name": "Step goal"
+      },
+      "sleep_goal": {
+        "name": "Sleep goal"
+      },
+      "weight_goal": {
+        "name": "Weight goal"
+      },
+      "activity_steps_today": {
+        "name": "Steps today"
+      },
+      "activity_distance_today": {
+        "name": "Distance travelled today"
+      },
+      "activity_elevation_today": {
+        "name": "Elevation change today"
+      },
+      "activity_soft_duration_today": {
+        "name": "Soft activity today"
+      },
+      "activity_moderate_duration_today": {
+        "name": "Moderate activity today"
+      },
+      "activity_intense_duration_today": {
+        "name": "Intense activity today"
+      },
+      "activity_active_duration_today": {
+        "name": "Active time today"
+      },
+      "activity_active_calories_burnt_today": {
+        "name": "Active calories burnt today"
+      },
+      "activity_total_calories_burnt_today": {
+        "name": "Total calories burnt today"
+      },
+      "workout_type": {
+        "name": "Last workout type",
+        "state": {
+          "walk": "Walking",
+          "run": "Running",
+          "hiking": "Hiking",
+          "skating": "Skating",
+          "bmx": "BMX",
+          "bicycling": "Bicycling",
+          "swimming": "Swimming",
+          "surfing": "Surfing",
+          "kitesurfing": "Kitesurfing",
+          "windsurfing": "Windsurfing",
+          "bodyboard": "Bodyboard",
+          "tennis": "Tennis",
+          "table_tennis": "Table tennis",
+          "squash": "Squash",
+          "badminton": "Badminton",
+          "lift_weights": "Lift weights",
+          "calisthenics": "Calisthenics",
+          "elliptical": "Elliptical",
+          "pilates": "Pilates",
+          "basket_ball": "Basket ball",
+          "soccer": "Soccer",
+          "football": "Football",
+          "rugby": "Rugby",
+          "volley_ball": "Volley ball",
+          "waterpolo": "Waterpolo",
+          "horse_riding": "Horse riding",
+          "golf": "Golf",
+          "yoga": "Yoga",
+          "dancing": "Dancing",
+          "boxing": "Boxing",
+          "fencing": "Fencing",
+          "wrestling": "Wrestling",
+          "martial_arts": "Martial arts",
+          "skiing": "Skiing",
+          "snowboarding": "Snowboarding",
+          "other": "Other",
+          "no_activity": "No activity",
+          "rowing": "Rowing",
+          "zumba": "Zumba",
+          "baseball": "Baseball",
+          "handball": "Handball",
+          "hockey": "Hockey",
+          "ice_hockey": "Ice hockey",
+          "climbing": "Climbing",
+          "ice_skating": "Ice skating",
+          "multi_sport": "Multi sport",
+          "indoor_walk": "Indoor walking",
+          "indoor_running": "Indoor running",
+          "indoor_cycling": "Indoor cycling"
+        }
+      },
+      "workout_active_calories_burnt": {
+        "name": "Calories burnt last workout"
+      },
+      "workout_distance": {
+        "name": "Distance travelled last workout"
+      },
+      "workout_elevation": {
+        "name": "Elevation change last workout"
+      },
+      "workout_intensity": {
+        "name": "Last workout intensity"
+      },
+      "workout_pause_duration": {
+        "name": "Pause during last workout"
+      },
+      "workout_duration": {
+        "name": "Last workout duration"
+      },
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
     }
   }
 }

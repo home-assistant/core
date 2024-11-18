@@ -1,51 +1,45 @@
 """Button platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass
-class SensiboEntityDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Sensibo Button entities."""
 
     data_key: str
 
 
-@dataclass
-class SensiboButtonEntityDescription(
-    ButtonEntityDescription, SensiboEntityDescriptionMixin
-):
-    """Class describing Sensibo Button entities."""
-
-
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
-    name="Reset filter",
-    icon="mdi:air-filter",
+    translation_key="reset_filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo binary sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)

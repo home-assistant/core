@@ -1,7 +1,7 @@
 """Config flow for imap integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import ssl
 from typing import Any
@@ -9,35 +9,65 @@ from typing import Any
 from aioimaplib import AioImapException
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TemplateSelector,
+    TemplateSelectorConfig,
 )
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
+    CONF_CUSTOM_EVENT_DATA_TEMPLATE,
+    CONF_ENABLE_PUSH,
+    CONF_EVENT_MESSAGE_DATA,
     CONF_FOLDER,
+    CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
+    DEFAULT_MAX_MESSAGE_SIZE,
     DEFAULT_PORT,
     DOMAIN,
+    MAX_MESSAGE_SIZE_LIMIT,
+    MESSAGE_DATA_OPTIONS,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
 
+BOOLEAN_SELECTOR = BooleanSelector()
 CIPHER_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=list(SSLCipherList),
         mode=SelectSelectorMode.DROPDOWN,
         translation_key=CONF_SSL_CIPHER_LIST,
+    )
+)
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=MESSAGE_DATA_OPTIONS,
+        translation_key=CONF_EVENT_MESSAGE_DATA,
+        multiple=True,
     )
 )
 
@@ -50,23 +80,41 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        # The default for new entries is to not include text and headers
+        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 CONFIG_SCHEMA_ADVANCED = {
     vol.Optional(
         CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
-    ): CIPHER_SELECTOR
+    ): CIPHER_SELECTOR,
+    vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
 }
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        # The default for older entries is to include text and headers
+        vol.Optional(
+            CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
+        ): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 
+OPTIONS_SCHEMA_ADVANCED = {
+    vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
+    vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
+        cv.positive_int,
+        vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
+    ),
+    vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
+}
 
-async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, str]:
     """Validate user input."""
     errors = {}
 
@@ -86,7 +134,7 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         # See https://github.com/bamthomas/aioimaplib/issues/91
         # This handler is added to be able to supply a better error message
         errors["base"] = "ssl_error"
-    except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
+    except (TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":
@@ -94,40 +142,18 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
                 errors[CONF_CHARSET] = "invalid_charset"
             else:
                 errors[CONF_SEARCH] = "invalid_search"
+
     return errors
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for imap."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle the import from imap_email_content integration."""
-        data = CONFIG_SCHEMA(
-            {
-                CONF_SERVER: user_input[CONF_SERVER],
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_FOLDER: user_input[CONF_FOLDER],
-            }
-        )
-        self._async_abort_entries_match(
-            {
-                key: data[key]
-                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
-            }
-        )
-        title = user_input[CONF_NAME]
-        if await validate_input(data):
-            raise AbortFlow("cannot_connect")
-        return self.async_create_entry(title=title, data=data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         schema = CONFIG_SCHEMA
@@ -144,39 +170,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if not (errors := await validate_input(user_input)):
+        if not (errors := await validate_input(self.hass, user_input)):
             title = user_input[CONF_USERNAME]
 
             return self.async_create_entry(title=title, data=user_input)
 
-        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input)
+        schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**self._reauth_entry.data, **user_input}
-            if not (errors := await validate_input(user_input)):
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+            user_input = {**reauth_entry.data, **user_input}
+            if not (errors := await validate_input(self.hass, user_input)):
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -190,27 +212,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> ImapOptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return ImapOptionsFlow()
 
 
-class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class ImapOptionsFlow(OptionsFlow):
     """Option flow handler."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
-        entry_data: dict[str, Any] = dict(self._config_entry.data)
+        entry_data: dict[str, Any] = dict(self.config_entry.data)
         if user_input is not None:
             try:
                 self._async_abort_entries_match(
                     {
-                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
-                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_SERVER: self.config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
                         CONF_FOLDER: user_input[CONF_FOLDER],
                         CONF_SEARCH: user_input[CONF_SEARCH],
                     }
@@ -221,7 +243,7 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 errors = {"base": err.reason}
             else:
                 entry_data.update(user_input)
-                errors = await validate_input(entry_data)
+                errors = await validate_input(self.hass, entry_data)
                 if not errors:
                     self.hass.config_entries.async_update_entry(
                         self.config_entry, data=entry_data
@@ -233,6 +255,9 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                     )
                     return self.async_create_entry(data={})
 
-        schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
+        schema = OPTIONS_SCHEMA
+        if self.show_advanced_options:
+            schema = schema.extend(OPTIONS_SCHEMA_ADVANCED)
+        schema = self.add_suggested_values_to_schema(schema, entry_data)
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

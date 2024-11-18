@@ -1,22 +1,19 @@
 """Support for monitoring the Syncthing instance."""
+
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
-    FOLDER_SENSOR_ALERT_ICON,
-    FOLDER_SENSOR_DEFAULT_ICON,
-    FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
@@ -58,6 +55,7 @@ class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     _attr_should_poll = False
+    _attr_translation_key = "syncthing"
 
     STATE_ATTRIBUTES = {
         "errors": "errors",
@@ -95,19 +93,17 @@ class FolderSensor(SensorEntity):
         self._folder_label = folder_label
         self._state = None
         self._unsub_timer = None
-        self._version = version
 
         self._short_server_id = server_id.split("-")[0]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._short_server_id} {self._folder_id} {self._folder_label}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._short_server_id}-{self._folder_id}"
+        self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
+        self._attr_unique_id = f"{self._short_server_id}-{folder_id}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._server_id)},
+            manufacturer="Syncthing Team",
+            name=f"Syncthing ({syncthing.url})",
+            sw_version=version,
+        )
 
     @property
     def native_value(self):
@@ -120,29 +116,9 @@ class FolderSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        if self._state is None:
-            return FOLDER_SENSOR_DEFAULT_ICON
-        if self.state in FOLDER_SENSOR_ICONS:
-            return FOLDER_SENSOR_ICONS[self.state]
-        return FOLDER_SENSOR_ALERT_ICON
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._server_id)},
-            manufacturer="Syncthing Team",
-            name=f"Syncthing ({self._syncthing.url})",
-            sw_version=self._version,
-        )
 
     async def async_update_status(self):
         """Request folder status and update state."""

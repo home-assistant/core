@@ -1,4 +1,5 @@
 """Support for Modbus."""
+
 from __future__ import annotations
 
 import logging
@@ -50,21 +51,31 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
     CONF_FANS,
-    CONF_HUB,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -76,16 +87,14 @@ from .const import (  # noqa: F401
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
     CONF_MIN_VALUE,
     CONF_MSG_WAIT,
+    CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_RETRIES,
-    CONF_RETRY_ON_EMPTY,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -100,11 +109,19 @@ from .const import (  # noqa: F401
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_REGISTERS,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
@@ -120,10 +137,11 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    duplicate_entity_validator,
-    duplicate_modbus_validator,
-    number_validator,
-    scan_interval_validator,
+    duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
+    hvac_fixedsize_reglist_validator,
+    nan_validator,
+    register_int_list_validator,
     struct_validator,
 )
 
@@ -137,11 +155,11 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
+        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -158,11 +176,9 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
-                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
-                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,
@@ -170,17 +186,17 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.STRING,
                 DataType.CUSTOM,
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE, default=1): number_validator,
-        vol.Optional(CONF_OFFSET, default=0): number_validator,
-        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION): cv.positive_int,
+        vol.Optional(
+            CONF_SWAP,
+        ): vol.In(
             [
-                CONF_SWAP_NONE,
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
                 CONF_SWAP_WORD_BYTE,
@@ -215,8 +231,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
@@ -227,9 +245,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-            vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-            vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
+            vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
+            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
@@ -238,18 +257,67 @@ CLIMATE_SCHEMA = vol.All(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
-        }
+            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_FAN_MODE_VALUES: {
+                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                        },
+                    },
+                    duplicate_fan_mode_validator,
+                ),
+            ),
+            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_SWING_MODE_VALUES: {
+                            vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_HORIZ): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_VERT): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_BOTH): cv.positive_int,
+                        },
+                    },
+                    duplicate_swing_mode_validator,
+                )
+            ),
+        },
     ),
 )
 
@@ -293,10 +361,12 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
-            vol.Optional(CONF_MIN_VALUE): number_validator,
-            vol.Optional(CONF_MAX_VALUE): number_validator,
-            vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
+            vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Optional(CONF_MIN_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_MAX_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_NAN_VALUE): nan_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
         }
     ),
 )
@@ -312,7 +382,8 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+        vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
     }
 )
 
@@ -320,10 +391,7 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
-        vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -365,9 +433,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            scan_interval_validator,
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -394,7 +459,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Release modbus resources."""
-    _LOGGER.info("Modbus reloading")
+    if DOMAIN not in hass.data:
+        _LOGGER.error("Modbus cannot reload, because it was never loaded")
+        return
+    _LOGGER.debug("Modbus reloading")
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()

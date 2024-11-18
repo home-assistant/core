@@ -1,7 +1,7 @@
 """Represent the Netgear router and its devices."""
+
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
@@ -17,13 +17,8 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -274,137 +269,3 @@ class NetgearRouter:
     def ssl(self) -> bool:
         """SSL used by the API."""
         return self.api.ssl
-
-
-class NetgearBaseEntity(CoordinatorEntity):
-    """Base class for a device connected to a Netgear router."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
-    ) -> None:
-        """Initialize a Netgear device."""
-        super().__init__(coordinator)
-        self._router = router
-        self._device = device
-        self._mac = device["mac"]
-        self._name = self.get_device_name()
-        self._device_name = self._name
-        self._active = device["active"]
-
-    def get_device_name(self):
-        """Return the name of the given device or the MAC if we don't know."""
-        name = self._device["name"]
-        if not name or name == "--":
-            name = self._mac
-
-        return name
-
-    @abstractmethod
-    @callback
-    def async_update_device(self) -> None:
-        """Update the Netgear device."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_update_device()
-        super()._handle_coordinator_update()
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-
-class NetgearDeviceEntity(NetgearBaseEntity):
-    """Base class for a device connected to a Netgear router."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
-    ) -> None:
-        """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
-        self._unique_id = self._mac
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            default_name=self._device_name,
-            default_model=self._device["device_model"],
-            via_device=(DOMAIN, self._router.unique_id),
-        )
-
-
-class NetgearRouterCoordinatorEntity(CoordinatorEntity):
-    """Base class for a Netgear router entity."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter
-    ) -> None:
-        """Initialize a Netgear device."""
-        super().__init__(coordinator)
-        self._router = router
-        self._name = router.device_name
-        self._unique_id = router.serial_number
-
-    @abstractmethod
-    @callback
-    def async_update_device(self) -> None:
-        """Update the Netgear device."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_update_device()
-        super()._handle_coordinator_update()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._router.unique_id)},
-        )
-
-
-class NetgearRouterEntity(Entity):
-    """Base class for a Netgear router entity without coordinator."""
-
-    def __init__(self, router: NetgearRouter) -> None:
-        """Initialize a Netgear device."""
-        self._router = router
-        self._name = router.device_name
-        self._unique_id = router.serial_number
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._router.unique_id)},
-        )

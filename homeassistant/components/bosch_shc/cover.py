@@ -1,4 +1,5 @@
 """Platform for cover integration."""
+
 from typing import Any
 
 from boschshcpy import SHCSession, SHCShutterControl
@@ -24,24 +25,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC cover platform."""
 
-    entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for cover in session.device_helper.shutter_controls:
-        entities.append(
-            ShutterControlCover(
-                device=cover,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
+    async_add_entities(
+        ShutterControlCover(
+            device=cover,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
-
-    async_add_entities(entities)
+        for cover in session.device_helper.shutter_controls
+    )
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN

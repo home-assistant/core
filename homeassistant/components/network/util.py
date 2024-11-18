@@ -1,4 +1,5 @@
 """Network helper class for the network integration."""
+
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
@@ -84,7 +85,7 @@ def _reset_enabled_adapters(adapters: list[Adapter]) -> None:
 
 
 def _ifaddr_adapter_to_ha(
-    adapter: ifaddr.Adapter, next_hop_address: None | IPv4Address | IPv6Address
+    adapter: ifaddr.Adapter, next_hop_address: IPv4Address | IPv6Address | None
 ) -> Adapter:
     """Convert an ifaddr adapter to ha."""
     ip_v4s: list[IPv4ConfiguredAddress] = []
@@ -97,6 +98,7 @@ def _ifaddr_adapter_to_ha(
             ip_addr = ip_address(ip_config.ip[0])
             ip_v6s.append(_ip_v6_from_adapter(ip_config))
         else:
+            assert not isinstance(ip_config.ip, tuple)
             ip_addr = ip_address(ip_config.ip)
             ip_v4s.append(_ip_v4_from_adapter(ip_config))
 
@@ -117,6 +119,7 @@ def _ifaddr_adapter_to_ha(
 
 
 def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
+    assert isinstance(ip_config.ip, tuple)
     return {
         "address": ip_config.ip[0],
         "flowinfo": ip_config.ip[1],
@@ -126,6 +129,7 @@ def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
 
 
 def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
+    assert not isinstance(ip_config.ip, tuple)
     return {
         "address": ip_config.ip,
         "network_prefix": ip_config.network_prefix,
@@ -140,7 +144,7 @@ def async_get_source_ip(target_ip: str) -> str | None:
     try:
         test_sock.connect((target_ip, 1))
         return cast(str, test_sock.getsockname()[0])
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.debug(
             (
                 "The system could not auto detect the source ip for %s on your"

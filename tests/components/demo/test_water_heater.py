@@ -1,8 +1,12 @@
 """The tests for the demo water_heater component."""
+
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import water_heater
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -13,8 +17,18 @@ ENTITY_WATER_HEATER = "water_heater.demo_water_heater"
 ENTITY_WATER_HEATER_CELSIUS = "water_heater.demo_water_heater_celsius"
 
 
+@pytest.fixture
+async def water_heater_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.WATER_HEATER],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant, water_heater_only: None):
     """Set up demo component."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     assert await async_setup_component(
@@ -112,3 +126,19 @@ async def test_set_only_target_temp_with_convert(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 114, ENTITY_WATER_HEATER_CELSIUS)
     state = hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
     assert state.attributes.get("temperature") == 114
+
+
+async def test_turn_on_off(hass: HomeAssistant) -> None:
+    """Test turn on and off."""
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("temperature") == 119
+    assert state.attributes.get("away_mode") == "off"
+    assert state.attributes.get("operation_mode") == "eco"
+
+    await common.async_turn_off(hass, ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "off"
+
+    await common.async_turn_on(hass, ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "eco"

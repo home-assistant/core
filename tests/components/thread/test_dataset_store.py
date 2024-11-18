@@ -1,14 +1,26 @@
 """Test the thread dataset store."""
+
+import asyncio
 from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from python_otbr_api.tlv_parser import TLVError
+from zeroconf.asyncio import AsyncServiceInfo
 
-from homeassistant.components.thread import dataset_store
+from homeassistant.components.thread import dataset_store, discovery
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import DATASET_1, DATASET_2, DATASET_3
+from . import (
+    DATASET_1,
+    DATASET_2,
+    DATASET_3,
+    ROUTER_DISCOVERY_GOOGLE_1,
+    ROUTER_DISCOVERY_HASS,
+    TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    TEST_BORDER_AGENT_ID,
+)
 
 from tests.common import flush_store
 
@@ -26,7 +38,25 @@ DATASET_1_BAD_CHANNEL = (
 )
 
 DATASET_1_NO_CHANNEL = (
-    "0E08000000000001000035060004001FFFE0020811111111222222220708FDAD70BF"
+    "0E08000000000001000035060004001FFFE0020811111111222222250708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
+)
+
+DATASET_1_NO_EXTPANID = (
+    "0E080000000000010000000300000F35060004001FFFE00708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
+)
+
+DATASET_1_NO_ACTIVETIMESTAMP = (
+    "000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
+)
+
+DATASET_1_LARGER_TIMESTAMP = (
+    "0E080000000000020000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
     "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
@@ -89,6 +119,7 @@ async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
 
     store = await dataset_store.async_get_store(hass)
     dataset_id = list(store.datasets.values())[0].id
+    store.preferred_dataset = dataset_id
 
     with pytest.raises(HomeAssistantError, match="attempt to remove preferred dataset"):
         store.async_delete(dataset_id)
@@ -112,6 +143,10 @@ async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+    store.preferred_dataset = dataset_id
+
     assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
 
 
@@ -121,7 +156,6 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
         {"source": "Google", "tlv": DATASET_1},
         {"source": "Multipan", "tlv": DATASET_2},
         {"source": "🎅", "tlv": DATASET_3},
-        {"source": "test1", "tlv": DATASET_1_BAD_CHANNEL},
         {"source": "test2", "tlv": DATASET_1_NO_CHANNEL},
     ]
 
@@ -136,10 +170,8 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
             dataset_2 = dataset
         if dataset.source == "🎅":
             dataset_3 = dataset
-        if dataset.source == "test1":
-            dataset_4 = dataset
         if dataset.source == "test2":
-            dataset_5 = dataset
+            dataset_4 = dataset
 
     dataset = store.async_get(dataset_1.id)
     assert dataset == dataset_1
@@ -151,14 +183,14 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
     dataset = store.async_get(dataset_2.id)
     assert dataset == dataset_2
     assert dataset.channel == 15
-    assert dataset.extended_pan_id == "1111111122222222"
+    assert dataset.extended_pan_id == "1111111122222233"
     assert dataset.network_name == "HomeAssistant!"
     assert dataset.pan_id == "1234"
 
     dataset = store.async_get(dataset_3.id)
     assert dataset == dataset_3
     assert dataset.channel == 15
-    assert dataset.extended_pan_id == "1111111122222222"
+    assert dataset.extended_pan_id == "1111111122222244"
     assert dataset.network_name == "~🐣🐥🐤~"
     assert dataset.pan_id == "1234"
 
@@ -166,9 +198,61 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
     assert dataset == dataset_4
     assert dataset.channel is None
 
-    dataset = store.async_get(dataset_5.id)
-    assert dataset == dataset_5
-    assert dataset.channel is None
+
+@pytest.mark.parametrize(
+    ("dataset", "error"),
+    [
+        (DATASET_1_BAD_CHANNEL, TLVError),
+        (DATASET_1_NO_EXTPANID, HomeAssistantError),
+        (DATASET_1_NO_ACTIVETIMESTAMP, HomeAssistantError),
+    ],
+)
+async def test_add_bad_dataset(hass: HomeAssistant, dataset, error) -> None:
+    """Test adding a bad dataset."""
+    with pytest.raises(error):
+        await dataset_store.async_add_dataset(hass, "test", dataset)
+
+
+async def test_update_dataset_newer(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test updating a dataset."""
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
+
+    assert (
+        "Updating dataset with same extended PAN ID and newer active timestamp"
+        in caplog.text
+    )
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        not in caplog.text
+    )
+
+
+async def test_update_dataset_older(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test updating a dataset."""
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
+
+    assert (
+        "Updating dataset with same extended PAN ID and newer active timestamp"
+        not in caplog.text
+    )
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        in caplog.text
+    )
 
 
 async def test_load_datasets(hass: HomeAssistant) -> None:
@@ -191,8 +275,10 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
 
     store1 = await dataset_store.async_get_store(hass)
     for dataset in datasets:
-        store1.async_add(dataset["source"], dataset["tlv"])
+        store1.async_add(dataset["source"], dataset["tlv"], None, None)
     assert len(store1.datasets) == 3
+    dataset_id = list(store1.datasets.values())[0].id
+    store1.preferred_dataset = dataset_id
 
     for dataset in store1.datasets.values():
         if dataset.source == "Google":
@@ -240,20 +326,26 @@ async def test_loading_datasets_from_storage(
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id1",
+                    "preferred_border_agent_id": "230C6A1AC57F6F4BE262ACF32E5EF52C",
+                    "preferred_extended_address": "AEEB2F594B570BBF",
                     "source": "source_1",
-                    "tlv": "DATASET_1",
+                    "tlv": DATASET_1,
                 },
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id2",
+                    "preferred_border_agent_id": None,
+                    "preferred_extended_address": "AEEB2F594B570BBF",
                     "source": "source_2",
-                    "tlv": "DATASET_2",
+                    "tlv": DATASET_2,
                 },
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id3",
+                    "preferred_border_agent_id": None,
+                    "preferred_extended_address": None,
                     "source": "source_3",
-                    "tlv": "DATASET_3",
+                    "tlv": DATASET_3,
                 },
             ],
             "preferred_dataset": "id1",
@@ -263,3 +355,624 @@ async def test_loading_datasets_from_storage(
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 3
     assert store.preferred_dataset == "id1"
+
+
+async def test_migrate_drop_bad_datasets(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store when the store has bad datasets."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": dataset_store.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id2",
+                    "source": "source_2",
+                    "tlv": DATASET_1_NO_EXTPANID,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id3",
+                    "source": "source_3",
+                    "tlv": DATASET_1_NO_ACTIVETIMESTAMP,
+                },
+            ],
+            "preferred_dataset": "id1",
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1
+    assert store.preferred_dataset == "id1"
+
+    assert f"Dropped invalid Thread dataset '{DATASET_1_NO_EXTPANID}'" in caplog.text
+    assert (
+        f"Dropped invalid Thread dataset '{DATASET_1_NO_ACTIVETIMESTAMP}'"
+        in caplog.text
+    )
+
+
+async def test_migrate_drop_bad_datasets_preferred(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store when the store has bad datasets."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": dataset_store.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id2",
+                    "source": "source_2",
+                    "tlv": DATASET_1_NO_EXTPANID,
+                },
+            ],
+            "preferred_dataset": "id2",
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert store.preferred_dataset is None
+
+
+async def test_migrate_drop_duplicate_datasets(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store when the store has duplicated datasets."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": dataset_store.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id2",
+                    "source": "source_2",
+                    "tlv": DATASET_1_LARGER_TIMESTAMP,
+                },
+            ],
+            "preferred_dataset": None,
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
+    assert store.preferred_dataset is None
+
+    assert (
+        f"Dropped duplicated Thread dataset '{DATASET_1}' "
+        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
+    ) in caplog.text
+
+
+async def test_migrate_drop_duplicate_datasets_2(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store when the store has duplicated datasets."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": dataset_store.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id2",
+                    "source": "source_2",
+                    "tlv": DATASET_1_LARGER_TIMESTAMP,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+            ],
+            "preferred_dataset": None,
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
+    assert store.preferred_dataset is None
+
+    assert (
+        f"Dropped duplicated Thread dataset '{DATASET_1}' "
+        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
+    ) in caplog.text
+
+
+async def test_migrate_drop_duplicate_datasets_preferred(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store when the store has duplicated datasets."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": dataset_store.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id2",
+                    "source": "source_2",
+                    "tlv": DATASET_1_LARGER_TIMESTAMP,
+                },
+            ],
+            "preferred_dataset": "id1",
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1
+    assert store.preferred_dataset == "id1"
+
+    assert (
+        f"Dropped duplicated Thread dataset '{DATASET_1_LARGER_TIMESTAMP}' "
+        f"(duplicate of preferred dataset '{DATASET_1}')"
+    ) in caplog.text
+
+
+async def test_migrate_set_default_border_agent_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migrating the dataset store adds default border agent."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+            ],
+            "preferred_dataset": "id1",
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert store.datasets[store._preferred_dataset].preferred_border_agent_id is None
+    assert store.datasets[store._preferred_dataset].preferred_extended_address is None
+
+
+async def test_set_preferred_border_agent_id(hass: HomeAssistant) -> None:
+    """Test set the preferred border agent ID of a dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_3, preferred_border_agent_id="blah"
+        )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 0
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_3, preferred_border_agent_id="bleh"
+        )
+    assert len(store.datasets) == 0
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_2, preferred_border_agent_id="blah"
+        )
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+    with pytest.raises(HomeAssistantError):
+        await store.async_set_preferred_border_agent(dataset_id, "blah", None)
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert len(store.datasets) == 2
+    assert list(store.datasets.values())[1].preferred_border_agent_id is None
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_border_agent_id="blah"
+        )
+    assert list(store.datasets.values())[1].preferred_border_agent_id is None
+
+
+async def test_set_preferred_border_agent_id_and_extended_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test set the preferred border agent ID and extended address of a dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_3,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
+    )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
+
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_3,
+        preferred_border_agent_id="bleh",
+        preferred_extended_address="bleh",
+    )
+    assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+    assert len(store.datasets) == 2
+    assert list(store.datasets.values())[1].preferred_border_agent_id is None
+    assert list(store.datasets.values())[1].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_2,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
+    )
+    assert list(store.datasets.values())[1].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[1].preferred_extended_address == "bleh"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert len(store.datasets) == 3
+    assert list(store.datasets.values())[2].preferred_border_agent_id is None
+    assert list(store.datasets.values())[2].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
+    )
+    assert list(store.datasets.values())[2].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[2].preferred_extended_address == "bleh"
+
+
+async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
+    """Test set the preferred extended address of a dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_3, preferred_extended_address="blah"
+    )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_3, preferred_extended_address="bleh"
+    )
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+    assert len(store.datasets) == 2
+    assert list(store.datasets.values())[1].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_2, preferred_extended_address="blah"
+    )
+    assert list(store.datasets.values())[1].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert len(store.datasets) == 3
+    assert list(store.datasets.values())[2].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_extended_address="blah"
+    )
+    assert list(store.datasets.values())[2].preferred_extended_address == "blah"
+
+
+async def test_automatically_set_preferred_dataset(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test automatically setting the first dataset as the preferred dataset."""
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        # Wait for discovery to start
+        await add_service_listener_called.wait()
+        mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
+            "_meshcop._udp.local.", ANY
+        )
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        # Wait for discovery of other routers to time out and discovery to stop
+        await remove_service_listener_called.wait()
+
+    store = await dataset_store.async_get_store(hass)
+    assert (
+        list(store.datasets.values())[0].preferred_border_agent_id
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    )
+    assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_1
+
+
+async def test_automatically_set_preferred_dataset_own_and_other_router(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test automatically setting the first dataset as the preferred dataset.
+
+    In this test case both our own and another router are found.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        # Wait for discovery to start
+        await add_service_listener_called.wait()
+        mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
+            "_meshcop._udp.local.", ANY
+        )
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        # Discover another router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_GOOGLE_1
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_GOOGLE_1["type_"], ROUTER_DISCOVERY_GOOGLE_1["name"]
+        )
+
+        # Wait for discovery to stop
+        await remove_service_listener_called.wait()
+
+    store = await dataset_store.async_get_store(hass)
+    assert (
+        list(store.datasets.values())[0].preferred_border_agent_id
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    )
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
+async def test_automatically_set_preferred_dataset_other_router(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test automatically setting the first dataset as the preferred dataset.
+
+    In this test case another router is found.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        # Wait for discovery to start
+        await add_service_listener_called.wait()
+        mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
+            "_meshcop._udp.local.", ANY
+        )
+
+        # Discover another router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_GOOGLE_1
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_GOOGLE_1["type_"], ROUTER_DISCOVERY_GOOGLE_1["name"]
+        )
+
+        # Wait for discovery to stop
+        await remove_service_listener_called.wait()
+
+    store = await dataset_store.async_get_store(hass)
+    assert (
+        list(store.datasets.values())[0].preferred_border_agent_id
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    )
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
+async def test_automatically_set_preferred_dataset_no_router(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test automatically setting the first dataset as the preferred dataset.
+
+    In this test case no routers are found.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        # Wait for discovery to start
+        await add_service_listener_called.wait()
+        mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
+            "_meshcop._udp.local.", ANY
+        )
+
+        # Wait for discovery of other routers to time out and discovery to stop
+        await remove_service_listener_called.wait()
+
+    store = await dataset_store.async_get_store(hass)
+    assert (
+        list(store.datasets.values())[0].preferred_border_agent_id
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    )
+    assert await dataset_store.async_get_preferred_dataset(hass) is None

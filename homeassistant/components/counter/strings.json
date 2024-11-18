@@ -25,5 +25,29 @@
         }
       }
     }
+  },
+  "services": {
+    "decrement": {
+      "name": "Decrement",
+      "description": "Decrements a counter."
+    },
+    "increment": {
+      "name": "Increment",
+      "description": "Increments a counter."
+    },
+    "reset": {
+      "name": "Reset",
+      "description": "Resets a counter."
+    },
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the counter value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new counter value the entity should be set to."
+        }
+      }
+    }
   }
 }

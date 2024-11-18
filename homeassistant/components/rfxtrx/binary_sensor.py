@@ -1,4 +1,5 @@
 """Support for RFXtrx binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,7 @@ from homeassistant.helpers import event as evt
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
+from . import DeviceTuple, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -26,6 +27,7 @@ from .const import (
     CONF_OFF_DELAY,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +132,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """
 
     _attr_force_update = True
+    _attr_name = None
 
     def __init__(
         self,

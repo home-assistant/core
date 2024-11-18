@@ -1,7 +1,9 @@
 """Tests for AVM Fritz!Box switch component."""
+
 from datetime import timedelta
 from unittest.mock import Mock
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -10,7 +12,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorStateClass,
 )
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -27,17 +30,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceSwitchMock, setup_config_entry
+from . import FritzDeviceSwitchMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, fritz: Mock
+) -> None:
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
@@ -60,6 +67,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Temperature",
             UnitOfTemperature.CELSIUS,
             SensorStateClass.MEASUREMENT,
+            EntityCategory.DIAGNOSTIC,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power",
@@ -67,6 +75,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Power",
             UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_energy",
@@ -74,6 +83,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Energy",
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_voltage",
@@ -81,6 +91,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Voltage",
             UnitOfElectricPotential.VOLT,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current",
@@ -88,6 +99,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Current",
             UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
     )
 
@@ -98,6 +110,10 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         assert state.attributes[ATTR_FRIENDLY_NAME] == sensor[2]
         assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == sensor[3]
         assert state.attributes[ATTR_STATE_CLASS] == sensor[4]
+        assert state.attributes[ATTR_STATE_CLASS] == sensor[4]
+        entry = entity_registry.async_get(sensor[0])
+        assert entry
+        assert entry.entity_category is sensor[5]
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
@@ -107,8 +123,8 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_on.call_count == 1
 
@@ -116,14 +132,42 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device off."""
     device = FritzDeviceSwitchMock()
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
+
     assert device.set_switch_state_off.call_count == 1
+
+
+async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test toggling while device is locked."""
+    device = FritzDeviceSwitchMock()
+    device.lock = True
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't toggle switch while manual switching is disabled for the device",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't toggle switch while manual switching is disabled for the device",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
@@ -137,7 +181,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 2
     assert fritz().login.call_count == 1
@@ -155,7 +199,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 4
     assert fritz().login.call_count == 4
@@ -174,3 +218,26 @@ async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock) -> No
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test adding new discovered devices during runtime."""
+    device = FritzDeviceSwitchMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    new_device = FritzDeviceSwitchMock()
+    new_device.ain = "7890 1234"
+    new_device.name = "new_switch"
+    set_devices(fritz, devices=[device, new_device])
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{SWITCH_DOMAIN}.new_switch")
+    assert state

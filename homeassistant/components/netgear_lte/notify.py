@@ -1,18 +1,18 @@
 """Support for Netgear LTE notifications."""
+
 from __future__ import annotations
 
-import logging
+from typing import Any
 
-import attr
 import eternalegypt
+from eternalegypt.eternalegypt import Modem
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_NOTIFY, CONF_RECIPIENT, DATA_KEY
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_NOTIFY, LOGGER
 
 
 async def async_get_service(
@@ -24,27 +24,31 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    return NetgearNotifyService(hass, discovery_info)
+    return NetgearNotifyService(config, discovery_info)
 
 
-@attr.s
 class NetgearNotifyService(BaseNotificationService):
     """Implementation of a notification service."""
 
-    hass = attr.ib()
-    config = attr.ib()
+    def __init__(
+        self,
+        config: ConfigType,
+        discovery_info: dict[str, Any],
+    ) -> None:
+        """Initialize the service."""
+        self.config = config
+        self.modem: Modem = discovery_info["modem"]
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
 
-        modem_data = self.hass.data[DATA_KEY].get_modem_data(self.config)
-        if not modem_data:
-            _LOGGER.error("Modem not ready")
+        if not self.modem.token:
+            LOGGER.error("Modem not ready")
             return
-
-        targets = kwargs.get(ATTR_TARGET, self.config[CONF_NOTIFY][CONF_RECIPIENT])
+        if not (targets := kwargs.get(ATTR_TARGET)):
+            targets = self.config[CONF_NOTIFY][CONF_RECIPIENT]
         if not targets:
-            _LOGGER.warning("No recipients")
+            LOGGER.warning("No recipients")
             return
 
         if not message:
@@ -52,6 +56,6 @@ class NetgearNotifyService(BaseNotificationService):
 
         for target in targets:
             try:
-                await modem_data.modem.sms(target, message)
+                await self.modem.sms(target, message)
             except eternalegypt.Error:
-                _LOGGER.error("Unable to send to %s", target)
+                LOGGER.error("Unable to send to %s", target)

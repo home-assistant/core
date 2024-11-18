@@ -1,4 +1,5 @@
 """Sensors for National Weather Service (NWS)."""
+
 import pytest
 
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN
@@ -35,6 +36,7 @@ from tests.common import MockConfigEntry
 )
 async def test_imperial_metric(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     units,
     result_observation,
     result_forecast,
@@ -42,10 +44,8 @@ async def test_imperial_metric(
     no_weather,
 ) -> None:
     """Test with imperial and metric units."""
-    registry = er.async_get(hass)
-
     for description in SENSOR_TYPES:
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             SENSOR_DOMAIN,
             DOMAIN,
             f"35_-75_{description.key}",
@@ -70,15 +70,20 @@ async def test_imperial_metric(
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
 
-async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_weather) -> None:
+@pytest.mark.parametrize("values", [NONE_OBSERVATION, None])
+async def test_none_values(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_simple_nws,
+    no_weather,
+    values,
+) -> None:
     """Test with no values."""
     instance = mock_simple_nws.return_value
-    instance.observation = NONE_OBSERVATION
-
-    registry = er.async_get(hass)
+    instance.observation = values
 
     for description in SENSOR_TYPES:
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             SENSOR_DOMAIN,
             DOMAIN,
             f"35_-75_{description.key}",

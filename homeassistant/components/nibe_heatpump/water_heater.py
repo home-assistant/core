@@ -1,5 +1,8 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
+
+from datetime import date
 
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
@@ -17,8 +20,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_TEMPORARY_LUX_INACTIVE, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
+from .const import (
+    DOMAIN,
+    LOGGER,
+    VALUES_TEMPORARY_LUX_INACTIVE,
+    VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE,
+)
+from .coordinator import CoilCoordinator
 
 
 async def async_setup_entry(
@@ -28,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     def water_heaters():
         for key, group in WATER_HEATER_COILGROUPS.get(coordinator.series, ()).items():
@@ -40,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(water_heaters())
 
 
-class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
+class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
     """Sensor entity."""
 
     _attr_entity_category = None
@@ -51,7 +59,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         key: str,
         desc: WaterHeaterCoilGroup,
     ) -> None:
@@ -127,7 +135,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
                 return None
             return self.coordinator.get_coil_float(coil)
 
-        def _get_value(coil: Coil | None) -> int | str | float | None:
+        def _get_value(coil: Coil | None) -> int | str | float | date | None:
             if coil is None:
                 return None
             return self.coordinator.get_coil_value(coil)

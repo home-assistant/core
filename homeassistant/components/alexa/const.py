@@ -1,4 +1,5 @@
 """Constants for the Alexa integration."""
+
 from collections import OrderedDict
 
 from homeassistant.components import climate
@@ -69,7 +70,7 @@ API_TEMP_UNITS = {
 # Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
 # reverse mapping of this dict and we want to map the first occurrence of OFF
 # back to HA state.
-API_THERMOSTAT_MODES = OrderedDict(
+API_THERMOSTAT_MODES: OrderedDict[str, str] = OrderedDict(
     [
         (climate.HVACMode.HEAT, "HEAT"),
         (climate.HVACMode.COOL, "COOL"),
@@ -87,8 +88,11 @@ API_THERMOSTAT_MODES_CUSTOM = {
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
 # AlexaModeController does not like a single mode for the fan preset or humidifier mode,
-# we add PRESET_MODE_NA if a fan / humidifier has only one preset_mode
+# we add PRESET_MODE_NA if a fan / humidifier / remote has only one preset_mode
 PRESET_MODE_NA = "-"
+
+STORAGE_ACCESS_TOKEN = "access_token"
+STORAGE_REFRESH_TOKEN = "refresh_token"
 
 
 class Cause:

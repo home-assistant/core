@@ -1,27 +1,34 @@
 """The tests for the Alexa component."""
 
+from asyncio import AbstractEventLoop
 import datetime
 from http import HTTPStatus
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
 REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
 
-# pylint: disable=invalid-name
 calls = []
 
 NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(event_loop, hass, hass_client):
+def alexa_client(
+    event_loop: AbstractEventLoop,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Initialize a Home Assistant server for testing this module."""
     loop = event_loop
 

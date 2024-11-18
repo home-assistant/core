@@ -1,4 +1,5 @@
 """Xbox Media Player Support."""
+
 from __future__ import annotations
 
 import re
@@ -22,13 +23,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConsoleData, XboxUpdateCoordinator
 from .browse_media import build_item_response
 from .const import DOMAIN
+from .coordinator import ConsoleData, XboxUpdateCoordinator
 
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON

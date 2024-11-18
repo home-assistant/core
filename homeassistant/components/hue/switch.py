@@ -1,9 +1,11 @@
 """Support for switch platform for Hue resources (V2 only)."""
+
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from typing import Any
 
 from aiohue.v2 import HueBridgeV2
+from aiohue.v2.controllers.config import BehaviorInstance, BehaviorInstanceController
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     LightLevel,
@@ -12,7 +14,11 @@ from aiohue.v2.controllers.sensors import (
     MotionController,
 )
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -21,10 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
-
-ControllerType: TypeAlias = LightLevelController | MotionController
-
-SensingService: TypeAlias = LightLevel | Motion
 
 
 async def async_setup_entry(
@@ -41,13 +43,22 @@ async def async_setup_entry(
         raise NotImplementedError("Switch support is only available for V2 bridges")
 
     @callback
-    def register_items(controller: ControllerType):
+    def register_items(
+        controller: BehaviorInstanceController
+        | LightLevelController
+        | MotionController,
+        switch_class: type[
+            HueBehaviorInstanceEnabledEntity
+            | HueLightSensorEnabledEntity
+            | HueMotionSensorEnabledEntity
+        ],
+    ):
         @callback
-        def async_add_entity(event_type: EventType, resource: SensingService) -> None:
+        def async_add_entity(
+            event_type: EventType, resource: BehaviorInstance | LightLevel | Motion
+        ) -> None:
             """Add entity from Hue resource."""
-            async_add_entities(
-                [HueSensingServiceEnabledEntity(bridge, controller, resource)]
-            )
+            async_add_entities([switch_class(bridge, controller, resource)])
 
         # add all current items in controller
         for item in controller:
@@ -61,26 +72,23 @@ async def async_setup_entry(
         )
 
     # setup for each switch-type hue resource
-    register_items(api.sensors.motion)
-    register_items(api.sensors.light_level)
+    register_items(api.sensors.motion, HueMotionSensorEnabledEntity)
+    register_items(api.sensors.light_level, HueLightSensorEnabledEntity)
+    register_items(api.config.behavior_instance, HueBehaviorInstanceEnabledEntity)
 
 
-class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
-    """Representation of a Switch entity from Hue SensingService."""
+class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
+    """Representation of a Switch entity from a Hue resource that can be toggled enabled."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_device_class = SwitchDeviceClass.SWITCH
+    controller: BehaviorInstanceController | LightLevelController | MotionController
+    resource: BehaviorInstance | LightLevel | Motion
 
-    def __init__(
-        self,
-        bridge: HueBridge,
-        controller: LightLevelController | MotionController,
-        resource: SensingService,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(bridge, controller, resource)
-        self.resource = resource
-        self.controller = controller
+    entity_description = SwitchEntityDescription(
+        key="sensing_service_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+    )
 
     @property
     def is_on(self) -> bool:
@@ -98,3 +106,45 @@ class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
         await self.bridge.async_request_call(
             self.controller.set_enabled, self.resource.id, enabled=False
         )
+
+
+class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
+    """Representation of a Switch entity to enable/disable a Hue Behavior Instance."""
+
+    resource: BehaviorInstance
+
+    entity_description = SwitchEntityDescription(
+        key="behavior_instance",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=False,
+    )
+
+    @property
+    def name(self) -> str:
+        """Return name for this entity."""
+        return f"Automation: {self.resource.metadata.name}"
+
+
+class HueMotionSensorEnabledEntity(HueResourceEnabledEntity):
+    """Representation of a Switch entity to enable/disable a Hue motion sensor."""
+
+    entity_description = SwitchEntityDescription(
+        key="motion_sensor_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        translation_key="motion_sensor_enabled",
+    )
+
+
+class HueLightSensorEnabledEntity(HueResourceEnabledEntity):
+    """Representation of a Switch entity to enable/disable a Hue light sensor."""
+
+    entity_description = SwitchEntityDescription(
+        key="light_sensor_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        translation_key="light_sensor_enabled",
+    )

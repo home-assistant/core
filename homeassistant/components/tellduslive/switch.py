@@ -1,4 +1,5 @@
 """Support for Tellstick switches using Tellstick Net."""
+
 from typing import Any
 
 from homeassistant.components import switch
@@ -8,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import tellduslive
-from .entry import TelldusLiveEntity
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 
 async def async_setup_entry(
@@ -21,18 +22,20 @@ async def async_setup_entry(
 
     async def async_discover_switch(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSwitch(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(switch.DOMAIN, tellduslive.DOMAIN),
+        TELLDUS_DISCOVERY_NEW.format(switch.DOMAIN, DOMAIN),
         async_discover_switch,
     )
 
 
 class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     """Representation of a Tellstick switch."""
+
+    _attr_name = None
 
     @property
     def is_on(self):
@@ -42,9 +45,9 @@ class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.device.turn_on()
-        self._update_callback()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.device.turn_off()
-        self._update_callback()
+        self.schedule_update_ha_state()

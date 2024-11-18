@@ -1,0 +1,7 @@
+{
+  "services": {
+    "send_text_command": {
+      "service": "mdi:comment-text-outline"
+    }
+  }
+}

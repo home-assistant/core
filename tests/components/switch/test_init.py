@@ -1,4 +1,5 @@
 """The tests for the Switch component."""
+
 import pytest
 
 from homeassistant import core
@@ -8,21 +9,27 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
+from .common import MockSwitch
 
-from tests.common import MockUser
+from tests.common import (
+    MockUser,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
 
 
 @pytest.fixture(autouse=True)
-def entities(hass):
+def entities(
+    hass: HomeAssistant, mock_switch_entities: list[MockSwitch]
+) -> list[MockSwitch]:
     """Initialize the test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    return platform.ENTITIES
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    return mock_switch_entities
 
 
-async def test_methods(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_methods(hass: HomeAssistant, entities: list[MockSwitch]) -> None:
     """Test is_on, turn_on, turn_off methods."""
     switch_1, switch_2, switch_3 = entities
     assert await async_setup_component(
@@ -54,11 +61,11 @@ async def test_methods(
     assert switch.is_on(hass, switch_3.entity_id)
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_switch_context(
     hass: HomeAssistant,
     entities,
     hass_admin_user: MockUser,
-    enable_custom_integrations: None,
 ) -> None:
     """Test that switch context works."""
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
@@ -80,3 +87,19 @@ async def test_switch_context(
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(switch)
+
+
+@pytest.mark.parametrize(("enum"), list(switch.SwitchDeviceClass))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: switch.SwitchDeviceClass,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, switch, enum, "DEVICE_CLASS_", "2025.1"
+    )

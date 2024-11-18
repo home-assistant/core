@@ -5,15 +5,13 @@ from typing import Any
 from tesla_powerwall import GridStatus, IslandMode, PowerwallError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import PowerWallEntity
-from .models import PowerwallRuntimeData
+from .models import PowerwallConfigEntry, PowerwallRuntimeData
 
 OFF_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_ISLAND,
@@ -23,19 +21,17 @@ OFF_GRID_STATUSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PowerwallConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Powerwall switch platform from Powerwall resources."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PowerwallOffGridEnabledEntity(powerwall_data)])
+    async_add_entities([PowerwallOffGridEnabledEntity(entry.runtime_data)])
 
 
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
-    _attr_name = "Off-Grid operation"
-    _attr_has_entity_name = True
+    _attr_translation_key = "off_grid_operation"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
 
@@ -60,9 +56,7 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     async def _async_set_island_mode(self, island_mode: IslandMode) -> None:
         """Toggles off-grid mode using the island_mode argument."""
         try:
-            await self.hass.async_add_executor_job(
-                self.power_wall.set_island_mode, island_mode
-            )
+            await self.power_wall.set_island_mode(island_mode)
         except PowerwallError as ex:
             raise HomeAssistantError(
                 f"Setting off-grid operation to {island_mode} failed: {ex}"

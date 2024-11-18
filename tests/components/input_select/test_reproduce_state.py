@@ -1,7 +1,9 @@
 """Test reproduce state for Input select."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
 
@@ -60,7 +62,8 @@ async def test_reproducing_states(
     assert hass.states.get(ENTITY).state == VALID_OPTION3
 
     # Test setting state to invalid state
-    await async_reproduce_state(hass, [State(ENTITY, INVALID_OPTION)])
+    with pytest.raises(HomeAssistantError):
+        await async_reproduce_state(hass, [State(ENTITY, INVALID_OPTION)])
 
     # The entity state should be unchanged
     assert hass.states.get(ENTITY).state == VALID_OPTION3

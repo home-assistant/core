@@ -1,4 +1,5 @@
 """Support for buttons."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries
@@ -6,7 +7,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,19 +35,26 @@ async def async_setup_entry(
 class SyncButton(ButtonEntity):
     """Representation of a synchronization button."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "sync_devices"
+
     def __init__(self, project_id: str, google_config: GoogleConfig) -> None:
         """Initialize button."""
         super().__init__()
         self._google_config = google_config
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_unique_id = f"{project_id}_sync"
-        self._attr_name = "Synchronize Devices"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, project_id)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, project_id)},
+            name="Google Assistant",
+        )
 
     async def async_press(self) -> None:
         """Press the button."""
         assert self._context
-        agent_user_id = self._google_config.get_agent_user_id(self._context)
+        agent_user_id = self._google_config.get_agent_user_id_from_context(
+            self._context
+        )
         result = await self._google_config.async_sync_entities(agent_user_id)
         if result != 200:
             raise HomeAssistantError(

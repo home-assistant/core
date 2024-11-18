@@ -30,5 +30,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "services": {
+    "request_image": {
+      "name": "Request camera image",
+      "description": "Requests a new image from a Prosegur camera."
+    }
   }
 }

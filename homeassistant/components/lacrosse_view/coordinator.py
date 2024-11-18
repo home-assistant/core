@@ -1,7 +1,9 @@
 """DataUpdateCoordinator for LaCrosse View."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from time import time
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
@@ -11,7 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import LOGGER, SCAN_INTERVAL
+from .const import SCAN_INTERVAL
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
@@ -39,7 +43,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         self.id = entry.data["id"]
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             name="LaCrosse View",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -49,6 +53,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         now = int(time())
 
         if self.last_update < now - 59 * 60:  # Get new token once in a hour
+            _LOGGER.debug("Refreshing token")
             self.last_update = now
             try:
                 await self.api.login(self.username, self.password)
@@ -65,6 +70,8 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             )
         except HTTPError as error:
             raise ConfigEntryNotReady from error
+
+        _LOGGER.debug("Got data: %s", sensors)
 
         # Verify that we have permission to read the sensors
         for sensor in sensors:

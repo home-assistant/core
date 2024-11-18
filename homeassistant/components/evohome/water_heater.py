@@ -1,7 +1,19 @@
-"""Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+"""Support for WaterHeater entities of the Evohome integration."""
+
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any
+
+import evohomeasync2 as evo
+from evohomeasync2.schema.const import (
+    SZ_ACTIVE_FAULTS,
+    SZ_DHW_ID,
+    SZ_OFF,
+    SZ_ON,
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -19,17 +31,21 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
+from .entity import EvoChild
+
+if TYPE_CHECKING:
+    from . import EvoBroker
+
 
 _LOGGER = logging.getLogger(__name__)
 
 STATE_AUTO = "auto"
 
-HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: "On", STATE_OFF: "Off"}
+HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: SZ_ON, STATE_OFF: SZ_OFF}
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
-STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
+STATE_ATTRS_DHW = [SZ_DHW_ID, SZ_ACTIVE_FAULTS, SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS]
 
 
 async def async_setup_platform(
@@ -42,31 +58,39 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+
+    assert broker.tcs.hotwater is not None  # mypy check
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
-        broker.tcs.hotwater.zone_type,
-        broker.tcs.hotwater.zoneId,
+        broker.tcs.hotwater.TYPE,
+        broker.tcs.hotwater.dhwId,
     )
+
     new_entity = EvoDHW(broker, broker.tcs.hotwater)
 
     async_add_entities([new_entity], update_before_add=True)
 
 
 class EvoDHW(EvoChild, WaterHeaterEntity):
-    """Base for a Honeywell TCC DHW controller (aka boiler)."""
+    """Base for any evohome-compatible DHW controller."""
 
     _attr_name = "DHW controller"
     _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize an evohome DHW controller."""
+    _evo_device: evo.HotWater  # mypy hint
+
+    def __init__(self, evo_broker: EvoBroker, evo_device: evo.HotWater) -> None:
+        """Initialize an evohome-compatible DHW controller."""
+
         super().__init__(evo_broker, evo_device)
+        self._evo_id = evo_device.dhwId
 
         self._attr_unique_id = evo_device.dhwId
+        self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
             PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
@@ -76,17 +100,21 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         )
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operating mode (Auto, On, or Off)."""
-        if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
+        if self._evo_device.mode == EVO_FOLLOW:
             return STATE_AUTO
-        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
+        if (device_state := self._evo_device.state) is None:
+            return None
+        return EVO_STATE_TO_HA[device_state]
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool | None:
         """Return True if away mode is on."""
-        is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
-        is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
+        if self._evo_device.state is None:
+            return None
+        is_off = EVO_STATE_TO_HA[self._evo_device.state] == STATE_OFF
+        is_permanent = self._evo_device.mode == EVO_PERMOVER
         return is_off and is_permanent
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
@@ -95,7 +123,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         Except for Auto, the mode is only until the next SetPoint.
         """
         if operation_mode == STATE_AUTO:
-            await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
+            await self._evo_broker.call_client_api(self._evo_device.reset_mode())
         else:
             await self._update_schedule()
             until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
@@ -103,28 +131,28 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
             if operation_mode == STATE_ON:
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_on(until=until)
+                    self._evo_device.set_on(until=until)
                 )
             else:  # STATE_OFF
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_off(until=until)
+                    self._evo_device.set_off(until=until)
                 )
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_off())
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
+        await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_on())
+        await self._evo_broker.call_client_api(self._evo_device.set_on())
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_off())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""

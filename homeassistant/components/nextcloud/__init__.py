@@ -1,4 +1,5 @@
 """The Nextcloud integration."""
+
 import logging
 
 from nextcloudmonitor import (
@@ -7,12 +8,10 @@ from nextcloudmonitor import (
     NextcloudMonitorConnectionError,
     NextcloudMonitorRequestError,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -20,70 +19,41 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import entity_registry as er
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 
+PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.UPDATE)
+
+
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
-# Validate user configuration
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_URL): cv.url,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                },
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+type NextcloudConfigEntry = ConfigEntry[NextcloudDataUpdateCoordinator]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NextcloudConfigEntry) -> bool:
     """Set up the Nextcloud integration."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml",
-            breaks_in_ha_version="2023.6.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-        )
 
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Nextcloud integration."""
+    # migrate old entity unique ids
+    entity_reg = er.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        entity_reg, entry.entry_id
+    )
+    for entity in entities:
+        old_uid_start = f"{entry.data[CONF_URL]}#nextcloud_"
+        new_uid_start = f"{entry.entry_id}#"
+        if entity.unique_id.startswith(old_uid_start):
+            new_uid = entity.unique_id.replace(old_uid_start, new_uid_start)
+            _LOGGER.debug("migrate unique id '%s' to '%s'", entity.unique_id, new_uid)
+            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
 
     def _connect_nc():
         return NextcloudMonitor(
             entry.data[CONF_URL],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            entry.data[CONF_VERIFY_SSL],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            skip_update=False,
         )
 
     try:
@@ -98,19 +68,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ncm,
         entry,
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NextcloudConfigEntry) -> bool:
     """Unload Nextcloud integration."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

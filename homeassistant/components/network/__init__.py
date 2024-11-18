@@ -1,4 +1,5 @@
 """The Network Configuration integration."""
+
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface
@@ -6,11 +7,13 @@ import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import util
 from .const import (
+    DOMAIN,
     IPV4_BROADCAST_ADDR,
     LOOPBACK_TARGET_IP,
     MDNS_TARGET_IP,
@@ -20,6 +23,8 @@ from .models import Adapter
 from .network import Network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -113,6 +118,30 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
                 IPv4Address(interface.network.broadcast_address.exploded)
             )
     return broadcast_addresses
+
+
+async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
+    """Return a list of IP addresses to announce/use via zeroconf/ssdp/etc.
+
+    The default ip address is always returned first if available.
+    """
+    adapters = await async_get_adapters(hass)
+    addresses: list[str] = []
+    default_ip: str | None = None
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        addresses.extend(str(IPv4Address(ips["address"])) for ips in adapter["ipv4"])
+        addresses.extend(str(IPv6Address(ips["address"])) for ips in adapter["ipv6"])
+
+    # Puts the default IPv4 address first in the list to preserve compatibility,
+    # because some mDNS implementations ignores anything but the first announced
+    # address.
+    if default_ip := await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP):
+        if default_ip in addresses:
+            addresses.remove(default_ip)
+        return [default_ip, *addresses]
+    return list(addresses)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

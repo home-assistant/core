@@ -1,9 +1,10 @@
 {
   "domain": "waqi",
   "name": "World Air Quality Index (WAQI)",
-  "codeowners": ["@andrey-git"],
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waqi",
   "iot_class": "cloud_polling",
-  "loggers": ["waqiasync"],
-  "requirements": ["waqiasync==1.0.0"]
+  "loggers": ["aiowaqi"],
+  "requirements": ["aiowaqi==3.1.0"]
 }

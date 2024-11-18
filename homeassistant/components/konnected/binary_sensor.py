@@ -1,4 +1,5 @@
 """Support for wired binary sensors attached to a Konnected device."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -10,8 +11,8 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as KONNECTED_DOMAIN
@@ -42,38 +43,12 @@ class KonnectedBinarySensor(BinarySensorEntity):
     def __init__(self, device_id, zone_num, data):
         """Initialize the Konnected binary sensor."""
         self._data = data
-        self._device_id = device_id
-        self._zone_num = zone_num
-        self._state = self._data.get(ATTR_STATE)
-        self._device_class = self._data.get(CONF_TYPE)
-        self._unique_id = f"{device_id}-{zone_num}"
-        self._name = self._data.get(CONF_NAME)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(KONNECTED_DOMAIN, self._device_id)},
+        self._attr_is_on = data.get(ATTR_STATE)
+        self._attr_device_class = data.get(CONF_TYPE)
+        self._attr_unique_id = f"{device_id}-{zone_num}"
+        self._attr_name = data.get(CONF_NAME)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(KONNECTED_DOMAIN, device_id)},
         )
 
     async def async_added_to_hass(self) -> None:
@@ -88,5 +63,5 @@ class KonnectedBinarySensor(BinarySensorEntity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        self._state = state
+        self._attr_is_on = state
         self.async_write_ha_state()

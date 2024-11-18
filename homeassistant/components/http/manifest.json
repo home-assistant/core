@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/http",
   "integration_type": "system",
   "iot_class": "local_push",
-  "quality_scale": "internal",
-  "requirements": ["aiohttp_cors==0.7.0"]
+  "quality_scale": "internal"
 }

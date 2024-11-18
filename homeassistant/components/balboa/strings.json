@@ -2,9 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the Balboa Wi-Fi device",
+        "description": "Connect to the Balboa Wi-Fi device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Balboa Spa Wi-Fi Device. For example, 192.168.1.58."
         }
       }
     },
@@ -26,6 +29,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter_1": {
+        "name": "Filter cycle 1"
+      },
+      "filter_2": {
+        "name": "Filter cycle 2"
+      },
+      "circ_pump": {
+        "name": "Circulation pump"
+      }
+    },
     "climate": {
       "balboa": {
         "state_attributes": {
@@ -36,6 +50,28 @@
               "ready_in_rest": "Ready-in-rest"
             }
           }
+        }
+      }
+    },
+    "fan": {
+      "pump": {
+        "name": "Pump {index}"
+      }
+    },
+    "light": {
+      "light_of_n": {
+        "name": "Light {index}"
+      },
+      "only_light": {
+        "name": "Light"
+      }
+    },
+    "select": {
+      "temperature_range": {
+        "name": "Temperature range",
+        "state": {
+          "low": "Low",
+          "high": "High"
         }
       }
     }

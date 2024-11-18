@@ -1,4 +1,5 @@
 """Config flow to configure the Pi-hole integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,7 +10,7 @@ from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -33,7 +33,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole config flow."""
 
     VERSION = 1
@@ -44,7 +44,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -103,7 +103,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_api_key(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle step to setup API key."""
         errors = {}
         if user_input is not None:
@@ -120,7 +120,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._config = dict(entry_data)
         return await self.async_step_reauth_confirm()
@@ -128,21 +130,15 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Perform reauth confirm upon an API authentication error."""
         errors = {}
         if user_input is not None:
             self._config = {**self._config, CONF_API_KEY: user_input[CONF_API_KEY]}
             if not (errors := await self._async_try_connect()):
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=self._config
                 )
-                assert entry
-                self.hass.config_entries.async_update_entry(entry, data=self._config)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.context["entry_id"])
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

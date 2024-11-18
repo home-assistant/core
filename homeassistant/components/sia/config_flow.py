@@ -1,4 +1,5 @@
 """Config flow for sia integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,10 +16,14 @@ from pysiaalarm import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ACCOUNT,
@@ -72,8 +77,8 @@ def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
         return {"base": "invalid_account_format"}
     except InvalidAccountLengthError:
         return {"base": "invalid_account_length"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception from SIAAccount: %s", exc)
+    except Exception:
+        _LOGGER.exception("Unexpected exception from SIAAccount")
         return {"base": "unknown"}
     if not 1 <= data[CONF_PING_INTERVAL] <= 1440:
         return {"base": "invalid_ping"}
@@ -87,7 +92,7 @@ def validate_zones(data: dict[str, Any]) -> dict[str, str] | None:
     return None
 
 
-class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for sia."""
 
     VERSION: int = 1
@@ -95,7 +100,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SIAOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SIAOptionsFlowHandler(config_entry)
@@ -107,7 +112,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -120,7 +125,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_add_account(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the additional accounts steps."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -133,7 +138,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_handle_data_and_route(
         self, user_input: dict[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user_input, check if configured and route to the right next step or create entry."""
         self._update_data(user_input)
 
@@ -171,19 +176,18 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
 
 
-class SIAOptionsFlowHandler(config_entries.OptionsFlow):
+class SIAOptionsFlowHandler(OptionsFlow):
     """Handle SIA options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize SIA options flow."""
-        self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
         self.hub: SIAHub | None = None
         self.accounts_todo: list = []
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the SIA options."""
         self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
         assert self.hub is not None
@@ -193,7 +197,7 @@ class SIAOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create the options step for a account."""
         errors: dict[str, str] | None = None
         if user_input is not None:

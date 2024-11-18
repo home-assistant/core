@@ -6,7 +6,7 @@
         "title": "Connect to Elk-M1 Control",
         "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "manual_connection": {
@@ -44,6 +44,163 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "An ElkM1 with this prefix is already configured",
       "address_already_configured": "An ElkM1 with this address is already configured"
+    }
+  },
+  "services": {
+    "alarm_bypass": {
+      "name": "Alarm bypass",
+      "description": "Bypasses all zones for the area.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "An code to authorize the bypass of the alarm control panel."
+        }
+      }
+    },
+    "alarm_clear_bypass": {
+      "name": "Alarm clear bypass",
+      "description": "Removes bypass on all zones for the area.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "An code to authorize the bypass clear of the alarm control panel."
+        }
+      }
+    },
+    "alarm_arm_home_instant": {
+      "name": "Alarm are home instant",
+      "description": "Arms the ElkM1 in home instant mode.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "An code to arm the alarm control panel."
+        }
+      }
+    },
+    "alarm_arm_night_instant": {
+      "name": "Alarm arm night instant",
+      "description": "Arms the ElkM1 in night instant mode.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "[%key:component::elkm1::services::alarm_arm_home_instant::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_vacation": {
+      "name": "Alarm arm vacation",
+      "description": "Arm the ElkM1 in vacation mode.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "[%key:component::elkm1::services::alarm_arm_home_instant::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_display_message": {
+      "name": "Alarm display message",
+      "description": "Displays a message on all of the ElkM1 keypads for an area.",
+      "fields": {
+        "clear": {
+          "name": "Clear",
+          "description": "0=clear message, 1=clear message with * key, 2=Display until timeout."
+        },
+        "beep": {
+          "name": "Beep",
+          "description": "0=no beep, 1=beep."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Time to display message, 0=forever, max 65535."
+        },
+        "line1": {
+          "name": "Line 1",
+          "description": "Up to 16 characters of text (truncated if too long)."
+        },
+        "line2": {
+          "name": "Line 2",
+          "description": "[%key:component::elkm1::services::alarm_display_message::fields::line1::description%]"
+        }
+      }
+    },
+    "set_time": {
+      "name": "Set time",
+      "description": "Sets the time for the panel.",
+      "fields": {
+        "prefix": {
+          "name": "Prefix",
+          "description": "Prefix for the panel."
+        }
+      }
+    },
+    "speak_phrase": {
+      "name": "Speak phrase",
+      "description": "Speaks a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.",
+      "fields": {
+        "number": {
+          "name": "Phrase number",
+          "description": "Phrase number to speak."
+        },
+        "prefix": {
+          "name": "[%key:component::elkm1::services::set_time::fields::prefix::name%]",
+          "description": "Prefix to identify panel when multiple panels configured."
+        }
+      }
+    },
+    "speak_word": {
+      "name": "Speak word",
+      "description": "Speaks a word. See list of words in ElkM1 ASCII Protocol documentation.",
+      "fields": {
+        "number": {
+          "name": "Word number",
+          "description": "Word number to speak."
+        },
+        "prefix": {
+          "name": "[%key:component::elkm1::services::set_time::fields::prefix::name%]",
+          "description": "[%key:component::elkm1::services::speak_phrase::fields::prefix::description%]"
+        }
+      }
+    },
+    "sensor_counter_refresh": {
+      "name": "Sensor counter refresh",
+      "description": "Refreshes the value of a counter from the panel."
+    },
+    "sensor_counter_set": {
+      "name": "Sensor counter set",
+      "description": "Sets the value of a counter on the panel.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Value to set the counter to."
+        }
+      }
+    },
+    "sensor_zone_bypass": {
+      "name": "Sensor zone bypass",
+      "description": "Bypasses zone.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "An code to authorize the bypass of the zone."
+        }
+      }
+    },
+    "sensor_zone_trigger": {
+      "name": "Sensor zone trigger",
+      "description": "Triggers zone."
+    }
+  },
+  "issues": {
+    "migrate_aux_heat": {
+      "title": "Migration of Elk-M1 set_aux_heat action",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Elk-M1 `set_aux_heat` action has been migrated. A new emergency heat switch entity is available for each thermostat.\n\nUpdate any automations to use the new emergency heat switch entity. When this is done, select **Submit** to fix this issue.",
+            "title": "[%key:component::elkm1::issues::migrate_aux_heat::title%]"
+          }
+        }
+      }
     }
   }
 }

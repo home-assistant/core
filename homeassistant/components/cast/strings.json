@@ -12,9 +12,6 @@
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
     }
@@ -22,10 +19,10 @@
   "options": {
     "step": {
       "basic_options": {
-        "title": "Google Cast configuration",
-        "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
+        "title": "[%key:component::cast::config::step::config::title%]",
+        "description": "[%key:component::cast::config::step::config::description%]",
         "data": {
-          "known_hosts": "Known hosts"
+          "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
         }
       },
       "advanced_options": {
@@ -38,7 +35,27 @@
       }
     },
     "error": {
-      "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+      "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
+    }
+  },
+  "services": {
+    "show_lovelace_view": {
+      "name": "Show dashboard view",
+      "description": "Shows a dashboard view on a Chromecast device.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Media player entity to show the dashboard view on."
+        },
+        "dashboard_path": {
+          "name": "Dashboard path",
+          "description": "The URL path of the dashboard to show."
+        },
+        "view_path": {
+          "name": "View path",
+          "description": "The path of the dashboard view to show."
+        }
+      }
     }
   }
 }

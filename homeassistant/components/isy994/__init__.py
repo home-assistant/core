@@ -1,11 +1,11 @@
 """Support the Universal Devices ISY/IoX controllers."""
+
 from __future__ import annotations
 
 import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
@@ -23,8 +23,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import (
     _LOGGER,
@@ -102,9 +101,9 @@ async def async_setup_entry(
     )
 
     try:
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             await isy.initialize()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Timed out initializing the ISY; device may be busy, trying again later:"
             f" {err}"
@@ -145,7 +144,7 @@ async def async_setup_entry(
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.info(repr(isy.clock))
+    _LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)

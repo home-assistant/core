@@ -1,4 +1,5 @@
 """Demo implementation of the media player."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,17 +16,15 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the media player demo platform."""
+    """Set up the Demo config entry."""
     async_add_entities(
         [
             DemoYoutubePlayer(
@@ -40,17 +39,10 @@ async def async_setup_platform(
             DemoMusicPlayer(),
             DemoMusicPlayer("Kitchen"),
             DemoTVShowPlayer(),
+            DemoBrowsePlayer("Browse"),
+            DemoGroupPlayer("Group"),
         ]
     )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
 
 
 SOUND_MODE_LIST = ["Music", "Movie"]
@@ -100,6 +92,8 @@ NETFLIX_PLAYER_SUPPORT = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.STOP
 )
+
+BROWSE_PLAYER_SUPPORT = MediaPlayerEntityFeature.BROWSE_MEDIA
 
 
 class AbstractDemoPlayer(MediaPlayerEntity):
@@ -329,9 +323,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
 
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        self._attr_group_members = [
-            self.entity_id,
-        ] + group_members
+        self._attr_group_members = [self.entity_id, *group_members]
         self.schedule_update_ha_state()
 
     def unjoin_player(self) -> None:
@@ -390,3 +382,19 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Set the input source."""
         self._attr_source = source
         self.schedule_update_ha_state()
+
+
+class DemoBrowsePlayer(AbstractDemoPlayer):
+    """A Demo media player that supports browse."""
+
+    _attr_supported_features = BROWSE_PLAYER_SUPPORT
+
+
+class DemoGroupPlayer(AbstractDemoPlayer):
+    """A Demo media player that supports grouping."""
+
+    _attr_supported_features = (
+        YOUTUBE_PLAYER_SUPPORT
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.TURN_OFF
+    )

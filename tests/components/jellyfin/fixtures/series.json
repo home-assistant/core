@@ -1,0 +1,28 @@
+{
+  "AirDays": ["string"],
+  "AirTime": "string",
+  "BackdropImageTags": [],
+  "ChannelId": "string",
+  "CommunityRating": 0,
+  "EndDate": "string",
+  "Id": "SERIES-UUID",
+  "ImageBlurHashes": { "Banner": { "string": "string" } },
+  "ImageTags": { "Banner": "string" },
+  "IsFolder": true,
+  "LocationType": "FileSystem",
+  "Name": "SERIES",
+  "PremiereDate": "string",
+  "ProductionYear": 0,
+  "RunTimeTicks": 0,
+  "ServerId": "string",
+  "Status": "string",
+  "Type": "Series",
+  "UserData": {
+    "IsFavorite": false,
+    "Key": "string",
+    "PlayCount": 0,
+    "PlaybackPositionTicks": 0,
+    "Played": false,
+    "UnplayedItemCount": 0
+  }
+}

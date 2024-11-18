@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
       "user": {
@@ -10,6 +11,16 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Connect to your Tado account"
+      },
+      "reconfigure": {
+        "title": "Reconfigure your Tado",
+        "description": "Reconfigure the entry, for your account: `{username}`.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the (new) password for Tado."
+        }
       }
     },
     "error": {
@@ -28,6 +39,120 @@
         },
         "title": "Adjust Tado options."
       }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "overlay": {
+        "name": "Overlay"
+      },
+      "early_start": {
+        "name": "Early start"
+      }
+    },
+    "climate": {
+      "tado": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "solar_percentage": {
+        "name": "Solar percentage"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      },
+      "tado_mode": {
+        "name": "Tado mode"
+      },
+      "geofencing_mode": {
+        "name": "Geofencing mode"
+      },
+      "automatic_geofencing": {
+        "name": "Automatic geofencing"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "ac": {
+        "name": "AC"
+      }
+    }
+  },
+  "services": {
+    "set_climate_timer": {
+      "name": "Set climate timer",
+      "description": "Turns on climate entities for a set time.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature to set climate entity to."
+        },
+        "time_period": {
+          "name": "Time period",
+          "description": "Choose this or Overlay. Set the time period for the change if you want to be specific. Alternatively use Overlay."
+        },
+        "requested_overlay": {
+          "name": "Overlay",
+          "description": "Choose this or Time Period. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on tado app setting."
+        }
+      }
+    },
+    "set_water_heater_timer": {
+      "name": "Set water heater timer",
+      "description": "Turns on water heater for a set time.",
+      "fields": {
+        "time_period": {
+          "name": "Time period",
+          "description": "Set the time period for the boost."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature to set heater to."
+        }
+      }
+    },
+    "set_climate_temperature_offset": {
+      "name": "Set climate temperature offset",
+      "description": "Sets the temperature offset of climate entities.",
+      "fields": {
+        "offset": {
+          "name": "Offset",
+          "description": "Offset you would like (depending on your device)."
+        }
+      }
+    },
+    "add_meter_reading": {
+      "name": "Add meter readings",
+      "description": "Add meter readings to Tado Energy IQ.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "Config entry to add meter readings to."
+        },
+        "reading": {
+          "name": "Reading",
+          "description": "Reading in m³ or kWh without decimals."
+        }
+      }
+    }
+  },
+  "issues": {
+    "water_heater_fallback": {
+      "title": "Tado Water Heater entities now support fallback options",
+      "description": "Due to added support for water heaters entities, these entities may use different overlay. Please configure integration entity and tado app water heater zone overlay options. Otherwise, please configure the integration entity and Tado app water heater zone overlay options (under Settings -> Rooms & Devices -> Hot Water)."
     }
   }
 }

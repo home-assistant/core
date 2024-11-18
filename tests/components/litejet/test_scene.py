@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from homeassistant.components import scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,16 +18,16 @@ ENTITY_OTHER_SCENE = "scene.litejet_mock_scene_2"
 ENTITY_OTHER_SCENE_NUMBER = 2
 
 
-async def test_disabled_by_default(hass: HomeAssistant, mock_litejet) -> None:
+async def test_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_litejet
+) -> None:
     """Test the scene is disabled by default."""
     await async_init_integration(hass)
-
-    registry = er.async_get(hass)
 
     state = hass.states.get(ENTITY_SCENE)
     assert state is None
 
-    entry = registry.async_get(ENTITY_SCENE)
+    entry = entity_registry.async_get(ENTITY_SCENE)
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

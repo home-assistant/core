@@ -4,7 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aiopvapi.resources.shade import BaseShade, factory as PvShade
+from aiopvapi.helpers.constants import ATTR_NAME
+from aiopvapi.resources.shade import BaseShade
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,37 +13,27 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_BATTERY_KIND,
-    ATTR_SIGNAL_STRENGTH,
-    ATTR_SIGNAL_STRENGTH_MAX,
-    BATTERY_KIND_HARDWIRED,
-    DOMAIN,
-    ROOM_ID_IN_SHADE,
-    ROOM_NAME_UNICODE,
-    SHADE_BATTERY_LEVEL,
-    SHADE_BATTERY_LEVEL_MAX,
-)
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescriptionMixin:
     """Mixin to describe a Sensor entity."""
 
     update_fn: Callable[[BaseShade], Any]
+    device_class_fn: Callable[[BaseShade], SensorDeviceClass | None]
     native_value_fn: Callable[[BaseShade], int]
-    create_sensor_fn: Callable[[BaseShade], bool]
+    native_unit_fn: Callable[[BaseShade], str | None]
+    create_entity_fn: Callable[[BaseShade], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescription(
     SensorEntityDescription, PowerviewSensorDescriptionMixin
 ):
@@ -52,63 +43,61 @@ class PowerviewSensorDescription(
     state_class = SensorStateClass.MEASUREMENT
 
 
+def get_signal_device_class(shade: BaseShade) -> SensorDeviceClass | None:
+    """Get the signal value based on version of API."""
+    return SensorDeviceClass.SIGNAL_STRENGTH if shade.api_version >= 3 else None
+
+
+def get_signal_native_unit(shade: BaseShade) -> str:
+    """Get the unit of measurement for signal based on version of API."""
+    return SIGNAL_STRENGTH_DECIBELS if shade.api_version >= 3 else PERCENTAGE
+
+
 SENSORS: Final = [
     PowerviewSensorDescription(
         key="charge",
-        name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        native_value_fn=lambda shade: round(
-            shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
-        ),
-        create_sensor_fn=lambda shade: bool(
-            shade.raw_data.get(ATTR_BATTERY_KIND) != BATTERY_KIND_HARDWIRED
-            and SHADE_BATTERY_LEVEL in shade.raw_data
-        ),
-        update_fn=lambda shade: shade.refresh_battery(),
+        device_class_fn=lambda shade: SensorDeviceClass.BATTERY,
+        native_unit_fn=lambda shade: PERCENTAGE,
+        native_value_fn=lambda shade: shade.get_battery_strength(),
+        create_entity_fn=lambda shade: shade.is_battery_powered(),
+        update_fn=lambda shade: shade.refresh_battery(suppress_timeout=True),
     ),
     PowerviewSensorDescription(
         key="signal",
-        name="Signal",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        native_unit_of_measurement=PERCENTAGE,
-        native_value_fn=lambda shade: round(
-            shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100
-        ),
-        create_sensor_fn=lambda shade: bool(ATTR_SIGNAL_STRENGTH in shade.raw_data),
-        update_fn=lambda shade: shade.refresh(),
+        translation_key="signal_strength",
+        icon="mdi:signal",
+        device_class_fn=get_signal_device_class,
+        native_unit_fn=get_signal_native_unit,
+        native_value_fn=lambda shade: shade.get_signal_strength(),
+        create_entity_fn=lambda shade: shade.has_signal_strength(),
+        update_fn=lambda shade: shade.refresh(suppress_timeout=True),
         entity_registry_enabled_default=False,
     ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PowerviewConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas sensor entities."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
+    pv_entry = entry.runtime_data
     entities: list[PowerViewSensor] = []
-    for raw_shade in pv_entry.shade_data.values():
-        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
-        name_before_refresh = shade.name
-        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
-
-        for description in SENSORS:
-            if description.create_sensor_fn(shade):
-                entities.append(
-                    PowerViewSensor(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        name_before_refresh,
-                        description,
-                    )
-                )
-
+    for shade in pv_entry.shade_data.values():
+        room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
+        entities.extend(
+            PowerViewSensor(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in SENSORS
+            if description.create_entity_fn(shade)
+        )
     async_add_entities(entities)
 
 
@@ -126,18 +115,28 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         name: str,
         description: PowerviewSensorDescription,
     ) -> None:
-        """Initialize the select entity."""
+        """Initialize the sensor entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description = description
-        self._attr_name = f"{self._shade_name} {description.name}"
+        self.entity_description: PowerviewSensorDescription = description
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
     def native_value(self) -> int:
-        """Get the current value in percentage."""
+        """Get the current value of the sensor."""
         return self.entity_description.native_value_fn(self._shade)
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return native unit of measurement of sensor."""
+        return self.entity_description.native_unit_fn(self._shade)
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the class of this entity."""
+        return self.entity_description.device_class_fn(self._shade)
+
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
@@ -152,5 +151,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Refresh sensor entity."""
-        await self.entity_description.update_fn(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.update_fn(self._shade)
         self.async_write_ha_state()

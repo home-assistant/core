@@ -1,54 +1,26 @@
 """Test state helpers."""
+
 import asyncio
-from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_CLOSED,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
-from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
-
-
-async def test_async_track_states(
-    hass: HomeAssistant, mock_integration_frame: Mock
-) -> None:
-    """Test AsyncTrackStates context manager."""
-    point1 = dt_util.utcnow()
-    point2 = point1 + timedelta(seconds=5)
-    point3 = point2 + timedelta(seconds=5)
-
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = point2
-
-        with state.AsyncTrackStates(hass) as states:
-            mock_utcnow.return_value = point1
-            hass.states.async_set("light.test", "on")
-
-            mock_utcnow.return_value = point2
-            hass.states.async_set("light.test2", "on")
-            state2 = hass.states.get("light.test2")
-
-            mock_utcnow.return_value = point3
-            hass.states.async_set("light.test3", "on")
-            state3 = hass.states.get("light.test3")
-
-    assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
 
 async def test_call_to_component(hass: HomeAssistant) -> None:
@@ -82,29 +54,6 @@ async def test_call_to_component(hass: HomeAssistant) -> None:
             climate_fun.assert_called_once_with(
                 hass, [state_climate], context=context, reproduce_options=None
             )
-
-
-async def test_get_changed_since(
-    hass: HomeAssistant, mock_integration_frame: Mock
-) -> None:
-    """Test get_changed_since."""
-    point1 = dt_util.utcnow()
-    point2 = point1 + timedelta(seconds=5)
-    point3 = point2 + timedelta(seconds=5)
-
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point1):
-        hass.states.async_set("light.test", "on")
-        state1 = hass.states.get("light.test")
-
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point2):
-        hass.states.async_set("light.test2", "on")
-        state2 = hass.states.get("light.test2")
-
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point3):
-        hass.states.async_set("light.test3", "on")
-        state3 = hass.states.get("light.test3")
-
-    assert [state2, state3] == state.get_changed_since([state1, state2, state3], point2)
 
 
 async def test_reproduce_with_no_entity(hass: HomeAssistant) -> None:
@@ -193,11 +142,17 @@ async def test_as_number_states(hass: HomeAssistant) -> None:
     zero_states = (
         STATE_OFF,
         STATE_CLOSED,
-        STATE_UNLOCKED,
+        LockState.UNLOCKED,
         STATE_BELOW_HORIZON,
         STATE_NOT_HOME,
     )
-    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON, STATE_HOME)
+    one_states = (
+        STATE_ON,
+        STATE_OPEN,
+        LockState.LOCKED,
+        STATE_ABOVE_HORIZON,
+        STATE_HOME,
+    )
     for _state in zero_states:
         assert state.state_as_number(State("domain.test", _state, {})) == 0
     for _state in one_states:

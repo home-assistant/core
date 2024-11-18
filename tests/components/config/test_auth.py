@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 import pytest
 
 from homeassistant.auth import models as auth_models
@@ -6,13 +7,15 @@ from homeassistant.components.config import auth as auth_config
 from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockGroup, MockUser
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def setup_config(hass, aiohttp_client):
+async def setup_config(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Fixture that sets up the auth provider homeassistant module."""
-    hass.loop.run_until_complete(auth_config.async_setup(hass))
+    auth_config.async_setup(hass)
 
 
 async def test_list_requires_admin(
@@ -136,7 +139,7 @@ async def test_delete_unable_self_account(
 ) -> None:
     """Test we cannot delete our own account."""
     client = await hass_ws_client(hass, hass_access_token)
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     await client.send_json(
         {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": refresh_token.user.id}

@@ -1,4 +1,5 @@
 """Provide the device conditions for Z-Wave JS."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -7,9 +8,7 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -31,11 +30,11 @@ from .device_automation_helpers import (
     NODE_STATUSES,
     async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
-    get_config_parameter_value_schema,
 )
 from .helpers import (
     async_get_node_from_device_id,
     check_type_schema_map,
+    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -209,7 +208,7 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        value_schema = get_config_parameter_value_schema(node, value_id)
+        value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}

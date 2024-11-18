@@ -1,7 +1,8 @@
 """Support for Hue binary sensors."""
+
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from functools import partial
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -9,15 +10,25 @@ from aiohue.v2.controllers.config import (
     EntertainmentConfigurationController,
 )
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.sensors import MotionController
+from aiohue.v2.controllers.sensors import (
+    CameraMotionController,
+    ContactController,
+    MotionController,
+    TamperController,
+)
+from aiohue.v2.models.camera_motion import CameraMotion
+from aiohue.v2.models.contact import Contact, ContactState
 from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.motion import Motion
+from aiohue.v2.models.tamper import Tamper, TamperState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,8 +36,14 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType: TypeAlias = Motion | EntertainmentConfiguration
-ControllerType: TypeAlias = MotionController | EntertainmentConfigurationController
+type SensorType = CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
+type ControllerType = (
+    CameraMotionController
+    | ContactController
+    | MotionController
+    | EntertainmentConfigurationController
+    | TamperController
+)
 
 
 async def async_setup_entry(
@@ -40,14 +57,15 @@ async def async_setup_entry(
 
     @callback
     def register_items(controller: ControllerType, sensor_class: SensorType):
+        make_binary_sensor_entity = partial(sensor_class, bridge, controller)
+
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Binary Sensor."""
-            async_add_entities([sensor_class(bridge, controller, resource)])
+            async_add_entities([make_binary_sensor_entity(resource)])
 
         # add all current items in controller
-        for sensor in controller:
-            async_add_sensor(EventType.RESOURCE_ADDED, sensor)
+        async_add_entities(make_binary_sensor_entity(sensor) for sensor in controller)
 
         # register listener for new sensors
         config_entry.async_on_unload(
@@ -57,29 +75,25 @@ async def async_setup_entry(
         )
 
     # setup for each binary-sensor-type hue resource
+    register_items(api.sensors.camera_motion, HueMotionSensor)
     register_items(api.sensors.motion, HueMotionSensor)
     register_items(api.config.entertainment_configuration, HueEntertainmentActiveSensor)
+    register_items(api.sensors.contact, HueContactSensor)
+    register_items(api.sensors.tamper, HueTamperSensor)
 
 
-class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
-    """Representation of a Hue binary_sensor."""
-
-    def __init__(
-        self,
-        bridge: HueBridge,
-        controller: ControllerType,
-        resource: SensorType,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(bridge, controller, resource)
-        self.resource = resource
-        self.controller = controller
-
-
-class HueMotionSensor(HueBinarySensorBase):
+# pylint: disable-next=hass-enforce-class-module
+class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Motion sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.MOTION
+    controller: CameraMotionController | MotionController
+    resource: CameraMotion | Motion
+
+    entity_description = BinarySensorEntityDescription(
+        key="motion_sensor",
+        device_class=BinarySensorDeviceClass.MOTION,
+        has_entity_name=True,
+    )
 
     @property
     def is_on(self) -> bool | None:
@@ -87,18 +101,21 @@ class HueMotionSensor(HueBinarySensorBase):
         if not self.resource.enabled:
             # Force None (unknown) if the sensor is set to disabled in Hue
             return None
-        return self.resource.motion.motion
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the optional state attributes."""
-        return {"motion_valid": self.resource.motion.motion_valid}
+        return self.resource.motion.value
 
 
-class HueEntertainmentActiveSensor(HueBinarySensorBase):
+# pylint: disable-next=hass-enforce-class-module
+class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.RUNNING
+    controller: EntertainmentConfigurationController
+    resource: EntertainmentConfiguration
+
+    entity_description = BinarySensorEntityDescription(
+        key="entertainment_active_sensor",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        has_entity_name=False,
+    )
 
     @property
     def is_on(self) -> bool | None:
@@ -108,5 +125,48 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
     @property
     def name(self) -> str:
         """Return sensor name."""
-        type_title = self.resource.type.value.replace("_", " ").title()
-        return f"{self.resource.metadata.name}: {type_title}"
+        return self.resource.metadata.name
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueContactSensor(HueBaseEntity, BinarySensorEntity):
+    """Representation of a Hue Contact sensor."""
+
+    controller: ContactController
+    resource: Contact
+
+    entity_description = BinarySensorEntityDescription(
+        key="contact_sensor",
+        device_class=BinarySensorDeviceClass.OPENING,
+        has_entity_name=True,
+    )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if not self.resource.enabled:
+            # Force None (unknown) if the sensor is set to disabled in Hue
+            return None
+        return self.resource.contact_report.state != ContactState.CONTACT
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
+    """Representation of a Hue Tamper sensor."""
+
+    controller: TamperController
+    resource: Tamper
+
+    entity_description = BinarySensorEntityDescription(
+        key="tamper_sensor",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+    )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if not self.resource.tamper_reports:
+            return False
+        return self.resource.tamper_reports[0].state == TamperState.TAMPERED

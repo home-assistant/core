@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Genius Hub configuration",
+        "menu_options": {
+          "local_api": "Local: IP address and user credentials",
+          "cloud_api": "Cloud: API token"
+        }
+      },
+      "local_api": {
+        "title": "Genius Hub local configuration",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "cloud_api": {
+        "title": "Genius Hub cloud configuration",
+        "data": {
+          "token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+
+  "services": {
+    "set_zone_mode": {
+      "name": "Set zone mode",
+      "description": "Set the zone to an operating mode.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The zone's entity_id."
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "One of: off, timer or footprint."
+        }
+      }
+    },
+    "set_zone_override": {
+      "name": "Set zone override",
+      "description": "Overrides the zone's set point for a given duration.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::geniushub::services::set_zone_mode::fields::entity_id::description%]"
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "The target temperature."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours."
+        }
+      }
+    },
+    "set_switch_override": {
+      "name": "Set switch override",
+      "description": "Overrides switch for a given duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "[%key:component::geniushub::services::set_zone_override::fields::duration::description%]"
+        }
+      }
+    }
+  }
+}

@@ -1,1 +1,63 @@
-{ "title": "Scene" }
+{
+  "title": "Scene",
+  "services": {
+    "turn_on": {
+      "name": "Activate",
+      "description": "Activates a scene.",
+      "fields": {
+        "transition": {
+          "name": "Transition",
+          "description": "Time it takes the devices to transition into the states defined in the scene."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads the scenes from the YAML-configuration."
+    },
+    "apply": {
+      "name": "Apply",
+      "description": "Activates a scene with configuration.",
+      "fields": {
+        "entities": {
+          "name": "Entities state",
+          "description": "List of entities and their target state."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Time it takes the devices to transition into the states defined in the scene."
+        }
+      }
+    },
+    "create": {
+      "name": "Create",
+      "description": "Creates a new scene.",
+      "fields": {
+        "scene_id": {
+          "name": "Scene entity ID",
+          "description": "The entity ID of the new scene."
+        },
+        "entities": {
+          "name": "Entities state",
+          "description": "List of entities and their target state. If your entities are already in the target state right now, use `snapshot_entities` instead."
+        },
+        "snapshot_entities": {
+          "name": "Snapshot entities",
+          "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine the `snapshot_entities` with `entities`."
+        }
+      }
+    },
+    "delete": {
+      "name": "Delete",
+      "description": "Deletes a dynamically created scene."
+    }
+  },
+  "exceptions": {
+    "entity_not_scene": {
+      "message": "{entity_id} is not a valid scene entity_id."
+    },
+    "entity_not_dynamically_created": {
+      "message": "The scene {entity_id} is not created with action `scene.create`."
+    }
+  }
+}

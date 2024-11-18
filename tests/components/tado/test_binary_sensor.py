@@ -1,4 +1,5 @@
 """The sensor tests for the tado platform."""
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -13,13 +14,13 @@ async def test_air_con_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.air_conditioning_power")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.air_conditioning_link")
+    state = hass.states.get("binary_sensor.air_conditioning_connectivity")
     assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.air_conditioning_overlay")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.air_conditioning_open_window")
+    state = hass.states.get("binary_sensor.air_conditioning_window")
     assert state.state == STATE_OFF
 
 
@@ -31,7 +32,7 @@ async def test_heater_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.baseboard_heater_power")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.baseboard_heater_link")
+    state = hass.states.get("binary_sensor.baseboard_heater_connectivity")
     assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.baseboard_heater_early_start")
@@ -40,7 +41,7 @@ async def test_heater_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.baseboard_heater_overlay")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.baseboard_heater_open_window")
+    state = hass.states.get("binary_sensor.baseboard_heater_window")
     assert state.state == STATE_OFF
 
 
@@ -49,7 +50,7 @@ async def test_water_heater_create_binary_sensors(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    state = hass.states.get("binary_sensor.water_heater_link")
+    state = hass.states.get("binary_sensor.water_heater_connectivity")
     assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.water_heater_overlay")

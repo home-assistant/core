@@ -1,11 +1,15 @@
 """Test the Fully Kiosk Browser media player."""
+
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
+from homeassistant.components import media_player
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
-import homeassistant.components.media_player as media_player
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -15,13 +19,12 @@ from tests.typing import WebSocketGenerator
 
 async def test_media_player(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk media player."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("media_player.amazon_fire")
     assert state
 
@@ -97,6 +100,60 @@ async def test_media_player(
     assert device_entry.sw_version == "1.42.5"
 
 
+@pytest.mark.parametrize("media_content_type", ["video", "video/mp4"])
+async def test_media_player_video(
+    hass: HomeAssistant,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
+    media_content_type: str,
+) -> None:
+    """Test Fully Kiosk media player for videos."""
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "play_media",
+        {
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
+            "media_content_type": media_content_type,
+            "media_content_id": "test.mp4",
+        },
+        blocking=True,
+    )
+    assert len(mock_fully_kiosk.sendCommand.mock_calls) == 1
+    mock_fully_kiosk.sendCommand.assert_called_with(
+        "playVideo", url="test.mp4", stream=3, showControls=1, exitOnCompletion=1
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "media_stop",
+        {
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
+        },
+        blocking=True,
+    )
+    mock_fully_kiosk.sendCommand.assert_called_with("stopVideo")
+
+
+async def test_media_player_unsupported(
+    hass: HomeAssistant,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test Fully Kiosk media player for unsupported media."""
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            "play_media",
+            {
+                ATTR_ENTITY_ID: "media_player.amazon_fire",
+                "media_content_type": "playlist",
+                "media_content_id": "test.m4u",
+            },
+            blocking=True,
+        )
+    assert error.value.args[0] == "Unsupported media type playlist"
+
+
 async def test_browse_media(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -113,6 +170,8 @@ async def test_browse_media(
         {
             "id": 1,
             "type": "media_player/browse_media",
+            "media_content_id": "media-source://media_source",
+            "media_content_type": "library",
             "entity_id": "media_player.amazon_fire",
         }
     )

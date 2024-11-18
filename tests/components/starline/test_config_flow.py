@@ -1,9 +1,11 @@
 """Tests for StarLine config flow."""
+
 import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.starline import config_flow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 TEST_APP_ID = "666"
 TEST_APP_SECRET = "appsecret"
@@ -37,16 +39,14 @@ async def test_flow_works(hass: HomeAssistant) -> None:
             cookies={"slnet": TEST_APP_SLNET},
         )
         mock.get(
-            "https://developer.starline.ru/json/v2/user/{}/user_info".format(
-                TEST_APP_UID
-            ),
+            f"https://developer.starline.ru/json/v2/user/{TEST_APP_UID}/user_info",
             text='{"code": 200, "devices": [{"device_id": "123", "imei": "123", "alias": "123", "battery": "123", "ctemp": "123", "etemp": "123", "fw_version": "123", "gsm_lvl": "123", "phone": "123", "status": "1", "ts_activity": "123", "typename": "123", "balance": {}, "car_state": {}, "car_alr_state": {}, "functions": [], "position": {}}], "shared_devices": []}',
         )
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
 
         result = await hass.config_entries.flow.async_configure(
@@ -56,7 +56,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
                 config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
             },
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_user"
 
         result = await hass.config_entries.flow.async_configure(
@@ -66,7 +66,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
                 config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
             },
         )
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Application {TEST_APP_ID}"
 
 
@@ -84,7 +84,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
                 config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
             },
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
         assert result["errors"] == {"base": "error_auth_app"}
 
@@ -107,7 +107,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
                 config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
             },
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
         assert result["errors"] == {"base": "error_auth_app"}
 
@@ -124,6 +124,6 @@ async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
                 config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
             }
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_user"
         assert result["errors"] == {"base": "error_auth_user"}

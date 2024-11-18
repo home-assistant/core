@@ -1,15 +1,24 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
+
+from unittest.mock import Mock
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
 
+from tests.common import MockConfigEntry
+
 
 async def test_sensors(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -28,7 +37,6 @@ async def test_sensors(
     assert sensor.attributes["device_class"] == "temperature"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "°C"
-    assert sensor.attributes["temperature_valid"] is True
 
     # test illuminance sensor
     sensor = hass.states.get("sensor.hue_motion_sensor_illuminance")
@@ -39,7 +47,6 @@ async def test_sensors(
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "lx"
     assert sensor.attributes["light_level"] == 18027
-    assert sensor.attributes["light_level_valid"] is True
 
     # test battery sensor
     sensor = hass.states.get("sensor.wall_switch_with_2_controls_battery")
@@ -53,8 +60,7 @@ async def test_sensors(
 
     # test disabled zigbee_connectivity sensor
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
@@ -62,7 +68,11 @@ async def test_sensors(
 
 
 async def test_enable_sensor(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    mock_config_entry_v2: MockConfigEntry,
 ) -> None:
     """Test enabling of the by default disabled zigbee_connectivity sensor."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -70,26 +80,29 @@ async def test_enable_sensor(
 
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, ["sensor"]
+    )
 
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
     # reload platform and check if entity is correctly there
     await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, ["sensor"]
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -97,7 +110,7 @@ async def test_enable_sensor(
     assert state.attributes["mac_address"] == "00:17:88:01:0b:aa:bb:99"
 
 
-async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
+async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test if sensors get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
     await setup_platform(hass, mock_bridge_v2, "sensor")

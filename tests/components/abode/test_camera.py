@@ -1,19 +1,21 @@
 """Tests for the Abode camera device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraState
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, CAMERA_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("camera.test_cam")
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
@@ -24,7 +26,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, CAMERA_DOMAIN)
 
     state = hass.states.get("camera.test_cam")
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
 
 async def test_capture_image(hass: HomeAssistant) -> None:

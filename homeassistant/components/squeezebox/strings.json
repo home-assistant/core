@@ -5,6 +5,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Lyrion Music Server."
         }
       },
       "edit": {
@@ -13,7 +16,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over https (requires reverse proxy)"
         }
       }
     },
@@ -26,6 +30,72 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_server_found": "No LMS server found."
+    }
+  },
+  "services": {
+    "call_method": {
+      "name": "Call method",
+      "description": "Calls a custom Squeezebox JSONRPC API.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation)."
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).\n."
+        }
+      }
+    },
+    "call_query": {
+      "name": "Call query",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.\n.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]"
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rescan": {
+        "name": "Library rescan"
+      },
+      "needsrestart": {
+        "name": "Needs restart"
+      }
+    },
+    "sensor": {
+      "lastscan": {
+        "name": "Last scan"
+      },
+      "info_total_albums": {
+        "name": "Total albums"
+      },
+      "info_total_artists": {
+        "name": "Total artists"
+      },
+      "info_total_duration": {
+        "name": "Total duration"
+      },
+      "info_total_genres": {
+        "name": "Total genres"
+      },
+      "info_total_songs": {
+        "name": "Total songs"
+      },
+      "player_count": {
+        "name": "Player count"
+      },
+      "other_player_count": {
+        "name": "Player count off service"
+      }
     }
   }
 }

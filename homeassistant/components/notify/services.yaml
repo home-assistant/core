@@ -1,53 +1,54 @@
 # Describes the format for available notification services
 
 notify:
-  name: Send a notification
-  description: Sends a notification message to selected notify platforms.
   fields:
     message:
-      name: Message
-      description: Message body of the notification.
       required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
     title:
-      name: Title
-      description: Title for your notification.
       example: "Your Garage Door Friend"
       selector:
         text:
     target:
-      name: Target
-      description:
-        An array of targets to send the notification to. Optional depending on
-        the platform.
       example: platform specific
       selector:
         object:
     data:
-      name: Data
-      description:
-        Extended information for notification. Optional depending on the
-        platform.
       example: platform specific
       selector:
         object:
 
-persistent_notification:
-  name: Send a persistent notification
-  description: Sends a notification that is visible in the front-end.
+send_message:
+  target:
+    entity:
+      domain: notify
   fields:
     message:
-      name: Message
-      description: Message body of the notification.
+      required: true
+      selector:
+        text:
+    title:
+      required: false
+      selector:
+        text:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.TITLE
+
+persistent_notification:
+  fields:
+    message:
       required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
     title:
-      name: Title
-      description: Title for your notification.
       example: "Your Garage Door Friend"
       selector:
         text:
+    data:
+      example: platform specific
+      selector:
+        object:

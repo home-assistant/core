@@ -1,4 +1,5 @@
 """Support for SwitchBee climate."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -87,11 +88,9 @@ async def async_setup_entry(
 class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
     """Representation of a SwitchBee climate."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_target_temperature_step = 1
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -103,9 +102,16 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         # set HVAC capabilities
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
-        self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
+        self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.temperature_unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
         self._update_attrs_from_coordinator()
 
     @callback
@@ -175,7 +181,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} state {state}, error: {str(exp)}"
+                f"Failed to set {self.name} state {state}, error: {exp!s}"
             ) from exp
 
         await self.coordinator.async_refresh()

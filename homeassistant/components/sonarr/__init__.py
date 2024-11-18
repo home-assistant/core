@@ -1,4 +1,5 @@
 """The Sonarr component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -104,10 +105,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **entry.data,
             CONF_URL: f"{new_proto}://{new_host_port}{new_path}",
         }
-        hass.config_entries.async_update_entry(entry, data=data)
-        entry.version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
 
-    LOGGER.info("Migration to version %s successful", entry.version)
+    LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
 

@@ -1,4 +1,5 @@
 """Config flow for RTSPtoWebRTC."""
+
 from __future__ import annotations
 
 import logging
@@ -8,12 +9,16 @@ from urllib.parse import urlparse
 import rtsp_to_webrtc
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import CONF_STUN_SERVER, DATA_SERVER_URL, DOMAIN
 
@@ -22,14 +27,14 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(DATA_SERVER_URL): str})
 
 
-class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RTSPToWebRTCConfigFlow(ConfigFlow, domain=DOMAIN):
     """RTSPtoWebRTC config flow."""
 
     _hassio_discovery: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure the RTSPtoWebRTC server url."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -72,7 +77,9 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return "server_unreachable"
         return None
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for the RTSPtoWebRTC server add-on discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -82,7 +89,7 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm Add-on discovery."""
         errors = None
         if user_input is not None:
@@ -109,22 +116,18 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create an options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """RTSPtoWeb Options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

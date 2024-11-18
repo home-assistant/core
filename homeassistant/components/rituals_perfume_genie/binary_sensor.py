@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,25 +22,17 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsentityDescriptionMixin:
-    """Mixin values for Rituals entities."""
+@dataclass(frozen=True, kw_only=True)
+class RitualsBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Rituals binary sensor entities."""
 
     is_on_fn: Callable[[Diffuser], bool]
     has_fn: Callable[[Diffuser], bool]
 
 
-@dataclass
-class RitualsBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RitualsentityDescriptionMixin
-):
-    """Class describing Rituals binary sensor entities."""
-
-
 ENTITY_DESCRIPTIONS = (
     RitualsBinarySensorEntityDescription(
         key="charging",
-        name="Battery Charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda diffuser: diffuser.charging,
@@ -70,15 +63,6 @@ class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
     """Defines a Rituals binary sensor entity."""
 
     entity_description: RitualsBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: RitualsDataUpdateCoordinator,
-        description: RitualsBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize Rituals binary sensor entity."""
-        super().__init__(coordinator, description)
-        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def is_on(self) -> bool:

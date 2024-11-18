@@ -1,18 +1,31 @@
 """Support for AVM FRITZ!Box update platform."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateEntity,
+    UpdateEntityDescription,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DOMAIN
+from .coordinator import AvmWrapper
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescription):
+    """Describes Fritz update entity."""
 
 
 async def async_setup_entry(
@@ -27,11 +40,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
+class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
     """Mixin for update entity specific attributes."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_title = "FRITZ!OS"
+    entity_description: FritzUpdateEntityDescription
 
     def __init__(
         self,
@@ -39,29 +54,30 @@ class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
         device_friendly_name: str,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._attr_name = f"{device_friendly_name} FRITZ!OS"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-update"
-        super().__init__(avm_wrapper, device_friendly_name)
+        description = FritzUpdateEntityDescription(
+            key="update", name="FRITZ!OS", value_fn=None
+        )
+        super().__init__(avm_wrapper, device_friendly_name, description)
 
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self._avm_wrapper.current_firmware
+        return self.coordinator.current_firmware
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if self._avm_wrapper.update_available:
-            return self._avm_wrapper.latest_firmware
-        return self._avm_wrapper.current_firmware
+        if self.coordinator.update_available:
+            return self.coordinator.latest_firmware
+        return self.coordinator.current_firmware
 
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        return self._avm_wrapper.release_url
+        return self.coordinator.release_url
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self._avm_wrapper.async_trigger_firmware_update()
+        await self.coordinator.async_trigger_firmware_update()

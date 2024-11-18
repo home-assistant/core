@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri covers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(
@@ -39,6 +40,8 @@ async def async_setup_entry(
 
 class TradfriCover(TradfriBaseEntity, CoverEntity):
     """The platform class required by Home Assistant."""
+
+    _attr_name = None
 
     def __init__(
         self,

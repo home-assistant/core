@@ -1,4 +1,5 @@
 """Support for HERE travel time sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -22,10 +23,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -52,21 +51,21 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
     """Construct SensorEntityDescriptions."""
     return (
         SensorEntityDescription(
-            name="Duration",
+            translation_key="duration",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
-            name="Duration in traffic",
+            translation_key="duration_in_traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
-            name="Distance",
+            translation_key="distance",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -87,16 +86,15 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][entry_id]
 
-    sensors: list[HERETravelTimeSensor] = []
-    for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
-        sensors.append(
-            HERETravelTimeSensor(
-                entry_id,
-                name,
-                sensor_description,
-                coordinator,
-            )
+    sensors: list[HERETravelTimeSensor] = [
+        HERETravelTimeSensor(
+            entry_id,
+            name,
+            sensor_description,
+            coordinator,
         )
+        for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE])
+    ]
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors)
@@ -109,6 +107,8 @@ class HERETravelTimeSensor(
     RestoreSensor,
 ):
     """Representation of a HERE travel time sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -128,7 +128,6 @@ class HERETravelTimeSensor(
             name=name,
             manufacturer="HERE Technologies",
         )
-        self._attr_has_entity_name = True
 
     async def _async_restore_state(self) -> None:
         """Restore state."""
@@ -139,11 +138,6 @@ class HERETravelTimeSensor(
         """Wait for start so origin and destination entities can be resolved."""
         await self._async_restore_state()
         await super().async_added_to_hass()
-
-        async def _update_at_start(_: HomeAssistant) -> None:
-            await self.async_update()
-
-        self.async_on_remove(async_at_started(self.hass, _update_at_start))
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -174,7 +168,7 @@ class OriginSensor(HERETravelTimeSensor):
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
-            name="Origin",
+            translation_key="origin",
             icon="mdi:store-marker",
             key=ATTR_ORIGIN_NAME,
         )
@@ -202,7 +196,7 @@ class DestinationSensor(HERETravelTimeSensor):
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
-            name="Destination",
+            translation_key="destination",
             icon="mdi:store-marker",
             key=ATTR_DESTINATION_NAME,
         )

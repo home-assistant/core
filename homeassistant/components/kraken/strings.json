@@ -18,5 +18,57 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "ask": {
+        "name": "Ask"
+      },
+      "ask_volume": {
+        "name": "Ask volume"
+      },
+      "bid": {
+        "name": "Bid"
+      },
+      "bid_volume": {
+        "name": "Bid volume"
+      },
+      "volume_today": {
+        "name": "Volume today"
+      },
+      "volume_last_24h": {
+        "name": "Volume last 24h"
+      },
+      "volume_weighted_average_today": {
+        "name": "Volume weighted average today"
+      },
+      "volume_weighted_average_last_24h": {
+        "name": "Volume weighted average last 24h"
+      },
+      "number_of_trades_today": {
+        "name": "Number of trades today"
+      },
+      "number_of_trades_last_24h": {
+        "name": "Number of trades last 24h"
+      },
+      "last_trade_closed": {
+        "name": "Last trade closed"
+      },
+      "low_today": {
+        "name": "Low today"
+      },
+      "low_last_24h": {
+        "name": "Low last 24h"
+      },
+      "high_today": {
+        "name": "High today"
+      },
+      "high_last_24h": {
+        "name": "High last 24h"
+      },
+      "opening_price_today": {
+        "name": "Opening price today"
+      }
+    }
   }
 }

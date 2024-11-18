@@ -1,14 +1,17 @@
 """Helpers for the logger integration."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, cast
 
-from homeassistant.backports.enum import StrEnum
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +19,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
     DOMAIN,
-    EVENT_LOGGING_CHANGED,
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,
@@ -25,6 +27,16 @@ from .const import (
     STORAGE_LOG_KEY,
     STORAGE_VERSION,
 )
+
+SAVE_DELAY = 15.0
+# At startup, we want to save after a long delay to avoid
+# saving while the system is still starting up. If the system
+# for some reason restarts quickly, it will still be written
+# at the final write event. In most cases we expect startup
+# to happen in less than 180 seconds, but if it takes longer
+# it's likely delayed because of remote I/O and not local
+# I/O so it's fine to save at that point.
+SAVE_DELAY_LONG = 180.0
 
 
 @callback
@@ -119,7 +131,7 @@ class LoggerSettings:
 
         self._yaml_config = yaml_config
         self._default_level = logging.INFO
-        if DOMAIN in yaml_config:
+        if DOMAIN in yaml_config and LOGGER_DEFAULT in yaml_config[DOMAIN]:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
         self._store: Store[dict[str, dict[str, dict[str, Any]]]] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
@@ -146,7 +158,7 @@ class LoggerSettings:
                 for domain, settings in stored_log_config.items()
             }
         }
-        await self._store.async_save(self._async_data_to_save())
+        self.async_save(SAVE_DELAY_LONG)
 
     @callback
     def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
@@ -162,9 +174,9 @@ class LoggerSettings:
         }
 
     @callback
-    def async_save(self) -> None:
+    def async_save(self, delay: float = SAVE_DELAY) -> None:
         """Save settings."""
-        self._store.async_delay_save(self._async_data_to_save, 15)
+        self._store.async_delay_save(self._async_data_to_save, delay)
 
     @callback
     def _async_get_logger_logs(self) -> dict[str, int]:
@@ -216,3 +228,11 @@ class LoggerSettings:
                 )
 
         return dict(combined_logs)
+
+
+get_logger = lru_cache(maxsize=256)(logging.getLogger)
+"""Get a logger.
+
+getLogger uses a threading.RLock, so we cache the result to avoid
+locking the threads every time the integrations page is loaded.
+"""

@@ -1,12 +1,22 @@
 """Fixtures for harmony tests."""
+
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
 import pytest
 
-from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
+from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME
 
-from .const import NILE_TV_ACTIVITY_ID, PLAY_MUSIC_ACTIVITY_ID, WATCH_TV_ACTIVITY_ID
+from .const import (
+    HUB_NAME,
+    NILE_TV_ACTIVITY_ID,
+    PLAY_MUSIC_ACTIVITY_ID,
+    WATCH_TV_ACTIVITY_ID,
+)
+
+from tests.common import MockConfigEntry
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,
@@ -37,19 +47,16 @@ IDS_TO_DEVICES = {
 class FakeHarmonyClient:
     """FakeHarmonyClient to mock away network calls."""
 
-    def initialize(
-        self, ip_address: str = "", callbacks: ClientCallbackType = MagicMock()
-    ):
+    _callbacks: ClientCallbackType
+
+    def __init__(self) -> None:
         """Initialize FakeHarmonyClient class to capture callbacks."""
         self._activity_name = "Watch TV"
         self.close = AsyncMock()
         self.send_commands = AsyncMock()
         self.change_channel = AsyncMock()
         self.sync = AsyncMock()
-        self._callbacks = callbacks
         self.fw_version = "123.456"
-
-        return self
 
     async def connect(self):
         """Connect and call the appropriate callbacks."""
@@ -142,20 +149,27 @@ class FakeHarmonyClient:
 
 
 @pytest.fixture
-def harmony_client():
+def harmony_client() -> FakeHarmonyClient:
     """Create the FakeHarmonyClient instance."""
     return FakeHarmonyClient()
 
 
 @pytest.fixture
-def mock_hc(harmony_client):
+def mock_hc(harmony_client: FakeHarmonyClient) -> Generator[None]:
     """Patch the real HarmonyClient with initialization side effect."""
+
+    def _on_create_instance(
+        ip_address: str, callbacks: ClientCallbackType
+    ) -> FakeHarmonyClient:
+        """Set client callbacks on instance creation."""
+        harmony_client._callbacks = callbacks
+        return harmony_client
 
     with patch(
         "homeassistant.components.harmony.data.HarmonyClient",
-        side_effect=harmony_client.initialize,
-    ) as fake:
-        yield fake
+        side_effect=_on_create_instance,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -165,3 +179,13 @@ def mock_write_config():
         "homeassistant.components.harmony.remote.HarmonyRemote.write_config_file",
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123",
+        data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME},
+    )

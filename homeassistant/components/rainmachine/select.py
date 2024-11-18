@@ -1,4 +1,5 @@
 """Support for RainMachine selects."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,22 +14,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
-from . import RainMachineData, RainMachineEntity
-from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
-from .model import (
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinDataKey,
-)
+from . import RainMachineConfigEntry, RainMachineData
+from .const import DATA_RESTRICTIONS_UNIVERSAL
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import key_exists
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RainMachineSelectDescription(
-    SelectEntityDescription,
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinDataKey,
+    SelectEntityDescription, RainMachineEntityDescription
 ):
     """Describe a generic RainMachine select."""
+
+    data_key: str
 
 
 @dataclass
@@ -40,18 +38,11 @@ class FreezeProtectionSelectOption:
     metric_label: str
 
 
-@dataclass
-class FreezeProtectionTemperatureMixin:
-    """Define an entity description mixin to include an options list."""
+@dataclass(frozen=True, kw_only=True)
+class FreezeProtectionSelectDescription(RainMachineSelectDescription):
+    """Describe a freeze protection temperature select."""
 
     extended_options: list[FreezeProtectionSelectOption]
-
-
-@dataclass
-class FreezeProtectionSelectDescription(
-    RainMachineSelectDescription, FreezeProtectionTemperatureMixin
-):
-    """Describe a freeze protection temperature select."""
 
 
 TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"
@@ -59,8 +50,7 @@ TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"
 SELECT_DESCRIPTIONS = (
     FreezeProtectionSelectDescription(
         key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
-        name="Freeze protection temperature",
-        icon="mdi:thermometer",
+        translation_key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",
@@ -91,10 +81,12 @@ SELECT_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up RainMachine selects based on a config entry."""
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entity_map = {
         TYPE_FREEZE_PROTECTION_TEMPERATURE: FreezeProtectionTemperatureSelect,

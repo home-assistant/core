@@ -1,4 +1,5 @@
 """Sensors for LIFX lights."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,7 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 RSSI_SENSOR = SensorEntityDescription(
     key=ATTR_RSSI,
-    name="RSSI",
+    translation_key="rssi",
     device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=SensorStateClass.MEASUREMENT,
@@ -40,8 +41,6 @@ async def async_setup_entry(
 
 class LIFXRssiSensor(LIFXEntity, SensorEntity):
     """LIFX RSSI sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -66,7 +65,6 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
         """Handle coordinator updates."""
         self._attr_native_value = self.coordinator.rssi
 
-    @callback
     async def async_added_to_hass(self) -> None:
         """Enable RSSI updates."""
         self.async_on_remove(self.coordinator.async_enable_rssi_updates())

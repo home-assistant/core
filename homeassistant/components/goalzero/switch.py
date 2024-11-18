@@ -1,42 +1,40 @@
 """Support for Goal Zero Yeti Switches."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import GoalZeroConfigEntry
 from .entity import GoalZeroEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="v12PortStatus",
-        name="12V port status",
+        translation_key="v12_port_status",
     ),
     SwitchEntityDescription(
         key="usbPortStatus",
-        name="USB port status",
+        translation_key="usb_port_status",
     ),
     SwitchEntityDescription(
         key="acPortStatus",
-        name="AC port status",
+        translation_key="ac_port_status",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GoalZeroConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Goal Zero Yeti switch."""
     async_add_entities(
-        GoalZeroSwitch(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
-        for description in SWITCH_TYPES
+        GoalZeroSwitch(entry.runtime_data, description) for description in SWITCH_TYPES
     )
 
 

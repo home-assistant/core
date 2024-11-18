@@ -1,47 +1,6 @@
-reconnect:
-  description: Reconnects your FRITZ!Box internet connection
-  fields:
-    device_id:
-      name: Fritz!Box Device
-      description: Select the Fritz!Box to reconnect
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
-reboot:
-  description: Reboots your FRITZ!Box
-  fields:
-    device_id:
-      name: Fritz!Box Device
-      description: Select the Fritz!Box to reboot
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
-
-cleanup:
-  description: Remove FRITZ!Box stale device_tracker entities
-  fields:
-    device_id:
-      name: Fritz!Box Device
-      description: Select the Fritz!Box to check
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
 set_guest_wifi_password:
-  name: Set guest wifi password
-  description: Set a new password for the guest wifi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.
   fields:
     device_id:
-      name: Fritz!Box Device
-      description: Select the Fritz!Box to check
       required: true
       selector:
         device:
@@ -49,14 +8,10 @@ set_guest_wifi_password:
           entity:
             device_class: connectivity
     password:
-      name: Password
-      description: New password for the guest wifi
       required: false
       selector:
         text:
     length:
-      name: Password length
-      description: Length of the new password. The password will be auto-generated, if no password is set.
       required: false
       selector:
         number:

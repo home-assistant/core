@@ -1,4 +1,6 @@
 """Test the Thread config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant.components import thread, zeroconf
@@ -6,10 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 TEST_ZEROCONF_RECORD = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="HomeAssistant OpenThreadBorderRouter #0BBF",
     name="HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
-    addresses=["127.0.0.1"],
     port=8080,
     properties={
         "rv": "1",
@@ -40,7 +42,7 @@ async def test_import(hass: HomeAssistant) -> None:
             thread.DOMAIN, context={"source": "import"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Thread"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -63,7 +65,7 @@ async def test_import_then_zeroconf(hass: HomeAssistant) -> None:
             thread.DOMAIN, context={"source": "import"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
@@ -73,7 +75,7 @@ async def test_import_then_zeroconf(hass: HomeAssistant) -> None:
             thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -88,7 +90,7 @@ async def test_user(hass: HomeAssistant) -> None:
             thread.DOMAIN, context={"source": "user"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Thread"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -106,7 +108,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "confirm"
 
@@ -115,7 +117,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Thread"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -130,16 +132,19 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
     """Test we automatically finish a zeroconf flow during onboarding."""
-    with patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ), patch(
-        "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
+        patch(
+            "homeassistant.components.thread.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Thread"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -156,7 +161,7 @@ async def test_zeroconf_then_import(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
@@ -166,6 +171,6 @@ async def test_zeroconf_then_import(hass: HomeAssistant) -> None:
             thread.DOMAIN, context={"source": "import"}
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0

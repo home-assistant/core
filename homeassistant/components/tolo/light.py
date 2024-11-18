@@ -1,4 +1,5 @@
 """TOLO Sauna light controls."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,8 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
@@ -26,7 +28,7 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
     """Sauna light control."""
 
     _attr_color_mode = ColorMode.ONOFF
-    _attr_name = "Sauna Light"
+    _attr_translation_key = "light"
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(

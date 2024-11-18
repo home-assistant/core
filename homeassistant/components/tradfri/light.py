@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri lights."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,15 +15,16 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(
@@ -49,7 +51,9 @@ async def async_setup_entry(
 class TradfriLight(TradfriBaseEntity, LightEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_name = None
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _fixed_color_mode: ColorMode | None = None
 
     def __init__(
         self,
@@ -71,18 +75,16 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._hs_color = None
 
         # Calculate supported color modes
-        self._attr_supported_color_modes: set[ColorMode] = set()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
         if self._device.light_control.can_set_color:
-            self._attr_supported_color_modes.add(ColorMode.HS)
+            modes.add(ColorMode.HS)
         if self._device.light_control.can_set_temp:
-            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if (
-            not self._attr_supported_color_modes
-            and self._device.light_control.can_set_dimmer
-        ):
-            # Must be the only supported mode according to docs for
-            # ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+            modes.add(ColorMode.COLOR_TEMP)
+        if self._device.light_control.can_set_dimmer:
+            modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
@@ -98,6 +100,15 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         if not self._device_data:
             return False
         return cast(bool, self._device_data.state)
+
+    @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+        if self.hs_color:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
 
     @property
     def brightness(self) -> int | None:

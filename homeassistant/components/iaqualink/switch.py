@@ -1,15 +1,19 @@
 """Support for Aqualink pool feature switches."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from iaqualink.device import AqualinkSwitch
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 PARALLEL_UPDATES = 0
@@ -21,32 +25,27 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkSwitch(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][SWITCH_DOMAIN]),
+        True,
+    )
 
 
 class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     """Representation of a switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self.dev.label
-
-    @property
-    def icon(self) -> str | None:
-        """Return an icon based on the switch type."""
-        if self.name == "Cleaner":
-            return "mdi:robot-vacuum"
-        if self.name == "Waterfall" or self.name.endswith("Dscnt"):
-            return "mdi:fountain"
-        if self.name.endswith("Pump") or self.name.endswith("Blower"):
-            return "mdi:fan"
-        if self.name.endswith("Heater"):
-            return "mdi:radiator"
-        return None
+    def __init__(self, dev: AqualinkSwitch) -> None:
+        """Initialize AquaLink switch."""
+        super().__init__(dev)
+        name = self._attr_name = dev.label
+        if name == "Cleaner":
+            self._attr_icon = "mdi:robot-vacuum"
+        elif name == "Waterfall" or name.endswith("Dscnt"):
+            self._attr_icon = "mdi:fountain"
+        elif name.endswith(("Pump", "Blower")):
+            self._attr_icon = "mdi:fan"
+        if name.endswith("Heater"):
+            self._attr_icon = "mdi:radiator"
 
     @property
     def is_on(self) -> bool:

@@ -1,4 +1,5 @@
 """Support for the Tank Utility propane monitor."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,7 +9,10 @@ import requests
 from tank_utility import auth, device as tank_monitor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(hours=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -56,10 +60,7 @@ def setup_platform(
     try:
         token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
-        if (
-            http_error.response.status_code
-            == requests.codes.unauthorized  # pylint: disable=no-member
-        ):
+        if http_error.response.status_code == requests.codes.unauthorized:
             _LOGGER.error("Invalid credentials")
             return
 
@@ -121,14 +122,14 @@ class TankUtilitySensor(SensorEntity):
             data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if http_error.response.status_code in (
-                requests.codes.unauthorized,  # pylint: disable=no-member
-                requests.codes.bad_request,  # pylint: disable=no-member
+                requests.codes.unauthorized,
+                requests.codes.bad_request,
             ):
-                _LOGGER.info("Getting new token")
+                _LOGGER.debug("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)
                 data = tank_monitor.get_device_data(self._token, self.device)
             else:
-                raise http_error
+                raise
         data.update(data.pop("device", {}))
         data.update(data.pop("lastReading", {}))
         return data

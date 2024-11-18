@@ -1,0 +1,79 @@
+{
+  "title": "History Stats",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "only_two_keys_allowed": "The sensor configuration must provide two out of 'start', 'end', 'duration'"
+    },
+    "step": {
+      "user": {
+        "description": "Add a history stats sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "Entity",
+          "state": "State",
+          "type": "Type"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "entity_id": "Entity to get statistics from.",
+          "state": "The states you want to track from the entity.",
+          "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
+        }
+      },
+      "options": {
+        "description": "Read the documention for further details on how to configure the history stats sensor using these options.",
+        "data": {
+          "start": "Start",
+          "end": "End",
+          "duration": "Duration"
+        },
+        "data_description": {
+          "start": "When to start the measure (timestamp or datetime). Can be a template.",
+          "end": "When to stop the measure (timestamp or datetime). Can be a template",
+          "duration": "Duration of the measure."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "only_two_keys_allowed": "[%key:component::history_stats::config::error::only_two_keys_allowed%]"
+    },
+    "step": {
+      "init": {
+        "description": "[%key:component::history_stats::config::step::options::description%]",
+        "data": {
+          "start": "[%key:component::history_stats::config::step::options::data::start%]",
+          "end": "[%key:component::history_stats::config::step::options::data::end%]",
+          "duration": "[%key:component::history_stats::config::step::options::data::duration%]"
+        },
+        "data_description": {
+          "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
+          "end": "[%key:component::history_stats::config::step::options::data_description::end%]",
+          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "time": "Time",
+        "ratio": "Ratio",
+        "count": "Count"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads history stats sensors from the YAML-configuration."
+    }
+  }
+}

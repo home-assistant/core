@@ -1,4 +1,5 @@
 """Tests for the Velbus component initialisation."""
+
 from unittest.mock import patch
 
 import pytest
@@ -19,12 +20,12 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 
@@ -45,17 +46,17 @@ async def test_device_identifier_migration(
         sw_version="module_sw_version",
     )
     assert device_registry.async_get_device(
-        original_identifiers  # type: ignore[arg-type]
+        identifiers=original_identifiers  # type: ignore[arg-type]
     )
-    assert not device_registry.async_get_device(target_identifiers)
+    assert not device_registry.async_get_device(identifiers=target_identifiers)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get_device(
-        original_identifiers  # type: ignore[arg-type]
+        identifiers=original_identifiers  # type: ignore[arg-type]
     )
-    device_entry = device_registry.async_get_device(target_identifiers)
+    device_entry = device_registry.async_get_device(identifiers=target_identifiers)
     assert device_entry
     assert device_entry.name == "channel_name"
     assert device_entry.manufacturer == "Velleman"

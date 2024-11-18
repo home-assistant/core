@@ -1,0 +1,2 @@
+# This always raises ValueError
+custom_validator_bad_2:

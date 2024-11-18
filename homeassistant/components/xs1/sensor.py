@@ -1,4 +1,5 @@
 """Support for XS1 sensors."""
+
 from __future__ import annotations
 
 from xs1_api_client.api_constants import ActuatorType
@@ -8,7 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS
+from .entity import XS1DeviceEntity
 
 
 def setup_platform(

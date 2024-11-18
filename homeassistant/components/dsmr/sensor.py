@@ -1,20 +1,22 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+
 from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 
-from dsmr_parser import obis_references
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
-from dsmr_parser.objects import DSMRObject
+from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 import serial
 
 from homeassistant.components.sensor import (
@@ -27,240 +29,243 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import EventType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
+from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PRECISION,
-    CONF_PROTOCOL,
-    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
-    DATA_TASK,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
+    DEVICE_NAME_HEAT,
+    DEVICE_NAME_WATER,
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
 )
 
+EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
+
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass
-class DSMRSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    obis_reference: str
-
-
-@dataclass
-class DSMRSensorEntityDescription(
-    SensorEntityDescription, DSMRSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
+    is_water: bool = False
+    is_heat: bool = False
+    obis_reference: str
+
+
+class MbusDeviceType(IntEnum):
+    """Types of mbus devices (13757-3:2013)."""
+
+    GAS = 3
+    HEAT = 4
+    WATER = 7
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
+        key="timestamp",
+        obis_reference="P1_MESSAGE_TIMESTAMP",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
         key="current_electricity_usage",
-        name="Power consumption",
-        obis_reference=obis_references.CURRENT_ELECTRICITY_USAGE,
+        translation_key="current_electricity_usage",
+        obis_reference="CURRENT_ELECTRICITY_USAGE",
         device_class=SensorDeviceClass.POWER,
-        force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="current_electricity_delivery",
-        name="Power production",
-        obis_reference=obis_references.CURRENT_ELECTRICITY_DELIVERY,
+        translation_key="current_electricity_delivery",
+        obis_reference="CURRENT_ELECTRICITY_DELIVERY",
         device_class=SensorDeviceClass.POWER,
-        force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="electricity_active_tariff",
-        name="Active tariff",
-        obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
+        translation_key="electricity_active_tariff",
+        obis_reference="ELECTRICITY_ACTIVE_TARIFF",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
-        translation_key="electricity_tariff",
-        icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_1",
-        name="Energy consumption (tarif 1)",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_1,
+        translation_key="electricity_used_tariff_1",
+        obis_reference="ELECTRICITY_USED_TARIFF_1",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
-        force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_2",
-        name="Energy consumption (tarif 2)",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_2,
+        translation_key="electricity_used_tariff_2",
+        obis_reference="ELECTRICITY_USED_TARIFF_2",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_1",
-        name="Energy production (tarif 1)",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
+        translation_key="electricity_delivered_tariff_1",
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_1",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_2",
-        name="Energy production (tarif 2)",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
+        translation_key="electricity_delivered_tariff_2",
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_2",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_positive",
-        name="Power consumption phase L1",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+        translation_key="instantaneous_active_power_l1_positive",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_positive",
-        name="Power consumption phase L2",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+        translation_key="instantaneous_active_power_l2_positive",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_positive",
-        name="Power consumption phase L3",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+        translation_key="instantaneous_active_power_l3_positive",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_negative",
-        name="Power production phase L1",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+        translation_key="instantaneous_active_power_l1_negative",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_negative",
-        name="Power production phase L2",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+        translation_key="instantaneous_active_power_l2_negative",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_negative",
-        name="Power production phase L3",
-        obis_reference=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+        translation_key="instantaneous_active_power_l3_negative",
+        obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="short_power_failure_count",
-        name="Short power failure count",
-        obis_reference=obis_references.SHORT_POWER_FAILURE_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="short_power_failure_count",
+        obis_reference="SHORT_POWER_FAILURE_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="long_power_failure_count",
-        name="Long power failure count",
-        obis_reference=obis_references.LONG_POWER_FAILURE_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="long_power_failure_count",
+        obis_reference="LONG_POWER_FAILURE_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_sag_l1_count",
-        name="Voltage sags phase L1",
-        obis_reference=obis_references.VOLTAGE_SAG_L1_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_sag_l1_count",
+        obis_reference="VOLTAGE_SAG_L1_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_sag_l2_count",
-        name="Voltage sags phase L2",
-        obis_reference=obis_references.VOLTAGE_SAG_L2_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_sag_l2_count",
+        obis_reference="VOLTAGE_SAG_L2_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_sag_l3_count",
-        name="Voltage sags phase L3",
-        obis_reference=obis_references.VOLTAGE_SAG_L3_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_sag_l3_count",
+        obis_reference="VOLTAGE_SAG_L3_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_swell_l1_count",
-        name="Voltage swells phase L1",
-        obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_swell_l1_count",
+        obis_reference="VOLTAGE_SWELL_L1_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_swell_l2_count",
-        name="Voltage swells phase L2",
-        obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_swell_l2_count",
+        obis_reference="VOLTAGE_SWELL_L2_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="voltage_swell_l3_count",
-        name="Voltage swells phase L3",
-        obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        translation_key="voltage_swell_l3_count",
+        obis_reference="VOLTAGE_SWELL_L3_COUNT",
+        dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l1",
-        name="Voltage phase L1",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L1,
+        translation_key="instantaneous_voltage_l1",
+        obis_reference="INSTANTANEOUS_VOLTAGE_L1",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -268,8 +273,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l2",
-        name="Voltage phase L2",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L2,
+        translation_key="instantaneous_voltage_l2",
+        obis_reference="INSTANTANEOUS_VOLTAGE_L2",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -277,8 +282,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l3",
-        name="Voltage phase L3",
-        obis_reference=obis_references.INSTANTANEOUS_VOLTAGE_L3,
+        translation_key="instantaneous_voltage_l3",
+        obis_reference="INSTANTANEOUS_VOLTAGE_L3",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -286,8 +291,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l1",
-        name="Current phase L1",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L1,
+        translation_key="instantaneous_current_l1",
+        obis_reference="INSTANTANEOUS_CURRENT_L1",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -295,8 +300,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l2",
-        name="Current phase L2",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L2,
+        translation_key="instantaneous_current_l2",
+        obis_reference="INSTANTANEOUS_CURRENT_L2",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -304,8 +309,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l3",
-        name="Current phase L3",
-        obis_reference=obis_references.INSTANTANEOUS_CURRENT_L3,
+        translation_key="instantaneous_current_l3",
+        obis_reference="INSTANTANEOUS_CURRENT_L3",
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -313,8 +318,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_power_per_phase",
-        name="Max power per phase",
-        obis_reference=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
+        translation_key="max_power_per_phase",
+        obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
@@ -323,91 +328,279 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_current_per_phase",
-        name="Max current per phase",
-        obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
+        translation_key="max_current_per_phase",
+        obis_reference="FUSE_THRESHOLD_L1",
         dsmr_versions={"5B"},
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="electricity_imported_total",
-        name="Energy consumption (total)",
-        obis_reference=obis_references.ELECTRICITY_IMPORTED_TOTAL,
+        translation_key="electricity_imported_total",
+        obis_reference="ELECTRICITY_IMPORTED_TOTAL",
         dsmr_versions={"5L", "5S", "Q3D"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="electricity_exported_total",
-        name="Energy production (total)",
-        obis_reference=obis_references.ELECTRICITY_EXPORTED_TOTAL,
+        translation_key="electricity_exported_total",
+        obis_reference="ELECTRICITY_EXPORTED_TOTAL",
         dsmr_versions={"5L", "5S", "Q3D"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key="hourly_gas_meter_reading",
-        name="Gas consumption",
-        obis_reference=obis_references.HOURLY_GAS_METER_READING,
-        dsmr_versions={"4", "5", "5L"},
-        is_gas=True,
-        force_update=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        key="belgium_current_average_demand",
+        translation_key="current_average_demand",
+        obis_reference="BELGIUM_CURRENT_AVERAGE_DEMAND",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
-        name="Gas consumption",
-        obis_reference=obis_references.BELGIUM_5MIN_GAS_METER_READING,
+        key="belgium_maximum_demand_current_month",
+        translation_key="maximum_demand_current_month",
+        obis_reference="BELGIUM_MAXIMUM_DEMAND_MONTH",
         dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key="hourly_gas_meter_reading",
+        translation_key="gas_meter_reading",
+        obis_reference="HOURLY_GAS_METER_READING",
+        dsmr_versions={"4", "5", "5L"},
         is_gas=True,
-        force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key="gas_meter_reading",
-        name="Gas consumption",
-        obis_reference=obis_references.GAS_METER_READING,
+        translation_key="gas_meter_reading",
+        obis_reference="GAS_METER_READING",
         dsmr_versions={"2.2"},
         is_gas=True,
-        force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
+SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
+    MbusDeviceType.GAS: (
+        DSMRSensorEntityDescription(
+            key="gas_reading",
+            translation_key="gas_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_gas=True,
+            device_class=SensorDeviceClass.GAS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+    MbusDeviceType.HEAT: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+    MbusDeviceType.WATER: (
+        DSMRSensorEntityDescription(
+            key="water_reading",
+            translation_key="water_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_water=True,
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+}
+
+
+def device_class_and_uom(
+    data: Telegram | MbusDevice,
+    entity_description: DSMRSensorEntityDescription,
+) -> tuple[SensorDeviceClass | None, str | None]:
+    """Get native unit of measurement from telegram,."""
+    dsmr_object = getattr(data, entity_description.obis_reference)
+    uom: str | None = getattr(dsmr_object, "unit") or None
+    with suppress(ValueError):
+        if entity_description.device_class == SensorDeviceClass.GAS and (
+            enery_uom := UnitOfEnergy(str(uom))
+        ):
+            return (SensorDeviceClass.ENERGY, enery_uom)
+    if uom in UNIT_CONVERSION:
+        return (entity_description.device_class, UNIT_CONVERSION[uom])
+    return (entity_description.device_class, uom)
+
+
+def rename_old_gas_to_mbus(
+    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+) -> None:
+    """Rename old gas sensor to mbus variant."""
+    dev_reg = dr.async_get(hass)
+    for dev_id in (mbus_device_id, entry.entry_id):
+        device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+        if device_entry_v1 is not None:
+            device_id = device_entry_v1.id
+
+            ent_reg = er.async_get(hass)
+            entries = er.async_entries_for_device(ent_reg, device_id)
+
+            for entity in entries:
+                if entity.unique_id.endswith(
+                    "belgium_5min_gas_meter_reading"
+                ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
+                    try:
+                        ent_reg.async_update_entity(
+                            entity.entity_id,
+                            new_unique_id=mbus_device_id,
+                            device_id=mbus_device_id,
+                        )
+                    except ValueError:
+                        LOGGER.debug(
+                            "Skip migration of %s because it already exists",
+                            entity.entity_id,
+                        )
+                    else:
+                        LOGGER.debug(
+                            "Migrated entity %s from unique id %s to %s",
+                            entity.entity_id,
+                            entity.unique_id,
+                            mbus_device_id,
+                        )
+            # Cleanup old device
+            dev_entities = er.async_entries_for_device(
+                ent_reg, device_id, include_disabled_entities=True
+            )
+            if not dev_entities:
+                dev_reg.async_remove_device(device_id)
+
+
+def is_supported_description(
+    data: Telegram | MbusDevice,
+    description: DSMRSensorEntityDescription,
+    dsmr_version: str,
+) -> bool:
+    """Check if this is a supported description for this telegram."""
+    return hasattr(data, description.obis_reference) and (
+        description.dsmr_versions is None or dsmr_version in description.dsmr_versions
+    )
+
+
+def create_mbus_entities(
+    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+) -> Generator[DSMREntity]:
+    """Create MBUS Entities."""
+    mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
+    for device in mbus_devices:
+        if (device_type := getattr(device, "MBUS_DEVICE_TYPE", None)) is None:
+            continue
+        type_ = int(device_type.value)
+
+        if type_ not in SENSORS_MBUS_DEVICE_TYPE:
+            LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
+            continue
+
+        if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
+            serial_ = identifier.value
+            rename_old_gas_to_mbus(hass, entry, serial_)
+        else:
+            serial_ = ""
+
+        for description in SENSORS_MBUS_DEVICE_TYPE.get(type_, ()):
+            if not is_supported_description(device, description, dsmr_version):
+                continue
+            yield DSMREntity(
+                description,
+                entry,
+                telegram,
+                *device_class_and_uom(device, description),  # type: ignore[arg-type]
+                serial_,
+                device.channel_id,
+            )
+
+
+def get_dsmr_object(
+    telegram: Telegram | None, mbus_id: int, obis_reference: str
+) -> DSMRObject | None:
+    """Extract DSMR object from telegram."""
+    if not telegram:
+        return None
+
+    telegram_or_device: Telegram | MbusDevice | None = telegram
+    if mbus_id:
+        telegram_or_device = telegram.get_mbus_device_by_channel(mbus_id)
+        if telegram_or_device is None:
+            return None
+
+    return getattr(telegram_or_device, obis_reference, None)
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    entities = [
-        DSMREntity(description, entry)
-        for description in SENSORS
-        if (
-            description.dsmr_versions is None
-            or dsmr_version in description.dsmr_versions
-        )
-        and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
-    ]
-    async_add_entities(entities)
+    entities: list[DSMREntity] = []
+    initialized: bool = False
+    add_entities_handler: Callable[..., None] | None
 
+    @callback
+    def init_async_add_entities(telegram: Telegram) -> None:
+        """Add the sensor entities after the first telegram was received."""
+        nonlocal add_entities_handler
+        assert add_entities_handler is not None
+        add_entities_handler()
+        add_entities_handler = None
+
+        entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
+
+        entities.extend(
+            [
+                DSMREntity(
+                    description,
+                    entry,
+                    telegram,
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                )
+                for description in SENSORS
+                if is_supported_description(telegram, description, dsmr_version)
+                and (
+                    (not description.is_gas and not description.is_heat)
+                    or CONF_SERIAL_ID_GAS in entry.data
+                )
+            ]
+        )
+        async_add_entities(entities)
+
+    add_entities_handler = async_dispatcher_connect(
+        hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
+    )
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:
+    def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
+        nonlocal initialized
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
+
+        entry.runtime_data.telegram = telegram
+
+        if not initialized and telegram:
+            initialized = True
+            async_dispatcher_send(
+                hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
+            )
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
@@ -445,7 +638,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
@@ -458,11 +651,11 @@ async def async_setup_entry(
                 if transport:
                     # Register listener to close transport on HA shutdown
                     @callback
-                    def close_transport(_event: EventType) -> None:
+                    def close_transport(_event: Event) -> None:
                         """Close the transport on HA shutdown."""
-                        if not transport:
+                        if not transport:  # noqa: B023
                             return
-                        transport.close()
+                        transport.close()  # noqa: B023
 
                     stop_listener = hass.bus.async_listen_once(
                         EVENT_HOMEASSISTANT_STOP, close_transport
@@ -472,7 +665,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -483,11 +676,9 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except (serial.serialutil.SerialException, OSError):
+            except (serial.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -499,18 +690,16 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
                 update_entities_telegram(None)
 
                 if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
+                    hass.state is CoreState.not_running or hass.is_running
                 ):
-                    stop_listener()  # pylint: disable=not-callable
+                    stop_listener()
 
                 if transport:
                     transport.close()
@@ -524,7 +713,9 @@ async def async_setup_entry(
     task = asyncio.create_task(connect_and_reconnect())
 
     @callback
-    async def _async_stop(_: Event) -> None:
+    def _async_stop(_: Event) -> None:
+        if add_entities_handler is not None:
+            add_entities_handler()
         task.cancel()
 
     # Make sure task is cancelled on shutdown (or tests complete)
@@ -533,7 +724,7 @@ async def async_setup_entry(
     )
 
     # Save the task to be able to cancel it when unloading
-    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
+    entry.runtime_data.task = task
 
 
 class DSMREntity(SensorEntity):
@@ -544,18 +735,38 @@ class DSMREntity(SensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
+        self,
+        entity_description: DSMRSensorEntityDescription,
+        entry: ConfigEntry,
+        telegram: Telegram,
+        device_class: SensorDeviceClass,
+        native_unit_of_measurement: str | None,
+        serial_id: str = "",
+        mbus_id: int = 0,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self.telegram: dict[str, DSMRObject] | None = {}
+        self.telegram: Telegram | None = telegram
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
-            device_serial = entry.data[CONF_SERIAL_ID_GAS]
+            if serial_id:
+                device_serial = serial_id
+            else:
+                device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
+        if entity_description.is_water:
+            if serial_id:
+                device_serial = serial_id
+            device_name = DEVICE_NAME_WATER
+        if entity_description.is_heat:
+            if serial_id:
+                device_serial = serial_id
+            device_name = DEVICE_NAME_HEAT
         if device_serial is None:
             device_serial = entry.entry_id
 
@@ -563,28 +774,37 @@ class DSMREntity(SensorEntity):
             identifiers={(DOMAIN, device_serial)},
             name=device_name,
         )
-        self._attr_unique_id = f"{device_serial}_{entity_description.key}"
+        self._mbus_id = mbus_id
+        if mbus_id != 0:
+            if serial_id:
+                self._attr_unique_id = f"{device_serial}"
+            else:
+                self._attr_unique_id = f"{device_serial}_{mbus_id}"
+        else:
+            self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
     @callback
-    def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
+    def update_data(self, telegram: Telegram | None) -> None:
         """Update data."""
         self.telegram = telegram
         if self.hass and (
-            telegram is None or self.entity_description.obis_reference in telegram
+            telegram is None
+            or get_dsmr_object(
+                telegram, self._mbus_id, self.entity_description.obis_reference
+            )
         ):
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute: str) -> str | None:
         """Read attribute from last received telegram for this DSMR object."""
-        # Make sure telegram contains an object for this entities obis
-        if (
-            self.telegram is None
-            or self.entity_description.obis_reference not in self.telegram
-        ):
+        # Get the object
+        dsmr_object = get_dsmr_object(
+            self.telegram, self._mbus_id, self.entity_description.obis_reference
+        )
+        if dsmr_object is None:
             return None
 
         # Get the attribute value if the object has it
-        dsmr_object = self.telegram[self.entity_description.obis_reference]
         attr: str | None = getattr(dsmr_object, attribute)
         return attr
 
@@ -594,47 +814,23 @@ class DSMREntity(SensorEntity):
         return self.telegram is not None
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of this entity."""
-        device_class = super().device_class
-
-        # Override device class for gas sensors providing energy units, like
-        # kWh, MWh, GJ, etc. In those cases, the class should be energy, not gas
-        with suppress(ValueError):
-            if device_class == SensorDeviceClass.GAS and UnitOfEnergy(
-                str(self.native_unit_of_measurement)
-            ):
-                return SensorDeviceClass.ENERGY
-
-        return device_class
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value: StateType
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
-        if (
-            self.entity_description.obis_reference
-            == obis_references.ELECTRICITY_ACTIVE_TARIFF
-        ):
+        if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(
-                float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
-            )
+            value = round(float(value), DEFAULT_PRECISION)
+
+        # Make sure we do not return a zero value for an energy sensor
+        if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
+            return None
 
         return value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = self.get_dsmr_object_attr("unit")
-        if unit_of_measurement in UNIT_CONVERSION:
-            return UNIT_CONVERSION[unit_of_measurement]
-        return unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:

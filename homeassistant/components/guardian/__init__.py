@@ -1,10 +1,11 @@
 """The Elexa Guardian integration."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -24,9 +25,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_SENSOR_PAIR_DUMP,
@@ -40,7 +38,7 @@ from .const import (
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .coordinator import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 
@@ -76,7 +74,13 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @dataclass
@@ -107,45 +111,6 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     raise ValueError(f"No config entry for device ID: {device_id}")
 
 
-@callback
-def async_log_deprecated_service_call(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    alternate_service: str,
-    alternate_target: str,
-    breaks_in_ha_version: str,
-) -> None:
-    """Log a warning about a deprecated service call."""
-    deprecated_service = f"{call.domain}.{call.service}"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_service_{deprecated_service}",
-        breaks_in_ha_version=breaks_in_ha_version,
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service",
-        translation_placeholders={
-            "alternate_service": alternate_service,
-            "alternate_target": alternate_target,
-            "deprecated_service": deprecated_service,
-        },
-    )
-
-    LOGGER.warning(
-        (
-            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
-        ),
-        deprecated_service,
-        breaks_in_ha_version,
-        alternate_service,
-        alternate_target,
-    )
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
@@ -171,16 +136,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = valve_controller_coordinators[
-            api
-        ] = GuardianDataUpdateCoordinator(
-            hass,
-            entry=entry,
-            client=client,
-            api_name=api,
-            api_coro=api_coro,
-            api_lock=api_lock,
-            valve_controller_uid=entry.data[CONF_UID],
+        coordinator = valve_controller_coordinators[api] = (
+            GuardianDataUpdateCoordinator(
+                hass,
+                entry=entry,
+                client=client,
+                api_name=api,
+                api_coro=api_coro,
+                api_lock=api_lock,
+                valve_controller_uid=entry.data[CONF_UID],
+            )
         )
         init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 
@@ -209,7 +174,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def call_with_data(func: Callable) -> Callable:
+    def call_with_data(
+        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Hydrate a service call with the appropriate GuardianData object."""
 
         async def wrapper(call: ServiceCall) -> None:
@@ -339,9 +306,7 @@ class PairedSensorManager:
             entry=self._entry,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=lambda: cast(
-                Awaitable, self._client.sensor.paired_sensor_status(uid)
-            ),
+            api_coro=lambda: self._client.sensor.paired_sensor_status(uid),
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
@@ -389,96 +354,3 @@ class PairedSensorManager:
             config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
         )
         dev_reg.async_remove_device(device.id)
-
-
-class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
-    """Define a base Guardian entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_extra_state_attributes = {}
-        self.entity_description = description
-
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity's underlying data.
-
-        This should be extended by Guardian platforms.
-        """
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._async_update_from_latest_data()
-
-
-class PairedSensorEntity(GuardianEntity):
-    """Define a Guardian paired sensor entity."""
-
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinator: GuardianDataUpdateCoordinator,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
-
-        paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, paired_sensor_uid)},
-            manufacturer="Elexa",
-            model=coordinator.data["codename"],
-            name=f"Guardian paired sensor {paired_sensor_uid}",
-            via_device=(DOMAIN, entry.data[CONF_UID]),
-        )
-        self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
-
-
-@dataclass
-class ValveControllerEntityDescriptionMixin:
-    """Define an entity description mixin for valve controller entities."""
-
-    api_category: str
-
-
-@dataclass
-class ValveControllerEntityDescription(
-    EntityDescription, ValveControllerEntityDescriptionMixin
-):
-    """Describe a Guardian valve controller entity."""
-
-
-class ValveControllerEntity(GuardianEntity):
-    """Define a Guardian valve controller entity."""
-
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinators: dict[str, GuardianDataUpdateCoordinator],
-        description: ValveControllerEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinators[description.api_category], description)
-
-        self._diagnostics_coordinator = coordinators[API_SYSTEM_DIAGNOSTICS]
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data[CONF_UID])},
-            manufacturer="Elexa",
-            model=self._diagnostics_coordinator.data["firmware"],
-            name=f"Guardian valve controller {entry.data[CONF_UID]}",
-        )
-        self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"

@@ -1,26 +1,29 @@
 """Support for tracking iBeacon devices."""
+
 from __future__ import annotations
 
 from ibeacon_ble import iBeaconAdvertisement
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
+from . import IBeaconConfigEntry
+from .const import SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IBeaconConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for iBeacon Tracker component."""
-    coordinator: IBeaconCoordinator = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     @callback
     def _async_device_new(
@@ -48,6 +51,9 @@ async def async_setup_entry(
 class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
     """An iBeacon Tracker entity."""
 
+    _attr_name = None
+    _attr_translation_key = "device_tracker"
+
     def __init__(
         self,
         coordinator: IBeaconCoordinator,
@@ -71,11 +77,6 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
     def source_type(self) -> SourceType:
         """Return tracker source type."""
         return SourceType.BLUETOOTH_LE
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:bluetooth-connect" if self._active else "mdi:bluetooth-off"
 
     @callback
     def _async_seen(

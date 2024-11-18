@@ -1,4 +1,5 @@
 """Support for Netgear switches."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -15,7 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+from .entity import NetgearDeviceEntity, NetgearRouterEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,81 +26,71 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SWITCH_TYPES = [
     SwitchEntityDescription(
         key="allow_or_block",
-        name="Allowed on network",
-        icon="mdi:block-helper",
+        translation_key="allowed_on_network",
         entity_category=EntityCategory.CONFIG,
     )
 ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetgearSwitchEntityDescriptionRequired:
     """Required attributes of NetgearSwitchEntityDescription."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class NetgearSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Netgear Switch entities."""
 
     update: Callable[[NetgearRouter], bool]
     action: Callable[[NetgearRouter], bool]
 
 
-@dataclass
-class NetgearSwitchEntityDescription(
-    SwitchEntityDescription, NetgearSwitchEntityDescriptionRequired
-):
-    """Class describing Netgear Switch entities."""
-
-
 ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="access_control",
-        name="Access Control",
-        icon="mdi:block-helper",
+        translation_key="access_control",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_block_device_enable_status,
         action=lambda router: router.api.set_block_device_enable,
     ),
     NetgearSwitchEntityDescription(
         key="traffic_meter",
-        name="Traffic Meter",
-        icon="mdi:wifi-arrow-up-down",
+        translation_key="traffic_meter",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_traffic_meter_enabled,
         action=lambda router: router.api.enable_traffic_meter,
     ),
     NetgearSwitchEntityDescription(
         key="parental_control",
-        name="Parental Control",
-        icon="mdi:account-child-outline",
+        translation_key="parental_control",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_parental_control_enable_status,
         action=lambda router: router.api.enable_parental_control,
     ),
     NetgearSwitchEntityDescription(
         key="qos",
-        name="Quality of Service",
-        icon="mdi:wifi-star",
+        translation_key="quality_of_service",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_qos_enable_status,
         action=lambda router: router.api.set_qos_enable_status,
     ),
     NetgearSwitchEntityDescription(
         key="2g_guest_wifi",
-        name="2.4G Guest Wifi",
-        icon="mdi:wifi",
+        translation_key="2g_guest_wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_2g_guest_access_enabled,
         action=lambda router: router.api.set_2g_guest_access_enabled,
     ),
     NetgearSwitchEntityDescription(
         key="5g_guest_wifi",
-        name="5G Guest Wifi",
-        icon="mdi:wifi",
+        translation_key="5g_guest_wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_5g_guest_access_enabled,
         action=lambda router: router.api.set_5g_guest_access_enabled,
     ),
     NetgearSwitchEntityDescription(
         key="smart_connect",
-        name="Smart Connect",
-        icon="mdi:wifi",
+        translation_key="smart_connect",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_smart_connect_enabled,
         action=lambda router: router.api.set_smart_connect_enabled,
@@ -112,13 +104,10 @@ async def async_setup_entry(
     """Set up switches for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
 
-    # Router entities
-    router_entities = []
-
-    for description in ROUTER_SWITCH_TYPES:
-        router_entities.append(NetgearRouterSwitchEntity(router, description))
-
-    async_add_entities(router_entities)
+    async_add_entities(
+        NetgearRouterSwitchEntity(router, description)
+        for description in ROUTER_SWITCH_TYPES
+    )
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
@@ -166,9 +155,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self.entity_description = entity_description
-        self._name = f"{self.get_device_name()} {self.entity_description.name}"
-        self._unique_id = f"{self._mac}-{self.entity_description.key}"
-        self._attr_is_on = None
+        self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self.async_update_device()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -206,8 +193,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         """Initialize a Netgear device."""
         super().__init__(router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
 
         self._attr_is_on = None
         self._attr_available = False

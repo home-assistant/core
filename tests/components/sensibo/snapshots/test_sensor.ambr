@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_sensor
+  ReadOnlyDict({
+    'device_class': 'enum',
+    'friendly_name': 'Kitchen Pure AQI',
+    'options': list([
+      'good',
+      'moderate',
+      'bad',
+    ]),
+  })
+# ---
+# name: test_sensor.1
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'fanlevel': 'low',
+    'friendly_name': 'Hallway Climate React low temperature threshold',
+    'horizontalswing': 'stopped',
+    'light': 'on',
+    'mode': 'heat',
+    'on': True,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'swing': 'stopped',
+    'targettemperature': 21,
+    'temperatureunit': 'c',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---

@@ -1,4 +1,5 @@
 """Asuswrt status sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,12 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,20 +24,25 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import slugify
 
+from . import AsusWrtConfigEntry
 from .const import (
-    DATA_ASUSWRT,
-    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_SENSORS,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
+    SENSORS_CPU,
     SENSORS_LOAD_AVG,
+    SENSORS_MEMORY,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
+    SENSORS_UPTIME,
 )
-from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
+from .router import AsusWrtRouter
 
 
-@dataclass
+@dataclass(frozen=True)
 class AsusWrtSensorEntityDescription(SensorEntityDescription):
     """A class that describes AsusWrt sensor entities."""
 
@@ -44,18 +51,29 @@ class AsusWrtSensorEntityDescription(SensorEntityDescription):
 
 UNIT_DEVICES = "Devices"
 
+CPU_CORE_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = tuple(
+    AsusWrtSensorEntityDescription(
+        key=sens_key,
+        translation_key="cpu_core_usage",
+        translation_placeholders={"core_id": str(core_id)},
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    )
+    for core_id, sens_key in enumerate(SENSORS_CPU[1:], start=1)
+)
 CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_CONNECTED_DEVICE[0],
-        name="Devices Connected",
-        icon="mdi:router-network",
+        translation_key="devices_connected",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UNIT_DEVICES,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[0],
-        name="Download Speed",
-        icon="mdi:download-network",
+        translation_key="download_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
@@ -65,8 +83,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[1],
-        name="Upload Speed",
-        icon="mdi:upload-network",
+        translation_key="upload_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
@@ -76,8 +93,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[0],
-        name="Download",
-        icon="mdi:download",
+        translation_key="download",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -87,8 +103,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[1],
-        name="Upload",
-        icon="mdi:upload",
+        translation_key="upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -98,8 +113,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[0],
-        name="Load Avg (1m)",
-        icon="mdi:cpu-32-bit",
+        translation_key="load_avg_1m",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -107,8 +121,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
-        name="Load Avg (5m)",
-        icon="mdi:cpu-32-bit",
+        translation_key="load_avg_5m",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -116,8 +129,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
-        name="Load Avg (15m)",
-        icon="mdi:cpu-32-bit",
+        translation_key="load_avg_15m",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -125,7 +137,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[0],
-        name="2.4GHz Temperature",
+        translation_key="24ghz_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -135,7 +147,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[1],
-        name="5GHz Temperature",
+        translation_key="5ghz_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -145,7 +157,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[2],
-        name="CPU Temperature",
+        translation_key="cpu_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -153,14 +165,91 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[3],
+        translation_key="5ghz_2_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[4],
+        translation_key="6ghz_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_MEMORY[0],
+        translation_key="memory_usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_MEMORY[1],
+        translation_key="memory_free",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=2,
+        factor=1024,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_MEMORY[2],
+        translation_key="memory_used",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=2,
+        factor=1024,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_UPTIME[0],
+        translation_key="last_boot",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_UPTIME[1],
+        translation_key="uptime",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_CPU[0],
+        translation_key="cpu_usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    *CPU_CORE_SENSORS,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AsusWrtConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
     entities = []
 
     for sensor_data in router.sensors_coordinator.values():
@@ -180,6 +269,9 @@ async def async_setup_entry(
 class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     """Representation of a AsusWrt sensor."""
 
+    entity_description: AsusWrtSensorEntityDescription
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -188,13 +280,9 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
-        self.entity_description: AsusWrtSensorEntityDescription = description
+        self.entity_description = description
 
-        self._attr_name = f"{router.name} {description.name}"
-        if router.unique_id:
-            self._attr_unique_id = f"{DOMAIN} {router.unique_id} {description.name}"
-        else:
-            self._attr_unique_id = f"{DOMAIN} {self.name}"
+        self._attr_unique_id = slugify(f"{router.unique_id}_{description.key}")
         self._attr_device_info = router.device_info
         self._attr_extra_state_attributes = {"hostname": router.host}
 

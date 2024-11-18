@@ -2,8 +2,9 @@
   "domain": "blinksticklight",
   "name": "BlinkStick",
   "codeowners": [],
+  "disabled": "This integration is disabled because it uses non-open source code to operate.",
   "documentation": "https://www.home-assistant.io/integrations/blinksticklight",
   "iot_class": "local_polling",
   "loggers": ["blinkstick"],
-  "requirements": ["blinkstick==1.2.0"]
+  "requirements": ["BlinkStick==1.2.0"]
 }

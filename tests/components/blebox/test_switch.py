@@ -1,4 +1,5 @@
 """Blebox switch tests."""
+
 import logging
 from unittest.mock import AsyncMock, PropertyMock
 
@@ -44,7 +45,9 @@ def switchbox_fixture():
     return (feature, "switch.switchbox_0_relay")
 
 
-async def test_switchbox_init(switchbox, hass: HomeAssistant, config) -> None:
+async def test_switchbox_init(
+    switchbox, hass: HomeAssistant, device_registry: dr.DeviceRegistry, config
+) -> None:
     """Test switch default state."""
 
     feature_mock, entity_id = switchbox
@@ -60,7 +63,6 @@ async def test_switchbox_init(switchbox, hass: HomeAssistant, config) -> None:
 
     assert state.state == STATE_OFF
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My switch box"
@@ -189,7 +191,9 @@ def switchbox_d_fixture():
     return (features, ["switch.switchboxd_0_relay", "switch.switchboxd_1_relay"])
 
 
-async def test_switchbox_d_init(switchbox_d, hass: HomeAssistant) -> None:
+async def test_switchbox_d_init(
+    switchbox_d, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test switch default state."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -206,7 +210,6 @@ async def test_switchbox_d_init(switchbox_d, hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"
@@ -223,7 +226,6 @@ async def test_switchbox_d_init(switchbox_d, hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"

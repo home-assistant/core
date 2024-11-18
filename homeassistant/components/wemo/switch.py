@@ -1,7 +1,7 @@
 """Support for WeMo switches."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -11,12 +11,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as WEMO_DOMAIN
+from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -36,7 +35,7 @@ MAKER_SWITCH_TOGGLE = "toggle"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo switches."""
@@ -45,14 +44,7 @@ async def async_setup_entry(
         """Handle a discovered Wemo device."""
         async_add_entities([WemoSwitch(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
 
 class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
@@ -98,8 +90,9 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     def as_uptime(_seconds: int) -> str:
         """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
-        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
-            uptime.day - 1, uptime.hour, uptime.minute, uptime.second
+        return (
+            f"{uptime.day - 1:0>2d}d {uptime.hour:0>2d}h "
+            f"{uptime.minute:0>2d}m {uptime.second:0>2d}s"
         )
 
     @property

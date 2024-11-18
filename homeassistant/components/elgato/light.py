@@ -1,4 +1,5 @@
 """Support for Elgato lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import (
@@ -20,7 +20,8 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import DOMAIN, SERVICE_IDENTIFY
+from . import ElgatorConfigEntry
+from .const import SERVICE_IDENTIFY
 from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
@@ -29,17 +30,17 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElgatorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([ElgatoLight(coordinator)])
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_IDENTIFY,
-        {},
+        None,
         ElgatoLight.async_identify.__name__,
     )
 
@@ -47,6 +48,7 @@ async def async_setup_entry(
 class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
+    _attr_name = None
     _attr_min_mireds = 143
     _attr_max_mireds = 344
 
@@ -57,7 +59,15 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         self._attr_unique_id = coordinator.data.info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
-        if self.coordinator.data.settings.power_on_hue is not None:
+        if (
+            self.coordinator.data.info.product_name
+            in (
+                "Elgato Light Strip",
+                "Elgato Light Strip Pro",
+            )
+            or self.coordinator.data.settings.power_on_hue
+            or self.coordinator.data.state.hue is not None
+        ):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_min_mireds = 153
             self._attr_max_mireds = 285

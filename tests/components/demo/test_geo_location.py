@@ -1,4 +1,5 @@
 """The tests for the demo platform."""
+
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
@@ -21,7 +22,7 @@ from tests.common import assert_setup_component, async_fire_time_changed
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
-async def test_setup_platform(hass: HomeAssistant) -> None:
+async def test_setup_platform(hass: HomeAssistant, disable_platforms) -> None:
     """Test setup of demo platform via configuration."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -49,7 +50,7 @@ async def test_setup_platform(hass: HomeAssistant) -> None:
 
         # Update (replaces 1 device).
         async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         # Get all states again, ensure that the number of states is still
         # the same, but the lists are different.
         all_states_updated = [

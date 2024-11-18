@@ -1,25 +1,96 @@
 # Describes the format for Habitica service
 api_call:
-  name: API name
-  description: Call Habitica API
   fields:
     name:
-      name: Name
-      description: Habitica's username to call for
       required: true
       example: "xxxNotAValidNickxxx"
       selector:
         text:
     path:
-      name: Path
-      description: "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks"
       required: true
       example: '["tasks", "user", "post"]'
       selector:
         object:
     args:
-      name: Args
-      description: Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint
       example: '{"text": "Use API from Home Assistant", "type": "todo"}'
       selector:
         object:
+cast_skill:
+  fields:
+    config_entry: &config_entry
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    skill:
+      required: true
+      selector:
+        select:
+          options:
+            - "pickpocket"
+            - "backstab"
+            - "smash"
+            - "fireball"
+          mode: dropdown
+          translation_key: "skill_select"
+    task: &task
+      required: true
+      selector:
+        text:
+accept_quest:
+  fields:
+    config_entry: *config_entry
+reject_quest:
+  fields:
+    config_entry: *config_entry
+start_quest:
+  fields:
+    config_entry: *config_entry
+cancel_quest:
+  fields:
+    config_entry: *config_entry
+abort_quest:
+  fields:
+    config_entry: *config_entry
+leave_quest:
+  fields:
+    config_entry: *config_entry
+score_habit:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    direction:
+      required: true
+      selector:
+        select:
+          options:
+            - value: up
+              label: "➕"
+            - value: down
+              label: "➖"
+score_reward:
+  fields:
+    config_entry: *config_entry
+    task: *task
+transformation:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    item:
+      required: true
+      selector:
+        select:
+          options:
+            - "snowball"
+            - "spooky_sparkles"
+            - "seafoam"
+            - "shiny_seed"
+          mode: dropdown
+          translation_key: "transformation_item_select"
+    target:
+      required: true
+      selector:
+        text:

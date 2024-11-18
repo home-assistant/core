@@ -1,37 +1,66 @@
 """The Flipr integration."""
-from datetime import timedelta
+
+from collections import Counter
+from dataclasses import dataclass
 import logging
 
 from flipr_api import FliprAPIRestClient
-from flipr_api.exceptions import FliprError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
+from .const import DOMAIN
+from .coordinator import FliprDataUpdateCoordinator, FliprHubDataUpdateCoordinator
+
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=60)
+
+@dataclass
+class FliprData:
+    """The Flipr data class."""
+
+    flipr_coordinators: list[FliprDataUpdateCoordinator]
+    hub_coordinators: list[FliprHubDataUpdateCoordinator]
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+type FliprConfigEntry = ConfigEntry[FliprData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Flipr from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> bool:
+    """Set up flipr from a config entry."""
 
-    coordinator = FliprDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # Detect invalid old config entry and raise error if found
+    detect_invalid_old_configuration(hass, entry)
+
+    config = entry.data
+
+    username = config[CONF_EMAIL]
+    password = config[CONF_PASSWORD]
+
+    _LOGGER.debug("Initializing Flipr client %s", username)
+    client = FliprAPIRestClient(username, password)
+    ids = await hass.async_add_executor_job(client.search_all_ids)
+
+    _LOGGER.debug("List of devices ids : %s", ids)
+
+    flipr_coordinators = []
+    for flipr_id in ids["flipr"]:
+        flipr_coordinator = FliprDataUpdateCoordinator(hass, client, flipr_id)
+        await flipr_coordinator.async_config_entry_first_refresh()
+        flipr_coordinators.append(flipr_coordinator)
+
+    hub_coordinators = []
+    for hub_id in ids["hub"]:
+        hub_coordinator = FliprHubDataUpdateCoordinator(hass, client, hub_id)
+        await hub_coordinator.async_config_entry_first_refresh()
+        hub_coordinators.append(hub_coordinator)
+
+    entry.runtime_data = FliprData(flipr_coordinators, hub_coordinators)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -40,65 +69,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class FliprDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to hold Flipr data retrieval."""
+def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
+    """Detect invalid old configuration and raise error if found."""
 
-    def __init__(self, hass, entry):
-        """Initialize."""
-        username = entry.data[CONF_EMAIL]
-        password = entry.data[CONF_PASSWORD]
-        self.flipr_id = entry.data[CONF_FLIPR_ID]
+    def find_duplicate_entries(entries):
+        values = [e.data["email"] for e in entries]
+        _LOGGER.debug("Detecting duplicates in values : %s", values)
+        return any(count > 1 for count in Counter(values).values())
 
-        # Establishes the connection.
-        self.client = FliprAPIRestClient(username, password)
-        self.entry = entry
+    entries = hass.config_entries.async_entries(DOMAIN)
 
-        super().__init__(
+    if find_duplicate_entries(entries):
+        ir.async_create_issue(
             hass,
-            _LOGGER,
-            name=f"Flipr data measure for {self.flipr_id}",
-            update_interval=SCAN_INTERVAL,
+            DOMAIN,
+            "duplicate_config",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="duplicate_config",
         )
 
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            data = await self.hass.async_add_executor_job(
-                self.client.get_pool_measure_latest, self.flipr_id
-            )
-        except FliprError as error:
-            raise UpdateFailed(error) from error
-
-        return data
+        raise ConfigEntryError(
+            "Duplicate entries found for flipr with the same user email. Please remove one of it manually. Multiple fliprs will be automatically detected after restart."
+        )
 
 
-class FliprEntity(CoordinatorEntity):
-    """Implements a common class elements representing the Flipr component."""
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug("Migration of flipr config from version %s", entry.version)
 
-    _attr_attribution = ATTRIBUTION
+    if entry.version == 1:
+        # In version 1, we have flipr device as config entry unique id
+        # and one device per config entry.
+        # We need to migrate to a new config entry that may contain multiple devices.
+        # So we change the entry data to match config_flow evolution.
+        login = entry.data[CONF_EMAIL]
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize Flipr sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        if coordinator.config_entry:
-            flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
-            self._attr_unique_id = f"{flipr_id}-{description.key}"
+        hass.config_entries.async_update_entry(entry, version=2, unique_id=login)
 
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, flipr_id)},
-                manufacturer=MANUFACTURER,
-                name=NAME,
-            )
+        _LOGGER.debug("Migration of flipr config to version 2 successful")
 
-            self._attr_name = f"Flipr {flipr_id} {description.name}"
+    return True

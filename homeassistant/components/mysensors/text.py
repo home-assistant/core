@@ -1,4 +1,5 @@
 """Provide a text platform for MySensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.text import TextEntity
@@ -8,9 +9,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -24,7 +25,7 @@ async def async_setup_entry(
     @callback
     def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors text entity."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.TEXT,
             discovery_info,
@@ -43,7 +44,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsText(MySensorsEntity, TextEntity):
+class MySensorsText(MySensorsChildEntity, TextEntity):
     """Representation of the value of a MySensors Text child node."""
 
     _attr_native_max = 25

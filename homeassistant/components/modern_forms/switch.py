@@ -1,4 +1,5 @@
 """Support for Modern Forms switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,12 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import modernforms_exception_handler
 from .const import DOMAIN
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
@@ -39,20 +38,18 @@ class ModernFormsSwitch(ModernFormsDeviceEntity, SwitchEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        name: str,
-        icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
         self._key = key
-        super().__init__(
-            entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
-        )
+        super().__init__(entry_id=entry_id, coordinator=coordinator)
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_{self._key}"
 
 
 class ModernFormsAwaySwitch(ModernFormsSwitch):
     """Defines a Modern Forms Away mode switch."""
+
+    _attr_translation_key = "away_mode"
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
@@ -61,9 +58,7 @@ class ModernFormsAwaySwitch(ModernFormsSwitch):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:airplane-takeoff",
             key="away_mode",
-            name=f"{coordinator.data.info.device_name} Away Mode",
         )
 
     @property
@@ -85,6 +80,8 @@ class ModernFormsAwaySwitch(ModernFormsSwitch):
 class ModernFormsAdaptiveLearningSwitch(ModernFormsSwitch):
     """Defines a Modern Forms Adaptive Learning switch."""
 
+    _attr_translation_key = "adaptive_learning"
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -92,9 +89,7 @@ class ModernFormsAdaptiveLearningSwitch(ModernFormsSwitch):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:school-outline",
             key="adaptive_learning",
-            name=f"{coordinator.data.info.device_name} Adaptive Learning",
         )
 
     @property

@@ -11,13 +11,13 @@
         }
       },
       "geography_by_name": {
-        "title": "Configure a Geography",
+        "title": "[%key:component::airvisual::config::step::geography_by_coords::title%]",
         "description": "Use the AirVisual cloud API to monitor a city/state/country.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "city": "City",
           "country": "Country",
-          "state": "state"
+          "state": "State"
         }
       },
       "reauth_confirm": {
@@ -32,7 +32,7 @@
       }
     },
     "error": {
-      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "location_not_found": "Location not found",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -45,7 +45,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure AirVisual",
+        "title": "[%key:component::airvisual::config::step::user::title%]",
         "data": {
           "show_on_map": "Show monitored geography on the map"
         }

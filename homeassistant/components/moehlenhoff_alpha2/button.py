@@ -6,10 +6,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
-from . import Alpha2BaseCoordinator
 from .const import DOMAIN
+from .coordinator import Alpha2BaseCoordinator
 
 
 async def async_setup_entry(
@@ -38,4 +38,4 @@ class Alpha2TimeSyncButton(CoordinatorEntity[Alpha2BaseCoordinator], ButtonEntit
 
     async def async_press(self) -> None:
         """Synchronize current local time from HA instance to base station."""
-        await self.coordinator.base.set_datetime(dt.now())
+        await self.coordinator.base.set_datetime(dt_util.now())

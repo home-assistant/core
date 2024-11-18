@@ -6,6 +6,9 @@
         "description": "Set up your WLED to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your WLED device."
         }
       },
       "zeroconf_confirm": {
@@ -18,27 +21,115 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "cct_unsupported": "This WLED device uses CCT channels, which is not supported by this integration"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "keep_master_light": "Keep master light, even with 1 LED segment."
+          "keep_master_light": "Keep main light, even with 1 LED segment."
         }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
+    "light": {
+      "main": {
+        "name": "Main"
+      },
+      "segment": {
+        "name": "Segment {segment}"
+      }
+    },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      },
+      "segment_intensity": {
+        "name": "Segment {segment} intensity"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "segment_speed": {
+        "name": "Segment {segment} speed"
+      }
+    },
     "select": {
+      "color_palette": {
+        "name": "Color palette"
+      },
+      "segment_color_palette": {
+        "name": "Segment {segment} color palette"
+      },
       "live_override": {
+        "name": "Live override",
         "state": {
           "0": "[%key:common::state::off%]",
           "1": "[%key:common::state::on%]",
           "2": "Until device restarts"
         }
+      },
+      "preset": {
+        "name": "Preset"
+      },
+      "playlist": {
+        "name": "Playlist"
+      }
+    },
+    "sensor": {
+      "estimated_current": {
+        "name": "Estimated current"
+      },
+      "info_leds_count": {
+        "name": "LED count"
+      },
+      "info_leds_max_power": {
+        "name": "Max current"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "free_heap": {
+        "name": "Free memory"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "wifi_channel": {
+        "name": "Wi-Fi channel"
+      },
+      "wifi_bssid": {
+        "name": "Wi-Fi BSSID"
+      },
+      "ip": {
+        "name": "IP"
+      }
+    },
+    "switch": {
+      "nightlight": {
+        "name": "Nightlight"
+      },
+      "sync_send": {
+        "name": "Sync send"
+      },
+      "sync_receive": {
+        "name": "Sync receive"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "segment_reverse": {
+        "name": "Segment {segment} reverse"
       }
     }
   }

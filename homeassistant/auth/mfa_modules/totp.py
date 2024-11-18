@@ -1,4 +1,5 @@
 """Time-based One Time Password auth module."""
+
 from __future__ import annotations
 
 import asyncio
@@ -176,17 +177,17 @@ class TotpAuthModule(MultiFactorAuthModule):
 class TotpSetupFlow(SetupFlow):
     """Handler for the setup flow."""
 
+    _auth_module: TotpAuthModule
+    _ota_secret: str
+    _url: str
+    _image: str
+
     def __init__(
         self, auth_module: TotpAuthModule, setup_schema: vol.Schema, user: User
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user.id)
-        # to fix typing complaint
-        self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret: str = ""
-        self._url: str | None = None
-        self._image: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -213,12 +214,11 @@ class TotpSetupFlow(SetupFlow):
             errors["base"] = "invalid_code"
 
         else:
-            hass = self._auth_module.hass
             (
                 self._ota_secret,
                 self._url,
                 self._image,
-            ) = await hass.async_add_executor_job(
+            ) = await self._auth_module.hass.async_add_executor_job(
                 _generate_secret_and_qr_code,
                 str(self._user.name),
             )

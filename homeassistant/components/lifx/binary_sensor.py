@@ -1,4 +1,5 @@
 """Binary sensor entities for LIFX integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -18,7 +19,7 @@ from .util import lifx_features
 
 HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
     key=HEV_CYCLE_STATE,
-    name="Clean Cycle",
+    translation_key="clean_cycle",
     entity_category=EntityCategory.DIAGNOSTIC,
     device_class=BinarySensorDeviceClass.RUNNING,
 )
@@ -38,8 +39,6 @@ async def async_setup_entry(
 
 class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
     """LIFX HEV cycle state binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

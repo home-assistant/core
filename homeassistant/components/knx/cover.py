@@ -1,10 +1,10 @@
 """Support for KNX/IP covers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
 
-from xknx import XKNX
 from xknx.devices import Cover as XknxCover
 
 from homeassistant import config_entries
@@ -25,8 +25,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxEntity
+from . import KNXModule
+from .const import KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import CoverSchema
 
 
@@ -36,22 +37,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up cover(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.COVER]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.COVER]
 
-    async_add_entities(KNXCover(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXCover(knx_module, entity_config) for entity_config in config)
 
 
-class KNXCover(KnxEntity, CoverEntity):
+class KNXCover(KnxYamlEntity, CoverEntity):
     """Representation of a KNX cover."""
 
     _device: XknxCover
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize the cover."""
         super().__init__(
+            knx_module=knx_module,
             device=XknxCover(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
                 group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
@@ -69,7 +71,7 @@ class KNXCover(KnxEntity, CoverEntity):
                 invert_updown=config[CoverSchema.CONF_INVERT_UPDOWN],
                 invert_position=config[CoverSchema.CONF_INVERT_POSITION],
                 invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
-            )
+            ),
         )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
@@ -163,11 +165,17 @@ class KNXCover(KnxEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self._device.set_short_up()
+        if self._device.angle.writable:
+            await self._device.set_angle(0)
+        else:
+            await self._device.set_short_up()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self._device.set_short_down()
+        if self._device.angle.writable:
+            await self._device.set_angle(100)
+        else:
+            await self._device.set_short_down()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""

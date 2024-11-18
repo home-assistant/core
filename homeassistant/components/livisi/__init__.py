@@ -1,4 +1,5 @@
 """The Livisi Smart Home integration."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=coordinator.serial_number,
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Livisi",
         name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",

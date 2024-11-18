@@ -16,13 +16,13 @@
         }
       },
       "origin_coordinates": {
-        "title": "Choose Origin",
+        "title": "[%key:component::here_travel_time::config::step::origin_menu::title%]",
         "data": {
           "origin": "Origin as GPS coordinates"
         }
       },
       "origin_entity_id": {
-        "title": "Choose Origin",
+        "title": "[%key:component::here_travel_time::config::step::origin_menu::title%]",
         "data": {
           "origin_entity_id": "Origin using an entity"
         }
@@ -30,18 +30,18 @@
       "destination_menu": {
         "title": "Choose Destination",
         "menu_options": {
-          "destination_coordinates": "Using a map location",
-          "destination_entity": "Using an entity"
+          "destination_coordinates": "[%key:component::here_travel_time::config::step::origin_menu::menu_options::origin_coordinates%]",
+          "destination_entity": "[%key:component::here_travel_time::config::step::origin_menu::menu_options::origin_entity%]"
         }
       },
       "destination_coordinates": {
-        "title": "Choose Destination",
+        "title": "[%key:component::here_travel_time::config::step::destination_menu::title%]",
         "data": {
           "destination": "Destination as GPS coordinates"
         }
       },
       "destination_entity_id": {
-        "title": "Choose Destination",
+        "title": "[%key:component::here_travel_time::config::step::destination_menu::title%]",
         "data": {
           "destination_entity_id": "Destination using an entity"
         }
@@ -52,7 +52,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -83,6 +84,25 @@
         "data": {
           "arrival_time": "Arrival Time"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "duration": {
+        "name": "Duration"
+      },
+      "duration_in_traffic": {
+        "name": "Duration in traffic"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "origin": {
+        "name": "Origin"
+      },
+      "destination": {
+        "name": "Destination"
       }
     }
   }

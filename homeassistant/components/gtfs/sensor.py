@@ -1,4 +1,5 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
+
 from __future__ import annotations
 
 import datetime
@@ -269,7 +270,7 @@ def get_next_departure(
     schedule: Any,
     start_station_id: Any,
     end_station_id: Any,
-    offset: cv.time_period,
+    offset: datetime.timedelta,
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
@@ -341,7 +342,7 @@ def get_next_departure(
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """
+        """  # noqa: S608
     result = schedule.engine.connect().execute(
         text(sql_query),
         {
@@ -404,7 +405,7 @@ def get_next_departure(
 
     item = {}
     for key in sorted(timetable.keys()):
-        if dt_util.parse_datetime(key) > now:
+        if (value := dt_util.parse_datetime(key)) is not None and value > now:
             item = timetable[key]
             _LOGGER.debug(
                 "Departure found for station %s @ %s -> %s", start_station_id, key, item
@@ -505,7 +506,6 @@ def setup_platform(
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
-    # pylint: disable=no-member
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
@@ -643,15 +643,14 @@ class GTFSDepartureSensor(SensorEntity):
             # Define the state as a UTC timestamp with ISO 8601 format
             if not self._departure:
                 self._state = None
+            elif self._agency:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
+                )
             else:
-                if self._agency:
-                    self._state = self._departure["departure_time"].replace(
-                        tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
-                    )
-                else:
-                    self._state = self._departure["departure_time"].replace(
-                        tzinfo=dt_util.UTC
-                    )
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Assign attributes, icon and name
             self.update_attributes()
@@ -738,10 +737,10 @@ class GTFSDepartureSensor(SensorEntity):
             self._attributes[ATTR_LOCATION_DESTINATION] = LOCATION_TYPE_OPTIONS.get(
                 self._destination.location_type, LOCATION_TYPE_DEFAULT
             )
-            self._attributes[
-                ATTR_WHEELCHAIR_DESTINATION
-            ] = WHEELCHAIR_BOARDING_OPTIONS.get(
-                self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+            self._attributes[ATTR_WHEELCHAIR_DESTINATION] = (
+                WHEELCHAIR_BOARDING_OPTIONS.get(
+                    self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+                )
             )
 
         # Manage Route metadata

@@ -1,19 +1,21 @@
 """Config Flow for Flick Electric integration."""
+
 import asyncio
 import logging
+from typing import Any
 
-import async_timeout
 from pyflick.authentication import AuthException, SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -30,7 +32,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
     """Flick config flow."""
 
     VERSION = 1
@@ -45,16 +47,18 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 token = await auth.async_get_access_token()
-        except asyncio.TimeoutError as err:
-            raise CannotConnect() from err
+        except TimeoutError as err:
+            raise CannotConnect from err
         except AuthException as err:
-            raise InvalidAuth() from err
+            raise InvalidAuth from err
 
         return token is not None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle gathering login info."""
         errors = {}
         if user_input is not None:
@@ -64,7 +68,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -83,9 +87,9 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

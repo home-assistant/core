@@ -1,4 +1,5 @@
 """Config flow for Modem Caller ID integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,10 +9,9 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
@@ -23,18 +23,18 @@ def _generate_unique_id(port: ListPortInfo) -> str:
     return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
 
 
-class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Phone Modem."""
 
     def __init__(self) -> None:
         """Set up flow instance."""
         self._device: str | None = None
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle USB Discovery."""
-        device = discovery_info.device
-
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
         unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
         if (
             await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)
@@ -46,7 +46,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle USB Discovery confirmation."""
         if user_input is not None:
             return self.async_create_entry(
@@ -58,7 +58,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = {}
         if self._async_in_progress():

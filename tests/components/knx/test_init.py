@@ -1,4 +1,5 @@
 """Test KNX init."""
+
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +11,6 @@ from xknx.io import (
     SecureConfig,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -39,6 +39,7 @@ from homeassistant.components.knx.const import (
     DOMAIN as KNX_DOMAIN,
     KNXConfigEntryData,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -276,13 +277,13 @@ async def test_async_remove_entry(
     knx.mock_config_entry = config_entry
     await knx.setup_integration({})
 
-    with patch("pathlib.Path.unlink") as unlink_mock, patch(
-        "pathlib.Path.rmdir"
-    ) as rmdir_mock:
+    with (
+        patch("pathlib.Path.unlink") as unlink_mock,
+        patch("pathlib.Path.rmdir") as rmdir_mock,
+    ):
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        unlink_mock.assert_called_once()
+        assert unlink_mock.call_count == 3
         rmdir_mock.assert_called_once()
-    await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

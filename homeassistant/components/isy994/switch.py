@@ -1,6 +1,8 @@
 """Support for ISY switches."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from pyisy.constants import (
@@ -22,12 +24,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
 from .models import IsyData
+
+
+@dataclass(frozen=True)
+class ISYSwitchEntityDescription(SwitchEntityDescription):
+    """Describes ISY switch."""
+
+    # ISYEnableSwitchEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
 
 async def async_setup_entry(
@@ -53,7 +64,7 @@ async def async_setup_entry(
     for node, control in isy_data.aux_properties[Platform.SWITCH]:
         # Currently only used for enable switches, will need to be updated for
         # NS support by making sure control == TAG_ENABLED
-        description = SwitchEntityDescription(
+        description = ISYSwitchEntityDescription(
             key=control,
             device_class=SwitchDeviceClass.SWITCH,
             name=control.title(),
@@ -102,6 +113,8 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
 class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     """A representation of an ISY program switch."""
 
+    _attr_icon = "mdi:script-text-outline"  # Matches isy program icon
+
     @property
     def is_on(self) -> bool:
         """Get whether the ISY switch program is on."""
@@ -121,11 +134,6 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
                 f"Unable to run 'else' clause on program switch {self._actions.address}"
             )
 
-    @property
-    def icon(self) -> str:
-        """Get the icon for programs."""
-        return "mdi:script-text-outline"  # Matches isy program icon
-
 
 class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
     """A representation of an ISY enable/disable switch."""
@@ -135,7 +143,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         node: Node,
         control: str,
         unique_id: str,
-        description: EntityDescription,
+        description: ISYSwitchEntityDescription,
         device_info: DeviceInfo | None,
     ) -> None:
         """Initialize the ISY Aux Control Number entity."""
@@ -149,6 +157,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         self._attr_name = description.name  # Override super
         self._change_handler: EventListener = None
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.isy.nodes.status_events.subscribe(

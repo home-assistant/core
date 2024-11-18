@@ -19,19 +19,22 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your RFXCOM RFXtrx device."
+        },
         "title": "Select connection address"
       },
       "setup_serial": {
         "data": {
           "device": "Select device"
         },
-        "title": "Device"
+        "title": "[%key:common::config_flow::data::device%]"
       },
       "setup_serial_manual_path": {
         "data": {
           "device": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Path"
+        "title": "[%key:common::config_flow::data::path%]"
       }
     }
   },
@@ -77,6 +80,164 @@
     "trigger_type": {
       "status": "Received status: {subtype}",
       "command": "Received command: {subtype}"
+    }
+  },
+  "entity": {
+    "event": {
+      "command": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sound_0": "Sound 0",
+              "sound_1": "Sound 1",
+              "sound_2": "Sound 2",
+              "sound_3": "Sound 3",
+              "sound_4": "Sound 4",
+              "sound_5": "Sound 5",
+              "sound_6": "Sound 6",
+              "sound_7": "Sound 7",
+              "sound_8": "Sound 8",
+              "sound_9": "Sound 9",
+              "sound_10": "Sound 10",
+              "sound_11": "Sound 11",
+              "sound_12": "Sound 12",
+              "sound_13": "Sound 13",
+              "sound_14": "Sound 14",
+              "sound_15": "Sound 15",
+              "down": "Down",
+              "up": "Up",
+              "all_off": "All Off",
+              "all_on": "All On",
+              "scene": "Scene",
+              "off": "Off",
+              "on": "On",
+              "dim": "Dim",
+              "bright": "Bright",
+              "all_group_off": "All/group Off",
+              "all_group_on": "All/group On",
+              "chime": "Chime",
+              "illegal_command": "Illegal command",
+              "set_level": "Set level",
+              "group_off": "Group off",
+              "group_on": "Group on",
+              "set_group_level": "Set group level",
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3",
+              "level_4": "Level 4",
+              "level_5": "Level 5",
+              "level_6": "Level 6",
+              "level_7": "Level 7",
+              "level_8": "Level 8",
+              "level_9": "Level 9",
+              "program": "Program",
+              "stop": "Stop",
+              "0_5_seconds_up": "0.5 Seconds Up",
+              "0_5_seconds_down": "0.5 Seconds Down",
+              "2_seconds_up": "2 Seconds Up",
+              "2_seconds_down": "2 Seconds Down",
+              "enable_sun_automation": "Enable sun automation",
+              "disable_sun_automation": "Disable sun automation",
+              "normal": "Normal",
+              "normal_delayed": "Normal Delayed",
+              "alarm": "Alarm",
+              "alarm_delayed": "Alarm Delayed",
+              "motion": "Motion",
+              "no_motion": "No Motion",
+              "panic": "Panic",
+              "end_panic": "End Panic",
+              "ir": "IR",
+              "arm_away": "Arm Away",
+              "arm_away_delayed": "Arm Away Delayed",
+              "arm_home": "Arm Home",
+              "arm_home_delayed": "Arm Home Delayed",
+              "disarm": "Disarm",
+              "light_1_off": "Light 1 Off",
+              "light_1_on": "Light 1 On",
+              "light_2_off": "Light 2 Off",
+              "light_2_on": "Light 2 On",
+              "dark_detected": "Dark Detected",
+              "light_detected": "Light Detected",
+              "battery_low": "Battery low",
+              "pairing_kd101": "Pairing KD101",
+              "normal_tamper": "Normal Tamper",
+              "normal_delayed_tamper": "Normal Delayed Tamper",
+              "alarm_tamper": "Alarm Tamper",
+              "alarm_delayed_tamper": "Alarm Delayed Tamper",
+              "motion_tamper": "Motion Tamper",
+              "no_motion_tamper": "No Motion Tamper"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "current_ch_1": {
+        "name": "Current Ch. 1"
+      },
+      "current_ch_2": {
+        "name": "Current Ch. 2"
+      },
+      "current_ch_3": {
+        "name": "Current Ch. 3"
+      },
+      "instantaneous_power": {
+        "name": "Instantaneous power"
+      },
+      "temperature_2": {
+        "name": "Temperature 2"
+      },
+      "total_energy_usage": {
+        "name": "Total energy usage"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "sensor_status": {
+        "name": "Sensor status"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "counter_value": {
+        "name": "Counter value"
+      },
+      "chill": {
+        "name": "Chill"
+      },
+      "wind_average_speed": {
+        "name": "Wind average speed"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "forecast_status": {
+        "name": "Forecast status"
+      },
+      "forecast": {
+        "name": "Forecast"
+      },
+      "humidity_status": {
+        "name": "Humidity status"
+      },
+      "uv_index": {
+        "name": "UV index"
+      }
+    }
+  },
+  "services": {
+    "send": {
+      "name": "Send",
+      "description": "Sends a raw event on radio.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "A hexadecimal string to send."
+        }
+      }
     }
   }
 }

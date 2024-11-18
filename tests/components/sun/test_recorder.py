@@ -1,12 +1,13 @@
 """The tests for sun recorder."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.sun import (
-    DOMAIN,
+from homeassistant.components.sun import DOMAIN
+from homeassistant.components.sun.entity import (
     STATE_ATTR_AZIMUTH,
     STATE_ATTR_ELEVATION,
     STATE_ATTR_NEXT_DAWN,

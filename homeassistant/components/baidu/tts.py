@@ -1,10 +1,15 @@
 """Support for Baidu speech service."""
+
 import logging
 
 from aip import AipSpeech
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -21,7 +26,7 @@ CONF_PITCH = "pitch"
 CONF_VOLUME = "volume"
 CONF_PERSON = "person"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Required(CONF_APP_ID): cv.string,
@@ -104,7 +109,7 @@ class BaiduTTSProvider(Provider):
         """Return a list of supported options."""
         return SUPPORTED_OPTIONS
 
-    def get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options):
         """Load TTS from BaiduTTS."""
 
         aip_speech = AipSpeech(
@@ -113,14 +118,11 @@ class BaiduTTSProvider(Provider):
             self._app_data["secretkey"],
         )
 
-        if options is None:
-            result = aip_speech.synthesis(message, language, 1, self._speech_conf_data)
-        else:
-            speech_data = self._speech_conf_data.copy()
-            for key, value in options.items():
-                speech_data[_OPTIONS[key]] = value
+        speech_data = self._speech_conf_data.copy()
+        for key, value in options.items():
+            speech_data[_OPTIONS[key]] = value
 
-            result = aip_speech.synthesis(message, language, 1, speech_data)
+        result = aip_speech.synthesis(message, language, 1, speech_data)
 
         if isinstance(result, dict):
             _LOGGER.error(

@@ -1,4 +1,5 @@
 """Support for INSTEON Modems (PLM and Hub)."""
+
 from contextlib import suppress
 import logging
 
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
@@ -25,7 +25,6 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
-from .schemas import convert_yaml_to_config_flow
 from .utils import (
     add_insteon_events,
     async_register_services,
@@ -75,33 +74,15 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Insteon platform."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    conf = dict(config[DOMAIN])
-    hass.data[DOMAIN][CONF_DEV_PATH] = conf.pop(CONF_DEV_PATH, None)
-
-    if not conf:
-        return True
-
-    data, options = convert_yaml_to_config_flow(conf)
-
-    if options:
-        hass.data[DOMAIN][OPTIONS] = options
-    # Create a config entry with the connection data
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
+
+    if dev_path := entry.options.get(CONF_DEV_PATH):
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][CONF_DEV_PATH] = dev_path
+
+    api.async_load_api(hass)
+    await api.async_register_insteon_frontend(hass)
 
     if not devices.modem:
         try:
@@ -167,9 +148,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_services(hass)
 
     create_insteon_device(hass, devices.modem, entry.entry_id)
-
-    api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass)
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"

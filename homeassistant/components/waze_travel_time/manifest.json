@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waze_travel_time",
   "iot_class": "cloud_polling",
-  "loggers": ["WazeRouteCalculator", "homeassistant.helpers.location"],
-  "requirements": ["WazeRouteCalculator==0.14"]
+  "loggers": ["pywaze", "homeassistant.helpers.location"],
+  "requirements": ["pywaze==1.0.2"]
 }

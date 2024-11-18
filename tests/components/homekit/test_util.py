@@ -1,4 +1,5 @@
 """Test HomeKit util module."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -6,16 +7,41 @@ import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
+    CONF_AUDIO_CODEC,
+    CONF_AUDIO_MAP,
+    CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
+    CONF_STREAM_COUNT,
+    CONF_SUPPORT_AUDIO,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
+    CONF_VIDEO_CODEC,
+    CONF_VIDEO_MAP,
+    CONF_VIDEO_PACKET_SIZE,
+    DEFAULT_AUDIO_CODEC,
+    DEFAULT_AUDIO_MAP,
+    DEFAULT_AUDIO_PACKET_SIZE,
     DEFAULT_CONFIG_FLOW_PORT,
+    DEFAULT_LOW_BATTERY_THRESHOLD,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_MAP,
+    DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -23,6 +49,7 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -67,7 +94,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
         attempts += 1
         if attempts <= failure_attempts:
             raise OSError
-        return
 
     mock_socket.bind = Mock(side_effect=_simulate_bind)
     return mock_socket
@@ -171,6 +197,37 @@ def test_validate_entity_config() -> None:
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+    assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
+        "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"sensor.co2": {CONF_THRESHOLD_CO2: 500}}) == {
+        "sensor.co2": {CONF_THRESHOLD_CO2: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec(
+        {
+            "camera.demo": {
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+                CONF_LINKED_MOTION_SENSOR: "event.motion",
+            }
+        }
+    ) == {
+        "camera.demo": {
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            CONF_LINKED_MOTION_SENSOR: "event.motion",
+            CONF_AUDIO_CODEC: DEFAULT_AUDIO_CODEC,
+            CONF_SUPPORT_AUDIO: DEFAULT_SUPPORT_AUDIO,
+            CONF_MAX_WIDTH: DEFAULT_MAX_WIDTH,
+            CONF_MAX_HEIGHT: DEFAULT_MAX_HEIGHT,
+            CONF_MAX_FPS: DEFAULT_MAX_FPS,
+            CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
+            CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
+            CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
+            CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+            CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
+            CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
 
 
 def test_validate_media_player_features() -> None:
@@ -223,20 +280,19 @@ def test_temperature_to_states() -> None:
 def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
-    assert density_to_air_quality(12) == 1
-    assert density_to_air_quality(12.1) == 2
+    assert density_to_air_quality(9) == 1
+    assert density_to_air_quality(9.1) == 2
+    assert density_to_air_quality(12) == 2
     assert density_to_air_quality(35.4) == 2
     assert density_to_air_quality(35.5) == 3
     assert density_to_air_quality(55.4) == 3
     assert density_to_air_quality(55.5) == 4
-    assert density_to_air_quality(150.4) == 4
-    assert density_to_air_quality(150.5) == 5
+    assert density_to_air_quality(125.4) == 4
+    assert density_to_air_quality(125.5) == 5
     assert density_to_air_quality(200) == 5
 
 
-async def test_async_show_setup_msg(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -251,8 +307,14 @@ async def test_async_show_setup_msg(
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
+
+    # New tests should not access runtime data.
+    # Do not use this pattern for new tests.
+    entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+        entry.entry_id
+    ).runtime_data
+    assert entry_data.pairing_qr_secret
+    assert entry_data.pairing_qr
 
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][1][3] == entry.entry_id
@@ -341,9 +403,12 @@ async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> 
     ):
         assert async_port_is_available(next_port)
 
-    with pytest.raises(OSError), patch(
-        "homeassistant.components.homekit.util.socket.socket",
-        return_value=_mock_socket(10),
+    with (
+        pytest.raises(OSError),
+        patch(
+            "homeassistant.components.homekit.util.socket.socket",
+            return_value=_mock_socket(10),
+        ),
     ):
         async_find_next_available_port(hass, 65530)
 

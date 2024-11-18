@@ -1,4 +1,5 @@
 """Constants for the Tomorrow.io integration."""
+
 from __future__ import annotations
 
 import logging
@@ -25,7 +26,7 @@ LOGGER = logging.getLogger(__package__)
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
-DEFAULT_TIMESTEP = 15
+DEFAULT_TIMESTEP = 60
 DEFAULT_FORECAST_TYPE = DAILY
 DOMAIN = "tomorrowio"
 INTEGRATION_NAME = "Tomorrow.io"
@@ -115,3 +116,5 @@ TMRW_ATTR_PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
 TMRW_ATTR_SOLAR_GHI = "solarGHI"
 TMRW_ATTR_CLOUD_BASE = "cloudBase"
 TMRW_ATTR_CLOUD_CEILING = "cloudCeiling"
+TMRW_ATTR_UV_INDEX = "uvIndex"
+TMRW_ATTR_UV_HEALTH_CONCERN = "uvHealthConcern"

@@ -1,0 +1,63 @@
+{
+  "config": {
+    "flow_title": "{host}",
+    "step": {
+      "reauth_confirm": {
+        "description": "Please enter the correct PIN for {host}",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Comelit device."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "zone_status": {
+        "state": {
+          "alarm": "Alarm",
+          "armed": "Armed",
+          "open": "Open",
+          "excluded": "Excluded",
+          "faulty": "Faulty",
+          "inhibited": "Inhibited",
+          "isolated": "Isolated",
+          "rest": "Rest",
+          "sabotated": "Sabotated"
+        }
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      }
+    }
+  },
+  "exceptions": {
+    "humidity_while_off": {
+      "message": "Cannot change humidity while off"
+    }
+  }
+}

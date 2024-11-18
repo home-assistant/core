@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "vapid_email": "[%key:common::config_flow::data::email%]",
+          "vapid_prv_key": "VAPID private key"
+        },
+        "data_description": {
+          "vapid_email": "Email to use for html5 push notifications.",
+          "vapid_prv_key": "If not specified, one will be automatically generated."
+        }
+      }
+    },
+    "error": {
+      "unknown": "Unknown error",
+      "invalid_prv_key": "Invalid private key"
+    },
+    "abort": {
+      "invalid_config": "Invalid configuration"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "title": "HTML5 YAML configuration import failed",
+      "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually."
+    }
+  },
+  "services": {
+    "dismiss": {
+      "name": "Dismiss",
+      "description": "Dismisses a html5 notification.",
+      "fields": {
+        "target": {
+          "name": "Target",
+          "description": "An array of targets."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag."
+        }
+      }
+    }
+  }
+}

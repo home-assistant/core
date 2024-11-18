@@ -1,0 +1,169 @@
+{
+  "aqi": 29,
+  "idx": 4584,
+  "attributions": [
+    {
+      "url": "http://www.luchtmeetnet.nl/",
+      "name": "RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit",
+      "logo": "Netherland-RIVM.png"
+    },
+    {
+      "url": "https://waqi.info/",
+      "name": "World Air Quality Index Project"
+    }
+  ],
+  "city": {
+    "geo": [52.105031, 5.124464],
+    "name": "de Jongweg, Utrecht",
+    "url": "https://aqicn.org/city/netherland/utrecht/de-jongweg",
+    "location": ""
+  },
+  "dominentpol": "o3",
+  "iaqi": {
+    "h": {
+      "v": 80
+    },
+    "neph": {
+      "v": 80
+    },
+    "co": {
+      "v": 2.3
+    },
+    "no2": {
+      "v": 2.3
+    },
+    "so2": {
+      "v": 2.3
+    },
+    "o3": {
+      "v": 29.4
+    },
+    "p": {
+      "v": 1008.8
+    },
+    "pm10": {
+      "v": 12
+    },
+    "pm25": {
+      "v": 17
+    },
+    "t": {
+      "v": 16
+    },
+    "w": {
+      "v": 1.4
+    },
+    "wg": {
+      "v": 2.4
+    }
+  },
+  "time": {
+    "s": "2023-08-07 17:00:00",
+    "tz": "+02:00",
+    "v": 1691427600,
+    "iso": "2023-08-07T17:00:00+02:00"
+  },
+  "forecast": {
+    "daily": {
+      "o3": [
+        {
+          "avg": 28,
+          "day": "2023-08-07",
+          "max": 34,
+          "min": 25
+        },
+        {
+          "avg": 22,
+          "day": "2023-08-08",
+          "max": 29,
+          "min": 19
+        },
+        {
+          "avg": 23,
+          "day": "2023-08-09",
+          "max": 35,
+          "min": 9
+        },
+        {
+          "avg": 18,
+          "day": "2023-08-10",
+          "max": 38,
+          "min": 3
+        },
+        {
+          "avg": 17,
+          "day": "2023-08-11",
+          "max": 17,
+          "min": 11
+        }
+      ],
+      "pm10": [
+        {
+          "avg": 8,
+          "day": "2023-08-07",
+          "max": 10,
+          "min": 6
+        },
+        {
+          "avg": 9,
+          "day": "2023-08-08",
+          "max": 12,
+          "min": 6
+        },
+        {
+          "avg": 9,
+          "day": "2023-08-09",
+          "max": 13,
+          "min": 6
+        },
+        {
+          "avg": 23,
+          "day": "2023-08-10",
+          "max": 33,
+          "min": 10
+        },
+        {
+          "avg": 27,
+          "day": "2023-08-11",
+          "max": 34,
+          "min": 27
+        }
+      ],
+      "pm25": [
+        {
+          "avg": 19,
+          "day": "2023-08-07",
+          "max": 29,
+          "min": 11
+        },
+        {
+          "avg": 25,
+          "day": "2023-08-08",
+          "max": 37,
+          "min": 19
+        },
+        {
+          "avg": 27,
+          "day": "2023-08-09",
+          "max": 45,
+          "min": 19
+        },
+        {
+          "avg": 64,
+          "day": "2023-08-10",
+          "max": 86,
+          "min": 33
+        },
+        {
+          "avg": 72,
+          "day": "2023-08-11",
+          "max": 89,
+          "min": 72
+        }
+      ]
+    }
+  },
+  "debug": {
+    "sync": "2023-08-08T01:29:52+09:00"
+  }
+}

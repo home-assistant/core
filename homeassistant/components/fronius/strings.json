@@ -11,6 +11,12 @@
       },
       "confirm_discovery": {
         "description": "Do you want to add {device} to Home Assistant?"
+      },
+      "reconfigure": {
+        "description": "Update your configuration information for {device}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       }
     },
     "error": {
@@ -19,7 +25,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier"
     }
   },
   "entity": {
@@ -65,6 +73,21 @@
       },
       "status_code": {
         "name": "Status code"
+      },
+      "status_message": {
+        "name": "Status message",
+        "state": {
+          "startup": "Startup",
+          "running": "Running",
+          "standby": "Standby",
+          "bootloading": "Bootloading",
+          "error": "Error",
+          "idle": "Idle",
+          "ready": "Ready",
+          "sleeping": "Sleeping",
+          "unknown": "Unknown",
+          "invalid": "Invalid"
+        }
       },
       "led_state": {
         "name": "LED state"
@@ -113,6 +136,16 @@
       },
       "meter_location": {
         "name": "Meter location"
+      },
+      "meter_location_description": {
+        "name": "Meter location description",
+        "state": {
+          "feed_in": "Grid interconnection point",
+          "consumption_path": "Consumption path",
+          "external_generator": "External generator",
+          "external_battery": "External battery",
+          "subload": "Subload"
+        }
       },
       "power_apparent_phase_1": {
         "name": "Apparent power phase 1"
@@ -193,7 +226,15 @@
         "name": "State code"
       },
       "state_message": {
-        "name": "State message"
+        "name": "State message",
+        "state": {
+          "up_and_running": "Up and running",
+          "keep_minimum_temperature": "Keep minimum temperature",
+          "legionella_protection": "Legionella protection",
+          "critical_fault": "Critical fault",
+          "fault": "Fault",
+          "boost_mode": "Boost mode"
+        }
       },
       "meter_mode": {
         "name": "Meter mode"
@@ -201,11 +242,29 @@
       "power_battery": {
         "name": "Power battery"
       },
+      "power_battery_discharge": {
+        "name": "Power battery discharge"
+      },
+      "power_battery_charge": {
+        "name": "Power battery charge"
+      },
       "power_grid": {
         "name": "Power grid"
       },
+      "power_grid_import": {
+        "name": "Power grid import"
+      },
+      "power_grid_export": {
+        "name": "Power grid export"
+      },
       "power_load": {
         "name": "Power load"
+      },
+      "power_load_generated": {
+        "name": "Power load generated"
+      },
+      "power_load_consumed": {
+        "name": "Power load consumed"
       },
       "power_photovoltaics": {
         "name": "Power photovoltaics"
@@ -217,7 +276,7 @@
         "name": "Relative self consumption"
       },
       "capacity_maximum": {
-        "name": "Maximum capacity "
+        "name": "Maximum capacity"
       },
       "capacity_designed": {
         "name": "Designed capacity"

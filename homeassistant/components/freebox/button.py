@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,25 +13,17 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .router import FreeboxRouter
 
 
-@dataclass
-class FreeboxButtonRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class FreeboxButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Freebox button entities."""
 
     async_press: Callable[[FreeboxRouter], Awaitable]
-
-
-@dataclass
-class FreeboxButtonEntityDescription(
-    ButtonEntityDescription, FreeboxButtonRequiredKeysMixin
-):
-    """Class describing Freebox button entities."""
 
 
 BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (
@@ -72,12 +65,8 @@ class FreeboxButton(ButtonEntity):
         """Initialize a Freebox button."""
         self.entity_description = description
         self._router = router
+        self._attr_device_info = router.device_info
         self._attr_unique_id = f"{router.mac} {description.name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._router.device_info
 
     async def async_press(self) -> None:
         """Press the button."""

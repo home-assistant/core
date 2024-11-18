@@ -1,4 +1,5 @@
 """Support for Freedompro light."""
+
 from __future__ import annotations
 
 import json
@@ -16,12 +17,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -38,7 +39,12 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
-    """Representation of an Freedompro light."""
+    """Representation of a Freedompro light."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_is_on = False
+    _attr_brightness = 0
 
     def __init__(
         self,
@@ -51,16 +57,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device["uid"])},
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
-        self._attr_is_on = False
-        self._attr_brightness = 0
         color_mode = ColorMode.ONOFF
         if "hue" in device["characteristics"]:
             color_mode = ColorMode.HS

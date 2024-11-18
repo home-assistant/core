@@ -1,4 +1,5 @@
 """Config flow for Nmap Tracker integration."""
+
 from __future__ import annotations
 
 from ipaddress import ip_address, ip_network, summarize_address_range
@@ -6,7 +7,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -14,11 +14,16 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.network import MDNS_TARGET_IP
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_HOME_INTERVAL,
@@ -58,7 +63,7 @@ def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
             start, end = host.split("-", 1)
             if "." not in end:
                 ip_1, ip_2, ip_3, _ = start.split(".", 3)
-                end = ".".join([ip_1, ip_2, ip_3, end])
+                end = f"{ip_1}.{ip_2}.{ip_3}.{end}"
             summarize_address_range(ip_address(start), ip_address(end))
         except ValueError:
             pass
@@ -106,7 +111,7 @@ async def _async_build_schema_with_user_input(
     exclude = user_input.get(
         CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
-    schema = {
+    schema: VolDictType = {
         vol.Required(CONF_HOSTS, default=hosts): str,
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
@@ -133,16 +138,16 @@ async def _async_build_schema_with_user_input(
     return vol.Schema(schema)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for homekit."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         errors = {}
         if user_input is not None:
@@ -163,7 +168,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
     VERSION = 1
@@ -174,7 +179,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -208,6 +213,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)

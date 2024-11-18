@@ -25,7 +25,7 @@ from aioqsw.const import (
     QSD_SYSTEM_TIME,
     QSD_TEMP,
     QSD_TEMP_MAX,
-    QSD_UPTIME,
+    QSD_UPTIME_SECONDS,
     QSD_VERSION,
 )
 
@@ -118,6 +118,6 @@ async def test_config_entry_diagnostics(
     assert (
         sys_time_diag.items()
         >= {
-            QSD_UPTIME: sys_time_mock[API_UPTIME],
+            QSD_UPTIME_SECONDS: sys_time_mock[API_UPTIME],
         }.items()
     )

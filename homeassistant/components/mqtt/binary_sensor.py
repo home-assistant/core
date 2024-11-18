@@ -1,8 +1,8 @@
 """Support for MQTT binary sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import functools
 import logging
 from typing import Any
 
@@ -29,24 +29,17 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttAvailability,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .const import CONF_STATE_TOPIC, PAYLOAD_NONE
+from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,19 +55,12 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in
-# HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(binary_sensor.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
@@ -85,42 +71,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT binary sensor through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttBinarySensor,
+        binary_sensor.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, binary_sensor.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT binary sensor."""
-    async_add_entities([MqttBinarySensor(hass, config, config_entry, discovery_data)])
 
 
 class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
+    _default_name = DEFAULT_NAME
+    _delay_listener: CALLBACK_TYPE | None = None
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT binary sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._delay_listener: CALLBACK_TYPE | None = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+    _expiration_trigger: CALLBACK_TYPE | None = None
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -135,15 +105,17 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             expiration_at: datetime = last_state.last_changed + timedelta(
                 seconds=self._expire_after
             )
-            if expiration_at < (time_now := dt_util.utcnow()):
+            remain_seconds = (expiration_at - dt_util.utcnow()).total_seconds()
+
+            if remain_seconds <= 0:
                 # Skip reactivating the binary_sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
             self._attr_is_on = last_state.state == STATE_ON
 
-            self._expiration_trigger = async_track_point_in_utc_time(
-                self.hass, self._value_is_expired, expiration_at
+            self._expiration_trigger = async_call_later(
+                self.hass, remain_seconds, self._value_is_expired
             )
             _LOGGER.debug(
                 (
@@ -151,7 +123,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     " expiring %s"
                 ),
                 self.entity_id,
-                expiration_at - time_now,
+                remain_seconds,
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -184,104 +156,90 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
+    @callback
+    def _off_delay_listener(self, now: datetime) -> None:
+        """Switch device off after a delay."""
+        self._delay_listener = None
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle a new received MQTT state message."""
+
+        # auto-expire enabled?
+        if self._expire_after:
+            # When expire_after is set, and we receive a message, assume device is
+            # not expired since it has to be to receive the message
+            self._expired = False
+
+            # Reset old trigger
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            # Set new trigger
+            self._expiration_trigger = async_call_later(
+                self.hass, self._expire_after, self._value_is_expired
+            )
+
+        payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                (
+                    "Empty template output for entity: %s with state topic: %s."
+                    " Payload: '%s', with value template '%s'"
+                ),
+                self.entity_id,
+                self._config[CONF_STATE_TOPIC],
+                msg.payload,
+                self._config.get(CONF_VALUE_TEMPLATE),
+            )
+            return
+
+        if payload == self._config[CONF_PAYLOAD_ON]:
+            self._attr_is_on = True
+        elif payload == self._config[CONF_PAYLOAD_OFF]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+        else:  # Payload is not for this entity
+            template_info = ""
+            if self._config.get(CONF_VALUE_TEMPLATE) is not None:
+                template_info = (
+                    f", template output: '{payload!s}', with value template"
+                    f" '{self._config.get(CONF_VALUE_TEMPLATE)!s}'"
+                )
+            _LOGGER.info(
+                (
+                    "No matching payload found for entity: %s with state topic: %s."
+                    " Payload: '%s'%s"
+                ),
+                self.entity_id,
+                self._config[CONF_STATE_TOPIC],
+                msg.payload,
+                template_info,
+            )
+            return
+
+        if self._delay_listener is not None:
+            self._delay_listener()
+            self._delay_listener = None
+
+        off_delay: int | None = self._config.get(CONF_OFF_DELAY)
+        if self._attr_is_on and off_delay is not None:
+            self._delay_listener = evt.async_call_later(
+                self.hass, off_delay, self._off_delay_listener
+            )
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        def off_delay_listener(now: datetime) -> None:
-            """Switch device off after a delay."""
-            self._delay_listener = None
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle a new received MQTT state message."""
-            # auto-expire enabled?
-            if self._expire_after:
-                # When expire_after is set, and we receive a message, assume device is
-                # not expired since it has to be to receive the message
-                self._expired = False
-
-                # Reset old trigger
-                if self._expiration_trigger:
-                    self._expiration_trigger()
-
-                # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
-
-                self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self._value_is_expired, expiration_at
-                )
-
-            payload = self._value_template(msg.payload)
-            if not payload.strip():  # No output from template, ignore
-                _LOGGER.debug(
-                    (
-                        "Empty template output for entity: %s with state topic: %s."
-                        " Payload: '%s', with value template '%s'"
-                    ),
-                    self._config[CONF_NAME],
-                    self._config[CONF_STATE_TOPIC],
-                    msg.payload,
-                    self._config.get(CONF_VALUE_TEMPLATE),
-                )
-                return
-
-            if payload == self._config[CONF_PAYLOAD_ON]:
-                self._attr_is_on = True
-            elif payload == self._config[CONF_PAYLOAD_OFF]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-            else:  # Payload is not for this entity
-                template_info = ""
-                if self._config.get(CONF_VALUE_TEMPLATE) is not None:
-                    template_info = (
-                        f", template output: '{str(payload)}', with value template"
-                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
-                    )
-                _LOGGER.info(
-                    (
-                        "No matching payload found for entity: %s with state topic: %s."
-                        " Payload: '%s'%s"
-                    ),
-                    self._config[CONF_NAME],
-                    self._config[CONF_STATE_TOPIC],
-                    msg.payload,
-                    template_info,
-                )
-                return
-
-            if self._delay_listener is not None:
-                self._delay_listener()
-                self._delay_listener = None
-
-            off_delay: int | None = self._config.get(CONF_OFF_DELAY)
-            if self._attr_is_on and off_delay is not None:
-                self._delay_listener = evt.async_call_later(
-                    self.hass, off_delay, off_delay_listener
-                )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": state_message_received,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
-            },
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on", "_expired"}
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
     def _value_is_expired(self, *_: Any) -> None:
@@ -295,6 +253,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )

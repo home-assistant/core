@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'accounts': list([
+      dict({
+        'amount': '**REDACTED**',
+        'currency': 'BTC',
+        'id': '**REDACTED**',
+        'is_vault': False,
+        'name': 'BTC Wallet',
+      }),
+      dict({
+        'amount': '**REDACTED**',
+        'currency': 'BTC',
+        'id': '**REDACTED**',
+        'is_vault': True,
+        'name': 'BTC Vault',
+      }),
+      dict({
+        'amount': '**REDACTED**',
+        'currency': 'USD',
+        'id': '**REDACTED**',
+        'is_vault': False,
+        'name': 'USD Wallet',
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'api_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'coinbase',
+      'entry_id': '080272b77a4f80c41b94d7cdc86fd826',
+      'minor_version': 1,
+      'options': dict({
+        'account_balance_currencies': list([
+        ]),
+        'exchange_rate_currencies': list([
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

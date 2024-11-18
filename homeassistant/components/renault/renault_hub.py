@@ -1,4 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,10 +16,11 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
-    ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -57,8 +59,15 @@ class RenaultHub:
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        device_registry = dr.async_get(self._hass)
         if vehicles.vehicleLinks:
+            if any(
+                vehicle_link.vehicleDetails is None
+                for vehicle_link in vehicles.vehicleLinks
+            ):
+                raise ConfigEntryNotReady(
+                    "Failed to retrieve vehicle details from Renault servers"
+                )
+            device_registry = dr.async_get(self._hass)
             await asyncio.gather(
                 *(
                     self.async_initialise_vehicle(
@@ -97,7 +106,7 @@ class RenaultHub:
             manufacturer=vehicle.device_info[ATTR_MANUFACTURER],
             name=vehicle.device_info[ATTR_NAME],
             model=vehicle.device_info[ATTR_MODEL],
-            sw_version=vehicle.device_info[ATTR_SW_VERSION],
+            model_id=vehicle.device_info[ATTR_MODEL_ID],
         )
         self._vehicles[vehicle_link.vin] = vehicle
 

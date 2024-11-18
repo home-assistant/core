@@ -1,0 +1,90 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:thermostat",
+      "state_attributes": {
+        "fan_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "auto": "mdi:fan-auto",
+            "diffuse": "mdi:weather-windy",
+            "focus": "mdi:target",
+            "high": "mdi:speedometer",
+            "low": "mdi:speedometer-slow",
+            "medium": "mdi:speedometer-medium",
+            "middle": "mdi:speedometer-medium",
+            "off": "mdi:fan-off",
+            "on": "mdi:fan"
+          }
+        },
+        "hvac_action": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "cooling": "mdi:snowflake",
+            "defrosting": "mdi:snowflake-melt",
+            "drying": "mdi:water-percent",
+            "fan": "mdi:fan",
+            "heating": "mdi:fire",
+            "idle": "mdi:clock-outline",
+            "off": "mdi:power",
+            "preheating": "mdi:heat-wave"
+          }
+        },
+        "preset_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "activity": "mdi:motion-sensor",
+            "away": "mdi:account-arrow-right",
+            "boost": "mdi:rocket-launch",
+            "comfort": "mdi:sofa",
+            "eco": "mdi:leaf",
+            "home": "mdi:home",
+            "sleep": "mdi:bed"
+          }
+        },
+        "swing_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "both": "mdi:arrow-all",
+            "horizontal": "mdi:arrow-left-right",
+            "off": "mdi:arrow-oscillating-off",
+            "on": "mdi:arrow-oscillating",
+            "vertical": "mdi:arrow-up-down"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_fan_mode": {
+      "service": "mdi:fan"
+    },
+    "set_humidity": {
+      "service": "mdi:water-percent"
+    },
+    "set_swing_mode": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "set_aux_heat": {
+      "service": "mdi:radiator"
+    },
+    "set_preset_mode": {
+      "service": "mdi:sofa"
+    },
+    "set_hvac_mode": {
+      "service": "mdi:hvac"
+    },
+    "turn_on": {
+      "service": "mdi:power-on"
+    },
+    "turn_off": {
+      "service": "mdi:power-off"
+    },
+    "toggle": {
+      "service": "mdi:toggle-switch"
+    }
+  }
+}

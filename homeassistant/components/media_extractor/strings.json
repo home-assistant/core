@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "services": {
+    "play_media": {
+      "name": "Play media",
+      "description": "Downloads file from given URL.",
+      "fields": {
+        "media_content_id": {
+          "name": "Media content ID",
+          "description": "The ID of the content to play. Platform dependent."
+        },
+        "media_content_type": {
+          "name": "Media content type",
+          "description": "The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC."
+        }
+      }
+    },
+    "extract_media_url": {
+      "name": "Get Media URL",
+      "description": "Extract media URL from a service.",
+      "fields": {
+        "url": {
+          "name": "Media URL",
+          "description": "URL where the media can be found."
+        },
+        "format_query": {
+          "name": "Format query",
+          "description": "Youtube-dl query to select the quality of the result."
+        }
+      }
+    }
+  }
+}

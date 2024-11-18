@@ -1,13 +1,18 @@
 """Config flow to configure the Season integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DEFAULT_NAME, DOMAIN, TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
 
@@ -19,7 +24,7 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_TYPE])
@@ -33,11 +38,15 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(
-                        {
-                            TYPE_ASTRONOMICAL: "Astronomical",
-                            TYPE_METEOROLOGICAL: "Meteorological",
-                        }
+                    vol.Required(CONF_TYPE, default=TYPE_ASTRONOMICAL): SelectSelector(
+                        SelectSelectorConfig(
+                            translation_key="season_type",
+                            mode=SelectSelectorMode.LIST,
+                            options=[
+                                TYPE_ASTRONOMICAL,
+                                TYPE_METEOROLOGICAL,
+                            ],
+                        )
                     )
                 },
             ),

@@ -1,4 +1,5 @@
 """The tests for google-assistant init."""
+
 from http import HTTPStatus
 
 from homeassistant.components import google_assistant as ga

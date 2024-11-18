@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -23,11 +24,13 @@ from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLL
 from .entity import SmartTubEntity
 
 PRESET_DAY = "day"
+PRESET_READY = "ready"
 
 PRESET_MODES = {
     Spa.HeatMode.AUTO: PRESET_NONE,
     Spa.HeatMode.ECONOMY: PRESET_ECO,
     Spa.HeatMode.DAY: PRESET_DAY,
+    Spa.HeatMode.READY: PRESET_READY,
 }
 
 HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
@@ -64,6 +67,8 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_preset_modes = list(PRESET_MODES.values())
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -103,11 +108,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode."""
         return PRESET_MODES[self.spa_status.heat_mode]
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes."""
-        return list(PRESET_MODES.values())
 
     @property
     def current_temperature(self):

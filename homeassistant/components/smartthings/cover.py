@@ -1,4 +1,5 @@
 """Support for covers through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -9,28 +10,25 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 VALUE_TO_STATE = {
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "partially open": STATE_OPEN,
+    "closed": CoverState.CLOSED,
+    "closing": CoverState.CLOSING,
+    "open": CoverState.OPEN,
+    "opening": CoverState.OPENING,
+    "partially open": CoverState.OPEN,
     "unknown": None,
 }
 
@@ -62,7 +60,12 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Must have one of the min_required
     if any(capability in capabilities for capability in min_required):
         # Return all capabilities supported/consumed
-        return min_required + [Capability.battery, Capability.switch_level]
+        return [
+            *min_required,
+            Capability.battery,
+            Capability.switch_level,
+            Capability.window_shade_level,
+        ]
 
     return None
 
@@ -73,14 +76,23 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     def __init__(self, device):
         """Initialize the cover class."""
         super().__init__(device)
-        self._device_class = None
+        self._current_cover_position = None
         self._state = None
-        self._state_attrs = None
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if Capability.switch_level in device.capabilities:
+        if (
+            Capability.switch_level in device.capabilities
+            or Capability.window_shade_level in device.capabilities
+        ):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+
+        if Capability.door_control in device.capabilities:
+            self._attr_device_class = CoverDeviceClass.DOOR
+        elif Capability.window_shade in device.capabilities:
+            self._attr_device_class = CoverDeviceClass.SHADE
+        elif Capability.garage_door_control in device.capabilities:
+            self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -103,55 +115,45 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
-        await self._device.set_level(kwargs[ATTR_POSITION], 0)
+        if Capability.window_shade_level in self._device.capabilities:
+            await self._device.set_window_shade_level(
+                kwargs[ATTR_POSITION], set_status=False
+            )
+        else:
+            await self._device.set_level(kwargs[ATTR_POSITION], set_status=False)
 
     async def async_update(self) -> None:
         """Update the attrs of the cover."""
         if Capability.door_control in self._device.capabilities:
-            self._device_class = CoverDeviceClass.DOOR
             self._state = VALUE_TO_STATE.get(self._device.status.door)
         elif Capability.window_shade in self._device.capabilities:
-            self._device_class = CoverDeviceClass.SHADE
             self._state = VALUE_TO_STATE.get(self._device.status.window_shade)
         elif Capability.garage_door_control in self._device.capabilities:
-            self._device_class = CoverDeviceClass.GARAGE
             self._state = VALUE_TO_STATE.get(self._device.status.door)
 
-        self._state_attrs = {}
+        if Capability.window_shade_level in self._device.capabilities:
+            self._attr_current_cover_position = self._device.status.shade_level
+        elif Capability.switch_level in self._device.capabilities:
+            self._attr_current_cover_position = self._device.status.level
+
+        self._attr_extra_state_attributes = {}
         battery = self._device.status.attributes[Attribute.battery].value
         if battery is not None:
-            self._state_attrs[ATTR_BATTERY_LEVEL] = battery
+            self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = battery
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        return self._state == CoverState.OPENING
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        return self._state == CoverState.CLOSING
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        if self._state == STATE_CLOSED:
+        if self._state == CoverState.CLOSED:
             return True
         return None if self._state is None else False
-
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return current position of cover."""
-        if not self.supported_features & CoverEntityFeature.SET_POSITION:
-            return None
-        return self._device.status.level
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Define this cover as a garage door."""
-        return self._device_class
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Get additional state attributes."""
-        return self._state_attrs

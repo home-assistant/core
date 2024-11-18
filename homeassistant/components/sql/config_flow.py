@@ -1,4 +1,5 @@
 """Adds config flow for SQL integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,21 +7,38 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
+from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
+import sqlparse
+from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
+
 
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
@@ -39,6 +57,26 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         vol.Optional(
             CONF_VALUE_TEMPLATE,
         ): selector.TemplateSelector(),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="device_class",
+                sort=True,
+            )
+        ),
+        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorStateClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="state_class",
+                sort=True,
+            )
+        ),
     }
 )
 
@@ -49,11 +87,16 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 ).extend(OPTIONS_SCHEMA.schema)
 
 
-def validate_sql_select(value: str) -> str | None:
+def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
-        raise ValueError("Incorrect Query")
-    return value
+    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
+        raise MultipleResultsFound
+    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
+        raise ValueError
+    if query_type != "SELECT":
+        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
+        raise SQLParseError
+    return str(query[0])
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -90,7 +133,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
     return True
 
 
-class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
     VERSION = 1
@@ -98,14 +141,14 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SQLOptionsFlowHandler(config_entry)
+        return SQLOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step."""
         errors = {}
         description_placeholders = {}
@@ -117,7 +160,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             db_url_for_validation = None
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -125,9 +168,14 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
+            except SQLParseError:
+                errors["query"] = "query_no_read_only"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
             options = {
@@ -139,6 +187,10 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options[CONF_UNIT_OF_MEASUREMENT] = uom
             if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                 options[CONF_VALUE_TEMPLATE] = value_template
+            if device_class := user_input.get(CONF_DEVICE_CLASS):
+                options[CONF_DEVICE_CLASS] = device_class
+            if state_class := user_input.get(CONF_STATE_CLASS):
+                options[CONF_STATE_CLASS] = state_class
             if db_url_for_validation != get_instance(self.hass).db_url:
                 options[CONF_DB_URL] = db_url_for_validation
 
@@ -157,12 +209,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class SQLOptionsFlowHandler(OptionsFlow):
     """Handle SQL options."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage SQL options."""
         errors = {}
         description_placeholders = {}
@@ -171,10 +223,10 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            name = self.options.get(CONF_NAME, self.config_entry.title)
+            name = self.config_entry.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -182,9 +234,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
+            except SQLParseError:
+                errors["query"] = "query_no_read_only"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
             else:
                 recorder_db = get_instance(self.hass).db_url
@@ -204,6 +261,10 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     options[CONF_UNIT_OF_MEASUREMENT] = uom
                 if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                     options[CONF_VALUE_TEMPLATE] = value_template
+                if device_class := user_input.get(CONF_DEVICE_CLASS):
+                    options[CONF_DEVICE_CLASS] = device_class
+                if state_class := user_input.get(CONF_STATE_CLASS):
+                    options[CONF_STATE_CLASS] = state_class
                 if db_url_for_validation != get_instance(self.hass).db_url:
                     options[CONF_DB_URL] = db_url_for_validation
 
@@ -214,7 +275,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, user_input or self.options
+                OPTIONS_SCHEMA, user_input or self.config_entry.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,

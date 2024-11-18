@@ -1,0 +1,12 @@
+{
+  "domain": "comelit",
+  "name": "Comelit SimpleHome",
+  "codeowners": ["@chemelli74"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/comelit",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["aiocomelit"],
+  "quality_scale": "silver",
+  "requirements": ["aiocomelit==0.9.1"]
+}

@@ -1,5 +1,5 @@
 """Test the Yeelight light."""
-import asyncio
+
 from datetime import timedelta
 import logging
 import socket
@@ -153,8 +153,10 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -181,7 +183,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         await hass.services.async_call(domain, service, data, blocking=True)
         if payload is None:
             mocked_method.assert_called_once()
-        elif type(payload) == list:
+        elif isinstance(payload, list):
             mocked_method.assert_called_once_with(*payload)
         else:
             mocked_method.assert_called_once_with(**payload)
@@ -504,7 +506,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
-    mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
@@ -542,8 +544,10 @@ async def test_update_errors(
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -553,7 +557,7 @@ async def test_update_errors(
 
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
-    mocked_bulb.async_turn_off = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_turn_off = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
@@ -590,8 +594,10 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -770,7 +776,9 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
 
 async def test_device_types(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test different device types."""
     mocked_bulb = _mocked_bulb()
@@ -818,14 +826,16 @@ async def test_device_types(
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
         await hass.config_entries.async_unload(config_entry.entry_id)
-        await config_entry.async_remove(hass)
-        registry = er.async_get(hass)
-        registry.async_clear_config_entry(config_entry.entry_id)
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        entity_registry.async_clear_config_entry(config_entry.entry_id)
         mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
 
         # nightlight as a setting of the main entity
         if nightlight_mode_properties is not None:
             mocked_bulb.last_properties["active_mode"] = True
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+            )
             config_entry.add_to_hass(hass)
             await _async_setup(config_entry)
             state = hass.states.get(entity_id)
@@ -837,8 +847,8 @@ async def test_device_types(
             assert dict(state.attributes) == nightlight_mode_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
-            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
             mocked_bulb.last_properties.pop("active_mode")
 
@@ -854,15 +864,14 @@ async def test_device_types(
             state = hass.states.get(f"{entity_id}_nightlight")
             assert state.state == "on"
             nightlight_entity_properties["friendly_name"] = f"{name} Nightlight"
-            nightlight_entity_properties["icon"] = "mdi:weather-night"
             nightlight_entity_properties["flowing"] = False
             nightlight_entity_properties["night_light"] = True
             nightlight_entity_properties["music_mode"] = False
             assert dict(state.attributes) == nightlight_entity_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
-            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
@@ -889,6 +898,7 @@ async def test_device_types(
         "mono",
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
             "color_mode": "brightness",
@@ -903,6 +913,7 @@ async def test_device_types(
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "effect": None,
             "brightness": bright,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
@@ -917,6 +928,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -944,6 +956,7 @@ async def test_device_types(
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "hs_color": (28.401, 100.0),
             "rgb_color": (255, 120, 0),
@@ -976,6 +989,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -991,6 +1005,8 @@ async def test_device_types(
             "hs_color": hs_color,
             "rgb_color": color_hs_to_RGB(*hs_color),
             "xy_color": color_hs_to_xy(*hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1009,6 +1025,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1024,6 +1041,8 @@ async def test_device_types(
             "hs_color": color_RGB_to_hs(*rgb_color),
             "rgb_color": rgb_color,
             "xy_color": color_RGB_to_xy(*rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1043,6 +1062,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1055,6 +1075,11 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1074,6 +1099,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1086,6 +1112,11 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1104,6 +1135,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1115,6 +1147,12 @@ async def test_device_types(
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
+            "brightness": None,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "unknown",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1133,6 +1171,7 @@ async def test_device_types(
         "ceiling1",
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1163,6 +1202,7 @@ async def test_device_types(
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1201,6 +1241,7 @@ async def test_device_types(
         {
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1234,6 +1275,7 @@ async def test_device_types(
         nightlight_mode_properties={
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1270,6 +1312,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1297,6 +1340,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1308,6 +1352,8 @@ async def test_device_types(
             "hs_color": bg_hs_color,
             "rgb_color": color_hs_to_RGB(*bg_hs_color),
             "xy_color": color_hs_to_xy(*bg_hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1322,6 +1368,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1333,6 +1380,8 @@ async def test_device_types(
             "hs_color": color_RGB_to_hs(*bg_rgb_color),
             "rgb_color": bg_rgb_color,
             "xy_color": color_RGB_to_xy(*bg_rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1365,20 +1414,24 @@ async def test_effects(hass: HomeAssistant) -> None:
             }
         },
     )
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).attributes.get(
-        "effect_list"
-    ) == YEELIGHT_COLOR_EFFECT_LIST + ["mock_effect"]
+    assert hass.states.get(ENTITY_LIGHT).attributes.get("effect_list") == [
+        *YEELIGHT_COLOR_EFFECT_LIST,
+        "mock_effect",
+    ]
 
     async def _async_test_effect(name, target=None, called=True):
         async_mocked_start_flow = AsyncMock()
@@ -1531,8 +1584,9 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
         options={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False},
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(capabilities=capabilities), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(capabilities=capabilities),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1558,8 +1612,10 @@ async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> Non
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

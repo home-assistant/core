@@ -9,11 +9,51 @@
       }
     },
     "progress": {
-      "wait_for_device": "1. Open {url} \n2.Paste the following key to authorize the integration: \n```\n{code}\n```\n"
+      "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "could_not_register": "Could not register integration with GitHub"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "discussions_count": {
+        "name": "Discussions"
+      },
+      "stargazers_count": {
+        "name": "Stars"
+      },
+      "subscribers_count": {
+        "name": "Watchers"
+      },
+      "forks_count": {
+        "name": "Forks"
+      },
+      "issues_count": {
+        "name": "Issues"
+      },
+      "pulls_count": {
+        "name": "Pull requests"
+      },
+      "latest_commit": {
+        "name": "Latest commit"
+      },
+      "latest_discussion": {
+        "name": "Latest discussion"
+      },
+      "latest_release": {
+        "name": "Latest release"
+      },
+      "latest_issue": {
+        "name": "Latest issue"
+      },
+      "latest_pull_request": {
+        "name": "Latest pull request"
+      },
+      "latest_tag": {
+        "name": "Latest tag"
+      }
     }
   }
 }

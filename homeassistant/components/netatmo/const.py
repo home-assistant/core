@@ -1,4 +1,5 @@
 """Constants used by the Netatmo component."""
+
 from homeassistant.const import Platform
 
 API = "api"
@@ -8,9 +9,11 @@ MANUFACTURER = "Netatmo"
 DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
@@ -30,11 +33,19 @@ HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
+API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_doorbell",
+    "read_doorbell",
+    "read_mhs1",
+    "write_mhs1",
+]
+
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
@@ -69,6 +80,7 @@ DEFAULT_PERSON = "unknown"
 DEFAULT_WEBHOOKS = False
 
 ATTR_CAMERA_LIGHT_MODE = "camera_light_mode"
+ATTR_END_DATETIME = "end_datetime"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_FACE_URL = "face_url"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
@@ -81,11 +93,17 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_TARGET_TEMPERATURE = "target_temperature"
+ATTR_TIME_PERIOD = "time_period"
 
+SERVICE_CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"
 SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_SCHEDULE = "set_schedule"
+SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
+SERVICE_SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
+SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD = "set_temperature_with_time_period"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"

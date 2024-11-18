@@ -1,4 +1,5 @@
 """Platform for Flexit AC units with CI66 Modbus adapter."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -16,8 +17,6 @@ from homeassistant.components.climate import (
 from homeassistant.components.modbus import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
-    CONF_HUB,
     DEFAULT_HUB,
     ModbusHub,
     get_hub,
@@ -34,7 +33,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CONF_HUB = "hub"
+
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
@@ -68,6 +70,7 @@ class Flexit(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
@@ -177,9 +180,7 @@ class Flexit(ClimateEntity):
         self, register_type: str, register: int
     ) -> int:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, register, 1, register_type
-        )
+        result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
         if result is None:
             _LOGGER.error("Error reading value from Flexit modbus adapter")
             return -1
@@ -192,14 +193,14 @@ class Flexit(ClimateEntity):
         result = float(
             await self._async_read_int16_from_register(register_type, register)
         )
-        if result == -1:
+        if not result:
             return -1
         return result / 10.0
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
-        if result == -1:
+        if not result:
             return False
         return True

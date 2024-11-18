@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus
@@ -11,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
-from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
+from .entity import ElmaxEntity
 
 
 async def async_setup_entry(
@@ -38,7 +39,6 @@ async def async_setup_entry(
             if zone.endpoint_id in known_devices:
                 continue
             entity = ElmaxSensor(
-                panel=coordinator.panel_entry,
                 elmax_device=zone,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
@@ -60,12 +60,9 @@ async def async_setup_entry(
 class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     """Elmax Sensor entity implementation."""
 
+    _attr_device_class = BinarySensorDeviceClass.DOOR
+
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.get_zone_state(self._device.endpoint_id).opened
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.DOOR

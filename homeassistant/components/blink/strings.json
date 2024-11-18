@@ -10,7 +10,9 @@
       },
       "2fa": {
         "title": "Two-factor authentication",
-        "data": { "2fa": "Two-factor code" },
+        "data": {
+          "pin": "Two-factor code"
+        },
         "description": "Enter the PIN sent via email or SMS"
       }
     },
@@ -32,6 +34,112 @@
         },
         "title": "Blink options",
         "description": "Configure Blink integration"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wifi_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "binary_sensor": {
+      "camera_armed": {
+        "name": "Camera armed"
+      }
+    },
+    "switch": {
+      "camera_motion": {
+        "name": "Camera motion detection"
+      }
+    }
+  },
+  "services": {
+    "record": {
+      "name": "Record",
+      "description": "Requests camera to record a clip."
+    },
+    "trigger_camera": {
+      "name": "Trigger camera",
+      "description": "Requests camera to take new image."
+    },
+    "save_video": {
+      "name": "Save video",
+      "description": "Saves last recorded video clip to local file.",
+      "fields": {
+        "filename": {
+          "name": "File name",
+          "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config)."
+        }
+      }
+    },
+    "save_recent_clips": {
+      "name": "Save recent clips",
+      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
+      "fields": {
+        "file_path": {
+          "name": "Output directory",
+          "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config)."
+        }
+      }
+    },
+    "send_pin": {
+      "name": "Send pin",
+      "description": "Sends a new PIN to blink for 2FA.",
+      "fields": {
+        "pin": {
+          "name": "Pin",
+          "description": "PIN received from blink. Leave empty if you only received a verification email."
+        },
+        "config_entry_id": {
+          "name": "Integration ID",
+          "description": "The Blink Integration id."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_path": {
+      "message": "Can't write to directory {target}, no access to path!"
+    },
+    "cant_write": {
+      "message": "Can't write to file."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "failed_arm": {
+      "message": "Blink failed to arm camera."
+    },
+    "failed_disarm": {
+      "message": "Blink failed to disarm camera."
+    },
+    "failed_clip": {
+      "message": "Blink failed to record a clip."
+    },
+    "failed_snap": {
+      "message": "Blink failed to snap a picture."
+    },
+    "failed_arm_motion": {
+      "message": "Blink failed to arm camera motion detection."
+    },
+    "failed_disarm_motion": {
+      "message": "Blink failed to disarm camera motion detection."
+    }
+  },
+  "issues": {
+    "service_deprecation": {
+      "title": "Blink update service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::blink::issues::service_deprecation::title%]",
+            "description": "Blink update service is deprecated and will be removed.\nPlease update your automations and scripts to use `Home Assistant Core Integration: Update entity`."
+          }
+        }
       }
     }
   }

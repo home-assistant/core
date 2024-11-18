@@ -1,19 +1,22 @@
 """Describe ZHA logbook events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+
+from zha.application.const import ZHA_EVENT
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
-from .core.const import DOMAIN as ZHA_DOMAIN, ZHA_EVENT
-from .core.helpers import async_get_zha_device
+from .const import DOMAIN as ZHA_DOMAIN
+from .helpers import async_get_zha_device_proxy
 
 if TYPE_CHECKING:
-    from .core.device import ZHADevice
+    from zha.zigbee.device import Device
 
 
 @callback
@@ -29,8 +32,8 @@ def async_describe_events(
         """Describe ZHA logbook event."""
         device: dr.DeviceEntry | None = None
         device_name: str = "Unknown device"
-        zha_device: ZHADevice | None = None
-        event_data: dict = event.data
+        zha_device: Device | None = None
+        event_data = event.data
         event_type: str | None = None
         event_subtype: str | None = None
 
@@ -38,7 +41,9 @@ def async_describe_events(
             device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
             if device:
                 device_name = device.name_by_user or device.name or "Unknown device"
-            zha_device = async_get_zha_device(hass, event.data[ATTR_DEVICE_ID])
+            zha_device = async_get_zha_device_proxy(
+                hass, event.data[ATTR_DEVICE_ID]
+            ).device
         except (KeyError, AttributeError):
             pass
 

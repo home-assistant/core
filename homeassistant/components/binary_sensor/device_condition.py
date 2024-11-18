@@ -1,4 +1,5 @@
 """Implement device conditions for binary sensor."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -256,7 +257,7 @@ ENTITY_CONDITIONS = {
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(IS_OFF + IS_ON),
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
@@ -287,7 +288,7 @@ async def async_get_conditions(
                 **template,
                 "condition": "device",
                 "device_id": device_id,
-                "entity_id": entry.entity_id,
+                "entity_id": entry.id,
                 "domain": DOMAIN,
             }
             for template in templates

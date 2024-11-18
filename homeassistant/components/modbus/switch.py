@@ -1,4 +1,5 @@
 """Support for Modbus switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BaseSwitch
+from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -30,7 +31,7 @@ async def async_setup_platform(
 
     for entry in discovery_info[CONF_SWITCHES]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        switches.append(ModbusSwitch(hub, entry))
+        switches.append(ModbusSwitch(hass, hub, entry))
     async_add_entities(switches)
 
 

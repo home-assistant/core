@@ -1,4 +1,5 @@
 """Support for Insteon covers via PowerLinc Modem."""
+
 import math
 from typing import Any
 
@@ -14,8 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .entity import InsteonEntity
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 
 async def async_setup_entry(
@@ -34,7 +35,12 @@ async def async_setup_entry(
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.COVER}"
     async_dispatcher_connect(hass, signal, async_add_insteon_cover_entities)
-    async_add_insteon_cover_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.COVER,
+        InsteonCoverEntity,
+        async_add_entities,
+    )
 
 
 class InsteonCoverEntity(InsteonEntity, CoverEntity):

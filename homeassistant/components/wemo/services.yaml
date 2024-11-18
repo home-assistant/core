@@ -1,14 +1,10 @@
 set_humidity:
-  name: Set humidity
-  description: Set the target humidity of WeMo humidifier devices.
   target:
     entity:
       integration: wemo
       domain: fan
   fields:
     target_humidity:
-      name: Target humidity
-      description: Target humidity.
       required: true
       selector:
         number:
@@ -18,8 +14,6 @@ set_humidity:
           unit_of_measurement: "%"
 
 reset_filter_life:
-  name: Reset filter life
-  description: Reset the WeMo Humidifier's filter life to 100%.
   target:
     entity:
       integration: wemo

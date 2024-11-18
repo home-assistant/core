@@ -1,4 +1,5 @@
 """Constants for the Slack integration."""
+
 from typing import Final
 
 ATTR_BLOCKS = "blocks"
@@ -10,6 +11,7 @@ ATTR_SNOOZE = "snooze_endtime"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
 ATTR_USER_ID = "user_id"
+ATTR_THREAD_TS = "thread_ts"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 

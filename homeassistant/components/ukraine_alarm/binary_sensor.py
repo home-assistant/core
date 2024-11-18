@@ -1,4 +1,5 @@
 """binary sensors for Ukraine Alarm integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -9,12 +10,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UkraineAlarmDataUpdateCoordinator
 from .const import (
     ALERT_TYPE_AIR,
     ALERT_TYPE_ARTILLERY,
@@ -26,42 +25,38 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import UkraineAlarmDataUpdateCoordinator
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=ALERT_TYPE_UNKNOWN,
-        name="Unknown",
+        translation_key="unknown",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_AIR,
-        name="Air",
+        translation_key="air",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:cloud",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_URBAN_FIGHTS,
-        name="Urban Fights",
+        translation_key="urban_fights",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:pistol",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_ARTILLERY,
-        name="Artillery",
+        translation_key="artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:tank",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_CHEMICAL,
-        name="Chemical",
+        translation_key="chemical",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:chemical-weapon",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_NUCLEAR,
-        name="Nuclear",
+        translation_key="nuclear",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:nuke",
     ),
 )
 
@@ -92,6 +87,7 @@ class UkraineAlarmSensor(
     """Class for a Ukraine Alarm binary sensor."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -105,7 +101,6 @@ class UkraineAlarmSensor(
 
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{unique_id}-{description.key}".lower()
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

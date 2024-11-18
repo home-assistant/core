@@ -1,4 +1,5 @@
 """Support for Lutron Caseta scenes."""
+
 from typing import Any
 
 from pylutron_caseta.smartbridge import Smartbridge
@@ -6,11 +7,10 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronCasetaData
 from .util import serial_to_unique_id
 
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     Adds scenes from the Caseta bridge associated with the config_entry as
     scene entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     scenes = bridge.get_scenes()
     async_add_entities(LutronCasetaScene(scenes[scene], data) for scene in scenes)

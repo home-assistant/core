@@ -408,6 +408,46 @@ async def test_websocket_delete_recurring(
     ]
 
 
+async def test_websocket_delete_empty_recurrence_id(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+) -> None:
+    """Test websocket delete command with an empty recurrence id no-op."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+    uid = events[0]["uid"]
+
+    # Delete the event with an empty recurrence id
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "",
+        },
+    )
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == []
+
+
 async def test_websocket_update(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
 ) -> None:
@@ -454,6 +494,58 @@ async def test_websocket_update(
             "summary": "Bastille Day Party [To be rescheduled]",
             "start": {"date": "1997-07-14"},
             "end": {"date": "1997-07-15"},
+        }
+    ]
+
+
+async def test_websocket_update_empty_recurrence(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+) -> None:
+    """Test an edit with an empty recurrence id (no-op)."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+    uid = events[0]["uid"]
+
+    # Update the event with an empty string for the recurrence id which should
+    # have no effect.
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "",
+            "event": {
+                "summary": "Bastille Day Party [To be rescheduled]",
+                "dtstart": "1997-07-15T11:00:00-06:00",
+                "dtend": "1997-07-15T22:00:00-06:00",
+            },
+        },
+    )
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party [To be rescheduled]",
+            "start": {"dateTime": "1997-07-15T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-15T22:00:00-06:00"},
         }
     ]
 
@@ -630,6 +722,7 @@ async def test_websocket_update_recurring(
             "summary": "Morning Routine [Adjusted]",
             "start": {"dateTime": "2022-08-24T08:00:00-06:00"},
             "end": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "recurrence_id": "20220824T083000",
         },
         {
             "summary": "Morning Routine",
@@ -692,7 +785,7 @@ async def test_all_day_iter_order(
     setup_integration: None,
     get_events: GetEventsFn,
     event_order: list[str],
-):
+) -> None:
     """Test the sort order of an all day events depending on the time zone."""
     client = await ws_client()
     await client.cmd_result(

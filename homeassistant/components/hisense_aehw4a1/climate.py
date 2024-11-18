@@ -1,4 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
+
 from __future__ import annotations
 
 import logging
@@ -144,24 +145,23 @@ class ClimateAehW4a1(ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _attr_fan_modes = FAN_MODES
+    _attr_swing_modes = SWING_MODES
+    _attr_preset_modes = PRESET_MODES
+    _attr_available = False
+    _attr_target_temperature_step = 1
+    _previous_state: HVACMode | str | None = None
+    _on: str | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Initialize the climate device."""
-        self._unique_id = device
+        self._attr_unique_id = device
+        self._attr_name = device
         self._device = AehW4a1(device)
-        self._fan_modes = FAN_MODES
-        self._swing_modes = SWING_MODES
-        self._preset_modes = PRESET_MODES
-        self._attr_available = False
-        self._on = None
-        self._current_temperature = None
-        self._target_temperature = None
-        self._attr_hvac_mode = None
-        self._fan_mode = None
-        self._swing_mode = None
-        self._preset_mode = None
-        self._previous_state = None
 
     async def async_update(self) -> None:
         """Pull state from AEH-W4A1."""
@@ -169,7 +169,7 @@ class ClimateAehW4a1(ClimateEntity):
             status = await self._device.command("status_102_0")
         except pyaehw4a1.exceptions.ConnectionError as library_error:
             _LOGGER.warning(
-                "Unexpected error of %s: %s", self._unique_id, library_error
+                "Unexpected error of %s: %s", self._attr_unique_id, library_error
             )
             self._attr_available = False
             return
@@ -180,123 +180,65 @@ class ClimateAehW4a1(ClimateEntity):
 
         if status["temperature_Fahrenheit"] == "0":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_min_temp = MIN_TEMP_C
+            self._attr_max_temp = MAX_TEMP_C
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_min_temp = MIN_TEMP_F
+            self._attr_max_temp = MAX_TEMP_F
 
-        self._current_temperature = int(status["indoor_temperature_status"], 2)
+        self._attr_current_temperature = int(status["indoor_temperature_status"], 2)
 
         if self._on == "1":
             device_mode = status["mode_status"]
             self._attr_hvac_mode = AC_TO_HA_STATE[device_mode]
 
             fan_mode = status["wind_status"]
-            self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+            self._attr_fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
             swing_mode = f'{status["up_down"]}{status["left_right"]}'
-            self._swing_mode = AC_TO_HA_SWING[swing_mode]
+            self._attr_swing_mode = AC_TO_HA_SWING[swing_mode]
 
             if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT):
-                self._target_temperature = int(status["indoor_temperature_setting"], 2)
+                self._attr_target_temperature = int(
+                    status["indoor_temperature_setting"], 2
+                )
             else:
-                self._target_temperature = None
+                self._attr_target_temperature = None
 
             if status["efficient"] == "1":
-                self._preset_mode = PRESET_BOOST
+                self._attr_preset_mode = PRESET_BOOST
             elif status["low_electricity"] == "1":
-                self._preset_mode = PRESET_ECO
+                self._attr_preset_mode = PRESET_ECO
             elif status["sleep_status"] == "0000001":
-                self._preset_mode = PRESET_SLEEP
+                self._attr_preset_mode = PRESET_SLEEP
             elif status["sleep_status"] == "0000010":
-                self._preset_mode = "sleep_2"
+                self._attr_preset_mode = "sleep_2"
             elif status["sleep_status"] == "0000011":
-                self._preset_mode = "sleep_3"
+                self._attr_preset_mode = "sleep_3"
             elif status["sleep_status"] == "0000100":
-                self._preset_mode = "sleep_4"
+                self._attr_preset_mode = "sleep_4"
             else:
-                self._preset_mode = PRESET_NONE
+                self._attr_preset_mode = PRESET_NONE
         else:
             self._attr_hvac_mode = HVACMode.OFF
-            self._fan_mode = None
-            self._swing_mode = None
-            self._target_temperature = None
-            self._preset_mode = None
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._unique_id
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we are trying to reach."""
-        return self._target_temperature
-
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._fan_mode
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return self._fan_modes
-
-    @property
-    def preset_mode(self):
-        """Return the preset mode if on."""
-        return self._preset_mode
-
-    @property
-    def preset_modes(self):
-        """Return the list of available preset modes."""
-        return self._preset_modes
-
-    @property
-    def swing_mode(self):
-        """Return swing operation."""
-        return self._swing_mode
-
-    @property
-    def swing_modes(self):
-        """Return the list of available fan modes."""
-        return self._swing_modes
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        if self.temperature_unit == UnitOfTemperature.CELSIUS:
-            return MIN_TEMP_C
-        return MIN_TEMP_F
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        if self.temperature_unit == UnitOfTemperature.CELSIUS:
-            return MAX_TEMP_C
-        return MAX_TEMP_F
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
+            self._attr_fan_mode = None
+            self._attr_swing_mode = None
+            self._attr_target_temperature = None
+            self._attr_preset_mode = None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if self._on != "1":
             _LOGGER.warning(
-                "AC at %s is off, could not set temperature", self._unique_id
+                "AC at %s is off, could not set temperature", self._attr_unique_id
             )
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
-            if self._preset_mode != PRESET_NONE:
+            _LOGGER.debug("Setting temp of %s to %s", self._attr_unique_id, temp)
+            if self._attr_preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)
-            if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            if self._attr_temperature_unit == UnitOfTemperature.CELSIUS:
                 await self._device.command(f"temp_{int(temp)}_C")
             else:
                 await self._device.command(f"temp_{int(temp)}_F")
@@ -304,24 +246,30 @@ class ClimateAehW4a1(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if self._on != "1":
-            _LOGGER.warning("AC at %s is off, could not set fan mode", self._unique_id)
+            _LOGGER.warning(
+                "AC at %s is off, could not set fan mode", self._attr_unique_id
+            )
             return
         if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.FAN_ONLY) and (
             self._attr_hvac_mode != HVACMode.FAN_ONLY or fan_mode != FAN_AUTO
         ):
-            _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
+            _LOGGER.debug(
+                "Setting fan mode of %s to %s", self._attr_unique_id, fan_mode
+            )
             await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if self._on != "1":
             _LOGGER.warning(
-                "AC at %s is off, could not set swing mode", self._unique_id
+                "AC at %s is off, could not set swing mode", self._attr_unique_id
             )
             return
 
-        _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
-        swing_act = self._swing_mode
+        _LOGGER.debug(
+            "Setting swing mode of %s to %s", self._attr_unique_id, swing_mode
+        )
+        swing_act = self._attr_swing_mode
 
         if swing_mode == SWING_OFF and swing_act != SWING_OFF:
             if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
@@ -354,7 +302,9 @@ class ClimateAehW4a1(ClimateEntity):
                 return
             await self.async_turn_on()
 
-        _LOGGER.debug("Setting preset mode of %s to %s", self._unique_id, preset_mode)
+        _LOGGER.debug(
+            "Setting preset mode of %s to %s", self._attr_unique_id, preset_mode
+        )
 
         if preset_mode == PRESET_ECO:
             await self._device.command("energysave_on")
@@ -379,13 +329,17 @@ class ClimateAehW4a1(ClimateEntity):
                 await self._device.command("energysave_off")
             elif self._previous_state == PRESET_BOOST:
                 await self._device.command("turbo_off")
-            elif self._previous_state in HA_STATE_TO_AC:
+            elif self._previous_state in HA_STATE_TO_AC and isinstance(
+                self._previous_state, HVACMode
+            ):
                 await self._device.command(HA_STATE_TO_AC[self._previous_state])
             self._previous_state = None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        _LOGGER.debug("Setting operation mode of %s to %s", self._unique_id, hvac_mode)
+        _LOGGER.debug(
+            "Setting operation mode of %s to %s", self._attr_unique_id, hvac_mode
+        )
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
         else:
@@ -395,10 +349,10 @@ class ClimateAehW4a1(ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on."""
-        _LOGGER.debug("Turning %s on", self._unique_id)
+        _LOGGER.debug("Turning %s on", self._attr_unique_id)
         await self._device.command("on")
 
     async def async_turn_off(self) -> None:
         """Turn off."""
-        _LOGGER.debug("Turning %s off", self._unique_id)
+        _LOGGER.debug("Turning %s off", self._attr_unique_id)
         await self._device.command("off")

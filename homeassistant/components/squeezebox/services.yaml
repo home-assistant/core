@@ -1,70 +1,32 @@
 call_method:
-  name: Call method
-  description: Call a custom Squeezebox JSONRPC API.
   target:
     entity:
       integration: squeezebox
       domain: media_player
   fields:
     command:
-      name: Command
-      description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
       required: true
       example: "playlist"
       selector:
         text:
     parameters:
-      name: Parameters
-      description: >
-        Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: '["loadtracks", "album.titlesearch=Revolver"]'
       advanced: true
       selector:
         object:
 call_query:
-  name: Call query
-  description: >
-    Call a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.
   target:
     entity:
       integration: squeezebox
       domain: media_player
   fields:
     command:
-      name: Command
-      description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
       required: true
       example: "albums"
       selector:
         text:
     parameters:
-      name: Parameters
-      description: >
-        Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: '["0", "20", "search:Revolver"]'
       advanced: true
       selector:
         object:
-sync:
-  name: Sync
-  description: >
-    Add another player to this player's sync group. If the other player is already in a sync group, it will leave it.
-  target:
-    entity:
-      integration: squeezebox
-      domain: media_player
-  fields:
-    other_player:
-      name: Other player
-      description: Name of the other Squeezebox player to link.
-      required: true
-      example: "media_player.living_room"
-      selector:
-        text:
-unsync:
-  name: Unsync
-  description: Remove this player from its sync group.
-  target:
-    entity:
-      integration: squeezebox
-      domain: media_player

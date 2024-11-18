@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select the area, where you want to search for water measuring stations",
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]",
+          "radius": "Search radius (in km)"
+        }
+      },
+      "select_station": {
+        "title": "Select the measuring station to add",
+        "description": "Found {stations_count} stations in radius",
+        "data": {
+          "station": "Station"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_stations": "Could not find any station in range."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "clearance_height": {
+        "name": "Clearance height"
+      },
+      "oxygen_level": {
+        "name": "Oxygen level"
+      },
+      "water_speed": {
+        "name": "Water flow speed"
+      },
+      "water_flow": {
+        "name": "Water volume flow"
+      },
+      "water_level": {
+        "name": "Water level"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

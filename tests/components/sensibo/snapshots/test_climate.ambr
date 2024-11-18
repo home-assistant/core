@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_climate
+  ReadOnlyDict({
+    'current_humidity': 32.9,
+    'current_temperature': 21.2,
+    'fan_mode': 'high',
+    'fan_modes': list([
+      'quiet',
+      'low',
+      'medium',
+    ]),
+    'friendly_name': 'Hallway',
+    'hvac_modes': list([
+      <HVACMode.COOL: 'cool'>,
+      <HVACMode.HEAT: 'heat'>,
+      <HVACMode.DRY: 'dry'>,
+      <HVACMode.HEAT_COOL: 'heat_cool'>,
+      <HVACMode.FAN_ONLY: 'fan_only'>,
+      <HVACMode.OFF: 'off'>,
+    ]),
+    'max_temp': 20,
+    'min_temp': 10,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'swing_mode': 'stopped',
+    'swing_modes': list([
+      'stopped',
+      'fixedtop',
+      'fixedmiddletop',
+    ]),
+    'target_temp_step': 1,
+    'temperature': 25,
+  })
+# ---

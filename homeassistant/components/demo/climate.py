@@ -1,9 +1,11 @@
 """Demo platform that offers a fake climate device."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -14,27 +16,25 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 SUPPORT_FLAGS = ClimateEntityFeature(0)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo climate devices."""
+    """Set up the demo climate platform."""
     async_add_entities(
         [
             DemoClimate(
                 unique_id="climate_1",
-                name="HeatPump",
+                device_name="HeatPump",
                 target_temperature=68,
                 unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 preset=None,
@@ -45,82 +45,72 @@ async def async_setup_platform(
                 swing_mode=None,
                 hvac_mode=HVACMode.HEAT,
                 hvac_action=HVACAction.HEATING,
-                aux=None,
                 target_temp_high=None,
                 target_temp_low=None,
                 hvac_modes=[HVACMode.HEAT, HVACMode.OFF],
             ),
             DemoClimate(
                 unique_id="climate_2",
-                name="Hvac",
+                device_name="Hvac",
                 target_temperature=21,
                 unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset=None,
                 current_temperature=22,
-                fan_mode="On High",
-                target_humidity=67,
-                current_humidity=54,
-                swing_mode="Off",
+                fan_mode="on_high",
+                target_humidity=67.4,
+                current_humidity=54.2,
+                swing_mode="off",
                 hvac_mode=HVACMode.COOL,
                 hvac_action=HVACAction.COOLING,
-                aux=False,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT_COOL],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
             ),
             DemoClimate(
                 unique_id="climate_3",
-                name="Ecobee",
+                device_name="Ecobee",
                 target_temperature=None,
                 unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset="home",
-                preset_modes=["home", "eco"],
+                preset_modes=["home", "eco", "away"],
                 current_temperature=23,
-                fan_mode="Auto Low",
+                fan_mode="auto_low",
                 target_humidity=None,
                 current_humidity=None,
-                swing_mode="Auto",
+                swing_mode="auto",
                 hvac_mode=HVACMode.HEAT_COOL,
                 hvac_action=None,
-                aux=None,
                 target_temp_high=24,
                 target_temp_low=21,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT],
             ),
         ]
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo climate devices config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "ubercool"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         target_temperature: float | None,
         unit_of_measurement: str,
         preset: str | None,
         current_temperature: float,
         fan_mode: str | None,
-        target_humidity: int | None,
-        current_humidity: int | None,
+        target_humidity: float | None,
+        current_humidity: float | None,
         swing_mode: str | None,
         hvac_mode: HVACMode,
         hvac_action: HVACAction | None,
-        aux: bool | None,
         target_temp_high: float | None,
         target_temp_low: float | None,
         hvac_modes: list[HVACMode],
@@ -128,7 +118,6 @@ class DemoClimate(ClimateEntity):
     ) -> None:
         """Initialize the climate device."""
         self._unique_id = unique_id
-        self._attr_name = name
         self._attr_supported_features = SUPPORT_FLAGS
         if target_temperature is not None:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -140,12 +129,13 @@ class DemoClimate(ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if swing_mode is not None:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-        if aux is not None:
-            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
         if HVACMode.HEAT_COOL in hvac_modes or HVACMode.AUTO in hvac_modes:
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement
@@ -156,23 +146,15 @@ class DemoClimate(ClimateEntity):
         self._current_fan_mode = fan_mode
         self._hvac_action = hvac_action
         self._hvac_mode = hvac_mode
-        self._aux = aux
         self._current_swing_mode = swing_mode
         self._fan_modes = ["on_low", "on_high", "auto_low", "auto_high", "off"]
         self._hvac_modes = hvac_modes
         self._swing_modes = ["auto", "1", "2", "3", "off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            name=self.name,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
         )
 
     @property
@@ -206,12 +188,12 @@ class DemoClimate(ClimateEntity):
         return self._target_temperature_low
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._current_humidity
 
     @property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 
@@ -239,11 +221,6 @@ class DemoClimate(ClimateEntity):
     def preset_modes(self) -> list[str] | None:
         """Return preset modes."""
         return self._preset_modes
-
-    @property
-    def is_aux_heat(self) -> bool | None:
-        """Return true if aux heat is on."""
-        return self._aux
 
     @property
     def fan_mode(self) -> str | None:
@@ -275,6 +252,8 @@ class DemoClimate(ClimateEntity):
         ):
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:
@@ -300,14 +279,4 @@ class DemoClimate(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Update preset_mode on."""
         self._preset = preset_mode
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        self._aux = True
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        self._aux = False
         self.async_write_ha_state()

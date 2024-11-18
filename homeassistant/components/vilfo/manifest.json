@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vilfo",
   "iot_class": "local_polling",
   "loggers": ["vilfo"],
-  "requirements": ["vilfo-api-client==0.3.2"]
+  "requirements": ["vilfo-api-client==0.5.0"]
 }

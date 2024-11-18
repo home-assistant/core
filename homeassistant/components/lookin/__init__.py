@@ -1,9 +1,9 @@
 """The lookin integration."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -26,7 +26,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
+from .const import (
+    DOMAIN,
+    METEO_UPDATE_INTERVAL,
+    PLATFORMS,
+    REMOTE_UPDATE_INTERVAL,
+    TYPE_TO_PLATFORM,
+)
 from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
 from .models import LookinData
 
@@ -96,20 +102,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
+    except (TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
+
+    if entry.unique_id != (found_uuid := lookin_device.id.upper()):
+        # If the uuid of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, "
+            f"found {found_uuid}"
+        )
 
     push_coordinator = LookinPushCoordinator(entry.title)
 
     if lookin_device.model >= 2:
-        meteo_coordinator = LookinDataUpdateCoordinator[MeteoSensor](
+        coordinator_class = LookinDataUpdateCoordinator[MeteoSensor]
+        meteo_coordinator = coordinator_class(
             hass,
             push_coordinator,
             name=entry.title,
             update_method=lookin_protocol.get_meteo_sensor,
-            update_interval=timedelta(
-                minutes=5
-            ),  # Updates are pushed (fallback is polling)
+            update_interval=METEO_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
         )
         await meteo_coordinator.async_config_entry_first_refresh()
 
@@ -127,9 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,
-            update_interval=timedelta(
-                seconds=60
-            ),  # Updates are pushed (fallback is polling)
+            update_interval=REMOTE_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
         )
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[uuid] = coordinator

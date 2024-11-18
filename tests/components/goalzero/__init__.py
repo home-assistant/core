@@ -1,9 +1,9 @@
 """Tests for the Goal Zero Yeti integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import dhcp
-from homeassistant.components.goalzero import DOMAIN
-from homeassistant.components.goalzero.const import DEFAULT_NAME
+from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -21,7 +21,7 @@ CONF_DATA = {
 
 CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
     ip=HOST,
-    macaddress=format_mac("AA:BB:CC:DD:EE:FF"),
+    macaddress=format_mac("AA:BB:CC:DD:EE:FF").replace(":", ""),
     hostname="yeti",
 )
 

@@ -14,13 +14,20 @@
           "port": "[%key:common::config_flow::data::port%]",
           "device_baudrate": "Device Baud Rate",
           "device_path": "Device Path"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the AlarmDecoder device that is connected to your alarm panel.",
+          "port": "The port on which AlarmDecoder is accessible (for example, 10000)"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "create_entry": { "default": "Successfully connected to AlarmDecoder." },
+    "create_entry": {
+      "default": "Successfully connected to AlarmDecoder."
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
@@ -31,11 +38,11 @@
         "title": "Configure AlarmDecoder",
         "description": "What would you like to edit?",
         "data": {
-          "edit_select": "Edit"
+          "edit_selection": "Edit"
         }
       },
       "arm_settings": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "data": {
           "auto_bypass": "Auto Bypass on Arm",
           "code_arm_required": "Code Required for Arming",
@@ -43,14 +50,14 @@
         }
       },
       "zone_select": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "description": "Enter the zone number you'd like to to add, edit, or remove.",
         "data": {
           "zone_number": "Zone Number"
         }
       },
       "zone_details": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
         "data": {
           "zone_name": "Zone Name",
@@ -67,6 +74,28 @@
       "int": "The field below must be an integer.",
       "loop_rfid": "RF Loop cannot be used without RF Serial.",
       "loop_range": "RF Loop must be an integer between 1 and 4."
+    }
+  },
+  "services": {
+    "alarm_keypress": {
+      "name": "Key press",
+      "description": "Sends custom keypresses to the alarm.",
+      "fields": {
+        "keypress": {
+          "name": "[%key:component::alarmdecoder::services::alarm_keypress::name%]",
+          "description": "String to send to the alarm panel."
+        }
+      }
+    },
+    "alarm_toggle_chime": {
+      "name": "Toggle chime",
+      "description": "Sends the alarm the toggle chime command.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to toggle the alarm control panel chime with."
+        }
+      }
     }
   }
 }

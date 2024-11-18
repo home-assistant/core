@@ -1,4 +1,5 @@
 """Support for yalexs ble sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,7 +7,6 @@ from dataclasses import dataclass
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,29 +22,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
 
-@dataclass
-class YaleXSBLERequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class YaleXSBLESensorEntityDescription(SensorEntityDescription):
+    """Describes Yale Access Bluetooth sensor entity."""
 
     value_fn: Callable[[LockState, LockInfo, ConnectionInfo], int | float | None]
-
-
-@dataclass
-class YaleXSBLESensorEntityDescription(
-    SensorEntityDescription, YaleXSBLERequiredKeysMixin
-):
-    """Describes Yale Access Bluetooth sensor entity."""
 
 
 SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     YaleXSBLESensorEntityDescription(
         key="",  # No key for the original RSSI sensor unique id
-        name="Signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -55,7 +47,6 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_level",
-        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -67,7 +58,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_voltage",
-        name="Battery Voltage",
+        translation_key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,11 +74,11 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: YALEXSBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YALE XS Bluetooth sensors."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(YaleXSBLESensor(description, data) for description in SENSORS)
 
 

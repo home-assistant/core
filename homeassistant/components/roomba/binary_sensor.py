@@ -1,12 +1,14 @@
 """Roomba binary sensor entities."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import roomba_reported_state
-from .const import BLID, DOMAIN, ROOMBA_SESSION
-from .irobot_base import IRobotEntity
+from .const import DOMAIN
+from .entity import IRobotEntity
+from .models import RoombaData
 
 
 async def async_setup_entry(
@@ -15,34 +17,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    roomba = domain_data[ROOMBA_SESSION]
-    blid = domain_data[BLID]
+    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    roomba = domain_data.roomba
+    blid = domain_data.blid
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
-        async_add_entities([roomba_vac], True)
+        async_add_entities([roomba_vac])
 
 
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
-    ICON = "mdi:delete-variant"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} Bin Full"
+    _attr_translation_key = "bin_full"
 
     @property
     def unique_id(self):
         """Return the ID of this sensor."""
         return f"bin_{self._blid}"
-
-    @property
-    def icon(self):
-        """Return the icon of this sensor."""
-        return self.ICON
 
     @property
     def is_on(self):

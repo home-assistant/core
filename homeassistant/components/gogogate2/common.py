@@ -1,7 +1,8 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, NamedTuple
@@ -13,7 +14,7 @@ from ismartgate import (
     ISmartGateApi,
     ISmartGateInfoResponse,
 )
-from ismartgate.common import AbstractDoor, get_door_by_id
+from ismartgate.common import AbstractDoor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,16 +24,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN
+from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,92 +39,6 @@ class StateData(NamedTuple):
     config_unique_id: str
     unique_id: str | None
     door: AbstractDoor | None
-
-
-class DeviceDataUpdateCoordinator(
-    DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
-):
-    """Manages polling for state changes from the device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        api: AbstractGateApi,
-        *,
-        name: str,
-        update_interval: timedelta,
-        update_method: Callable[
-            [], Awaitable[GogoGate2InfoResponse | ISmartGateInfoResponse]
-        ]
-        | None = None,
-        request_refresh_debouncer: Debouncer | None = None,
-    ) -> None:
-        """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,
-            request_refresh_debouncer=request_refresh_debouncer,
-        )
-        self.api = api
-
-
-class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
-    """Base class for gogogate2 entities."""
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        data_update_coordinator: DeviceDataUpdateCoordinator,
-        door: AbstractDoor,
-        unique_id: str,
-    ) -> None:
-        """Initialize gogogate2 base entity."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
-        self._door_id = door.door_id
-        self._api = data_update_coordinator.api
-        self._attr_unique_id = unique_id
-
-    @property
-    def door(self) -> AbstractDoor:
-        """Return the door object."""
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    @property
-    def door_status(self) -> AbstractDoor:
-        """Return the door with status."""
-        data = self.coordinator.data
-        door_with_statuses = self._api.async_get_door_statuses_from_info(data)
-        return door_with_statuses[self._door_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for the controller."""
-        data = self.coordinator.data
-        configuration_url = (
-            f"https://{data.remoteaccess}" if data.remoteaccess else None
-        )
-        return DeviceInfo(
-            configuration_url=configuration_url,
-            identifiers={(DOMAIN, str(self._config_entry.unique_id))},
-            name=self._config_entry.title,
-            manufacturer=MANUFACTURER,
-            model=data.model,
-            sw_version=data.firmwareversion,
-        )
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"door_id": self._door_id}
 
 
 def get_data_update_coordinator(

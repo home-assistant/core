@@ -1,4 +1,5 @@
 """The test for the sensibo binary sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,21 +10,21 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo binary sensor."""
 
-    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_alive")
+    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_connectivity")
     state2 = hass.states.get("binary_sensor.hallway_motion_sensor_main_sensor")
     state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
     state4 = hass.states.get("binary_sensor.hallway_room_occupied")
@@ -53,11 +54,11 @@ async def test_binary_sensor(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_alive")
+    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_connectivity")
     state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
     assert state1.state == "off"
     assert state3.state == "off"

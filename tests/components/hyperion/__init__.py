@@ -1,4 +1,5 @@
 """Tests for the Hyperion component."""
+
 from __future__ import annotations
 
 from types import TracebackType
@@ -27,7 +28,6 @@ TEST_PRIORITY = 180
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
-TEST_PRIORITY_LIGHT_ENTITY_ID_1 = "light.test_instance_1_priority"
 TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
@@ -115,6 +115,7 @@ def create_mock_client() -> Mock:
     mock_client.instances = [
         {"friendly_name": "Test instance 1", "instance": 0, "running": True}
     ]
+    mock_client.remote_url = f"http://{TEST_HOST}:{TEST_PORT_UI}"
 
     return mock_client
 
@@ -123,9 +124,9 @@ def add_test_config_entry(
     hass: HomeAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Add a test config entry."""
-    config_entry: MockConfigEntry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         data=data

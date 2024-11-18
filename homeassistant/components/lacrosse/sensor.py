@@ -1,4 +1,5 @@
 """Support for LaCrosse sensor components."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -59,7 +60,7 @@ SENSOR_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
@@ -93,7 +94,7 @@ def setup_platform(
         _LOGGER.warning("Unable to open serial port: %s", exc)
         return
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())  # type: ignore[no-any-return]
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
 
     if CONF_JEELINK_LED in config:
         lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
@@ -209,7 +210,7 @@ class LaCrosseHumidity(LaCrosseSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:water-percent"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
 
     @property
     def native_value(self) -> int | None:

@@ -1,20 +1,23 @@
 """Component to interact with Hassbian tools."""
 
+from __future__ import annotations
+
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.sensor import async_update_suggested_units
-from homeassistant.config import async_check_ha_config_file
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Set up the Hassbian config."""
     hass.http.register_view(CheckConfigView)
     websocket_api.async_register_command(hass, websocket_update_config)
@@ -28,13 +31,21 @@ class CheckConfigView(HomeAssistantView):
     url = "/api/config/core/check_config"
     name = "api:config:core:check_config"
 
-    async def post(self, request):
+    @require_admin
+    async def post(self, request: web.Request) -> web.Response:
         """Validate configuration and return results."""
-        errors = await async_check_ha_config_file(request.app["hass"])
 
-        state = "invalid" if errors else "valid"
+        res = await check_config.async_check_ha_config_file(request.app[KEY_HASS])
 
-        return self.json({"result": state, "errors": errors})
+        state = "invalid" if res.errors else "valid"
+
+        return self.json(
+            {
+                "result": state,
+                "errors": res.error_str or None,
+                "warnings": res.warning_str or None,
+            }
+        )
 
 
 @websocket_api.require_admin
@@ -50,6 +61,7 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("latitude"): cv.latitude,
         vol.Optional("location_name"): str,
         vol.Optional("longitude"): cv.longitude,
+        vol.Optional("radius"): cv.positive_int,
         vol.Optional("time_zone"): cv.time_zone,
         vol.Optional("update_units"): bool,
         vol.Optional("unit_system"): unit_system.validate_unit_system,
@@ -98,11 +110,9 @@ async def websocket_detect_config(
     # We don't want any integrations to use the name of the unit system
     # so we are using the private attribute here
     if location_info.use_metric:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC  # noqa: SLF001
     else:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY  # noqa: SLF001
 
     if location_info.latitude:
         info["latitude"] = location_info.latitude

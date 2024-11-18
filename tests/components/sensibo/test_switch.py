@@ -1,4 +1,5 @@
 """The test for the sensibo switch platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -18,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -36,12 +37,15 @@ async def test_switch_timer(
     assert state1.attributes["id"] is None
     assert state1.attributes["turn_on"] is None
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+            return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -62,7 +66,7 @@ async def test_switch_timer(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
     state1 = hass.states.get("switch.hallway_timer")
@@ -70,12 +74,15 @@ async def test_switch_timer(
     assert state1.attributes["id"] == "SzTGE4oZ4D"
     assert state1.attributes["turn_on"] is False
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+            return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -95,7 +102,7 @@ async def test_switch_timer(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -114,12 +121,15 @@ async def test_switch_pure_boost(
     state1 = hass.states.get("switch.kitchen_pure_boost")
     assert state1.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -140,18 +150,21 @@ async def test_switch_pure_boost(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
     state1 = hass.states.get("switch.kitchen_pure_boost")
     assert state1.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -171,7 +184,7 @@ async def test_switch_pure_boost(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -189,14 +202,18 @@ async def test_switch_command_failure(
 
     state1 = hass.states.get("switch.hallway_timer")
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
-        return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+            return_value={"status": "failure"},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -207,14 +224,18 @@ async def test_switch_command_failure(
             blocking=True,
         )
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
-        return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+            return_value={"status": "failure"},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -237,12 +258,15 @@ async def test_switch_climate_react(
     state1 = hass.states.get("switch.hallway_climate_react")
     assert state1.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -262,18 +286,21 @@ async def test_switch_climate_react(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
     state1 = hass.states.get("switch.hallway_climate_react")
     assert state1.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -293,7 +320,7 @@ async def test_switch_climate_react(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -317,7 +344,7 @@ async def test_switch_climate_react_no_data(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 

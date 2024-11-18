@@ -1,13 +1,18 @@
 """Support for Aqualink Thermostats."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
+from iaqualink.device import AqualinkThermostat
+from iaqualink.systems.iaqua.device import AqualinkState
+
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -15,8 +20,9 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,22 +36,37 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]:
-        devs.append(HassAqualinkThermostat(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (
+            HassAqualinkThermostat(dev)
+            for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]
+        ),
+        True,
+    )
 
 
 class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
-    @property
-    def name(self) -> str:
-        """Return the name of the thermostat."""
-        return self.dev.label.split(" ")[0]
+    def __init__(self, dev: AqualinkThermostat) -> None:
+        """Initialize AquaLink thermostat."""
+        super().__init__(dev)
+        self._attr_name = dev.label.split(" ")[0]
+        self._attr_temperature_unit = (
+            UnitOfTemperature.FAHRENHEIT
+            if dev.unit == "F"
+            else UnitOfTemperature.CELSIUS
+        )
+        self._attr_min_temp = dev.min_temperature
+        self._attr_max_temp = dev.max_temperature
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -65,21 +86,14 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        if self.dev.unit == "F":
-            return UnitOfTemperature.FAHRENHEIT
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    def min_temp(self) -> int:
-        """Return the minimum temperature supported by the thermostat."""
-        return self.dev.min_temperature
-
-    @property
-    def max_temp(self) -> int:
-        """Return the minimum temperature supported by the thermostat."""
-        return self.dev.max_temperature
+    def hvac_action(self) -> HVACAction:
+        """Return the current HVAC action."""
+        state = AqualinkState(self.dev._heater.state)  # noqa: SLF001
+        if state == AqualinkState.ON:
+            return HVACAction.HEATING
+        if state == AqualinkState.ENABLED:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:

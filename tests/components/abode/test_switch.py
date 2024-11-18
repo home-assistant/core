@@ -1,4 +1,5 @@
 """Tests for the Abode switch device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import (
@@ -24,10 +25,11 @@ DEVICE_ID = "switch.test_switch"
 DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(AUTOMATION_ID)
     assert entry.unique_id == AUTOMATION_UID
@@ -49,7 +51,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
     await setup_platform(hass, SWITCH_DOMAIN)
 
     with patch("jaraco.abode.devices.switch.Switch.switch_on") as mock_switch_on:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
@@ -62,7 +64,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     await setup_platform(hass, SWITCH_DOMAIN)
 
     with patch("jaraco.abode.devices.switch.Switch.switch_off") as mock_switch_off:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()

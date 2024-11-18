@@ -1,4 +1,5 @@
 """Handle manual setup of ihc resources as entities in Home Assistant."""
+
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_USERNAME,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -81,11 +81,7 @@ LIGHT_SCHEMA = DEVICE_SCHEMA.extend(
 )
 
 SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS
-        ): cv.string
-    }
+    {vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string}
 )
 
 IHC_SCHEMA = vol.Schema(

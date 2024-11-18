@@ -1,22 +1,31 @@
 """The Fronius integration."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from datetime import datetime, timedelta
 import logging
-from typing import Final, TypeVar
+from typing import Final
 
 from pyfronius import Fronius, FroniusError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
+from .const import (
+    DOMAIN,
+    SOLAR_NET_DISCOVERY_NEW,
+    SOLAR_NET_ID_SYSTEM,
+    SOLAR_NET_RESCAN_TIMER,
+    FroniusDeviceInfo,
+)
 from .coordinator import (
     FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
@@ -30,30 +39,31 @@ from .coordinator import (
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
 
-_FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
+type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Set up fronius from a config entry."""
     host = entry.data[CONF_HOST]
     fronius = Fronius(async_get_clientsession(hass), host)
     solar_net = FroniusSolarNet(hass, entry, fronius)
     await solar_net.init_devices()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
+    entry.runtime_data = solar_net
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        solar_net = hass.data[DOMAIN].pop(entry.entry_id)
-        while solar_net.cleanup_callbacks:
-            solar_net.cleanup_callbacks.pop()()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return True
 
 
 class FroniusSolarNet:
@@ -64,7 +74,6 @@ class FroniusSolarNet:
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
-        self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
         self.fronius = fronius
@@ -95,17 +104,7 @@ class FroniusSolarNet:
         # _create_solar_net_device uses data from self.logger_coordinator when available
         self.system_device_info = await self._create_solar_net_device()
 
-        _inverter_infos = await self._get_inverter_infos()
-        for inverter_info in _inverter_infos:
-            coordinator = FroniusInverterUpdateCoordinator(
-                hass=self.hass,
-                solar_net=self,
-                logger=_LOGGER,
-                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
-                inverter_info=inverter_info,
-            )
-            await coordinator.async_config_entry_first_refresh()
-            self.inverter_coordinators.append(coordinator)
+        await self._init_devices_inverter()
 
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
@@ -143,6 +142,15 @@ class FroniusSolarNet:
             )
         )
 
+        # Setup periodic re-scan
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass,
+                self._init_devices_inverter,
+                timedelta(minutes=SOLAR_NET_RESCAN_TIMER),
+            )
+        )
+
     async def _create_solar_net_device(self) -> DeviceInfo:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
@@ -168,14 +176,58 @@ class FroniusSolarNet:
         )
         return solar_net_device
 
+    async def _init_devices_inverter(self, _now: datetime | None = None) -> None:
+        """Get available inverters and set up coordinators for new found devices."""
+        _inverter_infos = await self._get_inverter_infos()
+
+        _LOGGER.debug("Processing inverters for: %s", _inverter_infos)
+        for _inverter_info in _inverter_infos:
+            _inverter_name = (
+                f"{DOMAIN}_inverter_{_inverter_info.solar_net_id}_{self.host}"
+            )
+
+            # Add found inverter only not already existing
+            if _inverter_info.solar_net_id in [
+                inv.inverter_info.solar_net_id for inv in self.inverter_coordinators
+            ]:
+                continue
+
+            _coordinator = FroniusInverterUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=_inverter_name,
+                inverter_info=_inverter_info,
+            )
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                await _coordinator.async_refresh()
+            else:
+                await _coordinator.async_config_entry_first_refresh()
+            self.inverter_coordinators.append(_coordinator)
+
+            # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
+
+            _LOGGER.debug(
+                "New inverter added (UID: %s)",
+                _inverter_info.unique_id,
+            )
+
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
+        inverter_infos: list[FroniusDeviceInfo] = []
+
         try:
             _inverter_info = await self.fronius.inverter_info()
         except FroniusError as err:
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                # During a re-scan we will attempt again as per schedule.
+                _LOGGER.debug("Re-scan failed for %s", self.host)
+                return inverter_infos
+
             raise ConfigEntryNotReady from err
 
-        inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
@@ -195,10 +247,16 @@ class FroniusSolarNet:
                     unique_id=unique_id,
                 )
             )
+            _LOGGER.debug(
+                "Inverter found at %s (Device ID: %s, UID: %s)",
+                self.host,
+                solar_net_id,
+                unique_id,
+            )
         return inverter_infos
 
     @staticmethod
-    async def _init_optional_coordinator(
+    async def _init_optional_coordinator[_FroniusCoordinatorT: FroniusCoordinatorBase](
         coordinator: _FroniusCoordinatorT,
     ) -> _FroniusCoordinatorT | None:
         """Initialize an update coordinator and return it if devices are found."""

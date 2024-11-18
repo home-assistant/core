@@ -1,4 +1,5 @@
 """Services for the Plex integration."""
+
 import json
 import logging
 
@@ -132,6 +133,8 @@ def process_plex_payload(
     elif content_id.startswith(PLEX_URI_SCHEME):
         # Handle standard media_browser payloads
         plex_url = URL(content_id)
+        # https://github.com/pylint-dev/pylint/issues/3484
+        # pylint: disable-next=using-constant-test
         if plex_url.name:
             if len(plex_url.parts) == 2:
                 if plex_url.name == "search":
@@ -143,7 +146,7 @@ def process_plex_payload(
                 content = plex_url.path
             server_id = plex_url.host
             plex_server = get_plex_server(hass, plex_server_id=server_id)
-        else:
+        else:  # noqa: PLR5501
             # Handle legacy payloads without server_id in URL host position
             if plex_url.host == "search":
                 content = {}
@@ -159,6 +162,11 @@ def process_plex_payload(
 
     if not plex_server:
         plex_server = get_plex_server(hass)
+
+    if isinstance(content, dict):
+        if plex_user := content.pop("username", None):
+            _LOGGER.debug("Switching to Plex user: %s", plex_user)
+            plex_server = plex_server.switch_user(plex_user)
 
     if content_type == "station":
         if not supports_playqueues:

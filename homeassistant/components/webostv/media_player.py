@@ -1,4 +1,5 @@
 """Support for interface with an LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,11 +9,9 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-from ssl import SSLContext
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
-import async_timeout
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -32,8 +31,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
@@ -80,12 +79,8 @@ async def async_setup_entry(
     async_add_entities([LgWebOSMediaPlayerEntity(entry, client)])
 
 
-_T = TypeVar("_T", bound="LgWebOSMediaPlayerEntity")
-_P = ParamSpec("_P")
-
-
-def cmd(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
@@ -115,13 +110,15 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
         """Initialize the webos device."""
         self._entry = entry
         self._client = client
         self._attr_assumed_state = True
-        self._attr_name = entry.title
+        self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
 
@@ -237,8 +234,23 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, self.unique_id))},
             manufacturer="LG",
-            name=self.name,
+            name=self._device_name,
         )
+
+        self._attr_assumed_state = True
+        if (
+            self._client.is_on
+            and self._client.media_state is not None
+            and self._client.media_state.get("foregroundAppInfo") is not None
+        ):
+            self._attr_assumed_state = False
+            for entry in self._client.media_state.get("foregroundAppInfo"):
+                if entry.get("playState") == "playing":
+                    self._attr_state = MediaPlayerState.PLAYING
+                elif entry.get("playState") == "paused":
+                    self._attr_state = MediaPlayerState.PAUSED
+                elif entry.get("playState") == "unloaded":
+                    self._attr_state = MediaPlayerState.IDLE
 
         if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
             maj_v = self._client.software_info.get("major_ver")
@@ -376,7 +388,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if (source_dict := self._source_list.get(source)) is None:
-            _LOGGER.warning("Source %s not found for %s", source, self.name)
+            _LOGGER.warning(
+                "Source %s not found for %s", source, self._friendly_name_internal()
+            )
             return
         if source_dict.get("title"):
             await self._client.launch_app(source_dict["id"])
@@ -408,13 +422,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     partial_match_channel_id = channel["channelId"]
 
             if perfect_match_channel_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Switching to channel <%s> with perfect match",
                     perfect_match_channel_id,
                 )
                 await self._client.set_channel(perfect_match_channel_id)
             elif partial_match_channel_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Switching to channel <%s> with partial match",
                     partial_match_channel_id,
                 )
@@ -470,15 +484,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         SSLContext to bypass validation errors if url starts with https.
         """
         content = None
-        ssl_context = None
-        if url.startswith("https"):
-            ssl_context = SSLContext()
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-            response = await websession.get(url, ssl=ssl_context)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
+        with suppress(TimeoutError):
+            async with asyncio.timeout(10):
+                response = await websession.get(url, ssl=False)
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

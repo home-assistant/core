@@ -1,0 +1,1410 @@
+{
+  "nodeId": 72,
+  "index": 0,
+  "installerIcon": 7680,
+  "userIcon": 7680,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 1089,
+  "productId": 4096,
+  "productType": 9216,
+  "firmwareVersion": "7.0",
+  "zwavePlusVersion": 2,
+  "name": "Portail",
+  "location": "**REDACTED**",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x0441/ibt4zwave.json",
+    "isEmbedded": true,
+    "manufacturer": "NICE Spa",
+    "manufacturerId": 1089,
+    "label": "IBT4ZWAVE",
+    "description": "BusT4-Z-Wave interface",
+    "devices": [
+      {
+        "productType": 9216,
+        "productId": 4096
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "Install the external antenna before powering the device and adding to the Z-Wave network for the device to automatically detect and enable it (use only antennas and cables compliant with technical specification).\n\n01. Set the Z-Wave gateway into adding mode (see the Z-Wave gateway\u2019s manual)\n02. On the IBT4ZWAVE press and release the S1 button 3 times x3 S1\n03. LEDs on the IBT4ZW AVE will start slow flashing alter nately\n04. If you are adding in Security S2 Authenticated, input the underlined part\nof the DSK (label on the box) DSK: XXXXX-XXXXX-XXXXX-XXXXX XXXXX-XXXXX-XXXXX-XXXXX\n05. When the adding process ends, the LEDs on the IBT4ZWAVE will show adding and antenna status (Table 1 in manual)",
+      "exclusion": "01. Set the Z-Wave gateway into remove mode (see the Z-Wave gateway\u2019s manual)\n02. On the IBT4ZWAVE press and release the S1 button 3 times x3 S1\n03. LEDs on the IBT4ZW AVE will start slow flashing alternately\n04. Wait for the removing process to end",
+      "reset": "01. Press and hold the S1 button\n03. Wait 3 seconds\n04. LEDs will show adding and antenna status (Table 1 in manual) for 3 seconds\n05. LEDs will turn off for 3 seconds\n06. LEDs will show selected antenna (Table 2 in manual) for 3 seconds\n07. When both LEDs light up simultaneously, release the button\n08. Press and release the S1 button\n09. Both LEDs will flash once at the end of the procedure",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3837/IBT4ZWAVE-T-v0.7.pdf"
+    }
+  },
+  "label": "IBT4ZWAVE",
+  "interviewAttempts": 2,
+  "endpoints": [
+    {
+      "nodeId": 72,
+      "index": 0,
+      "installerIcon": 7680,
+      "userIcon": 7680,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        },
+        "mandatorySupportedCCs": [32, 38],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 5,
+          "isSecure": false
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Open",
+      "propertyName": "Open",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Open)",
+        "ccSpecific": {
+          "switchType": 3
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      },
+      "value": false,
+      "nodeId": 72
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Close",
+      "propertyName": "Close",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Close)",
+        "ccSpecific": {
+          "switchType": 3
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      },
+      "value": true,
+      "nodeId": 72
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm Configuration - 1st Slot Notification Type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 1st Slot Notification Type",
+        "default": 0,
+        "min": 0,
+        "max": 22,
+        "states": {
+          "0": "Disabled",
+          "1": "Smoke Alarm",
+          "2": "CO Alarm",
+          "3": "CO2 Alarm",
+          "4": "Heat Alarm",
+          "5": "Water Alarm",
+          "6": "Access Control",
+          "7": "Home Security",
+          "8": "Power Management",
+          "9": "System",
+          "10": "Emergency Alarm",
+          "11": "Clock",
+          "12": "Appliance",
+          "13": "Home Health",
+          "14": "Siren",
+          "15": "Water Valve",
+          "16": "Weather Alarm",
+          "17": "Irrigation",
+          "18": "Gas Alarm",
+          "19": "Pest Control",
+          "20": "Light Sensor",
+          "21": "Water Quality Monitoring",
+          "22": "Home Monitoring"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm Configuration - 1st Slot Notification Event",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 1st Slot Notification Event",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Disabled",
+          "255": "Any Notification,"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 65280,
+      "propertyName": "Alarm Configuration - 1st Slot Notification Event Parameter",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 1st Slot Notification Event Parameter",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 255,
+      "propertyName": "Alarm Configuration - 1st Slot Action",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 1st Slot Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No Action",
+          "1": "Open",
+          "2": "Close"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm Configuration - 2nd Slot Notification Type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 2nd Slot Notification Type",
+        "default": 5,
+        "min": 0,
+        "max": 22,
+        "states": {
+          "0": "Disabled",
+          "1": "Smoke Alarm",
+          "2": "CO Alarm",
+          "3": "CO2 Alarm",
+          "4": "Heat Alarm",
+          "5": "Water Alarm",
+          "6": "Access Control",
+          "7": "Home Security",
+          "8": "Power Management",
+          "9": "System",
+          "10": "Emergency Alarm",
+          "11": "Clock",
+          "12": "Appliance",
+          "13": "Home Health",
+          "14": "Siren",
+          "15": "Water Valve",
+          "16": "Weather Alarm",
+          "17": "Irrigation",
+          "18": "Gas Alarm",
+          "19": "Pest Control",
+          "20": "Light Sensor",
+          "21": "Water Quality Monitoring",
+          "22": "Home Monitoring"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm Configuration - 2nd Slot Notification Event",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 2nd Slot Notification Event",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Disabled",
+          "255": "Any Notification,"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 65280,
+      "propertyName": "Alarm Configuration - 2nd Slot Notification Event Parameter",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 2nd Slot Notification Event Parameter",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 255,
+      "propertyName": "Alarm Configuration - 2nd Slot Action",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 2nd Slot Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No Action",
+          "1": "Open",
+          "2": "Close"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm Configuration - 3rd Slot Notification Type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 3rd Slot Notification Type",
+        "default": 1,
+        "min": 0,
+        "max": 22,
+        "states": {
+          "0": "Disabled",
+          "1": "Smoke Alarm",
+          "2": "CO Alarm",
+          "3": "CO2 Alarm",
+          "4": "Heat Alarm",
+          "5": "Water Alarm",
+          "6": "Access Control",
+          "7": "Home Security",
+          "8": "Power Management",
+          "9": "System",
+          "10": "Emergency Alarm",
+          "11": "Clock",
+          "12": "Appliance",
+          "13": "Home Health",
+          "14": "Siren",
+          "15": "Water Valve",
+          "16": "Weather Alarm",
+          "17": "Irrigation",
+          "18": "Gas Alarm",
+          "19": "Pest Control",
+          "20": "Light Sensor",
+          "21": "Water Quality Monitoring",
+          "22": "Home Monitoring"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm Configuration - 3rd Slot Notification Event",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 3rd Slot Notification Event",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Disabled",
+          "255": "Any Notification,"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 65280,
+      "propertyName": "Alarm Configuration - 3rd Slot Notification Event Parameter",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 3rd Slot Notification Event Parameter",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 255,
+      "propertyName": "Alarm Configuration - 3rd Slot Action",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 3rd Slot Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No Action",
+          "1": "Open",
+          "2": "Close"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm Configuration - 4th Slot Notification Type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 4th Slot Notification Type",
+        "default": 2,
+        "min": 0,
+        "max": 22,
+        "states": {
+          "0": "Disabled",
+          "1": "Smoke Alarm",
+          "2": "CO Alarm",
+          "3": "CO2 Alarm",
+          "4": "Heat Alarm",
+          "5": "Water Alarm",
+          "6": "Access Control",
+          "7": "Home Security",
+          "8": "Power Management",
+          "9": "System",
+          "10": "Emergency Alarm",
+          "11": "Clock",
+          "12": "Appliance",
+          "13": "Home Health",
+          "14": "Siren",
+          "15": "Water Valve",
+          "16": "Weather Alarm",
+          "17": "Irrigation",
+          "18": "Gas Alarm",
+          "19": "Pest Control",
+          "20": "Light Sensor",
+          "21": "Water Quality Monitoring",
+          "22": "Home Monitoring"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm Configuration - 4th Slot Notification Event",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 4th Slot Notification Event",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Disabled",
+          "255": "Any Notification,"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 65280,
+      "propertyName": "Alarm Configuration - 4th Slot Notification Event Parameter",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 4th Slot Notification Event Parameter",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 255,
+      "propertyName": "Alarm Configuration - 4th Slot Action",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 4th Slot Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No Action",
+          "1": "Open",
+          "2": "Close"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm Configuration - 5th Slot Notification Type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 5th Slot Notification Type",
+        "default": 4,
+        "min": 0,
+        "max": 22,
+        "states": {
+          "0": "Disabled",
+          "1": "Smoke Alarm",
+          "2": "CO Alarm",
+          "3": "CO2 Alarm",
+          "4": "Heat Alarm",
+          "5": "Water Alarm",
+          "6": "Access Control",
+          "7": "Home Security",
+          "8": "Power Management",
+          "9": "System",
+          "10": "Emergency Alarm",
+          "11": "Clock",
+          "12": "Appliance",
+          "13": "Home Health",
+          "14": "Siren",
+          "15": "Water Valve",
+          "16": "Weather Alarm",
+          "17": "Irrigation",
+          "18": "Gas Alarm",
+          "19": "Pest Control",
+          "20": "Light Sensor",
+          "21": "Water Quality Monitoring",
+          "22": "Home Monitoring"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm Configuration - 5th Slot Notification Event",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 5th Slot Notification Event",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Disabled",
+          "255": "Any Notification,"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 65280,
+      "propertyName": "Alarm Configuration - 5th Slot Notification Event Parameter",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 5th Slot Notification Event Parameter",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 255,
+      "propertyName": "Alarm Configuration - 5th Slot Action",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Configuration - 5th Slot Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No Action",
+          "1": "Open",
+          "2": "Close"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
+      "propertyKey": "Barrier control status",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Barrier control status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Barrier control status",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "76": "Barrier associated with non Z-Wave remote control"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Hardware status",
+      "propertyName": "System",
+      "propertyKeyName": "Hardware status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Hardware status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "System hardware failure (with failure code)"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
+      "propertyKey": "Barrier safety beam obstacle status",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Barrier safety beam obstacle status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Barrier safety beam obstacle status",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "72": "Barrier safety beam obstacle"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 1089
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 9216
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 4096
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "local",
+      "propertyName": "local",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Local protection state",
+        "states": {
+          "0": "Unprotected",
+          "2": "NoOperationPossible"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "rf",
+      "propertyName": "rf",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "NoControl"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "exclusiveControlNodeId",
+      "propertyName": "exclusiveControlNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "7.13"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["7.0"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "SDK version"
+      },
+      "value": "7.13.1"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API version"
+      },
+      "value": "10.13.1"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API build number"
+      },
+      "value": 175
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API version"
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API build number"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "7.13.1"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol build number"
+      },
+      "value": 175
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application version"
+      },
+      "value": "7.0.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application build number"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 3,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Period: Duration",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Sets the duration of an on/off period in 1/10th seconds. Must be set together with \"On/Off Cycle Count\"",
+        "label": "Node Identify - On/Off Period: Duration",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 3
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 4,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Cycle Count",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Sets the number of on/off periods. 0xff means infinite. Must be set together with \"On/Off Period duration\"",
+        "label": "Node Identify - On/Off Cycle Count",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 4
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": 80,
+      "propertyKey": 5,
+      "propertyName": "Node Identify",
+      "propertyKeyName": "On/Off Period: On time",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "This property is used to set the length of the On time during an On/Off period. It allows asymetic On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+        "label": "Node Identify - On/Off Period: On time",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 5
+        }
+      },
+      "value": 0
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 0,
+      "label": "Unused"
+    },
+    "mandatorySupportedCCs": [32, 38],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0441:0x2400:0x1000:7.0",
+  "statistics": {
+    "commandsTX": 254,
+    "commandsRX": 224,
+    "commandsDroppedRX": 47,
+    "commandsDroppedTX": 85,
+    "timeoutResponse": 4,
+    "rtt": 18.7
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

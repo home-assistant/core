@@ -1,9 +1,11 @@
 """Support for MySensors sensors."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from awesomeversion import AwesomeVersion
+from mysensors import BaseAsyncGateway
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,12 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONDUCTIVITY,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -26,17 +28,28 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import mysensors
-from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from . import setup_mysensors_platform
+from .const import (
+    ATTR_GATEWAY_ID,
+    ATTR_NODE_ID,
+    DOMAIN,
+    MYSENSORS_DISCOVERY,
+    MYSENSORS_GATEWAYS,
+    MYSENSORS_NODE_DISCOVERY,
+    DiscoveryInfo,
+    NodeDiscoveryInfo,
+)
+from .entity import MySensorNodeEntity, MySensorsChildEntity
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -180,11 +193,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
-        native_unit_of_measurement="var",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
@@ -203,13 +216,21 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors sensor."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.SENSOR,
             discovery_info,
             MySensorsSensor,
             async_add_entities=async_add_entities,
         )
+
+    @callback
+    def async_node_discover(discovery_info: NodeDiscoveryInfo) -> None:
+        """Add battery sensor for each MySensors node."""
+        gateway_id = discovery_info[ATTR_GATEWAY_ID]
+        node_id = discovery_info[ATTR_NODE_ID]
+        gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
+        async_add_entities([MyBatterySensor(gateway_id, gateway, node_id)])
 
     on_unload(
         hass,
@@ -221,8 +242,43 @@ async def async_setup_entry(
         ),
     )
 
+    on_unload(
+        hass,
+        config_entry.entry_id,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_NODE_DISCOVERY,
+            async_node_discover,
+        ),
+    )
 
-class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
+
+class MyBatterySensor(MySensorNodeEntity, SensorEntity):
+    """Battery sensor of MySensors node."""
+
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_force_update = True
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for use in home assistant."""
+        return f"{self.gateway_id}-{self.node_id}-battery"
+
+    @property
+    def name(self) -> str:
+        """Return the name of this entity."""
+        return f"{self.node_name} Battery"
+
+    @callback
+    def _async_update_callback(self) -> None:
+        """Update the controller with the latest battery level."""
+        self._attr_native_value = self._node.battery_level
+        self.async_write_ha_state()
+
+
+class MySensorsSensor(MySensorsChildEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     _attr_force_update = True
@@ -264,9 +320,9 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         entity_description = SENSORS.get(set_req(self.value_type).name)
 
         if not entity_description:
-            pres = self.gateway.const.Presentation
+            presentation = self.gateway.const.Presentation
             entity_description = SENSORS.get(
-                f"{set_req(self.value_type).name}_{pres(self.child_type).name}"
+                f"{set_req(self.value_type).name}_{presentation(self.child_type).name}"
             )
 
         return entity_description

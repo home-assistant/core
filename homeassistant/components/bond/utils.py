@@ -1,4 +1,5 @@
 """Reusable utilities for the Bond component."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from typing import Any, cast
 from aiohttp import ClientResponseError
 from bond_async import Action, Bond, BondType
 
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import BRIDGE_MAKE
 
@@ -70,7 +71,7 @@ class BondDevice:
     @property
     def trust_state(self) -> bool:
         """Check if Trust State is turned on."""
-        return self.props.get("trust_state", False)
+        return self.props.get("trust_state", False)  # type: ignore[no-any-return]
 
     def has_action(self, action: str) -> bool:
         """Check to see if the device supports an actions."""
@@ -163,7 +164,7 @@ class BondHub:
                 ]
             )
 
-        responses = await gather_with_concurrency(MAX_REQUESTS, *tasks)
+        responses = await gather_with_limited_concurrency(MAX_REQUESTS, *tasks)
         response_idx = 0
         for device_id in setup_device_ids:
             self._devices.append(
@@ -203,7 +204,7 @@ class BondHub:
     @property
     def make(self) -> str:
         """Return this hub make."""
-        return self._version.get("make", BRIDGE_MAKE)
+        return self._version.get("make", BRIDGE_MAKE)  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:

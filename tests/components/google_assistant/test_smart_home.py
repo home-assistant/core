@@ -1,17 +1,28 @@
 """Test Google Smart Home."""
+
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, patch
 
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components import camera
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.cover import DemoCover
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,
@@ -21,9 +32,15 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
-from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CALL_SERVICE,
+    Platform,
+    UnitOfTemperature,
+    __version__,
+)
+from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -34,9 +51,19 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+
+
+@pytest.fixture
+async def light_only() -> None:
+    """Enable only the light platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.LIGHT],
+    ):
+        yield
 
 
 @pytest.fixture
@@ -69,6 +96,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
         hass,
         config,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -88,6 +116,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,
@@ -128,6 +157,8 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
+    light._attr_device_info = None
+    light._attr_name = "Demo Light"
     light.async_write_ha_state()
 
     # This should not show up in the sync request
@@ -151,6 +182,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -177,7 +209,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -234,10 +266,12 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
 @pytest.mark.parametrize("area_on_device", [True, False])
 async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
     """Test a sync message where room hint comes from area."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     area = registries.area.async_create("Living Room")
 
     device = registries.device.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         manufacturer="Someone",
         model="Some model",
         sw_version="Some Version",
@@ -268,6 +302,8 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
     )
     light.hass = hass
     light.entity_id = entity.entity_id
+    light._attr_device_info = None
+    light._attr_name = "Demo Light"
     light.async_write_ha_state()
 
     config = MockConfig(should_expose=lambda _: True, entity_config={})
@@ -277,6 +313,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -292,7 +329,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -360,6 +397,8 @@ async def test_query_message(hass: HomeAssistant) -> None:
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
+    light._attr_device_info = None
+    light._attr_name = "Demo Light"
     light.async_write_ha_state()
 
     light2 = DemoLight(
@@ -367,11 +406,15 @@ async def test_query_message(hass: HomeAssistant) -> None:
     )
     light2.hass = hass
     light2.entity_id = "light.another_light"
+    light2._attr_device_info = None
+    light2._attr_name = "Another Light"
     light2.async_write_ha_state()
 
     light3 = DemoLight(None, "Color temp Light", state=True, ct=400, brightness=200)
     light3.hass = hass
     light3.entity_id = "light.color_temp_light"
+    light3._attr_device_info = None
+    light3._attr_name = "Color temp Light"
     light3.async_write_ha_state()
 
     events = async_capture_events(hass, EVENT_QUERY_RECEIVED)
@@ -379,6 +422,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,
@@ -448,7 +492,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     [(False, True, 20, 0.2), (True, ANY, ANY, ANY)],
 )
 async def test_execute(
-    hass: HomeAssistant, report_state, on, brightness, value
+    hass: HomeAssistant, light_only, report_state, on, brightness, value
 ) -> None:
     """Test an execute command."""
     await async_setup_component(hass, "homeassistant", {})
@@ -463,76 +507,42 @@ async def test_execute(
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
-    with patch.object(
-        hass.services, "async_call", wraps=hass.services.async_call
-    ) as call_service_mock:
-        result = await sh.async_handle_message(
-            hass,
-            MockConfig(should_report_state=report_state),
-            None,
-            {
-                "requestId": REQ_ID,
-                "inputs": [
-                    {
-                        "intent": "action.devices.EXECUTE",
-                        "payload": {
-                            "commands": [
-                                {
-                                    "devices": [
-                                        {"id": "light.non_existing"},
-                                        {"id": "light.ceiling_lights"},
-                                        {"id": "light.kitchen_lights"},
-                                    ],
-                                    "execution": [
-                                        {
-                                            "command": "action.devices.commands.OnOff",
-                                            "params": {"on": True},
-                                        },
-                                        {
-                                            "command": "action.devices.commands.BrightnessAbsolute",
-                                            "params": {"brightness": 20},
-                                        },
-                                    ],
-                                }
-                            ]
-                        },
-                    }
-                ],
-            },
-            const.SOURCE_CLOUD,
-        )
-        assert call_service_mock.call_count == 4
-        expected_calls = [
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights", "brightness_pct": 20},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights", "brightness_pct": 20},
-                blocking=not report_state,
-                context=ANY,
-            ),
-        ]
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
+    result = await sh.async_handle_message(
+        hass,
+        MockConfig(should_report_state=report_state),
+        None,
+        None,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.EXECUTE",
+                    "payload": {
+                        "commands": [
+                            {
+                                "devices": [
+                                    {"id": "light.non_existing"},
+                                    {"id": "light.ceiling_lights"},
+                                    {"id": "light.kitchen_lights"},
+                                ],
+                                "execution": [
+                                    {
+                                        "command": "action.devices.commands.OnOff",
+                                        "params": {"on": True},
+                                    },
+                                    {
+                                        "command": "action.devices.commands.BrightnessAbsolute",
+                                        "params": {"brightness": 20},
+                                    },
+                                ],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
     await hass.async_block_till_done()
 
     assert result == {
@@ -630,13 +640,13 @@ async def test_execute(
     ("report_state", "on", "brightness", "value"), [(False, False, ANY, ANY)]
 )
 async def test_execute_times_out(
-    hass: HomeAssistant, report_state, on, brightness, value
+    hass: HomeAssistant, light_only, report_state, on, brightness, value
 ) -> None:
     """Test an execute command which times out."""
     orig_execute_limit = sh.EXECUTE_LIMIT
     sh.EXECUTE_LIMIT = 0.02  # Decrease timeout to 20ms
-    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -655,16 +665,13 @@ async def test_execute_times_out(
 
     async def slow_turn_on(*args, **kwargs):
         # Make DemoLigt.async_turn_on hang waiting for the turn_on_wait event
-        await turn_on_wait.wait(),
+        await turn_on_wait.wait()
 
-    with patch.object(
-        hass.services, "async_call", wraps=hass.services.async_call
-    ) as call_service_mock, patch.object(
-        DemoLight, "async_turn_on", wraps=slow_turn_on
-    ):
+    with patch.object(DemoLight, "async_turn_on", wraps=slow_turn_on):
         result = await sh.async_handle_message(
             hass,
             MockConfig(should_report_state=report_state),
+            None,
             None,
             {
                 "requestId": REQ_ID,
@@ -697,50 +704,10 @@ async def test_execute_times_out(
             },
             const.SOURCE_CLOUD,
         )
-        # Only the two first calls are executed
-        assert call_service_mock.call_count == 2
-        expected_calls = [
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-        ]
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
 
         turn_on_wait.set()
         await hass.async_block_till_done()
-        # The remaining two calls should now have executed
-        assert call_service_mock.call_count == 4
-        expected_calls.extend(
-            [
-                call(
-                    "light",
-                    "turn_on",
-                    {"entity_id": "light.ceiling_lights", "brightness_pct": 20},
-                    blocking=not report_state,
-                    context=ANY,
-                ),
-                call(
-                    "light",
-                    "turn_on",
-                    {"entity_id": "light.kitchen_lights", "brightness_pct": 20},
-                    blocking=not report_state,
-                    context=ANY,
-                ),
-            ]
-        )
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result == {
         "requestId": REQ_ID,
@@ -852,6 +819,7 @@ async def test_raising_error_trait(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -933,6 +901,8 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
     light.hass = hass
     light.entity_id = "light.demo_light"
     light._available = False
+    light._attr_device_info = None
+    light._attr_name = "Demo Light"
     light.async_write_ha_state()
 
     events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
@@ -940,6 +910,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -955,7 +926,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -1021,17 +992,19 @@ async def test_device_class_switch(
         None,
         "Demo Sensor",
         state=False,
-        icon="mdi:switch",
         assumed=False,
         device_class=device_class,
     )
     sensor.hass = hass
     sensor.entity_id = "switch.demo_sensor"
+    sensor._attr_device_info = None
+    sensor._attr_name = "Demo Sensor"
     sensor.async_write_ha_state()
 
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1074,11 +1047,14 @@ async def test_device_class_binary_sensor(
     )
     sensor.hass = hass
     sensor.entity_id = "binary_sensor.demo_sensor"
+    sensor._attr_device_info = None
+    sensor._attr_name = "Demo Sensor"
     sensor.async_write_ha_state()
 
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1111,7 +1087,7 @@ async def test_device_class_binary_sensor(
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
-        ("gate", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GATE"),
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
@@ -1125,11 +1101,14 @@ async def test_device_class_cover(
     sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
     sensor.entity_id = "cover.demo_sensor"
+    sensor._attr_device_info = None
+    sensor._attr_name = "Demo Sensor"
     sensor.async_write_ha_state()
 
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1178,6 +1157,7 @@ async def test_device_media_player(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1216,6 +1196,7 @@ async def test_query_disconnect(hass: HomeAssistant) -> None:
             hass,
             config,
             "test-agent",
+            "test-agent",
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
             const.SOURCE_CLOUD,
         )
@@ -1230,7 +1211,9 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
     hass.states.async_set(
-        "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
+        "camera.office",
+        "idle",
+        {"supported_features": CameraEntityFeature.STREAM},
     )
 
     with patch(
@@ -1240,6 +1223,7 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         result = await sh.async_handle_message(
             hass,
             BASIC_CONFIG,
+            None,
             None,
             {
                 "requestId": REQ_ID,
@@ -1299,6 +1283,7 @@ async def test_identify(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         user_agent_id,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1307,7 +1292,7 @@ async def test_identify(hass: HomeAssistant) -> None:
                     "payload": {
                         "device": {
                             "mdnsScanData": {
-                                "additionals": [
+                                "additionals": [  # codespell:ignore additionals
                                     {
                                         "type": "TXT",
                                         "class": "IN",
@@ -1387,6 +1372,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
         hass,
         config,
         user_agent_id,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1456,6 +1442,8 @@ async def test_sync_message_recovery(
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
+    light._attr_device_info = None
+    light._attr_name = "Demo Light"
     light.async_write_ha_state()
 
     hass.states.async_set(
@@ -1470,6 +1458,7 @@ async def test_sync_message_recovery(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1531,6 +1520,7 @@ async def test_query_recover(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1571,6 +1561,7 @@ async def test_proxy_selected(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,

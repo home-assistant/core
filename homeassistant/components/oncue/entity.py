@@ -1,11 +1,13 @@
 """Support for Oncue sensors."""
+
 from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -18,6 +20,8 @@ class OncueEntity(
     CoordinatorEntity[DataUpdateCoordinator[dict[str, OncueDevice]]], Entity
 ):
     """Representation of an Oncue entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -32,7 +36,7 @@ class OncueEntity(
         self.entity_description = description
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
-        self._attr_name = f"{device.name} {sensor.display_name}"
+        self._attr_name = sensor.display_name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,

@@ -36,8 +36,8 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 
 # Configuration
 CONF_FALLBACK = "fallback"
+CONF_HOME_ID = "home_id"
 DATA = "data"
-UPDATE_TRACK = "update_track"
 
 # Weather
 CONDITIONS_MAP = {
@@ -75,9 +75,13 @@ CONST_LINK_OFFLINE = "OFFLINE"
 
 CONST_FAN_OFF = "OFF"
 CONST_FAN_AUTO = "AUTO"
-CONST_FAN_LOW = "LOW"
-CONST_FAN_MIDDLE = "MIDDLE"
-CONST_FAN_HIGH = "HIGH"
+CONST_FAN_LOW_LEGACY = "LOW"
+CONST_FAN_MIDDLE_LEGACY = "MIDDLE"
+CONST_FAN_HIGH_LEGACY = "HIGH"
+
+CONST_FAN_LEVEL_1 = "LEVEL1"
+CONST_FAN_LEVEL_2 = "LEVEL2"
+CONST_FAN_LEVEL_3 = "LEVEL3"
 
 
 # When we change the temperature setting, we need an overlay mode
@@ -100,7 +104,7 @@ CONST_EXCLUSIVE_OVERLAY_GROUP = (
 
 
 # Heat always comes first since we get the
-# min and max tempatures for the zone from
+# min and max temperatures for the zone from
 # it.
 # Heat is preferred as it generally has a lower minimum temperature
 ORDERED_KNOWN_TADO_MODES = [
@@ -119,7 +123,7 @@ TADO_MODES_TO_HA_CURRENT_HVAC_ACTION = {
 }
 
 # These modes will not allow a temp to be set
-TADO_MODES_WITH_NO_TEMP_SETTING = [CONST_MODE_AUTO, CONST_MODE_DRY, CONST_MODE_FAN]
+TADO_MODES_WITH_NO_TEMP_SETTING = [CONST_MODE_AUTO, CONST_MODE_FAN]
 #
 # HVAC_MODE_HEAT_COOL is mapped to CONST_MODE_AUTO
 #    This lets tado decide on a temp
@@ -137,24 +141,46 @@ HA_TO_TADO_HVAC_MODE_MAP = {
     HVACMode.FAN_ONLY: CONST_MODE_FAN,
 }
 
+HA_TO_TADO_FAN_MODE_MAP_LEGACY = {
+    FAN_AUTO: CONST_FAN_AUTO,
+    FAN_OFF: CONST_FAN_OFF,
+    FAN_LOW: CONST_FAN_LOW_LEGACY,
+    FAN_MEDIUM: CONST_FAN_MIDDLE_LEGACY,
+    FAN_HIGH: CONST_FAN_HIGH_LEGACY,
+}
+
 HA_TO_TADO_FAN_MODE_MAP = {
     FAN_AUTO: CONST_FAN_AUTO,
     FAN_OFF: CONST_FAN_OFF,
-    FAN_LOW: CONST_FAN_LOW,
-    FAN_MEDIUM: CONST_FAN_MIDDLE,
-    FAN_HIGH: CONST_FAN_HIGH,
+    FAN_LOW: CONST_FAN_LEVEL_1,
+    FAN_MEDIUM: CONST_FAN_LEVEL_2,
+    FAN_HIGH: CONST_FAN_LEVEL_3,
 }
 
 TADO_TO_HA_HVAC_MODE_MAP = {
     value: key for key, value in HA_TO_TADO_HVAC_MODE_MAP.items()
 }
 
+TADO_TO_HA_FAN_MODE_MAP_LEGACY = {
+    value: key for key, value in HA_TO_TADO_FAN_MODE_MAP_LEGACY.items()
+}
+
 TADO_TO_HA_FAN_MODE_MAP = {value: key for key, value in HA_TO_TADO_FAN_MODE_MAP.items()}
+
+TADO_FAN_SPEEDS = list(HA_TO_TADO_FAN_MODE_MAP_LEGACY.values())
+
+TADO_FAN_LEVELS = list(HA_TO_TADO_FAN_MODE_MAP.values())
 
 DEFAULT_TADO_PRECISION = 0.1
 
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
+# Constant for Auto Geolocation mode
+PRESET_AUTO = "auto"
 
+SUPPORT_PRESET_AUTO = [PRESET_AWAY, PRESET_HOME, PRESET_AUTO]
+SUPPORT_PRESET_MANUAL = [PRESET_AWAY, PRESET_HOME]
+
+SENSOR_DATA_CATEGORY_WEATHER = "weather"
+SENSOR_DATA_CATEGORY_GEOFENCE = "geofence"
 
 TADO_SWING_OFF = "OFF"
 TADO_SWING_ON = "ON"
@@ -171,14 +197,13 @@ TADO_TO_HA_SWING_MODE_MAP = {
 DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}_{}"
+SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED = "tado_mobile_device_update_received_{}"
 UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"
 
 TADO_HOME = "Home"
 TADO_ZONE = "Zone"
-
-UPDATE_LISTENER = "update_listener"
 
 # Constants for Temperature Offset
 INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"
@@ -195,3 +220,20 @@ TADO_TO_HA_OFFSET_MAP = {
 # Constants for Overlay Default settings
 HA_TERMINATION_TYPE = "default_overlay_type"
 HA_TERMINATION_DURATION = "default_overlay_seconds"
+
+TADO_DEFAULT_MIN_TEMP = 5
+TADO_DEFAULT_MAX_TEMP = 40
+# Constants for service calls
+SERVICE_ADD_METER_READING = "add_meter_reading"
+CONF_CONFIG_ENTRY = "config_entry"
+CONF_READING = "reading"
+ATTR_MESSAGE = "message"
+
+WATER_HEATER_FALLBACK_REPAIR = "water_heater_fallback"
+
+TADO_SWING_SETTING = "swings"
+TADO_FANSPEED_SETTING = "fanSpeeds"
+
+TADO_FANLEVEL_SETTING = "fanLevel"
+TADO_VERTICAL_SWING_SETTING = "verticalSwing"
+TADO_HORIZONTAL_SWING_SETTING = "horizontalSwing"

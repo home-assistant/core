@@ -1,14 +1,18 @@
 """Trigger entity."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.template_entity import TriggerBaseEntity
+from homeassistant.helpers.template import TemplateStateFromEntityId
+from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 
 
-class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+class TriggerEntity(  # pylint: disable=hass-enforce-class-module
+    TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]
+):
     """Template entity based on trigger data."""
 
     def __init__(
@@ -18,13 +22,12 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super(CoordinatorEntity, self).__init__(coordinator)
-        super().__init__(hass, config)
+        CoordinatorEntity.__init__(self, coordinator)
+        TriggerBaseEntity.__init__(self, hass, config)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
-        await super(CoordinatorEntity, self).async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()
 
@@ -39,11 +42,11 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
     def _process_data(self) -> None:
         """Process new data."""
 
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
         run_variables = self.coordinator.data["run_variables"]
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)
 

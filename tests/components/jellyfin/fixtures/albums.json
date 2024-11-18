@@ -1,0 +1,16 @@
+{
+  "Items": [
+    {
+      "AlbumArtist": "ARTIST",
+      "AlbumArtists": [{ "Id": "ARTIST-UUID", "Name": "ARTIST" }],
+      "Artists": ["ARTIST"],
+      "Id": "ALBUM-UUID",
+      "ImageTags": {},
+      "IsFolder": true,
+      "Name": "ALBUM",
+      "PrimaryImageAspectRatio": 1,
+      "ServerId": "ServerId",
+      "Type": "MusicAlbum"
+    }
+  ]
+}

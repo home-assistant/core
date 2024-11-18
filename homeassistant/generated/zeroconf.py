@@ -20,10 +20,6 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "819LMB": {
-        "always_discover": True,
-        "domain": "myq",
-    },
     "AC02": {
         "always_discover": True,
         "domain": "tado",
@@ -44,7 +40,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "EB-*": {
+    "EB": {
         "always_discover": True,
         "domain": "ecobee",
     },
@@ -56,7 +52,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "hive",
     },
-    "Healty Home Coach": {
+    "Healthy Home Coach": {
         "always_discover": True,
         "domain": "netatmo",
     },
@@ -65,6 +61,10 @@ HOMEKIT = {
         "domain": "abode",
     },
     "LIFX A19": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX A21": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -77,6 +77,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Candle": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Ceiling": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -112,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Indoor Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Lightstrip": {
         "always_discover": True,
         "domain": "lifx",
@@ -120,7 +128,15 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Nightvision": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX PAR38": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -129,6 +145,18 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Square": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX String": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -143,10 +171,6 @@ HOMEKIT = {
     "LIFX Z": {
         "always_discover": True,
         "domain": "lifx",
-    },
-    "MYQ": {
-        "always_discover": True,
-        "domain": "myq",
     },
     "NL29": {
         "always_discover": False,
@@ -243,9 +267,24 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
+        },
+    ],
+    "_aicu-http._tcp.local.": [
+        {
+            "domain": "romy",
+        },
+    ],
+    "_airgradient._tcp.local.": [
+        {
+            "domain": "airgradient",
         },
     ],
     "_airplay._tcp.local.": [
@@ -277,6 +316,16 @@ ZEROCONF = {
     "_airport._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_amzn-alexa._tcp.local.": [
+        {
+            "domain": "roomba",
+            "name": "irobot-*",
+        },
+        {
+            "domain": "roomba",
+            "name": "roomba-*",
         },
     ],
     "_androidtvremote2._tcp.local.": [
@@ -328,10 +377,21 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
             },
+        },
+    ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
         },
     ],
     "_bbxsrv._tcp.local.": [
@@ -349,9 +409,25 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
+        },
+    ],
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd",
+        },
+    ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
+    "_devialet-http._tcp.local.": [
+        {
+            "domain": "devialet",
         },
     ],
     "_dkapi._tcp.local.": [
@@ -376,9 +452,19 @@ ZEROCONF = {
             "name": "wac*",
         },
     ],
+    "_ecobee._tcp.local.": [
+        {
+            "domain": "ecobee",
+        },
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -439,6 +525,14 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "lektrico",
+            "name": "lektrico*",
+        },
+        {
+            "domain": "loqed",
+            "name": "loqed*",
+        },
+        {
             "domain": "nam",
             "name": "nam-*",
         },
@@ -470,6 +564,12 @@ ZEROCONF = {
                 "vendor": "synology*",
             },
         },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -497,12 +597,29 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_kizboxdev._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
         },
     ],
     "_lutron._tcp.local.": [
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
         {
             "domain": "lutron_caseta",
             "properties": {
@@ -520,6 +637,21 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
+        },
+    ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
         },
     ],
     "_mediaremotetv._tcp.local.": [
@@ -542,6 +674,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -585,6 +722,11 @@ ZEROCONF = {
             "name": "brother*",
         },
     ],
+    "_rabbitair._udp.local.": [
+        {
+            "domain": "rabbitair",
+        },
+    ],
     "_raop._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -626,8 +768,16 @@ ZEROCONF = {
     ],
     "_slzb-06._tcp.local.": [
         {
+            "domain": "smlight",
+        },
+        {
             "domain": "zha",
             "name": "slzb-06*",
+        },
+    ],
+    "_smoip._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_sonos._tcp.local.": [
@@ -659,14 +809,35 @@ ZEROCONF = {
             "name": "smappee50*",
         },
     ],
+    "_stream-magic._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
+        },
+    ],
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
         },
     ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_tvm._tcp.local.": [
+        {
+            "domain": "motionmount",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [
@@ -679,9 +850,20 @@ ZEROCONF = {
             "domain": "wled",
         },
     ],
+    "_wyoming._tcp.local.": [
+        {
+            "domain": "wyoming",
+        },
+    ],
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi",
+        },
+    ],
+    "_xzg._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "xzg*",
         },
     ],
     "_zigate-zigbee-gateway._tcp.local.": [

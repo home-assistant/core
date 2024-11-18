@@ -12,12 +12,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-from .models import MelnorDataUpdateCoordinator
+from .coordinator import MelnorDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 

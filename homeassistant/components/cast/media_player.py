@@ -1,12 +1,14 @@
 """Provide functionality to interact with Cast devices on the network."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
+from functools import wraps
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -18,12 +20,12 @@ from pychromecast.controllers.media import (
 )
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
+from pychromecast.error import PyChromecastError
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
 )
-import voluptuous as vol
 import yarl
 
 from homeassistant.components import media_source, zeroconf
@@ -47,9 +49,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 import homeassistant.util.dt as dt_util
@@ -63,6 +64,7 @@ from .const import (
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
+    HomeAssistantControllerData,
 )
 from .discovery import setup_internal_discovery
 from .helpers import (
@@ -83,14 +85,27 @@ APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
-ENTITY_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_UUID): cv.string,
-            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-)
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
+
+
+def api_error[_CastDeviceT: CastDevice, **_P, _R](
+    func: _FuncType[_CastDeviceT, _P, _R],
+) -> _FuncType[_CastDeviceT, _P, _R]:
+    """Handle PyChromecastError and reraise a HomeAssistantError."""
+
+    @wraps(func)
+    def wrapper(self: _CastDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        """Wrap a CastDevice method."""
+        try:
+            return_value = func(self, *args, **kwargs)
+        except PyChromecastError as err:
+            raise HomeAssistantError(
+                f"{self.__class__.__name__}.{func.__name__} Failed: {err}"
+            ) from err
+
+        return return_value
+
+    return wrapper
 
 
 @callback
@@ -251,7 +266,8 @@ class CastDevice:
             self._status_listener.invalidate()
             self._status_listener = None
 
-    async def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
+    @callback
+    def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
         """Handle discovery of new Chromecast."""
         if self._cast_info.uuid != discover.uuid:
             # Discovered is not our device.
@@ -278,6 +294,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     """Representation of a Cast device on the network."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_media_image_remotely_accessible = True
     _mz_only = False
@@ -372,15 +389,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         ):
             external_url = None
             internal_url = None
-            tts_base_url = None
             url_description = ""
-            if "tts" in self.hass.config.components:
-                # pylint: disable-next=[import-outside-toplevel]
-                from homeassistant.components import tts
-
-                with suppress(KeyError):  # base_url not configured
-                    tts_base_url = tts.get_base_url(self.hass)
-
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
 
@@ -388,8 +397,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 internal_url = get_url(self.hass, allow_external=False)
 
             if media_status.content_id:
-                if tts_base_url and media_status.content_id.startswith(tts_base_url):
-                    url_description = f" from tts.base_url ({tts_base_url})"
                 if external_url and media_status.content_id.startswith(external_url):
                     url_description = f" from external_url ({external_url})"
                 if internal_url and media_status.content_id.startswith(internal_url):
@@ -409,15 +416,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def load_media_failed(self, item, error_code):
+    def load_media_failed(self, queue_item_id, error_code):
         """Handle load media failed."""
         _LOGGER.debug(
-            "[%s %s] Load media failed with code %s(%s) for item %s",
+            "[%s %s] Load media failed with code %s(%s) for queue_item_id %s",
             self.entity_id,
             self._cast_info.friendly_name,
             error_code,
             MEDIA_PLAYER_ERROR_CODES.get(error_code, "unknown code"),
-            item,
+            queue_item_id,
         )
 
     def new_connection_status(self, connection_status):
@@ -495,6 +502,21 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return media_controller
 
+    @api_error
+    def _quick_play(self, app_name: str, data: dict[str, Any]) -> None:
+        """Launch the app `app_name` and start playing media defined by `data`."""
+        quick_play(self._get_chromecast(), app_name, data)
+
+    @api_error
+    def _quit_app(self) -> None:
+        """Quit the currently running app."""
+        self._get_chromecast().quit_app()
+
+    @api_error
+    def _start_app(self, app_id: str) -> None:
+        """Start an app."""
+        self._get_chromecast().start_app(app_id)
+
     def turn_on(self) -> None:
         """Turn on the cast device."""
 
@@ -505,52 +527,61 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         if chromecast.app_id is not None:
             # Quit the previous app before starting splash screen or media player
-            chromecast.quit_app()
+            self._quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
         if chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
             app_data = {"media_id": CAST_SPLASH, "media_type": "image/png"}
-            quick_play(chromecast, "default_media_receiver", app_data)
+            self._quick_play("default_media_receiver", app_data)
         else:
-            chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
+            self._start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
+    @api_error
     def turn_off(self) -> None:
         """Turn off the cast device."""
         self._get_chromecast().quit_app()
 
+    @api_error
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._get_chromecast().set_volume_muted(mute)
 
+    @api_error
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._get_chromecast().set_volume(volume)
 
+    @api_error
     def media_play(self) -> None:
         """Send play command."""
         media_controller = self._media_controller()
         media_controller.play()
 
+    @api_error
     def media_pause(self) -> None:
         """Send pause command."""
         media_controller = self._media_controller()
         media_controller.pause()
 
+    @api_error
     def media_stop(self) -> None:
         """Send stop command."""
         media_controller = self._media_controller()
         media_controller.stop()
 
+    @api_error
     def media_previous_track(self) -> None:
         """Send previous track command."""
         media_controller = self._media_controller()
         media_controller.queue_prev()
 
+    @api_error
     def media_next_track(self) -> None:
         """Send next track command."""
         media_controller = self._media_controller()
         media_controller.queue_next()
 
+    @api_error
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         media_controller = self._media_controller()
@@ -662,8 +693,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             # an arbitrary cast app, generally for UX.
             if "app_id" in app_data:
                 app_id = app_data.pop("app_id")
-                _LOGGER.info("Starting Cast app by ID %s", app_id)
-                await self.hass.async_add_executor_job(chromecast.start_app, app_id)
+                _LOGGER.debug("Starting Cast app by ID %s", app_id)
+                await self.hass.async_add_executor_job(self._start_app, app_id)
                 if app_data:
                     _LOGGER.warning(
                         "Extra keys %s were ignored. Please use app_name to cast media",
@@ -674,7 +705,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             app_name = app_data.pop("app_name")
             try:
                 await self.hass.async_add_executor_job(
-                    quick_play, chromecast, app_name, app_data
+                    self._quick_play, app_name, app_data
                 )
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
@@ -702,11 +733,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
-        elif (
-            media_id.endswith(".m3u")
-            or media_id.endswith(".m3u8")
-            or media_id.endswith(".pls")
-        ):
+        elif media_id.endswith((".m3u", ".m3u8", ".pls")):
             try:
                 playlist = await parse_playlist(self.hass, media_id)
                 _LOGGER.debug(
@@ -748,7 +775,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             app_data,
         )
         await self.hass.async_add_executor_job(
-            quick_play, chromecast, "default_media_receiver", app_data
+            self._quick_play, "default_media_receiver", app_data
         )
 
     def _media_status(self):
@@ -971,7 +998,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     def _handle_signal_show_view(
         self,
-        controller: HomeAssistantController,
+        controller_data: HomeAssistantControllerData,
         entity_id: str,
         view_path: str,
         url_path: str | None,
@@ -981,6 +1008,23 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         if self._hass_cast_controller is None:
+
+            def unregister() -> None:
+                """Handle request to unregister the handler."""
+                if not self._hass_cast_controller or not self._chromecast:
+                    return
+                _LOGGER.debug(
+                    "[%s %s] Unregistering HomeAssistantController",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                )
+
+                self._chromecast.unregister_handler(self._hass_cast_controller)
+                self._hass_cast_controller = None
+
+            controller = HomeAssistantController(
+                **controller_data, unregister=unregister
+            )
             self._hass_cast_controller = controller
             self._chromecast.register_handler(controller)
 

@@ -1,12 +1,13 @@
 """Binary sensor platform for hvv_departures."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError
-import async_timeout
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.binary_sensor import (
@@ -15,8 +16,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -88,10 +88,10 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": station}
+        payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
                     station_name, await hub.gti.stationInformation(payload)
                 )
@@ -126,13 +126,29 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, idx, config_entry):
         """Initialize."""
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.idx = idx
-        self.config_entry = config_entry
+
+        self._attr_name = coordinator.data[idx]["name"]
+        self._attr_unique_id = idx
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (
+                    DOMAIN,
+                    config_entry.entry_id,
+                    config_entry.data[CONF_STATION]["id"],
+                    config_entry.data[CONF_STATION]["type"],
+                )
+            },
+            manufacturer=MANUFACTURER,
+            name=f"Departures at {config_entry.data[CONF_STATION]['name']}",
+        )
 
     @property
     def is_on(self):
@@ -148,38 +164,6 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def device_info(self):
-        """Return the device info for this sensor."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    self.config_entry.entry_id,
-                    self.config_entry.data[CONF_STATION]["id"],
-                    self.config_entry.data[CONF_STATION]["type"],
-                )
-            },
-            manufacturer=MANUFACTURER,
-            name=f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
-        )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self.coordinator.data[self.idx]["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this sensor."""
-        return self.idx
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.PROBLEM
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not (
@@ -192,16 +176,3 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             for k, v in self.coordinator.data[self.idx]["attributes"].items()
             if v is not None
         }
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

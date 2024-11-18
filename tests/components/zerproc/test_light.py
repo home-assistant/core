@@ -1,4 +1,5 @@
 """Test the zerproc lights."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,6 @@ from homeassistant.components.zerproc.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
@@ -35,13 +35,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_entry(hass):
+async def mock_entry() -> MockConfigEntry:
     """Create a mock light entity."""
     return MockConfigEntry(domain=DOMAIN)
 
 
 @pytest.fixture
-async def mock_light(hass, mock_entry):
+async def mock_light(hass: HomeAssistant, mock_entry: MockConfigEntry) -> MagicMock:
     """Create a mock light entity."""
 
     mock_entry.add_to_hass(hass)
@@ -53,11 +53,13 @@ async def mock_light(hass, mock_entry):
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[light],
-    ), patch.object(light, "connect"), patch.object(
-        light, "get_state", return_value=mock_state
+    with (
+        patch(
+            "homeassistant.components.zerproc.light.pyzerproc.discover",
+            return_value=[light],
+        ),
+        patch.object(light, "connect"),
+        patch.object(light, "get_state", return_value=mock_state),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -101,7 +103,11 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     state = hass.states.get("light.ledblue_33445566")
@@ -110,7 +116,6 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
         ATTR_COLOR_MODE: ColorMode.HS,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
@@ -282,7 +287,11 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     # Make sure no discovery calls are made while we emulate time passing
@@ -301,7 +310,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -319,7 +327,11 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
+            ATTR_COLOR_MODE: None,
+            ATTR_BRIGHTNESS: None,
+            ATTR_HS_COLOR: None,
+            ATTR_RGB_COLOR: None,
+            ATTR_XY_COLOR: None,
         }
 
         with patch.object(
@@ -337,7 +349,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
             ATTR_COLOR_MODE: ColorMode.HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),

@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-import homeassistant.components.alert as alert
+from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
     CONF_ALERT_MESSAGE,
     CONF_DATA,
@@ -14,7 +14,6 @@ from homeassistant.components.alert.const import (
     CONF_TITLE,
     DOMAIN,
 )
-import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -36,6 +35,7 @@ from tests.common import async_mock_service
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = "test"
+BAD_NOTIFIER = "bad_notifier"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
@@ -199,6 +199,26 @@ async def test_notification(
     assert len(mock_notifier) == 2
 
 
+async def test_bad_notifier(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test a broken notifier does not break the alert."""
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_NOTIFIERS] = [BAD_NOTIFIER, NOTIFIER]
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_notifier) == 0
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 2
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+
 async def test_no_notifiers(
     hass: HomeAssistant, mock_notifier: list[ServiceCall]
 ) -> None:
@@ -317,10 +337,10 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
 
 async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
-    entity = alert.Alert(hass, *TEST_NOACK)
+    entity = alert.AlertEntity(hass, *TEST_NOACK)
     entity._cancel = lambda *args: None
     assert entity._send_done_message is False
     entity._send_done_message = True
-    hass.async_add_job(entity.end_alerting)
+    await entity.end_alerting()
     await hass.async_block_till_done()
     assert entity._send_done_message is False

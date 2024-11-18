@@ -1,4 +1,5 @@
 """Tests for the Modern Forms light platform."""
+
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -28,12 +29,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_light_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the creation and values of the Modern Forms lights."""
     await init_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("light.modernformsfan_light")
     assert state
@@ -118,7 +119,9 @@ async def test_light_error(
 
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"):
+    with patch(
+        "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -137,9 +140,14 @@ async def test_light_connection_error(
     """Test error handling of the Moder Forms lights."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.light",
-        side_effect=ModernFormsConnectionError,
+    with (
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+        ),
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.light",
+            side_effect=ModernFormsConnectionError,
+        ),
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,

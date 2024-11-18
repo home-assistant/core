@@ -1,7 +1,9 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components import geonetnz_volcano
 from homeassistant.components.geo_location import ATTR_DISTANCE
@@ -52,9 +54,12 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch(
+            "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
+        ) as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_volcano.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.
@@ -149,19 +154,22 @@ async def test_setup(hass: HomeAssistant) -> None:
         )
 
 
-async def test_setup_imperial(hass: HomeAssistant) -> None:
+async def test_setup_imperial(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 1, 15.5, (38.0, -3.0))
 
     # Patching 'utcnow' to gain more control over the timed update.
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
-    ) as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.__init__"
-    ) as mock_feed_init:
+    freezer.move_to(dt_util.utcnow())
+    with (
+        patch(
+            "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
+        ) as mock_feed_update,
+        patch("aio_geojson_client.feed.GeoJsonFeed.__init__") as mock_feed_init,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_volcano.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.

@@ -1,4 +1,5 @@
 """The venstar component."""
+
 import logging
 
 DOMAIN = "venstar"

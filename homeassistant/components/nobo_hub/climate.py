@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,18 +18,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_VIA_DEVICE,
-    PRECISION_TENTHS,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_NAME, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_SERIAL,
@@ -76,31 +70,32 @@ class NoboZone(ClimateEntity):
     controlled as a unity.
     """
 
+    _attr_name = None
+    _attr_has_entity_name = True
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, zone_id, hub: nobo, override_type) -> None:
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
-        self._attr_name = None
-        self._attr_has_entity_name = True
-        self._attr_hvac_mode = HVACMode.AUTO
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
-        self._attr_device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            ATTR_NAME: hub.zones[zone_id][ATTR_NAME],
-            ATTR_VIA_DEVICE: (DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            ATTR_SUGGESTED_AREA: hub.zones[zone_id][ATTR_NAME],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
+            name=hub.zones[zone_id][ATTR_NAME],
+            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            suggested_area=hub.zones[zone_id][ATTR_NAME],
+        )
         self._read_state()
 
     async def async_added_to_hass(self) -> None:
@@ -158,7 +153,7 @@ class NoboZone(ClimateEntity):
     @callback
     def _read_state(self) -> None:
         """Read the current state from the hub. These are only local calls."""
-        state = self._nobo.get_current_zone_mode(self._id, dt.now())
+        state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE
 

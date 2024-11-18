@@ -1,4 +1,5 @@
 """The HERE Travel Time integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, time, timedelta
@@ -29,7 +30,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
@@ -336,7 +337,7 @@ def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:
 
 def next_datetime(simple_time: time) -> datetime:
     """Take a time like 08:00:00 and combine it with the current date."""
-    combined = datetime.combine(dt.start_of_local_day(), simple_time)
+    combined = datetime.combine(dt_util.start_of_local_day(), simple_time)
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined

@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/laundrify",
   "iot_class": "cloud_polling",
-  "requirements": ["laundrify_aio==1.1.2"]
+  "requirements": ["laundrify-aio==1.2.2"]
 }

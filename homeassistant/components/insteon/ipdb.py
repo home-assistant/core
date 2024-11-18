@@ -1,4 +1,8 @@
 """Utility methods for the Insteon platform."""
+
+from collections.abc import Iterable
+
+from pyinsteon.device_types.device_base import Device
 from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     ClimateControl_Thermostat,
@@ -7,6 +11,7 @@ from pyinsteon.device_types.ipdb import (
     DimmableLightingControl_Dial,
     DimmableLightingControl_DinRail,
     DimmableLightingControl_FanLinc,
+    DimmableLightingControl_I3_KeypadLinc_4,
     DimmableLightingControl_InLineLinc01,
     DimmableLightingControl_InLineLinc02,
     DimmableLightingControl_KeypadLinc_6,
@@ -44,7 +49,7 @@ from pyinsteon.device_types.ipdb import (
 
 from homeassistant.const import Platform
 
-DEVICE_PLATFORM = {
+DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
     AccessControl_Morningstar: {Platform.LOCK: [1]},
     DimmableLightingControl: {Platform.LIGHT: [1]},
     DimmableLightingControl_Dial: {Platform.LIGHT: [1]},
@@ -52,6 +57,9 @@ DEVICE_PLATFORM = {
     DimmableLightingControl_FanLinc: {Platform.LIGHT: [1], Platform.FAN: [2]},
     DimmableLightingControl_InLineLinc01: {Platform.LIGHT: [1]},
     DimmableLightingControl_InLineLinc02: {Platform.LIGHT: [1]},
+    DimmableLightingControl_I3_KeypadLinc_4: {
+        Platform.LIGHT: [1, 2, 3, 4],
+    },
     DimmableLightingControl_KeypadLinc_6: {
         Platform.LIGHT: [1],
         Platform.SWITCH: [3, 4, 5, 6],
@@ -101,11 +109,11 @@ DEVICE_PLATFORM = {
 }
 
 
-def get_device_platforms(device):
+def get_device_platforms(device) -> dict[Platform, Iterable[int]]:
     """Return the HA platforms for a device type."""
-    return DEVICE_PLATFORM.get(type(device), {}).keys()
+    return DEVICE_PLATFORM.get(type(device), {})
 
 
-def get_platform_groups(device, domain) -> dict:
-    """Return the platforms that a device belongs in."""
-    return DEVICE_PLATFORM.get(type(device), {}).get(domain, {})  # type: ignore[attr-defined]
+def get_device_platform_groups(device: Device, platform: Platform) -> Iterable[int]:
+    """Return the list of device groups for a platform."""
+    return get_device_platforms(device).get(platform, [])

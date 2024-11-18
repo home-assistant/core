@@ -1,4 +1,5 @@
 """Websocket API for Lovelace."""
+
 from __future__ import annotations
 
 from functools import wraps
@@ -7,9 +8,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, DOMAIN, ConfigNotFound
 from .dashboard import LovelaceStorage
@@ -50,15 +52,33 @@ def _handle_errors(func):
     return send_with_error_handling
 
 
-@websocket_api.websocket_command({"type": "lovelace/resources"})
 @websocket_api.async_response
 async def websocket_lovelace_resources(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Send Lovelace UI resources over WebSocket configuration."""
+    """Send Lovelace UI resources over WebSocket connection.
+
+    This function is used in YAML mode.
+    """
+    await websocket_lovelace_resources_impl(hass, connection, msg)
+
+
+async def websocket_lovelace_resources_impl(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Help send Lovelace UI resources over WebSocket connection.
+
+    This function is called by both Storage and YAML mode WS handlers.
+    """
     resources = hass.data[DOMAIN]["resources"]
+
+    if hass.config.safe_mode:
+        connection.send_result(msg["id"], [])
+        return
 
     if not resources.loaded:
         await resources.async_load()
@@ -81,9 +101,9 @@ async def websocket_lovelace_config(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
     config: LovelaceStorage,
-) -> None:
-    """Send Lovelace UI config over WebSocket configuration."""
-    return await config.async_load(msg["force"])
+) -> json_fragment:
+    """Send Lovelace UI config over WebSocket connection."""
+    return await config.async_json(msg["force"])
 
 
 @websocket_api.require_admin
@@ -123,21 +143,3 @@ async def websocket_lovelace_delete_config(
 ) -> None:
     """Delete Lovelace UI configuration."""
     await config.async_delete()
-
-
-@websocket_api.websocket_command({"type": "lovelace/dashboards/list"})
-@callback
-def websocket_lovelace_dashboards(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Delete Lovelace UI configuration."""
-    connection.send_result(
-        msg["id"],
-        [
-            dashboard.config
-            for dashboard in hass.data[DOMAIN]["dashboards"].values()
-            if dashboard.config
-        ],
-    )

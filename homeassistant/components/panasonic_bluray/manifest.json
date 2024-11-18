@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/panasonic_bluray",
   "iot_class": "local_polling",
   "loggers": ["panacotta"],
-  "requirements": ["panacotta==0.1"]
+  "requirements": ["panacotta==0.2"]
 }

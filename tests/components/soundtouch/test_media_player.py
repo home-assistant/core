@@ -1,4 +1,5 @@
 """Test the SoundTouch component."""
+
 from datetime import timedelta
 from typing import Any
 
@@ -31,7 +32,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
 
@@ -662,9 +663,9 @@ async def test_zone_attributes(
     # Fast-forward time to allow all entities to be set up and updated again
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_1_state = hass.states.get(DEVICE_1_ENTITY_ID)
     assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]

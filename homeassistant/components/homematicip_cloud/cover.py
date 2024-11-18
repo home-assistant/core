@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud cover devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,7 +25,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .const import DOMAIN
+from .entity import HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 HMIP_COVER_OPEN = 0
@@ -39,16 +41,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities: list[HomematicipGenericEntity] = []
+    hap = hass.data[DOMAIN][config_entry.unique_id]
+    entities: list[HomematicipGenericEntity] = [
+        HomematicipCoverShutterGroup(hap, group)
+        for group in hap.home.groups
+        if isinstance(group, AsyncExtendedLinkedShutterGroup)
+    ]
     for device in hap.home.devices:
         if isinstance(device, AsyncBlindModule):
             entities.append(HomematicipBlindModule(hap, device))
         elif isinstance(device, AsyncDinRailBlind4):
-            for channel in range(1, 5):
-                entities.append(
-                    HomematicipMultiCoverSlats(hap, device, channel=channel)
-                )
+            entities.extend(
+                HomematicipMultiCoverSlats(hap, device, channel=channel)
+                for channel in range(1, 5)
+            )
         elif isinstance(device, AsyncFullFlushBlind):
             entities.append(HomematicipCoverSlats(hap, device))
         elif isinstance(device, AsyncFullFlushShutter):
@@ -58,20 +64,13 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipGarageDoorModule(hap, device))
 
-    for group in hap.home.groups:
-        if isinstance(group, AsyncExtendedLinkedShutterGroup):
-            entities.append(HomematicipCoverShutterGroup(hap, group))
-
     async_add_entities(entities)
 
 
 class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP blind module."""
 
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of the cover."""
-        return CoverDeviceClass.BLIND
+    _attr_device_class = CoverDeviceClass.BLIND
 
     @property
     def current_cover_position(self) -> int | None:
@@ -149,6 +148,8 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
 class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP cover shutter."""
 
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
     def __init__(
         self,
         hap: HomematicipHAP,
@@ -160,11 +161,6 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         super().__init__(
             hap, device, channel=channel, is_multi_channel=is_multi_channel
         )
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of the cover."""
-        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:
@@ -272,6 +268,8 @@ class HomematicipCoverSlats(HomematicipMultiCoverSlats, CoverEntity):
 class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP Garage Door Module."""
 
+    _attr_device_class = CoverDeviceClass.GARAGE
+
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
@@ -282,11 +280,6 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
             DoorState.POSITION_UNKNOWN: None,
         }
         return door_state_to_position.get(self._device.doorState)
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of the cover."""
-        return CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool | None:
@@ -309,15 +302,12 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
 class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP cover shutter group."""
 
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
     def __init__(self, hap: HomematicipHAP, device, post: str = "ShutterGroup") -> None:
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
         super().__init__(hap, device, post, is_multi_channel=False)
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of the cover."""
-        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:

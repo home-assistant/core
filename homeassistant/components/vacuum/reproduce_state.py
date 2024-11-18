@@ -1,4 +1,5 @@
 """Reproduce an Vacuum state."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,8 +38,8 @@ VALID_STATES_STATE = {
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_IDLE,
-    STATE_RETURNING,
     STATE_PAUSED,
+    STATE_RETURNING,
 }
 
 

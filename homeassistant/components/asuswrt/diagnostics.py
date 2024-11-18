@@ -1,4 +1,5 @@
 """Diagnostics support for Asuswrt."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,6 @@ from typing import Any
 import attr
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -17,26 +17,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DATA_ASUSWRT, DOMAIN
-from .router import AsusWrtRouter
+from . import AsusWrtConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AsusWrtConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
     data = {"entry": async_redact_data(entry.as_dict(), TO_REDACT)}
 
-    router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
 
     # Gather information how this AsusWrt device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     hass_device = device_registry.async_get_device(
-        identifiers=router.device_info["identifiers"]
+        identifiers=router.device_info[ATTR_IDENTIFIERS]
     )
     if not hass_device:
         return data

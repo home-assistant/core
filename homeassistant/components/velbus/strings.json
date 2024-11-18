@@ -16,5 +16,64 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "invalid_hvac_mode": {
+      "message": "Climate mode {hvac_mode} is not supported."
+    }
+  },
+  "services": {
+    "sync_clock": {
+      "name": "Sync clock",
+      "description": "Syncs the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
+      "fields": {
+        "interface": {
+          "name": "Interface",
+          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+        }
+      }
+    },
+    "scan": {
+      "name": "Scan",
+      "description": "Scans the velbus modules, this will be need if you see unknown module warnings in the logs, or when you added new modules.",
+      "fields": {
+        "interface": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
+        }
+      }
+    },
+    "clear_cache": {
+      "name": "Clear cache",
+      "description": "Clears the velbuscache and then starts a new scan.",
+      "fields": {
+        "interface": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "The module address in decimal format, if this is provided we only clear this module, if nothing is provided we clear the whole cache directory (all modules) The decimal addresses are displayed in front of the modules listed at the integration page.\n."
+        }
+      }
+    },
+    "set_memo_text": {
+      "name": "Set memo text",
+      "description": "Sets the memo text to the display of modules like VMBGPO, VMBGPOD Be sure the page(s) of the module is configured to display the memo text.\n.",
+      "fields": {
+        "interface": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "The module address in decimal format. The decimal addresses are displayed in front of the modules listed at the integration page.\n."
+        },
+        "memo_text": {
+          "name": "Memo text",
+          "description": "The actual text to be displayed. Text is limited to 64 characters.\n."
+        }
+      }
+    }
   }
 }

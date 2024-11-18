@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/moon",
   "integration_type": "service",
-  "iot_class": "local_polling",
-  "quality_scale": "internal"
+  "iot_class": "calculated",
+  "quality_scale": "internal",
+  "single_config_entry": true
 }

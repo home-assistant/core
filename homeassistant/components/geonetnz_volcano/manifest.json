@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_geonetnz_volcano"],
-  "requirements": ["aio_geojson_geonetnz_volcano==0.8"]
+  "requirements": ["aio-geojson-geonetnz-volcano==0.9"]
 }

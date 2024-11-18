@@ -1,13 +1,14 @@
 """Support for the Philips Hue lights."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 import random
 
 import aiohue
-import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -28,7 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -224,7 +225,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Once we do a rooms update, we cancel the listener
         # until the next time lights are added
         bridge.reset_jobs.remove(cancel_update_rooms_listener)
-        cancel_update_rooms_listener()  # pylint: disable=not-callable
+        cancel_update_rooms_listener()
         cancel_update_rooms_listener = None
 
     @callback
@@ -262,7 +263,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
-        async with async_timeout.timeout(4):
+        async with asyncio.timeout(4):
             return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()
@@ -304,6 +305,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 

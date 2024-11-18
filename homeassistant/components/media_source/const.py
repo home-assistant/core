@@ -1,4 +1,5 @@
 """Constants for the media_source integration."""
+
 import re
 
 from homeassistant.components.media_player import MediaClass

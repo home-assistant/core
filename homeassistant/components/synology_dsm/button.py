@@ -1,4 +1,5 @@
 """Support for Synology DSM buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -14,7 +15,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -24,18 +25,11 @@ from .models import SynologyDSMData
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class SynologyDSMbuttonDescriptionMixin:
-    """Mixin to describe a Synology DSM button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SynologyDSMbuttonDescription(ButtonEntityDescription):
+    """Class to describe a Synology DSM button entity."""
 
     press_action: Callable[[SynoApi], Callable[[], Coroutine[Any, Any, None]]]
-
-
-@dataclass
-class SynologyDSMbuttonDescription(
-    ButtonEntityDescription, SynologyDSMbuttonDescriptionMixin
-):
-    """Class to describe a Synology DSM button entity."""
 
 
 BUTTONS: Final = [
@@ -79,7 +73,8 @@ class SynologyDSMButton(ButtonEntity):
         """Initialize the Synology DSM binary_sensor entity."""
         self.entity_description = description
         self.syno_api = api
-
+        assert api.network is not None
+        assert api.information is not None
         self._attr_name = f"{api.network.hostname} {description.name}"
         self._attr_unique_id = f"{api.information.serial}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -88,6 +83,7 @@ class SynologyDSMButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the Synology DSM button press service."""
+        assert self.syno_api.network is not None
         LOGGER.debug(
             "Trigger %s for %s",
             self.entity_description.key,

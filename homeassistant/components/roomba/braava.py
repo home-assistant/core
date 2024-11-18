@@ -1,9 +1,10 @@
 """Class for Braava devices."""
+
 import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature
 
-from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
+from .entity import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,24 +27,21 @@ BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
 SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 
-class BraavaJet(IRobotVacuum):
+class BraavaJet(IRobotVacuum):  # pylint: disable=hass-enforce-class-module
     """Braava Jet."""
+
+    _attr_supported_features = SUPPORT_BRAAVA
 
     def __init__(self, roomba, blid):
         """Initialize the Roomba handler."""
         super().__init__(roomba, blid)
 
         # Initialize fan speed list
-        speed_list = []
-        for behavior in BRAAVA_MOP_BEHAVIORS:
-            for spray in BRAAVA_SPRAY_AMOUNT:
-                speed_list.append(f"{behavior}-{spray}")
-        self._speed_list = speed_list
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_BRAAVA
+        self._attr_fan_speed_list = [
+            f"{behavior}-{spray}"
+            for behavior in BRAAVA_MOP_BEHAVIORS
+            for spray in BRAAVA_SPRAY_AMOUNT
+        ]
 
     @property
     def fan_speed(self):
@@ -61,11 +59,6 @@ class BraavaJet(IRobotVacuum):
         # "disposable" and "reusable" values are always the same
         pad_wetness_value = pad_wetness.get("disposable")
         return f"{behavior}-{pad_wetness_value}"
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return self._speed_list
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""

@@ -1,4 +1,5 @@
-"""Base class for Supla channels."""
+"""Base class for SUPLA channels."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SuplaEntity(CoordinatorEntity):
-    """Base class of a Supla Channel (an equivalent of HA's Entity)."""
+    """Base class of a SUPLA Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, config, server, coordinator):
         """Init from config, hookup[ server and coordinator."""
@@ -26,10 +27,9 @@ class SuplaEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "supla-{}-{}".format(
-            self.channel_data["iodevice"]["gUIDString"].lower(),
-            self.channel_data["channelNumber"],
-        )
+        uid = self.channel_data["iodevice"]["gUIDString"].lower()
+        channel_number = self.channel_data["channelNumber"]
+        return f"supla-{uid}-{channel_number}"
 
     @property
     def name(self) -> str | None:
@@ -49,7 +49,7 @@ class SuplaEntity(CoordinatorEntity):
         """Run server action.
 
         Actions are currently hardcoded in components.
-        Supla's API enables autodiscovery
+        SUPLA's API enables autodiscovery
         """
         _LOGGER.debug(
             "Executing action %s on channel %d, params: %s",

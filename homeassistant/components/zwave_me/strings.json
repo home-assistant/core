@@ -14,7 +14,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_valid_uuid_set": "No valid UUID set"
+      "no_valid_uuid_set": "[%key:component::zwave_me::config::error::no_valid_uuid_set%]"
     }
   }
 }

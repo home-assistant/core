@@ -1,31 +1,30 @@
 """Support for the World Air Quality Index service."""
+
 from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-import aiohttp
-import voluptuous as vol
-from waqiasync import WaqiClient
+from aiowaqi import WAQIAirQuality
+from aiowaqi.models import Pollutant
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_TEMPERATURE,
-    ATTR_TIME,
-    CONF_TOKEN,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,154 +37,143 @@ ATTR_PM2_5 = "pm_2_5"
 ATTR_PRESSURE = "pressure"
 ATTR_SULFUR_DIOXIDE = "sulfur_dioxide"
 
-KEY_TO_ATTR = {
-    "pm25": ATTR_PM2_5,
-    "pm10": ATTR_PM10,
-    "h": ATTR_HUMIDITY,
-    "p": ATTR_PRESSURE,
-    "t": ATTR_TEMPERATURE,
-    "o3": ATTR_OZONE,
-    "no2": ATTR_NITROGEN_DIOXIDE,
-    "so2": ATTR_SULFUR_DIOXIDE,
-}
 
-ATTRIBUTION = "Data provided by the World Air Quality Index project"
+@dataclass(frozen=True, kw_only=True)
+class WAQISensorEntityDescription(SensorEntityDescription):
+    """Describes WAQI sensor entity."""
 
-ATTR_ICON = "mdi:cloud"
-
-CONF_LOCATIONS = "locations"
-CONF_STATIONS = "stations"
-
-SCAN_INTERVAL = timedelta(minutes=5)
-
-TIMEOUT = 10
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_STATIONS): cv.ensure_list,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_LOCATIONS): cv.ensure_list,
-    }
-)
+    available_fn: Callable[[WAQIAirQuality], bool] = lambda _: True
+    value_fn: Callable[[WAQIAirQuality], StateType]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+SENSORS: list[WAQISensorEntityDescription] = [
+    WAQISensorEntityDescription(
+        key="air_quality",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.air_quality_index,
+    ),
+    WAQISensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.humidity,
+        available_fn=lambda aq: aq.extended_air_quality.humidity is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.pressure,
+        available_fn=lambda aq: aq.extended_air_quality.pressure is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.temperature,
+        available_fn=lambda aq: aq.extended_air_quality.temperature is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="carbon_monoxide",
+        translation_key="carbon_monoxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.carbon_monoxide,
+        available_fn=lambda aq: aq.extended_air_quality.carbon_monoxide is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="nitrogen_dioxide",
+        translation_key="nitrogen_dioxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.nitrogen_dioxide,
+        available_fn=lambda aq: aq.extended_air_quality.nitrogen_dioxide is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="ozone",
+        translation_key="ozone",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.ozone,
+        available_fn=lambda aq: aq.extended_air_quality.ozone is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="sulphur_dioxide",
+        translation_key="sulphur_dioxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide,
+        available_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="pm10",
+        translation_key="pm10",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.pm10,
+        available_fn=lambda aq: aq.extended_air_quality.pm10 is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="pm25",
+        translation_key="pm25",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.pm25,
+        available_fn=lambda aq: aq.extended_air_quality.pm25 is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="neph",
+        translation_key="neph",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.nephelometry,
+        available_fn=lambda aq: aq.extended_air_quality.nephelometry is not None,
+        entity_registry_enabled_default=False,
+    ),
+    WAQISensorEntityDescription(
+        key="dominant_pollutant",
+        translation_key="dominant_pollutant",
+        device_class=SensorDeviceClass.ENUM,
+        options=[pollutant.value for pollutant in Pollutant],
+        value_fn=lambda aq: aq.dominant_pollutant,
+    ),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the requested World Air Quality Index locations."""
-
-    token = config[CONF_TOKEN]
-    station_filter = config.get(CONF_STATIONS)
-    locations = config[CONF_LOCATIONS]
-
-    client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
-    dev = []
-    try:
-        for location_name in locations:
-            stations = await client.search(location_name)
-            _LOGGER.debug("The following stations were returned: %s", stations)
-            for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
-                if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
-                } & set(station_filter):
-                    dev.append(waqi_sensor)
-    except (
-        aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
-    ) as err:
-        _LOGGER.exception("Failed to connect to WAQI servers")
-        raise PlatformNotReady from err
-    async_add_entities(dev, True)
+    """Set up the WAQI sensor."""
+    coordinator: WAQIDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        WaqiSensor(coordinator, sensor)
+        for sensor in SENSORS
+        if sensor.available_fn(coordinator.data)
+    )
 
 
-class WaqiSensor(SensorEntity):
+class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
     """Implementation of a WAQI sensor."""
 
-    _attr_icon = ATTR_ICON
-    _attr_device_class = SensorDeviceClass.AQI
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
+    entity_description: WAQISensorEntityDescription
 
-    def __init__(self, client, station):
+    def __init__(
+        self,
+        coordinator: WAQIDataUpdateCoordinator,
+        entity_description: WAQISensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._client = client
-        try:
-            self.uid = station["uid"]
-        except (KeyError, TypeError):
-            self.uid = None
-
-        try:
-            self.url = station["station"]["url"]
-        except (KeyError, TypeError):
-            self.url = None
-
-        try:
-            self.station_name = station["station"]["name"]
-        except (KeyError, TypeError):
-            self.station_name = None
-
-        self._data = None
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.data.station_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.data.station_id))},
+            name=coordinator.data.city.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        self._attr_attribution = " and ".join(
+            attribution.name for attribution in coordinator.data.attributions
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        if self.station_name:
-            return f"WAQI {self.station_name}"
-        return f"WAQI {self.url if self.url else self.uid}"
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the device."""
-        if self._data is not None:
-            return self._data.get("aqi")
-        return None
-
-    @property
-    def available(self):
-        """Return sensor availability."""
-        return self._data is not None
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self.uid
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the last update."""
-        attrs = {}
-
-        if self._data is not None:
-            try:
-                attrs[ATTR_ATTRIBUTION] = " and ".join(
-                    [ATTRIBUTION]
-                    + [v["name"] for v in self._data.get("attributions", [])]
-                )
-
-                attrs[ATTR_TIME] = self._data["time"]["s"]
-                attrs[ATTR_DOMINENTPOL] = self._data.get("dominentpol")
-
-                iaqi = self._data["iaqi"]
-                for key in iaqi:
-                    if key in KEY_TO_ATTR:
-                        attrs[KEY_TO_ATTR[key]] = iaqi[key]["v"]
-                    else:
-                        attrs[key] = iaqi[key]["v"]
-                return attrs
-            except (IndexError, KeyError):
-                return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        if self.uid:
-            result = await self._client.get_station_by_number(self.uid)
-        elif self.url:
-            result = await self._client.get_station_by_name(self.url)
-        else:
-            result = None
-        self._data = result
+        return self.entity_description.value_fn(self.coordinator.data)

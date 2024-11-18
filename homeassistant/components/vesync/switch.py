@@ -1,4 +1,5 @@
 """Support for VeSync switches."""
+
 import logging
 from typing import Any
 
@@ -8,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
+from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +54,8 @@ def _setup_entities(devices, async_add_entities):
 
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
     """Base class for VeSync switch Device Representations."""
+
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

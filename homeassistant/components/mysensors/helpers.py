@@ -1,10 +1,12 @@
 """Helper functions for mysensors package."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum
 import logging
+from typing import cast
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
@@ -19,9 +21,12 @@ from homeassistant.util.decorator import Registry
 from .const import (
     ATTR_DEVICES,
     ATTR_GATEWAY_ID,
+    ATTR_NODE_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
+    MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
+    MYSENSORS_NODE_DISCOVERY,
     MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
@@ -63,6 +68,27 @@ def discover_mysensors_platform(
             ATTR_GATEWAY_ID: gateway_id,
         },
     )
+
+
+@callback
+def discover_mysensors_node(
+    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
+) -> None:
+    """Discover a MySensors node."""
+    discovered_nodes = hass.data[DOMAIN].setdefault(
+        MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
+    )
+
+    if node_id not in discovered_nodes:
+        discovered_nodes.add(node_id)
+        async_dispatcher_send(
+            hass,
+            MYSENSORS_NODE_DISCOVERY,
+            {
+                ATTR_GATEWAY_ID: gateway_id,
+                ATTR_NODE_ID: node_id,
+            },
+        )
 
 
 def default_schema(
@@ -126,8 +152,8 @@ def get_child_schema(
 ) -> vol.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
-    child_schema = child.get_schema(gateway.protocol_version)
-    schema = child_schema.extend(
+    child_schema = cast(vol.Schema, child.get_schema(gateway.protocol_version))
+    return child_schema.extend(
         {
             vol.Required(
                 set_req[name].value, msg=invalid_msg(gateway, child, name)
@@ -136,18 +162,15 @@ def get_child_schema(
         },
         extra=vol.ALLOW_EXTRA,
     )
-    return schema
 
 
 def invalid_msg(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
 ) -> str:
     """Return a message for an invalid child during schema validation."""
-    pres = gateway.const.Presentation
+    presentation = gateway.const.Presentation
     set_req = gateway.const.SetReq
-    return (
-        f"{pres(child.type).name} requires value_type {set_req[value_type_name].name}"
-    )
+    return f"{presentation(child.type).name} requires value_type {set_req[value_type_name].name}"
 
 
 def validate_set_msg(
@@ -177,10 +200,10 @@ def validate_child(
 ) -> defaultdict[Platform, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
     validated: defaultdict[Platform, list[DevId]] = defaultdict(list)
-    pres: type[IntEnum] = gateway.const.Presentation
+    presentation: type[IntEnum] = gateway.const.Presentation
     set_req: type[IntEnum] = gateway.const.SetReq
     child_type_name: SensorType | None = next(
-        (member.name for member in pres if member.value == child.type), None
+        (member.name for member in presentation if member.value == child.type), None
     )
     if not child_type_name:
         _LOGGER.warning("Child type %s is not supported", child.type)

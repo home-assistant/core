@@ -1,17 +1,11 @@
 {
-  "issues": {
-    "haos_outdated": {
-      "title": "Update to Home Assistant Operating System 9.0 or later",
-      "description": "To improve Bluetooth reliability and performance, we highly recommend you update to version 9.0 or later of the Home Assistant Operating System."
-    }
-  },
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{name} {manufacturer} {model}",
     "step": {
       "user": {
         "description": "Choose a device to set up",
         "data": {
-          "address": "Device"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -24,7 +18,7 @@
         }
       },
       "single_adapter": {
-        "description": "Do you want to set up the Bluetooth adapter {name}?"
+        "description": "Do you want to set up the Bluetooth adapter {name} {manufacturer} {model}?"
       }
     },
     "abort": {

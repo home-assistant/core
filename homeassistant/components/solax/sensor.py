@@ -1,11 +1,7 @@
 """Support for Solax inverter via local API."""
+
 from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
-
-from solax import RealTimeAPI
-from solax.discovery import InverterError
 from solax.units import Units
 
 from homeassistant.components.sensor import (
@@ -14,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -25,15 +20,15 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SolaxConfigEntry
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import SolaxDataUpdateCoordinator
 
 DEFAULT_PORT = 80
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
@@ -87,31 +82,29 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     ),
     (Units.NONE, False): SensorEntityDescription(
         key=f"{Units.NONE}_{False}",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SolaxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Entry setup."""
-    api: RealTimeAPI = hass.data[DOMAIN][entry.entry_id]
-    resp = await api.get_data()
+    api = entry.runtime_data.api
+    coordinator = entry.runtime_data.coordinator
+    resp = coordinator.data
     serial = resp.serial_number
     version = resp.version
-    endpoint = RealTimeDataEndpoint(hass, api)
-    hass.async_add_job(endpoint.async_refresh)
-    async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
-    devices = []
+    entities: list[InverterSensorEntity] = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
 
         uid = f"{serial}-{idx}"
-        devices.append(
-            Inverter(
+        entities.append(
+            InverterSensorEntity(
+                coordinator,
                 api.inverter.manufacturer,
                 uid,
                 serial,
@@ -122,57 +115,28 @@ async def async_setup_entry(
                 description.device_class,
             )
         )
-    endpoint.sensors = devices
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
-class RealTimeDataEndpoint:
-    """Representation of a Sensor."""
-
-    def __init__(self, hass: HomeAssistant, api: RealTimeAPI) -> None:
-        """Initialize the sensor."""
-        self.hass = hass
-        self.api = api
-        self.ready = asyncio.Event()
-        self.sensors: list[Inverter] = []
-
-    async def async_refresh(self, now=None):
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        try:
-            api_response = await self.api.get_data()
-            self.ready.set()
-        except InverterError as err:
-            if now is not None:
-                self.ready.clear()
-                return
-            raise PlatformNotReady from err
-        data = api_response.data
-        for sensor in self.sensors:
-            if sensor.key in data:
-                sensor.value = data[sensor.key]
-                sensor.async_schedule_update_ha_state()
-
-
-class Inverter(SensorEntity):
+class InverterSensorEntity(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
-        manufacturer,
-        uid,
-        serial,
-        version,
-        key,
-        unit,
-        state_class=None,
-        device_class=None,
-    ):
+        coordinator: SolaxDataUpdateCoordinator,
+        manufacturer: str,
+        uid: str,
+        serial: str,
+        version: str,
+        key: str,
+        unit: str | None,
+        state_class: SensorStateClass | str | None,
+        device_class: SensorDeviceClass | None,
+    ) -> None:
         """Initialize an inverter sensor."""
+        super().__init__(coordinator)
         self._attr_unique_id = uid
         self._attr_name = f"{manufacturer} {serial} {key}"
         self._attr_native_unit_of_measurement = unit
@@ -185,9 +149,8 @@ class Inverter(SensorEntity):
             sw_version=version,
         )
         self.key = key
-        self.value = None
 
     @property
     def native_value(self):
         """State of this inverter attribute."""
-        return self.value
+        return self.coordinator.data.data[self.key]

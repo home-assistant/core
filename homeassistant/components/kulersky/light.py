@@ -1,4 +1,5 @@
 """Kuler Sky light platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,7 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -62,14 +63,23 @@ async def async_setup_entry(
 
 
 class KulerskyLight(LightEntity):
-    """Representation of an Kuler Sky Light."""
+    """Representation of a Kuler Sky Light."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_available = False
+    _attr_supported_color_modes = {ColorMode.RGBW}
+    _attr_color_mode = ColorMode.RGBW
 
     def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._available = False
-        self._attr_supported_color_modes = {ColorMode.RGBW}
-        self._attr_color_mode = ColorMode.RGBW
+        self._attr_unique_id = light.address
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.address)},
+            manufacturer="Brightech",
+            name=light.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -89,33 +99,9 @@ class KulerskyLight(LightEntity):
             )
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._light.name
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._light.address
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for this light."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Brightech",
-            name=self.name,
-        )
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self.brightness > 0
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -142,18 +128,18 @@ class KulerskyLight(LightEntity):
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
-            if not self._available:
+            if not self._attr_available:
                 await self._light.connect()
             rgbw = await self._light.get_color()
         except pykulersky.PykulerskyException as exc:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.warning("Unable to connect to %s: %s", self._light.address, exc)
-            self._available = False
+            self._attr_available = False
             return
-        if self._available is False:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+        if self._attr_available is False:
+            _LOGGER.warning("Reconnected to %s", self._light.address)
 
-        self._available = True
+        self._attr_available = True
         brightness = max(rgbw)
         if not brightness:
             self._attr_rgbw_color = (0, 0, 0, 0)

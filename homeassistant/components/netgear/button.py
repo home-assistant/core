@@ -1,4 +1,5 @@
 """Support for Netgear Button."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -15,27 +16,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterCoordinatorEntity
+from .entity import NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 
-@dataclass
-class NetgearButtonEntityDescriptionRequired:
-    """Required attributes of NetgearButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class NetgearButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Netgear button entities."""
 
     action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
-
-
-@dataclass
-class NetgearButtonEntityDescription(
-    ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
-):
-    """Class describing Netgear button entities."""
 
 
 BUTTONS = [
     NetgearButtonEntityDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         action=lambda router: router.async_reboot,
@@ -69,8 +63,7 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
 
     async def async_press(self) -> None:
         """Triggers the button press service."""

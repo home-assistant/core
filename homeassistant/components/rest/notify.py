@@ -1,12 +1,12 @@
 """RESTful platform for notify component."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
 import logging
 from typing import Any
 
-import requests
-from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -44,7 +45,7 @@ DEFAULT_MESSAGE_PARAM_NAME = "message"
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(
@@ -72,7 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -91,12 +92,12 @@ def get_service(
     password: str | None = config.get(CONF_PASSWORD)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-    auth: AuthBase | None = None
+    auth: httpx.Auth | None = None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = httpx.DigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = httpx.BasicAuth(username, password)
 
     return RestNotificationService(
         hass,
@@ -129,7 +130,7 @@ class RestNotificationService(BaseNotificationService):
         target_param_name: str | None,
         data: dict[str, Any] | None,
         data_template: dict[str, Any] | None,
-        auth: AuthBase | None,
+        auth: httpx.Auth | None,
         verify_ssl: bool,
     ) -> None:
         """Initialize the service."""
@@ -146,7 +147,7 @@ class RestNotificationService(BaseNotificationService):
         self._auth = auth
         self._verify_ssl = verify_ssl
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {self._message_param_name: message}
 
@@ -171,7 +172,6 @@ class RestNotificationService(BaseNotificationService):
                     }
                 if not isinstance(value, Template):
                     return value
-                value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
 
             if self._data:
@@ -179,34 +179,32 @@ class RestNotificationService(BaseNotificationService):
             if self._data_template:
                 data.update(_data_template_creator(self._data_template))
 
+        websession = get_async_client(self._hass, self._verify_ssl)
         if self._method == "POST":
-            response = requests.post(
+            response = await websession.post(
                 self._resource,
                 headers=self._headers,
                 params=self._params,
                 data=data,
                 timeout=10,
-                auth=self._auth,
-                verify=self._verify_ssl,
+                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
             )
         elif self._method == "POST_JSON":
-            response = requests.post(
+            response = await websession.post(
                 self._resource,
                 headers=self._headers,
                 params=self._params,
                 json=data,
                 timeout=10,
-                auth=self._auth,
-                verify=self._verify_ssl,
+                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
             )
         else:  # default GET
-            response = requests.get(
+            response = await websession.get(
                 self._resource,
                 headers=self._headers,
                 params={**self._params, **data} if self._params else data,
                 timeout=10,
                 auth=self._auth,
-                verify=self._verify_ssl,
             )
 
         if (
@@ -214,21 +212,29 @@ class RestNotificationService(BaseNotificationService):
             and response.status_code < 600
         ):
             _LOGGER.exception(
-                "Server error. Response %d: %s:", response.status_code, response.reason
+                "Server error. Response %d: %s:",
+                response.status_code,
+                response.reason_phrase,
             )
         elif (
             response.status_code >= HTTPStatus.BAD_REQUEST
             and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.exception(
-                "Client error. Response %d: %s:", response.status_code, response.reason
+                "Client error. Response %d: %s:",
+                response.status_code,
+                response.reason_phrase,
             )
         elif (
             response.status_code >= HTTPStatus.OK
             and response.status_code < HTTPStatus.MULTIPLE_CHOICES
         ):
             _LOGGER.debug(
-                "Success. Response %d: %s:", response.status_code, response.reason
+                "Success. Response %d: %s:",
+                response.status_code,
+                response.reason_phrase,
             )
         else:
-            _LOGGER.debug("Response %d: %s:", response.status_code, response.reason)
+            _LOGGER.debug(
+                "Response %d: %s:", response.status_code, response.reason_phrase
+            )

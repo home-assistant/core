@@ -1,4 +1,5 @@
 """Support for Flo Water Monitor binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 
@@ -45,10 +46,11 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports on if there are any pending system alerts."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "pending_system_alerts"
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("pending_system_alerts", "Pending system alerts", device)
+        super().__init__("pending_system_alerts", device)
 
     @property
     def is_on(self):
@@ -71,10 +73,11 @@ class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports if water is detected (for leak detectors)."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "water_detected"
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("water_detected", "Water detected", device)
+        super().__init__("water_detected", device)
 
     @property
     def is_on(self):

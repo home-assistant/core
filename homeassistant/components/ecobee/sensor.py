@@ -1,4 +1,5 @@
 """Support for Ecobee sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,30 +20,22 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
-@dataclass
-class EcobeeSensorEntityDescriptionMixin:
-    """Represent the required ecobee entity description attributes."""
+@dataclass(frozen=True, kw_only=True)
+class EcobeeSensorEntityDescription(SensorEntityDescription):
+    """Represent the ecobee sensor entity description."""
 
     runtime_key: str | None
-
-
-@dataclass
-class EcobeeSensorEntityDescription(
-    SensorEntityDescription, EcobeeSensorEntityDescriptionMixin
-):
-    """Represent the ecobee sensor entity description."""
 
 
 SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     EcobeeSensorEntityDescription(
         key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -50,7 +43,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,7 +50,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="co2PPM",
-        name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,7 +57,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="vocPPM",
-        name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -74,7 +64,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="airQuality",
-        name="Air Quality Index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key="actualAQScore",
@@ -104,6 +93,8 @@ async def async_setup_entry(
 class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: EcobeeSensorEntityDescription
 
     def __init__(
@@ -119,10 +110,9 @@ class EcobeeSensor(SensorEntity):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._attr_name = f"{sensor_name} {description.name}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
@@ -130,6 +120,7 @@ class EcobeeSensor(SensorEntity):
                     return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:

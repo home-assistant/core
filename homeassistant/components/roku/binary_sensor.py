@@ -1,4 +1,5 @@
 """Support for Roku binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,45 +20,34 @@ from .const import DOMAIN
 from .entity import RokuEntity
 
 
-@dataclass
-class RokuBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RokuBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Roku binary sensor entity."""
 
     value_fn: Callable[[RokuDevice], bool | None]
-
-
-@dataclass
-class RokuBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RokuBinarySensorEntityDescriptionMixin
-):
-    """Describes a Roku binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="headphones_connected",
-        name="Headphones connected",
-        icon="mdi:headphones",
+        translation_key="headphones_connected",
         value_fn=lambda device: device.info.headphones_connected,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_airplay",
-        name="Supports AirPlay",
-        icon="mdi:cast-variant",
+        translation_key="supports_airplay",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_airplay,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_ethernet",
-        name="Supports ethernet",
-        icon="mdi:ethernet",
+        translation_key="supports_ethernet",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ethernet_support,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
-        name="Supports find remote",
-        icon="mdi:remote",
+        translation_key="supports_find_remote",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_find_remote,
     ),
@@ -71,10 +61,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = coordinator.data.info.serial_number
+
     async_add_entities(
         RokuBinarySensorEntity(
-            device_id=unique_id,
             coordinator=coordinator,
             description=description,
         )

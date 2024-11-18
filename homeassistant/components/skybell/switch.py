@@ -1,4 +1,5 @@
 """Switch support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -14,15 +15,15 @@ from .entity import SkybellEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="do_not_disturb",
-        name="Do not disturb",
+        translation_key="do_not_disturb",
     ),
     SwitchEntityDescription(
         key="do_not_ring",
-        name="Do not ring",
+        translation_key="do_not_ring",
     ),
     SwitchEntityDescription(
         key="motion_sensor",
-        name="Motion sensor",
+        translation_key="motion_sensor",
     ),
 )
 

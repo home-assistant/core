@@ -1,4 +1,5 @@
 """Support for AirVisual Pro sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -22,96 +22,99 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirVisualProData, AirVisualProEntity
-from .const import DOMAIN
+from . import AirVisualProConfigEntry
+from .entity import AirVisualProEntity
 
 
-@dataclass
-class AirVisualProMeasurementKeyMixin:
-    """Define an entity description mixin to include a measurement key."""
-
-    value_fn: Callable[[dict[str, Any], dict[str, Any], dict[str, Any]], float | int]
-
-
-@dataclass
-class AirVisualProMeasurementDescription(
-    SensorEntityDescription, AirVisualProMeasurementKeyMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class AirVisualProMeasurementDescription(SensorEntityDescription):
     """Describe an AirVisual Pro sensor."""
+
+    value_fn: Callable[
+        [dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]], float | int
+    ]
 
 
 SENSOR_DESCRIPTIONS = (
     AirVisualProMeasurementDescription(
         key="air_quality_index",
-        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements[
+        value_fn=lambda settings, status, measurements, history: measurements[
             async_get_aqi_locale(settings)
         ],
     ),
     AirVisualProMeasurementDescription(
+        key="outdoor_air_quality_index",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda settings, status, measurements, history: int(
+            history.get(
+                f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}', -1
+            )
+        ),
+        translation_key="outdoor_air_quality_index",
+    ),
+    AirVisualProMeasurementDescription(
         key="battery_level",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda settings, status, measurements: status["battery"],
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda settings, status, measurements, history: status["battery"],
     ),
     AirVisualProMeasurementDescription(
         key="carbon_dioxide",
-        name="C02",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["co2"],
+        value_fn=lambda settings, status, measurements, history: measurements["co2"],
     ),
     AirVisualProMeasurementDescription(
         key="humidity",
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda settings, status, measurements: measurements["humidity"],
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda settings, status, measurements, history: measurements[
+            "humidity"
+        ],
     ),
     AirVisualProMeasurementDescription(
         key="particulate_matter_0_1",
-        name="PM 0.1",
-        device_class=SensorDeviceClass.PM1,
+        translation_key="pm01",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["pm0_1"],
+        value_fn=lambda settings, status, measurements, history: measurements["pm0_1"],
     ),
     AirVisualProMeasurementDescription(
         key="particulate_matter_1_0",
-        name="PM 1.0",
-        device_class=SensorDeviceClass.PM10,
+        device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["pm1_0"],
+        value_fn=lambda settings, status, measurements, history: measurements["pm1_0"],
     ),
     AirVisualProMeasurementDescription(
         key="particulate_matter_2_5",
-        name="PM 2.5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["pm2_5"],
+        value_fn=lambda settings, status, measurements, history: measurements["pm2_5"],
     ),
     AirVisualProMeasurementDescription(
         key="temperature",
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["temperature_C"],
+        value_fn=lambda settings, status, measurements, history: measurements[
+            "temperature_C"
+        ],
     ),
     AirVisualProMeasurementDescription(
         key="voc",
-        name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements: measurements["voc"],
+        value_fn=lambda settings, status, measurements, history: measurements["voc"],
     ),
 )
 
@@ -125,13 +128,13 @@ def async_get_aqi_locale(settings: dict[str, Any]) -> str:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirVisualProConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        AirVisualProSensor(data.coordinator, description)
+        AirVisualProSensor(entry.runtime_data.coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -150,4 +153,5 @@ class AirVisualProSensor(AirVisualProEntity, SensorEntity):
             self.coordinator.data["settings"],
             self.coordinator.data["status"],
             self.coordinator.data["measurements"],
+            self.coordinator.data["history"],
         )

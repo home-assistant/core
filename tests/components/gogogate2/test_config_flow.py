@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api, ISmartGateApi
@@ -55,7 +57,7 @@ async def test_auth_fail(
         },
     )
     assert result
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
         "base": "invalid_auth",
     }
@@ -75,7 +77,7 @@ async def test_auth_fail(
         },
     )
     assert result
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     api.reset_mock()
@@ -93,7 +95,7 @@ async def test_auth_fail(
         },
     )
     assert result
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -104,8 +106,8 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -113,7 +115,7 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     flow = next(
         flow
@@ -132,8 +134,8 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -141,7 +143,7 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> None:
@@ -157,8 +159,8 @@ async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> Non
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -166,7 +168,7 @@ async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> Non
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
@@ -176,8 +178,8 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -185,7 +187,7 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     data_schema = result["data_schema"]
@@ -215,7 +217,7 @@ async def test_discovered_dhcp(
             ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -227,7 +229,7 @@ async def test_discovered_dhcp(
         },
     )
     assert result2
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     api.reset_mock()
 
@@ -243,7 +245,7 @@ async def test_discovered_dhcp(
         },
     )
     assert result3
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "device": "ismartgate",
         "ip_address": "1.2.3.4",
@@ -259,8 +261,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -268,7 +270,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_init(
@@ -278,7 +280,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
         ),
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     result3 = await hass.config_entries.flow.async_init(
@@ -288,5 +290,5 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             ip="1.2.3.4", macaddress="00:00:00:00:00:00", hostname="mock_hostname"
         ),
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"

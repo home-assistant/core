@@ -1,4 +1,5 @@
 """Provides device automations for Climate."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -34,16 +35,17 @@ TRIGGER_TYPES = {
 
 HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): "hvac_mode_changed",
         vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 CURRENT_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 ["current_temperature_changed", "current_humidity_changed"]
             ),
@@ -77,7 +79,7 @@ async def async_get_triggers(
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         triggers.append(
@@ -139,13 +141,13 @@ async def async_attach_trigger(
     }
 
     if trigger_type == "current_temperature_changed":
-        numeric_state_config[
-            numeric_state_trigger.CONF_VALUE_TEMPLATE
-        ] = "{{ state.attributes.current_temperature }}"
-    else:
-        numeric_state_config[
-            numeric_state_trigger.CONF_VALUE_TEMPLATE
-        ] = "{{ state.attributes.current_humidity }}"
+        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            "{{ state.attributes.current_temperature }}"
+        )
+    else:  # trigger_type == "current_humidity_changed"
+        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            "{{ state.attributes.current_humidity }}"
+        )
 
     if CONF_ABOVE in config:
         numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]

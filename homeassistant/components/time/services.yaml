@@ -1,13 +1,9 @@
 set_value:
-  name: Set Time
-  description: Set the time for a time entity.
   target:
     entity:
       domain: time
   fields:
     time:
-      name: Time
-      description: The time to set.
       required: true
       example: "22:15"
       selector:

@@ -1,7 +1,8 @@
 {
   "domain": "command_line",
   "name": "Command Line",
-  "codeowners": [],
+  "codeowners": ["@gjohansson-ST"],
   "documentation": "https://www.home-assistant.io/integrations/command_line",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["jsonpath==0.82.2"]
 }

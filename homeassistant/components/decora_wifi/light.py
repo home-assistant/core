@@ -1,10 +1,10 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-# pylint: disable=import-error
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
@@ -15,7 +15,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
@@ -63,17 +63,18 @@ def setup_platform(
 
         # Gather all the available devices...
         perms = session.user.get_residential_permissions()
-        all_switches = []
+        all_switches: list = []
         for permission in perms:
             if permission.residentialAccountId is not None:
                 acct = ResidentialAccount(session, permission.residentialAccountId)
-                for residence in acct.get_residences():
-                    for switch in residence.get_iot_switches():
-                        all_switches.append(switch)
+                all_switches.extend(
+                    switch
+                    for residence in acct.get_residences()
+                    for switch in residence.get_iot_switches()
+                )
             elif permission.residenceId is not None:
                 residence = Residence(session, permission.residenceId)
-                for switch in residence.get_iot_switches():
-                    all_switches.append(switch)
+                all_switches.extend(residence.get_iot_switches())
 
         add_entities(DecoraWifiLight(sw) for sw in all_switches)
     except ValueError:

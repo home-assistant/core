@@ -1,4 +1,5 @@
 """Tests for the Wemo light entity via the bridge."""
+
 from unittest.mock import create_autospec
 
 import pytest
@@ -35,12 +36,12 @@ def pywemo_model():
 def pywemo_bridge_light_fixture(pywemo_device):
     """Fixture for Bridge.Light WeMoDevice instances."""
     light = create_autospec(pywemo.ouimeaux_device.bridge.Light, instance=True)
-    light.uniqueID = pywemo_device.serialnumber
+    light.uniqueID = pywemo_device.serial_number
     light.name = pywemo_device.name
     light.bridge = pywemo_device
     light.state = {"onoff": 0, "available": True}
     light.capabilities = ["onoff", "levelcontrol", "colortemperature"]
-    pywemo_device.Lights = {pywemo_device.serialnumber: light}
+    pywemo_device.Lights = {pywemo_device.serial_number: light}
     return light
 
 
@@ -84,7 +85,7 @@ async def test_available_after_update(
     pywemo_bridge_light,
     wemo_entity,
 ) -> None:
-    """Test the avaliability when an On call fails and after an update."""
+    """Test the availability when an On call fails and after an update."""
     pywemo_bridge_light.turn_on.side_effect = pywemo.exceptions.ActionException
     pywemo_bridge_light.state["onoff"] = 1
     await entity_test_helpers.test_avaliable_after_update(

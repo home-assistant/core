@@ -1,43 +1,49 @@
 # Describes the format for available Blink services
 
-blink_update:
-  name: Update
-  description: Force a refresh.
+record:
+  target:
+    entity:
+      integration: blink
+      domain: camera
 
 trigger_camera:
-  name: Trigger camera
-  description: Request camera to take new image.
   target:
     entity:
       integration: blink
       domain: camera
 
 save_video:
-  name: Save video
-  description: Save last recorded video clip to local file.
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
-    name:
-      name: Name
-      description: Name of camera to grab video from.
-      required: true
-      example: "Living Room"
-      selector:
-        text:
     filename:
-      name: File name
-      description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
       required: true
       example: "/tmp/video.mp4"
       selector:
         text:
 
-send_pin:
-  name: Send pin
-  description: Send a new PIN to blink for 2FA.
+save_recent_clips:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
+    file_path:
+      required: true
+      example: "/tmp"
+      selector:
+        text:
+
+send_pin:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: blink
     pin:
-      name: Pin
-      description: PIN received from blink. Leave empty if you only received a verification email.
       example: "abc123"
       selector:
         text:

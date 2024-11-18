@@ -1,4 +1,5 @@
 """Support for displaying minimal, maximal, mean or median values."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -9,7 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorStateClass,
 )
@@ -22,17 +23,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -63,7 +59,7 @@ SENSOR_TYPES = {
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
             cv.string, vol.In(SENSOR_TYPES.values())
@@ -254,7 +250,9 @@ class MinMaxSensor(SensorEntity):
         # Replay current state of source entities
         for entity_id in self._entity_ids:
             state = self.hass.states.get(entity_id)
-            state_event = Event("", {"entity_id": entity_id, "new_state": state})
+            state_event: Event[EventStateChangedData] = Event(
+                "", {"entity_id": entity_id, "new_state": state, "old_state": None}
+            )
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
         self._calc_values()
@@ -287,11 +285,11 @@ class MinMaxSensor(SensorEntity):
 
     @callback
     def _async_min_max_sensor_state_listener(
-        self, event: EventType, update_state: bool = True
+        self, event: Event[EventStateChangedData], update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
-        new_state: State | None = event.data.get("new_state")
-        entity: str = event.data["entity_id"]
+        new_state = event.data["new_state"]
+        entity = event.data["entity_id"]
 
         if (
             new_state is None

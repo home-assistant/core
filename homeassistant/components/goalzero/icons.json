@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "backlight": {
+        "default": "mdi:clock-digital"
+      }
+    }
+  }
+}

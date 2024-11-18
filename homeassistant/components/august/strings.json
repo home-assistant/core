@@ -1,7 +1,14 @@
 {
+  "issues": {
+    "yale_brand_migration": {
+      "title": "Yale Home has a new integration",
+      "description": "Add the [Yale integration]({migrate_url}), and remove the August integration as soon as possible to avoid an interruption in service. The Yale Home brand will stop working with the August integration soon and will be removed in a future release."
+    }
+  },
   "config": {
     "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unhandled": "Unhandled error: {error}",
+      "invalid_verification_code": "Invalid verification code",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
@@ -13,25 +20,72 @@
       "validation": {
         "title": "Two factor authentication",
         "data": {
-          "code": "Verification code"
+          "verification_code": "Verification code"
         },
-        "description": "Please check your {login_method} ({username}) and enter the verification code below"
+        "description": "Please check your {login_method} ({username}) and enter the verification code below. Codes may take a few minutes to arrive."
       },
       "user_validate": {
-        "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
+        "description": "It is recommended to use the 'email' login method as some brands may not work with the 'phone' method. If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'. If you choose the wrong brand, you may be able to authenticate initially; however, you will not be able to operate devices. If you are unsure of the brand, create the integration again and try another brand.",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
+          "brand": "Brand",
+          "login_method": "Login Method",
           "username": "[%key:common::config_flow::data::username%]",
-          "login_method": "Login Method"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "Set up an August account"
       },
       "reauth_validate": {
-        "description": "Enter the password for {username}.",
+        "description": "Choose the correct brand for your device, and enter the password for {username}. If you choose the wrong brand, you may be able to authenticate initially; however, you will not be able to operate devices. If you are unsure of the brand, create the integration again and try another brand.",
         "data": {
+          "brand": "[%key:component::august::config::step::user_validate::data::brand%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "Reauthenticate an August account"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ding": {
+        "name": "Doorbell ding"
+      },
+      "image_capture": {
+        "name": "Image capture"
+      }
+    },
+    "button": {
+      "wake": {
+        "name": "Wake"
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
+    "sensor": {
+      "operator": {
+        "name": "Operator"
+      }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
       }
     }
   }

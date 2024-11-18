@@ -2,6 +2,7 @@
 
 Minimal Kernel needed is 4.14+
 """
+
 import logging
 
 from rpi_bad_power import UnderVoltage, new_under_voltage
@@ -54,5 +55,5 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
             if value:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
             else:
-                _LOGGER.info(DESCRIPTION_NORMALIZED)
+                _LOGGER.debug(DESCRIPTION_NORMALIZED)
             self._attr_is_on = value

@@ -1,4 +1,5 @@
 """The tests for the TCP sensor platform."""
+
 from copy import copy
 from unittest.mock import call, patch
 
@@ -42,7 +43,7 @@ socket_test_value = "123"
 @pytest.fixture(name="mock_socket")
 def mock_socket_fixture(mock_select):
     """Mock socket."""
-    with patch("homeassistant.components.tcp.common.socket.socket") as mock_socket:
+    with patch("homeassistant.components.tcp.entity.socket.socket") as mock_socket:
         socket_instance = mock_socket.return_value.__enter__.return_value
         socket_instance.recv.return_value = socket_test_value.encode()
         yield socket_instance
@@ -52,7 +53,7 @@ def mock_socket_fixture(mock_select):
 def mock_select_fixture():
     """Mock select."""
     with patch(
-        "homeassistant.components.tcp.common.select.select",
+        "homeassistant.components.tcp.entity.select.select",
         return_value=(True, False, False),
     ) as mock_select:
         yield mock_select
@@ -62,7 +63,7 @@ def mock_select_fixture():
 def mock_ssl_context_fixture():
     """Mock select."""
     with patch(
-        "homeassistant.components.tcp.common.ssl.create_default_context",
+        "homeassistant.components.tcp.entity.ssl.create_default_context",
     ) as mock_ssl_context:
         mock_ssl_context.return_value.wrap_socket.return_value.recv.return_value = (
             socket_test_value + "567"

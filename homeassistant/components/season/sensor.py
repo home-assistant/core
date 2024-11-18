@@ -1,4 +1,5 @@
 """Support for Season sensors."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -9,8 +10,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -31,13 +31,6 @@ HEMISPHERE_SEASON_SWAP = {
     STATE_SPRING: STATE_AUTUMN,
     STATE_AUTUMN: STATE_SPRING,
     STATE_SUMMER: STATE_WINTER,
-}
-
-SEASON_ICONS = {
-    STATE_SPRING: "mdi:flower",
-    STATE_SUMMER: "mdi:sunglasses",
-    STATE_AUTUMN: "mdi:leaf",
-    STATE_WINTER: "mdi:snowflake",
 }
 
 
@@ -94,6 +87,7 @@ class SeasonSensorEntity(SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_options = ["spring", "summer", "autumn", "winter"]
     _attr_translation_key = "season"
 
@@ -113,7 +107,3 @@ class SeasonSensorEntity(SensorEntity):
         self._attr_native_value = get_season(
             utcnow().replace(tzinfo=None), self.hemisphere, self.type
         )
-
-        self._attr_icon = "mdi:cloud"
-        if self._attr_native_value:
-            self._attr_icon = SEASON_ICONS[self._attr_native_value]

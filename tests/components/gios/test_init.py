@@ -1,4 +1,5 @@
 """Test init of GIOS integration."""
+
 import json
 from unittest.mock import patch
 
@@ -34,7 +35,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.gios.Gios._get_stations",
+        "homeassistant.components.gios.coordinator.Gios._get_stations",
         side_effect=ConnectionError(),
     ):
         entry.add_to_hass(hass)
@@ -74,16 +75,23 @@ async def test_migrate_device_and_config_entry(
     station = json.loads(load_fixture("gios/station.json"))
     sensors = json.loads(load_fixture("gios/sensors.json"))
 
-    with patch(
-        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
-    ), patch(
-        "homeassistant.components.gios.Gios._get_station",
-        return_value=station,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=sensors,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes", return_value=indexes
+    with (
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_stations",
+            return_value=STATIONS,
+        ),
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_station",
+            return_value=station,
+        ),
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
+            return_value=sensors,
+        ),
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
+            return_value=indexes,
+        ),
     ):
         config_entry.add_to_hass(hass)
 
@@ -100,11 +108,11 @@ async def test_migrate_device_and_config_entry(
         assert device_entry.id == migrated_device_entry.id
 
 
-async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
+async def test_remove_air_quality_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test remove air_quality entities from registry."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "123",
@@ -114,5 +122,5 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    entry = registry.async_get("air_quality.home")
+    entry = entity_registry.async_get("air_quality.home")
     assert entry is None

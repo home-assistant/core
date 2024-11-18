@@ -1,79 +1,30 @@
-"""Test the Minecraft Server config flow."""
+"""Tests for the Minecraft Server config flow."""
 
-import asyncio
 from unittest.mock import patch
 
-import aiodns
-from mcstatus.pinger import PingResponse
+from mcstatus import BedrockServer, JavaServer
 
-from homeassistant.components.minecraft_server.const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from homeassistant.components.minecraft_server.api import MinecraftServerType
+from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import (
+    TEST_ADDRESS,
+    TEST_BEDROCK_STATUS_RESPONSE,
+    TEST_HOST,
+    TEST_JAVA_STATUS_RESPONSE,
+    TEST_PORT,
+)
+
 from tests.common import MockConfigEntry
-
-
-class QueryMock:
-    """Mock for result of aiodns.DNSResolver.query."""
-
-    def __init__(self):
-        """Set up query result mock."""
-        self.host = "mc.dummyserver.com"
-        self.port = 23456
-        self.priority = 1
-        self.weight = 1
-        self.ttl = None
-
-
-STATUS_RESPONSE_RAW = {
-    "description": {"text": "Dummy Description"},
-    "version": {"name": "Dummy Version", "protocol": 123},
-    "players": {
-        "online": 3,
-        "max": 10,
-        "sample": [
-            {"name": "Player 1", "id": "1"},
-            {"name": "Player 2", "id": "2"},
-            {"name": "Player 3", "id": "3"},
-        ],
-    },
-}
 
 USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:{DEFAULT_PORT}",
+    CONF_ADDRESS: TEST_ADDRESS,
 }
-
-USER_INPUT_SRV = {CONF_NAME: DEFAULT_NAME, CONF_HOST: "dummyserver.com"}
-
-USER_INPUT_IPV4 = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"1.1.1.1:{DEFAULT_PORT}",
-}
-
-USER_INPUT_IPV6 = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"[::ffff:0101:0101]:{DEFAULT_PORT}",
-}
-
-USER_INPUT_PORT_TOO_SMALL = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: "mc.dummyserver.com:1023",
-}
-
-USER_INPUT_PORT_TOO_LARGE = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: "mc.dummyserver.com:65536",
-}
-
-SRV_RECORDS = asyncio.Future()
-SRV_RECORDS.set_result([QueryMock()])
 
 
 async def test_show_config_form(hass: HomeAssistant) -> None:
@@ -82,162 +33,180 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_invalid_ip(hass: HomeAssistant) -> None:
-    """Test error in case of an invalid IP address."""
-    with patch("getmac.get_mac_address", return_value=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
-        )
+async def test_service_already_configured(
+    hass: HomeAssistant, bedrock_mock_config_entry: MockConfigEntry
+) -> None:
+    """Test config flow abort if service is already configured."""
+    bedrock_mock_config_entry.add_to_hass(hass)
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_ip"}
-
-
-async def test_same_host(hass: HomeAssistant) -> None:
-    """Test abort in case of same host name."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
     ):
-        unique_id = "mc.dummyserver.com-25565"
-        config_data = {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: "mc.dummyserver.com",
-            CONF_PORT: DEFAULT_PORT,
-        }
-        mock_config_entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=unique_id, data=config_data
-        )
-        mock_config_entry.add_to_hass(hass)
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
-
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
-async def test_port_too_small(hass: HomeAssistant) -> None:
-    """Test error in case of a too small port."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_SMALL
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_port"}
-
-
-async def test_port_too_large(hass: HomeAssistant) -> None:
-    """Test error in case of a too large port."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_LARGE
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_port"}
-
-
-async def test_connection_failed(hass: HomeAssistant) -> None:
+async def test_address_validation_failure(hass: HomeAssistant) -> None:
     """Test error in case of a failed connection."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch("mcstatus.server.MinecraftServer.status", side_effect=OSError):
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            side_effect=ValueError,
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with a SRV record."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        return_value=SRV_RECORDS,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_SRV
-        )
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == USER_INPUT_SRV[CONF_HOST]
-        assert result["data"][CONF_NAME] == USER_INPUT_SRV[CONF_NAME]
-        assert result["data"][CONF_HOST] == USER_INPUT_SRV[CONF_HOST]
-
-
-async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with a host name."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+async def test_java_connection_failure(hass: HomeAssistant) -> None:
+    """Test error in case of a failed connection to a Java Edition server."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            side_effect=OSError,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == USER_INPUT[CONF_HOST]
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_bedrock_connection_failure(hass: HomeAssistant) -> None:
+    """Test error in case of a failed connection to a Bedrock Edition server."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            side_effect=OSError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_java_connection(hass: HomeAssistant) -> None:
+    """Test config entry in case of a successful connection to a Java Edition server."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == USER_INPUT[CONF_ADDRESS]
         assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
-        assert result["data"][CONF_HOST] == "mc.dummyserver.com"
+        assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
+        assert result["data"][CONF_TYPE] == MinecraftServerType.JAVA_EDITION
 
 
-async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with an IPv4 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+async def test_bedrock_connection(hass: HomeAssistant) -> None:
+    """Test config entry in case of a successful connection to a Bedrock Edition server."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == USER_INPUT_IPV4[CONF_HOST]
-        assert result["data"][CONF_NAME] == USER_INPUT_IPV4[CONF_NAME]
-        assert result["data"][CONF_HOST] == "1.1.1.1"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == USER_INPUT[CONF_ADDRESS]
+        assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+        assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
+        assert result["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION
 
 
-async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with an IPv6 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+async def test_recovery(hass: HomeAssistant) -> None:
+    """Test config flow recovery (successful connection after a failed connection)."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            side_effect=ValueError,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == USER_INPUT_IPV6[CONF_HOST]
-        assert result["data"][CONF_NAME] == USER_INPUT_IPV6[CONF_NAME]
-        assert result["data"][CONF_HOST] == "::ffff:0101:0101"
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input=USER_INPUT
+        )
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["title"] == USER_INPUT[CONF_ADDRESS]
+        assert result2["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+        assert result2["data"][CONF_ADDRESS] == TEST_ADDRESS
+        assert result2["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION

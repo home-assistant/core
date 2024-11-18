@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.sensor import (
@@ -86,13 +87,24 @@ async def test_entity_three_axis_invalid_state(
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    device = device_factory(
+        "Sensor 1",
+        [Capability.battery],
+        {
+            Attribute.battery: 100,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
+    )
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -100,27 +112,38 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_energy_sensors_for_switch_device(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
         "Switch_1",
         [Capability.switch, Capability.power_meter, Capability.energy_meter],
-        {Attribute.switch: "off", Attribute.power: 355, Attribute.energy: 11.422},
+        {
+            Attribute.switch: "off",
+            Attribute.power: 355,
+            Attribute.energy: 11.422,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -131,13 +154,15 @@ async def test_energy_sensors_for_switch_device(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
     assert entry.entity_category is None
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
     state = hass.states.get("sensor.switch_1_power_meter")
     assert state
@@ -146,16 +171,23 @@ async def test_energy_sensors_for_switch_device(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
     assert entry.entity_category is None
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
-async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> None:
+async def test_power_consumption_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -171,11 +203,13 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
                 "energySaved": 0,
                 "start": "2021-07-30T16:45:25Z",
                 "end": "2021-07-30T16:58:33Z",
-            }
+            },
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -185,13 +219,15 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.refrigerator_energy")
     assert entry
     assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
     state = hass.states.get("sensor.refrigerator_power")
     assert state
@@ -201,21 +237,27 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.refrigerator_power")
     assert entry
     assert entry.unique_id == f"{device.device_id}.power_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
     device = device_factory(
         "vacuum",
         [Capability.power_consumption_report],
-        {Attribute.power_consumption: {}},
+        {
+            Attribute.power_consumption: {},
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -225,13 +267,15 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.vacuum_energy")
     assert entry
     assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
@@ -256,7 +300,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
     config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     # Assert

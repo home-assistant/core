@@ -1,4 +1,5 @@
 """Support for LED lights."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -6,6 +7,7 @@ from typing import Any, cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -14,27 +16,35 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COLOR_PRIMARY, ATTR_ON, ATTR_SEGMENT_ID, DOMAIN
+from . import WLEDConfigEntry
+from .const import (
+    ATTR_CCT,
+    ATTR_COLOR_PRIMARY,
+    ATTR_ON,
+    ATTR_SEGMENT_ID,
+    COLOR_TEMP_K_MAX,
+    COLOR_TEMP_K_MIN,
+    LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
+)
 from .coordinator import WLEDDataUpdateCoordinator
-from .helpers import wled_exception_handler
-from .models import WLEDEntity
+from .entity import WLEDEntity
+from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WLEDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED light based on a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.keep_master_light:
-        async_add_entities([WLEDMasterLight(coordinator=coordinator)])
+    coordinator = entry.runtime_data
+    if coordinator.keep_main_light:
+        async_add_entities([WLEDMainLight(coordinator=coordinator)])
 
     update_segments = partial(
         async_update_segments,
@@ -47,17 +57,16 @@ async def async_setup_entry(
     update_segments()
 
 
-class WLEDMasterLight(WLEDEntity, LightEntity):
-    """Defines a WLED master light."""
+class WLEDMainLight(WLEDEntity, LightEntity):
+    """Defines a WLED main light."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:led-strip-variant"
-    _attr_name = "Master"
+    _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
-        """Initialize WLED master light."""
+        """Initialize WLED main light."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = coordinator.data.info.mac_address
 
@@ -73,8 +82,8 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
 
     @property
     def available(self) -> bool:
-        """Return if this master light is available or not."""
-        return self.coordinator.has_master_light and super().available
+        """Return if this main light is available or not."""
+        return self.coordinator.has_main_light and super().available
 
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -103,7 +112,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
-    _attr_icon = "mdi:led-strip-variant"
+    _attr_translation_key = "segment"
+    _attr_min_color_temp_kelvin = COLOR_TEMP_K_MIN
+    _attr_max_color_temp_kelvin = COLOR_TEMP_K_MAX
 
     def __init__(
         self,
@@ -112,31 +123,37 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     ) -> None:
         """Initialize WLED segment light."""
         super().__init__(coordinator=coordinator)
-        self._rgbw = coordinator.data.info.leds.rgbw
-        self._wv = coordinator.data.info.leds.wv
         self._segment = segment
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        if segment != 0:
-            self._attr_name = f"Segment {segment}"
+        if segment == 0:
+            self._attr_name = None
+        else:
+            self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
-        if self._rgbw and self._wv:
-            self._attr_color_mode = ColorMode.RGBW
-            self._attr_supported_color_modes = {ColorMode.RGBW}
+        if (
+            coordinator.data.info.leds.segment_light_capabilities is not None
+            and (
+                color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(
+                    coordinator.data.info.leds.segment_light_capabilities[segment]
+                )
+            )
+            is not None
+        ):
+            self._attr_color_mode = color_modes[0]
+            self._attr_supported_color_modes = set(color_modes)
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         try:
             self.coordinator.data.state.segments[self._segment]
-        except IndexError:
+        except KeyError:
             return False
 
         return super().available
@@ -144,20 +161,29 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
-        return self.coordinator.data.state.segments[self._segment].color_primary[:3]
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return None
+        return color.primary[:3]
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the color value."""
-        return cast(
-            tuple[int, int, int, int],
-            self.coordinator.data.state.segments[self._segment].color_primary,
-        )
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return None
+        return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the CT color value in K."""
+        cct = self.coordinator.data.state.segments[self._segment].cct
+        return kelvin_to_255_reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
 
     @property
     def effect(self) -> str | None:
         """Return the current effect of the light."""
-        return self.coordinator.data.state.segments[self._segment].effect.name
+        return self.coordinator.data.effects[
+            int(self.coordinator.data.state.segments[self._segment].effect_id)
+        ].name
 
     @property
     def brightness(self) -> int | None:
@@ -165,8 +191,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         state = self.coordinator.data.state
 
         # If this is the one and only segment, calculate brightness based
-        # on the master and segment brightness
-        if not self.coordinator.has_master_light:
+        # on the main and segment brightness
+        if not self.coordinator.has_main_light:
             return int(
                 (state.segments[self._segment].brightness * state.brightness) / 255
             )
@@ -176,16 +202,16 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
-        return [effect.name for effect in self.coordinator.data.effects]
+        return [effect.name for effect in self.coordinator.data.effects.values()]
 
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
         state = self.coordinator.data.state
 
-        # If there is no master, we take the master state into account
+        # If there is no main, we take the main state into account
         # on the segment level.
-        if not self.coordinator.has_master_light and not state.on:
+        if not self.coordinator.has_main_light and not state.on:
             return False
 
         return bool(state.segments[self._segment].on)
@@ -198,8 +224,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             # WLED uses 100ms per unit, so 10 = 1 second.
             transition = round(kwargs[ATTR_TRANSITION] * 10)
 
-        # If there is no master control, and only 1 segment, handle the
-        if not self.coordinator.has_master_light:
+        # If there is no main control, and only 1 segment, handle the main
+        if not self.coordinator.has_main_light:
             await self.coordinator.wled.master(on=False, transition=transition)
             return
 
@@ -221,6 +247,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if ATTR_RGBW_COLOR in kwargs:
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data[ATTR_CCT] = kelvin_to_255(
+                kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
+            )
+
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
             data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
@@ -231,19 +262,19 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if ATTR_EFFECT in kwargs:
             data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
 
-        # If there is no master control, and only 1 segment, handle the master
-        if not self.coordinator.has_master_light:
-            master_data = {ATTR_ON: True}
+        # If there is no main control, and only 1 segment, handle the main
+        if not self.coordinator.has_main_light:
+            main_data = {ATTR_ON: True}
             if ATTR_BRIGHTNESS in data:
-                master_data[ATTR_BRIGHTNESS] = data[ATTR_BRIGHTNESS]
+                main_data[ATTR_BRIGHTNESS] = data[ATTR_BRIGHTNESS]
                 data[ATTR_BRIGHTNESS] = 255
 
             if ATTR_TRANSITION in data:
-                master_data[ATTR_TRANSITION] = data[ATTR_TRANSITION]
+                main_data[ATTR_TRANSITION] = data[ATTR_TRANSITION]
                 del data[ATTR_TRANSITION]
 
             await self.coordinator.wled.segment(**data)
-            await self.coordinator.wled.master(**master_data)
+            await self.coordinator.wled.master(**main_data)
             return
 
         await self.coordinator.wled.segment(**data)
@@ -256,14 +287,18 @@ def async_update_segments(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {light.segment_id for light in coordinator.data.state.segments}
-    new_entities: list[WLEDMasterLight | WLEDSegmentLight] = []
+    segment_ids = {
+        light.segment_id
+        for light in coordinator.data.state.segments.values()
+        if light.segment_id is not None
+    }
+    new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
 
-    # More than 1 segment now? No master? Add master controls
-    if not coordinator.keep_master_light and (
+    # More than 1 segment now? No main? Add main controls
+    if not coordinator.keep_main_light and (
         len(current_ids) < 2 and len(segment_ids) > 1
     ):
-        new_entities.append(WLEDMasterLight(coordinator))
+        new_entities.append(WLEDMainLight(coordinator))
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:

@@ -1,6 +1,9 @@
 """Define patches used for androidtv tests."""
+
+from typing import Any
 from unittest.mock import patch
 
+from androidtv.adb_manager.adb_manager_async import DeviceAsync
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
 from homeassistant.components.androidtv.const import (
@@ -23,7 +26,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 
@@ -35,7 +38,7 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def shell(self, cmd, *args, **kwargs):
+    async def shell(self, cmd, *args, **kwargs) -> bytes | str | None:
         """Send an ADB shell command."""
         return None
 
@@ -43,7 +46,7 @@ class AdbDeviceTcpAsyncFake:
 class ClientAsyncFakeSuccess:
     """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeSuccess` instance."""
         self._devices = []
 
@@ -57,11 +60,11 @@ class ClientAsyncFakeSuccess:
 class ClientAsyncFakeFail:
     """A fake of the `ClientAsync` class when the connection and shell commands fail."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeFail` instance."""
         self._devices = []
 
-    async def device(self, serial):
+    async def device(self, serial) -> DeviceAsync | None:
         """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
         self._devices = []
         return None
@@ -70,7 +73,7 @@ class ClientAsyncFakeFail:
 class DeviceAsyncFake:
     """A fake of the `DeviceAsync` class."""
 
-    def __init__(self, host):
+    def __init__(self, host) -> None:
         """Initialize a `DeviceAsyncFake` instance."""
         self.host = host
 
@@ -185,6 +188,10 @@ def isfile(filepath):
     return filepath.endswith("adbkey")
 
 
+PATCH_SCREENCAP = patch(
+    "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+    return_value=b"image",
+)
 PATCH_SETUP_ENTRY = patch(
     "homeassistant.components.androidtv.async_setup_entry",
     return_value=True,

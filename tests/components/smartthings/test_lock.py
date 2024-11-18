@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 
@@ -18,13 +19,24 @@ from .conftest import setup_platform
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
-    device = device_factory("Lock_1", [Capability.lock], {Attribute.lock: "unlocked"})
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    device = device_factory(
+        "Lock_1",
+        [Capability.lock],
+        {
+            Attribute.lock: "unlocked",
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
+    )
     # Act
     await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     # Assert
@@ -32,13 +44,15 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_lock(hass: HomeAssistant, device_factory) -> None:
@@ -108,7 +122,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     # Arrange
     device = device_factory("Lock_1", [Capability.lock], {Attribute.lock: "locked"})
     config_entry = await setup_platform(hass, LOCK_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "lock")
     # Assert

@@ -1,40 +1,16 @@
 """Demo lock platform that implements locks."""
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any
 
-from homeassistant.components.lock import LockEntity, LockEntityFeature
+from homeassistant.components.lock import LockEntity, LockEntityFeature, LockState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 LOCK_UNLOCK_DELAY = 2  # Used to give a realistic lock/unlock experience in frontend
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo lock platform."""
-    async_add_entities(
-        [
-            DemoLock("Front Door", STATE_LOCKED),
-            DemoLock("Kitchen Door", STATE_UNLOCKED),
-            DemoLock("Poorly Installed Door", STATE_UNLOCKED, False, True),
-            DemoLock("Openable Lock", STATE_LOCKED, True),
-        ]
-    )
 
 
 async def async_setup_entry(
@@ -43,7 +19,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(
+        [
+            DemoLock("Front Door", LockState.LOCKED),
+            DemoLock("Kitchen Door", LockState.UNLOCKED),
+            DemoLock("Poorly Installed Door", LockState.UNLOCKED, False, True),
+            DemoLock("Openable Lock", LockState.LOCKED, True),
+        ]
+    )
 
 
 class DemoLock(LockEntity):
@@ -69,43 +52,56 @@ class DemoLock(LockEntity):
     @property
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
-        return self._state == STATE_LOCKING
+        return self._state == LockState.LOCKING
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
-        return self._state == STATE_UNLOCKING
+        return self._state == LockState.UNLOCKING
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._state == STATE_JAMMED
+        return self._state == LockState.JAMMED
 
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._state == STATE_LOCKED
+        return self._state == LockState.LOCKED
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._state == LockState.OPEN
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._state == LockState.OPENING
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        self._state = STATE_LOCKING
+        self._state = LockState.LOCKING
         self.async_write_ha_state()
         await asyncio.sleep(LOCK_UNLOCK_DELAY)
         if self._jam_on_operation:
-            self._state = STATE_JAMMED
+            self._state = LockState.JAMMED
         else:
-            self._state = STATE_LOCKED
+            self._state = LockState.LOCKED
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self._state = STATE_UNLOCKING
+        self._state = LockState.UNLOCKING
         self.async_write_ha_state()
         await asyncio.sleep(LOCK_UNLOCK_DELAY)
-        self._state = STATE_UNLOCKED
+        self._state = LockState.UNLOCKED
         self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        self._state = STATE_UNLOCKED
+        self._state = LockState.OPENING
+        self.async_write_ha_state()
+        await asyncio.sleep(LOCK_UNLOCK_DELAY)
+        self._state = LockState.OPEN
         self.async_write_ha_state()

@@ -5,20 +5,12 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Moon YAML configuration has been removed",
-      "description": "Configuring Moon using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   },
   "entity": {
     "sensor": {
       "phase": {
+        "name": "Phase",
         "state": {
           "first_quarter": "First quarter",
           "full_moon": "Full moon",
@@ -28,6 +20,20 @@
           "waning_gibbous": "Waning gibbous",
           "waxing_crescent": "Waxing crescent",
           "waxing_gibbous": "Waxing gibbous"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "first_quarter": "[%key:component::moon::entity::sensor::phase::state::first_quarter%]",
+              "full_moon": "[%key:component::moon::entity::sensor::phase::state::full_moon%]",
+              "last_quarter": "[%key:component::moon::entity::sensor::phase::state::last_quarter%]",
+              "new_moon": "[%key:component::moon::entity::sensor::phase::state::new_moon%]",
+              "waning_crescent": "[%key:component::moon::entity::sensor::phase::state::waning_crescent%]",
+              "waning_gibbous": "[%key:component::moon::entity::sensor::phase::state::waning_gibbous%]",
+              "waxing_crescent": "[%key:component::moon::entity::sensor::phase::state::waxing_crescent%]",
+              "waxing_gibbous": "[%key:component::moon::entity::sensor::phase::state::waxing_gibbous%]"
+            }
+          }
         }
       }
     }

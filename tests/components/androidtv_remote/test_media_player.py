@@ -1,4 +1,5 @@
 """Tests for the Android TV Remote remote platform."""
+
 from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 
@@ -19,6 +21,10 @@ async def test_media_player_receives_push_updates(
 ) -> None:
     """Test the Android TV Remote media player receives push updates and state is updated."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={"apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}},
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -37,6 +43,13 @@ async def test_media_player_receives_push_updates(
         hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_name")
         == "com.google.android.tvlauncher"
     )
+
+    mock_api._on_current_app_updated("com.google.android.youtube.tv")
+    assert (
+        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_id")
+        == "com.google.android.youtube.tv"
+    )
+    assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_name") == "YouTube"
 
     mock_api._on_volume_info_updated({"level": 35, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.35
@@ -66,7 +79,7 @@ async def test_media_player_toggles(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "turn_off",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -76,7 +89,7 @@ async def test_media_player_toggles(
 
     mock_api.send_key_command.assert_called_with("POWER", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "turn_on",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -95,7 +108,7 @@ async def test_media_player_volume(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_up",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -105,7 +118,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_UP", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_down",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -115,7 +128,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_DOWN", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_mute",
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": True},
@@ -125,7 +138,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_MUTE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_mute",
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": False},
@@ -144,7 +157,7 @@ async def test_media_player_controls(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_play",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -153,7 +166,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PLAY", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_pause",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -162,7 +175,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PAUSE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_play_pause",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -171,7 +184,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PLAY_PAUSE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_stop",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -180,7 +193,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_STOP", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_previous_track",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -189,7 +202,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PREVIOUS", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_next_track",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -207,7 +220,7 @@ async def test_media_player_play_media(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
@@ -234,6 +247,10 @@ async def test_media_player_play_media(
         },
         blocking=False,
     )
+
+    # Give background task time to run
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -244,9 +261,13 @@ async def test_media_player_play_media(
         },
         blocking=True,
     )
-    assert mock_api.send_key_command.call_count == 2
+    await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
+    # 4 7s should be sent
+    # 2 1s should be sent
+    assert mock_api.send_key_command.call_count == 6
+
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
@@ -258,8 +279,20 @@ async def test_media_player_play_media(
     )
     mock_api.send_launch_app_command.assert_called_with("https://www.youtube.com")
 
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            "entity_id": MEDIA_PLAYER_ENTITY,
+            "media_content_type": "app",
+            "media_content_id": "tv.twitch.android.app",
+        },
+        blocking=True,
+    )
+    mock_api.send_launch_app_command.assert_called_with("tv.twitch.android.app")
+
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {
@@ -271,7 +304,7 @@ async def test_media_player_play_media(
         )
 
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {
@@ -281,6 +314,72 @@ async def test_media_player_play_media(
             },
             blocking=True,
         )
+
+
+async def test_browse_media(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+) -> None:
+    """Test the Android TV Remote media player browse media."""
+    new_options = {
+        "apps": {
+            "com.google.android.youtube.tv": {
+                "app_name": "YouTube",
+                "app_icon": "https://www.youtube.com/icon.png",
+            },
+            "org.xbmc.kodi": {"app_name": "Kodi"},
+        }
+    }
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": MEDIA_PLAYER_ENTITY,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "title": "Applications",
+        "media_class": "directory",
+        "media_content_type": "apps",
+        "media_content_id": "apps",
+        "children_media_class": "app",
+        "can_play": False,
+        "can_expand": True,
+        "thumbnail": None,
+        "not_shown": 0,
+        "children": [
+            {
+                "title": "YouTube",
+                "media_class": "app",
+                "media_content_type": "app",
+                "media_content_id": "com.google.android.youtube.tv",
+                "children_media_class": None,
+                "can_play": False,
+                "can_expand": False,
+                "thumbnail": "https://www.youtube.com/icon.png",
+            },
+            {
+                "title": "Kodi",
+                "media_class": "app",
+                "media_content_type": "app",
+                "media_content_id": "org.xbmc.kodi",
+                "children_media_class": None,
+                "can_play": False,
+                "can_expand": False,
+                "thumbnail": "",
+            },
+        ],
+    }
 
 
 async def test_media_player_connection_closed(

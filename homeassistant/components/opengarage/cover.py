@@ -1,4 +1,5 @@
 """Platform for the opengarage.io cover component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,19 +9,19 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
+STATES_MAP = {0: CoverState.CLOSED, 1: CoverState.OPEN}
 
 
 async def async_setup_entry(
@@ -37,6 +38,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_name = None
 
     def __init__(
         self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str
@@ -52,36 +54,36 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state == STATE_CLOSED
+        return self._state == CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._state is None:
             return None
-        return self._state == STATE_CLOSING
+        return self._state == CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._state is None:
             return None
-        return self._state == STATE_OPENING
+        return self._state == CoverState.OPENING
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._state in [STATE_CLOSED, STATE_CLOSING]:
+        if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
             return
         self._state_before_move = self._state
-        self._state = STATE_CLOSING
+        self._state = CoverState.CLOSING
         await self._push_button()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._state in [STATE_OPEN, STATE_OPENING]:
+        if self._state in [CoverState.OPEN, CoverState.OPENING]:
             return
         self._state_before_move = self._state
-        self._state = STATE_OPENING
+        self._state = CoverState.OPENING
         await self._push_button()
 
     @callback
@@ -89,7 +91,6 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         """Update the state and attributes."""
         status = self.coordinator.data
 
-        self._attr_name = status["name"]
         state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
         if self._state_before_move is not None:
             if self._state_before_move != state:

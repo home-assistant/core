@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL Thermostats."""
+
 from __future__ import annotations
 
 from nexia.const import UNIT_CELSIUS
@@ -9,25 +10,23 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NexiaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for a Nexia device."""
 
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[NexiaThermostatEntity] = []
 
@@ -40,7 +39,7 @@ async def async_setup_entry(
                 coordinator,
                 thermostat,
                 "get_system_status",
-                "System Status",
+                "system_status",
                 None,
                 None,
                 None,
@@ -52,7 +51,7 @@ async def async_setup_entry(
                 coordinator,
                 thermostat,
                 "get_air_cleaner_mode",
-                "Air Cleaner Mode",
+                "air_cleaner_mode",
                 None,
                 None,
                 None,
@@ -65,7 +64,7 @@ async def async_setup_entry(
                     coordinator,
                     thermostat,
                     "get_current_compressor_speed",
-                    "Current Compressor Speed",
+                    "current_compressor_speed",
                     None,
                     PERCENTAGE,
                     SensorStateClass.MEASUREMENT,
@@ -77,7 +76,7 @@ async def async_setup_entry(
                     coordinator,
                     thermostat,
                     "get_requested_compressor_speed",
-                    "Requested Compressor Speed",
+                    "requested_compressor_speed",
                     None,
                     PERCENTAGE,
                     SensorStateClass.MEASUREMENT,
@@ -95,7 +94,7 @@ async def async_setup_entry(
                     coordinator,
                     thermostat,
                     "get_outdoor_temperature",
-                    "Outdoor Temperature",
+                    "outdoor_temperature",
                     SensorDeviceClass.TEMPERATURE,
                     unit,
                     SensorStateClass.MEASUREMENT,
@@ -108,7 +107,7 @@ async def async_setup_entry(
                     coordinator,
                     thermostat,
                     "get_relative_humidity",
-                    "Relative Humidity",
+                    None,
                     SensorDeviceClass.HUMIDITY,
                     PERCENTAGE,
                     SensorStateClass.MEASUREMENT,
@@ -129,7 +128,7 @@ async def async_setup_entry(
                     coordinator,
                     zone,
                     "get_temperature",
-                    "Temperature",
+                    None,
                     SensorDeviceClass.TEMPERATURE,
                     unit,
                     SensorStateClass.MEASUREMENT,
@@ -139,7 +138,7 @@ async def async_setup_entry(
             # Zone Status
             entities.append(
                 NexiaThermostatZoneSensor(
-                    coordinator, zone, "get_status", "Zone Status", None, None, None
+                    coordinator, zone, "get_status", "zone_status", None, None, None
                 )
             )
             # Setpoint Status
@@ -148,7 +147,7 @@ async def async_setup_entry(
                     coordinator,
                     zone,
                     "get_setpoint_status",
-                    "Zone Setpoint Status",
+                    "zone_setpoint_status",
                     None,
                     None,
                     None,
@@ -166,7 +165,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
         coordinator,
         thermostat,
         sensor_call,
-        sensor_name,
+        translation_key,
         sensor_class,
         sensor_unit,
         state_class,
@@ -176,7 +175,6 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
         super().__init__(
             coordinator,
             thermostat,
-            name=f"{thermostat.get_name()} {sensor_name}",
             unique_id=f"{thermostat.thermostat_id}_{sensor_call}",
         )
         self._call = sensor_call
@@ -184,6 +182,8 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
         self._attr_device_class = sensor_class
         self._attr_native_unit_of_measurement = sensor_unit
         self._attr_state_class = state_class
+        if translation_key is not None:
+            self._attr_translation_key = translation_key
 
     @property
     def native_value(self):
@@ -204,7 +204,7 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
         coordinator,
         zone,
         sensor_call,
-        sensor_name,
+        translation_key,
         sensor_class,
         sensor_unit,
         state_class,
@@ -215,7 +215,6 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
         super().__init__(
             coordinator,
             zone,
-            name=f"{zone.get_name()} {sensor_name}",
             unique_id=f"{zone.zone_id}_{sensor_call}",
         )
         self._call = sensor_call
@@ -223,6 +222,8 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
         self._attr_device_class = sensor_class
         self._attr_native_unit_of_measurement = sensor_unit
         self._attr_state_class = state_class
+        if translation_key is not None:
+            self._attr_translation_key = translation_key
 
     @property
     def native_value(self):

@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 import pytest
 
@@ -105,13 +106,23 @@ async def test_entity_state(hass: HomeAssistant, light_devices) -> None:
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
-    device = device_factory("Light 1", [Capability.switch, Capability.switch_level])
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    device = device_factory(
+        "Light 1",
+        [Capability.switch, Capability.switch_level],
+        {
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
+    )
     # Act
     await setup_platform(hass, LIGHT_DOMAIN, devices=[device])
     # Assert
@@ -119,13 +130,15 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_turn_off(hass: HomeAssistant, light_devices) -> None:
@@ -136,6 +149,8 @@ async def test_turn_off(hass: HomeAssistant, light_devices) -> None:
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.color_dimmer_2"}, blocking=True
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -153,6 +168,8 @@ async def test_turn_off_with_transition(hass: HomeAssistant, light_devices) -> N
         {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_TRANSITION: 2},
         blocking=True,
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -167,6 +184,8 @@ async def test_turn_on(hass: HomeAssistant, light_devices) -> None:
     await hass.services.async_call(
         "light", "turn_on", {ATTR_ENTITY_ID: "light.color_dimmer_1"}, blocking=True
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -188,6 +207,8 @@ async def test_turn_on_with_brightness(hass: HomeAssistant, light_devices) -> No
         },
         blocking=True,
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -214,6 +235,8 @@ async def test_turn_on_with_minimal_brightness(
         {ATTR_ENTITY_ID: "light.color_dimmer_1", ATTR_BRIGHTNESS: 2},
         blocking=True,
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -233,6 +256,8 @@ async def test_turn_on_with_color(hass: HomeAssistant, light_devices) -> None:
         {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_HS_COLOR: (180, 50)},
         blocking=True,
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -251,6 +276,8 @@ async def test_turn_on_with_color_temp(hass: HomeAssistant, light_devices) -> No
         {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_COLOR_TEMP: 300},
         blocking=True,
     )
+    # This test schedules and update right after the call
+    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -308,7 +335,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         },
     )
     config_entry = await setup_platform(hass, LIGHT_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "light")
     # Assert

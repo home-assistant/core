@@ -1,4 +1,5 @@
 """Coordinator for Roku."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -28,13 +29,12 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     roku: Roku
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        host: str,
+        self, hass: HomeAssistant, *, host: str, device_id: str, play_media_app_id: str
     ) -> None:
         """Initialize global Roku data updater."""
+        self.device_id = device_id
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
+        self.play_media_app_id = play_media_app_id
 
         self.full_update_interval = timedelta(minutes=15)
         self.last_full_update = None
@@ -59,10 +59,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
         try:
             data = await self.roku.update(full_update=full_update)
-
-            if full_update:
-                self.last_full_update = utcnow()
-
-            return data
         except RokuError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
+
+        if full_update:
+            self.last_full_update = utcnow()
+
+        return data

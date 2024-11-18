@@ -6,7 +6,7 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "App-specific password",
           "with_family": "With family"
         }
       },
@@ -14,7 +14,7 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "App-specific password"
         }
       },
       "trusted_device": {
@@ -41,6 +41,76 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_device": "None of your devices have \"Find my iPhone\" activated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "services": {
+    "update": {
+      "name": "Update",
+      "description": "Updates iCloud devices.",
+      "fields": {
+        "account": {
+          "name": "Account",
+          "description": "Your iCloud account username (email) or account name."
+        }
+      }
+    },
+    "play_sound": {
+      "name": "Play sound",
+      "description": "Plays sound on an Apple device.",
+      "fields": {
+        "account": {
+          "name": "Account",
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
+        },
+        "device_name": {
+          "name": "Device name",
+          "description": "The name of the Apple device to play a sound."
+        }
+      }
+    },
+    "display_message": {
+      "name": "Display message",
+      "description": "Displays a message on an Apple device.",
+      "fields": {
+        "account": {
+          "name": "Account",
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
+        },
+        "device_name": {
+          "name": "Device name",
+          "description": "The name of the Apple device to display the message."
+        },
+        "message": {
+          "name": "Message",
+          "description": "The content of your message."
+        },
+        "sound": {
+          "name": "Sound",
+          "description": "To make a sound when displaying the message."
+        }
+      }
+    },
+    "lost_device": {
+      "name": "Lost device",
+      "description": "Makes an Apple device in lost state.",
+      "fields": {
+        "account": {
+          "name": "Account",
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
+        },
+        "device_name": {
+          "name": "Device name",
+          "description": "The name of the Apple device to set lost."
+        },
+        "number": {
+          "name": "Number",
+          "description": "The phone number to call in lost mode (must contain country code)."
+        },
+        "message": {
+          "name": "Message",
+          "description": "The message to display in lost mode."
+        }
+      }
     }
   }
 }

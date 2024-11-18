@@ -1,12 +1,12 @@
 """Module for color_extractor (RGB extraction from images) component."""
+
 import asyncio
 import io
 import logging
 
-from PIL import UnidentifiedImageError
 import aiohttp
-import async_timeout
 from colorthief import ColorThief
+from PIL import UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
@@ -23,6 +24,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
@@ -57,8 +60,8 @@ def _get_color(file_handler) -> tuple:
     return color
 
 
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up services for color_extractor integration."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Color extractor component."""
 
     async def async_handle_service(service_call: ServiceCall) -> None:
         """Decide which color_extractor method to call based on service."""
@@ -80,7 +83,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         except UnidentifiedImageError as ex:
             _LOGGER.error(
                 "Bad image from %s '%s' provided, are you sure it's an image? %s",
-                image_type,  # pylint: disable=used-before-assignment
+                image_type,
                 image_reference,
                 ex,
             )
@@ -118,10 +121,10 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await session.get(url)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
             return None
 
@@ -150,4 +153,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         _file = _get_file(file_path)
         return _get_color(_file)
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
     return True

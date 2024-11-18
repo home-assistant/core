@@ -1,0 +1,274 @@
+[
+  {
+    "l2ident": {
+      "id": "8C:97:EA:00:00:00",
+      "type": "mac_address"
+    },
+    "active": true,
+    "persistent": false,
+    "names": [
+      {
+        "name": "d633d0c8-958c-43cc-e807-d881b076924b",
+        "source": "mdns"
+      },
+      {
+        "name": "Freebox Player POP",
+        "source": "mdns_srv"
+      }
+    ],
+    "vendor_name": "Freebox SAS",
+    "host_type": "smartphone",
+    "interface": "pub",
+    "id": "ether-8c:97:ea:00:00:00",
+    "last_time_reachable": 1614107652,
+    "primary_name_manual": false,
+    "l3connectivities": [
+      {
+        "addr": "192.168.1.180",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107614,
+        "af": "ipv4",
+        "last_time_reachable": 1614104242
+      },
+      {
+        "addr": "fe80::dcef:dbba:6604:31d1",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107645,
+        "af": "ipv6",
+        "last_time_reachable": 1614107645
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:8102:4704:7ce0:2ace",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1611574428,
+        "af": "ipv6",
+        "last_time_reachable": 1611574428
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:c8e5:c524:c96d:5f5e",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612475101,
+        "af": "ipv6",
+        "last_time_reachable": 1612475101
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:583a:49df:1df0:c2df",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107652,
+        "af": "ipv6",
+        "last_time_reachable": 1614107652
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:147e:3569:86ab:6aaa",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612486752,
+        "af": "ipv6",
+        "last_time_reachable": 1612486752
+      }
+    ],
+    "default_name": "Freebox Player POP",
+    "model": "fbx8am",
+    "reachable": true,
+    "last_activity": 1614107652,
+    "primary_name": "Freebox Player POP"
+  },
+  {
+    "l2ident": {
+      "id": "DE:00:B0:00:00:00",
+      "type": "mac_address"
+    },
+    "active": false,
+    "persistent": false,
+    "vendor_name": "",
+    "host_type": "workstation",
+    "interface": "pub",
+    "id": "ether-de:00:b0:00:00:00",
+    "last_time_reachable": 1607125599,
+    "primary_name_manual": false,
+    "default_name": "",
+    "l3connectivities": [
+      {
+        "addr": "192.168.1.181",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1607125599,
+        "af": "ipv4",
+        "last_time_reachable": 1607125599
+      },
+      {
+        "addr": "192.168.1.182",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1605958758,
+        "af": "ipv4",
+        "last_time_reachable": 1605958758
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:dc00:b0ff:fedf:e30",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1607125594,
+        "af": "ipv6",
+        "last_time_reachable": 1607125594
+      }
+    ],
+    "reachable": false,
+    "last_activity": 1607125599,
+    "primary_name": ""
+  },
+  {
+    "l2ident": {
+      "id": "DC:00:B0:00:00:00",
+      "type": "mac_address"
+    },
+    "active": true,
+    "persistent": false,
+    "names": [
+      {
+        "name": "Repeteur-Wifi-Freebox",
+        "source": "mdns"
+      },
+      {
+        "name": "Repeteur Wifi Freebox",
+        "source": "mdns_srv"
+      }
+    ],
+    "vendor_name": "",
+    "host_type": "freebox_wifi",
+    "interface": "pub",
+    "id": "ether-dc:00:b0:00:00:00",
+    "last_time_reachable": 1614107678,
+    "primary_name_manual": false,
+    "l3connectivities": [
+      {
+        "addr": "192.168.1.145",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107678,
+        "af": "ipv4",
+        "last_time_reachable": 1614107678
+      },
+      {
+        "addr": "fe80::de00:b0ff:fe52:6ef6",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107608,
+        "af": "ipv6",
+        "last_time_reachable": 1614107603
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:de00:b0ff:fe52:6ef6",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107618,
+        "af": "ipv6",
+        "last_time_reachable": 1614107618
+      }
+    ],
+    "default_name": "Repeteur Wifi Freebox",
+    "model": "fbxwmr",
+    "reachable": true,
+    "last_activity": 1614107678,
+    "primary_name": "Repeteur Wifi Freebox"
+  },
+  {
+    "l2ident": {
+      "id": "5E:65:55:00:00:00",
+      "type": "mac_address"
+    },
+    "active": false,
+    "persistent": false,
+    "names": [
+      {
+        "name": "iPhoneofQuentin",
+        "source": "dhcp"
+      },
+      {
+        "name": "iPhone-of-Quentin",
+        "source": "mdns"
+      }
+    ],
+    "vendor_name": "",
+    "host_type": "smartphone",
+    "interface": "pub",
+    "id": "ether-5e:65:55:00:00:00",
+    "last_time_reachable": 1612611982,
+    "primary_name_manual": false,
+    "default_name": "iPhonedeQuentin",
+    "l3connectivities": [
+      {
+        "addr": "192.168.1.148",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612611973,
+        "af": "ipv4",
+        "last_time_reachable": 1612611973
+      },
+      {
+        "addr": "fe80::14ca:6c30:938b:e281",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1609693223,
+        "af": "ipv6",
+        "last_time_reachable": 1609693223
+      },
+      {
+        "addr": "fe80::1c90:2b94:1ba2:bd8b",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1610797303,
+        "af": "ipv6",
+        "last_time_reachable": 1610797303
+      },
+      {
+        "addr": "fe80::8c8:e58b:838e:6785",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612611951,
+        "af": "ipv6",
+        "last_time_reachable": 1612611946
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:f0e7:e198:3a69:58",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1609693245,
+        "af": "ipv6",
+        "last_time_reachable": 1609693245
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:1dc4:c6f8:aa20:c83b",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1610797176,
+        "af": "ipv6",
+        "last_time_reachable": 1610797176
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:6cf6:5811:1770:c662",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612611982,
+        "af": "ipv6",
+        "last_time_reachable": 1612611982
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:438:9b2c:4f8f:f48a",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612611946,
+        "af": "ipv6",
+        "last_time_reachable": 1612611946
+      }
+    ],
+    "reachable": false,
+    "last_activity": 1612611982,
+    "primary_name": "iPhoneofQuentin"
+  }
+]

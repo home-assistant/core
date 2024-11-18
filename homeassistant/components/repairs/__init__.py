@@ -1,7 +1,9 @@
 """The repairs integration."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
@@ -16,6 +18,7 @@ __all__ = [
     "RepairsFlow",
     "RepairsFlowManager",
 ]
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:

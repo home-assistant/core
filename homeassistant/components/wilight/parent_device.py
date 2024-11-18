@@ -1,4 +1,5 @@
 """The WiLight Device integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -77,7 +78,7 @@ class WiLightParent:
                 EVENT_HOMEASSISTANT_STOP, lambda x: client.stop()
             )
 
-            _LOGGER.info("Connected to WiLight device: %s", api_device.device_id)
+            _LOGGER.debug("Connected to WiLight device: %s", api_device.device_id)
 
         await connect(api_device)
 

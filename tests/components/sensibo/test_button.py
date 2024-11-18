@@ -1,4 +1,5 @@
 """The test for the sensibo button platform."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -13,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -35,16 +36,21 @@ async def test_button(
     assert state_filter_clean.state is STATE_ON
     assert state_filter_last_reset.state == "2022-03-12T15:24:26+00:00"
 
-    today = datetime(datetime.now().year + 1, 6, 19, 20, 0, 0).replace(tzinfo=dt.UTC)
+    today = datetime(datetime.now().year + 1, 6, 19, 20, 0, 0).replace(
+        tzinfo=dt_util.UTC
+    )
     today_str = today.isoformat()
     freezer.move_to(today)
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -69,7 +75,7 @@ async def test_button(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -91,14 +97,18 @@ async def test_button_failure(
 
     state_button = hass.states.get("button.hallway_reset_filter")
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
-        return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
+            return_value={"status": "failure"},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

@@ -1,47 +1,33 @@
 """Test AirNow diagnostics."""
-from homeassistant.components.diagnostics import REDACTED
+
+from unittest.mock import patch
+
+import pytest
+from syrupy import SnapshotAssertion
+from syrupy.filters import props
+
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("setup_airnow")
 async def test_entry_diagnostics(
-    hass: HomeAssistant, config_entry, hass_client: ClientSessionGenerator, setup_airnow
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "entry": {
-            "entry_id": config_entry.entry_id,
-            "version": 1,
-            "domain": "airnow",
-            "title": REDACTED,
-            "data": {
-                "api_key": REDACTED,
-                "latitude": REDACTED,
-                "longitude": REDACTED,
-                "radius": 75,
-            },
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "unique_id": REDACTED,
-            "disabled_by": None,
-        },
-        "data": {
-            "O3": 0.048,
-            "PM2.5": 8.9,
-            "HourObserved": 15,
-            "DateObserved": "2020-12-20",
-            "StateCode": REDACTED,
-            "ReportingArea": REDACTED,
-            "Latitude": REDACTED,
-            "Longitude": REDACTED,
-            "PM10": 12,
-            "AQI": 44,
-            "Category.Number": 1,
-            "Category.Name": "Good",
-            "Pollutant": "O3",
-        },
-    }
+
+    # Fake LocalTimeZoneInfo
+    with patch(
+        "homeassistant.util.dt.async_get_time_zone",
+        return_value="PST",
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        ) == snapshot(exclude=props("created_at", "modified_at"))

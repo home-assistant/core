@@ -1,9 +1,9 @@
 """Support for Big Ass Fans auto comfort."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -14,30 +14,33 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan auto comfort."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_fan and data.device.has_auto_comfort:
-        async_add_entities(
-            [BAFAutoComfort(data.device, f"{data.device.name} Auto Comfort")]
-        )
+    device = entry.runtime_data
+    if device.has_fan and device.has_auto_comfort:
+        async_add_entities([BAFAutoComfort(device)])
 
 
 class BAFAutoComfort(BAFEntity, ClimateEntity):
     """BAF climate auto comfort."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
+    _attr_translation_key = "auto_comfort"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_update_attrs(self) -> None:

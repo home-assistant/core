@@ -1,4 +1,5 @@
 """Support for Renault services."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,12 +9,15 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
-from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +47,15 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required("id"): cv.positive_int,
         vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("monday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
@@ -60,10 +66,43 @@ SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     }
 )
 
+SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
+    {
+        vol.Required("readyAtTime"): cv.string,
+    }
+)
+
+SERVICE_AC_SET_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required("id"): cv.positive_int,
+        vol.Optional("activated"): cv.boolean,
+        vol.Optional("monday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+    }
+)
+SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_SCHEDULES): vol.All(
+            cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
+        ),
+    }
+)
+
 SERVICE_AC_CANCEL = "ac_cancel"
 SERVICE_AC_START = "ac_start"
 SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICES = [SERVICE_AC_CANCEL, SERVICE_AC_START, SERVICE_CHARGE_SET_SCHEDULES]
+SERVICE_AC_SET_SCHEDULES = "ac_set_schedules"
+SERVICES = [
+    SERVICE_AC_CANCEL,
+    SERVICE_AC_START,
+    SERVICE_CHARGE_SET_SCHEDULES,
+    SERVICE_AC_SET_SCHEDULES,
+]
 
 
 def setup_services(hass: HomeAssistant) -> None:
@@ -105,6 +144,25 @@ def setup_services(hass: HomeAssistant) -> None:
             "It may take some time before these changes are reflected in your vehicle"
         )
 
+    async def ac_set_schedules(service_call: ServiceCall) -> None:
+        """Set A/C schedules."""
+        schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
+        proxy = get_vehicle_proxy(service_call.data)
+        hvac_schedules = await proxy.get_hvac_settings()
+
+        for schedule in schedules:
+            hvac_schedules.update(schedule)
+
+        if TYPE_CHECKING:
+            assert hvac_schedules.schedules is not None
+        LOGGER.debug("HVAC set schedules attempt: %s", schedules)
+        result = await proxy.set_hvac_schedules(hvac_schedules.schedules)
+
+        LOGGER.debug("HVAC set schedules result: %s", result)
+        LOGGER.debug(
+            "It may take some time before these changes are reflected in your vehicle"
+        )
+
     def get_vehicle_proxy(service_call_data: Mapping) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
         device_registry = dr.async_get(hass)
@@ -113,9 +171,13 @@ def setup_services(hass: HomeAssistant) -> None:
         if device_entry is None:
             raise ValueError(f"Unable to find device with id: {device_id}")
 
-        proxy: RenaultHub
-        for proxy in hass.data[DOMAIN].values():
-            for vin, vehicle in proxy.vehicles.items():
+        loaded_entries: list[RenaultConfigEntry] = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ConfigEntryState.LOADED
+        ]
+        for entry in loaded_entries:
+            for vin, vehicle in entry.runtime_data.vehicles.items():
                 if (DOMAIN, vin) in device_entry.identifiers:
                     return vehicle
         raise ValueError(f"Unable to find vehicle with VIN: {device_entry.identifiers}")
@@ -138,9 +200,9 @@ def setup_services(hass: HomeAssistant) -> None:
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
-
-
-def unload_services(hass: HomeAssistant) -> None:
-    """Unload Renault services."""
-    for service in SERVICES:
-        hass.services.async_remove(DOMAIN, service)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_AC_SET_SCHEDULES,
+        ac_set_schedules,
+        schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
+    )

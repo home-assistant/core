@@ -1,15 +1,20 @@
 """Support for RESTful API."""
+
 from __future__ import annotations
 
 import logging
 import ssl
 
 import httpx
+import xmltodict
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util.ssl import SSLCipherList
+
+from .const import XML_MIME_TYPES
 
 DEFAULT_TIMEOUT = 10
 
@@ -50,6 +55,10 @@ class RestData:
         self.last_exception: Exception | None = None
         self.headers: httpx.Headers | None = None
 
+    def set_payload(self, payload: str) -> None:
+        """Set request data."""
+        self._request_data = payload
+
     @property
     def url(self) -> str:
         """Get url."""
@@ -58,6 +67,20 @@ class RestData:
     def set_url(self, url: str) -> None:
         """Set url."""
         self._resource = url
+
+    def data_without_xml(self) -> str | None:
+        """If the data is an XML string, convert it to a JSON string."""
+        _LOGGER.debug("Data fetched from resource: %s", self.data)
+        if (
+            (value := self.data) is not None
+            # If the http request failed, headers will be None
+            and (headers := self.headers) is not None
+            and (content_type := headers.get("content-type"))
+            and content_type.startswith(XML_MIME_TYPES)
+        ):
+            value = json_dumps(xmltodict.parse(value))
+            _LOGGER.debug("JSON converted from XML: %s", value)
+        return value
 
     async def async_update(self, log_errors: bool = True) -> None:
         """Get the latest data from REST service with provided method."""

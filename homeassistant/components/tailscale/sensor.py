@@ -1,4 +1,5 @@
 """Support for Tailscale sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,42 +18,34 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TailscaleEntity
 from .const import DOMAIN
+from .entity import TailscaleEntity
 
 
-@dataclass
-class TailscaleSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TailscaleSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tailscale sensor entity."""
 
     value_fn: Callable[[TailscaleDevice], datetime | str | None]
-
-
-@dataclass
-class TailscaleSensorEntityDescription(
-    SensorEntityDescription, TailscaleSensorEntityDescriptionMixin
-):
-    """Describes a Tailscale sensor entity."""
 
 
 SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
     TailscaleSensorEntityDescription(
         key="expires",
-        name="Expires",
+        translation_key="expires",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.expires,
     ),
     TailscaleSensorEntityDescription(
         key="ip",
-        name="IP address",
-        icon="mdi:ip-network",
+        translation_key="ip",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.addresses[0] if device.addresses else None,
     ),
     TailscaleSensorEntityDescription(
         key="last_seen",
-        name="Last seen",
+        translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.last_seen,
     ),

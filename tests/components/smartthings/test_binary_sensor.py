@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
@@ -46,28 +47,39 @@ async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
+        "Motion Sensor 1",
+        [Capability.motion_sensor],
+        {
+            Attribute.motion: "inactive",
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
@@ -96,7 +108,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
     )
     config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     # Assert
@@ -106,7 +118,9 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     )
 
 
-async def test_entity_category(hass: HomeAssistant, device_factory) -> None:
+async def test_entity_category(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_factory
+) -> None:
     """Tests the state attributes properly match the light types."""
     device1 = device_factory(
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
@@ -116,7 +130,6 @@ async def test_entity_category(hass: HomeAssistant, device_factory) -> None:
     )
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device1, device2])
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
     assert entry.entity_category is None

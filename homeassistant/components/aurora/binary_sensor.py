@@ -1,29 +1,35 @@
 """Support for Aurora Forecast binary sensor."""
+
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraEntity
-from .const import COORDINATOR, DOMAIN
+from . import AuroraConfigEntry
+from .entity import AuroraEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entries: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AuroraConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary_sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    name = f"{coordinator.name} Aurora Visibility Alert"
-
-    entity = AuroraSensor(coordinator=coordinator, name=name, icon="mdi:hazard-lights")
-
-    async_add_entries([entity])
+    async_add_entities(
+        [
+            AuroraSensor(
+                coordinator=entry.runtime_data,
+                translation_key="visibility_alert",
+            )
+        ]
+    )
 
 
 class AuroraSensor(AuroraEntity, BinarySensorEntity):
     """Implementation of an aurora sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if aurora is visible."""
         return self.coordinator.data > self.coordinator.threshold

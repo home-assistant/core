@@ -1,4 +1,5 @@
 """Support for MySensors binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,12 +17,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 
-@dataclass
+@dataclass(frozen=True)
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 
@@ -76,7 +78,7 @@ async def async_setup_entry(
     @callback
     def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors binary_sensor."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.BINARY_SENSOR,
             discovery_info,
@@ -95,7 +97,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
+class MySensorsBinarySensor(MySensorsChildEntity, BinarySensorEntity):
     """Representation of a MySensors binary sensor child node."""
 
     entity_description: MySensorsBinarySensorDescription
@@ -103,8 +105,8 @@ class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up the instance."""
         super().__init__(*args, **kwargs)
-        pres = self.gateway.const.Presentation
-        self.entity_description = SENSORS[pres(self.child_type).name]
+        presentation = self.gateway.const.Presentation
+        self.entity_description = SENSORS[presentation(self.child_type).name]
 
     @property
     def is_on(self) -> bool:

@@ -1,68 +1,46 @@
 # Describes the format for available Elexa Guardians services
 pair_sensor:
-  name: Pair Sensor
-  description: Add a new paired sensor to the valve controller.
   fields:
     device_id:
-      name: Valve Controller
-      description: The valve controller to add the sensor to
       required: true
       selector:
         device:
           integration: guardian
     uid:
-      name: UID
-      description: The UID of the paired sensor
       required: true
       example: 5410EC688BCF
       selector:
         text:
 unpair_sensor:
-  name: Unpair Sensor
-  description: Remove a paired sensor from the valve controller.
   fields:
     device_id:
-      name: Valve Controller
-      description: The valve controller to remove the sensor from
       required: true
       selector:
         device:
           integration: guardian
     uid:
-      name: UID
-      description: The UID of the paired sensor
       required: true
       example: 5410EC688BCF
       selector:
         text:
 upgrade_firmware:
-  name: Upgrade firmware
-  description: Upgrade the device firmware.
   fields:
     device_id:
-      name: Valve Controller
-      description: The valve controller whose firmware should be upgraded
       required: true
       selector:
         device:
           integration: guardian
     url:
-      name: URL
-      description: The URL of the server hosting the firmware file.
       example: https://repo.guardiancloud.services/gvc/fw
       selector:
         text:
     port:
-      name: Port
-      description: The port on which the firmware file is served.
       example: 443
       selector:
         number:
           min: 1
           max: 65535
     filename:
-      name: Filename
-      description: The firmware filename.
       example: latest.bin
       selector:
         text:

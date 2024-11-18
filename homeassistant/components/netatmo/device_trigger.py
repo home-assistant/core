@@ -1,10 +1,11 @@
 """Provides device automations for Netatmo."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -56,7 +57,7 @@ TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS + CLIMATE_TRIGG
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Optional(CONF_SUBTYPE): str,
     }
@@ -95,7 +96,7 @@ async def async_get_triggers(
     """List device triggers for Netatmo devices."""
     registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     for entry in er.async_entries_for_device(registry, device_id):
         if (
@@ -105,24 +106,24 @@ async def async_get_triggers(
 
         for trigger in DEVICES.get(device.model, []):
             if trigger in SUBTYPES:
-                for subtype in SUBTYPES[trigger]:
-                    triggers.append(
-                        {
-                            CONF_PLATFORM: "device",
-                            CONF_DEVICE_ID: device_id,
-                            CONF_DOMAIN: DOMAIN,
-                            CONF_ENTITY_ID: entry.entity_id,
-                            CONF_TYPE: trigger,
-                            CONF_SUBTYPE: subtype,
-                        }
-                    )
+                triggers.extend(
+                    {
+                        CONF_PLATFORM: "device",
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.id,
+                        CONF_TYPE: trigger,
+                        CONF_SUBTYPE: subtype,
+                    }
+                    for subtype in SUBTYPES[trigger]
+                )
             else:
                 triggers.append(
                     {
                         CONF_PLATFORM: "device",
                         CONF_DEVICE_ID: device_id,
                         CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_ENTITY_ID: entry.id,
                         CONF_TYPE: trigger,
                     }
                 )

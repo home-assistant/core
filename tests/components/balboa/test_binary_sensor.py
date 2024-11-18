@@ -1,14 +1,33 @@
-"""Tests of the climate entity of the balboa integration."""
+"""Tests of the binary sensors of the balboa integration."""
+
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from syrupy import SnapshotAssertion
+
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import init_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_BINARY_SENSOR = "binary_sensor.fakespa_"
+
+
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test spa binary sensors."""
+    with patch("homeassistant.components.balboa.PLATFORMS", [Platform.BINARY_SENSOR]):
+        entry = await init_integration(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_filters(
@@ -16,7 +35,7 @@ async def test_filters(
 ) -> None:
     """Test spa filters."""
     for num in (1, 2):
-        sensor = f"{ENTITY_BINARY_SENSOR}filter{num}"
+        sensor = f"{ENTITY_BINARY_SENSOR}filter_cycle_{num}"
 
         state = hass.states.get(sensor)
         assert state.state == STATE_OFF
@@ -33,7 +52,7 @@ async def test_circ_pump(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test spa circ pump."""
-    sensor = f"{ENTITY_BINARY_SENSOR}circ_pump"
+    sensor = f"{ENTITY_BINARY_SENSOR}circulation_pump"
 
     state = hass.states.get(sensor)
     assert state.state == STATE_OFF

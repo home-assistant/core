@@ -1,9 +1,10 @@
 """Tests for the APCUPSd component."""
+
 from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -20,12 +21,15 @@ MOCK_STATUS: Final = OrderedDict(
         ("CABLE", "USB Cable"),
         ("DRIVER", "USB UPS Driver"),
         ("UPSMODE", "Stand Alone"),
+        ("UPSNAME", "MyUPS"),
         ("MODEL", "Back-UPS ES 600"),
         ("STATUS", "ONLINE"),
         ("LINEV", "124.0 Volts"),
         ("LOADPCT", "14.0 Percent"),
         ("BCHARGE", "100.0 Percent"),
         ("TIMELEFT", "51.0 Minutes"),
+        ("NOMAPNT", "60.0 VA"),
+        ("ITEMP", "34.6 C Internal"),
         ("MBATTCHG", "5 Percent"),
         ("MINTIMEL", "3 Minutes"),
         ("MAXTIME", "0 Seconds"),
@@ -34,6 +38,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("HITRANS", "139.0 Volts"),
         ("ALARMDEL", "30 Seconds"),
         ("BATTV", "13.7 Volts"),
+        ("OUTCURNT", "0.88 Amps"),
         ("LASTXFER", "Automatic or explicit self test"),
         ("NUMXFERS", "1"),
         ("XONBATT", "1970-01-01 00:00:00 0000"),
@@ -42,6 +47,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("XOFFBATT", "1970-01-01 00:00:00 0000"),
         ("LASTSTEST", "1970-01-01 00:00:00 0000"),
         ("SELFTEST", "NO"),
+        ("STESTI", "7 days"),
         ("STATFLAG", "0x05000008"),
         ("SERIALNO", "XXXXXXXXXXXX"),
         ("BATTDATE", "1970-01-01"),
@@ -72,7 +78,7 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
 )
 
 
-async def init_integration(
+async def async_init_integration(
     hass: HomeAssistant, host: str = "test", status=None
 ) -> MockConfigEntry:
     """Set up the APC UPS Daemon integration in HomeAssistant."""
@@ -90,10 +96,8 @@ async def init_integration(
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", return_value=status), patch(
-        "apcaccess.status.get", return_value=b""
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    with patch("aioapcaccess.request_status", return_value=status):
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return entry

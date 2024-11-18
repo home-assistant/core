@@ -1,4 +1,5 @@
 """Kodi notification service."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -33,7 +34,7 @@ DEFAULT_PORT = 8080
 DEFAULT_PROXY_SSL = False
 DEFAULT_TIMEOUT = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -59,12 +60,12 @@ async def async_get_service(
     port: int = config[CONF_PORT]
     encryption = config.get(CONF_PROXY_SSL)
 
-    if host.startswith("http://") or host.startswith("https://"):
+    if host.startswith(("http://", "https://")):
         host = host[host.index("://") + 3 :]
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
-            "https://www.home-assistant.io/integrations/media_player.kodi/"
+            "https://www.home-assistant.io/integrations/kodi/"
         )
 
     http_protocol = "https" if encryption else "http"

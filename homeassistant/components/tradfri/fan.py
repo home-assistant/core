@@ -12,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 ATTR_AUTO = "Auto"
 ATTR_MAX_FAN_STEPS = 49
@@ -54,7 +54,22 @@ async def async_setup_entry(
 class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
-    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    _attr_name = None
+    _attr_supported_features = (
+        FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+    _attr_preset_modes = [ATTR_AUTO]
+    # These are the steps:
+    # 0 = Off
+    # 1 = Preset: Auto mode
+    # 2 = Min
+    # ... with step size 1
+    # 50 = Max
+    _attr_speed_count = ATTR_MAX_FAN_STEPS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -77,29 +92,11 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
 
     @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports.
-
-        These are the steps:
-        0 = Off
-        1 = Preset: Auto mode
-        2 = Min
-        ... with step size 1
-        50 = Max
-        """
-        return ATTR_MAX_FAN_STEPS
-
-    @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
         if not self._device_data:
             return False
         return cast(bool, self._device_data.state)
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return [ATTR_AUTO]
 
     @property
     def percentage(self) -> int | None:
@@ -128,8 +125,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         if not self._device_control:
             return
 
-        if not preset_mode == ATTR_AUTO:
-            raise ValueError("Preset must be 'Auto'.")
+        # Preset must be 'Auto'
 
         await self._api(self._device_control.turn_on_auto_mode())
 

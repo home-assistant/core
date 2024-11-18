@@ -11,7 +11,7 @@
   "iot_class": "local_polling",
   "loggers": ["rokuecp"],
   "quality_scale": "silver",
-  "requirements": ["rokuecp==0.17.1"],
+  "requirements": ["rokuecp==0.19.3"],
   "ssdp": [
     {
       "st": "roku:ecp",

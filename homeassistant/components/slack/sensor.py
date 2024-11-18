@@ -1,4 +1,5 @@
 """Slack platform for sensor component."""
+
 from __future__ import annotations
 
 from slack import WebClient
@@ -13,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import SlackEntity
 from .const import ATTR_SNOOZE, DOMAIN, SLACK_DATA
+from .entity import SlackEntity
 
 
 async def async_setup_entry(
@@ -29,8 +30,7 @@ async def async_setup_entry(
                 hass.data[DOMAIN][entry.entry_id][SLACK_DATA],
                 SensorEntityDescription(
                     key="do_not_disturb_until",
-                    name="Do not disturb until",
-                    icon="mdi:clock",
+                    translation_key="do_not_disturb_until",
                     device_class=SensorDeviceClass.TIMESTAMP,
                 ),
                 entry,

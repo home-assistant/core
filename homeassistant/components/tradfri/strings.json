@@ -7,11 +7,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "security_code": "Security Code"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Trådfri gateway."
         }
       }
     },
     "error": {
-      "invalid_key": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
+      "invalid_security_code": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "Timeout validating the code.",
       "cannot_authenticate": "Cannot authenticate, is Gateway paired with another server like e.g. Homekit?"
@@ -19,6 +22,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "name": "Air quality"
+      },
+      "filter_life_remaining": {
+        "name": "Filter time left"
+      }
     }
   }
 }

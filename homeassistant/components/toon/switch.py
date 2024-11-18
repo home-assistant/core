@@ -1,4 +1,5 @@
 """Support for Toon switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,8 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
+from .entity import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 
 
 async def async_setup_entry(
@@ -94,14 +95,14 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSwitchRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for switch required keys."""
 
     cls: type[ToonSwitch]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSwitchEntityDescription(SwitchEntityDescription, ToonSwitchRequiredKeysMixin):
     """Describes Toon switch entity."""
 

@@ -1,10 +1,11 @@
 """Models for manifest validator."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import json
 import pathlib
-from typing import Any
+from typing import Any, Literal
 
 
 @dataclass
@@ -26,8 +27,9 @@ class Config:
 
     specific_integrations: list[pathlib.Path] | None
     root: pathlib.Path
-    action: str
+    action: Literal["validate", "generate"]
     requirements: bool
+    core_integrations_path: pathlib.Path
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
     plugins: set[str] = field(default_factory=set)
@@ -104,7 +106,7 @@ class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
         integrations: dict[str, Integration] = {}
@@ -122,13 +124,14 @@ class Integration:
                 )
                 continue
 
-            integration = cls(fil)
+            integration = cls(fil, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
         return integrations
 
     path: pathlib.Path
+    _config: Config
     _manifest: dict[str, Any] | None = None
     manifest_path: pathlib.Path | None = None
     errors: list[Error] = field(default_factory=list)
@@ -149,7 +152,9 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith("homeassistant/components")
+        return self.path.as_posix().startswith(
+            self._config.core_integrations_path.as_posix()
+        )
 
     @property
     def disabled(self) -> str | None:

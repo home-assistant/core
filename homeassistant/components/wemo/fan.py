@@ -1,7 +1,7 @@
 """Support for WeMo humidifier."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import math
 from typing import Any
@@ -13,21 +13,18 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from .const import (
-    DOMAIN as WEMO_DOMAIN,
-    SERVICE_RESET_FILTER_LIFE,
-    SERVICE_SET_HUMIDITY,
-)
+from . import async_wemo_dispatcher_connect
+from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -41,7 +38,7 @@ ATTR_WATER_LEVEL = "water_level"
 
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
-SET_HUMIDITY_SCHEMA = {
+SET_HUMIDITY_SCHEMA: VolDictType = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
         vol.Coerce(float), vol.Range(min=0, max=100)
     ),
@@ -50,7 +47,7 @@ SET_HUMIDITY_SCHEMA = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo binary sensors."""
@@ -59,14 +56,7 @@ async def async_setup_entry(
         """Handle a discovered Wemo device."""
         async_add_entities([WemoHumidifier(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -77,15 +67,21 @@ async def async_setup_entry(
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
+        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.reset_filter_life.__name__
     )
 
 
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     wemo: Humidifier
+    _last_fan_on_mode: FanMode
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""

@@ -1,4 +1,5 @@
 """Support for iBeacon device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,33 +13,27 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
+from . import IBeaconConfigEntry
+from .const import SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
 
-@dataclass
-class IBeaconRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class IBeaconSensorEntityDescription(SensorEntityDescription):
+    """Describes iBeacon sensor entity."""
 
     value_fn: Callable[[iBeaconAdvertisement], str | int | None]
-
-
-@dataclass
-class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
-    """Describes iBeacon sensor entity."""
 
 
 SENSOR_DESCRIPTIONS = (
     IBeaconSensorEntityDescription(
         key="rssi",
-        name="Signal Strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
@@ -47,7 +42,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     IBeaconSensorEntityDescription(
         key="power",
-        name="Power",
+        translation_key="power",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
@@ -56,8 +51,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     IBeaconSensorEntityDescription(
         key="estimated_distance",
-        name="Estimated Distance",
-        icon="mdi:signal-distance-variant",
+        translation_key="estimated_distance",
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.distance,
         state_class=SensorStateClass.MEASUREMENT,
@@ -65,7 +59,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     IBeaconSensorEntityDescription(
         key="vendor",
-        name="Vendor",
+        translation_key="vendor",
         entity_registry_enabled_default=False,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.vendor,
     ),
@@ -73,10 +67,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IBeaconConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for iBeacon Tracker component."""
-    coordinator: IBeaconCoordinator = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     @callback
     def _async_device_new(

@@ -1,4 +1,5 @@
 """SmartApp functionality to receive cloud-push notifications."""
+
 import asyncio
 import functools
 import logging
@@ -15,6 +16,7 @@ from pysmartthings import (
     CAPABILITIES,
     CLASSIFICATION_AUTOMATION,
     App,
+    AppEntity,
     AppOAuth,
     AppSettings,
     InstalledAppStatus,
@@ -62,7 +64,7 @@ def format_unique_id(app_id: str, location_id: str) -> str:
     return f"{app_id}_{location_id}"
 
 
-async def find_app(hass: HomeAssistant, api):
+async def find_app(hass: HomeAssistant, api: SmartThings) -> AppEntity | None:
     """Find an existing SmartApp for this installation of hass."""
     apps = await api.apps()
     for app in [app for app in apps if app.app_name.startswith(APP_NAME_PREFIX)]:
@@ -73,6 +75,7 @@ async def find_app(hass: HomeAssistant, api):
             == hass.data[DOMAIN][CONF_INSTANCE_ID]
         ):
             return app
+    return None
 
 
 async def validate_installed_app(api, installed_app_id: str):
@@ -84,11 +87,9 @@ async def validate_installed_app(api, installed_app_id: str):
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning(
-            "Installed SmartApp instance '{}' ({}) is not AUTHORIZED but instead {}".format(
-                installed_app.display_name,
-                installed_app.installed_app_id,
-                installed_app.installed_app_status,
-            )
+            f"Installed SmartApp instance '{installed_app.display_name}' "
+            f"({installed_app.installed_app_id}) is not AUTHORIZED "
+            f"but instead {installed_app.installed_app_status}"
         )
     return installed_app
 
@@ -197,7 +198,7 @@ def setup_smartapp(hass, app):
     return smartapp
 
 
-async def setup_smartapp_endpoint(hass: HomeAssistant):
+async def setup_smartapp_endpoint(hass: HomeAssistant, fresh_install: bool):
     """Configure the SmartApp webhook in hass.
 
     SmartApps are an extension point within the SmartThings ecosystem and
@@ -205,11 +206,16 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
     """
     if hass.data.get(DOMAIN):
         # already setup
-        return
+        if not fresh_install:
+            return
+
+        # We're doing a fresh install, clean up
+        await unload_smartapp_endpoint(hass)
 
     # Get/create config to store a unique id for this hass instance.
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
-    if not (config := await store.async_load()):
+
+    if fresh_install or not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
@@ -322,7 +328,7 @@ async def smartapp_sync_subscriptions(
             _LOGGER.debug(
                 "Created subscription for '%s' under app '%s'", target, installed_app_id
             )
-        except Exception as error:  # pylint:disable=broad-except
+        except Exception as error:  # noqa: BLE001
             _LOGGER.error(
                 "Failed to create subscription for '%s' under app '%s': %s",
                 target,
@@ -341,7 +347,7 @@ async def smartapp_sync_subscriptions(
                 sub.capability,
                 installed_app_id,
             )
-        except Exception as error:  # pylint:disable=broad-except
+        except Exception as error:  # noqa: BLE001
             _LOGGER.error(
                 "Failed to remove subscription for '%s' under app '%s': %s",
                 sub.capability,

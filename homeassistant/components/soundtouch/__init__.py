@@ -1,4 +1,5 @@
 """The soundtouch component."""
+
 import logging
 
 from libsoundtouch import soundtouch_device
@@ -42,6 +43,8 @@ SERVICE_REMOVE_ZONE_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class SoundTouchData:

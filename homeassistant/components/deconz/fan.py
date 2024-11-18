@@ -1,4 +1,5 @@
 """Support for deCONZ fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,11 @@ from typing import Any
 from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light, LightFanSpeed
 
-from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,8 +20,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .entity import DeconzDevice
+from .hub import DeconzHub
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
     LightFanSpeed.PERCENT_25,
@@ -32,35 +37,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up fans for deCONZ component."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[FAN_DOMAIN] = set()
 
     @callback
     def async_add_fan(_: EventType, fan_id: str) -> None:
         """Add fan from deCONZ."""
-        fan = gateway.api.lights.lights[fan_id]
+        fan = hub.api.lights.lights[fan_id]
         if not fan.supports_fan_speed:
             return
-        async_add_entities([DeconzFan(fan, gateway)])
+        async_add_entities([DeconzFan(fan, hub)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_fan,
-        gateway.api.lights.lights,
+        hub.api.lights.lights,
     )
 
 
 class DeconzFan(DeconzDevice[Light], FanEntity):
     """Representation of a deCONZ fan."""
 
-    TYPE = DOMAIN
+    TYPE = FAN_DOMAIN
     _default_on_speed = LightFanSpeed.PERCENT_50
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, device: Light, gateway: DeconzGateway) -> None:
+    def __init__(self, device: Light, hub: DeconzHub) -> None:
         """Set up fan."""
-        super().__init__(device, gateway)
-
+        super().__init__(device, hub)
         if device.fan_speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = device.fan_speed
 
@@ -80,11 +89,6 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
             ORDERED_NAMED_FAN_SPEEDS, self._device.fan_speed
         )
 
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return len(ORDERED_NAMED_FAN_SPEEDS)
-
     @callback
     def async_update_callback(self) -> None:
         """Store latest configured speed from the device."""
@@ -95,8 +99,9 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
-            return await self.async_turn_off()
-        await self.gateway.api.lights.lights.set_state(
+            await self.async_turn_off()
+            return
+        await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             fan_speed=percentage_to_ordered_list_item(
                 ORDERED_NAMED_FAN_SPEEDS, percentage
@@ -113,14 +118,14 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self.gateway.api.lights.lights.set_state(
+        await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             fan_speed=self._default_on_speed,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off fan."""
-        await self.gateway.api.lights.lights.set_state(
+        await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             fan_speed=LightFanSpeed.OFF,
         )

@@ -224,6 +224,20 @@ SSDP = {
             "manufacturer": "The OctoPrint Project",
         },
     ],
+    "openhome": [
+        {
+            "st": "urn:av-openhome-org:service:Product:1",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:2",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:3",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:4",
+        },
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",
@@ -283,6 +297,10 @@ SSDP = {
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine SE",
         },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro Max",
+        },
     ],
     "unifiprotect": [
         {
@@ -296,6 +314,10 @@ SSDP = {
         {
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine SE",
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro Max",
         },
     ],
     "upnp": [

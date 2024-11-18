@@ -1,4 +1,5 @@
 """Fixtures for Jellyfin integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -36,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.jellyfin.async_setup_entry", return_value=True
@@ -45,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_client_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[MagicMock]:
     """Mock generating device id."""
     with patch(
         "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
@@ -74,6 +75,8 @@ def mock_api() -> MagicMock:
     jf_api.sessions.return_value = load_json_fixture("sessions.json")
 
     jf_api.artwork.side_effect = api_artwork_side_effect
+    jf_api.audio_url.side_effect = api_audio_url_side_effect
+    jf_api.video_url.side_effect = api_video_url_side_effect
     jf_api.user_items.side_effect = api_user_items_side_effect
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
@@ -86,7 +89,7 @@ def mock_api() -> MagicMock:
 def mock_config() -> MagicMock:
     """Return a mocked JellyfinClient."""
     jf_config = create_autospec(Config)
-    jf_config.data = {}
+    jf_config.data = {"auth.server": "http://localhost"}
 
     return jf_config
 
@@ -105,7 +108,7 @@ def mock_client(
 
 
 @pytest.fixture
-def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
+def mock_jellyfin(mock_client: MagicMock) -> Generator[MagicMock]:
     """Return a mocked Jellyfin."""
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.Jellyfin", autospec=True
@@ -136,6 +139,20 @@ def api_artwork_side_effect(*args, **kwargs):
     ext = "jpg"
 
     return f"http://localhost/Items/{item_id}/Images/{art}.{ext}"
+
+
+def api_audio_url_side_effect(*args, **kwargs):
+    """Handle variable responses for audio_url method."""
+    item_id = args[0]
+    if audio_codec := kwargs.get("audio_codec"):
+        return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec={audio_codec}"
+    return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000"
+
+
+def api_video_url_side_effect(*args, **kwargs):
+    """Handle variable responses for video_url method."""
+    item_id = args[0]
+    return f"http://localhost/Videos/{item_id}/stream?static=true,DeviceId=TEST-UUID,api_key=TEST-API-KEY"
 
 
 def api_get_item_side_effect(*args):

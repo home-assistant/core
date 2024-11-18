@@ -22,5 +22,106 @@
       "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "condition": {
+        "name": "Current condition"
+      },
+      "dewpoint": {
+        "name": "Dew point"
+      },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "humidex": {
+        "name": "Humidex"
+      },
+      "icon_code": {
+        "name": "Icon code"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
+      "normal_high": {
+        "name": "Normal high temperature"
+      },
+      "normal_low": {
+        "name": "Normal low temperature"
+      },
+      "pop": {
+        "name": "Chance of precipitation"
+      },
+      "pressure": {
+        "name": "Barometric pressure"
+      },
+      "tendency": {
+        "name": "Tendency"
+      },
+      "text_summary": {
+        "name": "Summary"
+      },
+      "timestamp": {
+        "name": "Observation time"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "wind_bearing": {
+        "name": "Wind bearing"
+      },
+      "wind_chill": {
+        "name": "Wind chill"
+      },
+      "wind_dir": {
+        "name": "Wind direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "aqhi": {
+        "name": "AQHI"
+      },
+      "advisories": {
+        "name": "Advisory"
+      },
+      "endings": {
+        "name": "Endings"
+      },
+      "statements": {
+        "name": "Statements"
+      },
+      "warnings": {
+        "name": "Warnings"
+      },
+      "watches": {
+        "name": "Watches"
+      }
+    },
+    "camera": {
+      "radar": {
+        "name": "Radar"
+      }
+    },
+    "weather": {
+      "forecast": {
+        "name": "Forecast"
+      }
+    }
+  },
+  "services": {
+    "set_radar_type": {
+      "name": "Set radar type",
+      "description": "Sets the type of radar image to retrieve.",
+      "fields": {
+        "radar_type": {
+          "name": "Radar type",
+          "description": "The type of radar image to display."
+        }
+      }
+    }
   }
 }

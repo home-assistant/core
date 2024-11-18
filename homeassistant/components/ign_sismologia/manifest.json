@@ -6,5 +6,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["georss_ign_sismologia_client"],
-  "requirements": ["georss_ign_sismologia_client==0.6"]
+  "requirements": ["georss-ign-sismologia-client==0.8"]
 }

@@ -1,4 +1,5 @@
 """The Washer/Dryer Sensor for Whirlpool Appliances."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -70,6 +71,7 @@ ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 def washer_state(washer: WasherDryer) -> str | None:
@@ -85,27 +87,19 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, None)
+    return MACHINE_STATE.get(machine_state)
 
 
-@dataclass
-class WhirlpoolSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhirlpoolSensorEntityDescription(SensorEntityDescription):
+    """Describes Whirlpool Washer sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass
-class WhirlpoolSensorEntityDescription(
-    SensorEntityDescription, WhirlpoolSensorEntityDescriptionMixin
-):
-    """Describes Whirlpool Washer sensor entity."""
 
 
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
-        name="State",
         translation_key="whirlpool_machine",
         device_class=SensorDeviceClass.ENUM,
         options=(
@@ -117,7 +111,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
-        name="Detergent Level",
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
@@ -131,7 +124,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
 SENSOR_TIMER: tuple[SensorEntityDescription] = (
     SensorEntityDescription(
         key="timeremaining",
-        name="End Time",
+        translation_key="end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
@@ -183,6 +176,7 @@ class WasherDryerClass(SensorEntity):
     """A class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -205,7 +199,6 @@ class WasherDryerClass(SensorEntity):
             name=name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
@@ -213,7 +206,7 @@ class WasherDryerClass(SensorEntity):
         self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whrilpool Appliance sockets before removing."""
+        """Close Whirlpool Appliance sockets before removing."""
         self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property
@@ -230,7 +223,8 @@ class WasherDryerClass(SensorEntity):
 class WasherDryerTimeClass(RestoreSensor):
     """A timestamp class for the whirlpool/maytag washer account."""
 
-    _attr_should_poll = False
+    _attr_should_poll = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -254,7 +248,6 @@ class WasherDryerTimeClass(RestoreSensor):
             name=name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
@@ -274,6 +267,10 @@ class WasherDryerTimeClass(RestoreSensor):
         """Return True if entity is available."""
         return self._wd.get_online()
 
+    async def async_update(self) -> None:
+        """Update status of Whirlpool."""
+        await self._wd.fetch_data()
+
     @callback
     def update_from_latest_data(self) -> None:
         """Calculate the time stamp for completion."""
@@ -290,12 +287,15 @@ class WasherDryerTimeClass(RestoreSensor):
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
+
             new_timestamp = now + timedelta(
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            if isinstance(self._attr_native_value, datetime) and abs(
-                new_timestamp - self._attr_native_value
-            ) > timedelta(seconds=60):
+            if (
+                self._attr_native_value is None
+                or isinstance(self._attr_native_value, datetime)
+                and abs(new_timestamp - self._attr_native_value) > timedelta(seconds=60)
+            ):
                 self._attr_native_value = new_timestamp
                 self._async_write_ha_state()

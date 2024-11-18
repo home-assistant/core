@@ -1,4 +1,5 @@
 """The sia integration."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -17,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = hub
     try:
         if hub.sia_client:
-            await hub.sia_client.start(reuse_port=True)
+            await hub.sia_client.async_start(reuse_port=True)
     except OSError as exc:
         raise ConfigEntryNotReady(
             f"SIA Server at port {entry.data[CONF_PORT]} could not start."

@@ -1,4 +1,5 @@
 """The lookin integration entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -14,7 +15,7 @@ from aiolookin import (
 )
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES
@@ -182,6 +183,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
                 self._lookin_device.id,

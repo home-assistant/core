@@ -1,4 +1,5 @@
 """Support for SwitchBot binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,13 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
@@ -25,12 +24,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
-        translation_key="motion",
+        name=None,
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "contact_open": BinarySensorEntityDescription(
         key="contact_open",
-        translation_key="door_open",
+        name=None,
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "contact_timeout": BinarySensorEntityDescription(
@@ -41,12 +40,11 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "is_light": BinarySensorEntityDescription(
         key="is_light",
-        translation_key="light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
     "door_open": BinarySensorEntityDescription(
         key="door_status",
-        translation_key="door_open",
+        name=None,
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "unclosed_alarm": BinarySensorEntityDescription(
@@ -70,10 +68,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
         for binary_sensor in coordinator.device.parsed_data
@@ -94,7 +94,6 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         self._sensor = binary_sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
-        self._attr_name = self.entity_description.name
 
     @property
     def is_on(self) -> bool:

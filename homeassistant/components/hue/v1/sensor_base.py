@@ -1,13 +1,14 @@
 """Support for the Philips Hue sensors as a platform."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohue import AiohueException, Unauthorized
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
-import async_timeout
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import callback
@@ -61,7 +62,7 @@ class SensorManager:
     async def async_update_data(self):
         """Update sensor data."""
         try:
-            async with async_timeout.timeout(4):
+            async with asyncio.timeout(4):
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )
@@ -164,7 +165,7 @@ class SensorManager:
             self._component_add_entities[platform](value)
 
 
-class GenericHueSensor(GenericHueDevice, entity.Entity):
+class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=hass-enforce-class-module
     """Representation of a Hue sensor."""
 
     should_poll = False

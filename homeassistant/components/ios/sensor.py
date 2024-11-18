@@ -1,28 +1,49 @@
 """Support for Home Assistant iOS app sensors."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .. import ios
-from .const import DOMAIN
+from . import devices
+from .const import (
+    ATTR_BATTERY,
+    ATTR_BATTERY_LEVEL,
+    ATTR_BATTERY_STATE,
+    ATTR_BATTERY_STATE_FULL,
+    ATTR_BATTERY_STATE_UNKNOWN,
+    ATTR_BATTERY_STATE_UNPLUGGED,
+    ATTR_DEVICE,
+    ATTR_DEVICE_ID,
+    ATTR_DEVICE_NAME,
+    ATTR_DEVICE_PERMANENT_ID,
+    ATTR_DEVICE_SYSTEM_VERSION,
+    ATTR_DEVICE_TYPE,
+    DOMAIN,
+)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="level",
-        name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     SensorEntityDescription(
         key="state",
-        name="Battery State",
+        translation_key="battery_state",
     ),
 )
 
@@ -46,31 +67,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up iOS from a config entry."""
-    entities = [
+    async_add_entities(
         IOSSensor(device_name, device, description)
-        for device_name, device in ios.devices(hass).items()
+        for device_name, device in devices(hass).items()
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class IOSSensor(SensorEntity):
     """Representation of an iOS sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
-        self, device_name, device, description: SensorEntityDescription
+        self,
+        device_name: str,
+        device: dict[str, Any],
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._device = device
 
-        device_name = device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME]
-        self._attr_name = f"{device_name} {description.key}"
-
-        device_id = device[ios.ATTR_DEVICE_ID]
+        device_id = device[ATTR_DEVICE_ID]
         self._attr_unique_id = f"{description.key}_{device_id}"
 
     @property
@@ -79,44 +99,44 @@ class IOSSensor(SensorEntity):
         return DeviceInfo(
             identifiers={
                 (
-                    ios.DOMAIN,
-                    self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_PERMANENT_ID],
+                    DOMAIN,
+                    self._device[ATTR_DEVICE][ATTR_DEVICE_PERMANENT_ID],
                 )
             },
             manufacturer="Apple",
-            model=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
-            name=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
-            sw_version=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+            model=self._device[ATTR_DEVICE][ATTR_DEVICE_TYPE],
+            name=self._device[ATTR_DEVICE][ATTR_DEVICE_NAME],
+            sw_version=self._device[ATTR_DEVICE][ATTR_DEVICE_SYSTEM_VERSION],
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        device = self._device[ios.ATTR_DEVICE]
-        device_battery = self._device[ios.ATTR_BATTERY]
+        device = self._device[ATTR_DEVICE]
+        device_battery = self._device[ATTR_BATTERY]
         return {
-            "Battery State": device_battery[ios.ATTR_BATTERY_STATE],
-            "Battery Level": device_battery[ios.ATTR_BATTERY_LEVEL],
-            "Device Type": device[ios.ATTR_DEVICE_TYPE],
-            "Device Name": device[ios.ATTR_DEVICE_NAME],
-            "Device Version": device[ios.ATTR_DEVICE_SYSTEM_VERSION],
+            "Battery State": device_battery[ATTR_BATTERY_STATE],
+            "Battery Level": device_battery[ATTR_BATTERY_LEVEL],
+            "Device Type": device[ATTR_DEVICE_TYPE],
+            "Device Name": device[ATTR_DEVICE_NAME],
+            "Device Version": device[ATTR_DEVICE_SYSTEM_VERSION],
         }
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
-        device_battery = self._device[ios.ATTR_BATTERY]
-        battery_state = device_battery[ios.ATTR_BATTERY_STATE]
-        battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
+        device_battery = self._device[ATTR_BATTERY]
+        battery_state = device_battery[ATTR_BATTERY_STATE]
+        battery_level = device_battery[ATTR_BATTERY_LEVEL]
         charging = True
         icon_state = DEFAULT_ICON_STATE
         if battery_state in (
-            ios.ATTR_BATTERY_STATE_FULL,
-            ios.ATTR_BATTERY_STATE_UNPLUGGED,
+            ATTR_BATTERY_STATE_FULL,
+            ATTR_BATTERY_STATE_UNPLUGGED,
         ):
             charging = False
             icon_state = f"{DEFAULT_ICON_STATE}-off"
-        elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
+        elif battery_state == ATTR_BATTERY_STATE_UNKNOWN:
             battery_level = None
             charging = False
             icon_state = f"{DEFAULT_ICON_LEVEL}-unknown"
@@ -126,20 +146,20 @@ class IOSSensor(SensorEntity):
         return icon_for_battery_level(battery_level=battery_level, charging=charging)
 
     @callback
-    def _update(self, device):
+    def _update(self, device: dict[str, Any]) -> None:
         """Get the latest state of the sensor."""
         self._device = device
-        self._attr_native_value = self._device[ios.ATTR_BATTERY][
+        self._attr_native_value = self._device[ATTR_BATTERY][
             self.entity_description.key
         ]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Added to hass so need to register to dispatch."""
-        self._attr_native_value = self._device[ios.ATTR_BATTERY][
+        """Handle addition to hass: register to dispatch."""
+        self._attr_native_value = self._device[ATTR_BATTERY][
             self.entity_description.key
         ]
-        device_id = self._device[ios.ATTR_DEVICE_ID]
+        device_id = self._device[ATTR_DEVICE_ID]
         self.async_on_remove(
             async_dispatcher_connect(self.hass, f"{DOMAIN}.{device_id}", self._update)
         )

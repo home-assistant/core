@@ -1,6 +1,7 @@
 """Fixtures for component."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyatv import conf
 from pyatv.const import PairingRequirement, Protocol
@@ -11,7 +12,7 @@ from .common import MockPairingHandler, airplay_service, create_conf, mrp_servic
 
 
 @pytest.fixture(autouse=True, name="mock_scan")
-def mock_scan_fixture():
+def mock_scan_fixture() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
 
@@ -29,7 +30,7 @@ def mock_scan_fixture():
 
 
 @pytest.fixture(name="dmap_pin")
-def dmap_pin_fixture():
+def dmap_pin_fixture() -> Generator[MagicMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.randrange") as mock_pin:
         mock_pin.side_effect = lambda start, stop: 1111
@@ -37,7 +38,7 @@ def dmap_pin_fixture():
 
 
 @pytest.fixture
-def pairing():
+def pairing() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
@@ -54,7 +55,7 @@ def pairing():
 
 
 @pytest.fixture
-def pairing_mock():
+def pairing_mock() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
@@ -75,7 +76,7 @@ def pairing_mock():
 
 
 @pytest.fixture
-def full_device(mock_scan, dmap_pin):
+def full_device(mock_scan: AsyncMock, dmap_pin: MagicMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
@@ -96,7 +97,7 @@ def full_device(mock_scan, dmap_pin):
 
 
 @pytest.fixture
-def mrp_device(mock_scan):
+def mrp_device(mock_scan: AsyncMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.extend(
         [
@@ -116,7 +117,7 @@ def mrp_device(mock_scan):
 
 
 @pytest.fixture
-def airplay_with_disabled_mrp(mock_scan):
+def airplay_with_disabled_mrp(mock_scan: AsyncMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
@@ -136,7 +137,7 @@ def airplay_with_disabled_mrp(mock_scan):
 
 
 @pytest.fixture
-def dmap_device(mock_scan):
+def dmap_device(mock_scan: AsyncMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
@@ -156,7 +157,7 @@ def dmap_device(mock_scan):
 
 
 @pytest.fixture
-def dmap_device_with_credentials(mock_scan):
+def dmap_device_with_credentials(mock_scan: AsyncMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
@@ -176,7 +177,7 @@ def dmap_device_with_credentials(mock_scan):
 
 
 @pytest.fixture
-def airplay_device_with_password(mock_scan):
+def airplay_device_with_password(mock_scan: AsyncMock) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(
@@ -191,7 +192,9 @@ def airplay_device_with_password(mock_scan):
 
 
 @pytest.fixture
-def dmap_with_requirement(mock_scan, pairing_requirement):
+def dmap_with_requirement(
+    mock_scan: AsyncMock, pairing_requirement: PairingRequirement
+) -> AsyncMock:
     """Mock pyatv.scan."""
     mock_scan.result.append(
         create_conf(

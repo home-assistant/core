@@ -25,5 +25,11 @@
         }
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads persons from the YAML-configuration."
+    }
   }
 }

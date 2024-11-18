@@ -49,4 +49,5 @@ ORALB_IO_SERIES_6_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

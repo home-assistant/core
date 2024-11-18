@@ -1,10 +1,11 @@
 """Class to manage devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 
-from voip_utils import CallInfo
+from voip_utils import CallInfo, VoipDatagramProtocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -21,6 +22,7 @@ class VoIPDevice:
     device_id: str
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
+    protocol: VoipDatagramProtocol | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
@@ -55,6 +57,18 @@ class VoIPDevice:
 
         return False
 
+    def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for pipeline select."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id("select", DOMAIN, f"{self.voip_id}-pipeline")
+
+    def get_vad_sensitivity_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD sensitivity."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""
@@ -83,7 +97,7 @@ class VoIPDevices:
             )
 
         @callback
-        def async_device_removed(ev: Event) -> None:
+        def async_device_removed(ev: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
             """Handle device removed."""
             removed_id = ev.data["device_id"]
             self.devices = {
@@ -96,7 +110,7 @@ class VoIPDevices:
             self.hass.bus.async_listen(
                 dr.EVENT_DEVICE_REGISTRY_UPDATED,
                 async_device_removed,
-                callback(lambda ev: ev.data.get("action") == "remove"),
+                callback(lambda event_data: event_data["action"] == "remove"),
             )
         )
 

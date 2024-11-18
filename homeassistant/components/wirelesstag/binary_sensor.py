@@ -1,21 +1,23 @@
 """Binary sensor support for Wireless Sensor Tags."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_BINARY_EVENT_UPDATE,
-    WirelessTagBaseSensor,
-)
+from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 # On means in range, Off means out of range
 SENSOR_PRESENCE = "presence"
@@ -63,7 +65,7 @@ SENSOR_TYPES = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
@@ -72,14 +74,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[DOMAIN]
 
     sensors = []
     tags = platform.tags
@@ -87,9 +89,10 @@ def setup_platform(
         allowed_sensor_types = tag.supported_binary_events_types
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if sensor_type in allowed_sensor_types:
+                async_migrate_unique_id(hass, tag, Platform.BINARY_SENSOR, sensor_type)
                 sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
@@ -100,6 +103,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         super().__init__(api, tag)
         self._sensor_type = sensor_type
         self._name = f"{self._tag.name} {self.event.human_readable_name}"
+        self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -1,11 +1,11 @@
 """Support for Big Ass Fans lights."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from aiobafi6 import Device, OffOnAuto
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -19,25 +19,26 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF lights."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_light:
-        klass = BAFFanLight if data.device.has_fan else BAFStandaloneLight
-        async_add_entities([klass(data.device)])
+    device = entry.runtime_data
+    if device.has_light:
+        klass = BAFFanLight if device.has_fan else BAFStandaloneLight
+        async_add_entities([klass(device)])
 
 
 class BAFLight(BAFEntity, LightEntity):
     """Representation of a Big Ass Fans light."""
+
+    _attr_name = None
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -63,21 +64,19 @@ class BAFLight(BAFEntity, LightEntity):
 class BAFFanLight(BAFLight):
     """Representation of a Big Ass Fans light on a fan."""
 
-    def __init__(self, device: Device) -> None:
-        """Init a fan light."""
-        super().__init__(device, device.name)
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        self._attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
 
 class BAFStandaloneLight(BAFLight):
     """Representation of a Big Ass Fans light."""
 
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
+
     def __init__(self, device: Device) -> None:
         """Init a standalone light."""
-        super().__init__(device, f"{device.name} Light")
-        self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
-        self._attr_color_mode = ColorMode.COLOR_TEMP
+        super().__init__(device)
         self._attr_min_mireds = color_temperature_kelvin_to_mired(
             device.light_warmest_color_temperature
         )

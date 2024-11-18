@@ -1,4 +1,7 @@
 """Constants for the Vizio integration tests."""
+
+from ipaddress import ip_address
+
 from homeassistant.components import zeroconf
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -81,7 +84,7 @@ APP_LIST = [
     },
 ]
 APP_NAME_LIST = [app["name"] for app in APP_LIST]
-INPUT_LIST_WITH_APPS = INPUT_LIST + ["CAST"]
+INPUT_LIST_WITH_APPS = [*INPUT_LIST, "CAST"]
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
 ADDITIONAL_APP_CONFIG = {
     "name": CURRENT_APP,
@@ -193,12 +196,11 @@ MOCK_INCLUDE_NO_APPS = {
 
 VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
-ZEROCONF_HOST = HOST.split(":")[0]
-ZEROCONF_PORT = HOST.split(":")[1]
+ZEROCONF_HOST, ZEROCONF_PORT = HOST.split(":", maxsplit=2)
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
-    host=ZEROCONF_HOST,
-    addresses=[ZEROCONF_HOST],
+    ip_address=ip_address(ZEROCONF_HOST),
+    ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",
     name=ZEROCONF_NAME,
     port=ZEROCONF_PORT,

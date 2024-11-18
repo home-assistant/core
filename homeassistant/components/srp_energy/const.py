@@ -1,4 +1,5 @@
 """Constants for the SRP Energy integration."""
+
 from datetime import timedelta
 import logging
 
@@ -12,5 +13,6 @@ CONF_IS_TOU = "is_tou"
 PHOENIX_TIME_ZONE = "America/Phoenix"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
 
-SENSOR_NAME = "Energy Usage"
-SENSOR_TYPE = "usage"
+DEVICE_CONFIG_URL = "https://www.srpnet.com/"
+DEVICE_MANUFACTURER = "srpnet.com"
+DEVICE_MODEL = "Service Api"

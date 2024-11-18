@@ -16,5 +16,59 @@
         }
       }
     }
+  },
+  "services": {
+    "select_next": {
+      "name": "Next",
+      "description": "Select the next option.",
+      "fields": {
+        "cycle": {
+          "name": "Cycle",
+          "description": "If the option should cycle from the last to the first option on the list."
+        }
+      }
+    },
+    "select_option": {
+      "name": "Select",
+      "description": "Selects an option.",
+      "fields": {
+        "option": {
+          "name": "Option",
+          "description": "Option to be selected."
+        }
+      }
+    },
+    "select_previous": {
+      "name": "Previous",
+      "description": "Selects the previous option.",
+      "fields": {
+        "cycle": {
+          "name": "[%key:component::input_select::services::select_next::fields::cycle::name%]",
+          "description": "[%key:component::input_select::services::select_next::fields::cycle::description%]"
+        }
+      }
+    },
+    "select_first": {
+      "name": "First",
+      "description": "Selects the first option."
+    },
+    "select_last": {
+      "name": "Last",
+      "description": "Selects the last option."
+    },
+    "set_options": {
+      "name": "Set options",
+      "description": "Sets the options.",
+      "fields": {
+        "options": {
+          "name": "Options",
+          "description": "List of options."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
   }
 }

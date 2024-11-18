@@ -1,19 +1,32 @@
 """Fixtures for websocket tests."""
+
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
-async def websocket_client(hass, hass_ws_client):
+async def websocket_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Create a websocket client."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def no_auth_websocket_client(hass, hass_client_no_auth):
+async def no_auth_websocket_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Websocket connection that requires authentication."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()

@@ -1,18 +1,16 @@
 """Support for Ness D8X/D16X alarm panel."""
+
 from __future__ import annotations
 
 import logging
 
-from nessclient import ArmingState, Client
+from nessclient import ArmingMode, ArmingState, Client
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+    CodeFormat,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,6 +20,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
+
+ARMING_MODE_TO_STATE = {
+    ArmingMode.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+    ArmingMode.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
+    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    ArmingMode.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+    ArmingMode.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
+    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+}
 
 
 async def async_setup_platform(
@@ -38,10 +45,10 @@ async def async_setup_platform(
     async_add_entities([device])
 
 
-class NessAlarmPanel(alarm.AlarmControlPanelEntity):
+class NessAlarmPanel(AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -79,23 +86,25 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         await self._client.panic(code)
 
     @callback
-    def _handle_arming_state_change(self, arming_state: ArmingState) -> None:
+    def _handle_arming_state_change(
+        self, arming_state: ArmingState, arming_mode: ArmingMode | None
+    ) -> None:
         """Handle arming state update."""
 
         if arming_state == ArmingState.UNKNOWN:
-            self._attr_state = None
+            self._attr_alarm_state = None
         elif arming_state == ArmingState.DISARMED:
-            self._attr_state = STATE_ALARM_DISARMED
-        elif arming_state == ArmingState.ARMING:
-            self._attr_state = STATE_ALARM_ARMING
-        elif arming_state == ArmingState.EXIT_DELAY:
-            self._attr_state = STATE_ALARM_ARMING
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
+        elif arming_state in (ArmingState.ARMING, ArmingState.EXIT_DELAY):
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
         elif arming_state == ArmingState.ARMED:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = ARMING_MODE_TO_STATE.get(
+                arming_mode, AlarmControlPanelState.ARMED_AWAY
+            )
         elif arming_state == ArmingState.ENTRY_DELAY:
-            self._attr_state = STATE_ALARM_PENDING
+            self._attr_alarm_state = AlarmControlPanelState.PENDING
         elif arming_state == ArmingState.TRIGGERED:
-            self._attr_state = STATE_ALARM_TRIGGERED
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         else:
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 

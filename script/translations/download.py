@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
+
 from __future__ import annotations
 
 import json
-import os
-import pathlib
+from pathlib import Path
 import re
 import subprocess
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
-from .util import get_lokalise_token
+from .util import get_lokalise_token, load_json_from_path
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
-DOWNLOAD_DIR = pathlib.Path("build/translations-download").absolute()
+DOWNLOAD_DIR = Path("build/translations-download").absolute()
 
 
 def run_download_docker():
@@ -38,13 +38,16 @@ def run_download_docker():
             CORE_PROJECT_ID,
             "--original-filenames=false",
             "--replace-breaks=false",
+            "--filter-data",
+            "nonfuzzy",
             "--export-empty-as",
             "skip",
             "--format",
             "json",
             "--unzip-to",
             "/opt/dest",
-        ]
+        ],
+        check=False,
     )
     print()
 
@@ -52,35 +55,32 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def save_json(filename: str, data: list | dict):
-    """Save JSON data to a file.
-
-    Returns True on success.
-    """
-    data = json.dumps(data, sort_keys=True, indent=4)
-    with open(filename, "w", encoding="utf-8") as fdesc:
-        fdesc.write(data)
-        return True
-    return False
+def save_json(filename: Path, data: list | dict) -> None:
+    """Save JSON data to a file."""
+    filename.write_text(json.dumps(data, sort_keys=True, indent=4), encoding="utf-8")
 
 
-def get_component_path(lang, component):
+def get_component_path(lang, component) -> Path | None:
     """Get the component translation path."""
-    if os.path.isdir(os.path.join("homeassistant", "components", component)):
-        return os.path.join(
-            "homeassistant", "components", component, "translations", f"{lang}.json"
+    if (Path("homeassistant") / "components" / component).is_dir():
+        return (
+            Path("homeassistant")
+            / "components"
+            / component
+            / "translations"
+            / f"{lang}.json"
         )
     return None
 
 
-def get_platform_path(lang, component, platform):
+def get_platform_path(lang, component, platform) -> Path:
     """Get the platform translation path."""
-    return os.path.join(
-        "homeassistant",
-        "components",
-        component,
-        "translations",
-        f"{platform}.{lang}.json",
+    return (
+        Path("homeassistant")
+        / "components"
+        / component
+        / "translations"
+        / f"{platform}.{lang}.json"
     )
 
 
@@ -103,7 +103,7 @@ def save_language_translations(lang, translations):
                     f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
                 )
                 continue
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             save_json(path, base_translations)
 
         if "platform" not in component_translations:
@@ -113,7 +113,7 @@ def save_language_translations(lang, translations):
             "platform"
         ].items():
             path = get_platform_path(lang, component, platform)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             save_json(path, platform_translations)
 
 
@@ -121,7 +121,7 @@ def write_integration_translations():
     """Write integration translations."""
     for lang_file in DOWNLOAD_DIR.glob("*.json"):
         lang = lang_file.stem
-        translations = json.loads(lang_file.read_text())
+        translations = load_json_from_path(lang_file)
         save_language_translations(lang, translations)
 
 

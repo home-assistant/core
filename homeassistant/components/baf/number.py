@@ -1,4 +1,5 @@
 """Support for Big Ass Fans number."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,6 @@ from typing import cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -17,27 +17,22 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
-from .entity import BAFEntity
-from .models import BAFData
+from . import BAFConfigEntry
+from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
+from .entity import BAFDescriptionEntity
 
 
-@dataclass
-class BAFNumberDescriptionMixin:
-    """Required values for BAF sensors."""
+@dataclass(frozen=True, kw_only=True)
+class BAFNumberDescription(NumberEntityDescription):
+    """Class describing BAF sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass
-class BAFNumberDescription(NumberEntityDescription, BAFNumberDescriptionMixin):
-    """Class describing BAF sensor entities."""
 
 
 AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="comfort_min_speed",
-        name="Auto Comfort Minimum Speed",
+        translation_key="comfort_min_speed",
         native_step=1,
         native_min_value=0,
         native_max_value=SPEED_RANGE[1] - 1,
@@ -47,7 +42,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     ),
     BAFNumberDescription(
         key="comfort_max_speed",
-        name="Auto Comfort Maximum Speed",
+        translation_key="comfort_max_speed",
         native_step=1,
         native_min_value=1,
         native_max_value=SPEED_RANGE[1],
@@ -57,7 +52,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     ),
     BAFNumberDescription(
         key="comfort_heat_assist_speed",
-        name="Auto Comfort Heat Assist Speed",
+        translation_key="comfort_heat_assist_speed",
         native_step=1,
         native_min_value=SPEED_RANGE[0],
         native_max_value=SPEED_RANGE[1],
@@ -70,7 +65,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
 FAN_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="return_to_auto_timeout",
-        name="Return to Auto Timeout",
+        translation_key="return_to_auto_timeout",
         native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
@@ -81,7 +76,7 @@ FAN_NUMBER_DESCRIPTIONS = (
     ),
     BAFNumberDescription(
         key="motion_sense_timeout",
-        name="Motion Sense Timeout",
+        translation_key="motion_sense_timeout",
         native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
@@ -95,7 +90,7 @@ FAN_NUMBER_DESCRIPTIONS = (
 LIGHT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="light_return_to_auto_timeout",
-        name="Light Return to Auto Timeout",
+        translation_key="light_return_to_auto_timeout",
         native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
@@ -106,7 +101,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
     ),
     BAFNumberDescription(
         key="light_auto_motion_timeout",
-        name="Light Motion Sense Timeout",
+        translation_key="light_auto_motion_timeout",
         native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
@@ -120,12 +115,11 @@ LIGHT_NUMBER_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF numbers."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
@@ -136,16 +130,10 @@ async def async_setup_entry(
     async_add_entities(BAFNumber(device, description) for description in descriptions)
 
 
-class BAFNumber(BAFEntity, NumberEntity):
+class BAFNumber(BAFDescriptionEntity, NumberEntity):
     """BAF number."""
 
     entity_description: BAFNumberDescription
-
-    def __init__(self, device: Device, description: BAFNumberDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device, f"{device.name} {description.name}")
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:

@@ -1,4 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
+
 from __future__ import annotations
 
 import mill
@@ -22,8 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,17 +45,17 @@ from .const import (
 HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONSUMPTION_YEAR,
+        translation_key="year_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Year consumption",
     ),
     SensorEntityDescription(
         key=CONSUMPTION_TODAY,
+        translation_key="day_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Day consumption",
     ),
 )
 
@@ -64,21 +64,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=BATTERY,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -86,13 +83,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ECO2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        name="Estimated CO2",
+        translation_key="estimated_co2",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TVOC,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        name="TVOC",
+        translation_key="tvoc",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -100,22 +97,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="control_signal",
+        translation_key="control_signal",
         native_unit_of_measurement=PERCENTAGE,
-        name="Control signal",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="current_power",
+        translation_key="current_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        name="Current power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="raw_ambient_temperature",
+        translation_key="uncalibrated_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Uncalibrated temperature",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -160,6 +157,8 @@ async def async_setup_entry(
 class MillSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Mill Sensor device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, entity_description, mill_device):
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -167,18 +166,13 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._id = mill_device.device_id
         self.entity_description = entity_description
         self._available = False
-
-        self._attr_name = f"{mill_device.name} {entity_description.name}"
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mill_device.device_id)},
-            name=self.name,
+            name=mill_device.name,
             manufacturer=MANUFACTURER,
+            model=mill_device.model,
         )
-        if isinstance(mill_device, mill.Heater):
-            self._attr_device_info["model"] = f"Generation {mill_device.generation}"
-        elif isinstance(mill_device, mill.Sensor):
-            self._attr_device_info["model"] = "Mill Sense Air"
         self._update_attr(mill_device)
 
     @callback
@@ -201,14 +195,13 @@ class MillSensor(CoordinatorEntity, SensorEntity):
 class LocalMillSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Mill Sensor device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self._attr_name = (
-            f"{coordinator.mill_data_connection.name} {entity_description.name}"
-        )
         if mac := coordinator.mill_data_connection.mac_address:
             self._attr_unique_id = f"{mac}_{entity_description.key}"
             self._attr_device_info = DeviceInfo(

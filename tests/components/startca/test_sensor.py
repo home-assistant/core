@@ -1,11 +1,12 @@
 """Tests for the Start.ca sensor platform."""
+
 from http import HTTPStatus
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -157,17 +158,14 @@ async def test_unlimited_setup(
     await async_setup_component(hass, "sensor", {"sensor": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.start_ca_usage_ratio")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.state == "0"
+    # These sensors should not be created for unlimited setups
+    assert hass.states.get("sensor.start_ca_usage_ratio") is None
+    assert hass.states.get("sensor.start_ca_data_limit") is None
+    assert hass.states.get("sensor.start_ca_remaining") is None
 
     state = hass.states.get("sensor.start_ca_usage")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "0.0"
-
-    state = hass.states.get("sensor.start_ca_data_limit")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
-    assert state.state == "inf"
 
     state = hass.states.get("sensor.start_ca_used_download")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
@@ -200,10 +198,6 @@ async def test_unlimited_setup(
     state = hass.states.get("sensor.start_ca_total_upload")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "6.48"
-
-    state = hass.states.get("sensor.start_ca_remaining")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
-    assert state.state == "inf"
 
 
 async def test_bad_return_code(

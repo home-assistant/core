@@ -1,4 +1,5 @@
 """Support for Freedompro fan."""
+
 from __future__ import annotations
 
 import json
@@ -11,12 +12,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -33,7 +34,13 @@ async def async_setup_entry(
 
 
 class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntity):
-    """Representation of an Freedompro fan."""
+    """Representation of a Freedompro fan."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_is_on = False
+    _attr_percentage = 0
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -46,7 +53,6 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
@@ -55,12 +61,13 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
-        self._attr_is_on = False
-        self._attr_percentage = 0
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         if "rotationSpeed" in self._characteristics:
-            self._attr_supported_features = FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self) -> bool | None:

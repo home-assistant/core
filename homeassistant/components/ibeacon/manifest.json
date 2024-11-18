@@ -13,5 +13,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ibeacon",
   "iot_class": "local_push",
   "loggers": ["bleak"],
-  "requirements": ["ibeacon_ble==1.0.1"]
+  "requirements": ["ibeacon-ble==1.2.0"],
+  "single_config_entry": true
 }

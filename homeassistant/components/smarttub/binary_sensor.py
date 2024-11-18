@@ -1,4 +1,5 @@
 """Platform for binary sensor integration."""
+
 from __future__ import annotations
 
 from smarttub import SpaError, SpaReminder
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
@@ -28,12 +30,12 @@ ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA = {
+RESET_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=30, max=365)
     )
 }
-SNOOZE_REMINDER_SCHEMA = {
+SNOOZE_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=10, max=120)
     )
@@ -76,18 +78,12 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    # This seems to be very noisy and not generally useful, so disable by default.
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry.
-
-        This seems to be very noisy and not generally useful, so disable by default.
-        """
-        return False
 
     @property
     def is_on(self) -> bool:
@@ -108,11 +104,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
             f"{reminder.name.title()} Reminder",
         )
         self.reminder_id = reminder.id
-
-    @property
-    def unique_id(self):
-        """Return a unique id for this sensor."""
-        return f"{self.spa.id}-reminder-{self.reminder_id}"
+        self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
 
     @property
     def reminder(self) -> SpaReminder:

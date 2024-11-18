@@ -1,4 +1,5 @@
 """Tests for the Awair sensor platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.awair.const import (
@@ -11,6 +12,8 @@ from homeassistant.components.awair.const import (
     API_SPL_A,
     API_TEMP,
     API_VOC,
+)
+from homeassistant.components.awair.sensor import (
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
@@ -26,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_awair
@@ -45,16 +48,24 @@ SENSOR_TYPES_MAP = {
 
 def assert_expected_properties(
     hass: HomeAssistant,
-    registry: er.RegistryEntry,
-    name,
-    unique_id,
-    state_value,
+    entity_registry: er.RegistryEntry,
+    name: str,
+    unique_id: str,
+    state_value: str,
     attributes: dict,
+    model="Awair",
+    model_id="awair",
 ):
     """Assert expected properties from a dict."""
+    entity_entry = entity_registry.async_get(name)
+    assert entity_entry.unique_id == unique_id
 
-    entry = registry.async_get(name)
-    assert entry.unique_id == unique_id
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model == model
+    assert device_entry.model_id == model_id
+
     state = hass.states.get(name)
     assert state
     assert state.state == state_value
@@ -63,17 +74,20 @@ def assert_expected_properties(
 
 
 async def test_awair_gen1_sensors(
-    hass: HomeAssistant, user, cloud_devices, gen1_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen1_data,
 ) -> None:
     """Test expected sensors on a 1st gen Awair."""
 
     fixtures = [user, cloud_devices, gen1_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
@@ -82,7 +96,7 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_temperature",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_TEMP].unique_id_tag}",
         "21.8",
@@ -91,7 +105,7 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_humidity",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_HUMID].unique_id_tag}",
         "41.59",
@@ -100,7 +114,7 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_carbon_dioxide",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_CO2].unique_id_tag}",
         "654.0",
@@ -112,8 +126,8 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
-        "sensor.living_room_volatile_organic_compounds",
+        entity_registry,
+        "sensor.living_room_vocs",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
         "366",
         {
@@ -124,7 +138,7 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_pm2_5",
         # gen1 unique_id should be awair_12345-DUST, which matches old integration behavior
         f"{AWAIR_UUID}_DUST",
@@ -137,7 +151,7 @@ async def test_awair_gen1_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_pm10",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM10].unique_id_tag}",
         "14.3",
@@ -157,17 +171,20 @@ async def test_awair_gen1_sensors(
 
 
 async def test_awair_gen2_sensors(
-    hass: HomeAssistant, user, cloud_devices, gen2_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen2_data,
 ) -> None:
     """Test expected sensors on a 2nd gen Awair."""
 
     fixtures = [user, cloud_devices, gen2_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
@@ -176,7 +193,7 @@ async def test_awair_gen2_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_pm2_5",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "2.0",
@@ -192,36 +209,43 @@ async def test_awair_gen2_sensors(
 
 
 async def test_local_awair_sensors(
-    hass: HomeAssistant, local_devices, local_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    local_devices,
+    local_data,
 ) -> None:
     """Test expected sensors on a local Awair."""
 
     fixtures = [local_devices, local_data]
     await setup_awair(hass, fixtures, LOCAL_UNIQUE_ID, LOCAL_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.mock_title_score",
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
         {},
+        model="Awair Element",
+        model_id="awair-element",
     )
 
 
 async def test_awair_mint_sensors(
-    hass: HomeAssistant, user, cloud_devices, mint_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    mint_data,
 ) -> None:
     """Test expected sensors on an Awair mint."""
 
     fixtures = [user, cloud_devices, mint_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
@@ -230,7 +254,7 @@ async def test_awair_mint_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_pm2_5",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "1.0",
@@ -242,7 +266,7 @@ async def test_awair_mint_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
         "441.7",
@@ -254,17 +278,20 @@ async def test_awair_mint_sensors(
 
 
 async def test_awair_glow_sensors(
-    hass: HomeAssistant, user, cloud_devices, glow_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    glow_data,
 ) -> None:
     """Test expected sensors on an Awair glow."""
 
     fixtures = [user, cloud_devices, glow_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
@@ -276,17 +303,20 @@ async def test_awair_glow_sensors(
 
 
 async def test_awair_omni_sensors(
-    hass: HomeAssistant, user, cloud_devices, omni_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    omni_data,
 ) -> None:
     """Test expected sensors on an Awair omni."""
 
     fixtures = [user, cloud_devices, omni_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
@@ -295,7 +325,7 @@ async def test_awair_omni_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_sound_level",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
         "47.0",
@@ -304,7 +334,7 @@ async def test_awair_omni_sensors(
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
         "804.9",
@@ -333,17 +363,21 @@ async def test_awair_offline(
 
 
 async def test_awair_unavailable(
-    hass: HomeAssistant, user, cloud_devices, gen1_data, awair_offline
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen1_data,
+    awair_offline,
 ) -> None:
     """Test expected behavior when an Awair becomes offline later."""
 
     fixtures = [user, cloud_devices, gen1_data]
     await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
-    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
-        registry,
+        entity_registry,
         "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
@@ -354,7 +388,7 @@ async def test_awair_unavailable(
         await async_update_entity(hass, "sensor.living_room_score")
         assert_expected_properties(
             hass,
-            registry,
+            entity_registry,
             "sensor.living_room_score",
             f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,

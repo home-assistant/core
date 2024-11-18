@@ -1,7 +1,7 @@
 {
   "domain": "fronius",
   "name": "Fronius",
-  "codeowners": ["@nielstron", "@farmio"],
+  "codeowners": ["@farmio"],
   "config_flow": true,
   "dhcp": [
     {
@@ -12,5 +12,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyfronius"],
   "quality_scale": "platinum",
-  "requirements": ["pyfronius==0.7.1"]
+  "requirements": ["PyFronius==0.7.3"]
 }

@@ -1,0 +1,1040 @@
+{
+  "type": "gateway",
+  "mac": "AA-BB-CC-DD-EE-FF",
+  "name": "Test Router",
+  "model": "ER7212PC",
+  "modelVersion": "1.0",
+  "compoundModel": "ER7212PC v1.0",
+  "showModel": "ER7212PC v1.0",
+  "firmwareVersion": "1.1.1 Build 20230901 Rel.55651",
+  "version": "1.1.1",
+  "hwVersion": "ER7212PC v1.0",
+  "status": 14,
+  "statusCategory": 1,
+  "site": "Test",
+  "omadacId": "XXXXX",
+  "compatible": 0,
+  "sn": "XXXX",
+  "addedInAdvanced": false,
+  "portNum": 12,
+  "ledSetting": 2,
+  "snmpSeting": {
+    "location": "",
+    "contact": ""
+  },
+  "iptvSetting": {
+    "igmpEnable": true,
+    "igmpVersion": "2"
+  },
+  "supportHwOffload": false,
+  "supportPoe": true,
+  "hwOffloadEnable": true,
+  "poeSettings": [
+    {
+      "portId": 5,
+      "portName": "LAN5",
+      "enable": true
+    },
+    {
+      "portId": 6,
+      "portName": "LAN6",
+      "enable": true
+    },
+    {
+      "portId": 7,
+      "portName": "LAN7",
+      "enable": true
+    },
+    {
+      "portId": 8,
+      "portName": "LAN8",
+      "enable": true
+    },
+    {
+      "portId": 9,
+      "portName": "LAN9",
+      "enable": true
+    },
+    {
+      "portId": 10,
+      "portName": "LAN10",
+      "enable": true
+    },
+    {
+      "portId": 11,
+      "portName": "LAN11",
+      "enable": true
+    },
+    {
+      "portId": 12,
+      "portName": "LAN12",
+      "enable": true
+    }
+  ],
+  "lldpEnable": false,
+  "echoServer": "0.0.0.0",
+  "ip": "192.168.0.1",
+  "uptime": "5day(s) 3h 29m 49s",
+  "uptimeLong": 444589,
+  "cpuUtil": 9,
+  "memUtil": 86,
+  "lastSeen": 1704219948802,
+  "portStats": [
+    {
+      "port": 1,
+      "name": "SFP WAN/LAN1",
+      "type": 1,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 2,
+      "name": "SFP WAN/LAN2",
+      "type": 1,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 3,
+      "name": "WAN3",
+      "type": 0,
+      "mode": -1,
+      "status": 0,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "mirroredPorts": []
+    },
+    {
+      "port": 4,
+      "name": "WAN/LAN4",
+      "type": 1,
+      "mode": 0,
+      "poe": false,
+      "status": 1,
+      "internetState": 1,
+      "ip": "XX.XX.XX.XX",
+      "speed": 3,
+      "duplex": 2,
+      "rx": 39901007520,
+      "rxPkt": 33051930,
+      "rxPktRate": 25,
+      "rxRate": 18,
+      "tx": 8891933646,
+      "txPkt": 12195464,
+      "txPktRate": 22,
+      "txRate": 3,
+      "proto": "dhcp",
+      "wanIpv6Comptent": 1,
+      "wanPortIpv6Config": {
+        "enable": 0,
+        "addr": "",
+        "gateway": "",
+        "priDns": "",
+        "sndDns": "",
+        "internetState": 0
+      },
+      "wanPortIpv4Config": {
+        "ip": "140.100.128.10",
+        "gateway": "140.100.128.1",
+        "gateway2": "0.0.0.0",
+        "priDns": "8.8.8.8",
+        "sndDns": "8.8.4.4",
+        "priDns2": "0.0.0.0",
+        "sndDns2": "0.0.0.0"
+      },
+      "mirroredPorts": []
+    },
+    {
+      "port": 5,
+      "name": "LAN5",
+      "type": 2,
+      "mode": 1,
+      "poe": true,
+      "status": 1,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 3,
+      "duplex": 2,
+      "rx": 4622709923,
+      "rxPkt": 8985877,
+      "rxPktRate": 21,
+      "rxRate": 4,
+      "tx": 38465362622,
+      "txPkt": 30836050,
+      "txPktRate": 25,
+      "txRate": 17,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 6,
+      "name": "LAN6",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 7,
+      "name": "LAN7",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 1,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 2,
+      "duplex": 2,
+      "rx": 5477288,
+      "rxPkt": 52166,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 66036305,
+      "txPkt": 319810,
+      "txPktRate": 1,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 8,
+      "name": "LAN8",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 1,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 3,
+      "duplex": 2,
+      "rx": 6105639661,
+      "rxPkt": 6200831,
+      "rxPktRate": 4,
+      "rxRate": 0,
+      "tx": 3258101551,
+      "txPkt": 4719927,
+      "txPktRate": 4,
+      "txRate": 1,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 9,
+      "name": "LAN9",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 10,
+      "name": "LAN10",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 11,
+      "name": "LAN11",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    },
+    {
+      "port": 12,
+      "name": "LAN12",
+      "type": 2,
+      "mode": 1,
+      "poe": false,
+      "status": 0,
+      "internetState": 0,
+      "ip": "192.168.0.1",
+      "speed": 1,
+      "duplex": 1,
+      "rx": 0,
+      "rxPkt": 0,
+      "rxPktRate": 0,
+      "rxRate": 0,
+      "tx": 0,
+      "txPkt": 0,
+      "txPktRate": 0,
+      "txRate": 0,
+      "wanIpv6Comptent": 1,
+      "mirroredPorts": []
+    }
+  ],
+  "lanClientStats": [
+    {
+      "lanName": "LAN",
+      "vlan": 1,
+      "ip": "192.168.0.1",
+      "rx": 3365832108,
+      "tx": 19893930205,
+      "clientNum": 3,
+      "lanPortIpv6Config": {
+        "addr": "XXXXX"
+      }
+    }
+  ],
+  "needUpgrade": false,
+  "download": 39901007520,
+  "upload": 8891933646,
+  "networkComptent": 1,
+  "portConfigs": [
+    {
+      "port": 1,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 1,
+        "name": "SFP WAN/LAN1",
+        "type": 1,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 2,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 2,
+        "name": "SFP WAN/LAN2",
+        "type": 1,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 3,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "portStat": {
+        "port": 3,
+        "name": "WAN3",
+        "type": 0,
+        "mode": -1,
+        "status": 0,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 4,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "portStat": {
+        "port": 4,
+        "name": "WAN/LAN4",
+        "type": 1,
+        "mode": 0,
+        "poe": false,
+        "status": 1,
+        "internetState": 1,
+        "ip": "XX.XX.XX.XX",
+        "speed": 3,
+        "duplex": 2,
+        "rx": 39901007520,
+        "rxPkt": 33051930,
+        "rxPktRate": 25,
+        "rxRate": 18,
+        "tx": 8891933646,
+        "txPkt": 12195464,
+        "txPktRate": 22,
+        "txRate": 3,
+        "proto": "dhcp",
+        "wanIpv6Comptent": 1,
+        "wanPortIpv6Config": {
+          "enable": 0,
+          "addr": "",
+          "gateway": "",
+          "priDns": "",
+          "sndDns": "",
+          "internetState": 0
+        },
+        "wanPortIpv4Config": {
+          "ip": "XX.XX.XX.XX",
+          "gateway": "XX.XX.XX.XXX",
+          "gateway2": "0.0.0.0",
+          "priDns": "212.27.40.240",
+          "sndDns": "212.27.40.241",
+          "priDns2": "0.0.0.0",
+          "sndDns2": "0.0.0.0"
+        },
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 5,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 5,
+        "name": "LAN5",
+        "type": 2,
+        "mode": 1,
+        "poe": true,
+        "status": 1,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 3,
+        "duplex": 2,
+        "rx": 4622709923,
+        "rxPkt": 8985877,
+        "rxPktRate": 21,
+        "rxRate": 4,
+        "tx": 38465362622,
+        "txPkt": 30836050,
+        "txPktRate": 25,
+        "txRate": 17,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 6,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 6,
+        "name": "LAN6",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 7,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 7,
+        "name": "LAN7",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 1,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 2,
+        "duplex": 2,
+        "rx": 5477288,
+        "rxPkt": 52166,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 66036305,
+        "txPkt": 319810,
+        "txPktRate": 1,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 8,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 8,
+        "name": "LAN8",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 1,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 3,
+        "duplex": 2,
+        "rx": 6105639661,
+        "rxPkt": 6200831,
+        "rxPktRate": 4,
+        "rxRate": 0,
+        "tx": 3258101551,
+        "txPkt": 4719927,
+        "txPktRate": 4,
+        "txRate": 1,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 9,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 9,
+        "name": "LAN9",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 10,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 10,
+        "name": "LAN10",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 11,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 11,
+        "name": "LAN11",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    },
+    {
+      "port": 12,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 1,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ],
+      "mirrorEnable": false,
+      "pvid": 1,
+      "availablePvids": [1],
+      "portStat": {
+        "port": 12,
+        "name": "LAN12",
+        "type": 2,
+        "mode": 1,
+        "poe": false,
+        "status": 0,
+        "internetState": 0,
+        "ip": "192.168.0.1",
+        "speed": 1,
+        "duplex": 1,
+        "rx": 0,
+        "rxPkt": 0,
+        "rxPktRate": 0,
+        "rxRate": 0,
+        "tx": 0,
+        "txPkt": 0,
+        "txPktRate": 0,
+        "txRate": 0,
+        "wanIpv6Comptent": 1,
+        "mirroredPorts": []
+      }
+    }
+  ],
+  "supportSpeedDuplex": true,
+  "supportMirror": true,
+  "supportPvid": true,
+  "unsupportedPorts": [],
+  "combinedGateway": true,
+  "speeds": [1, 2, 3],
+  "poeRemain": 105.699997,
+  "poeRemainPercent": 96.090904,
+  "multiChipGateway": true,
+  "multiChipInfos": [
+    [1, 3, 5, 6, 7, 8],
+    [2, 4, 9, 10, 11, 12]
+  ]
+}

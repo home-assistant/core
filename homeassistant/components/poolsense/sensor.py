@@ -1,4 +1,5 @@
 """Sensor platform for the PoolSense sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -6,95 +7,78 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EMAIL,
-    PERCENTAGE,
-    UnitOfElectricPotential,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import PoolSenseEntity
-from .const import DOMAIN
+from . import PoolSenseConfigEntry
+from .entity import PoolSenseEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="Chlorine",
+        translation_key="chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
-        name="Chlorine",
     ),
     SensorEntityDescription(
         key="pH",
-        icon="mdi:pool",
-        name="pH",
+        device_class=SensorDeviceClass.PH,
     ),
     SensorEntityDescription(
         key="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
     ),
     SensorEntityDescription(
         key="Water Temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:coolant-temperature",
-        name="Temperature",
+        translation_key="water_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="Last Seen",
-        icon="mdi:clock",
-        name="Last Seen",
+        translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="Chlorine High",
+        translation_key="chlorine_high",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
-        name="Chlorine High",
     ),
     SensorEntityDescription(
         key="Chlorine Low",
+        translation_key="chlorine_low",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
-        name="Chlorine Low",
     ),
     SensorEntityDescription(
         key="pH High",
-        icon="mdi:pool",
-        name="pH High",
+        translation_key="ph_high",
     ),
     SensorEntityDescription(
         key="pH Low",
-        icon="mdi:pool",
-        name="pH Low",
+        translation_key="ph_low",
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PoolSenseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    entities = [
-        PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], description)
-        for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, False)
+    async_add_entities(
+        PoolSenseSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
 
 class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """State of the sensor."""
         return self.coordinator.data[self.entity_description.key]

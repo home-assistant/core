@@ -1,40 +1,35 @@
 """Support for command line notification services."""
+
 from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Any
+from typing import Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_COMMAND, CONF_NAME
+from homeassistant.components.notify import BaseNotificationService
+from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
 
 def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CommandLineNotificationService:
+) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
-    command: str = config[CONF_COMMAND]
-    timeout: int = config[CONF_COMMAND_TIMEOUT]
+    if not discovery_info:
+        return None
+
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    notify_config = discovery_info
+    command: str = notify_config[CONF_COMMAND]
+    timeout: int = notify_config[CONF_COMMAND_TIMEOUT]
 
     return CommandLineNotificationService(command, timeout)
 
@@ -49,12 +44,12 @@ class CommandLineNotificationService(BaseNotificationService):
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a command line."""
-        with subprocess.Popen(
+        with subprocess.Popen(  # noqa: S602 # shell by design
             self.command,
             universal_newlines=True,
             stdin=subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
-            shell=True,  # nosec # shell by design
+            shell=True,
         ) as proc:
             try:
                 proc.communicate(input=message, timeout=self._timeout)

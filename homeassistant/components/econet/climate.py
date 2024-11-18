@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet thermostats."""
+
 from typing import Any
 
 from pyeconet.equipment import EquipmentType
@@ -16,12 +17,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
+from .entity import EcoNetEntity
 
 ECONET_STATE_TO_HA = {
     ThermostatOperationMode.HEATING: HVACMode.HEAT,
@@ -62,30 +64,31 @@ async def async_setup_entry(
 
 
 class EcoNetThermostat(EcoNetEntity, ClimateEntity):
-    """Define a Econet thermostat."""
+    """Define an Econet thermostat."""
+
+    _attr_should_poll = True
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, thermostat):
         """Initialize."""
         super().__init__(thermostat)
-        self._running = thermostat.running
-        self._poll = True
-        self.econet_state_to_ha = {}
-        self.ha_state_to_econet = {}
-        self.op_list = []
+        self._attr_hvac_modes = []
         for mode in self._econet.modes:
             if mode not in [
                 ThermostatOperationMode.UNKNOWN,
                 ThermostatOperationMode.EMERGENCY_HEAT,
             ]:
                 ha_mode = ECONET_STATE_TO_HA[mode]
-                self.op_list.append(ha_mode)
+                self._attr_hvac_modes.append(ha_mode)
 
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        if self._econet.supports_humidifier:
-            return SUPPORT_FLAGS_THERMOSTAT | ClimateEntityFeature.TARGET_HUMIDITY
-        return SUPPORT_FLAGS_THERMOSTAT
+        self._attr_supported_features |= SUPPORT_FLAGS_THERMOSTAT
+        if thermostat.supports_humidifier:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     @property
     def current_temperature(self):
@@ -143,15 +146,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
 
     @property
-    def hvac_modes(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Needs to be one of HVAC_MODE_*.
-        """
-        return self.op_list
-
-    @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 
         Needs to be one of HVAC_MODE_*.
@@ -191,17 +186,17 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """Return the fan modes."""
-        econet_fan_modes = self._econet.fan_modes
-        fan_list = []
-        for mode in econet_fan_modes:
+        return [
+            ECONET_FAN_STATE_TO_HA[mode]
+            for mode in self._econet.fan_modes
             # Remove the MEDLO MEDHI once we figure out how to handle it
-            if mode not in [
+            if mode
+            not in [
                 ThermostatFanMode.UNKNOWN,
                 ThermostatFanMode.MEDLO,
                 ThermostatFanMode.MEDHI,
-            ]:
-                fan_list.append(ECONET_FAN_STATE_TO_HA[mode])
-        return fan_list
+            ]
+        ]
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
@@ -209,10 +204,30 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         self._econet.set_mode(ThermostatOperationMode.HEATING)
 
     @property

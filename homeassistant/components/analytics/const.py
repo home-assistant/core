@@ -1,4 +1,5 @@
 """Constants for the analytics integration."""
+
 from datetime import timedelta
 import logging
 

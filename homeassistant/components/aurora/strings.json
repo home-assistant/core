@@ -14,15 +14,28 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "threshold": "Threshold (%)"
+          "forecast_threshold": "Threshold (%)"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "visibility_alert": {
+        "name": "Visibility alert"
+      }
+    },
+    "sensor": {
+      "visibility": {
+        "name": "Visibility"
       }
     }
   }

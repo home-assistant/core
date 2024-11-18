@@ -1,4 +1,5 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
@@ -16,6 +17,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -23,7 +25,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 UNIT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
@@ -110,6 +114,13 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
+    "Hz": SensorEntityDescription(
+        key="Hz",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
 }
 
 
@@ -120,7 +131,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         Sensor(coordinator, coil, UNIT_DESCRIPTIONS.get(coil.unit))
@@ -134,7 +145,7 @@ class Sensor(CoilEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         coil: Coil,
         entity_description: SensorEntityDescription | None,
     ) -> None:

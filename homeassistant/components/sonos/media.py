@@ -1,4 +1,5 @@
 """Support for media metadata handling."""
+
 from __future__ import annotations
 
 import datetime
@@ -43,7 +44,7 @@ DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
 
-def _timespan_secs(timespan: str | None) -> None | int:
+def _timespan_secs(timespan: str | None) -> int | None:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None

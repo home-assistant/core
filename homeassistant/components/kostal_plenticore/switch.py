@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,19 +11,19 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes plenticore switch entities."""
 
     module_id: str
     is_on: str
@@ -30,13 +31,6 @@ class PlenticoreRequiredKeysMixin:
     on_label: str
     off_value: str
     off_label: str
-
-
-@dataclass
-class PlenticoreSwitchEntityDescription(
-    SwitchEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore switch entities."""
 
 
 SWITCH_SETTINGS_DATA = [
@@ -116,7 +110,6 @@ class PlenticoreDataSwitch(
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_id = entry_id
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
@@ -129,7 +122,7 @@ class PlenticoreDataSwitch(
         self.off_label = description.off_label
         self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
@@ -170,11 +163,6 @@ class PlenticoreDataSwitch(
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     @property
     def is_on(self) -> bool:

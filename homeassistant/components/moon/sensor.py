@@ -1,4 +1,5 @@
 """Support for tracking the moon phases."""
+
 from __future__ import annotations
 
 from astral import moon
@@ -6,8 +7,7 @@ from astral import moon
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -21,17 +21,6 @@ STATE_WANING_CRESCENT = "waning_crescent"
 STATE_WANING_GIBBOUS = "waning_gibbous"
 STATE_WAXING_CRESCENT = "waxing_crescent"
 STATE_WAXING_GIBBOUS = "waxing_gibbous"
-
-MOON_ICONS = {
-    STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
-    STATE_FULL_MOON: "mdi:moon-full",
-    STATE_LAST_QUARTER: "mdi:moon-last-quarter",
-    STATE_NEW_MOON: "mdi:moon-new",
-    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",
-    STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
-    STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
-    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
-}
 
 
 async def async_setup_entry(
@@ -47,17 +36,16 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Phase"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [
-        STATE_FIRST_QUARTER,
-        STATE_FULL_MOON,
-        STATE_LAST_QUARTER,
         STATE_NEW_MOON,
-        STATE_WANING_CRESCENT,
-        STATE_WANING_GIBBOUS,
         STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
         STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
     ]
     _attr_translation_key = "phase"
 
@@ -91,5 +79,3 @@ class MoonSensorEntity(SensorEntity):
             self._attr_native_value = STATE_LAST_QUARTER
         else:
             self._attr_native_value = STATE_WANING_CRESCENT
-
-        self._attr_icon = MOON_ICONS.get(self._attr_native_value)

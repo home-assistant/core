@@ -1,4 +1,5 @@
 """Utility methods for initializing a Jellyfin client."""
+
 from __future__ import annotations
 
 import socket

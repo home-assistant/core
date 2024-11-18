@@ -1,9 +1,8 @@
 """Support for MQTT sirens."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-import copy
-import functools
 import logging
 from typing import Any, cast
 
@@ -32,8 +31,9 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -41,29 +41,19 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -85,7 +75,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -95,12 +85,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Sirens under the siren platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(siren.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
@@ -130,28 +114,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSiren,
+        siren.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, siren.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT siren."""
-    async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
 
 class MqttSiren(MqttEntity, SirenEntity):
     """Representation of a siren that can be controlled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
+    _extra_attributes: dict[str, Any]
 
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
@@ -161,18 +141,8 @@ class MqttSiren(MqttEntity, SirenEntity):
     _state_off: str
     _optimistic: bool
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT siren."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -185,24 +155,25 @@ class MqttSiren(MqttEntity, SirenEntity):
         state_off: str | None = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
-        self._attr_extra_state_attributes = {}
+        self._extra_attributes = {}
 
         _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
-            self._attr_extra_state_attributes[ATTR_DURATION] = None
+            self._extra_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
             _supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
-            self._attr_extra_state_attributes[ATTR_TONE] = None
+            self._extra_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
             _supported_features |= SirenEntityFeature.VOLUME_SET
-            self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
+            self._extra_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
+        self._attr_assumed_state = bool(self._optimistic)
         self._attr_is_on = False if self._optimistic else None
 
         command_template: Template | None = config.get(CONF_COMMAND_TEMPLATE)
@@ -226,104 +197,94 @@ class MqttSiren(MqttEntity, SirenEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self) -> None:
-        """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT state messages."""
-            payload = self._value_template(msg.payload)
-            if not payload or payload == PAYLOAD_EMPTY_JSON:
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        payload = self._value_template(msg.payload)
+        if not payload or payload == PAYLOAD_EMPTY_JSON:
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        json_payload: dict[str, Any] = {}
+        if payload in [self._state_on, self._state_off, PAYLOAD_NONE]:
+            json_payload = {STATE: payload}
+        else:
+            try:
+                json_payload = json_loads_object(payload)
                 _LOGGER.debug(
-                    "Ignoring empty payload '%s' after rendering for topic %s",
-                    payload,
+                    (
+                        "JSON payload detected after processing payload '%s' on"
+                        " topic %s"
+                    ),
+                    json_payload,
+                    msg.topic,
+                )
+            except JSON_DECODE_EXCEPTIONS:
+                _LOGGER.warning(
+                    (
+                        "No valid (JSON) payload detected after processing payload"
+                        " '%s' on topic %s"
+                    ),
+                    json_payload,
                     msg.topic,
                 )
                 return
-            json_payload: dict[str, Any] = {}
-            if payload in [self._state_on, self._state_off, PAYLOAD_NONE]:
-                json_payload = {STATE: payload}
-            else:
-                try:
-                    json_payload = json_loads_object(payload)
-                    _LOGGER.debug(
-                        (
-                            "JSON payload detected after processing payload '%s' on"
-                            " topic %s"
-                        ),
-                        json_payload,
-                        msg.topic,
-                    )
-                except JSON_DECODE_EXCEPTIONS:
-                    _LOGGER.warning(
-                        (
-                            "No valid (JSON) payload detected after processing payload"
-                            " '%s' on topic %s"
-                        ),
-                        json_payload,
-                        msg.topic,
-                    )
-                    return
-            if STATE in json_payload:
-                if json_payload[STATE] == self._state_on:
-                    self._attr_is_on = True
-                if json_payload[STATE] == self._state_off:
-                    self._attr_is_on = False
-                if json_payload[STATE] == PAYLOAD_NONE:
-                    self._attr_is_on = None
-                del json_payload[STATE]
+        if STATE in json_payload:
+            if json_payload[STATE] == self._state_on:
+                self._attr_is_on = True
+            if json_payload[STATE] == self._state_off:
+                self._attr_is_on = False
+            if json_payload[STATE] == PAYLOAD_NONE:
+                self._attr_is_on = None
+            del json_payload[STATE]
 
-            if json_payload:
-                # process attributes
-                try:
-                    params: SirenTurnOnServiceParameters
-                    params = vol.All(TURN_ON_SCHEMA)(json_payload)
-                except vol.MultipleInvalid as invalid_siren_parameters:
-                    _LOGGER.warning(
-                        "Unable to update siren state attributes from payload '%s': %s",
-                        json_payload,
-                        invalid_siren_parameters,
-                    )
-                    return
-                self._update(process_turn_on_params(self, params))
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        if json_payload:
+            # process attributes
+            try:
+                params: SirenTurnOnServiceParameters
+                params = vol.All(TURN_ON_SCHEMA)(json_payload)
+            except vol.MultipleInvalid as invalid_siren_parameters:
+                _LOGGER.warning(
+                    "Unable to update siren state attributes from payload '%s': %s",
+                    json_payload,
+                    invalid_siren_parameters,
+                )
+                return
+            # To be able to track changes to self._extra_attributes we assign
+            # a fresh copy to make the original tracked reference immutable.
+            self._extra_attributes = dict(self._extra_attributes)
+            self._update(process_turn_on_params(self, params))
 
-        if self._config.get(CONF_STATE_TOPIC) is None:
+    @callback
+    def _prepare_subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
+        if not self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_is_on", "_extra_attributes"},
+        ):
             # Force into optimistic mode.
             self._optimistic = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    CONF_STATE_TOPIC: {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": state_message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        mqtt_attributes = super().extra_state_attributes
-        attributes = (
-            copy.deepcopy(mqtt_attributes) if mqtt_attributes is not None else {}
+        extra_attributes = (
+            self._attr_extra_state_attributes
+            if hasattr(self, "_attr_extra_state_attributes")
+            else {}
         )
-        attributes.update(self._attr_extra_state_attributes)
-        return attributes
+        if extra_attributes:
+            return dict({*self._extra_attributes.items(), *extra_attributes.items()})
+        return self._extra_attributes or None
 
     async def _async_publish(
         self,
@@ -341,13 +302,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         else:
             payload = json_dumps(template_variables)
         if payload and str(payload) != PAYLOAD_NONE:
-            await self.async_publish(
-                self._config[topic],
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(self._config[topic], payload)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
@@ -385,8 +340,13 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     def _update(self, data: SirenTurnOnServiceParameters) -> None:
         """Update the extra siren state attributes."""
-        for attribute, support in SUPPORTED_ATTRIBUTES.items():
-            if self._attr_supported_features & support and attribute in data:
-                self._attr_extra_state_attributes[attribute] = data[
-                    attribute  # type: ignore[literal-required]
-                ]
+        self._extra_attributes.update(
+            {
+                attribute: data_attr
+                for attribute, support in SUPPORTED_ATTRIBUTES.items()
+                if self._attr_supported_features & support
+                and attribute in data
+                and (data_attr := data[attribute])  # type: ignore[literal-required]
+                != self._extra_attributes.get(attribute)
+            }
+        )

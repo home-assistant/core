@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "uptime": {
+        "default": "mdi:timer"
+      },
+      "travel_count": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "onboard_access_point": {
+        "default": "mdi:wifi"
+      },
+      "valve_controller": {
+        "default": "mdi:water"
+      }
+    }
+  },
+  "services": {
+    "pair_sensor": {
+      "service": "mdi:link-variant"
+    },
+    "unpair_sensor": {
+      "service": "mdi:link-variant-remove"
+    },
+    "upgrade_firmware": {
+      "service": "mdi:update"
+    }
+  }
+}

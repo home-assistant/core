@@ -2,12 +2,11 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import patch
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.xiaomi_ble.const import DOMAIN
+from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
@@ -23,6 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info_bleak,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
@@ -247,16 +247,47 @@ async def test_smoke(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             "54:EF:44:E3:9C:BC",
-            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01" b"\x08\x12\x05\x00\x00\x00q^\xbe\x90",
+            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01\x08\x12\x05\x00\x00\x00q^\xbe\x90",
         ),
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    smoke_sensor = hass.states.get("binary_sensor.thermometer_9cbc_smoke")
+    smoke_sensor = hass.states.get("binary_sensor.smoke_detector_9cbc_smoke")
     smoke_sensor_attribtes = smoke_sensor.attributes
     assert smoke_sensor.state == STATE_ON
-    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Thermometer 9CBC Smoke"
+    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Smoke Detector 9CBC Smoke"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_power(hass: HomeAssistant) -> None:
+    """Test setting up a power binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="F8:24:41:E9:50:74",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "F8:24:41:E9:50:74",
+            b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x01\x00\x00",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    power_sensor = hass.states.get("binary_sensor.remote_control_5074_power")
+    power_sensor_attribtes = power_sensor.attributes
+    assert power_sensor.state == STATE_OFF
+    assert power_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Remote Control 5074 Power"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -294,10 +325,12 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -312,6 +345,8 @@ async def test_unavailable(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert CONF_SLEEPY_DEVICE not in entry.data
 
 
 async def test_sleepy_device(hass: HomeAssistant) -> None:
@@ -345,10 +380,12 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -363,3 +400,68 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
+    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="A4:C1:38:66:E5:67",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "A4:C1:38:66:E5:67",
+            b"@0\xd6\x03$\x19\x10\x01\x00",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+
+    assert opening_sensor.state == STATE_ON
+
+    # Fastforward time without BLE advertisements
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+
+    # Sleepy devices should keep their state over time
+    assert opening_sensor.state == STATE_ON
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+
+    # Sleepy devices should keep their state over time and restore it
+    assert opening_sensor.state == STATE_ON
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True

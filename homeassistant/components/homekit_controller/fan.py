@@ -1,10 +1,12 @@
 """Support for Homekit fans."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -40,6 +42,21 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
+    _enable_turn_on_off_backwards_compatibility = False
+
+    @callback
+    def _async_reconfigure(self) -> None:
+        """Reconfigure entity."""
+        self._async_clear_property_cache(
+            (
+                "_speed_range",
+                "_min_speed",
+                "_max_speed",
+                "speed_count",
+                "supported_features",
+            )
+        )
+        super()._async_reconfigure()
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -55,19 +72,19 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         """Return true if device is on."""
         return self.service.value(self.on_characteristic) == 1
 
-    @property
+    @cached_property
     def _speed_range(self) -> tuple[int, int]:
         """Return the speed range."""
         return (self._min_speed, self._max_speed)
 
-    @property
+    @cached_property
     def _min_speed(self) -> int:
         """Return the minimum speed."""
         return (
             round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1
         )
 
-    @property
+    @cached_property
     def _max_speed(self) -> int:
         """Return the minimum speed."""
         return round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100)
@@ -94,10 +111,10 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         oscillating = self.service.value(CharacteristicsTypes.SWING_MODE)
         return oscillating == 1
 
-    @property
+    @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -110,7 +127,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
         return features
 
-    @property
+    @cached_property
     def speed_count(self) -> int:
         """Speed count for the fan."""
         return round(
@@ -127,7 +144,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
 
         await self.async_put_characteristics(
             {
@@ -157,7 +175,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
         if (
             percentage is not None
-            and self.supported_features & FanEntityFeature.SET_SPEED
+            and FanEntityFeature.SET_SPEED in self.supported_features
         ):
             characteristics[CharacteristicsTypes.ROTATION_SPEED] = round(
                 percentage_to_ranged_value(self._speed_range, percentage)
@@ -186,6 +204,7 @@ class HomeKitFanV2(BaseHomeKitFan):
 ENTITY_TYPES = {
     ServicesTypes.FAN: HomeKitFanV1,
     ServicesTypes.FAN_V2: HomeKitFanV2,
+    ServicesTypes.AIR_PURIFIER: HomeKitFanV2,
 }
 
 

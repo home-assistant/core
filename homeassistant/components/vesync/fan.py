@@ -1,4 +1,5 @@
 """Support for VeSync fans."""
+
 from __future__ import annotations
 
 import logging
@@ -11,26 +12,20 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from .common import VeSyncDevice
-from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEV_TYPE_TO_HA = {
-    "LV-PUR131S": "fan",
-    "Core200S": "fan",
-    "Core300S": "fan",
-    "Core400S": "fan",
-    "Core600S": "fan",
-}
-
 FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
+FAN_MODE_PET = "pet"
+FAN_MODE_TURBO = "turbo"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
@@ -38,6 +33,9 @@ PRESET_MODES = {
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "EverestAir": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO],
+    "Vital200S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
+    "Vital100S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
 }
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
@@ -45,6 +43,9 @@ SPEED_RANGE = {  # off is not included
     "Core300S": (1, 3),
     "Core400S": (1, 4),
     "Core600S": (1, 4),
+    "EverestAir": (1, 3),
+    "Vital200S": (1, 4),
+    "Vital100S": (1, 4),
 }
 
 
@@ -86,9 +87,17 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _attr_name = None
+    _attr_translation_key = "vesync"
+    _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, fan):
+    def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan)
         self.smartfan = fan
@@ -120,7 +129,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
+        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO):
             return self.smartfan.mode
         return None
 
@@ -185,6 +194,10 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.auto_mode()
         elif preset_mode == FAN_MODE_SLEEP:
             self.smartfan.sleep_mode()
+        elif preset_mode == FAN_MODE_PET:
+            self.smartfan.pet_mode()
+        elif preset_mode == FAN_MODE_TURBO:
+            self.smartfan.turbo_mode()
 
         self.schedule_update_ha_state()
 

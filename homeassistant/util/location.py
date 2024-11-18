@@ -2,9 +2,10 @@
 
 detect_location_info and elevation are mocked by default during tests.
 """
+
 from __future__ import annotations
 
-import asyncio
+from functools import lru_cache
 import math
 from typing import Any, NamedTuple
 
@@ -57,6 +58,7 @@ async def async_detect_location_info(
     return LocationInfo(**data)
 
 
+@lru_cache
 def distance(
     lat1: float | None, lon1: float | None, lat2: float, lon2: float
 ) -> float | None:
@@ -89,7 +91,6 @@ def vincenty(
     if point1[0] == point2[0] and point1[1] == point2[1]:
         return 0.0
 
-    # pylint: disable=invalid-name
     U1 = math.atan((1 - FLATTENING) * math.tan(math.radians(point1[0])))
     U2 = math.atan((1 - FLATTENING) * math.tan(math.radians(point2[0])))
     L = math.radians(point2[1] - point1[1])
@@ -130,6 +131,7 @@ def vincenty(
     uSq = cosSqAlpha * (AXIS_A**2 - AXIS_B**2) / (AXIS_B**2)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    # fmt: off
     deltaSigma = (
         B
         * sinSigma
@@ -142,11 +144,12 @@ def vincenty(
                 - B
                 / 6
                 * cos2SigmaM
-                * (-3 + 4 * sinSigma**2)
-                * (-3 + 4 * cos2SigmaM**2)
+                * (-3 + 4 * sinSigma ** 2)
+                * (-3 + 4 * cos2SigmaM ** 2)
             )
         )
     )
+    # fmt: on
     s = AXIS_B * A * (sigma - deltaSigma)
 
     s /= 1000  # Conversion of meters to kilometers
@@ -160,9 +163,10 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query whoami.home-assistant.io for location data."""
     try:
         resp = await session.get(
-            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL, timeout=30
+            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL,
+            timeout=aiohttp.ClientTimeout(total=30),
         )
-    except (aiohttp.ClientError, asyncio.TimeoutError):
+    except (aiohttp.ClientError, TimeoutError):
         return None
 
     try:

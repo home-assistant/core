@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_select_async_setup_entry
+  dict({
+    'services': list([
+      dict({
+        'service': dict({
+          'coordinator': '**REDACTED**',
+          'description': '**REDACTED**',
+          'name': 'NBN',
+          'service_id': '12345678',
+          'type': 'NBN',
+        }),
+        'usage': dict({
+        }),
+      }),
+      dict({
+        'service': dict({
+          'coordinator': '**REDACTED**',
+          'description': '**REDACTED**',
+          'name': 'Mobile',
+          'service_id': '87654321',
+          'type': 'PhoneMobile',
+        }),
+        'usage': dict({
+        }),
+      }),
+      dict({
+        'service': dict({
+          'coordinator': '**REDACTED**',
+          'description': '**REDACTED**',
+          'name': 'VOIP',
+          'service_id': '23456789',
+          'type': 'VOIP',
+        }),
+        'usage': dict({
+        }),
+      }),
+    ]),
+  })
+# ---

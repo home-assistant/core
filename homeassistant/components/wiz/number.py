@@ -1,4 +1,5 @@
 """Support for WiZ effect speed numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -12,30 +13,22 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import WizConfigEntry
 from .entity import WizEntity
 from .models import WizData
 
 
-@dataclass
-class WizNumberEntityDescriptionMixin:
-    """Mixin to describe a WiZ number entity."""
-
-    value_fn: Callable[[wizlight], int | None]
-    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
-    required_feature: str
-
-
-@dataclass
-class WizNumberEntityDescription(
-    NumberEntityDescription, WizNumberEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class WizNumberEntityDescription(NumberEntityDescription):
     """Class to describe a WiZ number entity."""
+
+    required_feature: str
+    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
+    value_fn: Callable[[wizlight], int | None]
 
 
 async def _async_set_speed(device: wizlight, speed: int) -> None:
@@ -49,11 +42,10 @@ async def _async_set_ratio(device: wizlight, ratio: int) -> None:
 NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     WizNumberEntityDescription(
         key="effect_speed",
+        translation_key="effect_speed",
         native_min_value=10,
         native_max_value=200,
         native_step=1,
-        icon="mdi:speedometer",
-        name="Effect speed",
         value_fn=lambda device: cast(int | None, device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
@@ -61,11 +53,10 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
+        translation_key="dual_head_ratio",
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        icon="mdi:floor-lamp-dual",
-        name="Dual head ratio",
         value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
@@ -76,15 +67,16 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WizConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the wiz speed number."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        WizSpeedNumber(wiz_data, entry.title, description)
+        WizSpeedNumber(entry.runtime_data, entry.title, description)
         for description in NUMBERS
-        if getattr(wiz_data.bulb.bulbtype.features, description.required_feature)
+        if getattr(
+            entry.runtime_data.bulb.bulbtype.features, description.required_feature
+        )
     )
 
 

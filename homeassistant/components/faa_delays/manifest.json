@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/faa_delays",
   "iot_class": "cloud_polling",
   "loggers": ["faadelays"],
-  "requirements": ["faadelays==0.0.7"]
+  "requirements": ["faadelays==2023.9.1"]
 }

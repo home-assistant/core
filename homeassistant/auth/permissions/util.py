@@ -1,4 +1,5 @@
 """Helpers to deal with permissions."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,8 +10,8 @@ from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
-LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
-SubCatLookupType = dict[str, LookupFunc]
+type LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
+type SubCatLookupType = dict[str, LookupFunc]
 
 
 def lookup_all(
@@ -109,4 +110,4 @@ def test_all(policy: CategoryType, key: str) -> bool:
     if not isinstance(all_policy, dict):
         return bool(all_policy)
 
-    return all_policy.get(key, False)
+    return all_policy.get(key, False)  # type: ignore[no-any-return]

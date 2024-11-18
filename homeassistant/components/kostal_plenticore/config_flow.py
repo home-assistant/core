@@ -1,17 +1,19 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
-import asyncio
+
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, AuthenticationException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,20 +34,22 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     session = async_get_clientsession(hass)
     async with ApiClient(session, data["host"]) as client:
         await client.login(data["password"])
-        values = await client.get_setting_values("scb:network", "Hostname")
+        hostname_id = await get_hostname_id(client)
+        values = await client.get_setting_values("scb:network", hostname_id)
 
-    return values["scb:network"]["Hostname"]
+    return values["scb:network"][hostname_id]
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kostal Plenticore Solar Inverter."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        hostname = None
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
@@ -55,13 +59,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, asyncio.TimeoutError):
+            except (ClientError, TimeoutError):
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
-
-            if not errors:
+            else:
                 return self.async_create_entry(title=hostname, data=user_input)
 
         return self.async_show_form(

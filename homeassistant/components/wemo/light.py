@@ -1,7 +1,7 @@
 """Support for Belkin WeMo lights."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any, cast
 
 from pywemo import Bridge, BridgeLight, Dimmer
@@ -17,15 +17,14 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
+from . import async_wemo_dispatcher_connect
 from .const import DOMAIN as WEMO_DOMAIN
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity, WemoEntity
-from .wemo_device import DeviceCoordinator
 
 # The WEMO_ constants below come from pywemo itself
 WEMO_OFF = 0
@@ -45,14 +44,7 @@ async def async_setup_entry(
         else:
             async_add_entities([WemoDimmer(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("light")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
 
 @callback

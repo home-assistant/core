@@ -1,6 +1,5 @@
 """Tests for the Fjäråskupan integration."""
 
-
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -17,4 +16,5 @@ COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

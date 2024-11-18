@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the TwenteMilieu integration."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant

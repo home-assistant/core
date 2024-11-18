@@ -1,20 +1,21 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -27,7 +28,7 @@ def async_setup(
     hass: HomeAssistant,
     conf: ConfigType,
     filters: Filters | None,
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
 ) -> None:
     """Set up the logbook rest API."""
     hass.http.register_view(LogbookView(conf, filters, entities_filter))
@@ -44,7 +45,7 @@ class LogbookView(HomeAssistantView):
         self,
         config: dict[str, Any],
         filters: Filters | None,
-        entities_filter: EntityFilter | None,
+        entities_filter: Callable[[str], bool] | None,
     ) -> None:
         """Initialize the logbook view."""
         self.config = config
@@ -69,11 +70,11 @@ class LogbookView(HomeAssistantView):
         if entity_ids_str := request.query.get("entity"):
             try:
                 entity_ids = cv.entity_ids(entity_ids_str)
-            except vol.Invalid:
+            except vol.Invalid as ex:
                 raise InvalidEntityFormatError(
                     f"Invalid entity id(s) encountered: {entity_ids_str}. "
                     "Format should be <domain>.<object_id>"
-                ) from vol.Invalid
+                ) from ex
         else:
             entity_ids = None
 
@@ -86,7 +87,7 @@ class LogbookView(HomeAssistantView):
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
             end_day = end_day_dt
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         context_id = request.query.get("context_id")
 
@@ -108,13 +109,6 @@ class LogbookView(HomeAssistantView):
 
         def json_events() -> web.Response:
             """Fetch events and generate JSON."""
-            return self.json(
-                event_processor.get_events(
-                    start_day,
-                    end_day,
-                )
-            )
+            return self.json(event_processor.get_events(start_day, end_day))
 
-        return cast(
-            web.Response, await get_instance(hass).async_add_executor_job(json_events)
-        )
+        return await get_instance(hass).async_add_executor_job(json_events)
