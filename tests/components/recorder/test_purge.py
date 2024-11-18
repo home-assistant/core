@@ -1138,7 +1138,6 @@ async def test_purge_filtered_states_multiple_rounds(
         await async_wait_purge_done(hass)
 
     assert "Cleanup filtered data hasn't fully completed yet" not in caplog.text
-    caplog.clear()
 
 
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
