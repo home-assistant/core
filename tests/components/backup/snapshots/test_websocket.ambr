@@ -257,6 +257,84 @@
     'type': 'result',
   })
 # ---
+# name: test_config_info[storage_data0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_info[storage_data1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': '2024-10-26T02:00:00+00:00',
+        'max_copies': 3,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_info[storage_data2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': 3,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_info[storage_data3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': '2024-10-26T02:00:00+00:00',
+        'max_copies': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update.1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': 5,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_details[with_hassio-with_backup_content]
   dict({
     'error': dict({
