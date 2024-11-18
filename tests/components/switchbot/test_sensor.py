@@ -1,9 +1,15 @@
 """Test the switchbot sensors."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.components.switchbot.const import DOMAIN
+from homeassistant.components.switchbot.const import (
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -15,7 +21,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import WOHAND_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
+from . import (
+    WOHAND_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
+    WORELAY_SWITCH_1PM_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -102,6 +112,42 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
     assert co2_sensor.state == "725"
     assert co2_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Carbon dioxide"
     assert co2_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_relay_switch_1pm_power_sensor(hass: HomeAssistant) -> None:
+    """Test setting up creates the power sensor."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WORELAY_SWITCH_1PM_SERVICE_INFO)
+
+    with patch(
+        "switchbot.SwitchbotRelaySwitch.update",
+        return_value=None,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "relay_switch_1pm",
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+            unique_id="aabbccddeeaa",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    power_sensor = hass.states.get("sensor.test_name_power")
+    power_sensor_attrs = power_sensor.attributes
+    assert power_sensor.state == "4.9"
+    assert power_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Power"
+    assert power_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "W"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

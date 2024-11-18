@@ -63,7 +63,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.HUB2.value: [Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
-    SupportedModels.RELAY_SWITCH_1PLUS.value: [Platform.SWITCH],
+    SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -77,7 +77,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
     SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
-    SupportedModels.RELAY_SWITCH_1PLUS.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
 }
 
 

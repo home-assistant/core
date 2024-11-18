@@ -410,6 +410,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_set_device(device_adv)
             if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
                 return await self.async_step_lock_choose_method()
+            if device_adv.data.get("modelName") in ENCRYPTED_MODELS:
+                return await self.async_step_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self.async_step_confirm()

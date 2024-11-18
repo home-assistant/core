@@ -31,7 +31,7 @@ class SupportedModels(StrEnum):
     BLIND_TILT = "blind_tilt"
     HUB2 = "hub2"
     RELAY_SWITCH_1PM = "relay_switch_1pm"
-    RELAY_SWITCH_1PLUS = "relay_switch_1plus"
+    RELAY_SWITCH_1 = "relay_switch_1"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -47,7 +47,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
     SwitchbotModel.HUB2: SupportedModels.HUB2,
     SwitchbotModel.RELAY_SWITCH_1PM: SupportedModels.RELAY_SWITCH_1PM,
-    SwitchbotModel.RELAY_SWITCH_1_PLUS: SupportedModels.RELAY_SWITCH_1PLUS,
+    SwitchbotModel.RELAY_SWITCH_1_PLUS: SupportedModels.RELAY_SWITCH_1,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
