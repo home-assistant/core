@@ -32,6 +32,8 @@ def exception_wrap[_LinkPlayEntityT: LinkPlayBaseEntity, **_P, _R](
 class LinkPlayBaseEntity(Entity):
     """Representation of a LinkPlay base entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, bridge: LinkPlayBridge) -> None:
         """Initialize the LinkPlay media player."""
 

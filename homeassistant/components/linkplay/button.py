@@ -64,8 +64,6 @@ async def async_setup_entry(
 class LinkPlayButton(LinkPlayBaseEntity, ButtonEntity):
     """Representation of LinkPlay button."""
 
-    _attr_has_entity_name = True
-
     entity_description: LinkPlayButtonEntityDescription
 
     def __init__(

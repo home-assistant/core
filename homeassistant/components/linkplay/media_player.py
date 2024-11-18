@@ -149,7 +149,6 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     _attr_sound_mode_list = list(EQUALIZER_MAP.values())
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_media_content_type = MediaType.MUSIC
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, bridge: LinkPlayBridge) -> None:
