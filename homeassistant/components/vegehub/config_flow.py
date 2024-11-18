@@ -79,47 +79,41 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._config_url = f"http://{self._hub.ip_address}"
 
             if self._hub is not None:
-                try:
-                    webhook_id = webhook_generate_id()
-                    webhook_url = webhook_generate_url(
-                        self.hass,
-                        webhook_id,
-                        allow_external=False,
-                        allow_ip=True,
-                    )
+                webhook_id = webhook_generate_id()
+                webhook_url = webhook_generate_url(
+                    self.hass,
+                    webhook_id,
+                    allow_external=False,
+                    allow_ip=True,
+                )
 
-                    # Send the webhook address to the hub as its server target
-                    await self._hub.setup(
-                        "",
-                        webhook_url,
-                    )
+                # Send the webhook address to the hub as its server target
+                await self._hub.setup(
+                    "",
+                    webhook_url,
+                )
 
-                    info_data = self._hub.info
+                info_data = self._hub.info
 
-                    info_data["mac_address"] = self._hub.mac_address
-                    info_data["ip_addr"] = self._hub.ip_address
-                    info_data["hostname"] = self._hostname
-                    info_data["sw_ver"] = self._properties.get("version")
-                    info_data["config_url"] = self._config_url
-                    info_data["webhook_url"] = webhook_url
-                    info_data[CONF_WEBHOOK_ID] = webhook_id
+                info_data["mac_address"] = self._hub.mac_address
+                info_data["ip_addr"] = self._hub.ip_address
+                info_data["hostname"] = self._hostname
+                info_data["sw_ver"] = self._properties.get("version")
+                info_data["config_url"] = self._config_url
+                info_data["webhook_url"] = webhook_url
+                info_data[CONF_WEBHOOK_ID] = webhook_id
 
-                    # Create a task to ask the hub for an update when it can,
-                    # so that we have initial data
-                    self.hass.async_create_task(self._hub.request_update())
+                # Create a task to ask the hub for an update when it can,
+                # so that we have initial data
+                self.hass.async_create_task(self._hub.request_update())
 
-                    # Create the config entry for the new device
-                    return self.async_create_entry(
-                        title=f"{self._hostname}", data=info_data
-                    )
+                # Create the config entry for the new device
+                return self.async_create_entry(
+                    title=f"{self._hostname}", data=info_data
+                )
 
-                except Exception as e:
-                    _LOGGER.error("Failed to update device config: %s", e)
-                    errors["base"] = "cannot_connect"
-                    raise
-            else:
-                _LOGGER.error("No IP address for device")
-                errors["base"] = "cannot_connect"
+            _LOGGER.error("No IP address for device")
+            errors["base"] = "cannot_connect"
 
         if self._hub is None:
             # Show the form to allow the user to manually enter the IP address
