@@ -571,11 +571,18 @@ class BackupManager(BaseBackupManager[Backup]):
         This will write the restore information to .HA_RESTORE which
         will be handled during startup by the restore_backup module.
         """
-        if not (local_agent := self.local_backup_agents.get(agent_id)):
-            raise NotImplementedError("Only local backups can be restored for now")
 
-        if not await local_agent.async_get_backup(slug=slug):
-            raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+        if agent_id in self.local_backup_agents:
+            local_agent = self.local_backup_agents[agent_id]
+            if not await local_agent.async_get_backup(slug=slug):
+                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+            path = local_agent.get_backup_path(slug=slug)
+        else:
+            path = self.temp_backup_dir / f"{slug}.tar"
+            agent = self.backup_agents[agent_id]
+            if not (backup := await agent.async_get_backup(slug=slug)):
+                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+            await agent.async_download_backup(id=backup.id, path=path)
 
         path = local_agent.get_backup_path(slug)
 
