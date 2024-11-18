@@ -165,10 +165,10 @@
         "name": "Salt/TDS"
       },
       "pool_setpoint": {
-        "name": "Pool Setpoint"
+        "name": "Pool Chlorinator Setpoint"
       },
       "spa_setpoint": {
-        "name": "Spa Setpoint"
+        "name": "Spa Chlorinator Setpoint"
       }
     },
     "sensor": {
