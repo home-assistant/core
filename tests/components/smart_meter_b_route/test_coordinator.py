@@ -4,13 +4,8 @@ from unittest.mock import Mock
 
 from momonga import MomongaError
 
-from homeassistant.components.smart_meter_b_route.const import (
-    ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
-    ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
-    ATTR_API_INSTANTANEOUS_POWER,
-    ATTR_API_TOTAL_CONSUMPTION,
-)
 from homeassistant.components.smart_meter_b_route.coordinator import (
+    BRouteData,
     BRouteUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
@@ -25,12 +20,12 @@ async def test_broute_update_coordinator(
 
     await coordinator.async_refresh()
 
-    assert coordinator.data == {
-        ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE: 1,
-        ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE: 2,
-        ATTR_API_INSTANTANEOUS_POWER: 3,
-        ATTR_API_TOTAL_CONSUMPTION: 4,
-    }
+    assert coordinator.data == BRouteData(
+        instantaneous_current_r_phase=1,
+        instantaneous_current_t_phase=2,
+        instantaneous_power=3,
+        total_consumption=4,
+    )
 
     mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
     await coordinator.async_refresh()

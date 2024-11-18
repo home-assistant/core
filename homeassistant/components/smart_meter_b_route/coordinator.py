@@ -1,26 +1,29 @@
 """DataUpdateCoordinator for the Smart Meter B-route integration."""
 
+from dataclasses import dataclass
 import logging
-from typing import Any
 
 from momonga import Momonga, MomongaError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
-    ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
-    ATTR_API_INSTANTANEOUS_POWER,
-    ATTR_API_TOTAL_CONSUMPTION,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+@dataclass
+class BRouteData:
+    """Class for data of the B Route."""
+
+    instantaneous_current_r_phase: float
+    instantaneous_current_t_phase: float
+    instantaneous_power: float
+    total_consumption: float
+
+
+class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     """The B Route update coordinator."""
 
     def __init__(
@@ -45,17 +48,17 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.api.open,
         )
 
-    def _get_data(self) -> dict[str, int | float]:
+    def _get_data(self) -> BRouteData:
         """Get the data from API."""
         current = self.api.get_instantaneous_current()
-        return {
-            ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE: current["r phase current"],
-            ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE: current["t phase current"],
-            ATTR_API_INSTANTANEOUS_POWER: self.api.get_instantaneous_power(),
-            ATTR_API_TOTAL_CONSUMPTION: self.api.get_measured_cumulative_energy(),
-        }
+        return BRouteData(
+            instantaneous_current_r_phase=current["r phase current"],
+            instantaneous_current_t_phase=current["t phase current"],
+            instantaneous_power=self.api.get_instantaneous_power(),
+            total_consumption=self.api.get_measured_cumulative_energy(),
+        )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> BRouteData:
         """Update data."""
         try:
             return await self.hass.async_add_executor_job(self._get_data)

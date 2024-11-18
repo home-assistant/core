@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
 import pytest
 
@@ -12,7 +13,6 @@ from homeassistant.components.smart_meter_b_route.sensor import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from . import configure_integration
 
@@ -43,13 +43,18 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_momonga) -> None:
     ],
 )
 async def test_smart_meter_b_route_sensor_update(
-    hass: HomeAssistant, index: int, entity_id: str, mock_momonga
+    hass: HomeAssistant,
+    index: int,
+    entity_id: str,
+    mock_momonga,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test SmartMeterBRouteSensor update."""
     config_entry = configure_integration(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
@@ -57,7 +62,9 @@ async def test_smart_meter_b_route_sensor_update(
 
 
 async def test_smart_meter_b_route_sensor_no_update(
-    hass: HomeAssistant, mock_momonga
+    hass: HomeAssistant,
+    mock_momonga,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test SmartMeterBRouteSensor with no update."""
 
@@ -66,7 +73,8 @@ async def test_smart_meter_b_route_sensor_no_update(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)

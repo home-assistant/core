@@ -1,5 +1,7 @@
 """Smart Meter B Route."""
 
+from collections.abc import Callable
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,36 +23,49 @@ from .const import (
     ATTR_API_TOTAL_CONSUMPTION,
     DOMAIN,
 )
-from .coordinator import BRouteUpdateCoordinator
+from .coordinator import BRouteData, BRouteUpdateCoordinator
+
+
+class SensorEntityDescriptionWithValueAccessor(
+    SensorEntityDescription, frozen_or_thawed=True
+):
+    """Sensor entity description with data accessor."""
+
+    value_accessor: Callable[[BRouteData], StateType] | None = None
+
 
 SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
+    SensorEntityDescriptionWithValueAccessor(
         key=ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
         translation_key=ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_accessor=lambda data: data.instantaneous_current_r_phase,
     ),
-    SensorEntityDescription(
+    SensorEntityDescriptionWithValueAccessor(
         key=ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
         translation_key=ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_accessor=lambda data: data.instantaneous_current_t_phase,
     ),
-    SensorEntityDescription(
+    SensorEntityDescriptionWithValueAccessor(
         key=ATTR_API_INSTANTANEOUS_POWER,
         translation_key=ATTR_API_INSTANTANEOUS_POWER,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        value_accessor=lambda data: data.instantaneous_power,
     ),
-    SensorEntityDescription(
+    SensorEntityDescriptionWithValueAccessor(
         key=ATTR_API_TOTAL_CONSUMPTION,
         translation_key=ATTR_API_TOTAL_CONSUMPTION,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_accessor=lambda data: data.total_consumption,
     ),
 )
 
@@ -77,11 +92,11 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
     def __init__(
         self,
         coordinator: BRouteUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: SensorEntityDescriptionWithValueAccessor,
     ) -> None:
         """Initialize Smart Meter B-route sensor entity."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self.entity_description: SensorEntityDescriptionWithValueAccessor = description
         self._attr_unique_id = f"{coordinator.bid}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.bid)},
@@ -91,4 +106,6 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if self.entity_description.value_accessor is None:
+            return None
+        return self.entity_description.value_accessor(self.coordinator.data)
