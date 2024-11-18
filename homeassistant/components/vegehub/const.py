@@ -1,10 +1,10 @@
 """Constants for the Vegetronix VegeHub integration."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "vegehub"
 NAME = "VegeHub"
-CONF_API_KEY = "api_key"
-METHODS = ["POST"]
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 MANUFACTURER = "vegetronix"
 MODEL = "VegeHub"
 OPTION_DATA_TYPE_CHOICES = [
