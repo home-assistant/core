@@ -83,7 +83,13 @@ def test_all() -> None:
         "ENERGY_",
     )
     + _create_tuples(const.UnitOfElectricCurrent, "ELECTRIC_CURRENT_")
-    + _create_tuples(const.UnitOfElectricPotential, "ELECTRIC_POTENTIAL_")
+    + _create_tuples(
+        [
+            const.UnitOfElectricPotential.MILLIVOLT,
+            const.UnitOfElectricPotential.VOLT,
+        ],
+        "ELECTRIC_POTENTIAL_",
+    )
     + _create_tuples(const.UnitOfTemperature, "TEMP_")
     + _create_tuples(const.UnitOfTime, "TIME_")
     + _create_tuples(
