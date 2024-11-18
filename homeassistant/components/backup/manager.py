@@ -185,7 +185,8 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self,
         slug: str,
         *,
-        password: str | None = None,
+        agent_id: str,
+        password: str | None,
         **kwargs: Any,
     ) -> None:
         """Restore a backup."""
@@ -593,7 +594,8 @@ class BackupManager(BaseBackupManager[Backup]):
         self,
         slug: str,
         *,
-        password: str | None = None,
+        agent_id: str,
+        password: str | None,
         **kwargs: Any,
     ) -> None:
         """Restore a backup.
@@ -601,13 +603,18 @@ class BackupManager(BaseBackupManager[Backup]):
         This will write the restore information to .HA_RESTORE which
         will be handled during startup by the restore_backup module.
         """
-        if (backup := await self.async_get_backup(slug=slug)) is None:
-            raise HomeAssistantError(f"Backup {slug} not found")
+        if not (local_agent := self.local_backup_agents.get(agent_id)):
+            raise NotImplementedError("Only local backups can be restored for now")
+
+        if not await local_agent.async_get_backup(slug=slug):
+            raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+
+        path = local_agent.get_backup_path(slug)
 
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                json.dumps({"path": backup.path.as_posix(), "password": password}),  # type: ignore[attr-defined]
+                json.dumps({"path": path.as_posix(), "password": password}),
                 encoding="utf-8",
             )
 

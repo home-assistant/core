@@ -97,6 +97,7 @@ async def handle_remove(
     {
         vol.Required("type"): "backup/restore",
         vol.Required("slug"): str,
+        vol.Required("agent_id"): str,
         vol.Optional("password"): str,
     }
 )
@@ -109,6 +110,7 @@ async def handle_restore(
     """Restore a backup."""
     await hass.data[DATA_MANAGER].async_restore_backup(
         slug=msg["slug"],
+        agent_id=msg["agent_id"],
         password=msg.get("password"),
     )
     connection.send_result(msg["id"])

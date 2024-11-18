@@ -234,7 +234,9 @@ async def test_restore(
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
     ):
-        await client.send_json_auto_id({"type": "backup/restore", "slug": "abc123"})
+        await client.send_json_auto_id(
+            {"type": "backup/restore", "slug": "abc123", "agent_id": "backup.local"}
+        )
         assert await client.receive_json() == snapshot
 
 

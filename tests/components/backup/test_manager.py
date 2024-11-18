@@ -601,38 +601,19 @@ async def test_async_receive_backup(
         assert copy_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
-@pytest.mark.xfail(reason="Restore not implemented in the draft")
 async def test_async_trigger_restore(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass)
-    manager.loaded_backups = True
-    manager.backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.write_text") as mocked_write_text,
-        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
-    ):
-        await manager.async_restore_backup(TEST_LOCAL_BACKUP.slug)
-        assert (
-            mocked_write_text.call_args[0][0]
-            == '{"path": "abc123.tar", "password": null}'
-        )
-        assert mocked_service_call.called
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
 
-
-@pytest.mark.xfail(reason="Restore not implemented in the draft")
-async def test_async_trigger_restore_with_password(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test trigger restore."""
-    manager = BackupManager(hass)
-    manager.loaded_backups = True
-    manager.backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent._backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
+    local_agent._loaded_backups = True
 
     with (
         patch("pathlib.Path.exists", return_value=True),
@@ -640,11 +621,40 @@ async def test_async_trigger_restore_with_password(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(
-            slug=TEST_LOCAL_BACKUP.slug, password="abc123"
+            TEST_LOCAL_BACKUP.slug, agent_id=LOCAL_AGENT_ID, password=None
         )
         assert (
             mocked_write_text.call_args[0][0]
-            == '{"path": "abc123.tar", "password": "abc123"}'
+            == f'{{"path": "{hass.config.path()}/backups/abc123.tar", "password": null}}'
+        )
+        assert mocked_service_call.called
+
+
+async def test_async_trigger_restore_with_password(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent._backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
+    local_agent._loaded_backups = True
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text") as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+    ):
+        await manager.async_restore_backup(
+            slug=TEST_LOCAL_BACKUP.slug, agent_id=LOCAL_AGENT_ID, password="abc123"
+        )
+        assert (
+            mocked_write_text.call_args[0][0]
+            == f'{{"path": "{hass.config.path()}/backups/abc123.tar", "password": "abc123"}}'
         )
         assert mocked_service_call.called
 
@@ -652,7 +662,14 @@ async def test_async_trigger_restore_with_password(
 async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass)
-    manager.loaded_backups = True
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent._loaded_backups = True
 
     with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
-        await manager.async_restore_backup(TEST_LOCAL_BACKUP.slug)
+        await manager.async_restore_backup(
+            TEST_LOCAL_BACKUP.slug, agent_id=LOCAL_AGENT_ID, password=None
+        )
