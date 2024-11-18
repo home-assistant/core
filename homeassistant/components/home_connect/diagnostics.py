@@ -15,6 +15,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return {
-        device.device_id: device.appliance.status
+        device.appliance.haId: device.appliance.status
         for device in hass.data[DOMAIN][config_entry.entry_id].devices
     }
