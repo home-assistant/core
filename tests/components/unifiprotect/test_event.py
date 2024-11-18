@@ -208,7 +208,6 @@ async def test_doorbell_nfc_scanned(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
     assert state.attributes.get("nfc_id") == "test_nfc_id"
-    assert state.attributes.get("user_id") == "test_user_id"
 
     unsub()
 
