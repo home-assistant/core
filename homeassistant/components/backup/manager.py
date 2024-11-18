@@ -339,14 +339,6 @@ class BackupManager(BaseBackupManager[Backup]):
 
         return backup
 
-    async def async_get_backup_path(self, *, slug: str, **kwargs: Any) -> Path | None:
-        """Return path to a backup if it is available locally."""
-        for local_agent in self.local_backup_agents.values():
-            if not await local_agent.async_get_backup(slug=slug):
-                continue
-            return local_agent.get_backup_path(slug)
-        return None
-
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
         for agent in self.backup_agents.values():
