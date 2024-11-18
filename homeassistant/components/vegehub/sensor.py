@@ -1,6 +1,6 @@
 """Sensor configuration for VegeHub integration."""
 
-from vegehub import vh400_transform
+from vegehub import therm200_transform, vh400_transform
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -129,9 +129,7 @@ class VegeHubSensor(SensorEntity):
         if (
             self._data_type == OPTION_DATA_TYPE_CHOICES[2] and self._attr_native_value
         ):  # Temperature C
-            if isinstance(self._attr_native_value, (int, str, float)):
-                return (41.6700 * float(self._attr_native_value)) - 40.0000
-            return None
+            return therm200_transform(self._attr_native_value)
 
         if isinstance(self._attr_native_value, (int, str, float)):
             return float(self._attr_native_value)
