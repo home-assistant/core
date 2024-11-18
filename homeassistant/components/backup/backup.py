@@ -5,16 +5,15 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
-import tarfile
 from tarfile import TarError
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import json_loads_object
 
 from .agent import BackupAgent, LocalBackupAgent, UploadedBackup
-from .const import BUF_SIZE, LOGGER
+from .const import LOGGER
 from .models import BackupUploadMetadata
+from .util import read_backup
 
 
 async def async_get_backup_agents(
@@ -61,19 +60,17 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         backups: dict[str, LocalBackup] = {}
         for backup_path in self.backup_dir.glob("*.tar"):
             try:
-                with tarfile.open(backup_path, "r:", bufsize=BUF_SIZE) as backup_file:
-                    if data_file := backup_file.extractfile("./backup.json"):
-                        data = json_loads_object(data_file.read())
-                        backup = LocalBackup(
-                            id=cast(str, data["slug"]),  # Do we need another ID?
-                            slug=cast(str, data["slug"]),
-                            name=cast(str, data["name"]),
-                            date=cast(str, data["date"]),
-                            path=backup_path,
-                            size=round(backup_path.stat().st_size / 1_048_576, 2),
-                            protected=cast(bool, data.get("protected", False)),
-                        )
-                        backups[backup.slug] = backup
+                base_backup = read_backup(backup_path)
+                backup = LocalBackup(
+                    id=base_backup.slug,
+                    slug=base_backup.slug,
+                    name=base_backup.name,
+                    date=base_backup.date,
+                    path=backup_path,
+                    size=round(backup_path.stat().st_size / 1_048_576, 2),
+                    protected=base_backup.protected,
+                )
+                backups[backup.slug] = backup
             except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups

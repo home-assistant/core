@@ -15,10 +15,18 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.backup import LocalBackup
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import LOCAL_AGENT_ID, Backup
+from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
+TEST_BASE_BACKUP = BaseBackup(
+    slug="abc123",
+    name="Test",
+    date="1970-01-01T00:00:00.000Z",
+    size=0.0,
+    protected=False,
+)
 TEST_BACKUP = Backup(
     agent_ids=["backup.local"],
     slug="abc123",

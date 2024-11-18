@@ -38,6 +38,7 @@ from .const import (
     LOGGER,
 )
 from .models import BackupUploadMetadata, BaseBackup
+from .util import read_backup
 
 # pylint: disable=fixme
 # TODO: Don't forget to remove this when the implementation is complete
@@ -227,6 +228,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     async def async_receive_backup(
         self,
         *,
+        agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
         **kwargs: Any,
     ) -> None:
@@ -264,7 +266,7 @@ class BackupManager(BaseBackupManager[Backup]):
     async def _async_upload_backup(
         self,
         *,
-        backup: Backup,
+        backup: BaseBackup,
         agent_ids: list[str],
         path: Path,
     ) -> None:
@@ -335,6 +337,7 @@ class BackupManager(BaseBackupManager[Backup]):
     async def async_receive_backup(
         self,
         *,
+        agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
         **kwargs: Any,
     ) -> None:
@@ -384,12 +387,37 @@ class BackupManager(BaseBackupManager[Backup]):
             if fut is not None:
                 await fut
 
-        def _move_and_cleanup() -> None:
-            shutil.move(target_temp_file, self.temp_backup_dir / target_temp_file.name)
+        def _copy_and_cleanup(local_file_paths: list[Path], backup: BaseBackup) -> Path:
+            if local_file_paths:
+                tar_file_path = local_file_paths[0]
+            else:
+                tar_file_path = self.temp_backup_dir / f"{backup.slug}.tar"
+            for local_path in local_file_paths:
+                shutil.copy(target_temp_file, local_path)
             temp_dir_handler.cleanup()
+            return tar_file_path
 
-        await self.hass.async_add_executor_job(_move_and_cleanup)
-        # TODO: What do we need to do instead?
+        try:
+            backup = await self.hass.async_add_executor_job(
+                read_backup, target_temp_file
+            )
+        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+            LOGGER.warning("Unable to parse backup %s: %s", target_temp_file, err)
+            return
+
+        local_file_paths = [
+            self.local_backup_agents[agent_id].get_backup_path(backup.slug)
+            for agent_id in agent_ids
+            if agent_id in self.local_backup_agents
+        ]
+        tar_file_path = await self.hass.async_add_executor_job(
+            _copy_and_cleanup, local_file_paths, backup
+        )
+        await self._async_upload_backup(
+            backup=backup, agent_ids=agent_ids, path=tar_file_path
+        )
+        if not local_file_paths:
+            await self.hass.async_add_executor_job(tar_file_path.unlink, True)
 
     async def async_create_backup(
         self,
@@ -442,7 +470,7 @@ class BackupManager(BaseBackupManager[Backup]):
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
         slug: str,
-    ) -> Backup:
+    ) -> BaseBackup:
         """Generate a backup."""
         success = False
 
@@ -476,15 +504,13 @@ class BackupManager(BaseBackupManager[Backup]):
                 database_included,
                 password,
             )
-            backup = Backup(
+            backup = BaseBackup(
                 slug=slug,
                 name=backup_name,
                 date=date_str,
                 size=round(size_in_bytes / 1_048_576, 2),
                 protected=password is not None,
-                agent_ids=agent_ids,  # TODO: This should maybe be set after upload
             )
-            # TODO: We should add a cache of the backup metadata
             LOGGER.debug(
                 "Generated new backup with slug %s, uploading to agents %s",
                 slug,
@@ -494,7 +520,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 backup=backup, agent_ids=agent_ids, path=tar_file_path
             )
             if not local_file_paths:
-                tar_file_path.unlink(True)
+                await self.hass.async_add_executor_job(tar_file_path.unlink, True)
             success = True
             return backup
         finally:
@@ -544,8 +570,8 @@ class BackupManager(BaseBackupManager[Backup]):
                     excludes=excludes,
                     arcname="data",
                 )
-        for copy_path in tar_file_paths[1:]:
-            shutil.copy(tar_file_path, copy_path)
+        for local_path in tar_file_paths[1:]:
+            shutil.copy(tar_file_path, local_path)
         return (tar_file_path, tar_file_path.stat().st_size)
 
     async def async_restore_backup(

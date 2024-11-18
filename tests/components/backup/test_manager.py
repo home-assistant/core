@@ -23,7 +23,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import TEST_BACKUP, TEST_BACKUP_PATH, TEST_LOCAL_BACKUP, BackupAgentTest
+from .common import (
+    TEST_BACKUP,
+    TEST_BACKUP_PATH,
+    TEST_BASE_BACKUP,
+    TEST_LOCAL_BACKUP,
+    BackupAgentTest,
+)
 
 from tests.common import MockPlatform, mock_platform
 
@@ -126,7 +132,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
         patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH]),
         patch("tarfile.open", return_value=MagicMock()),
         patch(
-            "homeassistant.components.backup.backup.json_loads_object",
+            "homeassistant.components.backup.util.json_loads_object",
             return_value={
                 "slug": TEST_LOCAL_BACKUP.slug,
                 "name": TEST_LOCAL_BACKUP.name,
@@ -557,6 +563,9 @@ async def test_async_receive_backup(
     """Test receiving a backup file."""
     manager = BackupManager(hass)
 
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
     size = 2 * 2**16
     protocol = Mock(_reading_paused=False)
     stream = aiohttp.StreamReader(protocol, 2**16)
@@ -565,8 +574,16 @@ async def test_async_receive_backup(
 
     open_mock = mock_open()
 
-    with patch("pathlib.Path.open", open_mock), patch("shutil.move") as mover_mock:
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch("shutil.copy") as copy_mock,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BASE_BACKUP,
+        ),
+    ):
         await manager.async_receive_backup(
+            agent_ids=[LOCAL_AGENT_ID],
             contents=aiohttp.BodyPartReader(
                 b"--:",
                 CIMultiDictProxy(
@@ -577,11 +594,11 @@ async def test_async_receive_backup(
                     )
                 ),
                 stream,
-            )
+            ),
         )
         assert open_mock.call_count == 1
-        assert mover_mock.call_count == 1
-        assert mover_mock.mock_calls[0].args[1].name == "abc123.tar"
+        assert copy_mock.call_count == 1
+        assert copy_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
 @pytest.mark.xfail(reason="Restore not implemented in the draft")
