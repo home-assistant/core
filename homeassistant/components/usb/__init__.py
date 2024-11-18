@@ -48,6 +48,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
+
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 
@@ -55,6 +57,7 @@ __all__ = [
     "USBCallbackMatcher",
     "async_is_plugged_in",
     "async_register_scan_request_callback",
+    "async_register_port_event_callback",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -86,6 +89,15 @@ def async_register_initial_scan_callback(
 
 
 @hass_callback
+def async_register_port_event_callback(
+    hass: HomeAssistant, callback: PORT_EVENT_CALLBACK_TYPE
+) -> CALLBACK_TYPE:
+    """Register to receive a callback when a USB device is connected or disconnected."""
+    discovery: USBDiscovery = hass.data[DOMAIN]
+    return discovery.async_register_port_event_callback(callback)
+
+
+@hass_callback
 def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
 
@@ -108,8 +120,25 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
 
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     return any(
-        _is_matching(USBDevice(*device_tuple), matcher)
-        for device_tuple in usb_discovery.seen
+        _is_matching(
+            USBDevice(
+                device=device,
+                vid=vid,
+                pid=pid,
+                serial_number=serial_number,
+                manufacturer=manufacturer,
+                description=description,
+            ),
+            matcher,
+        )
+        for (
+            device,
+            vid,
+            pid,
+            serial_number,
+            manufacturer,
+            description,
+        ) in usb_discovery.seen
     )
 
 
@@ -229,6 +258,8 @@ class USBDiscovery:
         self._request_callbacks: list[CALLBACK_TYPE] = []
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
+        self._port_event_callbacks: list[PORT_EVENT_CALLBACK_TYPE] = []
+        self._last_processed_devices: set[USBDevice] = set()
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -324,21 +355,27 @@ class USBDiscovery:
             return None
 
         observer = MonitorObserver(
-            monitor, callback=self._device_discovered, name="usb-observer"
+            monitor, callback=self._device_event, name="usb-observer"
         )
 
         observer.start()
         return observer
 
-    def _device_discovered(self, device: Device) -> None:
-        """Call when the observer discovers a new usb tty device."""
-        if device.action != "add":
-            return
-        _LOGGER.debug(
-            "Discovered Device at path: %s, triggering scan serial",
-            device.device_path,
-        )
-        self.hass.create_task(self._async_scan())
+    def _device_event(self, device: Device) -> None:
+        """Call when the observer receives a USB device event."""
+        if device.action == "add":
+            _LOGGER.debug(
+                "Discovered Device at path: %s, triggering scan serial",
+                device.device_path,
+            )
+            self.hass.create_task(self._async_scan())
+
+        if device.action == "remove":
+            _LOGGER.debug(
+                "Device removed %s, triggering scan serial",
+                device,
+            )
+            self.hass.create_task(self._async_scan())
 
     @hass_callback
     def async_register_scan_request_callback(
@@ -371,6 +408,22 @@ class USBDiscovery:
             if callback not in self._initial_scan_callbacks:
                 return
             self._initial_scan_callbacks.remove(callback)
+
+        return _async_remove_callback
+
+    @hass_callback
+    def async_register_port_event_callback(
+        self,
+        callback: PORT_EVENT_CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a port event callback."""
+        self._port_event_callbacks.append(callback)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            if callback not in self._port_event_callbacks:
+                return
+            self._port_event_callbacks.remove(callback)
 
         return _async_remove_callback
 
@@ -442,6 +495,15 @@ class USBDiscovery:
                     and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
                 )
             ]
+
+        unique_devices = set(usb_devices)
+        added_devices = unique_devices - self._last_processed_devices
+        removed_devices = self._last_processed_devices - unique_devices
+        self._last_processed_devices = unique_devices
+
+        if added_devices or removed_devices:
+            for callback in self._port_event_callbacks:
+                callback(added_devices, removed_devices)
 
         for usb_device in usb_devices:
             await self._async_process_discovered_usb_device(usb_device)
