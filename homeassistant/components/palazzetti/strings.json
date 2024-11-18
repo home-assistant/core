@@ -8,6 +8,9 @@
         "data_description": {
           "host": "The host name or the IP address of the Palazzetti CBox"
         }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add {name} ({host}) to Home Assistant?"
       }
     },
     "abort": {
