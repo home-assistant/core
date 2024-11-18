@@ -3,9 +3,6 @@
     "button": {
       "timesync": {
         "default": "mdi:clock"
-      },
-      "restart": {
-        "default": "mdi:restart"
       }
     }
   },
