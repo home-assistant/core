@@ -181,7 +181,7 @@ class ReportBehavior(enum.Enum):
 def report_usage(
     what: str,
     *,
-    breaks_in_version: str | None = None,
+    breaks_in_ha_version: str | None = None,
     core_behavior: ReportBehavior = ReportBehavior.ERROR,
     core_integration_behavior: ReportBehavior = ReportBehavior.LOG,
     custom_integration_behavior: ReportBehavior = ReportBehavior.LOG,
@@ -192,7 +192,7 @@ def report_usage(
 
     :param what: will be wrapped with "Detected that integration 'integration' {what}.
     Please create a bug report at https://..."
-    :param breaks_in_version: if set, the report will be adjusted to specify the
+    :param breaks_in_ha_version: if set, the report will be adjusted to specify the
     breaking version
     """
     try:
@@ -204,10 +204,10 @@ def report_usage(
         if core_behavior is ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
         if core_behavior is ReportBehavior.LOG:
-            if breaks_in_version:
+            if breaks_in_ha_version:
                 msg = (
                     f"Detected code that {what}. This will stop working in Home "
-                    f"Assistant {breaks_in_version}, please report this issue"
+                    f"Assistant {breaks_in_ha_version}, please report this issue"
                 )
             _LOGGER.warning(msg, stack_info=True)
         return
@@ -219,7 +219,7 @@ def report_usage(
     if integration_behavior is not ReportBehavior.IGNORE:
         _report_integration(
             what,
-            breaks_in_version,
+            breaks_in_ha_version,
             integration_frame,
             level,
             integration_behavior is ReportBehavior.ERROR,
@@ -228,7 +228,7 @@ def report_usage(
 
 def _report_integration(
     what: str,
-    breaks_in_version: str | None,
+    breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
     error: bool = False,
@@ -258,8 +258,8 @@ def _report_integration(
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
-        f"This will stop working in Home Assistant {breaks_in_version}, please"
-        if breaks_in_version
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
         else "Please",
         report_issue,
     )

@@ -280,7 +280,7 @@ async def test_prevent_flooding(
 
 
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_breaks_in_version(
+async def test_breaks_in_ha_version(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
 ) -> None:
     """Test to ensure a report is only written once to the log."""
@@ -297,7 +297,7 @@ async def test_breaks_in_version(
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
-    frame.report_usage(what, breaks_in_version="2024.11")
+    frame.report_usage(what, breaks_in_ha_version="2024.11")
     assert expected_message in caplog.text
 
 
