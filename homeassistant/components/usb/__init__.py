@@ -247,6 +247,7 @@ class USBDiscovery:
             self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
+        """Start monitoring hardware."""
         fallback_to_polling = await self._async_start_monitor_udev()
 
         if not fallback_to_polling:
