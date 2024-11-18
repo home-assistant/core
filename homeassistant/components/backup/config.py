@@ -19,6 +19,7 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     last_automatic_backup: datetime | None
+    max_copies: int | None
 
 
 @dataclass(kw_only=True)
@@ -26,18 +27,21 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     last_automatic_backup: datetime | None = None
+    max_copies: int | None = None
 
     @classmethod
     def from_dict(cls, data: StoredBackupConfig) -> Self:
         """Initialize backup config data from a dict."""
         return cls(
             last_automatic_backup=data["last_automatic_backup"],
+            max_copies=data["max_copies"],
         )
 
     def to_dict(self) -> StoredBackupConfig:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             last_automatic_backup=self.last_automatic_backup,
+            max_copies=self.max_copies,
         )
 
 

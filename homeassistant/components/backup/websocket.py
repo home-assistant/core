@@ -30,6 +30,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_restore)
 
     websocket_api.async_register_command(hass, handle_config_info)
+    websocket_api.async_register_command(hass, handle_config_update)
 
 
 @websocket_api.require_admin
@@ -284,3 +285,23 @@ async def handle_config_info(
             "config": manager.config.data,
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/config/update",
+        vol.Optional("max_copies"): int,
+    }
+)
+@websocket_api.async_response
+async def handle_config_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update the stored backup config."""
+    manager = hass.data[DATA_MANAGER]
+    manager.config.data.max_copies = msg.get("max_copies")
+    await manager.config.save()
+    connection.send_result(msg["id"])

@@ -263,6 +263,33 @@
     'result': dict({
       'config': dict({
         'last_automatic_backup': None,
+        'max_copies': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update.1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+        'max_copies': 5,
       }),
     }),
     'success': True,
