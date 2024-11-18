@@ -51,7 +51,7 @@ ATTR_API_CURRENT = "current"
 ATTR_API_HOURLY_FORECAST = "hourly_forecast"
 ATTR_API_DAILY_FORECAST = "daily_forecast"
 UPDATE_LISTENER = "update_listener"
-PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR, Platform.WEATHER]
 
 FORECAST_MODE_HOURLY = "hourly"
 FORECAST_MODE_DAILY = "daily"
