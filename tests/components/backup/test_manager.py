@@ -202,7 +202,6 @@ async def test_removing_non_existing_backup(
     assert "Removed backup located at" not in caplog.text
 
 
-@pytest.mark.xfail(reason="Cleanup not implemented in the draft")
 async def test_getting_backup_that_does_not_exist(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
