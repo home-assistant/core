@@ -138,8 +138,8 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
         if self.hvac_mode == HVACMode.OFF:
-            return HEAT_MODE(self._last_preset).name.lower()
-        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).name.lower()
+            return HEAT_MODE(self._last_preset).title
+        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).title
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""

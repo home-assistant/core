@@ -127,28 +127,10 @@
     },
     "climate": {
       "body_0": {
-        "name": "Pool Heat",
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
-              "solar_prefered": "[%key:component::screenlogic::common::climate_preset_solar_prefered%]",
-              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]"
-            }
-          }
-        }
+        "name": "Pool Heat"
       },
       "body_1": {
-        "name": "Spa Heat",
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
-              "solar_prefered": "[%key:component::screenlogic::common::climate_preset_solar_prefered%]",
-              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]"
-            }
-          }
-        }
+        "name": "Spa Heat"
       }
     },
     "number": {
@@ -203,12 +185,7 @@
         "name": "[%key:component::screenlogic::entity::number::salt_tds_ppm::name%]"
       },
       "chem_dose_state": {
-        "name": "{chem} Dosing State",
-        "state": {
-          "dosing": "Dosing",
-          "mixing": "Mixing",
-          "monitoring": "Monitoring"
-        }
+        "name": "{chem} Dosing State"
       },
       "chem_last_dose_time": {
         "name": "{chem} Last Dose Duration"
