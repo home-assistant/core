@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherBaseResponse, SwitcherApi
+from aioswitcher.api import SwitcherApi, SwitcherBaseResponse
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
 
 from homeassistant.components.cover import (

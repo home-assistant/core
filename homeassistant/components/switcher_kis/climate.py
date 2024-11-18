@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherBaseResponse, SwitcherApi
+from aioswitcher.api import SwitcherApi, SwitcherBaseResponse
 from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,

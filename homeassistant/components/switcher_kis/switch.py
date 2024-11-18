@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherApi
+from aioswitcher.api import Command, SwitcherApi, SwitcherBaseResponse
 from aioswitcher.device import DeviceCategory, DeviceState
 import voluptuous as vol
 

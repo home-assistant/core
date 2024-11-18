@@ -10,7 +10,6 @@ from aioswitcher.api import (
     DeviceState,
     SwitcherApi,
     SwitcherBaseResponse,
-    SwitcherApi,
     ThermostatSwing,
 )
 from aioswitcher.api.remotes import SwitcherBreezeRemote
