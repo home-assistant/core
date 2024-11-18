@@ -5,9 +5,9 @@ import json
 from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN

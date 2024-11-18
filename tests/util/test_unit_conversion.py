@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -32,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -59,6 +61,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        BloodGlucoseConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -80,6 +83,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    BloodGlucoseConcentrationConverter: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        18,
+    ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
         UnitOfConductivity.MILLISIEMENS_PER_CM,
@@ -130,6 +138,20 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    BloodGlucoseConcentrationConverter: [
+        (
+            90,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+            5,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+            18,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        ),
+    ],
     ConductivityConverter: [
         # Deprecated to deprecated
         (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
@@ -357,10 +379,16 @@ _CONVERTED_VALUE: dict[
     EnergyConverter: [
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.00000001, UnitOfEnergy.GIGA_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.00000000001, UnitOfEnergy.TERA_WATT_HOUR),
         (10, UnitOfEnergy.KILO_WATT_HOUR, 10000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_WATT_HOUR, 10e6, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_WATT_HOUR, 10e9, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.TERA_WATT_HOUR, 10e9, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.TERA_WATT_HOUR, 10e12, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.GIGA_JOULE, 2777.78, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_JOULE, 2.77778, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_JOULE, 2.77778, UnitOfEnergy.KILO_WATT_HOUR),
@@ -439,6 +467,9 @@ _CONVERTED_VALUE: dict[
     ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
+        (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
+        (10, UnitOfPower.GIGA_WATT, 10e9, UnitOfPower.WATT),
+        (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
     ],
     PressureConverter: [
