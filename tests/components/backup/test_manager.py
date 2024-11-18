@@ -16,12 +16,13 @@ from homeassistant.components.backup import (
     BackupPlatformProtocol,
     backup as local_backup_platform,
 )
-from homeassistant.components.backup.manager import LOCAL_AGENT_ID, BackupProgress
+from homeassistant.components.backup.manager import BackupProgress
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    LOCAL_AGENT_ID,
     TEST_BACKUP,
     TEST_BACKUP_PATH,
     TEST_BASE_BACKUP,
