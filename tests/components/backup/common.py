@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     BackupUploadMetadata,
     BaseBackup,
 )
-from homeassistant.components.backup.backup import LocalBackup
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import Backup
 from homeassistant.core import HomeAssistant
@@ -32,14 +31,6 @@ TEST_BASE_BACKUP_ABC123 = BaseBackup(
     size=0.0,
 )
 TEST_BACKUP_PATH_ABC123 = Path("abc123.tar")
-TEST_LOCAL_BACKUP_ABC123 = LocalBackup(
-    date="1970-01-01T00:00:00.000Z",
-    backup_id="abc123",
-    name="Test",
-    path=Path("abc123.tar"),
-    protected=False,
-    size=0.0,
-)
 
 TEST_BASE_BACKUP_DEF456 = BaseBackup(
     backup_id="def456",

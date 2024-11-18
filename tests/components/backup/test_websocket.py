@@ -19,7 +19,6 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BASE_BACKUP_ABC123,
     TEST_BASE_BACKUP_DEF456,
-    TEST_LOCAL_BACKUP_ABC123,
     BackupAgentTest,
     setup_backup_integration,
 )
@@ -68,7 +67,7 @@ async def test_info(
     await setup_backup_integration(
         hass,
         with_hassio=with_hassio,
-        backups={LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]} | remote_backups,
+        backups={LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]} | remote_backups,
         remote_agents=remote_agents,
     )
 
@@ -90,7 +89,7 @@ async def test_info_with_errors(
 ) -> None:
     """Test getting backup info with one unavailable agent."""
     await setup_backup_integration(
-        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]}
+        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]}
     )
     hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
@@ -106,13 +105,13 @@ async def test_info_with_errors(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]}),
+        (["remote"], {LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]}),
         (["remote"], {"test.remote": [TEST_BASE_BACKUP_ABC123]}),
         (["remote"], {"test.remote": [TEST_BASE_BACKUP_DEF456]}),
         (
             ["remote"],
             {
-                LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123],
+                LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123],
                 "test.remote": [TEST_BASE_BACKUP_ABC123],
             },
         ),
@@ -159,7 +158,7 @@ async def test_details_with_errors(
 ) -> None:
     """Test getting backup info with one unavailable agent."""
     await setup_backup_integration(
-        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]}
+        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]}
     )
     hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
@@ -180,13 +179,13 @@ async def test_details_with_errors(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]}),
+        (["remote"], {LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]}),
         (["remote"], {"test.remote": [TEST_BASE_BACKUP_ABC123]}),
         (["remote"], {"test.remote": [TEST_BASE_BACKUP_DEF456]}),
         (
             ["remote"],
             {
-                LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123],
+                LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123],
                 "test.remote": [TEST_BASE_BACKUP_ABC123],
             },
         ),
@@ -325,7 +324,7 @@ async def test_generate_without_hassio(
     "backups",
     [
         {},
-        {LOCAL_AGENT_ID: [TEST_LOCAL_BACKUP_ABC123]},
+        {LOCAL_AGENT_ID: [TEST_BASE_BACKUP_ABC123]},
     ],
 )
 @pytest.mark.parametrize(
