@@ -8,6 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patc
 import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -23,10 +24,9 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
-    TEST_BACKUP,
-    TEST_BACKUP_PATH,
-    TEST_BASE_BACKUP,
-    TEST_LOCAL_BACKUP,
+    TEST_BACKUP_PATH_ABC123,
+    TEST_BASE_BACKUP_ABC123,
+    TEST_LOCAL_BACKUP_ABC123,
     BackupAgentTest,
 )
 
@@ -120,7 +120,7 @@ async def test_constructor(hass: HomeAssistant) -> None:
     assert manager.temp_backup_dir.as_posix() == hass.config.path("tmp_backups")
 
 
-async def test_load_backups(hass: HomeAssistant) -> None:
+async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
 
@@ -128,24 +128,24 @@ async def test_load_backups(hass: HomeAssistant) -> None:
     await manager.load_platforms()
 
     with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH]),
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
         patch("tarfile.open", return_value=MagicMock()),
         patch(
             "homeassistant.components.backup.util.json_loads_object",
             return_value={
-                "date": TEST_LOCAL_BACKUP.date,
-                "name": TEST_LOCAL_BACKUP.name,
-                "slug": TEST_LOCAL_BACKUP.backup_id,
+                "date": TEST_LOCAL_BACKUP_ABC123.date,
+                "name": TEST_LOCAL_BACKUP_ABC123.name,
+                "slug": TEST_LOCAL_BACKUP_ABC123.backup_id,
             },
         ),
         patch(
             "pathlib.Path.stat",
-            return_value=MagicMock(st_size=TEST_LOCAL_BACKUP.size),
+            return_value=MagicMock(st_size=TEST_LOCAL_BACKUP_ABC123.size),
         ),
     ):
         await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
     backups, agent_errors = await manager.async_get_backups()
-    assert backups == {TEST_BACKUP.backup_id: TEST_BACKUP}
+    assert backups == snapshot
     assert agent_errors == {}
 
 
@@ -160,12 +160,15 @@ async def test_load_backups_with_exception(
     await manager.load_platforms()
 
     with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH]),
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
         patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
         await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
     backups, agent_errors = await manager.async_get_backups()
-    assert f"Unable to read backup {TEST_BACKUP_PATH}: Test exception" in caplog.text
+    assert (
+        f"Unable to read backup {TEST_BACKUP_PATH_ABC123}: Test exception"
+        in caplog.text
+    )
     assert backups == {}
     assert agent_errors == {}
 
@@ -181,11 +184,13 @@ async def test_removing_backup(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_LOCAL_BACKUP.backup_id: TEST_LOCAL_BACKUP}
+    local_agent._backups = {
+        TEST_LOCAL_BACKUP_ABC123.backup_id: TEST_LOCAL_BACKUP_ABC123
+    }
     local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=True):
-        await manager.async_remove_backup(TEST_LOCAL_BACKUP.backup_id)
+        await manager.async_remove_backup(TEST_LOCAL_BACKUP_ABC123.backup_id)
     assert "Removed backup located at" in caplog.text
 
 
@@ -214,19 +219,21 @@ async def test_getting_backup_that_does_not_exist(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_LOCAL_BACKUP.backup_id: TEST_LOCAL_BACKUP}
+    local_agent._backups = {
+        TEST_LOCAL_BACKUP_ABC123.backup_id: TEST_LOCAL_BACKUP_ABC123
+    }
     local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
         backup, agent_errors = await manager.async_get_backup(
-            TEST_LOCAL_BACKUP.backup_id
+            TEST_LOCAL_BACKUP_ABC123.backup_id
         )
         assert backup is None
         assert agent_errors == {}
 
         assert (
-            f"Removing tracked backup ({TEST_LOCAL_BACKUP.backup_id}) that "
-            f"does not exists on the expected path {TEST_LOCAL_BACKUP.path}"
+            f"Removing tracked backup ({TEST_LOCAL_BACKUP_ABC123.backup_id}) that "
+            f"does not exists on the expected path {TEST_LOCAL_BACKUP_ABC123.path}"
         ) in caplog.text
 
 
@@ -424,7 +431,7 @@ async def test_async_receive_backup(
         patch("shutil.copy") as copy_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BASE_BACKUP,
+            return_value=TEST_BASE_BACKUP_ABC123,
         ),
     ):
         await manager.async_receive_backup(
@@ -457,7 +464,9 @@ async def test_async_trigger_restore(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_LOCAL_BACKUP.backup_id: TEST_LOCAL_BACKUP}
+    local_agent._backups = {
+        TEST_LOCAL_BACKUP_ABC123.backup_id: TEST_LOCAL_BACKUP_ABC123
+    }
     local_agent._loaded_backups = True
 
     with (
@@ -466,7 +475,7 @@ async def test_async_trigger_restore(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(
-            TEST_LOCAL_BACKUP.backup_id, agent_id=LOCAL_AGENT_ID, password=None
+            TEST_LOCAL_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -486,7 +495,9 @@ async def test_async_trigger_restore_with_password(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_LOCAL_BACKUP.backup_id: TEST_LOCAL_BACKUP}
+    local_agent._backups = {
+        TEST_LOCAL_BACKUP_ABC123.backup_id: TEST_LOCAL_BACKUP_ABC123
+    }
     local_agent._loaded_backups = True
 
     with (
@@ -495,7 +506,9 @@ async def test_async_trigger_restore_with_password(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(
-            TEST_LOCAL_BACKUP.backup_id, agent_id=LOCAL_AGENT_ID, password="abc123"
+            TEST_LOCAL_BACKUP_ABC123.backup_id,
+            agent_id=LOCAL_AGENT_ID,
+            password="abc123",
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -516,5 +529,5 @@ async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None
 
     with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
         await manager.async_restore_backup(
-            TEST_LOCAL_BACKUP.backup_id, agent_id=LOCAL_AGENT_ID, password=None
+            TEST_LOCAL_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
         )
