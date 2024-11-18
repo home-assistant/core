@@ -258,7 +258,7 @@ class BackupManager(BaseBackupManager[Backup]):
         local_agent = self.local_backup_agents[LOCAL_AGENT_ID]
         await self._async_upload_backup(
             backup=backup,
-            agent_ids=list(self.backup_agents.keys()),
+            agent_ids=list(self.backup_agents),
             # TODO: This should be the path to the backup file
             path=local_agent.get_backup_path(slug),
         )
