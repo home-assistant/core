@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SENSOR,
 ]
