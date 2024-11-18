@@ -13,15 +13,13 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import init_integration
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
-    hass: HomeAssistant, integration_manager: IntegrationRepositoryManager
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test async_setup_entry."""
-    await init_integration(hass)
-
     state = hass.states.get("update.awesome_component")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE

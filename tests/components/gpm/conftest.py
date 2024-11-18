@@ -17,12 +17,18 @@ from homeassistant.components.gpm._manager import (
     ResourceRepositoryManager,
     UpdateStrategy,
 )
-from homeassistant.components.gpm.const import CONF_DOWNLOAD_URL, CONF_UPDATE_STRATEGY
+from homeassistant.components.gpm.const import (
+    CONF_DOWNLOAD_URL,
+    CONF_UPDATE_STRATEGY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import TESTING_VERSIONS
+from . import DEFAULT_VERSION, TESTING_VERSIONS
+
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +58,7 @@ def repo() -> Generator[None]:
         for tag in TESTING_VERSIONS:
             repo.index.commit(f"New version: {tag}")
             repo.create_tag(tag)
+        repo.git.checkout(DEFAULT_VERSION)
         return repo
 
     remote_mock = MagicMock(spec=Remote)
@@ -172,7 +179,10 @@ def _testing_manager(
         "remove",
         "get_current_version",
         "get_latest_version",
+        "get_download_url",
     ):
+        if not hasattr(manager, method):
+            continue
         setattr(manager, method, AsyncMock(wraps=getattr(manager, method)))
     manager.clone_basedir = tmp_path / "clone_basedir"
     manager.clone_basedir.mkdir()
@@ -188,3 +198,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.gpm.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+async def config_entry(
+    hass: HomeAssistant,
+    integration_manager: IntegrationRepositoryManager,
+) -> MockConfigEntry:
+    """Set up the GPM integration, add it as a config entry into hass and return the entry."""
+    await integration_manager.install()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: RepositoryType.INTEGRATION,
+            CONF_URL: integration_manager.repo_url,
+            CONF_UPDATE_STRATEGY: integration_manager.update_strategy,
+        },
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry

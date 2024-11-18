@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -20,7 +20,6 @@ from ._manager import (
     InvalidStructure,
     RepositoryManager,
     RepositoryType,
-    ResourceRepositoryManager,
     UpdateStrategy,
 )
 from .const import CONF_DOWNLOAD_URL, CONF_UPDATE_STRATEGY, DOMAIN
@@ -74,9 +73,6 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_TYPE: user_input[CONF_TYPE],
                     CONF_UPDATE_STRATEGY: user_input[CONF_UPDATE_STRATEGY],
                 }
-                self.manager = get_manager(self.hass, user_input)
-                await self.async_set_unique_id(self.manager.unique_id)
-                self._abort_if_unique_id_configured()
                 if user_input[CONF_TYPE] == RepositoryType.RESOURCE:
                     return await self.async_step_resource()
                 return await self.async_step_install()
@@ -100,11 +96,9 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self._user_input is not None
         assert self._user_input[CONF_TYPE] == RepositoryType.RESOURCE
-        manager = cast(ResourceRepositoryManager, self.manager)
         if user_input is not None:
             try:
-                download_url = cv.template(user_input[CONF_DOWNLOAD_URL])
-                manager.set_download_url(download_url)
+                cv.template(user_input[CONF_DOWNLOAD_URL])
                 self._user_input[CONF_DOWNLOAD_URL] = user_input[CONF_DOWNLOAD_URL]
                 return await self.async_step_install()
             except vol.Invalid:
@@ -124,6 +118,10 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the install step."""
         abort_reason = None
         assert self._user_input is not None
+
+        self.manager = get_manager(self.hass, self._user_input)
+        await self.async_set_unique_id(self.manager.unique_id)
+        self._abort_if_unique_id_configured()
 
         try:
             await self.manager.clone()
