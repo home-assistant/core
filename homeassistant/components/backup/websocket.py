@@ -60,7 +60,7 @@ async def handle_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/details",
-        vol.Required("slug"): str,
+        vol.Required("backup_id"): str,
     }
 )
 @websocket_api.async_response
@@ -69,9 +69,9 @@ async def handle_details(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get backup details for a specific slug."""
+    """Get backup details for a specific backup."""
     backup, agent_errors = await hass.data[DATA_MANAGER].async_get_backup(
-        slug=msg["slug"]
+        msg["backup_id"]
     )
     connection.send_result(
         msg["id"],
@@ -88,7 +88,7 @@ async def handle_details(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/remove",
-        vol.Required("slug"): str,
+        vol.Required("backup_id"): str,
     }
 )
 @websocket_api.async_response
@@ -98,7 +98,7 @@ async def handle_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
-    await hass.data[DATA_MANAGER].async_remove_backup(slug=msg["slug"])
+    await hass.data[DATA_MANAGER].async_remove_backup(msg["backup_id"])
     connection.send_result(msg["id"])
 
 
@@ -106,7 +106,7 @@ async def handle_remove(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/restore",
-        vol.Required("slug"): str,
+        vol.Required("backup_id"): str,
         vol.Required("agent_id"): str,
         vol.Optional("password"): str,
     }
@@ -119,7 +119,7 @@ async def handle_restore(
 ) -> None:
     """Restore a backup."""
     await hass.data[DATA_MANAGER].async_restore_backup(
-        slug=msg["slug"],
+        msg["backup_id"],
         agent_id=msg["agent_id"],
         password=msg.get("password"),
     )
@@ -245,7 +245,6 @@ async def backup_agents_list_backups(
         vol.Required("type"): "backup/agents/download",
         vol.Required("agent_id"): str,
         vol.Required("backup_id"): str,
-        vol.Required("slug"): str,
     }
 )
 @websocket_api.async_response
@@ -262,9 +261,9 @@ async def backup_agents_download(
         )
         return
     try:
-        path = manager.temp_backup_dir / f"{msg["slug"]}.tar"
+        path = manager.temp_backup_dir / f"{msg["backup_id"]}.tar"
         await agent.async_download_backup(
-            id=msg["backup_id"],
+            msg["backup_id"],
             path=path,
         )
     except Exception as err:  # noqa: BLE001

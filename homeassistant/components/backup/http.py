@@ -31,13 +31,13 @@ def async_register_http_views(hass: HomeAssistant) -> None:
 class DownloadBackupView(HomeAssistantView):
     """Generate backup view."""
 
-    url = "/api/backup/download/{slug}"
+    url = "/api/backup/download/{backup_id}"
     name = "api:backup:download"
 
     async def get(
         self,
         request: Request,
-        slug: str,
+        backup_id: str,
     ) -> FileResponse | Response:
         """Download a backup file."""
         if not request["hass_user"].is_admin:
@@ -51,7 +51,7 @@ class DownloadBackupView(HomeAssistantView):
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
-        backup = await agent.async_get_backup(slug=slug)
+        backup = await agent.async_get_backup(backup_id)
 
         # We don't need to check if the path exists, aiohttp.FileResponse will handle
         # that
@@ -60,10 +60,10 @@ class DownloadBackupView(HomeAssistantView):
 
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
-            path = local_agent.get_backup_path(slug=slug)
+            path = local_agent.get_backup_path(backup_id)
         else:
-            path = manager.temp_backup_dir / f"{slug}.tar"
-            await agent.async_download_backup(id=backup.id, path=path)
+            path = manager.temp_backup_dir / f"{backup_id}.tar"
+            await agent.async_download_backup(backup_id, path=path)
 
         # TODO: We need a callback to remove the temp file once the download is complete
         return FileResponse(

@@ -10,12 +10,11 @@ from homeassistant.components.backup import (
     DOMAIN,
     BackupAgent,
     BackupUploadMetadata,
-    UploadedBackup,
+    BaseBackup,
 )
 from homeassistant.components.backup.backup import LocalBackup
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import Backup
-from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -23,29 +22,28 @@ from homeassistant.setup import async_setup_component
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
 TEST_BASE_BACKUP = BaseBackup(
-    slug="abc123",
-    name="Test",
+    backup_id="abc123",
     date="1970-01-01T00:00:00.000Z",
-    size=0.0,
+    name="Test",
     protected=False,
+    size=0.0,
 )
 TEST_BACKUP = Backup(
     agent_ids=["backup.local"],
-    slug="abc123",
-    name="Test",
+    backup_id="abc123",
     date="1970-01-01T00:00:00.000Z",
-    size=0.0,
+    name="Test",
     protected=False,
+    size=0.0,
 )
 TEST_BACKUP_PATH = Path("abc123.tar")
 TEST_LOCAL_BACKUP = LocalBackup(
-    id="abc123",
-    slug="abc123",
-    name="Test",
     date="1970-01-01T00:00:00.000Z",
+    backup_id="abc123",
+    name="Test",
     path=Path("abc123.tar"),
-    size=0.0,
     protected=False,
+    size=0.0,
 )
 
 
@@ -74,35 +72,33 @@ class BackupAgentTest(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
-    async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
         return [
-            UploadedBackup(
-                id="abc123",
+            BaseBackup(
+                backup_id="abc123",
                 date="1970-01-01T00:00:00Z",
                 name="Test",
                 protected=False,
                 size=13.37,
-                slug="abc123",
             )
         ]
 
     async def async_get_backup(
         self,
         *,
-        slug: str,
+        backup_id: str,
         **kwargs: Any,
-    ) -> UploadedBackup | None:
+    ) -> BaseBackup | None:
         """Return a backup."""
-        if slug != "abc123":
+        if backup_id != "abc123":
             return None
-        return UploadedBackup(
-            id="abc123",
+        return BaseBackup(
+            backup_id="abc123",
             date="1970-01-01T00:00:00Z",
             name="Test",
             protected=False,
             size=13.37,
-            slug="abc123",
         )
 
 
@@ -119,7 +115,7 @@ async def setup_backup_integration(
             return result
 
         local_agent = hass.data[DATA_MANAGER].backup_agents[LOCAL_AGENT_ID]
-        local_agent._backups = {backups.slug: backups for backups in backups}
+        local_agent._backups = {backup.backup_id: backup for backup in backups}
         local_agent._loaded_backups = True
 
         return result

@@ -3,7 +3,6 @@
 from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import patch
-from uuid import UUID
 
 import pytest
 
@@ -69,12 +68,11 @@ async def test_agents_list_backups(
     assert response["result"] == [
         {
             "agent_id": "kitchen_sink.syncer",
+            "backup_id": "abc123",
             "date": "1970-01-01T00:00:00Z",
-            "id": "def456",
-            "slug": "abc123",
-            "size": 1234,
             "name": "Kitchen sink syncer",
             "protected": False,
+            "size": 1234,
         }
     ]
 
@@ -86,13 +84,11 @@ async def test_agents_download(
 ) -> None:
     """Test backup agents download."""
     client = await hass_ws_client(hass)
-    backup_id = "def456"
-    slug = "abc123"
+    backup_id = "abc123"
 
     await client.send_json_auto_id(
         {
             "type": "backup/agents/download",
-            "slug": slug,
             "agent_id": "kitchen_sink.syncer",
             "backup_id": backup_id,
         }
@@ -100,7 +96,7 @@ async def test_agents_download(
     response = await client.receive_json()
 
     assert response["success"]
-    path = hass.config.path(f"tmp_backups/{slug}.tar")
+    path = hass.config.path(f"tmp_backups/{backup_id}.tar")
     assert f"Downloading backup {backup_id} to {path}" in caplog.text
 
 
@@ -114,18 +110,16 @@ async def test_agents_upload(
     """Test backup agents upload."""
     ws_client = await hass_ws_client(hass, hass_supervisor_access_token)
     client = await hass_client()
-    slug = "test-backup"
+    backup_id = "test-backup"
     test_backup = BaseBackup(
-        slug=slug,
-        name="Test",
+        backup_id=backup_id,
         date="1970-01-01T00:00:00.000Z",
-        size=0.0,
+        name="Test",
         protected=False,
+        size=0.0,
     )
-    uuid = UUID(int=123456)
 
     with (
-        patch("homeassistant.components.kitchen_sink.backup.uuid4", return_value=uuid),
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,
@@ -141,22 +135,20 @@ async def test_agents_upload(
         )
 
     assert resp.status == 201
-    backup_name = f"{slug}.tar"
+    backup_name = f"{backup_id}.tar"
     assert f"Uploading backup {backup_name}" in caplog.text
 
-    with patch("homeassistant.components.kitchen_sink.backup.uuid4", return_value=uuid):
-        await ws_client.send_json_auto_id({"type": "backup/agents/list_backups"})
-        response = await ws_client.receive_json()
+    await ws_client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    response = await ws_client.receive_json()
 
     assert response["success"]
     backup_list = response["result"]
     assert len(backup_list) == 2
     assert backup_list[1] == {
         "agent_id": "kitchen_sink.syncer",
+        "backup_id": backup_id,
         "date": test_backup.date,
-        "id": uuid.hex,
-        "slug": slug,
-        "size": 0.0,
         "name": test_backup.name,
         "protected": test_backup.protected,
+        "size": 0.0,
     }
