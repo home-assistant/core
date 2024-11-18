@@ -5432,6 +5432,17 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert ATTR_FRIENDLY_NAME in states[0].attributes
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    [
+        [
+            "component.test.issues..title",
+            "component.test.issues..description",
+            "component.sensor.issues..title",
+            "component.sensor.issues..description",
+        ]
+    ],
+)
 async def test_clean_up_repairs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
