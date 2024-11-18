@@ -66,11 +66,16 @@ async def handle_details(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get backup details for a specific backup_id."""
-    backup = await hass.data[DATA_MANAGER].async_get_backup(msg["backup_id"])
+    """Get backup details for a specific backup."""
+    backup, agent_errors = await hass.data[DATA_MANAGER].async_get_backup(
+        msg["backup_id"]
+    )
     connection.send_result(
         msg["id"],
         {
+            "agent_errors": {
+                agent_id: str(err) for agent_id, err in agent_errors.items()
+            },
             "backup": backup,
         },
     )
