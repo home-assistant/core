@@ -63,7 +63,12 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if entry:
                         ip_dict.pop(entry)
                 except ValueError:
+                    # If the MAC address is not in the list, a ValueError will be thrown,
+                    # which just means that we don't need to remove it from the list.
                     pass
+
+                # Add a new entry to the list of IP:MAC pairs that we have seen
+                ip_dict[self._hub.ip_address] = self._hub.mac_address
 
                 # Set the unique ID for the manual configuration
                 await self.async_set_unique_id(self._hub.mac_address)
