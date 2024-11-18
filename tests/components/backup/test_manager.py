@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 import aiohttp
@@ -15,7 +14,6 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
-    BackupUploadMetadata,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.manager import LOCAL_AGENT_ID, BackupProgress
@@ -349,164 +347,6 @@ async def test_not_loading_bad_platforms(
     assert len(manager.platforms) == 0
 
     assert "Loaded 0 platforms" in caplog.text
-
-
-@pytest.mark.usefixtures("mock_backup_generation")
-async def test_syncing_backup(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
-) -> None:
-    """Test syncing a backup."""
-    manager = BackupManager(hass)
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await _setup_backup_platform(
-        hass,
-        platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(
-                return_value=[
-                    BackupAgentTest("agent1"),
-                    BackupAgentTest("agent2"),
-                ]
-            ),
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    backup = await _mock_backup_generation(
-        hass, manager, mocked_json_bytes, mocked_tarfile
-    )
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=backup,
-        ),
-        patch.object(BackupAgentTest, "async_upload_backup") as mocked_upload,
-        patch(
-            "homeassistant.components.backup.manager.HAVERSION",
-            "2025.1.0",
-        ),
-    ):
-        await manager.async_upload_backup(slug=backup.slug)
-        assert mocked_upload.call_count == 2
-        first_call = mocked_upload.call_args_list[0]
-        backup_path = manager.backup_agents[LOCAL_AGENT_ID].get_backup_path(backup.slug)
-        assert first_call[1]["path"] == backup_path
-        assert first_call[1]["metadata"] == BackupUploadMetadata(
-            date=backup.date,
-            homeassistant="2025.1.0",
-            name=backup.name,
-            protected=backup.protected,
-            size=backup.size,
-            slug=backup.slug,
-        )
-
-    assert "Error during backup upload" not in caplog.text
-
-
-@pytest.mark.usefixtures("mock_backup_generation")
-async def test_syncing_backup_with_exception(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
-) -> None:
-    """Test syncing a backup with exception."""
-    manager = BackupManager(hass)
-
-    class ModifiedBackupSyncAgentTest(BackupAgentTest):
-        async def async_upload_backup(self, **kwargs: Any) -> None:
-            raise HomeAssistantError("Test exception")
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await _setup_backup_platform(
-        hass,
-        platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(
-                return_value=[
-                    ModifiedBackupSyncAgentTest("agent1"),
-                    ModifiedBackupSyncAgentTest("agent2"),
-                ]
-            ),
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    backup = await _mock_backup_generation(
-        hass, manager, mocked_json_bytes, mocked_tarfile
-    )
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=backup,
-        ),
-        patch.object(
-            ModifiedBackupSyncAgentTest,
-            "async_upload_backup",
-        ) as mocked_upload,
-        patch(
-            "homeassistant.components.backup.manager.HAVERSION",
-            "2025.1.0",
-        ),
-    ):
-        mocked_upload.side_effect = HomeAssistantError("Test exception")
-        await manager.async_upload_backup(slug=backup.slug)
-        assert mocked_upload.call_count == 2
-        first_call = mocked_upload.call_args_list[0]
-        backup_path = manager.backup_agents[LOCAL_AGENT_ID].get_backup_path(backup.slug)
-        assert first_call[1]["path"] == backup_path
-        assert first_call[1]["metadata"] == BackupUploadMetadata(
-            date=backup.date,
-            homeassistant="2025.1.0",
-            name=backup.name,
-            protected=backup.protected,
-            size=backup.size,
-            slug=backup.slug,
-        )
-
-    assert "Error during backup upload - Test exception" in caplog.text
-
-
-@pytest.mark.usefixtures("mock_backup_generation")
-async def test_syncing_backup_no_agents(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
-) -> None:
-    """Test syncing a backup with no agents."""
-    manager = BackupManager(hass)
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await _setup_backup_platform(
-        hass,
-        platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(return_value=[]),
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    backup = await _mock_backup_generation(
-        hass, manager, mocked_json_bytes, mocked_tarfile
-    )
-    with patch(
-        "homeassistant.components.backup.agent.BackupAgent.async_upload_backup"
-    ) as mocked_async_upload_backup:
-        await manager.async_upload_backup(slug=backup.slug)
-        assert mocked_async_upload_backup.call_count == 0
 
 
 async def test_exception_plaform_pre(

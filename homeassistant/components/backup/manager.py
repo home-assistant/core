@@ -40,10 +40,6 @@ from .const import (
 from .models import BackupUploadMetadata, BaseBackup
 from .util import read_backup
 
-# pylint: disable=fixme
-# TODO: Don't forget to remove this when the implementation is complete
-
-
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
 _BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
@@ -235,10 +231,6 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     ) -> None:
         """Receive and store a backup file from upload."""
 
-    @abc.abstractmethod
-    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Upload a backup."""
-
 
 class BackupManager(BaseBackupManager[Backup]):
     """Backup manager for the Backup integration."""
@@ -247,22 +239,6 @@ class BackupManager(BaseBackupManager[Backup]):
         """Initialize the backup manager."""
         super().__init__(hass=hass)
         self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
-
-    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Upload a backup to all agents."""
-        if not self.backup_agents:
-            return
-
-        if not (backup := await self.async_get_backup(slug=slug)):
-            return
-
-        local_agent = self.local_backup_agents[LOCAL_AGENT_ID]
-        await self._async_upload_backup(
-            backup=backup,
-            agent_ids=list(self.backup_agents),
-            # TODO: This should be the path to the backup file
-            path=local_agent.get_backup_path(slug),
-        )
 
     async def _async_upload_backup(
         self,
