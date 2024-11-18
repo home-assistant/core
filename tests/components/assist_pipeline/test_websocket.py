@@ -682,7 +682,7 @@ async def test_stt_provider_missing(
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
-        "homeassistant.components.stt.async_get_provider",
+        "homeassistant.components.stt.async_get_speech_to_text_entity",
         return_value=None,
     ):
         client = await hass_ws_client(hass)
@@ -708,11 +708,11 @@ async def test_stt_provider_bad_metadata(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
-    mock_stt_provider,
+    mock_stt_provider_entity,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with wrong metadata."""
-    with patch.object(mock_stt_provider, "check_metadata", return_value=False):
+    with patch.object(mock_stt_provider_entity, "check_metadata", return_value=False):
         client = await hass_ws_client(hass)
 
         await client.send_json_auto_id(
@@ -743,7 +743,7 @@ async def test_stt_stream_failed(
     client = await hass_ws_client(hass)
 
     with patch(
-        "tests.components.assist_pipeline.conftest.MockSttProvider.async_process_audio_stream",
+        "tests.components.assist_pipeline.conftest.MockSTTProviderEntity.async_process_audio_stream",
         side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(
@@ -974,6 +974,7 @@ async def test_add_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": True,
         }
     )
     msg = await client.receive_json()
@@ -991,6 +992,7 @@ async def test_add_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": True,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1008,6 +1010,7 @@ async def test_add_pipeline(
         tts_voice="Arnold Schwarzenegger",
         wake_word_entity="wakeword_entity_1",
         wake_word_id="wakeword_id_1",
+        prefer_local_intents=True,
     )
 
     await client.send_json_auto_id(
@@ -1188,13 +1191,14 @@ async def test_get_pipeline(
         "id": ANY,
         "language": "en",
         "name": "Home Assistant",
-        "stt_engine": "test",
+        "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
         "tts_engine": "test",
         "tts_language": "en-US",
         "tts_voice": "james_earl_jones",
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     # Get conversation agent as pipeline
@@ -1213,13 +1217,14 @@ async def test_get_pipeline(
         "language": "en",
         "name": "Home Assistant",
         # It found these defaults
-        "stt_engine": "test",
+        "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
         "tts_engine": "test",
         "tts_language": "en-US",
         "tts_voice": "james_earl_jones",
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     await client.send_json_auto_id(
@@ -1249,6 +1254,7 @@ async def test_get_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": False,
         }
     )
     msg = await client.receive_json()
@@ -1277,6 +1283,7 @@ async def test_get_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": False,
     }
 
 
@@ -1297,13 +1304,14 @@ async def test_list_pipelines(
                 "id": ANY,
                 "language": "en",
                 "name": "Home Assistant",
-                "stt_engine": "test",
+                "stt_engine": "stt.mock_stt",
                 "stt_language": "en-US",
                 "tts_engine": "test",
                 "tts_language": "en-US",
                 "tts_voice": "james_earl_jones",
                 "wake_word_entity": None,
                 "wake_word_id": None,
+                "prefer_local_intents": False,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1395,6 +1403,7 @@ async def test_update_pipeline(
         "tts_voice": "new_tts_voice",
         "wake_word_entity": "new_wakeword_entity",
         "wake_word_id": "new_wakeword_id",
+        "prefer_local_intents": False,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1446,6 +1455,7 @@ async def test_update_pipeline(
         "tts_voice": None,
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     pipeline = pipeline_store.data[pipeline_id]

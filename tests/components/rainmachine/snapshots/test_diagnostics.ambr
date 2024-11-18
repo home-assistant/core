@@ -1131,6 +1131,8 @@
         'ssl': True,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'rainmachine',
       'entry_id': '81bd010ed0a63b705f6da8407cb26d4b',
       'minor_version': 1,
@@ -2260,6 +2262,8 @@
         'ssl': True,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'rainmachine',
       'entry_id': '81bd010ed0a63b705f6da8407cb26d4b',
       'minor_version': 1,

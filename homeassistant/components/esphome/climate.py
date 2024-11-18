@@ -58,6 +58,7 @@ from homeassistant.core import callback
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
+    esphome_float_state_property,
     esphome_state_property,
     platform_async_setup_entry,
 )
@@ -227,7 +228,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return _SWING_MODES.from_esphome(self._state.swing_mode)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
@@ -241,19 +242,19 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return round(self._state.current_humidity)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high

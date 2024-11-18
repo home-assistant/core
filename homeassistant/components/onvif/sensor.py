@@ -13,9 +13,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.enum import try_parse_enum
 
-from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 
 
 async def async_setup_entry(

@@ -12,6 +12,9 @@
       },
       "moving_ban": {
         "default": "mdi:car-off"
+      },
+      "is_running": {
+        "default": "mdi:speedometer"
       }
     },
     "button": {
@@ -72,8 +75,14 @@
     }
   },
   "services": {
-    "update_state": "mdi:reload",
-    "set_scan_interval": "mdi:timer",
-    "set_scan_obd_interval": "mdi:timer"
+    "update_state": {
+      "service": "mdi:reload"
+    },
+    "set_scan_interval": {
+      "service": "mdi:timer"
+    },
+    "set_scan_obd_interval": {
+      "service": "mdi:timer"
+    }
   }
 }

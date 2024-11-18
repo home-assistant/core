@@ -359,6 +359,14 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
+    def available(self) -> bool:
+        """Check if device is available and initialized or sleepy."""
+        coordinator = self.coordinator
+        return super().available and (
+            coordinator.device.initialized or bool(coordinator.sleep_period)
+        )
+
+    @property
     def status(self) -> dict:
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
@@ -480,7 +488,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             self._last_value = self.entity_description.value(
                 self.block_coordinator.device.status, self._last_value
             )
@@ -510,7 +518,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         id_key = key.split(":")[-1]
         self._id = int(id_key) if id_key.isnumeric() else None
 
-        if callable(description.unit):
+        if description.unit is not None:
             self._attr_native_unit_of_measurement = description.unit(
                 coordinator.device.config[key]
             )
@@ -536,7 +544,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
                 self.status.get(self.entity_description.sub_key), self._last_value

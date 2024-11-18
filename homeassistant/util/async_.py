@@ -39,7 +39,7 @@ def create_eager_task[_T](
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.helpers import frame
 
-            frame.report("attempted to create an asyncio task from a thread")
+            frame.report_usage("attempted to create an asyncio task from a thread")
             raise
 
     return Task(coro, loop=loop, name=name, eager_start=True)
@@ -57,7 +57,7 @@ def run_callback_threadsafe[_T, *_Ts](
 
     Return a concurrent.futures.Future to access the result.
     """
-    if (ident := loop.__dict__.get("_thread_ident")) and ident == threading.get_ident():
+    if (ident := loop.__dict__.get("_thread_id")) and ident == threading.get_ident():
         raise RuntimeError("Cannot be called from within the event loop")
 
     future: concurrent.futures.Future[_T] = concurrent.futures.Future()

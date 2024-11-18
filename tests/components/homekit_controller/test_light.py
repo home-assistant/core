@@ -3,8 +3,9 @@
 from collections.abc import Callable
 from unittest import mock
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -23,7 +24,7 @@ LIGHT_BULB_NAME = "TestDevice"
 LIGHT_BULB_ENTITY_ID = "light.testdevice"
 
 
-def create_lightbulb_service(accessory):
+def create_lightbulb_service(accessory: Accessory) -> Service:
     """Define lightbulb characteristics."""
     service = accessory.add_service(ServicesTypes.LIGHTBULB, name=LIGHT_BULB_NAME)
 
@@ -36,7 +37,7 @@ def create_lightbulb_service(accessory):
     return service
 
 
-def create_lightbulb_service_with_hs(accessory):
+def create_lightbulb_service_with_hs(accessory: Accessory) -> Service:
     """Define a lightbulb service with hue + saturation."""
     service = create_lightbulb_service(accessory)
 
@@ -49,7 +50,7 @@ def create_lightbulb_service_with_hs(accessory):
     return service
 
 
-def create_lightbulb_service_with_color_temp(accessory):
+def create_lightbulb_service_with_color_temp(accessory: Accessory) -> Service:
     """Define a lightbulb service with color temp."""
     service = create_lightbulb_service(accessory)
 

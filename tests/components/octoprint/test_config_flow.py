@@ -580,15 +580,7 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
         unique_id="1234",
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "entry_id": entry.entry_id,
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 

@@ -25,7 +25,7 @@ from homeassistant.components.influxdb.const import (
 )
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -190,7 +190,9 @@ def _set_query_mock_v2(
     return query_api
 
 
-async def _setup(hass, config_ext, queries, expected_sensors):
+async def _setup(
+    hass: HomeAssistant, config_ext, queries, expected_sensors
+) -> list[State]:
     """Create client and test expected sensors."""
     config = {
         DOMAIN: config_ext,

@@ -19,9 +19,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RainMachineConfigEntry, RainMachineEntity
+from . import RainMachineConfigEntry
 from .const import DATA_PROVISION_SETTINGS
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)

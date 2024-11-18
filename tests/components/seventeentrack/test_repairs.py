@@ -1,12 +1,10 @@
 """Tests for the seventeentrack repair flow."""
 
-from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.repairs.websocket_api import RepairsFlowIndexView
 from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -16,6 +14,7 @@ from . import goto_future, init_integration
 from .conftest import DEFAULT_SUMMARY_LENGTH, get_package
 
 from tests.common import MockConfigEntry
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -49,13 +48,7 @@ async def test_repair(
 
     client = await hass_client()
 
-    resp = await client.post(
-        RepairsFlowIndexView.url,
-        json={"handler": DOMAIN, "issue_id": repair_issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, repair_issue.issue_id)
 
     flow_id = data["flow_id"]
     assert data == {
@@ -70,9 +63,7 @@ async def test_repair(
         "preview": None,
     }
 
-    resp = await client.post(RepairsFlowIndexView.url + f"/{flow_id}")
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     flow_id = data["flow_id"]
     assert data == {

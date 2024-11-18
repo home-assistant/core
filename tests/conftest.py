@@ -36,6 +36,7 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
+from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
@@ -51,11 +52,15 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
@@ -88,7 +93,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension
+from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -144,6 +149,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Override default finish to detect unused snapshots despite xdist
+    # Temporary workaround until it is finalised inside syrupy
+    # See https://github.com/syrupy-project/syrupy/pull/901
+    SnapshotSession.finish = override_syrupy_finish
 
 
 def pytest_runtest_setup() -> None:
@@ -414,7 +424,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
     gensalt_orig = bcrypt.gensalt
@@ -1263,6 +1273,16 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
+def enable_missing_statistics() -> bool:
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_missing_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
@@ -1283,11 +1303,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1453,8 +1483,10 @@ async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
+    enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
@@ -1511,17 +1543,17 @@ async def async_test_recorder(
     )
     compile_missing = (
         recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
+        if enable_missing_statistics
         else None
     )
     migrate_states_context_ids = (
         migration.StatesContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
         migration.EventsContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
@@ -1689,7 +1721,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
@@ -1740,10 +1772,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )

@@ -27,7 +27,7 @@ class MockSirenEntity(SirenEntity):
         supported_features=0,
         available_tones_as_attr=None,
         available_tones_in_desc=None,
-    ):
+    ) -> None:
         """Initialize mock siren entity."""
         self._attr_supported_features = supported_features
         if available_tones_as_attr is not None:

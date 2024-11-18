@@ -28,7 +28,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from .helper import HAPID, async_manipulate_test_data, get_and_check_entity_basics
+from .helper import (
+    HAPID,
+    HomeFactory,
+    async_manipulate_test_data,
+    get_and_check_entity_basics,
+)
 
 
 async def test_manually_configured_platform(hass: HomeAssistant) -> None:
@@ -40,7 +45,7 @@ async def test_manually_configured_platform(hass: HomeAssistant) -> None:
 
 
 async def test_hmip_heating_group_heat(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.badezimmer"
@@ -136,13 +141,6 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
 
-    # Not required for hmip, but a possibility to send no temperature.
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {"entity_id": entity_id, "target_temp_low": 10, "target_temp_high": 10},
-        blocking=True,
-    )
     # No new service call should be in mock_calls.
     assert len(hmip_device.mock_calls) == service_call_counter + 12
     # Only fire event from last async_manipulate_test_data available.
@@ -257,7 +255,7 @@ async def test_hmip_heating_group_heat(
 
 
 async def test_hmip_heating_group_cool(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.badezimmer"
@@ -380,7 +378,7 @@ async def test_hmip_heating_group_cool(
 
 
 async def test_hmip_heating_group_heat_with_switch(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.schlafzimmer"
@@ -411,7 +409,7 @@ async def test_hmip_heating_group_heat_with_switch(
 
 
 async def test_hmip_heating_group_heat_with_radiator(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.vorzimmer"
@@ -440,7 +438,7 @@ async def test_hmip_heating_group_heat_with_radiator(
 
 
 async def test_hmip_heating_profile_default_name(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test visible profile 1 without a name should be displayed as 'Default'."""
     entity_id = "climate.vorzimmer3"
@@ -465,7 +463,7 @@ async def test_hmip_heating_profile_default_name(
 
 
 async def test_hmip_heating_profile_naming(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test Heating Profile Naming."""
     entity_id = "climate.vorzimmer2"
@@ -490,7 +488,7 @@ async def test_hmip_heating_profile_naming(
 
 
 async def test_hmip_heating_profile_name_not_in_list(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test set profile when profile is not in available profiles."""
     expected_profile = "Testprofile"
@@ -684,7 +682,7 @@ async def test_hmip_set_home_cooling_mode(
 
 
 async def test_hmip_heating_group_services(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipHeatingGroup services."""
     entity_id = "climate.badezimmer"

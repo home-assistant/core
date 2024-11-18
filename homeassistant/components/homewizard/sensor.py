@@ -18,19 +18,17 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_VIA_DEVICE,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
-    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -404,7 +402,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_reactive_power_var",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -415,7 +413,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_reactive_power_l1_var",
         translation_key="active_reactive_power_phase_var",
         translation_placeholders={"phase": "1"},
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -426,7 +424,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_reactive_power_l2_var",
         translation_key="active_reactive_power_phase_var",
         translation_placeholders={"phase": "2"},
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -437,7 +435,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_reactive_power_l3_var",
         translation_key="active_reactive_power_phase_var",
         translation_placeholders={"phase": "3"},
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -625,26 +623,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize sensors."""
 
-    # Migrate original gas meter sensor to ExternalDevice
-    # This is sensor that was directly linked to the P1 Meter
-    # Migration can be removed after 2024.8.0
-    ent_reg = er.async_get(hass)
     data = entry.runtime_data.data.data
-    if (
-        entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{entry.unique_id}_total_gas_m3"
-        )
-    ) and data.gas_unique_id is not None:
-        ent_reg.async_update_entity(
-            entity_id,
-            new_unique_id=f"{DOMAIN}_gas_meter_{data.gas_unique_id}",
-        )
-
-    # Remove old gas_unique_id sensor
-    if entity_id := ent_reg.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{entry.unique_id}_gas_unique_id"
-    ):
-        ent_reg.async_remove(entity_id)
 
     # Initialize default sensors
     entities: list = [
@@ -657,17 +636,6 @@ async def async_setup_entry(
     if data.external_devices is not None:
         for unique_id, device in data.external_devices.items():
             if description := EXTERNAL_SENSORS.get(device.meter_type):
-                # Migrate external devices to new unique_id
-                # This is to ensure that devices with same id but different type are unique
-                # Migration can be removed after 2024.11.0
-                if entity_id := ent_reg.async_get_entity_id(
-                    Platform.SENSOR, DOMAIN, f"{DOMAIN}_{device.unique_id}"
-                ):
-                    ent_reg.async_update_entity(
-                        entity_id,
-                        new_unique_id=f"{DOMAIN}_{unique_id}",
-                    )
-
                 # Add external device
                 entities.append(
                     HomeWizardExternalSensorEntity(

@@ -2,11 +2,12 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -15,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_tv_service(accessory):
+def create_tv_service(accessory: Accessory) -> Service:
     """Define tv characteristics.
 
     The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
@@ -53,7 +54,7 @@ def create_tv_service(accessory):
     return tv_service
 
 
-def create_tv_service_with_target_media_state(accessory):
+def create_tv_service_with_target_media_state(accessory: Accessory) -> Service:
     """Define a TV service that can play/pause/stop without generate remote events."""
     service = create_tv_service(accessory)
 

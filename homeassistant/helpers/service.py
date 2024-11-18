@@ -33,6 +33,7 @@ from homeassistant.core import (
     Context,
     EntityServiceResponse,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -63,7 +64,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType, VolSchemaType
+from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -570,19 +571,31 @@ def async_extract_referenced_entity_ids(  # noqa: C901
             for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
         )
 
-    # Find devices for targeted areas
-    selected.referenced_devices.update(selector.device_ids)
-
     selected.referenced_areas.update(selector.area_ids)
-    if selected.referenced_areas:
-        for area_id in selected.referenced_areas:
-            selected.referenced_devices.update(
-                device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
-            )
+    selected.referenced_devices.update(selector.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
+
+    # Add indirectly referenced by device
+    selected.indirectly_referenced.update(
+        entry.entity_id
+        for device_id in selected.referenced_devices
+        for entry in entities.get_entries_for_device_id(device_id)
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
+        if (entry.entity_category is None and entry.hidden_by is None)
+    )
+
+    # Find devices for targeted areas
+    referenced_devices_by_area: set[str] = set()
+    if selected.referenced_areas:
+        for area_id in selected.referenced_areas:
+            referenced_devices_by_area.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
+    selected.referenced_devices.update(referenced_devices_by_area)
 
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
@@ -594,10 +607,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
         # or diagnostic entities.
         if entry.entity_category is None and entry.hidden_by is None
     )
-    # Add indirectly referenced by device
+    # Add indirectly referenced by area through device
     selected.indirectly_referenced.update(
         entry.entity_id
-        for device_id in selected.referenced_devices
+        for device_id in referenced_devices_by_area
         for entry in entities.get_entries_for_device_id(device_id)
         # Do not add entities which are hidden or which are config
         # or diagnostic entities.
@@ -609,11 +622,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
                 # by an area and the entity
                 # has no explicitly set area
                 not entry.area_id
-                # The entity's device matches a targeted device
-                or device_id in selector.device_ids
             )
         )
     )
+
     return selected
 
 
@@ -1240,3 +1252,55 @@ class ReloadServiceHelper[_T]:
                 self._service_running = False
                 self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
+
+
+@callback
+def async_register_entity_service(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    entities: dict[str, Entity],
+    func: str | Callable[..., Any],
+    job_type: HassJobType | None,
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering an entity service.
+
+    This is called by EntityComponent.async_register_entity_service and
+    EntityPlatform.async_register_entity_service and should not be called
+    directly by integrations.
+    """
+    if schema is None or isinstance(schema, dict):
+        schema = cv.make_entity_service_schema(schema)
+    elif not cv.is_entity_service_schema(schema):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
+
+        report_usage(
+            (
+                "registers an entity service with a non entity service schema "
+                "which will stop working in HA Core 2025.9"
+            ),
+            core_behavior=ReportBehavior.LOG,
+        )
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            entity_service_call,
+            hass,
+            entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=job_type,
+    )

@@ -7,6 +7,8 @@
         'model_family': 'ET',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'goodwe',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'minor_version': 1,

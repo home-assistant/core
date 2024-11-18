@@ -37,7 +37,7 @@ TEST_PORT_SERIAL = "usb01"
 class ReadResult:
     """Storage class for register read results."""
 
-    def __init__(self, register_words):
+    def __init__(self, register_words) -> None:
         """Init."""
         self.registers = register_words
         self.bits = register_words
@@ -57,7 +57,7 @@ def check_config_loaded_fixture():
 @pytest.fixture(name="register_words")
 def register_words_fixture():
     """Set default for register_words."""
-    return [0x00, 0x00]
+    return [0x00]
 
 
 @pytest.fixture(name="config_addon")

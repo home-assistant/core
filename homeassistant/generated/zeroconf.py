@@ -267,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -415,6 +420,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
@@ -515,6 +525,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "lektrico",
+            "name": "lektrico*",
+        },
+        {
             "domain": "loqed",
             "name": "loqed*",
         },
@@ -603,6 +617,12 @@ ZEROCONF = {
         {
             "domain": "lutron_caseta",
             "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
                 "SYSTYPE": "radiora3*",
             },
         },
@@ -617,6 +637,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
         },
     ],
     "_matter._tcp.local.": [
@@ -686,11 +711,6 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
-    "_powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
-        },
-    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -748,8 +768,16 @@ ZEROCONF = {
     ],
     "_slzb-06._tcp.local.": [
         {
+            "domain": "smlight",
+        },
+        {
             "domain": "zha",
             "name": "slzb-06*",
+        },
+    ],
+    "_smoip._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_sonos._tcp.local.": [
@@ -779,6 +807,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee50*",
+        },
+    ],
+    "_stream-magic._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_system-bridge._tcp.local.": [

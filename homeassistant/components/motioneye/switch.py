@@ -22,8 +22,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
+from . import get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
+from .entity import MotionEyeEntity
 
 MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(

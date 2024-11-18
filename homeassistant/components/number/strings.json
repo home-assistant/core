@@ -43,11 +43,17 @@
     "battery": {
       "name": "[%key:component::sensor::entity_component::battery::name%]"
     },
+    "blood_glucose_concentration": {
+      "name": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]"
+    },
     "carbon_dioxide": {
       "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
     },
     "carbon_monoxide": {
       "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+    },
+    "conductivity": {
+      "name": "[%key:component::sensor::entity_component::conductivity::name%]"
     },
     "current": {
       "name": "[%key:component::sensor::entity_component::current::name%]"

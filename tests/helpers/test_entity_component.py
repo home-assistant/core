@@ -23,7 +23,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -554,6 +554,35 @@ async def test_register_entity_service(
         DOMAIN, "hello", {"area_id": ENTITY_MATCH_NONE} | service_data, blocking=True
     )
     assert len(calls) == 2
+
+
+async def test_register_entity_service_non_entity_service_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test attempting to register a service with a non entity service schema."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    expected_message = "registers an entity service with a non entity service schema"
+
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
+        )
+    ):
+        component.async_register_entity_service(f"hello_{idx}", schema, Mock())
+        assert expected_message in caplog.text
+        caplog.clear()
+
+    for idx, schema in enumerate(
+        (
+            cv.make_entity_service_schema({"some": str}),
+            vol.Schema(cv.make_entity_service_schema({"some": str})),
+            vol.All(cv.make_entity_service_schema({"some": str})),
+        )
+    ):
+        component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
+        assert expected_message not in caplog.text
 
 
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:

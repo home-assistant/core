@@ -6,34 +6,23 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import (
-    ATTR_CODE,
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
-from .common import DOMAIN, assert_entities, setup_platform
+from .common import assert_entities, setup_platform
 
 
 async def test_locks(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests that the lock entity is correct."""
-
-    # Create the deprecated speed limit lock entity
-    entity_registry.async_get_or_create(
-        LOCK_DOMAIN,
-        DOMAIN,
-        "VINVINVIN-vehicle_state_speed_limit_mode_active",
-        original_name="Charge cable lock",
-        has_entity_name=True,
-        translation_key="vehicle_state_speed_limit_mode_active",
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
-    )
 
     entry = await setup_platform(hass, [Platform.LOCK])
 
@@ -49,7 +38,7 @@ async def test_locks(
             blocking=True,
         )
         mock_run.assert_called_once()
-    assert hass.states.get(entity_id).state == STATE_LOCKED
+    assert hass.states.get(entity_id).state == LockState.LOCKED
 
     with patch("homeassistant.components.tessie.lock.unlock") as mock_run:
         await hass.services.async_call(
@@ -59,7 +48,7 @@ async def test_locks(
             blocking=True,
         )
         mock_run.assert_called_once()
-    assert hass.states.get(entity_id).state == STATE_UNLOCKED
+    assert hass.states.get(entity_id).state == LockState.UNLOCKED
 
     # Test charge cable lock set value functions
     entity_id = "lock.test_charge_cable_lock"
@@ -80,67 +69,5 @@ async def test_locks(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert hass.states.get(entity_id).state == STATE_UNLOCKED
+        assert hass.states.get(entity_id).state == LockState.UNLOCKED
         mock_run.assert_called_once()
-
-
-async def test_speed_limit_lock(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Tests that the deprecated speed limit lock entity is correct."""
-    # Create the deprecated speed limit lock entity
-    entity = entity_registry.async_get_or_create(
-        LOCK_DOMAIN,
-        DOMAIN,
-        "VINVINVIN-vehicle_state_speed_limit_mode_active",
-        original_name="Charge cable lock",
-        has_entity_name=True,
-        translation_key="vehicle_state_speed_limit_mode_active",
-    )
-
-    with patch(
-        "homeassistant.components.tessie.lock.automations_with_entity",
-        return_value=["item"],
-    ):
-        await setup_platform(hass, [Platform.LOCK])
-        assert issue_registry.async_get_issue(
-            DOMAIN, f"deprecated_speed_limit_{entity.entity_id}_item"
-        )
-
-    # Test lock set value functions
-    with patch(
-        "homeassistant.components.tessie.lock.enable_speed_limit"
-    ) as mock_enable_speed_limit:
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "1234"},
-            blocking=True,
-        )
-        assert hass.states.get(entity.entity_id).state == STATE_LOCKED
-        mock_enable_speed_limit.assert_called_once()
-        # Assert issue has been raised in the issue register
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_speed_limit_locked")
-
-    with patch(
-        "homeassistant.components.tessie.lock.disable_speed_limit"
-    ) as mock_disable_speed_limit:
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "1234"},
-            blocking=True,
-        )
-        assert hass.states.get(entity.entity_id).state == STATE_UNLOCKED
-        mock_disable_speed_limit.assert_called_once()
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_speed_limit_unlocked")
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "abc"},
-            blocking=True,
-        )

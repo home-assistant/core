@@ -16,8 +16,8 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
-    ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -106,7 +106,7 @@ class RenaultHub:
             manufacturer=vehicle.device_info[ATTR_MANUFACTURER],
             name=vehicle.device_info[ATTR_NAME],
             model=vehicle.device_info[ATTR_MODEL],
-            sw_version=vehicle.device_info[ATTR_SW_VERSION],
+            model_id=vehicle.device_info[ATTR_MODEL_ID],
         )
         self._vehicles[vehicle_link.vin] = vehicle
 

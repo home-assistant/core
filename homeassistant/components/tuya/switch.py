@@ -17,8 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode
+from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default instruction set of each category end up being a Switch.

@@ -1,6 +1,7 @@
 """The tests for the Pilight sensor platform."""
 
 import logging
+from typing import Any
 
 import pytest
 
@@ -17,7 +18,9 @@ def setup_comp(hass: HomeAssistant) -> None:
     mock_component(hass, "pilight")
 
 
-def fire_pilight_message(hass, protocol, data):
+def fire_pilight_message(
+    hass: HomeAssistant, protocol: str, data: dict[str, Any]
+) -> None:
     """Fire the fake Pilight message."""
     message = {pilight.CONF_PROTOCOL: protocol}
     message.update(data)

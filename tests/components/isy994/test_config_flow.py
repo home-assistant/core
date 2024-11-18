@@ -644,10 +644,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "unique_id": MOCK_UUID},
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -701,3 +698,16 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert mock_setup_entry.called
     assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "reauth_successful"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test option flow."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # This should be improved at a later stage to increase test coverage
+    hass.config_entries.options.async_abort(result["flow_id"])

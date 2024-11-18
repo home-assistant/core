@@ -149,7 +149,7 @@ class MediaroomDevice(MediaPlayerEntity):
 
         self.host = host
         self.stb = Remote(host)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Found STB at %s%s", host, " - I'm optimistic" if optimistic else ""
         )
         self._channel = None

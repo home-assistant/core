@@ -21,11 +21,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type ArveConfigEntry = ConfigEntry[ArveCoordinator]
+
 
 class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
     """Arve coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ArveConfigEntry
     devices: ArveDevices
 
     def __init__(self, hass: HomeAssistant) -> None:

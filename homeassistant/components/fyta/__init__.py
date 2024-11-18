@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
 
 from fyta_cli.fyta_connector import FytaConnector
 
@@ -73,11 +72,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             fyta = FytaConnector(
                 config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
             )
-            credentials: dict[str, Any] = await fyta.login()
+            credentials = await fyta.login()
             await fyta.client.close()
 
-            new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
-            new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
+            new[CONF_ACCESS_TOKEN] = credentials.access_token
+            new[CONF_EXPIRATION] = credentials.expiration.isoformat()
 
             hass.config_entries.async_update_entry(
                 config_entry, data=new, minor_version=2, version=1

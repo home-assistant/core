@@ -8,6 +8,7 @@ from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
+import logging
 import re
 import sys
 from typing import Any, Protocol, cast
@@ -1062,6 +1063,46 @@ async def async_validate_conditions_config(
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
     return [await async_validate_condition_config(hass, cond) for cond in conditions]
+
+
+async def async_conditions_from_config(
+    hass: HomeAssistant,
+    condition_configs: list[ConfigType],
+    logger: logging.Logger,
+    name: str,
+) -> Callable[[TemplateVarsType], bool]:
+    """AND all conditions."""
+    checks: list[ConditionCheckerType] = [
+        await async_from_config(hass, condition_config)
+        for condition_config in condition_configs
+    ]
+
+    def check_conditions(variables: TemplateVarsType = None) -> bool:
+        """AND all conditions."""
+        errors: list[ConditionErrorIndex] = []
+        for index, check in enumerate(checks):
+            try:
+                with trace_path(["condition", str(index)]):
+                    if check(hass, variables) is False:
+                        return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "condition", index=index, total=len(checks), error=ex
+                    )
+                )
+
+        if errors:
+            logger.warning(
+                "Error evaluating condition in '%s':\n%s",
+                name,
+                ConditionErrorContainer("condition", errors=errors),
+            )
+            return False
+
+        return True
+
+    return check_conditions
 
 
 @callback

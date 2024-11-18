@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
@@ -33,13 +33,28 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
     EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
-    "None": LightEffect.NONE,
+    "none": LightEffect.NONE,
+    # Specific to Philips Hue
+    "candle": LightEffect.CANDLE,
+    "cosmos": LightEffect.COSMOS,
+    "enchant": LightEffect.ENCHANT,
+    "fire": LightEffect.FIRE,
+    "fireplace": LightEffect.FIREPLACE,
+    "glisten": LightEffect.GLISTEN,
+    "loop": LightEffect.LOOP,
+    "opal": LightEffect.OPAL,
+    "prism": LightEffect.PRISM,
+    "sparkle": LightEffect.SPARKLE,
+    "sunbeam": LightEffect.SUNBEAM,
+    "sunrise": LightEffect.SUNRISE,
+    "sunset": LightEffect.SUNSET,
+    "underwater": LightEffect.UNDERWATER,
     # Specific to Lidl christmas light
     "carnival": LightEffect.CARNIVAL,
     "collide": LightEffect.COLLIDE,
@@ -125,7 +140,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
@@ -170,7 +185,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
 ):
     """Representation of a deCONZ light."""
 
-    TYPE = DOMAIN
+    TYPE = LIGHT_DOMAIN
     _attr_color_mode = ColorMode.UNKNOWN
 
     def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
@@ -208,8 +223,17 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
-            if device.model_id in ("HG06467", "TS0601"):
-                self._attr_effect_list = XMAS_LIGHT_EFFECTS
+
+            # For lights that report supported effects.
+            if isinstance(device, Light):
+                if device.supported_effects is not None:
+                    self._attr_effect_list = [
+                        EFFECT_TO_DECONZ[el]
+                        for el in device.supported_effects
+                        if el in EFFECT_TO_DECONZ
+                    ]
+                if device.model_id in ("HG06467", "TS0601"):
+                    self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:

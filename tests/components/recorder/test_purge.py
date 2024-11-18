@@ -1330,7 +1330,9 @@ async def test_purge_filtered_events_state_changed(
 async def test_purge_entities(hass: HomeAssistant, recorder_mock: Recorder) -> None:
     """Test purging of specific entities."""
 
-    async def _purge_entities(hass, entity_ids, domains, entity_globs):
+    async def _purge_entities(
+        hass: HomeAssistant, entity_ids: str, domains: str, entity_globs: str
+    ) -> None:
         service_data = {
             "entity_id": entity_ids,
             "domains": domains,

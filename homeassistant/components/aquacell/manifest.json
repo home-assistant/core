@@ -1,6 +1,6 @@
 {
   "domain": "aquacell",
-  "name": "Aquacell",
+  "name": "AquaCell",
   "codeowners": ["@Jordi1990"],
   "config_flow": true,
   "dependencies": ["http", "network"],

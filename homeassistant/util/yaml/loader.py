@@ -22,10 +22,9 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
-from functools import cached_property
+from propcache import cached_property
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -144,37 +143,6 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-class SafeLoader(FastSafeLoader):
-    """Provided for backwards compatibility. Logs when instantiated."""
-
-    def __init__(*args: Any, **kwargs: Any) -> None:
-        """Log a warning and call super."""
-        SafeLoader.__report_deprecated()
-        FastSafeLoader.__init__(*args, **kwargs)
-
-    @classmethod
-    def add_constructor(cls, tag: str, constructor: Callable) -> None:
-        """Log a warning and call super."""
-        SafeLoader.__report_deprecated()
-        FastSafeLoader.add_constructor(tag, constructor)
-
-    @classmethod
-    def add_multi_constructor(
-        cls, tag_prefix: str, multi_constructor: Callable
-    ) -> None:
-        """Log a warning and call super."""
-        SafeLoader.__report_deprecated()
-        FastSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
-
-    @staticmethod
-    def __report_deprecated() -> None:
-        """Log deprecation warning."""
-        report(
-            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
-            "which will stop working in HA Core 2024.6,"
-        )
-
-
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
     """Python safe loader."""
 
@@ -184,49 +152,26 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-class SafeLineLoader(PythonSafeLoader):
-    """Provided for backwards compatibility. Logs when instantiated."""
-
-    def __init__(*args: Any, **kwargs: Any) -> None:
-        """Log a warning and call super."""
-        SafeLineLoader.__report_deprecated()
-        PythonSafeLoader.__init__(*args, **kwargs)
-
-    @classmethod
-    def add_constructor(cls, tag: str, constructor: Callable) -> None:
-        """Log a warning and call super."""
-        SafeLineLoader.__report_deprecated()
-        PythonSafeLoader.add_constructor(tag, constructor)
-
-    @classmethod
-    def add_multi_constructor(
-        cls, tag_prefix: str, multi_constructor: Callable
-    ) -> None:
-        """Log a warning and call super."""
-        SafeLineLoader.__report_deprecated()
-        PythonSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
-
-    @staticmethod
-    def __report_deprecated() -> None:
-        """Log deprecation warning."""
-        report(
-            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
-            "which will stop working in HA Core 2024.6,"
-        )
-
-
 type LoaderType = FastSafeLoader | PythonSafeLoader
 
 
 def load_yaml(
     fname: str | os.PathLike[str], secrets: Secrets | None = None
 ) -> JSON_TYPE | None:
-    """Load a YAML file."""
+    """Load a YAML file.
+
+    If opening the file raises an OSError it will be wrapped in a HomeAssistantError,
+    except for FileNotFoundError which will be re-raised.
+    """
     try:
         with open(fname, encoding="utf-8") as conf_file:
             return parse_yaml(conf_file, secrets)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
+        raise HomeAssistantError(exc) from exc
+    except FileNotFoundError:
+        raise
+    except OSError as exc:
         raise HomeAssistantError(exc) from exc
 
 
@@ -348,6 +293,20 @@ def _add_reference_to_node_class(
     return obj
 
 
+def _raise_if_no_value[NodeT: yaml.nodes.Node, _R](
+    func: Callable[[LoaderType, NodeT], _R],
+) -> Callable[[LoaderType, NodeT], _R]:
+    def wrapper(loader: LoaderType, node: NodeT) -> _R:
+        if not node.value:
+            raise HomeAssistantError(
+                f"{node.start_mark}: {node.tag} needs an argument."
+            )
+        return func(loader, node)
+
+    return wrapper
+
+
+@_raise_if_no_value
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load another YAML file and embed it using the !include tag.
 
@@ -363,7 +322,7 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
-            f"{node.start_mark}: Unable to read file {fname}."
+            f"{node.start_mark}: Unable to read file {fname}"
         ) from exc
 
 
@@ -382,6 +341,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
                 yield filename
 
 
+@_raise_if_no_value
 def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
     mapping = NodeDictClass()
@@ -399,6 +359,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
     return _add_reference_to_node_class(mapping, loader, node)
 
 
+@_raise_if_no_value
 def _include_dir_merge_named_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeDictClass:
@@ -414,6 +375,7 @@ def _include_dir_merge_named_yaml(
     return _add_reference_to_node_class(mapping, loader, node)
 
 
+@_raise_if_no_value
 def _include_dir_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
@@ -427,6 +389,7 @@ def _include_dir_list_yaml(
     ]
 
 
+@_raise_if_no_value
 def _include_dir_merge_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:

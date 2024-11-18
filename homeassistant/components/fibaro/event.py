@@ -15,8 +15,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -38,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroEventEntity(FibaroDevice, EventEntity):
+class FibaroEventEntity(FibaroEntity, EventEntity):
     """Representation of a Fibaro Event Entity."""
 
     def __init__(self, fibaro_device: DeviceModel, scene_event: SceneEvent) -> None:

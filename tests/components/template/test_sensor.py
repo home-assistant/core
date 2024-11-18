@@ -12,6 +12,7 @@ from homeassistant.components import sensor, template
 from homeassistant.components.template.sensor import TriggerSensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
@@ -23,7 +24,9 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -104,7 +107,8 @@ async def test_setup_config_entry(
         },
     ],
 )
-async def test_template_legacy(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_legacy(hass: HomeAssistant) -> None:
     """Test template."""
     assert hass.states.get(TEST_NAME).state == "It ."
 
@@ -133,7 +137,8 @@ async def test_template_legacy(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
     assert hass.states.get(TEST_NAME).attributes.get("icon") == ""
 
@@ -162,7 +167,8 @@ async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_entity_picture_template(hass: HomeAssistant) -> None:
     """Test entity_picture template."""
     assert hass.states.get(TEST_NAME).attributes.get("entity_picture") == ""
 
@@ -241,9 +247,8 @@ async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_friendly_name_template(
-    hass: HomeAssistant, attribute, expected, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_friendly_name_template(hass: HomeAssistant, attribute, expected) -> None:
     """Test friendly_name template with an unknown value_template."""
     assert hass.states.get(TEST_NAME).attributes.get(attribute) == expected[0]
 
@@ -312,7 +317,8 @@ async def test_friendly_name_template(
         },
     ],
 )
-async def test_template_syntax_error(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_syntax_error(hass: HomeAssistant) -> None:
     """Test setup with invalid device_class."""
     assert hass.states.async_all("sensor") == []
 
@@ -334,7 +340,8 @@ async def test_template_syntax_error(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_template_attribute_missing(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_attribute_missing(hass: HomeAssistant) -> None:
     """Test missing attribute template."""
     assert hass.states.get(TEST_NAME).state == STATE_UNAVAILABLE
 
@@ -360,7 +367,8 @@ async def test_template_attribute_missing(hass: HomeAssistant, start_ha) -> None
         },
     ],
 )
-async def test_setup_valid_device_class(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_setup_valid_device_class(hass: HomeAssistant) -> None:
     """Test setup with valid device_class."""
     hass.states.async_set("sensor.test_sensor", "75")
     await hass.async_block_till_done()
@@ -374,7 +382,7 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     order = []
     after_dep_event = Event()
 
-    async def async_setup_group(hass, config):
+    async def async_setup_group(hass: HomeAssistant, config: ConfigType) -> bool:
         # Make sure group takes longer to load, so that it won't
         # be loaded first by chance
         await after_dep_event.wait()
@@ -383,8 +391,11 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
         return True
 
     async def async_setup_template(
-        hass, config, async_add_entities, discovery_info=None
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
         order.append("sensor.template")
         return True
 
@@ -429,7 +440,8 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
         },
     ],
 )
-async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability tempalates with values from other entities."""
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
 
@@ -467,8 +479,9 @@ async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, caplog_setup_text
 ) -> None:
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("sensor.test_sensor", "startup")
@@ -503,8 +516,9 @@ async def test_invalid_attribute_template(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("sensor.my_sensor").state != STATE_UNAVAILABLE
@@ -620,8 +634,9 @@ async def test_no_template_match_all(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_unique_id(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique_id option only creates one sensor per id."""
     assert len(hass.states.async_all()) == 2
@@ -656,7 +671,8 @@ async def test_unique_id(
         },
     ],
 )
-async def test_sun_renders_once_per_sensor(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
     """Test sun change renders the template only once per sensor."""
 
     now = dt_util.utcnow()
@@ -725,7 +741,8 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant, start_ha) -> Non
         },
     ],
 )
-async def test_this_variable(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_this_variable(hass: HomeAssistant) -> None:
     """Test template."""
     assert hass.states.get(TEST_NAME).state == "It: " + TEST_NAME
 
@@ -870,8 +887,9 @@ async def test_this_variable_early_hass_running(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_self_referencing_sensor_loop(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test a self referencing sensor does not loop forever."""
     assert len(hass.states.async_all()) == 1
@@ -900,8 +918,9 @@ async def test_self_referencing_sensor_loop(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_self_referencing_sensor_with_icon_loop(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test a self referencing sensor loops forever with a valid self referencing icon."""
     assert len(hass.states.async_all()) == 1
@@ -935,8 +954,9 @@ async def test_self_referencing_sensor_with_icon_loop(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test a self referencing sensor loop forevers with a valid self referencing icon."""
     assert len(hass.states.async_all()) == 1
@@ -964,14 +984,16 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(
                     "test": {
                         "value_template": "{{ 1 }}",
                         "entity_picture_template": "{{ ((states.sensor.test.attributes['entity_picture'] or 0) | int) + 1 }}",
+                        "friendly_name_template": "{{ ((states.sensor.test.attributes['friendly_name'] or 0) | int) + 1 }}",
                     },
                 },
             }
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_self_referencing_entity_picture_loop(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test a self referencing sensor does not loop forever with a looping self referencing entity picture."""
     assert len(hass.states.async_all()) == 1
@@ -987,7 +1009,8 @@ async def test_self_referencing_entity_picture_loop(
 
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == 2
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "3"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "3"
 
     await hass.async_block_till_done()
     assert int(state.state) == 1
@@ -1087,7 +1110,8 @@ async def test_self_referencing_icon_with_no_loop(
         },
     ],
 )
-async def test_duplicate_templates(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_duplicate_templates(hass: HomeAssistant) -> None:
     """Test template entity where the value and friendly name as the same template."""
     hass.states.async_set("sensor.test_state", "Abc")
     await hass.async_block_till_done()
@@ -1156,8 +1180,9 @@ async def test_duplicate_templates(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_trigger_entity(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity works."""
     state = hass.states.get("sensor.hello_name")
@@ -1202,6 +1227,127 @@ async def test_trigger_entity(
     assert state.context is context
 
 
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
+                        }
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "You had enough Beer.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_conditional_entity(hass: HomeAssistant) -> None:
+    """Test conditional trigger entity works."""
+    state = hass.states.get("sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 42})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state.state == "You had enough Beer."
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer / 0 == 'narf' }}",
+                        }
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "You had enough Beer.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_conditional_entity_evaluation_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity is not updated when condition evaluation fails."""
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    assert "Error evaluating condition in 'template entity'" in caplog.text
+
+
+@pytest.mark.parametrize(("count", "domain"), [(0, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {"condition": "template", "value_template": "{{ invalid"}
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Will Not Exist Name",
+                            "state": "Unimportant",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_conditional_entity_invalid_condition(
+    hass: HomeAssistant,
+) -> None:
+    """Test trigger entity is not created when condition is invalid."""
+    state = hass.states.get("sensor.will_not_exist_name")
+    assert state is None
+
+
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -1227,9 +1373,8 @@ async def test_trigger_entity(
         },
     ],
 )
-async def test_trigger_entity_runs_once(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_entity_runs_once(hass: HomeAssistant) -> None:
     """Test trigger entity handles a trigger once."""
     state = hass.states.get("sensor.hello_name")
     assert state is not None
@@ -1262,8 +1407,9 @@ async def test_trigger_entity_runs_once(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_trigger_entity_render_error(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity handles render error."""
     state = hass.states.get("sensor.hello")
@@ -1299,8 +1445,9 @@ async def test_trigger_entity_render_error(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_trigger_not_allowed_platform_config(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test we throw a helpful warning if a trigger is configured in platform config."""
     state = hass.states.get(TEST_NAME)
@@ -1328,7 +1475,8 @@ async def test_trigger_not_allowed_platform_config(
         },
     ],
 )
-async def test_config_top_level(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_config_top_level(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one sensor per id."""
     assert len(hass.states.async_all()) == 1
     state = hass.states.get("sensor.top_level")
@@ -1874,9 +2022,8 @@ async def test_trigger_entity_restore_state(
         },
     ],
 )
-async def test_trigger_action(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_action(hass: HomeAssistant) -> None:
     """Test trigger entity with an action works."""
     event = "test_event2"
     context = Context()
@@ -1896,6 +2043,53 @@ async def test_trigger_action(
 
     assert len(events) == 1
     assert events[0].context.parent_id == context.id
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
+                        }
+                    ],
+                    "action": [
+                        {"event": "test_event_by_action"},
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Not That Important",
+                            "state": "Really not.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_conditional_action(hass: HomeAssistant) -> None:
+    """Test conditional trigger entity with an action works."""
+
+    event = "test_event_by_action"
+    events = async_capture_events(hass, event)
+
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    hass.bus.async_fire("test_event", {"beer": 42})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
 
 
 async def test_device_id(

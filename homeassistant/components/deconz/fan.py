@@ -7,7 +7,11 @@ from typing import Any
 from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light, LightFanSpeed
 
-from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,7 +20,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
@@ -34,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up fans for deCONZ component."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[FAN_DOMAIN] = set()
 
     @callback
     def async_add_fan(_: EventType, fan_id: str) -> None:
@@ -53,7 +57,7 @@ async def async_setup_entry(
 class DeconzFan(DeconzDevice[Light], FanEntity):
     """Representation of a deCONZ fan."""
 
-    TYPE = DOMAIN
+    TYPE = FAN_DOMAIN
     _default_on_speed = LightFanSpeed.PERCENT_50
 
     _attr_supported_features = (

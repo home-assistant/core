@@ -10,6 +10,8 @@
     }
   },
   "services": {
-    "list_notifications": "mdi:bell"
+    "list_notifications": {
+      "service": "mdi:bell"
+    }
   }
 }

@@ -73,7 +73,7 @@ async def test_signal_type_format(hass: HomeAssistant) -> None:
     assert calls == [("Hello", 2)]
 
     # Test compatibility with string keys
-    async_dispatcher_send(hass, "test-{}".format("unique-id"), "x", 4)
+    async_dispatcher_send(hass, "test-unique-id", "x", 4)
     await hass.async_block_till_done()
 
     assert calls == [("Hello", 2), ("x", 4)]
