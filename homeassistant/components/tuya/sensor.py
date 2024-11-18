@@ -692,6 +692,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.LIQUID_STATE,
             translation_key="liquid_state",
             device_class=SensorDeviceClass.ENUM,
+            icon="mdi:information-variant-circle"
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_DEPTH,
@@ -699,7 +700,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfLength.METERS,
-            icon="mdi:waves-arrow-up"
+            icon="mdi:arrow-up-down"
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_LEVEL_PERCENT,
@@ -707,7 +708,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=PERCENTAGE,
             suggested_display_precision=0,
-            icon="mdi:waves-arrow-up"
+            icon="mdi:water-percent"
         ),
     ),
     # Vibration Sensor
