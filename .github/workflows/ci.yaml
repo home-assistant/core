@@ -1248,12 +1248,11 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.0.0
+        uses: codecov/codecov-action@v5.0.2
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-24.04
@@ -1387,8 +1386,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.0.0
+        uses: codecov/codecov-action@v5.0.2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
