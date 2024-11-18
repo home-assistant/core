@@ -48,9 +48,6 @@
       "calories_bmr": {
         "name": "Calories BMR"
       },
-      "distance": {
-        "name": "Distance"
-      },
       "elevation": {
         "name": "Elevation"
       },
@@ -83,9 +80,6 @@
       },
       "body_fat": {
         "name": "Body fat"
-      },
-      "weight": {
-        "name": "Weight"
       },
       "awakenings_count": {
         "name": "Awakenings count"
