@@ -99,7 +99,7 @@ async def setup_backup_integration(
             return result
 
         local_agent = hass.data[DATA_MANAGER].backup_agents[LOCAL_AGENT_ID]
-        local_agent.backups = {backups.slug: backups for backups in backups}
-        local_agent.loaded_backups = True
+        local_agent._backups = {backups.slug: backups for backups in backups}
+        local_agent._loaded_backups = True
 
         return result

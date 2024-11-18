@@ -90,7 +90,7 @@ async def _mock_backup_generation(
         "type": "partial",
     }
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    assert local_agent.backup_dir.as_posix() in str(
+    assert local_agent._backup_dir.as_posix() in str(
         mocked_tarfile.call_args_list[0][0][0]
     )
     outer_tar = mocked_tarfile.return_value
@@ -180,8 +180,8 @@ async def test_removing_backup(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent.backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
-    local_agent.loaded_backups = True
+    local_agent._backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
+    local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=True):
         await manager.async_remove_backup(slug=TEST_LOCAL_BACKUP.slug)
@@ -214,8 +214,8 @@ async def test_getting_backup_that_does_not_exist(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent.backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
-    local_agent.loaded_backups = True
+    local_agent._backups = {TEST_LOCAL_BACKUP.slug: TEST_LOCAL_BACKUP}
+    local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
         backup = await manager.async_get_backup(slug=TEST_LOCAL_BACKUP.slug)
@@ -269,7 +269,7 @@ async def test_async_create_backup(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent.loaded_backups = True
+    local_agent._loaded_backups = True
 
     await _mock_backup_generation(
         hass, manager, mocked_json_bytes, mocked_tarfile, **params
@@ -280,8 +280,8 @@ async def test_async_create_backup(
     assert "Loaded 0 platforms" in caplog.text
     assert "Loaded 1 agents" in caplog.text
 
-    assert len(local_agent.backups) == 1
-    backup = list(local_agent.backups.values())[0]
+    assert len(local_agent._backups) == 1
+    backup = list(local_agent._backups.values())[0]
     assert backup.protected is bool(params.get("password"))
 
 

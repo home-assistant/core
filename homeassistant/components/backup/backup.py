@@ -44,21 +44,21 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         """Initialize the backup agent."""
         super().__init__()
         self._hass = hass
-        self.backup_dir = Path(hass.config.path("backups"))
-        self.backups: dict[str, LocalBackup] = {}
-        self.loaded_backups = False
+        self._backup_dir = Path(hass.config.path("backups"))
+        self._backups: dict[str, LocalBackup] = {}
+        self._loaded_backups = False
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self._hass.async_add_executor_job(self._read_backups)
         LOGGER.debug("Loaded %s local backups", len(backups))
-        self.backups = backups
-        self.loaded_backups = True
+        self._backups = backups
+        self._loaded_backups = True
 
     def _read_backups(self) -> dict[str, LocalBackup]:
         """Read backups from disk."""
         backups: dict[str, LocalBackup] = {}
-        for backup_path in self.backup_dir.glob("*.tar"):
+        for backup_path in self._backup_dir.glob("*.tar"):
             try:
                 base_backup = read_backup(backup_path)
                 backup = LocalBackup(
@@ -93,7 +93,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        self.backups[metadata.slug] = LocalBackup(
+        self._backups[metadata.slug] = LocalBackup(
             id=metadata.slug,  # Do we need another ID?
             slug=metadata.slug,
             name=metadata.name,
@@ -105,18 +105,18 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List backups."""
-        if not self.loaded_backups:
+        if not self._loaded_backups:
             await self.load_backups()
-        return list(self.backups.values())
+        return list(self._backups.values())
 
     async def async_get_backup(
         self, *, slug: str, **kwargs: Any
     ) -> UploadedBackup | None:
         """Return a backup."""
-        if not self.loaded_backups:
+        if not self._loaded_backups:
             await self.load_backups()
 
-        if not (backup := self.backups.get(slug)):
+        if not (backup := self._backups.get(slug)):
             return None
 
         if not backup.path.exists():
@@ -128,14 +128,14 @@ class CoreLocalBackupAgent(LocalBackupAgent):
                 backup.slug,
                 backup.path,
             )
-            self.backups.pop(slug)
+            self._backups.pop(slug)
             return None
 
         return backup
 
     def get_backup_path(self, slug: str) -> Path:
         """Return the local path to a backup."""
-        return self.backup_dir / f"{slug}.tar"
+        return self._backup_dir / f"{slug}.tar"
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
@@ -144,4 +144,4 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
         await self._hass.async_add_executor_job(backup.path.unlink, True)  # type: ignore[attr-defined]
         LOGGER.debug("Removed backup located at %s", backup.path)  # type: ignore[attr-defined]
-        self.backups.pop(slug)
+        self._backups.pop(slug)
