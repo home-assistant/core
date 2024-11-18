@@ -417,7 +417,7 @@ async def test_ws_get_client_config_no_rtc_camera(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_get_client_config_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
 
@@ -747,7 +747,7 @@ async def test_websocket_webrtc_offer_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
 
@@ -798,45 +798,6 @@ async def mock_hls_stream_source_fixture() -> AsyncGenerator[AsyncMock]:
         return_value=HLS_STREAM_SOURCE,
     ) as mock_hls_stream_source:
         yield mock_hls_stream_source
-
-
-@pytest.mark.usefixtures(
-    "mock_camera",
-    "mock_hls_stream_source",  # Not an RTSP stream source
-    "mock_camera_webrtc_frontendtype_only",
-)
-async def test_unsupported_rtsp_to_webrtc_stream_type(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test rtsp-to-webrtc is not registered for non-RTSP streams."""
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "camera/webrtc/offer",
-            "entity_id": "camera.demo_camera",
-            "offer": WEBRTC_OFFER,
-        }
-    )
-    response = await client.receive_json()
-    assert response["type"] == TYPE_RESULT
-    assert response["success"]
-    subscription_id = response["id"]
-
-    # Session id
-    response = await client.receive_json()
-    assert response["id"] == subscription_id
-    assert response["type"] == "event"
-    assert response["event"]["type"] == "session"
-
-    # Answer
-    response = await client.receive_json()
-    assert response["id"] == subscription_id
-    assert response["type"] == "event"
-    assert response["event"] == {
-        "type": "error",
-        "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC",
-    }
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
@@ -894,7 +855,7 @@ async def test_rtsp_to_webrtc_provider_unregistered(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
     assert not mock_provider.called
@@ -1093,7 +1054,7 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_candidate_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
 

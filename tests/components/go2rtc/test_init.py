@@ -211,7 +211,7 @@ async def _test_setup_and_signaling(
 ) -> None:
     """Test the go2rtc config entry."""
     entity_id = camera.entity_id
-    assert camera.frontend_stream_type == StreamType.HLS
+    assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)

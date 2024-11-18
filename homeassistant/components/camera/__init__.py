@@ -896,7 +896,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 frontend_stream_types.add(StreamType.HLS)
 
-                if self._webrtc_provider:
+                if self._webrtc_provider or self._legacy_webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
