@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import hashlib
 import io
 import json
@@ -13,10 +13,9 @@ from pathlib import Path
 from queue import SimpleQueue
 import shutil
 import tarfile
-from tarfile import TarError
 from tempfile import TemporaryDirectory
 import time
-from typing import Any, Generic, Protocol, cast
+from typing import Any, Generic, Protocol
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -29,13 +28,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads_object
 
-from .agent import BackupAgent, BackupAgentPlatformProtocol
-from .const import DOMAIN, EXCLUDE_DATABASE_FROM_BACKUP, EXCLUDE_FROM_BACKUP, LOGGER
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
+from .const import (
+    BUF_SIZE,
+    DOMAIN,
+    EXCLUDE_DATABASE_FROM_BACKUP,
+    EXCLUDE_FROM_BACKUP,
+    LOGGER,
+)
 from .models import BackupUploadMetadata, BaseBackup
+from .util import read_backup
 
-BUF_SIZE = 2**20 * 4  # 4MB
+LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
 _BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
 
@@ -51,11 +56,7 @@ class NewBackup:
 class Backup(BaseBackup):
     """Backup class."""
 
-    path: Path
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return {**asdict(self), "path": self.path.as_posix()}
+    agent_ids: list[str]
 
 
 @dataclass(slots=True)
@@ -84,20 +85,22 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """Initialize the backup manager."""
         self.hass = hass
         self.backup_task: asyncio.Task | None = None
-        self.backups: dict[str, _BackupT] = {}
-        self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
+        self.local_backup_agents: dict[str, LocalBackupAgent] = {}
         self.syncing = False
 
+    async def async_setup(self) -> None:
+        """Set up the backup manager."""
+        await self.load_platforms()
+
     @callback
-    def _add_platform_pre_post_handlers(
+    def _add_platform_pre_post_handler(
         self,
-        hass: HomeAssistant,
         integration_domain: str,
         platform: BackupPlatformProtocol,
     ) -> None:
-        """Add a platform to the backup manager."""
+        """Add a backup platform."""
         if not hasattr(platform, "async_pre_backup") or not hasattr(
             platform, "async_post_backup"
         ):
@@ -107,7 +110,6 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
 
     async def _async_add_platform_agents(
         self,
-        hass: HomeAssistant,
         integration_domain: str,
         platform: BackupAgentPlatformProtocol,
     ) -> None:
@@ -115,16 +117,30 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         if not hasattr(platform, "async_get_backup_agents"):
             return
 
-        agents = await platform.async_get_backup_agents(hass=hass)
+        agents = await platform.async_get_backup_agents(self.hass)
         self.backup_agents.update(
             {f"{integration_domain}.{agent.name}": agent for agent in agents}
         )
+        self.local_backup_agents.update(
+            {
+                f"{integration_domain}.{agent.name}": agent
+                for agent in agents
+                if isinstance(agent, LocalBackupAgent)
+            }
+        )
+
+    async def _add_platform(
+        self,
+        hass: HomeAssistant,
+        integration_domain: str,
+        platform: Any,
+    ) -> None:
+        """Add a backup platform manager."""
+        self._add_platform_pre_post_handler(integration_domain, platform)
+        await self._async_add_platform_agents(integration_domain, platform)
 
     async def async_pre_backup_actions(self, **kwargs: Any) -> None:
         """Perform pre backup actions."""
-        if not self.loaded_platforms:
-            await self.load_platforms()
-
         pre_backup_results = await asyncio.gather(
             *(
                 platform.async_pre_backup(self.hass)
@@ -138,9 +154,6 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
 
     async def async_post_backup_actions(self, **kwargs: Any) -> None:
         """Perform post backup actions."""
-        if not self.loaded_platforms:
-            await self.load_platforms()
-
         post_backup_results = await asyncio.gather(
             *(
                 platform.async_post_backup(self.hass)
@@ -154,30 +167,22 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
 
     async def load_platforms(self) -> None:
         """Load backup platforms."""
-        if self.loaded_platforms:
-            return
         await integration_platform.async_process_integration_platforms(
             self.hass,
             DOMAIN,
-            self._add_platform_pre_post_handlers,
-            wait_for_platforms=True,
-        )
-        await integration_platform.async_process_integration_platforms(
-            self.hass,
-            DOMAIN,
-            self._async_add_platform_agents,
+            self._add_platform,
             wait_for_platforms=True,
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         LOGGER.debug("Loaded %s agents", len(self.backup_agents))
-        self.loaded_platforms = True
 
     @abc.abstractmethod
     async def async_restore_backup(
         self,
         slug: str,
         *,
-        password: str | None = None,
+        agent_id: str,
+        password: str | None,
         **kwargs: Any,
     ) -> None:
         """Restore a backup."""
@@ -187,6 +192,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self,
         *,
         addons_included: list[str] | None,
+        agent_ids: list[str],
         database_included: bool,
         folders_included: list[str] | None,
         name: str | None,
@@ -219,14 +225,11 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     async def async_receive_backup(
         self,
         *,
+        agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
         **kwargs: Any,
     ) -> None:
         """Receive and store a backup file from upload."""
-
-    @abc.abstractmethod
-    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Upload a backup."""
 
 
 class BackupManager(BaseBackupManager[Backup]):
@@ -235,111 +238,91 @@ class BackupManager(BaseBackupManager[Backup]):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         super().__init__(hass=hass)
-        self.backup_dir = Path(hass.config.path("backups"))
-        self.loaded_backups = False
+        self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
 
-    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Upload a backup."""
-        await self.load_platforms()
-
-        if not self.backup_agents:
-            return
-
-        if not (backup := await self.async_get_backup(slug=slug)):
-            return
-
+    async def _async_upload_backup(
+        self,
+        *,
+        backup: BaseBackup,
+        agent_ids: list[str],
+        path: Path,
+    ) -> None:
+        """Upload a backup to selected agents."""
         self.syncing = True
-        sync_backup_results = await asyncio.gather(
-            *(
-                agent.async_upload_backup(
-                    path=backup.path,
-                    metadata=BackupUploadMetadata(
-                        homeassistant=HAVERSION,
-                        size=backup.size,
-                        date=backup.date,
-                        slug=backup.slug,
-                        name=backup.name,
-                        protected=backup.protected,
-                    ),
-                )
-                for agent in self.backup_agents.values()
-            ),
-            return_exceptions=True,
-        )
-        for result in sync_backup_results:
-            if isinstance(result, Exception):
-                LOGGER.error("Error during backup upload - %s", result)
-        self.syncing = False
-
-    async def load_backups(self) -> None:
-        """Load data of stored backup files."""
-        backups = await self.hass.async_add_executor_job(self._read_backups)
-        LOGGER.debug("Loaded %s local backups", len(backups))
-        self.backups = backups
-        self.loaded_backups = True
-
-    def _read_backups(self) -> dict[str, Backup]:
-        """Read backups from disk."""
-        backups: dict[str, Backup] = {}
-        for backup_path in self.backup_dir.glob("*.tar"):
-            try:
-                with tarfile.open(backup_path, "r:", bufsize=BUF_SIZE) as backup_file:
-                    if data_file := backup_file.extractfile("./backup.json"):
-                        data = json_loads_object(data_file.read())
-                        backup = Backup(
-                            slug=cast(str, data["slug"]),
-                            name=cast(str, data["name"]),
-                            date=cast(str, data["date"]),
-                            path=backup_path,
-                            size=round(backup_path.stat().st_size / 1_048_576, 2),
-                            protected=cast(bool, data.get("protected", False)),
-                        )
-                        backups[backup.slug] = backup
-            except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
-                LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
-        return backups
+        try:
+            sync_backup_results = await asyncio.gather(
+                *(
+                    self.backup_agents[agent_id].async_upload_backup(
+                        path=path,
+                        metadata=BackupUploadMetadata(
+                            homeassistant=HAVERSION,
+                            size=backup.size,
+                            date=backup.date,
+                            slug=backup.slug,
+                            name=backup.name,
+                            protected=backup.protected,
+                        ),
+                    )
+                    for agent_id in agent_ids
+                ),
+                return_exceptions=True,
+            )
+            for result in sync_backup_results:
+                if isinstance(result, Exception):
+                    LOGGER.exception(
+                        "Error during backup upload - %s", result, exc_info=result
+                    )
+        finally:
+            self.syncing = False
 
     async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Return backups."""
-        if not self.loaded_backups:
-            await self.load_backups()
+        backups: dict[str, Backup] = {}
+        for agent_id, agent in self.backup_agents.items():
+            agent_backups = await agent.async_list_backups()
+            for agent_backup in agent_backups:
+                if agent_backup.slug not in backups:
+                    backups[agent_backup.slug] = Backup(
+                        slug=agent_backup.slug,
+                        name=agent_backup.name,
+                        date=agent_backup.date,
+                        agent_ids=[],
+                        size=agent_backup.size,
+                        protected=agent_backup.protected,
+                    )
+                backups[agent_backup.slug].agent_ids.append(agent_id)
 
-        return self.backups
+        return backups
 
     async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
         """Return a backup."""
-        if not self.loaded_backups:
-            await self.load_backups()
+        backup: Backup | None = None
 
-        if not (backup := self.backups.get(slug)):
-            return None
-
-        if not backup.path.exists():
-            LOGGER.debug(
-                (
-                    "Removing tracked backup (%s) that does not exists on the expected"
-                    " path %s"
-                ),
-                backup.slug,
-                backup.path,
-            )
-            self.backups.pop(slug)
-            return None
+        for agent_id, agent in self.backup_agents.items():
+            if not (agent_backup := await agent.async_get_backup(slug=slug)):
+                continue
+            if backup is None:
+                backup = Backup(
+                    slug=agent_backup.slug,
+                    name=agent_backup.name,
+                    date=agent_backup.date,
+                    agent_ids=[],
+                    size=agent_backup.size,
+                    protected=agent_backup.protected,
+                )
+                backup.agent_ids.append(agent_id)
 
         return backup
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        if (backup := await self.async_get_backup(slug=slug)) is None:
-            return
-
-        await self.hass.async_add_executor_job(backup.path.unlink, True)
-        LOGGER.debug("Removed backup located at %s", backup.path)
-        self.backups.pop(slug)
+        for agent in self.backup_agents.values():
+            await agent.async_remove_backup(slug=slug)  # type: ignore[attr-defined]
 
     async def async_receive_backup(
         self,
         *,
+        agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
         **kwargs: Any,
     ) -> None:
@@ -387,17 +370,43 @@ class BackupManager(BaseBackupManager[Backup]):
             if fut is not None:
                 await fut
 
-        def _move_and_cleanup() -> None:
-            shutil.move(target_temp_file, self.backup_dir / target_temp_file.name)
+        def _copy_and_cleanup(local_file_paths: list[Path], backup: BaseBackup) -> Path:
+            if local_file_paths:
+                tar_file_path = local_file_paths[0]
+            else:
+                tar_file_path = self.temp_backup_dir / f"{backup.slug}.tar"
+            for local_path in local_file_paths:
+                shutil.copy(target_temp_file, local_path)
             temp_dir_handler.cleanup()
+            return tar_file_path
 
-        await self.hass.async_add_executor_job(_move_and_cleanup)
-        await self.load_backups()
+        try:
+            backup = await self.hass.async_add_executor_job(
+                read_backup, target_temp_file
+            )
+        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+            LOGGER.warning("Unable to parse backup %s: %s", target_temp_file, err)
+            return
+
+        local_file_paths = [
+            self.local_backup_agents[agent_id].get_backup_path(backup.slug)
+            for agent_id in agent_ids
+            if agent_id in self.local_backup_agents
+        ]
+        tar_file_path = await self.hass.async_add_executor_job(
+            _copy_and_cleanup, local_file_paths, backup
+        )
+        await self._async_upload_backup(
+            backup=backup, agent_ids=agent_ids, path=tar_file_path
+        )
+        if not local_file_paths:
+            await self.hass.async_add_executor_job(tar_file_path.unlink, True)
 
     async def async_create_backup(
         self,
         *,
         addons_included: list[str] | None,
+        agent_ids: list[str],
         database_included: bool,
         folders_included: list[str] | None,
         name: str | None,
@@ -408,12 +417,17 @@ class BackupManager(BaseBackupManager[Backup]):
         """Initiate generating a backup."""
         if self.backup_task:
             raise HomeAssistantError("Backup already in progress")
+        if not agent_ids:
+            raise HomeAssistantError("At least one agent must be selected")
+        if any(agent_id not in self.backup_agents for agent_id in agent_ids):
+            raise HomeAssistantError("Invalid agent selected")
         backup_name = name or f"Core {HAVERSION}"
         date_str = dt_util.now().isoformat()
         slug = _generate_slug(date_str, backup_name)
         self.backup_task = self.hass.async_create_task(
             self._async_create_backup(
                 addons_included=addons_included,
+                agent_ids=agent_ids,
                 backup_name=backup_name,
                 database_included=database_included,
                 date_str=date_str,
@@ -431,6 +445,7 @@ class BackupManager(BaseBackupManager[Backup]):
         self,
         *,
         addons_included: list[str] | None,
+        agent_ids: list[str],
         database_included: bool,
         backup_name: str,
         date_str: str,
@@ -438,9 +453,16 @@ class BackupManager(BaseBackupManager[Backup]):
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
         slug: str,
-    ) -> Backup:
+    ) -> BaseBackup:
         """Generate a backup."""
         success = False
+
+        local_file_paths = [
+            self.local_backup_agents[agent_id].get_backup_path(slug)
+            for agent_id in agent_ids
+            if agent_id in self.local_backup_agents
+        ]
+
         try:
             await self.async_pre_backup_actions()
 
@@ -458,25 +480,30 @@ class BackupManager(BaseBackupManager[Backup]):
                 "protected": password is not None,
             }
 
-            tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
-            size_in_bytes = await self.hass.async_add_executor_job(
+            tar_file_path, size_in_bytes = await self.hass.async_add_executor_job(
                 self._mkdir_and_generate_backup_contents,
-                tar_file_path,
+                local_file_paths,
                 backup_data,
                 database_included,
                 password,
             )
-            backup = Backup(
+            backup = BaseBackup(
                 slug=slug,
                 name=backup_name,
                 date=date_str,
-                path=tar_file_path,
                 size=round(size_in_bytes / 1_048_576, 2),
                 protected=password is not None,
             )
-            if self.loaded_backups:
-                self.backups[slug] = backup
-            LOGGER.debug("Generated new backup with slug %s", slug)
+            LOGGER.debug(
+                "Generated new backup with slug %s, uploading to agents %s",
+                slug,
+                agent_ids,
+            )
+            await self._async_upload_backup(
+                backup=backup, agent_ids=agent_ids, path=tar_file_path
+            )
+            if not local_file_paths:
+                await self.hass.async_add_executor_job(tar_file_path.unlink, True)
             success = True
             return backup
         finally:
@@ -487,15 +514,19 @@ class BackupManager(BaseBackupManager[Backup]):
 
     def _mkdir_and_generate_backup_contents(
         self,
-        tar_file_path: Path,
+        tar_file_paths: list[Path],
         backup_data: dict[str, Any],
         database_included: bool,
-        password: str | None = None,
-    ) -> int:
+        password: str | None,
+    ) -> tuple[Path, int]:
         """Generate backup contents and return the size."""
-        if not self.backup_dir.exists():
-            LOGGER.debug("Creating backup directory")
-            self.backup_dir.mkdir()
+        if tar_file_paths:
+            tar_file_path = tar_file_paths[0]
+        else:
+            tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
+        if not (backup_dir := tar_file_path.parent).exists():
+            LOGGER.debug("Creating backup directory %s", backup_dir)
+            backup_dir.mkdir()
 
         excludes = EXCLUDE_FROM_BACKUP
         if not database_included:
@@ -522,13 +553,16 @@ class BackupManager(BaseBackupManager[Backup]):
                     excludes=excludes,
                     arcname="data",
                 )
-        return tar_file_path.stat().st_size
+        for local_path in tar_file_paths[1:]:
+            shutil.copy(tar_file_path, local_path)
+        return (tar_file_path, tar_file_path.stat().st_size)
 
     async def async_restore_backup(
         self,
         slug: str,
         *,
-        password: str | None = None,
+        agent_id: str,
+        password: str | None,
         **kwargs: Any,
     ) -> None:
         """Restore a backup.
@@ -536,13 +570,25 @@ class BackupManager(BaseBackupManager[Backup]):
         This will write the restore information to .HA_RESTORE which
         will be handled during startup by the restore_backup module.
         """
-        if (backup := await self.async_get_backup(slug=slug)) is None:
-            raise HomeAssistantError(f"Backup {slug} not found")
+
+        if agent_id in self.local_backup_agents:
+            local_agent = self.local_backup_agents[agent_id]
+            if not await local_agent.async_get_backup(slug=slug):
+                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+            path = local_agent.get_backup_path(slug=slug)
+        else:
+            path = self.temp_backup_dir / f"{slug}.tar"
+            agent = self.backup_agents[agent_id]
+            if not (backup := await agent.async_get_backup(slug=slug)):
+                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
+            await agent.async_download_backup(id=backup.id, path=path)
+
+        path = local_agent.get_backup_path(slug)
 
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                json.dumps({"path": backup.path.as_posix(), "password": password}),
+                json.dumps({"path": path.as_posix(), "password": password}),
                 encoding="utf-8",
             )
 

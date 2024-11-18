@@ -56,6 +56,26 @@ class BackupAgent(abc.ABC):
     async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List backups."""
 
+    @abc.abstractmethod
+    async def async_get_backup(
+        self,
+        *,
+        slug: str,
+        **kwargs: Any,
+    ) -> UploadedBackup | None:
+        """Return a backup."""
+
+
+class LocalBackupAgent(BackupAgent):
+    """Local backup agent."""
+
+    @abc.abstractmethod
+    def get_backup_path(self, slug: str) -> Path:
+        """Return the local path to a backup.
+
+        The method should return the path to the backup file with the specified slug.
+        """
+
 
 class BackupAgentPlatformProtocol(Protocol):
     """Define the format of backup platforms which implement backup agents."""
