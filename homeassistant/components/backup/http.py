@@ -55,7 +55,9 @@ class DownloadBackupView(HomeAssistantView):
         backup = await agent.async_get_backup(slug=slug)  # type: ignore[attr-defined]
         path = agent.get_backup_path(slug=slug)
 
-        if backup is None or path is None or not path.exists():
+        # We don't need to check if the path exists, aiohttp.FileResponse will handle
+        # that
+        if backup is None or path is None:
             return Response(status=HTTPStatus.NOT_FOUND)
 
         return FileResponse(
