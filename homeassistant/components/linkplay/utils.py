@@ -37,7 +37,7 @@ MODELS_GGMM_GGMM_E2: Final[str] = "GGMM E2"
 MODELS_MEDION_MD_43970: Final[str] = "Life P66970 (MD 43970)"
 MODELS_GENERIC: Final[str] = "Generic"
 
-PROJECTID_LOOKUP: Final[dict] = {
+PROJECTID_LOOKUP: Final[dict[str, tuple[str, str]]] = {
     "SMART_ZONE4_AMP": (MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_ZONE4),
     "SMART_HYDE": (MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_HYDE),
     "ARYLIC_S50": (MANUFACTURER_ARYLIC, MODELS_ARYLIC_S50),
@@ -74,9 +74,7 @@ PROJECTID_LOOKUP: Final[dict] = {
 
 def get_info_from_project(project: str) -> tuple[str, str]:
     """Get manufacturer and model info based on given project."""
-    if project in PROJECTID_LOOKUP:
-        return tuple(PROJECTID_LOOKUP[project])
-    return MANUFACTURER_GENERIC, MODELS_GENERIC
+    return PROJECTID_LOOKUP.get(project, (MANUFACTURER_GENERIC, MODELS_GENERIC))
 
 
 async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
