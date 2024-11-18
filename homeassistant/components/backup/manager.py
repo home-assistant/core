@@ -628,8 +628,6 @@ class BackupManager(BaseBackupManager[Backup]):
                 )
             await agent.async_download_backup(backup_id, path=path)
 
-        path = local_agent.get_backup_path(backup_id)
-
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
