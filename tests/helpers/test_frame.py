@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
-from homeassistant.loader import Integration
+from homeassistant.loader import async_get_integration
 
 from tests.common import extract_stack_to_frame
 
@@ -449,41 +449,39 @@ async def test_report(
 
 
 @pytest.mark.parametrize(
-    ("integration", "integration_domain", "source"),
+    ("integration_domain", "source"),
     [
         pytest.param(
-            None,
             None,
             "code that",
             id="core",
         ),
         pytest.param(
-            None,
             "sensor",
             "that integration 'sensor'",
             id="core integration",
         ),
         pytest.param(
-            None,
-            "hue",
-            "that custom integration 'hue'",
+            "test_package",
+            "that custom integration 'test_package'",
             id="custom integration",
         ),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_report_integration_domain(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    integration: Integration | None,
     integration_domain: str | None,
     source: str,
 ) -> None:
     """Test report."""
+    await async_get_integration(hass, "sensor")
+    await async_get_integration(hass, "test_package")
+
     what = "test_report_string"
 
-    with (
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
-        patch("homeassistant.loader.async_get_issue_integration", integration),
-    ):
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
         frame.report_usage(
             what,
             core_behavior=frame.ReportBehavior.LOG,
