@@ -13,7 +13,7 @@ from homeassistant.components.webhook import (
     async_generate_url as webhook_generate_url,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 
 from .const import DOMAIN, OPTION_DATA_TYPE_CHOICES
@@ -41,10 +41,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if "ip_address" in user_input and self._hub is None:
+            if CONF_IP_ADDRESS in user_input and self._hub is None:
                 # When the user has input the IP manually, we need to gather more information
                 # from the Hub before we can continue setup.
-                self._hub = VegeHub(str(user_input.get("ip_address")))
+                self._hub = VegeHub(str(user_input.get(CONF_IP_ADDRESS)))
 
                 await self._hub.retrieve_mac_address()
 
@@ -122,7 +122,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required("ip_address"): str,
+                        vol.Required(CONF_IP_ADDRESS): str,
                     }
                 ),
                 errors={},
