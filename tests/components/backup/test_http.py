@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP, setup_backup_integration
+from .common import TEST_LOCAL_BACKUP, setup_backup_integration
 
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
@@ -26,8 +26,8 @@ async def test_downloading_backup(
 
     with (
         patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=TEST_BACKUP,
+            "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
+            return_value=TEST_LOCAL_BACKUP,
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch(
@@ -35,7 +35,7 @@ async def test_downloading_backup(
             return_value=web.Response(text=""),
         ),
     ):
-        resp = await client.get("/api/backup/download/abc123")
+        resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
         assert resp.status == 200
 
 
@@ -48,7 +48,7 @@ async def test_downloading_backup_not_found(
 
     client = await hass_client()
 
-    resp = await client.get("/api/backup/download/abc123")
+    resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
     assert resp.status == 404
 
 
@@ -63,7 +63,7 @@ async def test_downloading_as_non_admin(
 
     client = await hass_client()
 
-    resp = await client.get("/api/backup/download/abc123")
+    resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
     assert resp.status == 401
 
 
@@ -80,7 +80,7 @@ async def test_uploading_a_backup_file(
         "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
     ) as async_receive_backup_mock:
         resp = await client.post(
-            "/api/backup/upload",
+            "/api/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
         )
         assert resp.status == 201
@@ -110,7 +110,7 @@ async def test_error_handling_uploading_a_backup_file(
         side_effect=error,
     ):
         resp = await client.post(
-            "/api/backup/upload",
+            "/api/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
         )
         assert resp.status == 500

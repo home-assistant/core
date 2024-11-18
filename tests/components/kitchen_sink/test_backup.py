@@ -1,18 +1,18 @@
 """Test the Kitchen Sink backup platform."""
 
 from collections.abc import AsyncGenerator
-from pathlib import Path
+from io import StringIO
 from unittest.mock import patch
 from uuid import UUID
 
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, Backup
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BaseBackup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +31,7 @@ async def backup_only() -> AsyncGenerator[None]:
 @pytest.fixture(autouse=True)
 async def setup_integration(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Set up Kitchen Sink integration."""
-    with patch("homeassistant.components.backup.is_hassio", return_value=True):
+    with patch("homeassistant.components.backup.is_hassio", return_value=False):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -50,7 +50,7 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "kitchen_sink.syncer"}],
+        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
         "syncing": False,
     }
 
@@ -100,25 +100,25 @@ async def test_agents_download(
     response = await client.receive_json()
 
     assert response["success"]
-    path = hass.config.path(f"backup/{slug}.tar")
+    path = hass.config.path(f"tmp_backups/{slug}.tar")
     assert f"Downloading backup {backup_id} to {path}" in caplog.text
 
 
-@pytest.mark.xfail(reason="Disabled until /api/backup/upload accepts a list of agents")
 async def test_agents_upload(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     hass_supervisor_access_token: str,
 ) -> None:
     """Test backup agents upload."""
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    ws_client = await hass_ws_client(hass, hass_supervisor_access_token)
+    client = await hass_client()
     slug = "test-backup"
-    test_backup = Backup(
+    test_backup = BaseBackup(
         slug=slug,
         name="Test",
         date="1970-01-01T00:00:00.000Z",
-        path=Path(hass.config.path(f"backups/{slug}.tar")),
         size=0.0,
         protected=False,
     )
@@ -129,25 +129,24 @@ async def test_agents_upload(
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
     ):
         fetch_backup.return_value = test_backup
-        await client.send_json_auto_id(
-            {
-                "type": "backup/upload",
-                "data": {
-                    "slug": slug,
-                },
-            }
+        resp = await client.post(
+            "/api/backup/upload?agent_id=kitchen_sink.syncer",
+            data={"file": StringIO("test")},
         )
-        response = await client.receive_json()
 
-    assert response["success"]
+    assert resp.status == 201
     backup_name = f"{slug}.tar"
     assert f"Uploading backup {backup_name}" in caplog.text
 
     with patch("homeassistant.components.kitchen_sink.backup.uuid4", return_value=uuid):
-        await client.send_json_auto_id({"type": "backup/agents/list_backups"})
-        response = await client.receive_json()
+        await ws_client.send_json_auto_id({"type": "backup/agents/list_backups"})
+        response = await ws_client.receive_json()
 
     assert response["success"]
     backup_list = response["result"]

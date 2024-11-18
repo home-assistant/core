@@ -75,3 +75,15 @@ class KitchenSinkBackupAgent(BackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List synced backups."""
         return self._uploads
+
+    async def async_get_backup(
+        self,
+        *,
+        slug: str,
+        **kwargs: Any,
+    ) -> UploadedBackup | None:
+        """Return a backup."""
+        for backup in self._uploads:
+            if backup.slug == slug:
+                return backup
+        return None

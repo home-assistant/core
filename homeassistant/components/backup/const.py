@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .manager import BaseBackupManager
     from .models import BaseBackup
 
+BUF_SIZE = 2**20 * 4  # 4MB
 DOMAIN = "backup"
 DATA_MANAGER: HassKey[BaseBackupManager[BaseBackup]] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
