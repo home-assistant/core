@@ -679,12 +679,12 @@ def sun(
     has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
     has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
 
-    after_sunrise = today > dt_util.as_local(cast(datetime, sunrise)).date()
+    after_sunrise = today > dt_util.as_local(cast(dt_date, sunrise)).date()
     if after_sunrise and has_sunrise_condition:
         tomorrow = today + dt_timedelta(days=1)
         sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
 
-    after_sunset = today > dt_util.as_local(cast(datetime, sunset)).date()
+    after_sunset = today > dt_util.as_local(cast(dt_date, sunset)).date()
     if after_sunset and has_sunset_condition:
         tomorrow = today + dt_timedelta(days=1)
         sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
@@ -701,9 +701,9 @@ def sun(
     #      state: 'above_horizon' (or 'below_horizon')
     #
     if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
-        wanted_time_before = cast(datetime, sunrise) + before_offset
+        wanted_time_before = cast(dt_datetime, sunrise) + before_offset
         condition_trace_update_result(wanted_time_before=wanted_time_before)
-        wanted_time_after = cast(datetime, sunset) + after_offset
+        wanted_time_after = cast(dt_datetime, sunset) + after_offset
         condition_trace_update_result(wanted_time_after=wanted_time_after)
         return utcnow < wanted_time_before or utcnow > wanted_time_after
 
@@ -718,25 +718,25 @@ def sun(
         return False
 
     if before == SUN_EVENT_SUNRISE:
-        wanted_time_before = cast(datetime, sunrise) + before_offset
+        wanted_time_before = cast(dt_datetime, sunrise) + before_offset
         condition_trace_update_result(wanted_time_before=wanted_time_before)
         if utcnow > wanted_time_before:
             return False
 
     if before == SUN_EVENT_SUNSET:
-        wanted_time_before = cast(datetime, sunset) + before_offset
+        wanted_time_before = cast(dt_datetime, sunset) + before_offset
         condition_trace_update_result(wanted_time_before=wanted_time_before)
         if utcnow > wanted_time_before:
             return False
 
     if after == SUN_EVENT_SUNRISE:
-        wanted_time_after = cast(datetime, sunrise) + after_offset
+        wanted_time_after = cast(dt_datetime, sunrise) + after_offset
         condition_trace_update_result(wanted_time_after=wanted_time_after)
         if utcnow < wanted_time_after:
             return False
 
     if after == SUN_EVENT_SUNSET:
-        wanted_time_after = cast(datetime, sunset) + after_offset
+        wanted_time_after = cast(dt_datetime, sunset) + after_offset
         condition_trace_update_result(wanted_time_after=wanted_time_after)
         if utcnow < wanted_time_after:
             return False
