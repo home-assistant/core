@@ -110,9 +110,6 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
             if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
                 event_data["nfc_id"] = event.metadata.nfc.nfc_id
 
-                if event.metadata.nfc.user_id:
-                    event_data["user_id"] = event.metadata.nfc.user_id
-
             self._trigger_event(event_type, event_data)
             self.async_write_ha_state()
 
@@ -148,6 +145,8 @@ class ProtectDeviceFingerprintEventEntity(
                 and event.metadata.fingerprint.ulp_id
             ):
                 event_data["ulp_id"] = event.metadata.fingerprint.ulp_id
+            else:
+                event_data["ulp_id"] = ""
 
             self._trigger_event(event_type, event_data)
             self.async_write_ha_state()
