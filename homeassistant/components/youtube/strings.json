@@ -47,14 +47,8 @@
           "published_at": { "name": "Published at" }
         }
       },
-      "subscribers": {
-        "name": "Subscribers",
-        "native_unit_of_measurement": "subscribers"
-      },
-      "views": {
-        "name": "Views",
-        "native_unit_of_measurement": "views"
-      }
+      "subscribers": { "name": "Subscribers" },
+      "views": { "name": "Views" }
     }
   }
 }

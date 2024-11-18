@@ -19,22 +19,28 @@
   "entity": {
     "sensor": {
       "discussions_count": {
-        "name": "Discussions"
+        "name": "Discussions",
+        "native_unit_of_measurement": "discussions"
       },
       "stargazers_count": {
-        "name": "Stars"
+        "name": "Stars",
+        "native_unit_of_measurement": "stars"
       },
       "subscribers_count": {
-        "name": "Watchers"
+        "name": "Watchers",
+        "native_unit_of_measurement": "watchers"
       },
       "forks_count": {
-        "name": "Forks"
+        "name": "Forks",
+        "native_unit_of_measurement": "forks"
       },
       "issues_count": {
-        "name": "Issues"
+        "name": "Issues",
+        "native_unit_of_measurement": "issues"
       },
       "pulls_count": {
-        "name": "Pull requests"
+        "name": "Pull requests",
+        "native_unit_of_measurement": "pull requests"
       },
       "latest_commit": {
         "name": "Latest commit"
