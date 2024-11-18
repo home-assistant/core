@@ -8,8 +8,19 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .models import BackupUploadMetadata, BaseBackup
+
+
+class BackupAgentError(HomeAssistantError):
+    """Base class for backup agent errors."""
+
+
+class BackupAgentUnreachableError(BackupAgentError):
+    """Raised when the agent can't reach it's API."""
+
+    _message = "The backup agent is unreachable."
 
 
 @dataclass(slots=True)
