@@ -198,7 +198,7 @@ async def test_details_with_errors(
         pytest.param(False, id="without_hassio"),
     ],
 )
-async def test_remove(
+async def test_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
@@ -206,7 +206,7 @@ async def test_remove(
     backups: dict[str, BaseBackup],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test removing a backup file."""
+    """Test deleting a backup file."""
     await setup_backup_integration(
         hass, with_hassio=with_hassio, backups=backups, remote_agents=remote_agents
     )
@@ -217,19 +217,19 @@ async def test_remove(
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
 
-    await client.send_json_auto_id({"type": "backup/remove", "backup_id": "abc123"})
+    await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
     assert await client.receive_json() == snapshot
 
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
 
 
-async def test_remove_agents_delete(
+async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test removing a backup file with a mock agent."""
+    """Test deleting a backup file with a mock agent."""
     await setup_backup_integration(hass)
     hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
 
@@ -239,7 +239,7 @@ async def test_remove_agents_delete(
     with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
         await client.send_json_auto_id(
             {
-                "type": "backup/remove",
+                "type": "backup/delete",
                 "backup_id": "abc123",
             }
         )
