@@ -466,6 +466,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
+    # Deprecated in 2024.12. Remove in 2025.6
     _attr_frontend_stream_type: StreamType | None
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
@@ -566,6 +567,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         frontend which camera attributes and player to use. The default type
         is to use HLS, and components can override to change the type.
         """
+        # Deprecated in 2024.12. Remove in 2025.6
+        # Use the camera_capabilities instead
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
         if CameraEntityFeature.STREAM not in self.supported_features_compat:
@@ -628,7 +631,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Async means that it could take some time to process the offer and responses/message
         will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM and StreamType.WEB_RTC.
+        This method is used by cameras with CameraEntityFeature.STREAM.
         An integration overriding this method must also implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
