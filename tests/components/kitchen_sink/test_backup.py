@@ -41,7 +41,7 @@ async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test backup agents info."""
+    """Test backup agent info."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -58,7 +58,7 @@ async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test backup agents list backups."""
+    """Test agent list backups."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "backup/agents/list_backups"})
@@ -82,7 +82,7 @@ async def test_agents_download(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test backup agents download."""
+    """Test agent download backup."""
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 
@@ -107,7 +107,7 @@ async def test_agents_upload(
     caplog: pytest.LogCaptureFixture,
     hass_supervisor_access_token: str,
 ) -> None:
-    """Test backup agents upload."""
+    """Test agent upload backup."""
     ws_client = await hass_ws_client(hass, hass_supervisor_access_token)
     client = await hass_client()
     backup_id = "test-backup"
@@ -154,12 +154,12 @@ async def test_agents_upload(
     }
 
 
-async def test_agents_delete(
+async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test backup agents delete."""
+    """Test agent delete backup."""
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 

@@ -228,8 +228,8 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """Get a backup."""
 
     @abc.abstractmethod
-    async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
-        """Remove a backup."""
+    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+        """Delete a backup."""
 
     @abc.abstractmethod
     async def async_receive_backup(
@@ -353,8 +353,8 @@ class BackupManager(BaseBackupManager[Backup]):
 
         return (backup, agent_errors)
 
-    async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
-        """Remove a backup."""
+    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+        """Delete a backup."""
         for agent in self.backup_agents.values():
             await agent.async_delete_backup(backup_id)
 
