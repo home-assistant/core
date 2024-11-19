@@ -88,6 +88,13 @@ class BackupAgentTest(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
+        self._backups[metadata.backup_id] = BaseBackup(
+            backup_id=metadata.backup_id,
+            date=metadata.date,
+            name=metadata.name,
+            protected=metadata.protected,
+            size=metadata.size,
+        )
 
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
