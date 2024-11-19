@@ -235,8 +235,8 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_current_direction: str | None = None
     _attr_oscillating: bool | None = None
     _attr_percentage: int | None
-    _attr_preset_mode: str | None
-    _attr_preset_modes: list[str] | None
+    _attr_preset_mode: str | None = None
+    _attr_preset_modes: list[str] | None = None
     _attr_speed_count: int
     _attr_supported_features: FanEntityFeature = FanEntityFeature(0)
 
@@ -538,9 +538,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Requires FanEntityFeature.SET_SPEED.
         """
-        if hasattr(self, "_attr_preset_mode"):
-            return self._attr_preset_mode
-        return None
+        return self._attr_preset_mode
 
     @cached_property
     def preset_modes(self) -> list[str] | None:
@@ -548,9 +546,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Requires FanEntityFeature.SET_SPEED.
         """
-        if hasattr(self, "_attr_preset_modes"):
-            return self._attr_preset_modes
-        return None
+        return self._attr_preset_modes
 
 
 # These can be removed if no deprecated constant are in this module anymore
