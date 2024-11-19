@@ -10,9 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import QUEUE_DATA
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -32,7 +30,7 @@ def mock_sabnzbd() -> Generator[AsyncMock]:
     ) as mock_sabnzbd:
         mock = mock_sabnzbd.return_value
         mock.return_value.check_available = True
-        mock.queue = QUEUE_DATA
+        mock.queue = load_json_object_fixture("queue.json", DOMAIN)
         yield mock
 
 
