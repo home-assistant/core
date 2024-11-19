@@ -796,7 +796,7 @@
         "name": "On LED intensity"
       },
       "off_led_intensity": {
-        "name": "Off LED Intensity"
+        "name": "Off LED intensity"
       }
     },
     "select": {
@@ -894,10 +894,10 @@
         "name": "Weather delay"
       },
       "on_led_color": {
-        "name": "On LED Color"
+        "name": "On LED color"
       },
       "off_led_color": {
-        "name": "Off LED Color"
+        "name": "Off LED color"
       }
     },
     "sensor": {
@@ -1207,7 +1207,7 @@
         "name": "Valve 2"
       },
       "double_up_full": {
-        "name": "Double Tap On - Full"
+        "name": "Double tap on - full"
       }
     }
   }
