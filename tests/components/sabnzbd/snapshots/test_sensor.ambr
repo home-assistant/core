@@ -41,7 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Daily total',
+      'friendly_name': 'Sabnzbd Daily total',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
@@ -92,7 +92,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Free disk space',
+      'friendly_name': 'Sabnzbd Free disk space',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
@@ -143,7 +143,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Left to download',
+      'friendly_name': 'Sabnzbd Left to download',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
@@ -197,7 +197,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Monthly total',
+      'friendly_name': 'Sabnzbd Monthly total',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
@@ -251,7 +251,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Overall total',
+      'friendly_name': 'Sabnzbd Overall total',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
@@ -302,7 +302,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Queue',
+      'friendly_name': 'Sabnzbd Queue',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
@@ -355,7 +355,7 @@
 # name: test_sensor[sensor.sabnzbd_queue_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SABnzbd Queue count',
+      'friendly_name': 'Sabnzbd Queue count',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -411,7 +411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
-      'friendly_name': 'SABnzbd Speed',
+      'friendly_name': 'Sabnzbd Speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
@@ -459,7 +459,7 @@
 # name: test_sensor[sensor.sabnzbd_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SABnzbd Status',
+      'friendly_name': 'Sabnzbd Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_status',
@@ -508,7 +508,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Total disk space',
+      'friendly_name': 'Sabnzbd Total disk space',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
@@ -562,7 +562,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'SABnzbd Weekly total',
+      'friendly_name': 'Sabnzbd Weekly total',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
