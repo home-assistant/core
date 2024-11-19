@@ -14,7 +14,11 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_EVENT_ID
+from .const import (
+    ATTR_EVENT_ID,
+    EVENT_TYPE_FINGERPRINT_IDENTIFIED,
+    EVENT_TYPE_NFC_SCANNED,
+)
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
@@ -27,6 +31,7 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
+        name="Doorbell",
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
@@ -36,21 +41,23 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ),
     ProtectEventEntityDescription(
         key="nfc",
+        name="Nfc",
         translation_key="nfc",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:nfc",
         ufp_required_field="feature_flags.support_nfc",
         ufp_event_obj="last_nfc_card_scanned_event",
-        event_types=[EventType.NFC_CARD_SCANNED],
+        event_types=[EVENT_TYPE_NFC_SCANNED],
     ),
     ProtectEventEntityDescription(
         key="fingerprint",
+        name="Fingerprint",
         translation_key="fingerprint",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:fingerprint",
         ufp_required_field="feature_flags.has_fingerprint_sensor",
         ufp_event_obj="last_fingerprint_identified_event",
-        event_types=[EventType.FINGERPRINT_IDENTIFIED],
+        event_types=[EVENT_TYPE_FINGERPRINT_IDENTIFIED],
     ),
 )
 
@@ -74,10 +81,9 @@ class ProtectDeviceEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntit
         if (
             event
             and not self._event_already_ended(prev_event, prev_event_end)
-            and (event_types := description.event_types)
-            and (event_type := event.type) in event_types
+            and event.type == EventType.RING
         ):
-            self._trigger_event(event_type, {ATTR_EVENT_ID: event.id})
+            self._trigger_event(EventType.RING, {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 
 
@@ -100,14 +106,14 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
         if (
             event
             and not self._event_already_ended(prev_event, prev_event_end)
-            and (event_types := description.event_types)
-            and (event_type := event.type) in event_types
+            and not self._event_already_ended(prev_event, prev_event_end)
+            and event.type == EventType.NFC_CARD_SCANNED
         ):
             event_data = {ATTR_EVENT_ID: event.id}
             if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
                 event_data["nfc_id"] = event.metadata.nfc.nfc_id
 
-            self._trigger_event(event_type, event_data)
+            self._trigger_event(EVENT_TYPE_NFC_SCANNED, event_data)
             self.async_write_ha_state()
 
 
@@ -132,8 +138,7 @@ class ProtectDeviceFingerprintEventEntity(
         if (
             event
             and not self._event_already_ended(prev_event, prev_event_end)
-            and (event_types := description.event_types)
-            and (event_type := event.type) in event_types
+            and event.type == EventType.FINGERPRINT_IDENTIFIED
         ):
             event_data = {ATTR_EVENT_ID: event.id}
             if (
@@ -145,7 +150,7 @@ class ProtectDeviceFingerprintEventEntity(
             else:
                 event_data["ulp_id"] = ""
 
-            self._trigger_event(event_type, event_data)
+            self._trigger_event(EVENT_TYPE_FINGERPRINT_IDENTIFIED, event_data)
             self.async_write_ha_state()
 
 

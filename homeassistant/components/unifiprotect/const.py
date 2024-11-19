@@ -1,5 +1,7 @@
 """Constant definitions for UniFi Protect Integration."""
 
+from typing import Final
+
 from uiprotect.data import ModelType, Version
 
 from homeassistant.const import Platform
@@ -75,3 +77,6 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+
+EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "fingerprint_identified"
+EVENT_TYPE_NFC_SCANNED: Final = "nfc_card_scanned"
