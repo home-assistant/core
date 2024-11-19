@@ -99,6 +99,13 @@ class BackupAgentTest(BackupAgent):
         """Return a backup."""
         return self._backups.get(backup_id)
 
+    async def async_delete_backup(
+        self,
+        backup_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Delete a backup file."""
+
 
 async def setup_backup_integration(
     hass: HomeAssistant,

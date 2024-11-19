@@ -43,6 +43,7 @@ class KitchenSinkBackupAgent(BackupAgent):
     async def async_download_backup(
         self,
         backup_id: str,
+        *,
         path: Path,
         **kwargs: Any,
     ) -> None:
@@ -67,6 +68,17 @@ class KitchenSinkBackupAgent(BackupAgent):
                 size=metadata.size,
             )
         )
+
+    async def async_delete_backup(
+        self,
+        backup_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Delete a backup file."""
+        self._uploads = [
+            upload for upload in self._uploads if upload.backup_id != backup_id
+        ]
+        LOGGER.info("Deleted backup %s", backup_id)
 
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List synced backups."""

@@ -56,6 +56,17 @@ class BackupAgent(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def async_delete_backup(
+        self,
+        backup_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Delete a backup file.
+
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
+        """
+
+    @abc.abstractmethod
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
 
