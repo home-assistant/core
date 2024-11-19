@@ -469,7 +469,6 @@ class BackupManager:
                 raise HomeAssistantError(
                     f"Backup {backup_id} not found in agent {agent_id}"
                 )
-            path = local_agent.get_backup_path(backup_id)
         else:
             path = self.temp_backup_dir / f"{backup_id}.tar"
             agent = self.backup_agents[agent_id]
