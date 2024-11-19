@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.53.0
+PySwitchbot==0.53.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -369,7 +369,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.8.5
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.4.0
+aioswitcher==5.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -541,7 +541,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.20.0
+bluetooth-adapters==0.20.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -931,7 +931,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.84.0
 
 # homeassistant.components.conversation
-hassil==2.0.1
+hassil==2.0.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
