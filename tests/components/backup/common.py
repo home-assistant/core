@@ -116,7 +116,12 @@ async def setup_backup_integration(
     remote_agents: list[str] | None = None,
 ) -> bool:
     """Set up the Backup integration."""
-    with patch("homeassistant.components.backup.is_hassio", return_value=with_hassio):
+    with (
+        patch("homeassistant.components.backup.is_hassio", return_value=with_hassio),
+        patch(
+            "homeassistant.components.backup.backup.is_hassio", return_value=with_hassio
+        ),
+    ):
         remote_agents = remote_agents or []
         platform = Mock(
             async_get_backup_agents=AsyncMock(
@@ -129,6 +134,7 @@ async def setup_backup_integration(
         assert await async_setup_component(hass, TEST_DOMAIN, {})
 
         result = await async_setup_component(hass, DOMAIN, configuration or {})
+        await hass.async_block_till_done()
         if with_hassio or not backups:
             return result
 

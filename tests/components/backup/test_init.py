@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.backup.const import DOMAIN
+from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import setup_backup_integration
@@ -21,6 +21,8 @@ async def test_setup_with_hassio(
         with_hassio=True,
         configuration={DOMAIN: {}},
     )
+    manager = hass.data[DATA_MANAGER]
+    assert not manager.backup_agents
     assert (
         "The backup integration is not supported on this installation method, please"
         " remove it from your configuration"
