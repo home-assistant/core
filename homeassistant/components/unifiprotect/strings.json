@@ -137,6 +137,7 @@
     },
     "event": {
       "doorbell": {
+        "name": "Doorbell",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -145,7 +146,8 @@
           }
         }
       },
-      "doorbell_nfc": {
+      "nfc": {
+        "name": "NFC",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -154,7 +156,8 @@
           }
         }
       },
-      "doorbell_fingerprint": {
+      "fingerprint": {
+        "name": "Fingerprint",
         "state_attributes": {
           "event_type": {
             "state": {

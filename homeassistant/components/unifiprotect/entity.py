@@ -15,6 +15,7 @@ from uiprotect import make_enabled_getter, make_required_getter, make_value_gett
 from uiprotect.data import (
     NVR,
     Event,
+    EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
     SmartDetectObjectType,
@@ -331,6 +332,19 @@ class EventEntityMixin(ProtectDeviceEntity):
     _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
     _event: Event | None = None
     _event_end: datetime | None = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return mapped attributes for the entity."""
+        attributes = dict(super().extra_state_attributes or {})
+
+        if self._event:
+            if self._event.type == EventType.NFC_CARD_SCANNED:
+                attributes["event_type"] = "nfc_card_scanned"
+            elif self._event.type == EventType.FINGERPRINT_IDENTIFIED:
+                attributes["event_type"] = "fingerprint_identified"
+
+        return attributes
 
     @callback
     def _set_event_done(self) -> None:

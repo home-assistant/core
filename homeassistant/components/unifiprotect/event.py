@@ -28,7 +28,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
         translation_key="doorbell",
-        name="Doorbell",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
@@ -36,21 +35,19 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         event_types=[EventType.RING],
     ),
     ProtectEventEntityDescription(
-        key="doorbell_nfc",
-        translation_key="doorbell_nfc",
-        name="Doorbell-NFC",
+        key="nfc",
+        translation_key="nfc",
         device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:doorbell-video",
+        icon="mdi:nfc",
         ufp_required_field="feature_flags.support_nfc",
         ufp_event_obj="last_nfc_card_scanned_event",
         event_types=[EventType.NFC_CARD_SCANNED],
     ),
     ProtectEventEntityDescription(
-        key="doorbell_fingerprint",
-        translation_key="doorbell_fingerprint",
-        name="Doorbell-Fingerprint",
+        key="fingerprint",
+        translation_key="fingerprint",
         device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:doorbell-video",
+        icon="mdi:fingerprint",
         ufp_required_field="feature_flags.has_fingerprint_sensor",
         ufp_event_obj="last_fingerprint_identified_event",
         event_types=[EventType.FINGERPRINT_IDENTIFIED],
@@ -163,9 +160,9 @@ def _async_event_entities(
             if not description.has_required(device):
                 continue
 
-            if description.key == "doorbell_nfc":
+            if description.key == "nfc":
                 entities.append(ProtectDeviceNFCEventEntity(data, device, description))
-            elif description.key == "doorbell_fingerprint":
+            elif description.key == "fingerprint":
                 entities.append(
                     ProtectDeviceFingerprintEventEntity(data, device, description)
                 )
