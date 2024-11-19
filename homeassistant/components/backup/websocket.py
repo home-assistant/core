@@ -307,6 +307,17 @@ async def handle_config_info(
     {
         vol.Required("type"): "backup/config/update",
         vol.Optional("max_copies"): int,
+        vol.Optional("schedule"): {
+            vol.Optional("daily"): bool,
+            vol.Optional("never"): bool,
+            vol.Optional("weekday"): vol.Any(str, None),
+        },
+        vol.Optional("addons_included"): vol.Any(list[str], None),
+        vol.Optional("agent_ids"): vol.All(list[str], vol.Length(min=1)),
+        vol.Optional("database_included"): bool,
+        vol.Optional("folders_included"): vol.Any(list[str], None),
+        vol.Optional("name"): vol.Any(str, None),
+        vol.Optional("password"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response

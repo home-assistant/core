@@ -123,7 +123,8 @@ class BackupManager:
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
         self.local_backup_agents: dict[str, LocalBackupAgent] = {}
-        self.config = BackupConfig(hass)
+        self.config = BackupConfig(hass, self)
+        self.remove_next_backup_event: Callable[[], None] | None = None
         self.syncing = False
         self._reader_writer = reader_writer
 

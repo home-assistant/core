@@ -242,8 +242,20 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
         'last_automatic_backup': None,
         'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
       }),
     }),
     'success': True,
@@ -255,8 +267,25 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'last_automatic_backup': '2024-10-26T02:00:00+00:00',
+        'addons_included': list([
+          'test-addon',
+        ]),
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': True,
+        'folders_included': list([
+          'test-folder',
+        ]),
+        'last_automatic_backup': '2024-10-26T02:00:00+01:00',
         'max_copies': 3,
+        'name': 'test-name',
+        'password': 'test-password',
+        'schedule': dict({
+          'daily': True,
+          'never': False,
+          'weekday': None,
+        }),
       }),
     }),
     'success': True,
@@ -268,8 +297,21 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': False,
+        'folders_included': None,
         'last_automatic_backup': None,
         'max_copies': 3,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
       }),
     }),
     'success': True,
@@ -281,34 +323,573 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'last_automatic_backup': '2024-10-26T02:00:00+00:00',
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': False,
+        'folders_included': None,
+        'last_automatic_backup': '2024-10-26T02:00:00+01:00',
         'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
       }),
     }),
     'success': True,
     'type': 'result',
   })
 # ---
-# name: test_config_update
+# name: test_config_info[storage_data4]
   dict({
     'id': 1,
     'result': dict({
       'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': False,
+        'folders_included': None,
         'last_automatic_backup': None,
         'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': False,
+          'weekday': 'mon',
+        }),
       }),
     }),
     'success': True,
     'type': 'result',
   })
 # ---
-# name: test_config_update.1
+# name: test_config_info[storage_data5]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': False,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': False,
+          'weekday': 'sat',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command0].1
   dict({
     'id': 3,
     'result': dict({
       'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': True,
+        'folders_included': None,
         'last_automatic_backup': None,
         'max_copies': 5,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command0].2
+  dict({
+    'data': dict({
+      'addons_included': None,
+      'agent_ids': list([
+        'test-agent',
+      ]),
+      'database_included': True,
+      'folders_included': None,
+      'last_automatic_backup': None,
+      'max_copies': 5,
+      'name': None,
+      'password': None,
+      'schedule': dict({
+        'daily': False,
+        'never': True,
+        'weekday': None,
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 1,
+    'version': 1,
+  })
+# ---
+# name: test_config_update[command1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command1].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': True,
+          'never': False,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command1].2
+  dict({
+    'data': dict({
+      'addons_included': None,
+      'agent_ids': list([
+        'test-agent',
+      ]),
+      'database_included': True,
+      'folders_included': None,
+      'last_automatic_backup': None,
+      'max_copies': None,
+      'name': None,
+      'password': None,
+      'schedule': dict({
+        'daily': True,
+        'never': False,
+        'weekday': None,
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 1,
+    'version': 1,
+  })
+# ---
+# name: test_config_update[command2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command2].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': False,
+          'weekday': 'mon',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command2].2
+  dict({
+    'data': dict({
+      'addons_included': None,
+      'agent_ids': list([
+        'test-agent',
+      ]),
+      'database_included': True,
+      'folders_included': None,
+      'last_automatic_backup': None,
+      'max_copies': None,
+      'name': None,
+      'password': None,
+      'schedule': dict({
+        'daily': False,
+        'never': False,
+        'weekday': 'mon',
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 1,
+    'version': 1,
+  })
+# ---
+# name: test_config_update[command3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command3].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command3].2
+  dict({
+    'data': dict({
+      'addons_included': None,
+      'agent_ids': list([
+        'test-agent',
+      ]),
+      'database_included': True,
+      'folders_included': None,
+      'last_automatic_backup': None,
+      'max_copies': None,
+      'name': None,
+      'password': None,
+      'schedule': dict({
+        'daily': False,
+        'never': True,
+        'weekday': None,
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 1,
+    'version': 1,
+  })
+# ---
+# name: test_config_update_errors[command0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command0].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command1].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command2].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command3].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'addons_included': None,
+        'agent_ids': list([
+        ]),
+        'database_included': True,
+        'folders_included': None,
+        'last_automatic_backup': None,
+        'max_copies': None,
+        'name': None,
+        'password': None,
+        'schedule': dict({
+          'daily': False,
+          'never': True,
+          'weekday': None,
+        }),
       }),
     }),
     'success': True,

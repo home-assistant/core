@@ -1,8 +1,10 @@
 """Tests for the Backup integration."""
 
+from collections.abc import Generator
+from datetime import datetime
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -23,8 +25,18 @@ from .common import (
     setup_backup_integration,
 )
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
+
+BACKUP_CALL = call(
+    addons_included=["test-addon"],
+    agent_ids=["test-agent"],
+    database_included=True,
+    folders_included=["test-folder"],
+    name="test-name",
+    on_progress=None,
+    password="test-password",
+)
 
 
 @pytest.fixture
@@ -37,6 +49,22 @@ def sync_access_token_proxy(
     Workaround for https://github.com/pytest-dev/pytest-asyncio/issues/112
     """
     return request.getfixturevalue(access_token_fixture_name)
+
+
+@pytest.fixture(autouse=True)
+def mock_delay_save() -> Generator[None]:
+    """Mock the delay save constant."""
+    with patch("homeassistant.components.backup.config.DELAY_SAVE", 0):
+        yield
+
+
+@pytest.fixture(name="create_backup")
+def mock_create_backup() -> Generator[AsyncMock]:
+    """Mock manager create backup."""
+    with patch(
+        "homeassistant.components.backup.BackupManager.async_create_backup"
+    ) as mock_create_backup:
+        yield mock_create_backup
 
 
 @pytest.mark.parametrize(
@@ -642,9 +670,65 @@ async def test_agents_download_unknown_agent(
     "storage_data",
     [
         {},
-        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": 3},
-        {"last_automatic_backup": None, "max_copies": 3},
-        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": None},
+        {
+            "addons_included": ["test-addon"],
+            "agent_ids": ["test-agent"],
+            "database_included": True,
+            "folders_included": ["test-folder"],
+            "last_automatic_backup": datetime.fromisoformat(
+                "2024-10-26T02:00:00+01:00"
+            ),
+            "max_copies": 3,
+            "name": "test-name",
+            "password": "test-password",
+            "schedule": {"daily": True, "never": False, "weekday": None},
+        },
+        {
+            "addons_included": None,
+            "agent_ids": ["test-agent"],
+            "database_included": False,
+            "folders_included": None,
+            "last_automatic_backup": None,
+            "max_copies": 3,
+            "name": None,
+            "password": None,
+            "schedule": {"daily": False, "never": True, "weekday": None},
+        },
+        {
+            "addons_included": None,
+            "agent_ids": ["test-agent"],
+            "database_included": False,
+            "folders_included": None,
+            "last_automatic_backup": datetime.fromisoformat(
+                "2024-10-26T02:00:00+01:00"
+            ),
+            "max_copies": None,
+            "name": None,
+            "password": None,
+            "schedule": {"daily": False, "never": True, "weekday": None},
+        },
+        {
+            "addons_included": None,
+            "agent_ids": ["test-agent"],
+            "database_included": False,
+            "folders_included": None,
+            "last_automatic_backup": None,
+            "max_copies": None,
+            "name": None,
+            "password": None,
+            "schedule": {"daily": False, "never": False, "weekday": "mon"},
+        },
+        {
+            "addons_included": None,
+            "agent_ids": ["test-agent"],
+            "database_included": False,
+            "folders_included": None,
+            "last_automatic_backup": None,
+            "max_copies": None,
+            "name": None,
+            "password": None,
+            "schedule": {"daily": False, "never": False, "weekday": "sat"},
+        },
     ],
 )
 async def test_config_info(
@@ -670,10 +754,37 @@ async def test_config_info(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "max_copies": 5,
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": True, "never": False},
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": False, "never": False, "weekday": "mon"},
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"never": True},
+        },
+    ],
+)
 async def test_config_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
+    command: dict[str, Any],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test updating the backup config."""
     await setup_backup_integration(hass)
@@ -684,10 +795,201 @@ async def test_config_update(
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
 
-    await client.send_json_auto_id({"type": "backup/config/update", "max_copies": 5})
+    await client.send_json_auto_id(command)
     result = await client.receive_json()
 
     assert result["success"]
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN] == snapshot
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": False, "never": False, "weekday": None},
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": True, "never": True, "weekday": "mon"},
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": True, "never": True},
+        },
+        {
+            "type": "backup/config/update",
+            "agent_ids": ["test-agent"],
+            "schedule": {"daily": True, "weekday": "mon"},
+        },
+    ],
+)
+async def test_config_update_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    command: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test errors when updating the backup config."""
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/config/info"})
+    assert await client.receive_json() == snapshot
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert not result["success"]
+    assert "ValueError: Invalid schedule" in caplog.text
+
+    await client.send_json_auto_id({"type": "backup/config/info"})
+    assert await client.receive_json() == snapshot
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "last_automatic_backup",
+        "move_to_time",
+        "backup_time",
+        "backup_calls",
+        "call_args",
+    ),
+    [
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": True, "never": False},
+            },
+            "2024-11-11T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": False, "never": False, "weekday": "mon"},
+            },
+            "2024-11-11T02:00:00+01:00",
+            "2024-11-18T02:00:00+01:00",
+            "2024-11-18T02:00:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": False, "never": True},
+            },
+            "2024-11-11T02:00:00+01:00",
+            "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2024-11-11T02:00:00+01:00",
+            0,
+            None,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": True, "never": False},
+            },
+            "2024-10-26T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": False, "never": False, "weekday": "mon"},
+            },
+            "2024-10-26T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",
+            "2024-11-12T02:00:00+01:00",  # missed event uses daily schedule once
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "agent_ids": ["test-agent"],
+                "schedule": {"daily": False, "never": True},
+            },
+            "2024-10-26T02:00:00+01:00",
+            "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2024-10-26T02:00:00+01:00",
+            0,
+            None,
+        ),
+    ],
+)
+async def test_config_update_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    command: dict[str, Any],
+    last_automatic_backup: str,
+    move_to_time: str,
+    backup_time: str,
+    backup_calls: int,
+    call_args: Any,
+) -> None:
+    """Test updating the backup config schedule."""
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "addons_included": ["test-addon"],
+        "agent_ids": ["test-agent"],
+        "database_included": True,
+        "folders_included": ["test-folder"],
+        "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
+        "max_copies": 3,
+        "name": "test-name",
+        "password": "test-password",
+        "schedule": {"daily": True, "never": False, "weekday": None},
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-11 12:00:00+01:00")
+
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert result["success"]
+
+    freezer.move_to(move_to_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == backup_calls
+    assert create_backup.call_args == call_args
+    async_fire_time_changed(hass, fire_all=True)  # flush out storage save
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
