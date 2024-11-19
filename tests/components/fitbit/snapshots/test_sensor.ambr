@@ -73,7 +73,21 @@
     'fitbit-api-user-id-1_activities/tracker/activityCalories',
   )
 # ---
-# name: test_sensors[monitored_resources10-sensor.first_l_minutes_sedentary-activities/minutesSedentary-18]
+# name: test_sensors[monitored_resources10-sensor.first_l_minutes_lightly_active-activities/minutesLightlyActive-95]
+  tuple(
+    '95',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Minutes lightly active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_activities/minutesLightlyActive',
+  )
+# ---
+# name: test_sensors[monitored_resources11-sensor.first_l_minutes_sedentary-activities/minutesSedentary-18]
   tuple(
     '18',
     ReadOnlyDict({
@@ -87,7 +101,7 @@
     'fitbit-api-user-id-1_activities/minutesSedentary',
   )
 # ---
-# name: test_sensors[monitored_resources11-sensor.first_l_minutes_very_active-activities/minutesVeryActive-20]
+# name: test_sensors[monitored_resources12-sensor.first_l_minutes_very_active-activities/minutesVeryActive-20]
   tuple(
     '20',
     ReadOnlyDict({
@@ -101,7 +115,7 @@
     'fitbit-api-user-id-1_activities/minutesVeryActive',
   )
 # ---
-# name: test_sensors[monitored_resources12-sensor.first_l_steps-activities/steps-5600]
+# name: test_sensors[monitored_resources13-sensor.first_l_steps-activities/steps-5600]
   tuple(
     '5600',
     ReadOnlyDict({
@@ -114,7 +128,7 @@
     'fitbit-api-user-id-1_activities/steps',
   )
 # ---
-# name: test_sensors[monitored_resources13-sensor.first_l_weight-body/weight-175]
+# name: test_sensors[monitored_resources14-sensor.first_l_weight-body/weight-175]
   tuple(
     '175.0',
     ReadOnlyDict({
@@ -128,7 +142,7 @@
     'fitbit-api-user-id-1_body/weight',
   )
 # ---
-# name: test_sensors[monitored_resources14-sensor.first_l_body_fat-body/fat-18]
+# name: test_sensors[monitored_resources15-sensor.first_l_body_fat-body/fat-18]
   tuple(
     '18.0',
     ReadOnlyDict({
@@ -141,7 +155,7 @@
     'fitbit-api-user-id-1_body/fat',
   )
 # ---
-# name: test_sensors[monitored_resources15-sensor.first_l_bmi-body/bmi-23.7]
+# name: test_sensors[monitored_resources16-sensor.first_l_bmi-body/bmi-23.7]
   tuple(
     '23.7',
     ReadOnlyDict({
@@ -154,7 +168,7 @@
     'fitbit-api-user-id-1_body/bmi',
   )
 # ---
-# name: test_sensors[monitored_resources16-sensor.first_l_awakenings_count-sleep/awakeningsCount-7]
+# name: test_sensors[monitored_resources17-sensor.first_l_awakenings_count-sleep/awakeningsCount-7]
   tuple(
     '7',
     ReadOnlyDict({
@@ -167,7 +181,7 @@
     'fitbit-api-user-id-1_sleep/awakeningsCount',
   )
 # ---
-# name: test_sensors[monitored_resources17-sensor.first_l_sleep_efficiency-sleep/efficiency-80]
+# name: test_sensors[monitored_resources18-sensor.first_l_sleep_efficiency-sleep/efficiency-80]
   tuple(
     '80',
     ReadOnlyDict({
@@ -180,7 +194,7 @@
     'fitbit-api-user-id-1_sleep/efficiency',
   )
 # ---
-# name: test_sensors[monitored_resources18-sensor.first_l_minutes_after_wakeup-sleep/minutesAfterWakeup-17]
+# name: test_sensors[monitored_resources19-sensor.first_l_minutes_after_wakeup-sleep/minutesAfterWakeup-17]
   tuple(
     '17',
     ReadOnlyDict({
@@ -192,20 +206,6 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/minutesAfterWakeup',
-  )
-# ---
-# name: test_sensors[monitored_resources19-sensor.first_l_sleep_minutes_asleep-sleep/minutesAsleep-360]
-  tuple(
-    '360',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes asleep',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'fitbit-api-user-id-1_sleep/minutesAsleep',
   )
 # ---
 # name: test_sensors[monitored_resources2-sensor.first_l_calories-activities/calories-139]
@@ -221,7 +221,21 @@
     'fitbit-api-user-id-1_activities/calories',
   )
 # ---
-# name: test_sensors[monitored_resources20-sensor.first_l_sleep_minutes_awake-sleep/minutesAwake-35]
+# name: test_sensors[monitored_resources20-sensor.first_l_sleep_minutes_asleep-sleep/minutesAsleep-360]
+  tuple(
+    '360',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Sleep minutes asleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/minutesAsleep',
+  )
+# ---
+# name: test_sensors[monitored_resources21-sensor.first_l_sleep_minutes_awake-sleep/minutesAwake-35]
   tuple(
     '35',
     ReadOnlyDict({
@@ -235,7 +249,7 @@
     'fitbit-api-user-id-1_sleep/minutesAwake',
   )
 # ---
-# name: test_sensors[monitored_resources21-sensor.first_l_sleep_minutes_to_fall_asleep-sleep/minutesToFallAsleep-35]
+# name: test_sensors[monitored_resources22-sensor.first_l_sleep_minutes_to_fall_asleep-sleep/minutesToFallAsleep-35]
   tuple(
     '35',
     ReadOnlyDict({
@@ -249,7 +263,7 @@
     'fitbit-api-user-id-1_sleep/minutesToFallAsleep',
   )
 # ---
-# name: test_sensors[monitored_resources22-sensor.first_l_sleep_start_time-sleep/startTime-2020-01-27T00:17:30.000]
+# name: test_sensors[monitored_resources23-sensor.first_l_sleep_start_time-sleep/startTime-2020-01-27T00:17:30.000]
   tuple(
     '2020-01-27T00:17:30.000',
     ReadOnlyDict({
@@ -260,7 +274,7 @@
     'fitbit-api-user-id-1_sleep/startTime',
   )
 # ---
-# name: test_sensors[monitored_resources23-sensor.first_l_sleep_time_in_bed-sleep/timeInBed-462]
+# name: test_sensors[monitored_resources24-sensor.first_l_sleep_time_in_bed-sleep/timeInBed-462]
   tuple(
     '462',
     ReadOnlyDict({
@@ -301,7 +315,21 @@
     'fitbit-api-user-id-1_activities/distance',
   )
 # ---
-# name: test_sensors[monitored_resources5-sensor.first_l_elevation-activities/elevation-7600.24]
+# name: test_sensors[monitored_resources5-sensor.first_l_tracker_distance-activities/distance-12.7]
+  tuple(
+    'unknown',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'distance',
+      'friendly_name': 'First L. tracker Distance',
+      'icon': 'mdi:map-marker',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'fitbit-api-user-id-1_activities/tracker/distance',
+  )
+# ---
+# name: test_sensors[monitored_resources6-sensor.first_l_elevation-activities/elevation-7600.24]
   tuple(
     '7600.24',
     ReadOnlyDict({
@@ -315,7 +343,7 @@
     'fitbit-api-user-id-1_activities/elevation',
   )
 # ---
-# name: test_sensors[monitored_resources6-sensor.first_l_floors-activities/floors-8]
+# name: test_sensors[monitored_resources7-sensor.first_l_floors-activities/floors-8]
   tuple(
     '8',
     ReadOnlyDict({
@@ -328,7 +356,7 @@
     'fitbit-api-user-id-1_activities/floors',
   )
 # ---
-# name: test_sensors[monitored_resources7-sensor.first_l_resting_heart_rate-activities/heart-api_value7]
+# name: test_sensors[monitored_resources8-sensor.first_l_resting_heart_rate-activities/heart-api_value8]
   tuple(
     '76',
     ReadOnlyDict({
@@ -341,7 +369,7 @@
     'fitbit-api-user-id-1_activities/heart',
   )
 # ---
-# name: test_sensors[monitored_resources8-sensor.first_l_minutes_fairly_active-activities/minutesFairlyActive-35]
+# name: test_sensors[monitored_resources9-sensor.first_l_minutes_fairly_active-activities/minutesFairlyActive-35]
   tuple(
     '35',
     ReadOnlyDict({
@@ -353,19 +381,5 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_activities/minutesFairlyActive',
-  )
-# ---
-# name: test_sensors[monitored_resources9-sensor.first_l_minutes_lightly_active-activities/minutesLightlyActive-95]
-  tuple(
-    '95',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes lightly active',
-      'icon': 'mdi:walk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'fitbit-api-user-id-1_activities/minutesLightlyActive',
   )
 # ---

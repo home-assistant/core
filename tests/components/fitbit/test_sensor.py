@@ -107,6 +107,12 @@ def mock_token_refresh(requests_mock: Mocker) -> None:
             "12.7",
         ),
         (
+            ["activities/tracker/distance"],
+            "sensor.first_l_tracker_distance",
+            "activities/distance",
+            "12.7",
+        ),
+        (
             ["activities/elevation"],
             "sensor.first_l_elevation",
             "activities/elevation",
