@@ -41,15 +41,11 @@ async def async_setup_entry(
             # Skipping battery slot for AC hub
             continue
 
-        name = f"VegeHub Sensor {i + 1}"
-
         chan_type = CHAN_TYPE_SENSOR
         if i == num_sensors:
-            name = "Battery"
             chan_type = CHAN_TYPE_BATTERY
 
         sensor = VegeHubSensor(
-            name=name,
             mac_address=mac_address,
             slot=i + 1,
             ip_addr=ip_addr,
@@ -71,7 +67,6 @@ class VegeHubSensor(SensorEntity):
 
     def __init__(
         self,
-        name: str,
         mac_address: str,
         slot: int,
         ip_addr: str,
@@ -85,8 +80,7 @@ class VegeHubSensor(SensorEntity):
         )  # Generate a unique_id using mac and slot
 
         self._attr_has_entity_name = True
-        self._attr_translation_key = "analog"
-        self._attr_name: str = name
+        self._attr_translation_placeholders = {"index": str(slot)}
         self._data_type: str = data_type
         self._unit_of_measurement: str = ""
         self._attr_native_value = None
@@ -94,15 +88,19 @@ class VegeHubSensor(SensorEntity):
         if chan_type == CHAN_TYPE_BATTERY:
             self._unit_of_measurement = UnitOfElectricPotential.VOLT
             self._attr_device_class = SensorDeviceClass.VOLTAGE
+            self._attr_translation_key = "battery"
         elif data_type == OPTION_DATA_TYPE_CHOICES[1]:
             self._unit_of_measurement = PERCENTAGE
             self._attr_device_class = SensorDeviceClass.MOISTURE
+            self._attr_translation_key = "vh400_sensor"
         elif data_type == OPTION_DATA_TYPE_CHOICES[2]:
             self._unit_of_measurement = UnitOfTemperature.CELSIUS
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_translation_key = "therm200_temp"
         else:
             self._unit_of_measurement = UnitOfElectricPotential.VOLT
             self._attr_device_class = SensorDeviceClass.VOLTAGE
+            self._attr_translation_key = "analog_sensor"
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
