@@ -224,6 +224,20 @@ SSDP = {
             "manufacturer": "The OctoPrint Project",
         },
     ],
+    "onkyo": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "ONKYO",
+        },
+    ],
     "openhome": [
         {
             "st": "urn:av-openhome-org:service:Product:1",

@@ -2,9 +2,11 @@
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -66,6 +68,40 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _receiver_info: ReceiverInfo
     _discovered_infos: dict[str, ReceiverInfo]
+
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle flow initialized by SSDP discovery."""
+        host = urlparse(discovery_info.ssdp_location).hostname
+        _LOGGER.debug("Config flow start ssdp auto discovery: %s", host)
+
+        if not host:
+            _LOGGER.error("SSDP host is None: %s", discovery_info)
+            return self.async_abort(reason="no_host")
+
+        try:
+            info = await async_interview(str(host))
+        except Exception:
+            _LOGGER.exception("Unexpected exception interviewing host %s", host)
+            return self.async_abort(reason="host_info_error")
+
+        if info is None:
+            _LOGGER.error("SSDP info is none: %s", host)
+            return self.async_abort(reason="host_info_none")
+
+        await self.async_set_unique_id(info.identifier)
+        self._abort_if_unique_id_configured()
+
+        self._receiver_info = info
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "name": discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, host)
+                }
+            }
+        )
+        return await self.async_step_configure_receiver()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
