@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -222,6 +222,30 @@ async def test_remove(
 
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
+
+
+async def test_remove_agents_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test removing a backup file with a mock agent."""
+    await setup_backup_integration(hass)
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "backup/remove",
+                "backup_id": "abc123",
+            }
+        )
+        assert await client.receive_json() == snapshot
+
+    assert delete_mock.call_args == call("abc123")
 
 
 @pytest.mark.parametrize(

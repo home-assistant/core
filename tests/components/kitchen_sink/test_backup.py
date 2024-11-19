@@ -152,3 +152,31 @@ async def test_agents_upload(
         "protected": test_backup.protected,
         "size": 0.0,
     }
+
+
+async def test_agents_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test backup agents delete."""
+    client = await hass_ws_client(hass)
+    backup_id = "abc123"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/remove",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert f"Deleted backup {backup_id}" in caplog.text
+
+    await client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    backup_list = response["result"]
+    assert not backup_list

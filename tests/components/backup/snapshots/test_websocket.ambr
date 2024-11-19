@@ -1227,6 +1227,14 @@
     'type': 'result',
   })
 # ---
+# name: test_remove_agents_delete
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_restore_local_agent[with_hassio-backups0]
   dict({
     'error': dict({
