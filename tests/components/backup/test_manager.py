@@ -426,7 +426,7 @@ async def test_not_loading_bad_platforms(
     assert "Loaded 0 platforms" in caplog.text
 
 
-async def test_exception_plaform_pre(
+async def test_exception_platform_pre(
     hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
 ) -> None:
     """Test exception in pre step."""
@@ -449,7 +449,7 @@ async def test_exception_plaform_pre(
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
-async def test_exception_plaform_post(
+async def test_exception_platform_post(
     hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
 ) -> None:
     """Test exception in post step."""
