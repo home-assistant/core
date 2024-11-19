@@ -474,7 +474,9 @@ class BackupManager:
                 if local_path == tar_file_path:
                     keep_path = True
                     continue
-                shutil.copy(tar_file_path, local_path)
+                await self.hass.async_add_executor_job(
+                    shutil.copy, tar_file_path, local_path
+                )
             await self._async_upload_backup(
                 backup=backup, agent_ids=agent_ids, path=tar_file_path
             )
