@@ -17,6 +17,23 @@
     }
   },
   "issues": {
+    "issue_addon_boot_fail": {
+      "title": "Add-on failed to start at boot",
+      "fix_flow": {
+        "step": {
+          "fix_menu": {
+            "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
+            "menu_options": {
+              "addon_execute_start": "Start",
+              "addon_disable_boot": "Disable"
+            }
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        }
+      }
+    },
     "issue_addon_detached_addon_missing": {
       "title": "Missing repository for an installed add-on",
       "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."

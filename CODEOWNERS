@@ -496,8 +496,8 @@ build.json @home-assistant/supervisor
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
-/homeassistant/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
-/tests/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
+/homeassistant/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
+/tests/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
 /homeassistant/components/fritzbox_callmonitor/ @cdce8p
@@ -970,6 +970,8 @@ build.json @home-assistant/supervisor
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu @joostlek
 /tests/components/nanoleaf/ @milanmeu @joostlek
+/homeassistant/components/nasweb/ @nasWebio
+/tests/components/nasweb/ @nasWebio
 /homeassistant/components/neato/ @Santobert
 /tests/components/neato/ @Santobert
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM
@@ -1010,6 +1012,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
+/homeassistant/components/nordpool/ @gjohansson-ST
+/tests/components/nordpool/ @gjohansson-ST
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
 /homeassistant/components/notify_events/ @matrozov @papajojo
@@ -1340,6 +1344,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
+/homeassistant/components/sky_remote/ @dunnmj @saty9
+/tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
 /tests/components/skybell/ @tkdrob
 /homeassistant/components/slack/ @tkdrob @fletcherau

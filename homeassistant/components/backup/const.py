@@ -8,10 +8,12 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from .manager import BackupManager
+    from .manager import BaseBackupManager
+    from .models import BaseBackup
 
+BUF_SIZE = 2**20 * 4  # 4MB
 DOMAIN = "backup"
-DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
+DATA_MANAGER: HassKey[BaseBackupManager[BaseBackup]] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [
@@ -24,4 +26,9 @@ EXCLUDE_FROM_BACKUP = [
     "backups/*.tar",
     "OZW_Log.txt",
     "tts/*",
+]
+
+EXCLUDE_DATABASE_FROM_BACKUP = [
+    "home-assistant_v2.db",
+    "home-assistant_v2.db-wal",
 ]

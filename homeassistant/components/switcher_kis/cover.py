@@ -41,16 +41,20 @@ async def async_setup_entry(
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
         entities: list[CoverEntity] = []
+
         if coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
+            DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
         ):
-            entities.append(SwitcherSingleCoverEntity(coordinator, 0))
-        if (
-            coordinator.data.device_type.category
-            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
-        ):
-            entities.extend(SwitcherDualCoverEntity(coordinator, i) for i in range(2))
+            number_of_covers = len(cast(SwitcherShutter, coordinator.data).position)
+            if number_of_covers == 1:
+                entities.append(SwitcherSingleCoverEntity(coordinator, 0))
+            else:
+                entities.extend(
+                    SwitcherMultiCoverEntity(coordinator, i)
+                    for i in range(number_of_covers)
+                )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -152,8 +156,8 @@ class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
         self._update_data()
 
 
-class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
-    """Representation of a Switcher dual cover entity."""
+class SwitcherMultiCoverEntity(SwitcherBaseCoverEntity):
+    """Representation of a Switcher multiple cover entity."""
 
     _attr_translation_key = "cover"
 

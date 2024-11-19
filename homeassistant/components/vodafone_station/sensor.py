@@ -43,12 +43,10 @@ def _calculate_uptime(
 ) -> datetime:
     """Calculate device uptime."""
 
-    assert isinstance(last_value, datetime)
-
     delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
 
     if (
-        not last_value
+        not isinstance(last_value, datetime)
         or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
     ):
         return delta_uptime

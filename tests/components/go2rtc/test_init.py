@@ -6,8 +6,9 @@ from typing import NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
+from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
-from go2rtc_client.exceptions import Go2RtcClientError
+from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.models import Producer
 from go2rtc_client.ws import (
     ReceiveMessages,
@@ -17,6 +18,7 @@ from go2rtc_client.ws import (
     WsError,
 )
 import pytest
+from webrtc_models import RTCIceCandidate
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
@@ -35,10 +37,12 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    RECOMMENDED_VERSION,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -198,6 +202,7 @@ async def init_test_integration(
 
 async def _test_setup_and_signaling(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     config: ConfigType,
@@ -210,6 +215,7 @@ async def _test_setup_and_signaling(
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state == ConfigEntryState.LOADED
@@ -236,7 +242,31 @@ async def _test_setup_and_signaling(
 
     await test()
 
-    rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+    rest_client.streams.add.assert_called_once_with(
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+    # Stream exists but the source is different
+    rest_client.streams.add.reset_mock()
+    rest_client.streams.list.return_value = {
+        entity_id: Stream([Producer("rtsp://different")])
+    }
+
+    receive_message_callback.reset_mock()
+    ws_client.reset_mock()
+    await test()
+
+    rest_client.streams.add.assert_called_once_with(
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
 
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
@@ -281,6 +311,7 @@ async def _test_setup_and_signaling(
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
 async def test_setup_go_binary(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: AsyncMock,
@@ -299,7 +330,13 @@ async def test_setup_go_binary(
         server_start.assert_called_once()
 
     await _test_setup_and_signaling(
-        hass, rest_client, ws_client, config, after_setup, init_test_integration
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     await hass.async_stop()
@@ -315,8 +352,9 @@ async def test_setup_go_binary(
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
-async def test_setup_go(
+async def test_setup(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: Mock,
@@ -334,7 +372,13 @@ async def test_setup_go(
         server.assert_not_called()
 
     await _test_setup_and_signaling(
-        hass, rest_client, ws_client, config, after_setup, init_test_integration
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     mock_get_binary.assert_not_called()
@@ -379,7 +423,7 @@ async def message_callbacks(
     [
         (
             WebRTCCandidate("candidate"),
-            HAWebRTCCandidate("candidate"),
+            HAWebRTCCandidate(RTCIceCandidate("candidate")),
         ),
         (
             WebRTCAnswer(ANSWER_SDP),
@@ -415,7 +459,7 @@ async def test_on_candidate(
     session_id = "session_id"
 
     # Session doesn't exist
-    await camera.async_on_webrtc_candidate(session_id, "candidate")
+    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
     assert (
         "homeassistant.components.go2rtc",
         logging.DEBUG,
@@ -435,7 +479,7 @@ async def test_on_candidate(
     )
     ws_client.reset_mock()
 
-    await camera.async_on_webrtc_candidate(session_id, "candidate")
+    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
     ws_client.send.assert_called_once_with(WebRTCCandidate("candidate"))
     assert caplog.record_tuples == []
 
@@ -481,6 +525,8 @@ ERR_CONNECT = "Could not connect to go2rtc instance"
 ERR_CONNECT_RETRY = (
     "Could not connect to go2rtc instance on http://localhost:1984/; Retrying"
 )
+ERR_START_SERVER = "Could not start go2rtc server"
+ERR_UNSUPPORTED_VERSION = "The go2rtc server version is not supported"
 _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
 ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
@@ -513,8 +559,10 @@ async def test_non_user_setup_with_error(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
         ({DEFAULT_CONFIG_DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
+        ({DEFAULT_CONFIG_DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_START_SERVER),
         ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
         ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
+        ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_START_SERVER),
         ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_INVALID_URL),
         (
             {DOMAIN: {CONF_URL: "http://localhost:1984", CONF_DEBUG_UI: True}},
@@ -546,8 +594,6 @@ async def test_setup_with_setup_error(
 @pytest.mark.parametrize(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
-        ({DEFAULT_CONFIG_DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
-        ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
         ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True, ERR_CONNECT),
     ],
 )
@@ -571,7 +617,7 @@ async def test_setup_with_setup_entry_error(
     assert expected_log_message in caplog.text
 
 
-@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984/"}}])
 @pytest.mark.parametrize(
     ("cause", "expected_config_entry_state", "expected_log_message"),
     [
@@ -585,7 +631,7 @@ async def test_setup_with_setup_entry_error(
 @pytest.mark.usefixtures(
     "mock_get_binary", "mock_go2rtc_entry", "mock_is_docker_env", "server"
 )
-async def test_setup_with_retryable_setup_entry_error(
+async def test_setup_with_retryable_setup_entry_error_custom_server(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     rest_client: AsyncMock,
@@ -597,7 +643,78 @@ async def test_setup_with_retryable_setup_entry_error(
     """Test setup integration entry fails."""
     go2rtc_error = Go2RtcClientError()
     go2rtc_error.__cause__ = cause
-    rest_client.streams.list.side_effect = go2rtc_error
+    rest_client.validate_server_version.side_effect = go2rtc_error
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].state == expected_config_entry_state
+    assert expected_log_message in caplog.text
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
+@pytest.mark.parametrize(
+    ("cause", "expected_config_entry_state", "expected_log_message"),
+    [
+        (ClientConnectionError(), ConfigEntryState.NOT_LOADED, ERR_START_SERVER),
+        (ServerConnectionError(), ConfigEntryState.NOT_LOADED, ERR_START_SERVER),
+        (None, ConfigEntryState.NOT_LOADED, ERR_START_SERVER),
+        (Exception(), ConfigEntryState.NOT_LOADED, ERR_START_SERVER),
+    ],
+)
+@pytest.mark.parametrize("has_go2rtc_entry", [True, False])
+@pytest.mark.usefixtures(
+    "mock_get_binary", "mock_go2rtc_entry", "mock_is_docker_env", "server"
+)
+async def test_setup_with_retryable_setup_entry_error_default_server(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    rest_client: AsyncMock,
+    has_go2rtc_entry: bool,
+    config: ConfigType,
+    cause: Exception,
+    expected_config_entry_state: ConfigEntryState,
+    expected_log_message: str,
+) -> None:
+    """Test setup integration entry fails."""
+    go2rtc_error = Go2RtcClientError()
+    go2rtc_error.__cause__ = cause
+    rest_client.validate_server_version.side_effect = go2rtc_error
+    assert not await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == has_go2rtc_entry
+    for config_entry in config_entries:
+        assert config_entry.state == expected_config_entry_state
+    assert expected_log_message in caplog.text
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
+@pytest.mark.parametrize(
+    ("go2rtc_error", "expected_config_entry_state", "expected_log_message"),
+    [
+        (
+            Go2RtcVersionError("1.9.4", "1.9.5", "2.0.0"),
+            ConfigEntryState.SETUP_RETRY,
+            ERR_UNSUPPORTED_VERSION,
+        ),
+    ],
+)
+@pytest.mark.parametrize("has_go2rtc_entry", [True, False])
+@pytest.mark.usefixtures(
+    "mock_get_binary", "mock_go2rtc_entry", "mock_is_docker_env", "server"
+)
+async def test_setup_with_version_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    rest_client: AsyncMock,
+    config: ConfigType,
+    go2rtc_error: Exception,
+    expected_config_entry_state: ConfigEntryState,
+    expected_log_message: str,
+) -> None:
+    """Test setup integration entry fails."""
+    rest_client.validate_server_version.side_effect = [None, go2rtc_error]
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
@@ -613,3 +730,30 @@ async def test_config_entry_remove(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
+@pytest.mark.usefixtures("server")
+async def test_setup_with_recommended_version_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    rest_client: AsyncMock,
+    config: ConfigType,
+) -> None:
+    """Test setup integration entry fails."""
+    rest_client.validate_server_version.return_value = AwesomeVersion("1.9.5")
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify the issue is created
+    issue = issue_registry.async_get_issue(DOMAIN, "recommended_version")
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.issue_id == "recommended_version"
+    assert issue.translation_key == "recommended_version"
+    assert issue.translation_placeholders == {
+        "recommended_version": RECOMMENDED_VERSION,
+        "current_version": "1.9.5",
+    }

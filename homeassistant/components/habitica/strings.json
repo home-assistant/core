@@ -1,7 +1,8 @@
 {
   "common": {
     "todos": "To-Do's",
-    "dailies": "Dailies"
+    "dailies": "Dailies",
+    "config_entry_name": "Select character"
   },
   "config": {
     "abort": {
@@ -38,6 +39,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "pending_quest": {
+        "name": "Pending quest invitation"
+      }
+    },
     "button": {
       "run_cron": {
         "name": "Start my day"
@@ -159,6 +165,86 @@
       },
       "rewards": {
         "name": "Rewards"
+      },
+      "strength": {
+        "name": "Strength",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "Battle gear"
+          },
+          "class": {
+            "name": "Class equip bonus"
+          },
+          "allocated": {
+            "name": "Allocated attribute points"
+          },
+          "buffs": {
+            "name": "Buffs"
+          }
+        }
+      },
+      "intelligence": {
+        "name": "Intelligence",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
+      },
+      "perception": {
+        "name": "Perception",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
+      },
+      "constitution": {
+        "name": "Constitution",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
       }
     },
     "switch": {
@@ -204,10 +290,10 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Currently rate limited, try again later"
+      "message": "Rate limit exceeded, try again later"
     },
     "service_call_unallowed": {
-      "message": "Unable to carry out this action, because the required conditions are not met"
+      "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
       "message": "Unable to connect to Habitica, try again later"
@@ -215,20 +301,36 @@
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
     },
+    "not_enough_gold": {
+      "message": "Unable to buy reward, not enough gold. Your character has {gold}, but the reward costs {cost}."
+    },
     "skill_not_found": {
       "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
     },
     "entry_not_found": {
-      "message": "The selected character is currently not configured or loaded in Home Assistant."
+      "message": "The selected character is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The selected character is currently not loaded or disabled in Home Assistant."
     },
     "task_not_found": {
-      "message": "Unable to cast skill, could not find the task {task}"
+      "message": "Unable to complete action, could not find the task {task}"
+    },
+    "quest_action_unallowed": {
+      "message": "Action not allowed, only quest leader or group leader can perform this action"
+    },
+    "quest_not_found": {
+      "message": "Unable to complete action, quest or group not found"
     }
   },
   "issues": {
     "deprecated_task_entity": {
       "title": "The Habitica {task_name} sensor is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
+    },
+    "deprecated_api_call": {
+      "title": "The Habitica action habitica.api_call is deprecated",
+      "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
     }
   },
   "services": {
@@ -255,7 +357,7 @@
       "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
       "fields": {
         "config_entry": {
-          "name": "Select character",
+          "name": "[%key:component::habitica::common::config_entry_name%]",
           "description": "Choose the Habitica character to cast the skill."
         },
         "skill": {
@@ -265,6 +367,98 @@
         "task": {
           "name": "Task name",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
+        }
+      }
+    },
+    "accept_quest": {
+      "name": "Accept a quest invitation",
+      "description": "Accept a pending invitation to a quest.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Choose the Habitica character for which to perform the action."
+        }
+      }
+    },
+    "reject_quest": {
+      "name": "Reject a quest invitation",
+      "description": "Reject a pending invitation to a quest.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "leave_quest": {
+      "name": "Leave a quest",
+      "description": "Leave the current quest you are participating in.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "abort_quest": {
+      "name": "Abort an active quest",
+      "description": "Terminate your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "cancel_quest": {
+      "name": "Cancel a pending quest",
+      "description": "Cancel a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "start_quest": {
+      "name": "Force-start a pending quest",
+      "description": "Begin the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "score_habit": {
+      "name": "Track a habit",
+      "description": "Increase the positive or negative streak of a habit to track its progress.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Select the Habitica character tracking your habit."
+        },
+        "task": {
+          "name": "Habit name",
+          "description": "The name (or task ID) of the Habitica habit."
+        },
+        "direction": {
+          "name": "Reward or loss",
+          "description": "Is it positive or negative progress you want to track for your habit."
+        }
+      }
+    },
+    "score_reward": {
+      "name": "Buy a reward",
+      "description": "Reward yourself and buy one of your custom rewards with gold earned by fulfilling tasks.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Select the Habitica character buying the reward."
+        },
+        "task": {
+          "name": "Reward name",
+          "description": "The name (or task ID) of the custom reward."
         }
       }
     }
