@@ -2,7 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "data": {}
+        "title": "Client Credentials",
+        "description": "Add a set of client credentials created under your iglooaccess account.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret"
+        }
       }
     },
     "error": {
