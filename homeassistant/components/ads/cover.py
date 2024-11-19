@@ -58,7 +58,7 @@ def setup_platform(
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 
-    ads_var_is_closed: str = config[CONF_ADS_VAR]
+    ads_var_is_closed: str | None = config.get(CONF_ADS_VAR)
     ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
     ads_var_pos_set: str | None = config.get(CONF_ADS_VAR_SET_POS)
     ads_var_open: str | None = config.get(CONF_ADS_VAR_OPEN)
@@ -90,7 +90,7 @@ class AdsCover(AdsEntity, CoverEntity):
     def __init__(
         self,
         ads_hub: AdsHub,
-        ads_var_is_closed: str,
+        ads_var_is_closed: str | None,
         ads_var_position: str | None,
         ads_var_pos_set: str | None,
         ads_var_open: str | None,
