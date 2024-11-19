@@ -320,7 +320,7 @@ class BackupManager:
                     protected=result.protected,
                     size=result.size,
                 )
-                backup.agent_ids.append(agent_ids[idx])
+            backup.agent_ids.append(agent_ids[idx])
 
         return (backup, agent_errors)
 
