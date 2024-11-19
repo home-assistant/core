@@ -151,29 +151,29 @@
     },
     "set_preset_mode": {
       "name": "Set preset mode",
-      "description": "Sets preset mode.",
+      "description": "Sets preset operation mode.",
       "fields": {
         "preset_mode": {
           "name": "Preset mode",
-          "description": "Preset mode."
+          "description": "Preset operation mode."
         }
       }
     },
     "set_temperature": {
       "name": "Set target temperature",
-      "description": "Sets target temperature.",
+      "description": "Sets the target temperature for a climate device.",
       "fields": {
         "temperature": {
-          "name": "Temperature",
-          "description": "Target temperature."
+          "name": "Target temperature",
+          "description": "The setpoint for the climate device."
         },
         "target_temp_high": {
-          "name": "Target temperature high",
-          "description": "High target temperature."
+          "name": "Upper target temperature",
+          "description": "The highest temperature that the climate device will allow."
         },
         "target_temp_low": {
-          "name": "Target temperature low",
-          "description": "Low target temperature."
+          "name": "Lower target temperature",
+          "description": "The lowest temperature that the climate device will allow."
         },
         "hvac_mode": {
           "name": "HVAC mode",
