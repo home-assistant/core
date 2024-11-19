@@ -1026,7 +1026,6 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 class NumberSelectorConfig(TypedDict, total=False):
     """Class to represent a number selector config."""
 
-    as_int: bool
     min: float
     max: float
     step: float | int | Literal["any"]
