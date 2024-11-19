@@ -33,14 +33,13 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the config flow step."""
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             auth = Auth(
                 session=async_get_clientsession(self.hass),
                 client_id=user_input[CONF_CLIENT_ID],
                 client_secret=user_input[CONF_CLIENT_SECRET],
             )
-            errors: dict[str, str] = {}
-
             try:
                 _ = await auth.async_get_access_token()
             except AuthException:
