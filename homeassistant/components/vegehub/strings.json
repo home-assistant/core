@@ -35,5 +35,21 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "analog_sensor": {
+        "name": "VegeHub Sensor {index}"
+      },
+      "vh400_sensor": {
+        "name": "VH400 Moisture {index}"
+      },
+      "therm200_temp": {
+        "name": "THERM200 Temperature {index}"
+      },
+      "battery": {
+        "name": "Battery"
+      }
+    }
   }
 }
