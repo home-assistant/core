@@ -43,9 +43,6 @@
     'result': dict({
       'agents': list([
         dict({
-          'agent_id': 'backup.local',
-        }),
-        dict({
           'agent_id': 'domain.test',
         }),
       ]),
