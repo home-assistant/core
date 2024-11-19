@@ -283,7 +283,6 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/distance",
-        translation_key="distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
