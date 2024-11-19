@@ -564,7 +564,7 @@ class BackupManager(BaseBackupManager[Backup]):
         if tar_file_paths:
             tar_file_path = tar_file_paths[0]
         else:
-            tar_file_path = self.temp_backup_dir / f"{backup_data['backup_id']}.tar"
+            tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
         if not (backup_dir := tar_file_path.parent).exists():
             LOGGER.debug("Creating backup directory %s", backup_dir)
             backup_dir.mkdir()
