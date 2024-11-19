@@ -24,12 +24,12 @@ async def async_setup_entry(
     entry: IgloohomeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Do setup the lock entities."""
+    """Set up sensor entities."""
+
+    api: Api = entry.runtime_data
 
     try:
-        api: Api = entry.runtime_data
-        devicesResponse = await api.get_devices()
-
+        devices_response = await api.get_devices()
     except Exception as e:
         raise PlatformNotReady from e
     else:
@@ -41,7 +41,7 @@ async def async_setup_entry(
                     type=device.type,
                     api=api,
                 )
-                for device in devicesResponse.payload
+                for device in devices_response.payload
                 if device.batteryLevel is not None
             ),
             update_before_add=True,
