@@ -12,7 +12,7 @@ from homeassistant.helpers.hassio import is_hassio
 
 from .agent import BackupAgent, LocalBackupAgent
 from .const import LOGGER
-from .models import BackupUploadMetadata, BaseBackup
+from .models import BaseBackup
 from .util import read_backup
 
 
@@ -78,17 +78,11 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        backup: BaseBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        self._backups[metadata.backup_id] = BaseBackup(
-            backup_id=metadata.backup_id,
-            date=metadata.date,
-            name=metadata.name,
-            protected=metadata.protected,
-            size=round(path.stat().st_size / 1_048_576, 2),
-        )
+        self._backups[backup.backup_id] = backup
 
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""

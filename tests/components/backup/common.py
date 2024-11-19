@@ -10,7 +10,6 @@ from homeassistant.components.backup import (
     DOMAIN,
     BackupAgent,
     BackupAgentPlatformProtocol,
-    BackupUploadMetadata,
     BaseBackup,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -75,17 +74,12 @@ class BackupAgentTest(BackupAgent):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        backup: BaseBackup,
+        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        self._backups[metadata.backup_id] = BaseBackup(
-            backup_id=metadata.backup_id,
-            date=metadata.date,
-            name=metadata.name,
-            protected=metadata.protected,
-            size=metadata.size,
-        )
+        self._backups[backup.backup_id] = backup
 
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
