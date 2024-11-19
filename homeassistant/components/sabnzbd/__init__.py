@@ -174,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await migrate_unique_id(hass, entry)
     update_device_identifiers(hass, entry)
 
-    coordinator = SabnzbdUpdateCoordinator(hass, sab_api)
+    coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
