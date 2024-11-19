@@ -19,11 +19,8 @@ class IgloohomeBaseEntity(Entity):
         self.device_name = device_name
         self.type = type
         self.api = api
-
-    @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return the device info."""
-        return dr.DeviceInfo(
+        # Register the entity as part of a device.
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.device_id)
