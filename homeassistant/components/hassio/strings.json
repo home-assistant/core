@@ -274,7 +274,7 @@
       "fields": {
         "addon": {
           "name": "Add-on",
-          "description": "The add-on slug."
+          "description": "The add-on for this action."
         }
       }
     },
@@ -290,7 +290,7 @@
     },
     "addon_stdin": {
       "name": "Write data to add-on stdin.",
-      "description": "Writes data to add-on stdin.",
+      "description": "Writes data to the add-on's standard input.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
