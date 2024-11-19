@@ -247,10 +247,13 @@ class HabiticaTodoRemindersCalendarEntity(HabiticaCalendarEntity):
         events = []
 
         for task in self.coordinator.data.tasks:
-            if not (task["type"] == HabiticaTaskType.TODO and not task["completed"]):
+            if task["type"] != HabiticaTaskType.TODO or task["completed"]:
                 continue
 
             for reminder in task.get("reminders", []):
+                # reminders are returned by the API in local time but with wrong
+                # timezone (UTC) and arbitrary added seconds/microseconds. When
+                # creating reminders in Habitica only hours and minutes can be defined.
                 start = datetime.fromisoformat(reminder["time"]).replace(
                     tzinfo=dt_util.DEFAULT_TIME_ZONE, second=0, microsecond=0
                 )
@@ -360,7 +363,7 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
                 is_future_event = recurrence > self.today
                 is_current_event = recurrence <= self.today and not task["completed"]
 
-                if not (is_future_event or is_current_event):
+                if not is_future_event and not is_current_event:
                     continue
 
                 for reminder in task.get("reminders", []):
