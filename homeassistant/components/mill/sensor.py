@@ -33,8 +33,6 @@ from .const import (
     CONNECTION_TYPE,
     CONSUMPTION_TODAY,
     CONSUMPTION_YEAR,
-    CONTROL_SIGNAL,
-    CURRENT_POWER,
     DOMAIN,
     ECO2,
     HUMIDITY,
