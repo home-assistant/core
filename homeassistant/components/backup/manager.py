@@ -51,7 +51,7 @@ from .util import read_backup
 class NewBackup:
     """New backup class."""
 
-    backup_id: str
+    backup_job_id: str
 
 
 @dataclass(slots=True)
@@ -563,7 +563,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             eager_start=False,  # To ensure the task is not started before we return
         )
 
-        return (NewBackup(backup_id=backup_id), backup_task)
+        return (NewBackup(backup_job_id=backup_id), backup_task)
 
     async def _async_create_backup(
         self,
