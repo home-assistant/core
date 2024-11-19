@@ -124,8 +124,8 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         """Return the local path to a backup."""
         return self._backup_dir / f"{backup_id}.tar"
 
-    async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
-        """Remove a backup."""
+    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+        """Delete a backup file."""
         if await self.async_get_backup(backup_id) is None:
             return
 

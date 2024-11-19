@@ -356,9 +356,7 @@ class BackupManager(BaseBackupManager[Backup]):
     async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
         for agent in self.backup_agents.values():
-            if not hasattr(agent, "async_remove_backup"):
-                continue
-            await agent.async_remove_backup(backup_id)
+            await agent.async_delete_backup(backup_id)
 
     async def async_receive_backup(
         self,
