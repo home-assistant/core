@@ -830,7 +830,7 @@ async def test_groups(
             },
             {
                 "on": True,
-                "xy": (0.235, 0.164),
+                "xy": (0.236, 0.166),
             },
         ),
         (  # Turn on group with short color loop
@@ -845,7 +845,7 @@ async def test_groups(
             },
             {
                 "on": True,
-                "xy": (0.235, 0.164),
+                "xy": (0.236, 0.166),
             },
         ),
     ],
