@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DATA_MANAGER
-from .manager import BackupManager
 
 # pylint: disable=fixme
 # TODO: Don't forget to remove this when the implementation is complete
@@ -47,7 +46,7 @@ class DownloadBackupView(HomeAssistantView):
         except KeyError:
             return Response(status=HTTPStatus.BAD_REQUEST)
 
-        manager = cast(BackupManager, request.app[KEY_HASS].data[DATA_MANAGER])
+        manager = request.app[KEY_HASS].data[DATA_MANAGER]
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]

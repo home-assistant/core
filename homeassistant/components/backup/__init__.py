@@ -11,7 +11,12 @@ from homeassistant.helpers.typing import ConfigType
 from .agent import BackupAgent, BackupAgentPlatformProtocol
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
-from .manager import Backup, BackupManager, BackupPlatformProtocol
+from .manager import (
+    Backup,
+    BackupManager,
+    BackupPlatformProtocol,
+    CoreBackupReaderWriter,
+)
 from .models import BackupUploadMetadata, BaseBackup
 from .websocket import async_register_websocket_handlers
 
@@ -31,7 +36,9 @@ SERVICE_CREATE_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Backup integration."""
-    hass.data[DOMAIN] = backup_manager = BackupManager(hass)
+    hass.data[DOMAIN] = backup_manager = BackupManager(
+        hass, CoreBackupReaderWriter(hass)
+    )
     await backup_manager.async_setup()
 
     with_hassio = is_hassio(hass)

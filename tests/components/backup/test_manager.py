@@ -18,7 +18,11 @@ from homeassistant.components.backup import (
     BaseBackup,
     backup as local_backup_platform,
 )
-from homeassistant.components.backup.manager import BackupProgress
+from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.manager import (
+    BackupProgress,
+    CoreBackupReaderWriter,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -71,7 +75,8 @@ async def _mock_backup_generation(
     assert manager.backup_task is not None
     assert progress == []
 
-    backup = await manager.backup_task
+    backup, _ = await manager.backup_task
+    await manager.finish_backup_task
     assert progress == [BackupProgress(done=True, stage=None, success=True)]
 
     assert mocked_json_bytes.call_count == 1
@@ -132,13 +137,13 @@ async def _setup_backup_platform(
 
 async def test_constructor(hass: HomeAssistant) -> None:
     """Test BackupManager constructor."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     assert manager.temp_backup_dir.as_posix() == hass.config.path("tmp_backups")
 
 
 async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test loading backups."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -170,7 +175,7 @@ async def test_load_backups_with_exception(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backups with exception."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -194,7 +199,7 @@ async def test_deleting_backup(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deleting backup."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -213,7 +218,7 @@ async def test_deleting_non_existing_backup(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deleting not existing backup."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -227,7 +232,7 @@ async def test_getting_backup_that_does_not_exist(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test getting backup that does not exist."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -253,7 +258,7 @@ async def test_getting_backup_that_does_not_exist(
 async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
     event = asyncio.Event()
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     manager.backup_task = hass.async_create_task(event.wait())
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
         await manager.async_create_backup(
@@ -279,7 +284,7 @@ async def test_async_create_backup_wrong_agent_id(
     hass: HomeAssistant, agent_ids: list[str], expected_error: str
 ) -> None:
     """Test generate backup."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     with pytest.raises(HomeAssistantError, match=expected_error):
         await manager.async_create_backup(
             addons_included=[],
@@ -320,7 +325,8 @@ async def test_async_create_backup(
     backup_directory: str,
 ) -> None:
     """Test generate backup."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    hass.data[DATA_MANAGER] = manager
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await _setup_backup_platform(
@@ -358,7 +364,7 @@ async def test_loading_platforms(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backup platforms."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     assert not manager.platforms
 
@@ -383,7 +389,7 @@ async def test_loading_agents(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backup agents."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     assert not manager.platforms
 
@@ -407,7 +413,7 @@ async def test_not_loading_bad_platforms(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backup platforms."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     assert not manager.platforms
 
@@ -424,7 +430,7 @@ async def test_exception_plaform_pre(
     hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
 ) -> None:
     """Test exception in pre step."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     manager.loaded_backups = True
 
     async def _mock_step(hass: HomeAssistant) -> None:
@@ -447,7 +453,7 @@ async def test_exception_plaform_post(
     hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
 ) -> None:
     """Test exception in post step."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     manager.loaded_backups = True
 
     async def _mock_step(hass: HomeAssistant) -> None:
@@ -471,7 +477,7 @@ async def test_async_receive_backup(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test receiving a backup file."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -516,7 +522,8 @@ async def test_async_trigger_restore(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test trigger restore."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    hass.data[DATA_MANAGER] = manager
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -545,7 +552,8 @@ async def test_async_trigger_restore_with_password(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test trigger restore."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    hass.data[DATA_MANAGER] = manager
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -573,7 +581,7 @@ async def test_async_trigger_restore_with_password(
 
 async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
     """Test trigger restore."""
-    manager = BackupManager(hass)
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
