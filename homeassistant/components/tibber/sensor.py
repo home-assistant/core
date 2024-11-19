@@ -453,8 +453,8 @@ class TibberSensorElPriceExclTax(TibberSensor):
 
         self._attr_available = False
         self._attr_icon = ICON
-        self._attr_unique_id = f"{self._tibber_home.home_id}_excl_tax"
-        self._model = "Price Sensor Excluding Tax"
+        self._attr_unique_id = f"{self._tibber_home.home_id}-excl_tax"
+        self._model = "Price Sensor excluding tax"
 
         self._device_name = self._home_name
 
