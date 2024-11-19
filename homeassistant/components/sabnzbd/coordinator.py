@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 class SabnzbdUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The SABnzbd update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
