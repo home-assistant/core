@@ -69,6 +69,7 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, str]) -> ConfigFlowResult:
         """Import a config entry."""
-        self._import_info = import_info
+        if import_info is not None:
+            self._import_info = import_info
 
         return await self.async_step_user(None)
