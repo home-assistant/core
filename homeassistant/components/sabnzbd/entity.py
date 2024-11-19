@@ -1,19 +1,16 @@
 """Base entity for Sabnzbd."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import SabnzbdUpdateCoordinator
 
 
 class SabnzbdEntity(CoordinatorEntity[SabnzbdUpdateCoordinator]):
     """Defines a base Sabnzbd entity."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -24,14 +21,10 @@ class SabnzbdEntity(CoordinatorEntity[SabnzbdUpdateCoordinator]):
         """Initialize the base entity."""
         super().__init__(coordinator)
 
-        if TYPE_CHECKING:
-            assert coordinator.config_entry
-
         entry_id = coordinator.config_entry.entry_id
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
-            name=DEFAULT_NAME,
         )
