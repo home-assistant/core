@@ -603,17 +603,18 @@ async def test_agents_list_backups(
 
 
 @pytest.mark.parametrize(
-    "with_hassio",
+    ("with_hassio", "download_path"),
     [
-        pytest.param(True, id="with_hassio"),
-        pytest.param(False, id="without_hassio"),
+        pytest.param(True, "/cloud_backups", id="with_hassio"),
+        pytest.param(False, "{config_dir}/tmp_backups", id="without_hassio"),
     ],
 )
 async def test_agents_download(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
     with_hassio: bool,
+    download_path: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test WS command to start downloading a backup."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
@@ -629,12 +630,13 @@ async def test_agents_download(
             "backup_id": "abc123",
         }
     )
+    expected_path = Path(
+        download_path.format(config_dir=hass.config.config_dir), "abc123.tar"
+    )
     with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
         assert await client.receive_json() == snapshot
         assert download_mock.call_args[0] == ("abc123",)
-        assert download_mock.call_args[1] == {
-            "path": Path(hass.config.path("tmp_backups"), "abc123.tar"),
-        }
+        assert download_mock.call_args[1] == {"path": expected_path}
 
 
 async def test_agents_download_exception(

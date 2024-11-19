@@ -340,166 +340,241 @@
 # ---
 # name: test_delete[with_hassio-remote_agents0-backups0]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents0-backups0].1
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 2,
-    'success': False,
+    'result': None,
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents0-backups0].2
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 3,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents1-backups1]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents1-backups1].1
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 2,
-    'success': False,
+    'result': None,
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents1-backups1].2
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 3,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents2-backups2]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'abc123',
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents2-backups2].1
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 2,
-    'success': False,
+    'result': None,
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents2-backups2].2
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 3,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'abc123',
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents3-backups3]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'def456',
+          'date': '1980-01-01T00:00:00.000Z',
+          'name': 'Test 2',
+          'protected': False,
+          'size': 1.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents3-backups3].1
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 2,
-    'success': False,
+    'result': None,
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents3-backups3].2
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 3,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'def456',
+          'date': '1980-01-01T00:00:00.000Z',
+          'name': 'Test 2',
+          'protected': False,
+          'size': 1.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents4-backups4]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'abc123',
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents4-backups4].1
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 2,
-    'success': False,
+    'result': None,
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_delete[with_hassio-remote_agents4-backups4].2
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 3,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'abc123',
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
@@ -756,56 +831,79 @@
 # ---
 # name: test_details[with_hassio-remote_agents0-backups0]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': None,
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_details[with_hassio-remote_agents1-backups1]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': None,
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_details[with_hassio-remote_agents2-backups2]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': dict({
+        'agent_ids': list([
+          'test.remote',
+        ]),
+        'backup_id': 'abc123',
+        'date': '1970-01-01T00:00:00.000Z',
+        'name': 'Test',
+        'protected': False,
+        'size': 0.0,
+      }),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_details[with_hassio-remote_agents3-backups3]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': None,
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_details[with_hassio-remote_agents4-backups4]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': dict({
+        'agent_ids': list([
+          'test.remote',
+        ]),
+        'backup_id': 'abc123',
+        'date': '1970-01-01T00:00:00.000Z',
+        'name': 'Test',
+        'protected': False,
+        'size': 0.0,
+      }),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
@@ -932,8 +1030,8 @@
 # name: test_generate[with_hassio-None]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'home_assistant_error',
+      'message': 'Invalid agent selected',
     }),
     'id': 1,
     'success': False,
@@ -943,8 +1041,8 @@
 # name: test_generate[with_hassio-data1]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'home_assistant_error',
+      'message': 'Invalid agent selected',
     }),
     'id': 1,
     'success': False,
@@ -954,8 +1052,8 @@
 # name: test_generate[with_hassio-data2]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'home_assistant_error',
+      'message': 'Invalid agent selected',
     }),
     'id': 1,
     'success': False,
@@ -1047,45 +1145,77 @@
 # ---
 # name: test_info[with_hassio-remote_agents0-remote_backups0]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_info[with_hassio-remote_agents1-remote_backups1]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_info[with_hassio-remote_agents2-remote_backups2]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'abc123',
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
 # name: test_info[with_hassio-remote_agents3-remote_backups3]
   dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'test.remote',
+          ]),
+          'backup_id': 'def456',
+          'date': '1980-01-01T00:00:00.000Z',
+          'name': 'Test 2',
+          'protected': False,
+          'size': 1.0,
+        }),
+      ]),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
@@ -1235,8 +1365,8 @@
 # name: test_restore_local_agent[with_hassio-backups0]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'unknown_error',
+      'message': 'Unknown error',
     }),
     'id': 1,
     'success': False,
@@ -1249,8 +1379,8 @@
 # name: test_restore_local_agent[with_hassio-backups1]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'unknown_error',
+      'message': 'Unknown error',
     }),
     'id': 1,
     'success': False,
@@ -1288,8 +1418,8 @@
 # name: test_restore_remote_agent[with_hassio-remote_agents0-backups0]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'home_assistant_error',
+      'message': 'Backup abc123 not found in agent test.remote',
     }),
     'id': 1,
     'success': False,
@@ -1302,8 +1432,8 @@
 # name: test_restore_remote_agent[with_hassio-remote_agents1-backups1]
   dict({
     'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
+      'code': 'unknown_error',
+      'message': 'Unknown error',
     }),
     'id': 1,
     'success': False,
