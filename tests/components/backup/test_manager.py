@@ -15,6 +15,7 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
+    BaseBackup,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.manager import BackupProgress
@@ -44,12 +45,14 @@ async def _mock_backup_generation(
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     *,
+    agent_ids: list[str] | None = None,
     database_included: bool = True,
     name: str | None = "Core 2025.1.0",
     password: str | None = None,
-) -> None:
+) -> BaseBackup:
     """Mock backup generator."""
 
+    agent_ids = agent_ids or [LOCAL_AGENT_ID]
     progress: list[BackupProgress] = []
 
     def on_progress(_progress: BackupProgress) -> None:
@@ -59,7 +62,7 @@ async def _mock_backup_generation(
     assert manager.backup_task is None
     await manager.async_create_backup(
         addons_included=[],
-        agent_ids=[LOCAL_AGENT_ID],
+        agent_ids=agent_ids,
         database_included=database_included,
         folders_included=[],
         name=name,
@@ -88,10 +91,24 @@ async def _mock_backup_generation(
         "slug": ANY,
         "type": "partial",
     }
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    assert local_agent._backup_dir.as_posix() in str(
-        mocked_tarfile.call_args_list[0][0][0]
+    assert isinstance(backup, BaseBackup)
+    assert backup == BaseBackup(
+        backup_id=ANY,
+        date=ANY,
+        name=name,
+        protected=bool(password),
+        size=ANY,
     )
+    for agent_id in agent_ids:
+        agent = manager.backup_agents[agent_id]
+        assert len(agent._backups) == 1
+        agent_backup = agent._backups[backup.backup_id]
+        assert agent_backup.backup_id == backup.backup_id
+        assert agent_backup.date == backup.date
+        assert agent_backup.name == backup.name
+        assert agent_backup.protected == backup.protected
+        assert agent_backup.size == backup.size
+
     outer_tar = mocked_tarfile.return_value
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
     expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
@@ -255,7 +272,39 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     event.set()
 
 
+@pytest.mark.parametrize(
+    ("agent_ids", "expected_error"),
+    [
+        ([], "At least one agent must be selected"),
+        (["non_existing"], "Invalid agent selected"),
+    ],
+)
+async def test_async_create_backup_wrong_agent_id(
+    hass: HomeAssistant, agent_ids: list[str], expected_error: str
+) -> None:
+    """Test generate backup."""
+    manager = BackupManager(hass)
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await manager.async_create_backup(
+            addons_included=[],
+            agent_ids=agent_ids,
+            database_included=True,
+            folders_included=[],
+            name=None,
+            on_progress=None,
+            password=None,
+        )
+
+
 @pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("agent_ids", "backup_directory"),
+    [
+        ([LOCAL_AGENT_ID], "backups"),
+        (["test.remote"], "tmp_backups"),
+        ([LOCAL_AGENT_ID, "test.remote"], "backups"),
+    ],
+)
 @pytest.mark.parametrize(
     "params",
     [
@@ -271,28 +320,41 @@ async def test_async_create_backup(
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     params: dict,
+    agent_ids: list[str],
+    backup_directory: str,
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(
+                return_value=[BackupAgentTest("remote", backups=[])]
+            ),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
     local_agent._loaded_backups = True
 
-    await _mock_backup_generation(
-        hass, manager, mocked_json_bytes, mocked_tarfile, **params
+    backup = await _mock_backup_generation(
+        hass, manager, mocked_json_bytes, mocked_tarfile, agent_ids=agent_ids, **params
     )
 
     assert "Generated new backup with backup_id " in caplog.text
     assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
-    assert "Loaded 1 agents" in caplog.text
+    assert "Loaded 2 agents" in caplog.text
 
-    assert len(local_agent._backups) == 1
-    backup = list(local_agent._backups.values())[0]
-    assert backup.protected is bool(params.get("password"))
+    tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
+    backup_directory = hass.config.path(backup_directory)
+    assert tar_file_path == f"{backup_directory}/{backup.backup_id}.tar"
+    assert isinstance(tar_file_path, str)
 
 
 async def test_loading_platforms(
