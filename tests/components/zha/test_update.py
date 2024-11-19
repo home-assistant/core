@@ -394,7 +394,7 @@ async def test_firmware_update_success(
                         attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
                     )
                     assert attrs[ATTR_IN_PROGRESS] is True
-                    assert attrs[ATTR_UPDATE_PERCENTAGE] == 58
+                    assert attrs[ATTR_UPDATE_PERCENTAGE] == pytest.approx(100 * 40 / 70)
                     assert (
                         attrs[ATTR_LATEST_VERSION]
                         == f"0x{fw_image.firmware.header.file_version:08x}"

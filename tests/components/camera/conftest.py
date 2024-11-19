@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from webrtc_models import RTCIceCandidate
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
@@ -192,7 +192,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
             send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: RTCIceCandidate
+            self, session_id: str, candidate: RTCIceCandidateInit
         ) -> None:
             """Handle a WebRTC candidate."""
             # Do nothing

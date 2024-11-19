@@ -321,6 +321,15 @@
     },
     "quest_not_found": {
       "message": "Unable to complete action, quest or group not found"
+    },
+    "target_not_found": {
+      "message": "Unable to find target {target} in your party"
+    },
+    "party_not_found": {
+      "message": "Unable to find target, you are currently not in a party. You can only target yourself"
+    },
+    "item_not_found": {
+      "message": "Unable to use {item}, you don't own this item."
     }
   },
   "issues": {
@@ -461,6 +470,24 @@
           "description": "The name (or task ID) of the custom reward."
         }
       }
+    },
+    "transformation": {
+      "name": "Use a transformation item",
+      "description": "Use a transformation item from your Habitica character's inventory on a member of your party or yourself.",
+      "fields": {
+        "config_entry": {
+          "name": "Select character",
+          "description": "Choose the Habitica character to use the transformation item."
+        },
+        "item": {
+          "name": "Transformation item",
+          "description": "Select the transformation item you want to use. Item must be in the characters inventory."
+        },
+        "target": {
+          "name": "Target character",
+          "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
+        }
+      }
     }
   },
   "selector": {
@@ -470,6 +497,14 @@
         "pickpocket": "Rogue: Pickpocket",
         "backstab": "Rogue: Backstab",
         "smash": "Warrior: Brutal smash"
+      }
+    },
+    "transformation_item_select": {
+      "options": {
+        "snowball": "Snowball",
+        "spooky_sparkles": "Spooky sparkles",
+        "seafoam": "Seafoam",
+        "shiny_seed": "Shiny seed"
       }
     }
   }

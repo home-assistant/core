@@ -26,6 +26,8 @@ ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"
 ATTR_TASK = "task"
 ATTR_DIRECTION = "direction"
+ATTR_TARGET = "target"
+ATTR_ITEM = "item"
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_START_QUEST = "start_quest"
 SERVICE_ACCEPT_QUEST = "accept_quest"
@@ -35,6 +37,9 @@ SERVICE_REJECT_QUEST = "reject_quest"
 SERVICE_LEAVE_QUEST = "leave_quest"
 SERVICE_SCORE_HABIT = "score_habit"
 SERVICE_SCORE_REWARD = "score_reward"
+
+SERVICE_TRANSFORMATION = "transformation"
+
 
 WARRIOR = "warrior"
 ROGUE = "rogue"
