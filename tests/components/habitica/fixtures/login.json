@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+    "apiToken": "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+    "newUser": false,
+    "username": "test-username"
+  },
+  "appVersion": "5.30.0"
+}
