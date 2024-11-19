@@ -56,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
-        webhook_name = "VegeHub"
-        if entry.title != NAME:
-            webhook_name = f"{NAME} {entry.title}"
+        webhook_name = f"{NAME} {device_mac}"
 
         webhook_register(
             hass,
