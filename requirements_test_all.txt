@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.airq
-aioairq==0.3.2
+aioairq==0.4.3
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.6.10
