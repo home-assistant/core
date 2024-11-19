@@ -1,6 +1,6 @@
 """Websocket commands for the Backup integration."""
 
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -8,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
-from .manager import BackupManager, BackupProgress
+from .manager import BackupProgress
 
 
 @callback
@@ -254,7 +254,7 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download an uploaded backup."""
-    manager = cast(BackupManager, hass.data[DATA_MANAGER])
+    manager = hass.data[DATA_MANAGER]
     if not (agent := manager.backup_agents.get(msg["agent_id"])):
         connection.send_error(
             msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
