@@ -6,11 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components.backup import (
-    BackupAgent,
-    BackupUploadMetadata,
-    BaseBackup,
-)
+from homeassistant.components.backup import BackupAgent, BaseBackup
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
@@ -54,20 +50,13 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        backup: BaseBackup,
+        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        LOGGER.info("Uploading backup %s %s", path.name, metadata)
-        self._uploads.append(
-            BaseBackup(
-                backup_id=metadata.backup_id,
-                date=metadata.date,
-                name=metadata.name,
-                protected=metadata.protected,
-                size=metadata.size,
-            )
-        )
+        LOGGER.info("Uploading backup %s %s", path.name, backup)
+        self._uploads.append(backup)
 
     async def async_delete_backup(
         self,
