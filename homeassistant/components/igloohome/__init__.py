@@ -17,9 +17,8 @@ type IgloohomeConfigEntry = ConfigEntry[Api]
 async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
     """Set up igloohome from a config entry."""
 
-    session = async_get_clientsession(hass)
     authentication = Auth(
-        session=session,
+        session=async_get_clientsession(hass),
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
     )

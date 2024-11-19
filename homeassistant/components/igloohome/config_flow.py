@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
 from igloohome_api import Auth, AuthException
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -32,9 +32,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    session = aiohttp.ClientSession()
     auth = Auth(
-        session=session,
+        session=async_get_clientsession(hass),
         client_id=data[CONF_CLIENT_ID],
         client_secret=data[CONF_CLIENT_SECRET],
     )
@@ -45,8 +44,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from e
     except Exception as e:
         raise CannotConnect from e
-    finally:
-        await session.close()
 
     # If you cannot connect:
     # throw CannotConnect
@@ -59,7 +56,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for igloohome."""
-
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
