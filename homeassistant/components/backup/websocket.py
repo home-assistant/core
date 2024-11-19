@@ -26,7 +26,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
-    websocket_api.async_register_command(hass, handle_remove)
+    websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
 
     websocket_api.async_register_command(hass, handle_config_info)
@@ -92,13 +92,13 @@ async def handle_details(
     }
 )
 @websocket_api.async_response
-async def handle_remove(
+async def handle_delete(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Remove a backup."""
-    await hass.data[DATA_MANAGER].async_remove_backup(msg["backup_id"])
+    """Delete a backup."""
+    await hass.data[DATA_MANAGER].async_delete_backup(msg["backup_id"])
     connection.send_result(msg["id"])
 
 
