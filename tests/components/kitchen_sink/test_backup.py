@@ -165,8 +165,7 @@ async def test_agents_delete(
 
     await client.send_json_auto_id(
         {
-            "type": "backup/agents/delete",
-            "agent_id": "kitchen_sink.syncer",
+            "type": "backup/remove",
             "backup_id": backup_id,
         }
     )

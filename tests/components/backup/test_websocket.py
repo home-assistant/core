@@ -224,6 +224,30 @@ async def test_remove(
     assert await client.receive_json() == snapshot
 
 
+async def test_remove_agents_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test removing a backup file with a mock agent."""
+    await setup_backup_integration(hass)
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "backup/remove",
+                "backup_id": "abc123",
+            }
+        )
+        assert await client.receive_json() == snapshot
+
+    assert delete_mock.call_args == call("abc123")
+
+
 @pytest.mark.parametrize(
     "data",
     [
@@ -711,35 +735,3 @@ async def test_config_update(
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
-
-
-@pytest.mark.parametrize(
-    "with_hassio",
-    [
-        pytest.param(True, id="with_hassio"),
-        pytest.param(False, id="without_hassio"),
-    ],
-)
-async def test_agents_delete(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-    with_hassio: bool,
-) -> None:
-    """Test WS command to start deleting a backup."""
-    await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/delete",
-            "agent_id": "domain.test",
-            "backup_id": "abc123",
-        }
-    )
-    with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
-        assert await client.receive_json() == snapshot
-        assert delete_mock.call_args == call("abc123")
