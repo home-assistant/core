@@ -60,7 +60,7 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=CURRENT_POWER,
+        key="current_power",
         translation_key="current_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
