@@ -134,5 +134,5 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
         backup_path = self.get_backup_path(backup_id)
         await self._hass.async_add_executor_job(backup_path.unlink, True)
-        LOGGER.debug("Removed backup located at %s", backup_path)
+        LOGGER.debug("Deleted backup located at %s", backup_path)
         self._backups.pop(backup_id)

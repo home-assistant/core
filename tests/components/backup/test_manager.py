@@ -189,11 +189,11 @@ async def test_load_backups_with_exception(
     assert agent_errors == {}
 
 
-async def test_removing_backup(
+async def test_deleting_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test removing backup."""
+    """Test deleting backup."""
     manager = BackupManager(hass)
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
@@ -204,22 +204,22 @@ async def test_removing_backup(
     local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=True):
-        await manager.async_remove_backup(TEST_BASE_BACKUP_ABC123.backup_id)
-    assert "Removed backup located at" in caplog.text
+        await manager.async_delete_backup(TEST_BASE_BACKUP_ABC123.backup_id)
+    assert "Deleted backup located at" in caplog.text
 
 
-async def test_removing_non_existing_backup(
+async def test_deleting_non_existing_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test removing not existing backup."""
+    """Test deleting not existing backup."""
     manager = BackupManager(hass)
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
 
-    await manager.async_remove_backup("non_existing")
-    assert "Removed backup located at" not in caplog.text
+    await manager.async_delete_backup("non_existing")
+    assert "Deleted backup located at" not in caplog.text
 
 
 async def test_getting_backup_that_does_not_exist(
