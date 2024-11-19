@@ -63,7 +63,7 @@ class BackupAgent(abc.ABC):
     ) -> None:
         """Delete a backup file.
 
-        The `backup_id` parameter is the ID of the backup that was returned in async_list_backups.
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
 
     @abc.abstractmethod
