@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
 from tarfile import TarError
@@ -24,17 +23,6 @@ async def async_get_backup_agents(
     return [CoreLocalBackupAgent(hass)]
 
 
-@dataclass(slots=True)
-class LocalBackup(BaseBackup):
-    """Local backup class."""
-
-    path: Path
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return {**asdict(self), "path": self.path.as_posix()}
-
-
 class CoreLocalBackupAgent(LocalBackupAgent):
     """Local backup agent for Core and Container installations."""
 
@@ -45,7 +33,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         super().__init__()
         self._hass = hass
         self._backup_dir = Path(hass.config.path("backups"))
-        self._backups: dict[str, LocalBackup] = {}
+        self._backups: dict[str, BaseBackup] = {}
         self._loaded_backups = False
 
     async def load_backups(self) -> None:
@@ -55,17 +43,16 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self._backups = backups
         self._loaded_backups = True
 
-    def _read_backups(self) -> dict[str, LocalBackup]:
+    def _read_backups(self) -> dict[str, BaseBackup]:
         """Read backups from disk."""
-        backups: dict[str, LocalBackup] = {}
+        backups: dict[str, BaseBackup] = {}
         for backup_path in self._backup_dir.glob("*.tar"):
             try:
                 base_backup = read_backup(backup_path)
-                backup = LocalBackup(
+                backup = BaseBackup(
                     backup_id=base_backup.backup_id,
                     name=base_backup.name,
                     date=base_backup.date,
-                    path=backup_path,
                     size=round(backup_path.stat().st_size / 1_048_576, 2),
                     protected=base_backup.protected,
                 )
@@ -92,11 +79,10 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        self._backups[metadata.backup_id] = LocalBackup(
+        self._backups[metadata.backup_id] = BaseBackup(
             backup_id=metadata.backup_id,
             date=metadata.date,
             name=metadata.name,
-            path=path,
             protected=metadata.protected,
             size=round(path.stat().st_size / 1_048_576, 2),
         )
@@ -111,7 +97,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> LocalBackup | None:
+    ) -> BaseBackup | None:
         """Return a backup."""
         if not self._loaded_backups:
             await self.load_backups()
@@ -119,14 +105,15 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         if not (backup := self._backups.get(backup_id)):
             return None
 
-        if not await self._hass.async_add_executor_job(backup.path.exists):
+        backup_path = self.get_backup_path(backup_id)
+        if not await self._hass.async_add_executor_job(backup_path.exists):
             LOGGER.debug(
                 (
                     "Removing tracked backup (%s) that does not exists on the expected"
                     " path %s"
                 ),
                 backup.backup_id,
-                backup.path,
+                backup_path,
             )
             self._backups.pop(backup_id)
             return None
@@ -139,9 +126,10 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        if (backup := await self.async_get_backup(backup_id)) is None:
+        if await self.async_get_backup(backup_id) is None:
             return
 
-        await self._hass.async_add_executor_job(backup.path.unlink, True)
-        LOGGER.debug("Removed backup located at %s", backup.path)
+        backup_path = self.get_backup_path(backup_id)
+        await self._hass.async_add_executor_job(backup_path.unlink, True)
+        LOGGER.debug("Removed backup located at %s", backup_path)
         self._backups.pop(backup_id)

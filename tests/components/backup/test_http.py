@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_LOCAL_BACKUP_ABC123, setup_backup_integration
+from .common import TEST_BASE_BACKUP_ABC123, setup_backup_integration
 
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
@@ -27,7 +27,7 @@ async def test_downloading_backup(
     with (
         patch(
             "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
-            return_value=TEST_LOCAL_BACKUP_ABC123,
+            return_value=TEST_BASE_BACKUP_ABC123,
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch(
