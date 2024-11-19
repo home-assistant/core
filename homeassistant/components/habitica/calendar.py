@@ -60,24 +60,6 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
         """Initialize calendar entity."""
         super().__init__(coordinator, self.entity_description)
 
-    def get_recurrence_dates(
-        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
-    ) -> list[datetime]:
-        """Calculate recurrence dates based on start_date and end_date."""
-        if end_date:
-            return recurrences.between(
-                start_date, end_date - timedelta(days=1), inc=True
-            )
-        # if no end_date is given, return only the next recurrence
-        return [recurrences.after(self.today, inc=True)]
-
-    @property
-    def today(self) -> datetime:
-        """Habitica daystart."""
-        return dt_util.start_of_local_day(
-            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
-        )
-
 
 class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
     """Habitica todos calendar entity."""
@@ -151,6 +133,13 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.DAILIES,
     )
 
+    @property
+    def today(self) -> datetime:
+        """Habitica daystart."""
+        return dt_util.start_of_local_day(
+            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
+        )
+
     def end_date(self, recurrence: datetime, end: datetime | None = None) -> date:
         """Calculate the end date for a yesterdaily.
 
@@ -165,6 +154,17 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         return (
             dt_util.start_of_local_day() if recurrence == self.today else recurrence
         ).date() + timedelta(days=1)
+
+    def get_recurrence_dates(
+        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
+    ) -> list[datetime]:
+        """Calculate recurrence dates based on start_date and end_date."""
+        if end_date:
+            return recurrences.between(
+                start_date, end_date - timedelta(days=1), inc=True
+            )
+        # if no end_date is given, return only the next recurrence
+        return [recurrences.after(self.today, inc=True)]
 
     def due_dailies(
         self, start_date: datetime, end_date: datetime | None = None
@@ -317,6 +317,24 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
             .time(),
             tzinfo=dt_util.DEFAULT_TIME_ZONE,
         )
+
+    @property
+    def today(self) -> datetime:
+        """Habitica daystart."""
+        return dt_util.start_of_local_day(
+            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
+        )
+
+    def get_recurrence_dates(
+        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
+    ) -> list[datetime]:
+        """Calculate recurrence dates based on start_date and end_date."""
+        if end_date:
+            return recurrences.between(
+                start_date, end_date - timedelta(days=1), inc=True
+            )
+        # if no end_date is given, return only the next recurrence
+        return [recurrences.after(self.today, inc=True)]
 
     def reminders(
         self, start_date: datetime, end_date: datetime | None = None
