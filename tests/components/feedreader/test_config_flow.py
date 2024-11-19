@@ -248,13 +248,25 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_title"),
+    [
+        ("feed_htmlentities", "RSS en español"),
+        ("feed_atom_htmlentities", "ATOM RSS en español"),
+    ],
+)
 async def test_feed_htmlentities(
-    hass: HomeAssistant, feedparser, setup_entry, feed_htmlentities
+    hass: HomeAssistant,
+    feedparser,
+    setup_entry,
+    fixture_name,
+    expected_title,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test starting a flow by user from a feed with HTML Entities in the title."""
     with patch(
         "homeassistant.components.feedreader.config_flow.feedparser.http.get",
-        side_effect=[feed_htmlentities],
+        side_effect=[request.getfixturevalue(fixture_name)],
     ):
         # init user flow
         result = await hass.config_entries.flow.async_init(
@@ -268,27 +280,4 @@ async def test_feed_htmlentities(
             result["flow_id"], user_input={CONF_URL: URL}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "RSS en español"
-
-
-async def test_feed_atom_htmlentities(
-    hass: HomeAssistant, feedparser, setup_entry, feed_atom_htmlentities
-) -> None:
-    """Test starting a flow by user from an ATOM feed with HTML Entities in the title."""
-    with patch(
-        "homeassistant.components.feedreader.config_flow.feedparser.http.get",
-        side_effect=[feed_atom_htmlentities],
-    ):
-        # init user flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        # success
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_URL: URL}
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "ATOM RSS en español"
+        assert result["title"] == expected_title
