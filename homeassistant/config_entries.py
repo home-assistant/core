@@ -63,7 +63,7 @@ from .helpers.event import (
     RANDOM_MICROSECOND_MIN,
     async_call_later,
 )
-from .helpers.frame import ReportBehavior, report, report_usage
+from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
@@ -1191,14 +1191,13 @@ class FlowCancelledError(Exception):
 
 def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
     """Report non awaited platform forwards."""
-    report(
+    report_usage(
         f"calls {what} for integration {entry.domain} with "
         f"title: {entry.title} and entry_id: {entry.entry_id}, "
         f"during setup without awaiting {what}, which can cause "
         "the setup lock to be released before the setup is done. "
         "This will stop working in Home Assistant 2025.1",
-        error_if_integration=False,
-        error_if_core=False,
+        core_behavior=ReportBehavior.LOG,
     )
 
 
@@ -1266,10 +1265,8 @@ class ConfigEntriesFlowManager(
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
             # Deprecated in 2024.12, should fail in 2025.12
-            report(
+            report_usage(
                 f"initialises a {source} flow without a link to the config entry",
-                error_if_integration=False,
-                error_if_core=True,
             )
 
         flow_id = ulid_util.ulid_now()
@@ -2321,14 +2318,13 @@ class ConfigEntries:
         multiple platforms at once and is more efficient since it
         does not require a separate import executor job for each platform.
         """
-        report(
+        report_usage(
             "calls async_forward_entry_setup for "
             f"integration, {entry.domain} with title: {entry.title} "
             f"and entry_id: {entry.entry_id}, which is deprecated and "
             "will stop working in Home Assistant 2025.6, "
             "await async_forward_entry_setups instead",
-            error_if_core=False,
-            error_if_integration=False,
+            core_behavior=ReportBehavior.LOG,
         )
         if not entry.setup_lock.locked():
             async with entry.setup_lock:
@@ -2970,7 +2966,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:

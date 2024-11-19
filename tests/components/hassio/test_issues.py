@@ -323,6 +323,17 @@ async def test_reset_issues_supervisor_restart(
                 uuid=(uuid := uuid4()),
             )
         ],
+        suggestions_by_issue={
+            uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                )
+            ]
+        },
     )
 
     result = await async_setup_component(hass, "hassio", {})
@@ -341,7 +352,7 @@ async def test_reset_issues_supervisor_restart(
         uuid=uuid.hex,
         context="system",
         type_="reboot_required",
-        fixable=False,
+        fixable=True,
         reference=None,
     )
 
@@ -510,9 +521,9 @@ async def test_supervisor_issues(
         supervisor_client,
         issues=[
             Issue(
-                type=IssueType.REBOOT_REQUIRED,
-                context=ContextType.SYSTEM,
-                reference=None,
+                type=IssueType.DETACHED_ADDON_MISSING,
+                context=ContextType.ADDON,
+                reference="test",
                 uuid=(uuid_issue1 := uuid4()),
             ),
             Issue(
@@ -553,10 +564,11 @@ async def test_supervisor_issues(
     assert_issue_repair_in_list(
         msg["result"]["issues"],
         uuid=uuid_issue1.hex,
-        context="system",
-        type_="reboot_required",
+        context="addon",
+        type_="detached_addon_missing",
         fixable=False,
-        reference=None,
+        reference="test",
+        placeholders={"addon_url": "/hassio/addon/test", "addon": "test"},
     )
     assert_issue_repair_in_list(
         msg["result"]["issues"],
@@ -571,31 +583,39 @@ async def test_supervisor_issues(
 @pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_initial_failure(
     hass: HomeAssistant,
+    supervisor_client: AsyncMock,
     resolution_info: AsyncMock,
-    resolution_suggestions_for_issue: AsyncMock,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test issues manager retries after initial update failure."""
-    resolution_info.side_effect = [
-        SupervisorBadRequestError("System is not ready with state: setup"),
-        ResolutionInfo(
-            unsupported=[],
-            unhealthy=[],
-            suggestions=[],
-            issues=[
-                Issue(
-                    type=IssueType.REBOOT_REQUIRED,
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[],
+        unhealthy=[],
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(uuid := uuid4()),
+            )
+        ],
+        suggestions_by_issue={
+            uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
                     context=ContextType.SYSTEM,
                     reference=None,
                     uuid=uuid4(),
+                    auto=False,
                 )
-            ],
-            checks=[
-                Check(enabled=True, slug=CheckType.SUPERVISOR_TRUST),
-                Check(enabled=True, slug=CheckType.FREE_SPACE),
-            ],
-        ),
+            ]
+        },
+    )
+    resolution_info.side_effect = [
+        SupervisorBadRequestError("System is not ready with state: setup"),
+        resolution_info.return_value,
     ]
 
     with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
@@ -643,6 +663,14 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_reboot",
+                            "context": "system",
+                            "reference": None,
+                        }
+                    ],
                 },
             },
         }
@@ -660,53 +688,13 @@ async def test_supervisor_issues_add_remove(
         uuid=issue_uuid,
         context="system",
         type_="reboot_required",
-        fixable=False,
-        reference=None,
-    )
-
-    await client.send_json(
-        {
-            "id": 3,
-            "type": "supervisor/event",
-            "data": {
-                "event": "issue_changed",
-                "data": {
-                    "uuid": issue_uuid,
-                    "type": "reboot_required",
-                    "context": "system",
-                    "reference": None,
-                    "suggestions": [
-                        {
-                            "uuid": uuid4().hex,
-                            "type": "execute_reboot",
-                            "context": "system",
-                            "reference": None,
-                        }
-                    ],
-                },
-            },
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    await client.send_json({"id": 4, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    assert_issue_repair_in_list(
-        msg["result"]["issues"],
-        uuid=issue_uuid,
-        context="system",
-        type_="reboot_required",
         fixable=True,
         reference=None,
     )
 
     await client.send_json(
         {
-            "id": 5,
+            "id": 3,
             "type": "supervisor/event",
             "data": {
                 "event": "issue_removed",
@@ -723,7 +711,7 @@ async def test_supervisor_issues_add_remove(
     assert msg["success"]
     await hass.async_block_till_done()
 
-    await client.send_json({"id": 6, "type": "repairs/list_issues"})
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}

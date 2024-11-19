@@ -60,14 +60,14 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=CURRENT_POWER,
+        key="current_power",
         translation_key="current_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=CONTROL_SIGNAL,
+        key="control_signal",
         translation_key="control_signal",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -141,6 +141,16 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+)
+
+SOCKET_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    *HEATER_SENSOR_TYPES,
 )
 
 

@@ -22,7 +22,7 @@ from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
-UPTIME_DEVIATION = 45
+UPTIME_DEVIATION = 60
 
 
 @dataclass(frozen=True, kw_only=True)
