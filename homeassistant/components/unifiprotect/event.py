@@ -31,7 +31,6 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
-        name="Doorbell",
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
@@ -41,7 +40,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ),
     ProtectEventEntityDescription(
         key="nfc",
-        name="Nfc",
         translation_key="nfc",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:nfc",
@@ -51,7 +49,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ),
     ProtectEventEntityDescription(
         key="fingerprint",
-        name="Fingerprint",
         translation_key="fingerprint",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:fingerprint",
