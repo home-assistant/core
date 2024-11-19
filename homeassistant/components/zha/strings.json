@@ -793,7 +793,7 @@
         "name": "Irrigation time 2"
       },
       "on_led_intensity": {
-        "name": "On LED Intesity"
+        "name": "On LED intensity"
       },
       "off_led_intensity": {
         "name": "Off LED Intensity"
