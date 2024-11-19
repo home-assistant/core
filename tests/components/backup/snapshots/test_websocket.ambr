@@ -967,7 +967,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'backup_id': '27f5c632',
+      'backup_job_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -988,7 +988,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'backup_id': '27f5c632',
+      'backup_job_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -1009,7 +1009,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'backup_id': '27f5c632',
+      'backup_job_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -1030,7 +1030,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'backup_id': 'abc123',
+      'backup_job_id': 'abc123',
     }),
     'success': True,
     'type': 'result',
@@ -1040,7 +1040,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'backup_id': 'abc123',
+      'backup_job_id': 'abc123',
     }),
     'success': True,
     'type': 'result',
