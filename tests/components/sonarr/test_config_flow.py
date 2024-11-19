@@ -50,6 +50,34 @@ async def test_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_url_rewrite(
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test the full manual user flow from start to finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    user_input = MOCK_USER_INPUT.copy()
+    user_input[CONF_URL] = "https://192.168.1.189"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.189"
+
+    assert result["data"]
+    assert result["data"][CONF_URL] == "https://192.168.1.189:443/"
+
+
 async def test_invalid_auth(
     hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
@@ -145,7 +173,7 @@ async def test_full_user_flow_implementation(
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
 
 
 async def test_full_user_flow_advanced_options(
@@ -175,7 +203,7 @@ async def test_full_user_flow_advanced_options(
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
     assert result["data"][CONF_VERIFY_SSL]
 
 

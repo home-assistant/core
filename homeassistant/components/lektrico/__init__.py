@@ -12,6 +12,7 @@ from .coordinator import LektricoDeviceDataUpdateCoordinator
 
 # List the platforms that charger supports.
 CHARGERS_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
     Platform.SENSOR,

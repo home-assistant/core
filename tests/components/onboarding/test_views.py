@@ -72,23 +72,11 @@ async def mock_supervisor_fixture(
     aioclient_mock: AiohttpClientMocker,
     store_info: AsyncMock,
     supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
 ) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
-    )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",
         json={
