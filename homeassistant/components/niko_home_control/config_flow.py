@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.exceptions import ConfigEntryNotReady
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
@@ -16,18 +13,26 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
 from .errors import CannotConnect
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_IP): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+    }
+)
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
+
+async def validate_input(hass: HomeAssistant, data: dict) -> None:
     """Validate the user input allows us to connect."""
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
-    controller = NikoHomeControlConnection(host, port)
+    try:
+        controller = NikoHomeControlConnection(host, port)
+    except Exception as e:
+        raise CannotConnect("cannot_connect") from e
 
     if not controller:
-        raise CannotConnect('cannot_connect')
-
-    return {CONF_HOST: host, CONF_PORT: port}
+        raise CannotConnect("cannot_connect")
 
 
 class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,30 +40,21 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self, import_info=None) -> None:
+    def __init__(self, import_info: dict[str, str] | None = None) -> None:
         """Initialize the config flow."""
-        if import_info is not None:
-          self._import_info: dict[str, str] = import_info
+        self._import_info = import_info
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        HOST = DEFAULT_IP
-        if self._import_info is not None:
-            if self._import_info[CONF_HOST] is not None:
-                HOST = self._import_info[CONF_HOST]
-
-        DATA_SCHEMA = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-            }
-        )
+        DATA_SCHEMA.schema.update(self._import_info) if self._import_info else None
 
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
+                if self._import_info is not None:
+                    return self.async_abort(reason="import_failed")
                 errors["base"] = "cannot_connect"
 
             return self.async_create_entry(
@@ -75,7 +71,4 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         self._import_info = import_info
 
-        try:
-            return await self.async_step_user(None)
-        except Exception:
-            return self.async_abort(reason="import_failed")
+        return await self.async_step_user(None)

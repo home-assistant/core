@@ -1,7 +1,7 @@
 """Smarty tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,6 @@ from homeassistant.components.niko_home_control.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
