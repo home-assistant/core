@@ -15,7 +15,7 @@ import shutil
 import tarfile
 from tempfile import TemporaryDirectory
 import time
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -96,7 +96,7 @@ class BackupReaderWriter(abc.ABC):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[BaseBackup]]:
+    ) -> tuple[NewBackup, asyncio.Task[tuple[BaseBackup, Path]]]:
         """Create a backup."""
 
     @abc.abstractmethod
@@ -117,7 +117,8 @@ class BackupManager:
     def __init__(self, hass: HomeAssistant, reader_writer: BackupReaderWriter) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_task: asyncio.Task | None = None
+        self.backup_task: asyncio.Task[tuple[BaseBackup, Path]] | None = None
+        self.finish_backup_task: asyncio.Task[None] | None = None
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
         self.local_backup_agents: dict[str, LocalBackupAgent] = {}
@@ -444,8 +445,44 @@ class BackupManager:
             on_progress=on_progress,
             password=password,
         )
-        self.backup_task.add_done_callback(lambda _: setattr(self, "backup_task", None))
+        self.finish_backup_task = self.hass.async_create_task(
+            self._async_finish_backup(agent_ids),
+            name="backup_manager_finish_backup",
+        )
         return new_backup
+
+    async def _async_finish_backup(self, agent_ids: list[str]) -> None:
+        if TYPE_CHECKING:
+            assert self.backup_task is not None
+        try:
+            backup, tar_file_path = await self.backup_task
+        except Exception as err:  # noqa: BLE001
+            LOGGER.debug("Backup upload failed", exc_info=err)
+        else:
+            LOGGER.debug(
+                "Generated new backup with backup_id %s, uploading to agents %s",
+                backup.backup_id,
+                agent_ids,
+            )
+            local_file_paths = [
+                self.local_backup_agents[agent_id].get_backup_path(backup.backup_id)
+                for agent_id in agent_ids
+                if agent_id in self.local_backup_agents
+            ]
+            keep_path = False
+            for local_path in local_file_paths:
+                if local_path == tar_file_path:
+                    keep_path = True
+                    continue
+                shutil.copy(tar_file_path, local_path)
+            await self._async_upload_backup(
+                backup=backup, agent_ids=agent_ids, path=tar_file_path
+            )
+            if not keep_path:
+                await self.hass.async_add_executor_job(tar_file_path.unlink, True)
+        finally:
+            self.backup_task = None
+            self.finish_backup_task = None
 
     async def async_restore_backup(
         self,
@@ -503,7 +540,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[BaseBackup]]:
+    ) -> tuple[NewBackup, asyncio.Task[tuple[BaseBackup, Path]]]:
         """Initiate generating a backup."""
         date_str = dt_util.now().isoformat()
         backup_id = _generate_backup_id(date_str, backup_name)
@@ -531,23 +568,23 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         *,
         addons_included: list[str] | None,
         agent_ids: list[str],
+        backup_id: str,
         database_included: bool,
         backup_name: str,
         date_str: str,
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-        backup_id: str,
-    ) -> BaseBackup:
+    ) -> tuple[BaseBackup, Path]:
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
         success = False
 
-        local_file_paths = [
-            manager.local_backup_agents[agent_id].get_backup_path(backup_id)
-            for agent_id in agent_ids
-            if agent_id in manager.local_backup_agents
-        ]
+        suggested_tar_file_path = None
+        for agent_id in agent_ids:
+            if local_agent := manager.local_backup_agents.get(agent_id):
+                suggested_tar_file_path = local_agent.get_backup_path(backup_id)
+                break
 
         try:
             # Inform integrations a backup is about to be made
@@ -569,10 +606,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
             tar_file_path, size_in_bytes = await self._hass.async_add_executor_job(
                 self._mkdir_and_generate_backup_contents,
-                local_file_paths,
                 backup_data,
                 database_included,
                 password,
+                suggested_tar_file_path,
             )
             backup = BaseBackup(
                 backup_id=backup_id,
@@ -581,18 +618,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 protected=password is not None,
                 size=round(size_in_bytes / 1_048_576, 2),
             )
-            LOGGER.debug(
-                "Generated new backup with backup_id %s, uploading to agents %s",
-                backup_id,
-                agent_ids,
-            )
-            await manager._async_upload_backup(  # noqa: SLF001
-                backup=backup, agent_ids=agent_ids, path=tar_file_path
-            )
-            if not local_file_paths:
-                await self._hass.async_add_executor_job(tar_file_path.unlink, True)
             success = True
-            return backup
+            return (backup, tar_file_path)
         finally:
             if on_progress:
                 on_progress(BackupProgress(done=True, stage=None, success=success))
@@ -601,15 +628,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
     def _mkdir_and_generate_backup_contents(
         self,
-        tar_file_paths: list[Path],
         backup_data: dict[str, Any],
         database_included: bool,
         password: str | None,
+        tar_file_path: Path | None,
     ) -> tuple[Path, int]:
         """Generate backup contents and return the size."""
-        if tar_file_paths:
-            tar_file_path = tar_file_paths[0]
-        else:
+        if not tar_file_path:
             tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
         if not (backup_dir := tar_file_path.parent).exists():
             LOGGER.debug("Creating backup directory %s", backup_dir)
@@ -640,8 +665,6 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     excludes=excludes,
                     arcname="data",
                 )
-        for local_path in tar_file_paths[1:]:
-            shutil.copy(tar_file_path, local_path)
         return (tar_file_path, tar_file_path.stat().st_size)
 
     async def async_restore_backup(

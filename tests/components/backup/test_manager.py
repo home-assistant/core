@@ -75,7 +75,8 @@ async def _mock_backup_generation(
     assert manager.backup_task is not None
     assert progress == []
 
-    backup = await manager.backup_task
+    backup, _ = await manager.backup_task
+    await manager.finish_backup_task
     assert progress == [BackupProgress(done=True, stage=None, success=True)]
 
     assert mocked_json_bytes.call_count == 1
