@@ -1,7 +1,17 @@
 """Tests for the habitica component."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
+from habiticalib import (
+    BadRequestError,
+    HabiticaErrorResponse,
+    HabiticaLoginResponse,
+    HabiticaUserResponse,
+    NotAuthorizedError,
+    NotFoundError,
+    TooManyRequestsError,
+)
 import pytest
 from yarl import URL
 
@@ -9,8 +19,14 @@ from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, 
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="message")
+ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
+ERROR_NOT_FOUND = NotFoundError(error=ERROR_RESPONSE, headers={})
+ERROR_BAD_REQUEST = BadRequestError(error=ERROR_RESPONSE, headers={})
+ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(error=ERROR_RESPONSE, headers={})
 
 
 @pytest.fixture(autouse=True)
@@ -93,3 +109,33 @@ def mock_config_entry() -> MockConfigEntry:
 async def set_tz(hass: HomeAssistant) -> None:
     """Fixture to set timezone."""
     await hass.config.async_set_time_zone("Europe/Berlin")
+
+
+@pytest.fixture(name="habitica")
+async def mock_habiticalib() -> Generator[AsyncMock]:
+    """Mock habiticalib."""
+
+    with patch(
+        "homeassistant.components.habitica.config_flow.Habitica",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+
+        client.login.return_value = HabiticaLoginResponse.from_json(
+            load_fixture("login.json", DOMAIN)
+        )
+
+        client.get_user.return_value = HabiticaUserResponse.from_json(
+            load_fixture("user.json", DOMAIN)
+        )
+
+        yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.habitica.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
