@@ -9,7 +9,7 @@ from typing import Any, Protocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .models import BackupUploadMetadata, BaseBackup
+from .models import BaseBackup
 
 
 class BackupAgentError(HomeAssistantError):
@@ -46,13 +46,15 @@ class BackupAgent(abc.ABC):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        homeassistant_version: str,
+        backup: BaseBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
         :param path: The full file path to the backup that should be uploaded.
-        :param metadata: Metadata about the backup that should be uploaded.
+        :param backup: Metadata about the backup that should be uploaded.
+        :param homeassistant_version: The version of Home Assistant that created the backup
         """
 
     @abc.abstractmethod
