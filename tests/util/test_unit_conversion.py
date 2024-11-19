@@ -374,7 +374,11 @@ _CONVERTED_VALUE: dict[
     ],
     ElectricPotentialConverter: [
         (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.VOLT, 5e6, UnitOfElectricPotential.MICROVOLT),
         (5, UnitOfElectricPotential.MILLIVOLT, 0.005, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 5e3, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-3, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-6, UnitOfElectricPotential.VOLT),
     ],
     EnergyConverter: [
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
