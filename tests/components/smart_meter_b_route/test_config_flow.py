@@ -69,6 +69,7 @@ async def test_step_user_form_errors(
     hass: HomeAssistant,
     error: Exception,
     message: str,
+    mock_setup_entry: AsyncMock,
     mock_comports: AsyncMock,
     mock_momonga: AsyncMock,
 ) -> None:
@@ -92,11 +93,21 @@ async def test_step_user_form_errors(
         pwd=user_input[CONF_PASSWORD],
     )
 
-    hass.config_entries.flow.async_abort(result_init["flow_id"])
+    mock_momonga.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result_configure["flow_id"],
+        user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_step_usb(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_comports: AsyncMock,
+    mock_momonga: Mock,
 ) -> None:
     """Test step usb."""
     discovery_info = UsbServiceInfo(
@@ -113,3 +124,11 @@ async def test_step_usb(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
