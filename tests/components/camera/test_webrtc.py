@@ -1031,7 +1031,7 @@ async def test_ws_webrtc_candidate_not_supported(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.sync",
             "session_id": "session_id",
-            "candidate": {"candidate": "candidate", "sdpMLineIndex": 1},
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
@@ -1083,7 +1083,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.does_not_exist",
             "session_id": "session_id",
-            "candidate": {"candidate": "candidate", "sdpMLineIndex": 1},
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
@@ -1127,7 +1127,7 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
-            "candidate": {"candidate": "candidate", "sdpMLineIndex": 0},
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
