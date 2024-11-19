@@ -233,10 +233,10 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
                 ip_address=ip_address("192.168.1.200"),
                 ip_addresses=[ip_address("192.168.1.200")],
                 hostname="some-zigbee-gateway-12345.local.",
-                name="Some Zigbee Gateway (12345)._zigbee-gateway._tcp.local.",
+                name="Some Zigbee Gateway (12345)._zigbee-coordinator._tcp.local.",
                 port=6638,
                 properties={"radio_type": "znp", "serial_number": "aabbccddeeff"},
-                type="_zigbee-gateway._tcp.local.",
+                type="_zigbee-coordinator._tcp.local.",
             ),
         ),
     ],
@@ -346,7 +346,7 @@ async def test_zeroconf_discovery_bad_payload(hass: HomeAssistant) -> None:
         name="any",
         port=1234,
         properties={"radio_type": "some bogus radio"},
-        type="_zigbee-gateway._tcp.local.",
+        type="_zigbee-coordinator._tcp.local.",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info

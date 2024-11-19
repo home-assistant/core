@@ -72,7 +72,7 @@ REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 LEGACY_ZEROCONF_PORT = 6638
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
 
-ZEROCONF_SERVICE_TYPE = "_zigbee-gateway._tcp.local."
+ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
 ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     {
         vol.Required("radio_type"): vol.All(str, vol.In([t.name for t in RadioType])),
