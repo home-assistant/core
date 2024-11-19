@@ -165,7 +165,7 @@ async def test_agent_delete_backup(
 
     await client.send_json_auto_id(
         {
-            "type": "backup/delete",
+            "type": "backup/remove",
             "backup_id": backup_id,
         }
     )
