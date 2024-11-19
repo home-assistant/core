@@ -24,7 +24,6 @@ from webrtc_models import RTCIceCandidate
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
-    StreamType,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
@@ -253,11 +252,6 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         super().__init__(device)
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
         self._refresh_unsub: dict[str, Callable[[], None]] = {}
-
-    @property
-    def frontend_stream_type(self) -> StreamType | None:
-        """Return the type of stream supported by this camera."""
-        return StreamType.WEB_RTC
 
     async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""

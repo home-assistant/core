@@ -573,7 +573,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self._attr_frontend_stream_type
         if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
-        if self._webrtc_provider or self._legacy_webrtc_provider:
+        if (
+            self._webrtc_provider
+            or self._legacy_webrtc_provider
+            or self._supports_native_sync_webrtc
+            or self._supports_native_async_webrtc
+        ):
             return StreamType.WEB_RTC
         return StreamType.HLS
 
