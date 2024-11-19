@@ -6,6 +6,7 @@ from typing import Any
 
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,6 +19,7 @@ class SabnzbdUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         sab_api: SabnzbdApi,
     ) -> None:
         """Initialize the SABnzbd update coordinator."""
@@ -26,6 +28,7 @@ class SabnzbdUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="SABnzbd",
             update_interval=timedelta(seconds=30),
         )
