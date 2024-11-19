@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Imeon Inverter",
+        "data": {
+          "inverter": "Device name",
+          "address": "IP Address",
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "inverter": "The device name",
+          "address": "The address of the inverter",
+          "username": "Your inverter login",
+          "password": "Your inverter password"
+        }
+      }
+    }
+  }
+}
