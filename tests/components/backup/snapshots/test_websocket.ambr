@@ -884,6 +884,7 @@
       'backup': dict({
         'agent_ids': list([
           'test.remote',
+          'backup.local',
         ]),
         'backup_id': 'abc123',
         'date': '1970-01-01T00:00:00.000Z',
