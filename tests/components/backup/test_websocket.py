@@ -217,7 +217,7 @@ async def test_delete(
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
 
-    await client.send_json_auto_id({"type": "backup/remove", "backup_id": "abc123"})
+    await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
     assert await client.receive_json() == snapshot
 
     await client.send_json_auto_id({"type": "backup/info"})
@@ -239,7 +239,7 @@ async def test_agent_delete_backup(
     with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
         await client.send_json_auto_id(
             {
-                "type": "backup/remove",
+                "type": "backup/delete",
                 "backup_id": "abc123",
             }
         )

@@ -87,7 +87,7 @@ async def handle_details(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/remove",
+        vol.Required("type"): "backup/delete",
         vol.Required("backup_id"): str,
     }
 )
