@@ -30,7 +30,9 @@ async def async_setup_entry(
     controller = NikoHomeControlConnection(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     if not controller:
-        raise ConfigEntryNotReady("cannot_connect")
+        raise ConfigEntryNotReady(
+            "cannot connect to controller, please check the host & port are correct."
+        )
 
     entry.runtime_data = NikoHomeControlRuntimeData(controller)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
