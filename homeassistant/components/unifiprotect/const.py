@@ -19,6 +19,7 @@ ATTR_CHANNEL_ID = "channel_id"
 ATTR_MESSAGE = "message"
 ATTR_DURATION = "duration"
 ATTR_ANONYMIZE = "anonymize"
+ATTR_PTZ_SLOT = "slot"
 
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"

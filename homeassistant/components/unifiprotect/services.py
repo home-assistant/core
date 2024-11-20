@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import ATTR_MESSAGE, DOMAIN
+from .const import ATTR_MESSAGE, ATTR_PTZ_SLOT, DOMAIN
 from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
@@ -32,12 +32,14 @@ SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
+SERVICE_GOTO_PTZ_PRESET = "goto_ptz_preset"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
+    SERVICE_GOTO_PTZ_PRESET,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.All(
@@ -65,6 +67,16 @@ REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
         {
             **cv.ENTITY_SERVICE_FIELDS,
             vol.Required(ATTR_NAME): cv.string,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+)
+
+PTZ_GOTO_PRESET_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(ATTR_PTZ_SLOT): cv.string,
         },
     ),
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
@@ -165,6 +177,13 @@ async def remove_privacy_zone(hass: HomeAssistant, call: ServiceCall) -> None:
     await camera.queue_update(remove_zone)
 
 
+async def ptz_camera_goto_preset(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Go to preset for PTZ camera."""
+    slot: int = call.data[ATTR_PTZ_SLOT]
+    camera = _async_get_ufp_camera(hass, call)
+    await camera.goto_ptz_slot(slot=slot)
+
+
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
@@ -231,6 +250,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             SERVICE_REMOVE_PRIVACY_ZONE,
             functools.partial(remove_privacy_zone, hass),
             REMOVE_PRIVACY_ZONE_SCHEMA,
+        ),
+        (
+            SERVICE_GOTO_PTZ_PRESET,
+            functools.partial(ptz_camera_goto_preset, hass),
+            PTZ_GOTO_PRESET_SCHEMA,
         ),
     ]
     for name, method, schema in services:

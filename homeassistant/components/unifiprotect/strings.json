@@ -203,6 +203,20 @@
           "description": "The name of the zone to remove."
         }
       }
+    },
+    "goto_ptz_preset": {
+      "name": "Got to a PTZ perset",
+      "description": "Move camera to a perset coordinates",
+      "fields": {
+        "device_id": {
+          "name": "Camera",
+          "description": "Camera you want to remove privacy zone from."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "The PTZ preset slot number. Use -1 for home"
+        }
+      }
     }
   }
 }
