@@ -2,11 +2,24 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, OLD_SENSOR_KEYS
+import pytest
+
+from homeassistant.components.sabnzbd import (
+    ATTR_API_KEY,
+    DEFAULT_NAME,
+    DOMAIN,
+    OLD_SENSOR_KEYS,
+    SERVICE_PAUSE,
+    SERVICE_RESUME,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
 
@@ -75,3 +88,31 @@ async def test_unique_id_migrate(
     assert device_registry.async_get(mock_d_entry.id).identifiers == {
         (DOMAIN, MOCK_ENTRY_ID)
     }
+
+
+@pytest.mark.parametrize(
+    ("service", "issue_id"),
+    [
+        (SERVICE_RESUME, "resume_action_deprecated"),
+        (SERVICE_PAUSE, "pause_action_deprecated"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_deprecated_service_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    service: str,
+    issue_id: str,
+) -> None:
+    """Test that deprecated actions creates an issue."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0"},
+        blocking=True,
+    )
+
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+    assert issue
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.breaks_in_ha_version == "2025.6"
