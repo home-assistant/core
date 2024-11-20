@@ -369,7 +369,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                             slug_validator=translation_key_validator,
                         ),
                         vol.Optional(
-                            "native_unit_of_measurement"
+                            "unit_of_measurement"
                         ): translation_value_validator,
                     },
                     slug_validator=translation_key_validator,
