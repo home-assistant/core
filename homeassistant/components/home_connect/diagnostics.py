@@ -32,4 +32,7 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     appliance = _get_appliance_by_device_id(hass, device.id)
-    return appliance.status
+    return {
+        "status": appliance.status,
+        "programs": await hass.async_add_executor_job(appliance.get_programs_available),
+    }

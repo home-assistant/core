@@ -60,6 +60,9 @@ async def test_device_diagnostics(
             .get("settings")
         )
     )
+    appliance.get_programs_available.return_value = [
+        "Dishcare.Dishwasher.Program.Eco50"
+    ]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
