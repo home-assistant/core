@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "timer_running": {
+        "name": "Timer running"
+      }
+    },
     "button": {
       "tare": {
         "name": "Tare"

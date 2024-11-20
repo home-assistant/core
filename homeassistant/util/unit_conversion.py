@@ -215,10 +215,12 @@ class ElectricPotentialConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
+        UnitOfElectricPotential.MICROVOLT: 1e6,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
         UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.MICROVOLT,
     }
 
 

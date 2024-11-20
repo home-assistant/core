@@ -1,6 +1,6 @@
 {
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) to give Home Assistant access to your myUplink account. You also need to create application credentials linked to your account:\n1. Go to [Applications at myUplink developer site]({create_creds_url}) and get credentials from an existing application or select **Create New Application**.\n1. Set appropriate Application name and Description\n2. Enter `{callback_url}` as Callback Url"
+    "description": "Follow the [instructions]({more_info_url}) to give Home Assistant access to your myUplink account. You also need to create application credentials linked to your account:\n1. Go to [Applications at myUplink developer site]({create_creds_url}) and get credentials from an existing application or select **Create New Application**.\n1. Set appropriate Application name and Description\n1. Enter `{callback_url}` as Callback URL"
   },
   "config": {
     "step": {
