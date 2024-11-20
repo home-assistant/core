@@ -48,20 +48,24 @@ SERVICE_SPEED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
+type SabnzbdConfigEntry = ConfigEntry[SabnzbdUpdateCoordinator]
+
 
 @callback
-def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
+def async_get_entry_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> SabnzbdConfigEntry:
     """Get the entry ID related to a service call (by device ID)."""
     call_data_api_key = call.data[ATTR_API_KEY]
 
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data[ATTR_API_KEY] == call_data_api_key:
-            return entry.entry_id
+            return entry
 
     raise ValueError(f"No api for API key: {call_data_api_key}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
     """Set up the SabNzbd Component."""
 
     sab_api = await get_client(hass, entry.data)
@@ -70,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     @callback
     def extract_api(
@@ -82,8 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def wrapper(call: ServiceCall) -> None:
             """Wrap the service function."""
-            entry_id = async_get_entry_id_for_service_call(hass, call)
-            coordinator: SabnzbdUpdateCoordinator = hass.data[DOMAIN][entry_id]
+            config_entry = async_get_entry_for_service_call(hass, call)
+            coordinator = config_entry.runtime_data
 
             try:
                 await func(call, coordinator)
@@ -155,11 +159,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
     """Unload a Sabnzbd config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     loaded_entries = [
         entry
