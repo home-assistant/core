@@ -1,4 +1,4 @@
-"""Test theDEFAULT_NAMEconfig flow."""
+"""Test niko_home_control config flow."""
 
 from unittest.mock import AsyncMock
 

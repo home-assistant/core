@@ -56,7 +56,7 @@ async def async_setup_platform(
                     hass,
                     DOMAIN,
                     f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
-                    breaks_in_ha_version="2025.5.0",
+                    breaks_in_ha_version="2025.6.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=ir.IssueSeverity.WARNING,
@@ -72,14 +72,14 @@ async def async_setup_platform(
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.5.0",
+            breaks_in_ha_version="2025.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "niko_home_control",
+                "integration_title": "Niko Home Control",
             },
         )
 

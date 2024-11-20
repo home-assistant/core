@@ -1,4 +1,4 @@
-"""Smarty tests configuration."""
+"""niko_home_control integration tests configuration."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_nhc() -> Generator[AsyncMock]:
-    """Mock a Smarty client."""
+    """Mock a NHC client."""
     with (
         patch(
             "homeassistant.components.niko_home_control.NikoHomeControlConnection",

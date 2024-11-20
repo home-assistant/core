@@ -11,8 +11,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
+type NikoHomeControlConfigEntry = ConfigEntry[NikoHomeControlConnection]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: NikoHomeControlConfigEntry
+) -> bool:
     """Set Niko Home Control from a config entry."""
     controller = NikoHomeControlConnection(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
@@ -26,6 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: NikoHomeControlConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
