@@ -24,7 +24,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
-    IntegrationError,
+    HomeAssistantError,
 )
 from homeassistant.util.dt import utcnow
 
@@ -44,7 +44,7 @@ _DataUpdateCoordinatorT = TypeVar(
 )
 
 
-class UpdateFailed(IntegrationError):
+class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
 
