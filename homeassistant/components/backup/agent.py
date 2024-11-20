@@ -46,7 +46,6 @@ class BackupAgent(abc.ABC):
         self,
         *,
         path: Path,
-        homeassistant_version: str,
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
@@ -54,7 +53,6 @@ class BackupAgent(abc.ABC):
 
         :param path: The full file path to the backup that should be uploaded.
         :param backup: Metadata about the backup that should be uploaded.
-        :param homeassistant_version: The version of Home Assistant that created the backup
         """
 
     @abc.abstractmethod

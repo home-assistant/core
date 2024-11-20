@@ -57,7 +57,6 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         *,
         path: Path,
         backup: AgentBackup,
-        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -67,8 +66,13 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         """List backups."""
         return [
             AgentBackup(
+                addons=[],
                 backup_id=backup.slug,
+                database_included=True,
                 date=backup.date.isoformat(),
+                folders=backup.content.folders,
+                homeassistant_included=backup.content.homeassistant,
+                homeassistant_version="2024.12.0",
                 name=backup.name,
                 protected=backup.protected,
                 size=int(backup.size * 2**20),

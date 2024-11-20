@@ -51,14 +51,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         backups: dict[str, AgentBackup] = {}
         for backup_path in self._backup_dir.glob("*.tar"):
             try:
-                base_backup = read_backup(backup_path)
-                backup = AgentBackup(
-                    backup_id=base_backup.backup_id,
-                    name=base_backup.name,
-                    date=base_backup.date,
-                    size=backup_path.stat().st_size,
-                    protected=base_backup.protected,
-                )
+                backup = read_backup(backup_path)
                 backups[backup.backup_id] = backup
             except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
