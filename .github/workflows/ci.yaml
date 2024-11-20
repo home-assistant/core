@@ -42,7 +42,7 @@ env:
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2025.1"
   DEFAULT_PYTHON: "3.12"
-  ALL_PYTHON_VERSIONS: "['3.13']"
+  ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -76,21 +76,20 @@ jobs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
       core: ${{ steps.core.outputs.changes }}
+      integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
+      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
+      postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
+      test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
+      test_groups: ${{ steps.info.outputs.test_groups }}
+      tests_glob: ${{ steps.info.outputs.tests_glob }}
+      tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-
-      mariadb_groups: "[]"
-      postgresql_groups: "[]"
-      test_full_suite: "false"
-      integrations_glob: "{backup,cloud,hassio,kitchen_sink,demo}"
-      test_groups: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
-      tests: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
-      tests_glob: "{backup,cloud,hassio,kitchen_sink,demo}"
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
