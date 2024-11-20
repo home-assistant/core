@@ -63,7 +63,7 @@ rules:
       For standalone cameras this does not apply: the integration should be removed.
       For cameras connected to a NVR/Hub: the entities of a device are marked unavailable when power is unplugged. They can be removed using async_remove_config_entry_device.
       Chimes can be uncoupled from the doorbell and removed from HA using async_remove_config_entry_device
-      Automatic removal lead to many user issues when a device was temporarly out of wifi range or disconnected from power, so not implemented anymore
+      Automatic removal lead to many user issues when a device was temporarily out of wifi range or disconnected from power, so not implemented anymore
   # Platinumasync_remove_config_entry_device.
   async-dependency: done
   inject-websession: done
