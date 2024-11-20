@@ -3,7 +3,6 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
-from homeconnect.api import HomeConnectAppliance
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -18,7 +17,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import get_all_appliances
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("bypass_throttle")
@@ -45,28 +44,18 @@ async def test_device_diagnostics(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
-    appliance: MagicMock,
     get_appliances: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    get_appliances.return_value = [appliance]
-    appliance.status.update(
-        HomeConnectAppliance.json2dict(
-            load_json_object_fixture("home_connect/settings.json")
-            .get(appliance.name)
-            .get("data")
-            .get("settings")
-        )
-    )
-    appliance.get_programs_available.return_value = [
-        "Dishcare.Dishwasher.Program.Eco50"
-    ]
+    get_appliances.side_effect = get_all_appliances
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.haId)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "SIEMENS-HCS02DWH1-6BE58C26DCC1")}
+    )
 
     assert await async_get_device_diagnostics(hass, config_entry, device) == snapshot
