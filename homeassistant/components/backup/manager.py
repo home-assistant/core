@@ -43,7 +43,7 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import BaseBackup
+from .models import AgentBackup
 from .util import read_backup
 
 
@@ -55,7 +55,7 @@ class NewBackup:
 
 
 @dataclass(slots=True)
-class Backup(BaseBackup):
+class Backup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
@@ -96,7 +96,7 @@ class BackupReaderWriter(abc.ABC):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[BaseBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""
 
     @abc.abstractmethod
@@ -117,7 +117,7 @@ class BackupManager:
     def __init__(self, hass: HomeAssistant, reader_writer: BackupReaderWriter) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_task: asyncio.Task[tuple[BaseBackup, Path]] | None = None
+        self.backup_task: asyncio.Task[tuple[AgentBackup, Path]] | None = None
         self.finish_backup_task: asyncio.Task[None] | None = None
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
@@ -221,7 +221,7 @@ class BackupManager:
     async def _async_upload_backup(
         self,
         *,
-        backup: BaseBackup,
+        backup: AgentBackup,
         agent_ids: list[str],
         path: Path,
     ) -> None:
@@ -375,7 +375,9 @@ class BackupManager:
             if fut is not None:
                 await fut
 
-        def _copy_and_cleanup(local_file_paths: list[Path], backup: BaseBackup) -> Path:
+        def _copy_and_cleanup(
+            local_file_paths: list[Path], backup: AgentBackup
+        ) -> Path:
             if local_file_paths:
                 tar_file_path = local_file_paths[0]
             else:
@@ -537,7 +539,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[BaseBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Initiate generating a backup."""
         date_str = dt_util.now().isoformat()
         backup_id = _generate_backup_id(date_str, backup_name)
@@ -572,7 +574,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[BaseBackup, Path]:
+    ) -> tuple[AgentBackup, Path]:
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
         success = False
@@ -608,7 +610,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 password,
                 suggested_tar_file_path,
             )
-            backup = BaseBackup(
+            backup = AgentBackup(
                 backup_id=backup_id,
                 date=date_str,
                 name=backup_name,

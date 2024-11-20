@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components.backup import BackupAgent, BaseBackup
+from homeassistant.components.backup import AgentBackup, BackupAgent
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         super().__init__()
         self.name = name
         self._uploads = [
-            BaseBackup(
+            AgentBackup(
                 backup_id="abc123",
                 date="1970-01-01T00:00:00Z",
                 name="Kitchen sink syncer",
@@ -50,7 +50,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         *,
         path: Path,
-        backup: BaseBackup,
+        backup: AgentBackup,
         homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
@@ -69,7 +69,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         ]
         LOGGER.info("Deleted backup %s", backup_id)
 
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List synced backups."""
         return self._uploads
 
@@ -77,7 +77,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
         for backup in self._uploads:
             if backup.backup_id == backup_id:

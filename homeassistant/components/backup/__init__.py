@@ -17,7 +17,7 @@ from .manager import (
     BackupPlatformProtocol,
     CoreBackupReaderWriter,
 )
-from .models import BaseBackup
+from .models import AgentBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -25,7 +25,7 @@ __all__ = [
     "BackupAgent",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
-    "BaseBackup",
+    "AgentBackup",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

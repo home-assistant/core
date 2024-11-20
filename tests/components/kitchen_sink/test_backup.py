@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BaseBackup
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -111,7 +111,7 @@ async def test_agents_upload(
     ws_client = await hass_ws_client(hass, hass_supervisor_access_token)
     client = await hass_client()
     backup_id = "test-backup"
-    test_backup = BaseBackup(
+    test_backup = AgentBackup(
         backup_id=backup_id,
         date="1970-01-01T00:00:00.000Z",
         name="Test",
