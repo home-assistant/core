@@ -18,6 +18,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_DEVICE_ID): list[str],
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
@@ -56,7 +57,7 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 
 SERVICE_OPTION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_DEVICE_ID): list[str],
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
@@ -65,19 +66,19 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
 
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_DEVICE_ID): list[str],
         vol.Required(ATTR_PROGRAM): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_DEVICE_ID): list[str],
         vol.Required(ATTR_PROGRAM): str,
     },
 )
 
-SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
+SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): list[str]})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -107,7 +108,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_service_program(call, method):
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
-        device_id = call.data[ATTR_DEVICE_ID]
+        referenced_devices = async_extract_referenced_entity_ids(
+            hass, call
+        ).referenced_devices
 
         options = []
 
@@ -121,37 +124,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             options.append(option)
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(getattr(appliance, method), program, options)
+        for device_id in referenced_devices:
+            appliance = _get_appliance_by_device_id(hass, device_id)
+            await hass.async_add_executor_job(
+                getattr(appliance, method), program, options
+            )
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
-        device_id = call.data[ATTR_DEVICE_ID]
+        referenced_devices = async_extract_referenced_entity_ids(
+            hass, call
+        ).referenced_devices
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(appliance.execute_command, command)
+        for device_id in referenced_devices:
+            appliance = _get_appliance_by_device_id(hass, device_id)
+            await hass.async_add_executor_job(appliance.execute_command, command)
 
     async def _async_service_key_value(call, method):
         """Execute calls to services taking a key and value."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
         unit = call.data.get(ATTR_UNIT)
-        device_id = call.data[ATTR_DEVICE_ID]
+        referenced_devices = async_extract_referenced_entity_ids(
+            hass, call
+        ).referenced_devices
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        if unit is not None:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-                unit,
-            )
-        else:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-            )
+        for device_id in referenced_devices:
+            appliance = _get_appliance_by_device_id(hass, device_id)
+            if unit is not None:
+                await hass.async_add_executor_job(
+                    getattr(appliance, method),
+                    key,
+                    value,
+                    unit,
+                )
+            else:
+                await hass.async_add_executor_job(
+                    getattr(appliance, method),
+                    key,
+                    value,
+                )
 
     async def async_service_option_active(call):
         """Service for setting an option for an active program."""

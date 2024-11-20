@@ -45,7 +45,6 @@ SERVICE_KV_CALL_PARAMS = [
         "domain": DOMAIN,
         "service": "set_option_active",
         "service_data": {
-            "device_id": "DEVICE_ID",
             "key": "",
             "value": "",
             "unit": "",
@@ -56,7 +55,6 @@ SERVICE_KV_CALL_PARAMS = [
         "domain": DOMAIN,
         "service": "set_option_selected",
         "service_data": {
-            "device_id": "DEVICE_ID",
             "key": "",
             "value": "",
         },
@@ -66,7 +64,6 @@ SERVICE_KV_CALL_PARAMS = [
         "domain": DOMAIN,
         "service": "change_setting",
         "service_data": {
-            "device_id": "DEVICE_ID",
             "key": "",
             "value": "",
         },
@@ -78,17 +75,11 @@ SERVICE_COMMAND_CALL_PARAMS = [
     {
         "domain": DOMAIN,
         "service": "pause_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
         "blocking": True,
     },
     {
         "domain": DOMAIN,
         "service": "resume_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
         "blocking": True,
     },
 ]
@@ -99,7 +90,6 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "domain": DOMAIN,
         "service": "select_program",
         "service_data": {
-            "device_id": "DEVICE_ID",
             "program": "",
             "key": "",
             "value": "",
@@ -110,7 +100,6 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "domain": DOMAIN,
         "service": "start_program",
         "service_data": {
-            "device_id": "DEVICE_ID",
             "program": "",
             "key": "",
             "value": "",
@@ -277,7 +266,10 @@ async def test_services(
     )
 
     service_name = service_call["service"]
-    service_call["service_data"]["device_id"] = device_entry.id
+    service_call["target"] = {
+        "device_id": [device_entry.id],
+    }
+
     await hass.services.async_call(**service_call)
     await hass.async_block_till_done()
     assert (
@@ -303,7 +295,9 @@ async def test_services_exception(
 
     service_call = SERVICE_KV_CALL_PARAMS[0]
 
-    service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
+    service_call["target"] = {
+        "device_id": ["DOES_NOT_EXISTS"],
+    }
 
     with pytest.raises(ValueError):
         await hass.services.async_call(**service_call)

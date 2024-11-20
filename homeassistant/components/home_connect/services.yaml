@@ -1,10 +1,8 @@
 start_program:
+  target:
+    device:
+      - integration: home_connect
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
     program:
       example: "Dishcare.Dishwasher.Program.Auto2"
       required: true
@@ -23,12 +21,10 @@ start_program:
       selector:
         text:
 select_program:
+  target:
+    device:
+      - integration: home_connect
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
     program:
       example: "Dishcare.Dishwasher.Program.Auto2"
       required: true
@@ -47,26 +43,18 @@ select_program:
       selector:
         text:
 pause_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
+  target:
+    device:
+      - integration: home_connect
 resume_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
+  target:
+    device:
+      - integration: home_connect
 set_option_active:
+  target:
+    device:
+      - integration: home_connect
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
     key:
       example: "LaundryCare.Dryer.Option.DryingTarget"
       required: true
@@ -78,12 +66,10 @@ set_option_active:
       selector:
         object:
 set_option_selected:
+  target:
+    device:
+      - integration: home_connect
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
     key:
       example: "LaundryCare.Dryer.Option.DryingTarget"
       required: true
@@ -95,12 +81,10 @@ set_option_selected:
       selector:
         object:
 change_setting:
+  target:
+    device:
+      - integration: home_connect
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
     key:
       example: "BSH.Common.Setting.ChildLock"
       required: true
