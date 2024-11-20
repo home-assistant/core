@@ -96,10 +96,8 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         )
 
         self.supports_warm_cool = light_type in WARM_DEVICE_TYPES
-        self.supports_warm_dim = light_type == DEVICE_TYPE_SPECTRUM_TUNE
-        self.supports_spectrum_tune = light_type == DEVICE_TYPE_SPECTRUM_TUNE
-        self.supports_warm_dim = light_type == DEVICE_TYPE_COLOR_TUNE
-        self.supports_spectrum_tune = light_type == DEVICE_TYPE_COLOR_TUNE
+        self.supports_warm_dim = ((light_type == DEVICE_TYPE_SPECTRUM_TUNE) or (light_type == DEVICE_TYPE_COLOR_TUNE))
+        self.supports_spectrum_tune = ((light_type == DEVICE_TYPE_SPECTRUM_TUNE) or (light_type == DEVICE_TYPE_COLOR_TUNE))
 
     def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return minimum supported color temperature.
