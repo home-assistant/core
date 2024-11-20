@@ -1,0 +1,117 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Service actions are set up in `async_setup_entry` and are only set up if the MQTT broker was set up correctly.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: done
+    comment: |
+      The integration can be removed by renoving the config entry.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities are updated through dispatchers, and these are cleanup when the integration unloads.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      This is user configurable, but not required. It is required when a user wants to use device based discovery.
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      Runtime data is not used as the mqtt entry data is used to set up the MQTT broker, this is done during setup, and only one config entry is allowed.
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Only supported for entities the user has assigned a unique_id.
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates:
+    status: done
+    comment: |
+      No data coordinator is used. Parallel updates are supported through dispatchers.
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations:
+    status: exempt
+    comment: |
+      This is not possible because the integrations generates entities based on a user supplied config or discovery.
+  entity-device-class:
+    status: done
+    comment: An entity device class can be configured by the user for each entity.
+  devices:
+    status: done
+    comment: A device context can be configured by the user for each entity. It is not required though, except when using device based discovery.
+  entity-category:
+    status: done
+    comment: An entity category can be configured by the user for each entity.
+  entity-disabled-by-default:
+    status: done
+    comment: The user can configure through YAML or discover entities that are disabled by default.
+  discovery:
+    status: done
+    comment: |
+      When the Mosquitto MQTT broker add on is installed, an MQTT config flow allows an automatic setup.
+  stale-devices:
+    status: exempt
+    comment: >
+      This is is only supported for entities that are configured through MQTT discovery.
+      Users must manually cleanup stale entities that were set up though YAML.
+  diagnostics: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This is not possible because the integrations generates entities based on a user supplied config or discovery.
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: done
+    comment: |
+      MQTT allow to dynamically create and remove devices through MQTT discovery.
+  discovery-update-info:
+    status: done
+    comment: >
+      If the Mosquitto broker add-on is used to set up MQTT from discovery,
+      and the broker add-on is re-installed, MQTT will automatically update from the new brokers credentials.
+  repair-issues:
+    status: done
+    comment: >
+      This integration uses repair-issues when entities are set up through YAML. To avoid user panic,
+      discovery deprecation issues are logged only. It is the responsibility of the maintainer or the service
+      or device to correct the discovery messages. Extra options are allowed in MQTT messages to avoid breaking issues.
+  docs-use-cases: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration dos not use web sessions.
+  strict-typing: done
