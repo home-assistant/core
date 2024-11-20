@@ -268,7 +268,6 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
             )
         ],
         vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
-        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -304,6 +303,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,
     }
 )
@@ -359,47 +359,17 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if quality_scale := integration.manifest.get("quality_scale"):
-        if quality_scale not in NonScaledQualityScaleTiers:
-            scaled_tier = ScaledQualityScaleTiers[quality_scale.upper()]
-            if (
-                scaled_tier >= ScaledQualityScaleTiers.SILVER
-                and not integration.manifest.get("codeowners")
-            ):
-                integration.add_error(
-                    "manifest",
-                    f"{quality_scale} integration does not have a code owner",
-                )
-            if (
-                scaled_tier >= ScaledQualityScaleTiers.GOLD
-                and not (integration.path / "diagnostics.py").exists()
-            ):
-                integration.add_error(
-                    "manifest",
-                    f"{quality_scale} integration does not implement diagnostics",
-                )
-        elif integration.core:
-            if quality_scale == NonScaledQualityScaleTiers.CUSTOM:
-                integration.add_error(
-                    "manifest",
-                    "Core integration should not have a custom quality scale",
-                )
-            if (
-                quality_scale == NonScaledQualityScaleTiers.LEGACY
-                and integration.manifest.get("config_flow")
-            ):
-                integration.add_error(
-                    "manifest",
-                    "Integration with a config flow should not have a legacy quality scale",
-                )
-            if quality_scale not in (
-                NonScaledQualityScaleTiers.LEGACY,
-                NonScaledQualityScaleTiers.INTERNAL,
-            ) and not integration.manifest.get("config_flow"):
-                integration.add_error(
-                    "manifest",
-                    "Integration without a config flow should have a legacy quality scale",
-                )
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and quality_scale.upper() in ScaledQualityScaleTiers
+        and ScaledQualityScaleTiers[quality_scale.upper()]
+        >= ScaledQualityScaleTiers.SILVER
+    ):
+        if not integration.manifest.get("codeowners"):
+            integration.add_error(
+                "manifest",
+                f"{quality_scale} integration does not have a code owner",
+            )
 
     if not integration.core:
         validate_version(integration)

@@ -4,6 +4,5 @@
   "codeowners": [],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg_noise",
-  "iot_class": "calculated",
-  "quality_scale": "legacy"
+  "iot_class": "calculated"
 }

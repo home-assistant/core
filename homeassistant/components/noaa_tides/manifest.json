@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
   "iot_class": "cloud_polling",
   "loggers": ["noaa_coops"],
-  "quality_scale": "legacy",
   "requirements": ["noaa-coops==0.1.9"]
 }

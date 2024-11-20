@@ -4,6 +4,5 @@
   "codeowners": [],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/foursquare",
-  "iot_class": "cloud_push",
-  "quality_scale": "legacy"
+  "iot_class": "cloud_push"
 }

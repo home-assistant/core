@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rmvtransport",
   "iot_class": "cloud_polling",
   "loggers": ["RMVtransport"],
-  "quality_scale": "legacy",
   "requirements": ["PyRMVtransport==0.3.3"]
 }

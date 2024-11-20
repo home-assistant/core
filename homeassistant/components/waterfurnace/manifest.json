@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
   "iot_class": "cloud_polling",
   "loggers": ["waterfurnace"],
-  "quality_scale": "legacy",
   "requirements": ["waterfurnace==1.1.0"]
 }

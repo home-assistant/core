@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tank_utility",
   "iot_class": "cloud_polling",
   "loggers": ["tank_utility"],
-  "quality_scale": "legacy",
   "requirements": ["tank-utility==1.5.0"]
 }

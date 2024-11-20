@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
   "iot_class": "cloud_push",
   "loggers": ["wirelesstagpy"],
-  "quality_scale": "legacy",
   "requirements": ["wirelesstagpy==0.8.1"]
 }

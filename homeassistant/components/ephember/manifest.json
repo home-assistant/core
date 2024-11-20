@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ephember",
   "iot_class": "local_polling",
   "loggers": ["pyephember"],
-  "quality_scale": "legacy",
   "requirements": ["pyephember==0.3.1"]
 }

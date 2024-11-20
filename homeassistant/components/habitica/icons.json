@@ -64,6 +64,12 @@
       },
       "dailys": {
         "default": "mdi:calendar-multiple"
+      },
+      "todo_reminders": {
+        "default": "mdi:reminder"
+      },
+      "daily_reminders": {
+        "default": "mdi:reminder"
       }
     },
     "sensor": {
@@ -187,6 +193,9 @@
     },
     "score_reward": {
       "service": "mdi:sack"
+    },
+    "transformation": {
+      "service": "mdi:flask-round-bottom"
     }
   }
 }

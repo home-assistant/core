@@ -639,7 +639,7 @@
         'details': dict({
           'brightness': dict({
             'name': 'brightness',
-            'text': '100%',
+            'text': '100',
             'value': 100,
           }),
           'name': dict({
@@ -654,7 +654,7 @@
         'match': True,
         'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
         'slots': dict({
-          'brightness': '100%',
+          'brightness': '100',
           'name': 'test light',
         }),
         'source': 'builtin',

@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],
-  "quality_scale": "legacy",
   "requirements": ["pysnmp==6.2.6"]
 }

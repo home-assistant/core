@@ -7,6 +7,5 @@
   "dependencies": ["hardware"],
   "documentation": "https://www.home-assistant.io/integrations/hardkernel",
   "integration_type": "hardware",
-  "quality_scale": "legacy",
   "single_config_entry": true
 }

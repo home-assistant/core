@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mythicbeastsdns",
   "iot_class": "cloud_push",
   "loggers": ["mbddns"],
-  "quality_scale": "legacy",
   "requirements": ["mbddns==0.1.2"]
 }

@@ -5,6 +5,5 @@
   "dependencies": ["twilio"],
   "documentation": "https://www.home-assistant.io/integrations/twilio_call",
   "iot_class": "cloud_push",
-  "loggers": ["twilio"],
-  "quality_scale": "legacy"
+  "loggers": ["twilio"]
 }

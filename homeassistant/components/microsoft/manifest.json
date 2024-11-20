@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/microsoft",
   "iot_class": "cloud_push",
   "loggers": ["pycsspeechtts"],
-  "quality_scale": "legacy",
   "requirements": ["pycsspeechtts==1.0.8"]
 }

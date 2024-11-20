@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/irish_rail_transport",
   "iot_class": "cloud_polling",
   "loggers": ["pyirishrail"],
-  "quality_scale": "legacy",
   "requirements": ["pyirishrail==0.0.2"]
 }
