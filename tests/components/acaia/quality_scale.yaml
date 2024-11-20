@@ -42,10 +42,7 @@ rules:
     status: done
     comment: |
       Handled by coordinator.
-  parallel-updates:
-    status: done
-    comment: |
-      Handled by coordinator.
+  parallel-updates: todo
   reauthentication-flow:
     status: exempt
     comment: |
