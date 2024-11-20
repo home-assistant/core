@@ -3,7 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      No custom actions are defined.
+      No custom actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -13,14 +13,14 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      No custom actions
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
     comment: |
-      No explicit event subscriptions.
+      No explicit event subscriptions
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -32,31 +32,37 @@ rules:
   action-exceptions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      No custom actions
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      Options flow not documented, doesn't have any
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
     status: done
     comment: |
-      Handled by coordinator.
+      Handled by coordinator
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage:
     status: done
     comment: |
-      100% test coverage.
+      100% test coverage
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery:
-    status: done
+  discovery-update-info:
+    status: exempt
     comment: |
-      DHCP & Bluetooth discovery.
+      No discovery
+  discovery:
+    status: exempt
+    comment: |
+      No discovery supported atm
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -64,10 +70,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Device type integration.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -75,16 +78,12 @@ rules:
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: done
-  stale-devices:
+  repair-issues:
     status: exempt
     comment: |
-      Device type integration.
-
+      Currently no repairs/issues
+  stale-devices: done
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: done
-    comment: |
-      Uses `httpx` session.
+  inject-websession: done
   strict-typing: done
