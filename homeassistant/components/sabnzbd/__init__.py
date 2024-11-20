@@ -12,8 +12,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.issue_registry as ir
 
 from .const import (
@@ -62,61 +61,12 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     raise ValueError(f"No api for API key: {call_data_api_key}")
 
 
-def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry):
-    """Update device identifiers to new identifiers."""
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DOMAIN)})
-    if device_entry and entry.entry_id in device_entry.config_entries:
-        new_identifiers = {(DOMAIN, entry.entry_id)}
-        _LOGGER.debug(
-            "Updating device id <%s> with new identifiers <%s>",
-            device_entry.id,
-            new_identifiers,
-        )
-        device_registry.async_update_device(
-            device_entry.id, new_identifiers=new_identifiers
-        )
-
-
-async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry):
-    """Migrate entities to new unique ids (with entry_id)."""
-
-    @callback
-    def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """Define a callback to migrate appropriate SabnzbdSensor entities to new unique IDs.
-
-        Old: description.key
-        New: {entry_id}_description.key
-        """
-        entry_id = entity_entry.config_entry_id
-        if entry_id is None:
-            return None
-        if entity_entry.unique_id.startswith(entry_id):
-            return None
-
-        new_unique_id = f"{entry_id}_{entity_entry.unique_id}"
-
-        _LOGGER.debug(
-            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
-            entity_entry.entity_id,
-            entity_entry.unique_id,
-            new_unique_id,
-        )
-
-        return {"new_unique_id": new_unique_id}
-
-    await async_migrate_entries(hass, entry.entry_id, async_migrate_callback)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SabNzbd Component."""
 
     sab_api = await get_client(hass, entry.data)
     if not sab_api:
         raise ConfigEntryNotReady
-
-    await migrate_unique_id(hass, entry)
-    update_device_identifiers(hass, entry)
 
     coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
     await coordinator.async_config_entry_first_refresh()
