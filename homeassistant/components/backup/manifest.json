@@ -1,6 +1,7 @@
 {
   "domain": "backup",
   "name": "Backup",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/backup",
