@@ -53,6 +53,8 @@ rules:
     status: exempt
     comment: |
       This integration only polls data using a coordinator.
+      Since the integration is read-only and poll-only (only provide sensor
+      data), there is no need to implement parallel updates.
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: todo
@@ -81,9 +83,9 @@ rules:
       This integration has a fixed single device which represents the service.
   diagnostics: done
   exception-translations:
-    status: exempt
+    status: todo
     comment: |
-      This integration doesn't raise any exceptions on its own.
+      The coordinator raises, and currently, doesn't provide a translation for it.
   icon-translations: done
   reconfiguration-flow: todo
   dynamic-devices:
