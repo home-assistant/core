@@ -50,7 +50,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         **kwargs: Any,
     ) -> None:
         """Download a backup file."""
-        raise NotImplementedError
+        raise NotImplementedError("Not yet supported by supervisor")
 
     async def async_upload_backup(
         self,
@@ -71,7 +71,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
                 date=backup.date.isoformat(),
                 name=backup.name,
                 protected=backup.protected,
-                size=backup.size,
+                size=int(backup.size * 2**20),
             )
             for backup in await self._client.backups.list()
         ]
@@ -94,7 +94,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        raise NotImplementedError
+        raise NotImplementedError("Not yet supported by supervisor")
 
 
 class SupervisorBackupReaderWriter(BackupReaderWriter):
