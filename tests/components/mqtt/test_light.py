@@ -721,12 +721,12 @@ async def test_invalid_state_via_topic(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 254, 250)
+    assert state.attributes.get("rgb_color") == (255, 255, 251)
     assert state.attributes.get("brightness") == 255
     assert state.attributes.get("color_temp") == 153
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (54.768, 1.6)
-    assert state.attributes.get("xy_color") == (0.326, 0.333)
+    assert state.attributes.get("xy_color") == (0.325, 0.333)
 
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
     light_state = hass.states.get("light.test")

@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -41,7 +42,7 @@ from .coordinator import SabnzbdUpdateCoordinator
 from .sab import get_client
 from .sensor import OLD_SENSOR_KEYS
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 SERVICES = (
@@ -174,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await migrate_unique_id(hass, entry)
     update_device_identifiers(hass, entry)
 
-    coordinator = SabnzbdUpdateCoordinator(hass, sab_api)
+    coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -204,12 +205,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_pause_queue(
         call: ServiceCall, coordinator: SabnzbdUpdateCoordinator
     ) -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "pause_action_deprecated",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            breaks_in_ha_version="2025.6",
+            translation_key="pause_action_deprecated",
+        )
         await coordinator.sab_api.pause_queue()
 
     @extract_api
     async def async_resume_queue(
         call: ServiceCall, coordinator: SabnzbdUpdateCoordinator
     ) -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "resume_action_deprecated",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            breaks_in_ha_version="2025.6",
+            translation_key="resume_action_deprecated",
+        )
         await coordinator.sab_api.resume_queue()
 
     @extract_api
