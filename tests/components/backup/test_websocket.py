@@ -333,8 +333,8 @@ async def test_generate_without_hassio(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    params: dict,
-    expected_extra_call_params: tuple,
+    params: dict[str, Any],
+    expected_extra_call_params: dict[str, Any],
 ) -> None:
     """Test generating a backup."""
     await setup_backup_integration(hass, with_hassio=False)
