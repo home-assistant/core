@@ -60,6 +60,43 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
         """Initialize calendar entity."""
         super().__init__(coordinator, self.entity_description)
 
+    def get_events(
+        self, start_date: datetime, end_date: datetime | None = None
+    ) -> list[CalendarEvent]:
+        """Implement in calendar entities."""
+        raise NotImplementedError
+
+    @property
+    def event(self) -> CalendarEvent | None:
+        """Return the current or next upcoming event."""
+
+        return next(iter(self.get_events(dt_util.now())), None)
+
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Return calendar events within a datetime range."""
+
+        return self.get_events(start_date, end_date)
+
+    @property
+    def today(self) -> datetime:
+        """Habitica daystart."""
+        return dt_util.start_of_local_day(
+            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
+        )
+
+    def get_recurrence_dates(
+        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
+    ) -> list[datetime]:
+        """Calculate recurrence dates based on start_date and end_date."""
+        if end_date:
+            return recurrences.between(
+                start_date, end_date - timedelta(days=1), inc=True
+            )
+        # if no end_date is given, return only the next recurrence
+        return [recurrences.after(self.today, inc=True)]
+
 
 class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
     """Habitica todos calendar entity."""
@@ -69,7 +106,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.TODOS,
     )
 
-    def dated_todos(
+    def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
         """Get all dated todos."""
@@ -112,18 +149,6 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
             ),
         )
 
-    @property
-    def event(self) -> CalendarEvent | None:
-        """Return the current or next upcoming event."""
-
-        return next(iter(self.dated_todos(dt_util.now())), None)
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-        return self.dated_todos(start_date, end_date)
-
 
 class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     """Habitica dailies calendar entity."""
@@ -132,13 +157,6 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         key=HabiticaCalendar.DAILIES,
         translation_key=HabiticaCalendar.DAILIES,
     )
-
-    @property
-    def today(self) -> datetime:
-        """Habitica daystart."""
-        return dt_util.start_of_local_day(
-            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
-        )
 
     def end_date(self, recurrence: datetime, end: datetime | None = None) -> date:
         """Calculate the end date for a yesterdaily.
@@ -155,18 +173,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             dt_util.start_of_local_day() if recurrence == self.today else recurrence
         ).date() + timedelta(days=1)
 
-    def get_recurrence_dates(
-        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
-    ) -> list[datetime]:
-        """Calculate recurrence dates based on start_date and end_date."""
-        if end_date:
-            return recurrences.between(
-                start_date, end_date - timedelta(days=1), inc=True
-            )
-        # if no end_date is given, return only the next recurrence
-        return [recurrences.after(self.today, inc=True)]
-
-    def due_dailies(
+    def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
         """Get dailies and recurrences for a given period or the next upcoming."""
@@ -190,7 +197,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
                 is_future_event = recurrence > self.today
                 is_current_event = recurrence <= self.today and not task["completed"]
 
-                if not (is_future_event or is_current_event):
+                if not is_future_event and not is_current_event:
                     continue
 
                 events.append(
@@ -214,14 +221,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return next(iter(self.due_dailies(self.today)), None)
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        return self.due_dailies(start_date, end_date)
+        return next(iter(self.get_events(self.today)), None)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | None] | None:
@@ -239,7 +239,7 @@ class HabiticaTodoRemindersCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.TODO_REMINDERS,
     )
 
-    def reminders(
+    def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
         """Reminders for todos."""
@@ -282,18 +282,6 @@ class HabiticaTodoRemindersCalendarEntity(HabiticaCalendarEntity):
             key=lambda event: event.start,
         )
 
-    @property
-    def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-        return next(iter(self.reminders(dt_util.now())), None)
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        return self.reminders(start_date, end_date)
-
 
 class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
     """Habitica daily reminders calendar entity."""
@@ -321,25 +309,7 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
             tzinfo=dt_util.DEFAULT_TIME_ZONE,
         )
 
-    @property
-    def today(self) -> datetime:
-        """Habitica daystart."""
-        return dt_util.start_of_local_day(
-            datetime.fromisoformat(self.coordinator.data.user["lastCron"])
-        )
-
-    def get_recurrence_dates(
-        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
-    ) -> list[datetime]:
-        """Calculate recurrence dates based on start_date and end_date."""
-        if end_date:
-            return recurrences.between(
-                start_date, end_date - timedelta(days=1), inc=True
-            )
-        # if no end_date is given, return only the next recurrence
-        return [recurrences.after(self.today, inc=True)]
-
-    def reminders(
+    def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
         """Reminders for dailies."""
@@ -388,15 +358,3 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
             events,
             key=lambda event: event.start,
         )
-
-    @property
-    def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-        return next(iter(self.reminders(dt_util.now())), None)
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        return self.reminders(start_date, end_date)
