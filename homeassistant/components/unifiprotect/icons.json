@@ -11,6 +11,9 @@
     },
     "remove_privacy_zone": {
       "service": "mdi:eye-minus"
+    },
+    "goto_ptz_preset": {
+      "service": "mdi:camera-control"
     }
   }
 }

@@ -53,3 +53,17 @@ remove_privacy_zone:
       required: true
       selector:
         text:
+goto_ptz_preset:
+  fields:
+    device_id:
+      example: "-1"
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    slot:
+      required: true
+      selector:
+        text:

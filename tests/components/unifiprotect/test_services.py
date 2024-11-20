@@ -9,9 +9,14 @@ from uiprotect.data import Camera, Chime, Color, Light, ModelType
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    ATTR_MESSAGE,
+    ATTR_PTZ_SLOT,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
+    SERVICE_GOTO_PTZ_PRESET,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
@@ -239,3 +244,27 @@ async def test_remove_privacy_zone(
     )
     ufp.api.update_device.assert_called()
     assert not doorbell.privacy_zones
+
+
+async def test_ptz_camera_goto_preset(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera: Camera,
+) -> None:
+    """Test ptz_camera_goto_preset."""
+    # ptz_camera = camera.copy()
+    camera.name = "Test Camera PTZ"
+    camera.__fields__["goto_ptz_slot"] = Mock(final=False)
+    camera.goto_ptz_slot = AsyncMock()
+
+    await init_entry(hass, ufp, [camera])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_ptz_motion")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GOTO_PTZ_PRESET,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PTZ_SLOT: "0"},
+    )
+    camera.goto_ptz_slot.assert_called_once_with(slot="0")
