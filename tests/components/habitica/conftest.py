@@ -140,7 +140,9 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         client.toggle_sleep.return_value = HabiticaSleepResponse(
             success=True, data=True
         )
-
+        client.update_score.return_value = HabiticaUserResponse.from_json(
+            load_fixture("score_with_drop.json", DOMAIN)
+        )
         yield client
 
 

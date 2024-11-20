@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
-from habiticalib import Skill
+from habiticalib import Direction, Skill
 import pytest
 
 from homeassistant.components.habitica.const import (
@@ -377,7 +377,6 @@ async def test_handle_quests(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_handle_quests_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -405,7 +404,7 @@ async def test_handle_quests_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "task_id"),
+    ("service", "service_data", "call_args"),
     [
         (
             SERVICE_SCORE_HABIT,
@@ -413,7 +412,10 @@ async def test_handle_quests_exceptions(
                 ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
                 ATTR_DIRECTION: "up",
             },
-            "e97659e0-2c42-4599-a7bb-00282adc410d",
+            {
+                "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
+                "direction": Direction.UP,
+            },
         ),
         (
             SERVICE_SCORE_HABIT,
@@ -421,14 +423,20 @@ async def test_handle_quests_exceptions(
                 ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
                 ATTR_DIRECTION: "down",
             },
-            "e97659e0-2c42-4599-a7bb-00282adc410d",
+            {
+                "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
+                "direction": Direction.DOWN,
+            },
         ),
         (
             SERVICE_SCORE_REWARD,
             {
                 ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
             },
-            "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
+            {
+                "task_id": UUID("5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
+                "direction": Direction.UP,
+            },
         ),
         (
             SERVICE_SCORE_HABIT,
@@ -436,7 +444,10 @@ async def test_handle_quests_exceptions(
                 ATTR_TASK: "Füge eine Aufgabe zu Habitica hinzu",
                 ATTR_DIRECTION: "up",
             },
-            "e97659e0-2c42-4599-a7bb-00282adc410d",
+            {
+                "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
+                "direction": Direction.UP,
+            },
         ),
         (
             SERVICE_SCORE_HABIT,
@@ -444,7 +455,10 @@ async def test_handle_quests_exceptions(
                 ATTR_TASK: "create_a_task",
                 ATTR_DIRECTION: "up",
             },
-            "e97659e0-2c42-4599-a7bb-00282adc410d",
+            {
+                "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
+                "direction": Direction.UP,
+            },
         ),
     ],
     ids=[
@@ -458,17 +472,12 @@ async def test_handle_quests_exceptions(
 async def test_score_task(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service: str,
     service_data: dict[str, Any],
-    task_id: str,
+    call_args: dict[str, Any],
 ) -> None:
     """Test Habitica score task action."""
-
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/{task_id}/score/{service_data.get(ATTR_DIRECTION, "up")}",
-        json={"success": True, "data": {}},
-    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -481,17 +490,13 @@ async def test_score_task(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica,
-        "post",
-        f"{DEFAULT_URL}/api/v3/tasks/{task_id}/score/{service_data.get(ATTR_DIRECTION, "up")}",
-    )
+    habitica.update_score.assert_awaited_once_with(**call_args)
 
 
 @pytest.mark.parametrize(
     (
         "service_data",
-        "http_status",
+        "raise_exception",
         "expected_exception",
         "expected_exception_msg",
     ),
@@ -501,7 +506,7 @@ async def test_score_task(
                 ATTR_TASK: "task does not exist",
                 ATTR_DIRECTION: "up",
             },
-            HTTPStatus.OK,
+            None,
             ServiceValidationError,
             "Unable to complete action, could not find the task 'task does not exist'",
         ),
@@ -510,7 +515,7 @@ async def test_score_task(
                 ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
                 ATTR_DIRECTION: "up",
             },
-            HTTPStatus.TOO_MANY_REQUESTS,
+            ERROR_TOO_MANY_REQUESTS,
             ServiceValidationError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
@@ -519,7 +524,7 @@ async def test_score_task(
                 ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
                 ATTR_DIRECTION: "up",
             },
-            HTTPStatus.BAD_REQUEST,
+            ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
@@ -528,7 +533,7 @@ async def test_score_task(
                 ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
                 ATTR_DIRECTION: "up",
             },
-            HTTPStatus.UNAUTHORIZED,
+            ERROR_NOT_AUTHORIZED,
             HomeAssistantError,
             "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10 GP",
         ),
@@ -538,25 +543,15 @@ async def test_score_task(
 async def test_score_task_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service_data: dict[str, Any],
-    http_status: HTTPStatus,
+    raise_exception: Exception,
     expected_exception: Exception,
     expected_exception_msg: str,
 ) -> None:
     """Test Habitica score task action exceptions."""
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/e97659e0-2c42-4599-a7bb-00282adc410d/score/up",
-        json={"success": True, "data": {}},
-        status=http_status,
-    )
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b/score/up",
-        json={"success": True, "data": {}},
-        status=http_status,
-    )
-
+    habitica.update_score.side_effect = raise_exception
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
