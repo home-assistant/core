@@ -87,10 +87,10 @@ jobs:
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
 
-      integrations_glob: (backup|cloud)
-      test_groups: ["backup", "cloud"]
-      tests: ["backup", "cloud"]
-      tests_glob: (backup|cloud)
+      integrations_glob: (backup|cloud|hassio|kitchen_sink|demo)
+      test_groups: ["backup", "cloud", "hassio", "kitchen_sink", "demo"]
+      tests: ["backup", "cloud", "hassio", "kitchen_sink", "demo"]
+      tests_glob: (backup|cloud|hassio|kitchen_sink|demo)
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
