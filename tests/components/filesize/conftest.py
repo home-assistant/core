@@ -8,16 +8,24 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.filesize.const import DOMAIN
-from homeassistant.const import CONF_FILE_PATH
+from homeassistant.components.filesize.const import DOMAIN, PLATFORMS
+from homeassistant.const import CONF_FILE_PATH, Platform
 
 from . import TEST_FILE_NAME
 
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="load_platforms")
+async def patch_platform_constant() -> list[Platform]:
+    """Return list of platforms to load."""
+    return PLATFORMS
+
+
 @pytest.fixture
-def mock_config_entry(tmp_path: Path) -> MockConfigEntry:
+def mock_config_entry(
+    tmp_path: Path, load_platforms: list[Platform]
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
     test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     return MockConfigEntry(
