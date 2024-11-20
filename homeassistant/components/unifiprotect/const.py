@@ -79,4 +79,6 @@ DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
 
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "fingerprint_identified"
+EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "fingerprint_not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "nfc_card_scanned"
+EVENT_TYPE_DOORBELL_RING: Final = "ring"

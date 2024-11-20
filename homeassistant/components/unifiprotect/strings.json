@@ -136,8 +136,8 @@
       }
     },
     "event": {
-      "doorbell": {
-        "name": "Doorbell",
+      "ring": {
+        "name": "Ring",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -161,7 +161,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "fingerprint_identified": "Finger identified"
+              "fingerprint_identified": "Finger identified",
+              "fingerprint_not_identified": "Finger not identified"
             }
           }
         }

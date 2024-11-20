@@ -270,7 +270,7 @@ async def test_doorbell_fingerprint_identified(
     unsub()
 
 
-async def test_doorbell_no_fingerprint_identified(
+async def test_doorbell_fingerprint_not_identified(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
