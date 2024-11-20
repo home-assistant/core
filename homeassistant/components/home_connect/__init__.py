@@ -10,7 +10,7 @@ from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): list[str],
+        **cv.ENTITY_SERVICE_FIELDS,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
@@ -57,7 +57,7 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 
 SERVICE_OPTION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): list[str],
+        **cv.ENTITY_SERVICE_FIELDS,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
@@ -66,19 +66,19 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
 
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
-        vol.Required(ATTR_DEVICE_ID): list[str],
+        **cv.ENTITY_SERVICE_FIELDS,
         vol.Required(ATTR_PROGRAM): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
     {
-        vol.Required(ATTR_DEVICE_ID): list[str],
+        **cv.ENTITY_SERVICE_FIELDS,
         vol.Required(ATTR_PROGRAM): str,
     },
 )
 
-SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): list[str]})
+SERVICE_COMMAND_SCHEMA = vol.Schema(cv.ENTITY_SERVICE_FIELDS)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
