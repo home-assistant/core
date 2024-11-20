@@ -12,11 +12,10 @@ from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
-from homeassistant.core import callback
 
-from .const import DOMAIN, OPTION_DATA_TYPE_CHOICES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,67 +190,3 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If the device is new, allow the user to continue setup
         return await self.async_step_user()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> config_entries.OptionsFlow:
-        """Return the options flow handler for this integration."""
-        return VegehubOptionsFlowHandler(config_entry)
-
-
-class VegehubOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle an options flow for VegeHub."""
-
-    def __init__(self, config_entry) -> None:
-        """Initialize VegeHub options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-        """Manage the options for VegeHub."""
-        if user_input is not None:
-            # Update the config entry options with the new user input
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=user_input
-            )
-
-            # Trigger a reload of the config entry to apply the new options
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-            # Process the user inputs and update the config entry options
-            return self.async_create_entry(title="", data=user_input)
-
-        num_sensors = self.config_entry.data.get("hub", {}).get("num_channels")
-        num_actuators = self.config_entry.data.get("hub", {}).get("num_actuators")
-
-        options_schema: dict[Any, Any] = {}
-
-        if num_sensors > 0:
-            # Define data_type fields depending on the number of sensors this hub has
-            options_schema.update(
-                {
-                    vol.Required(
-                        f"data_type_{i + 1}",
-                        default=self.config_entry.options.get(
-                            f"data_type_{i + 1}", OPTION_DATA_TYPE_CHOICES[0]
-                        ),
-                    ): vol.In(OPTION_DATA_TYPE_CHOICES)
-                    for i in range(num_sensors)
-                }
-            )
-
-        # Check to see if there are actuators. If there are, add the duration field.
-        if num_actuators > 0:
-            # Get the current duration value from the config entry
-            current_duration = self.config_entry.options.get("user_act_duration", 0)
-            # If the current duration is invalid, make it default to 600 seconds
-            if current_duration <= 0:
-                current_duration = 600
-
-            options_schema.update(
-                {vol.Required("user_act_duration", default=current_duration): int}
-            )
-
-        # Show the form to the user with the available options
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options_schema)
-        )
