@@ -1,2 +1,2 @@
-select:
-  - IQS001
+rules:
+  IQS001: done

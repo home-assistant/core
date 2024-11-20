@@ -10,7 +10,25 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration
 
-SCHEMA = vol.Schema({vol.Required("select"): list[str]})
+SCHEMA = vol.Schema(
+    {
+        vol.Required("rules"): vol.Schema(
+            {
+                str: vol.Any(
+                    vol.In(["todo", "done"]),
+                    vol.Schema(
+                        {
+                            vol.Required("status"): vol.In(
+                                ["todo", "done", "exempted"]
+                            ),
+                            vol.Optional("comment"): str,
+                        }
+                    ),
+                )
+            }
+        )
+    }
+)
 
 
 def validate_iqs_file(config: Config, integration: Integration) -> None:
