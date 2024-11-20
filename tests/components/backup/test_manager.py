@@ -85,7 +85,6 @@ async def _mock_backup_generation(
     assert backup_json_dict == {
         "compressed": True,
         "date": ANY,
-        "folders": ["homeassistant"],
         "homeassistant": {
             "exclude_database": not database_included,
             "version": "2025.1.0",
@@ -94,6 +93,7 @@ async def _mock_backup_generation(
         "protected": bool(password),
         "slug": ANY,
         "type": "partial",
+        "version": 2,
     }
     assert isinstance(backup, AgentBackup)
     assert backup == AgentBackup(
