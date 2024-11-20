@@ -7,6 +7,7 @@ from homeassistant.components.sabnzbd.const import (
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RESUME,
+    SERVICE_SET_SPEED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -17,6 +18,7 @@ from homeassistant.helpers import issue_registry as ir
     [
         (SERVICE_RESUME, "resume_action_deprecated"),
         (SERVICE_PAUSE, "pause_action_deprecated"),
+        (SERVICE_SET_SPEED, "set_speed_action_deprecated"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
