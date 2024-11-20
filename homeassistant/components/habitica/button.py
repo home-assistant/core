@@ -5,10 +5,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from http import HTTPStatus
 from typing import Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
+from habiticalib import (
+    HabiticaException,
+    NotAuthorizedError,
+    Skill,
+    TooManyRequestsError,
+)
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -63,15 +68,13 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.RUN_CRON,
         translation_key=HabitipyButtonEntity.RUN_CRON,
-        press_fn=lambda coordinator: coordinator.api.cron.post(),
+        press_fn=lambda coordinator: coordinator.habitica.run_cron(),
         available_fn=lambda data: data.user["needsCron"],
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.BUY_HEALTH_POTION,
         translation_key=HabitipyButtonEntity.BUY_HEALTH_POTION,
-        press_fn=(
-            lambda coordinator: coordinator.api["user"]["buy-health-potion"].post()
-        ),
+        press_fn=lambda coordinator: coordinator.habitica.buy_health_potion(),
         available_fn=(
             lambda data: data.user["stats"]["gp"] >= 25
             and data.user["stats"]["hp"] < 50
@@ -81,7 +84,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
         translation_key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
-        press_fn=lambda coordinator: coordinator.api["user"]["allocate-now"].post(),
+        press_fn=lambda coordinator: coordinator.habitica.allocate_stat_points(),
         available_fn=(
             lambda data: data.user["preferences"].get("automaticAllocation") is True
             and data.user["stats"]["points"] > 0
@@ -90,7 +93,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.REVIVE,
         translation_key=HabitipyButtonEntity.REVIVE,
-        press_fn=lambda coordinator: coordinator.api["user"]["revive"].post(),
+        press_fn=lambda coordinator: coordinator.habitica.revive(),
         available_fn=lambda data: data.user["stats"]["hp"] == 0,
     ),
 )
@@ -100,7 +103,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.MPHEAL,
         translation_key=HabitipyButtonEntity.MPHEAL,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["mpheal"].post(),
+        press_fn=(
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.ETHEREAL_SURGE)
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 30
@@ -111,7 +116,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.EARTH,
         translation_key=HabitipyButtonEntity.EARTH,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["earth"].post(),
+        press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.EARTHQUAKE),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 35
@@ -122,7 +127,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
         translation_key=HabitipyButtonEntity.FROST,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["frost"].post(),
+        press_fn=(
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.CHILLING_FROST)
+        ),
         # chilling frost can only be cast once per day (streaks buff is false)
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
@@ -136,9 +143,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.DEFENSIVE_STANCE,
         translation_key=HabitipyButtonEntity.DEFENSIVE_STANCE,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast[
-                "defensiveStance"
-            ].post()
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.DEFENSIVE_STANCE)
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
@@ -151,9 +156,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.VALOROUS_PRESENCE,
         translation_key=HabitipyButtonEntity.VALOROUS_PRESENCE,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast[
-                "valorousPresence"
-            ].post()
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.VALOROUS_PRESENCE)
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
@@ -166,7 +169,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.INTIMIDATE,
         translation_key=HabitipyButtonEntity.INTIMIDATE,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["intimidate"].post()
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.INTIMIDATING_GAZE)
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
@@ -179,7 +182,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.TOOLS_OF_TRADE,
         translation_key=HabitipyButtonEntity.TOOLS_OF_TRADE,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["toolsOfTrade"].post()
+            lambda coordinator: coordinator.habitica.cast_skill(
+                Skill.TOOLS_OF_THE_TRADE
+            )
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
@@ -191,9 +196,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.STEALTH,
         translation_key=HabitipyButtonEntity.STEALTH,
-        press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["stealth"].post()
-        ),
+        press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.STEALTH),
         # Stealth buffs stack and it can only be cast if the amount of
         # unfinished dailies is smaller than the amount of buffs
         available_fn=(
@@ -216,7 +219,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
         translation_key=HabitipyButtonEntity.HEAL,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["heal"].post(),
+        press_fn=(
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.HEALING_LIGHT)
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
             and data.user["stats"]["mp"] >= 15
@@ -229,7 +234,9 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.BRIGHTNESS,
         translation_key=HabitipyButtonEntity.BRIGHTNESS,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["brightness"].post()
+            lambda coordinator: coordinator.habitica.cast_skill(
+                Skill.SEARING_BRIGHTNESS
+            )
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
@@ -242,7 +249,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.PROTECT_AURA,
         translation_key=HabitipyButtonEntity.PROTECT_AURA,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["protectAura"].post()
+            lambda coordinator: coordinator.habitica.cast_skill(Skill.PROTECTIVE_AURA)
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
@@ -254,7 +261,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL_ALL,
         translation_key=HabitipyButtonEntity.HEAL_ALL,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["healAll"].post(),
+        press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.BLESSING),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 25
@@ -322,17 +329,17 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="service_call_unallowed",
-                ) from e
+        except TooManyRequestsError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except NotAuthorizedError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_unallowed",
+            ) from e
+        except (HabiticaException, ClientError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
