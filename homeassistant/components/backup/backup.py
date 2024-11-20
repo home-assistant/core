@@ -56,7 +56,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
                     backup_id=base_backup.backup_id,
                     name=base_backup.name,
                     date=base_backup.date,
-                    size=round(backup_path.stat().st_size / 1_048_576, 2),
+                    size=backup_path.stat().st_size,
                     protected=base_backup.protected,
                 )
                 backups[backup.backup_id] = backup
