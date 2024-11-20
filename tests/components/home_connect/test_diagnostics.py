@@ -39,7 +39,7 @@ async def test_async_get_config_entry_diagnostics(
 
 
 @pytest.mark.usefixtures("bypass_throttle")
-async def test_device_diagnostics(
+async def test_async_get_device_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -48,7 +48,7 @@ async def test_device_diagnostics(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test device config entry diagnostics."""
     get_appliances.side_effect = get_all_appliances
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
