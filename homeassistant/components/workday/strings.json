@@ -86,18 +86,19 @@
       "options": {
         "armed_forces": "Armed forces",
         "bank": "Bank",
+        "catholic": "Catholic",
+        "chinese": "Chinese",
+        "christian": "Christian",
         "government": "Government",
         "half_day": "Half day",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic",
         "optional": "Optional",
         "public": "Public",
         "school": "School",
         "unofficial": "Unofficial",
-        "workday": "Workday",
-        "chinese": "Chinese",
-        "christian": "Christian",
-        "hebrew": "Hebrew",
-        "hindu": "Hindu",
-        "islamic": "Islamic"
+        "workday": "Workday"
       }
     },
     "days": {
