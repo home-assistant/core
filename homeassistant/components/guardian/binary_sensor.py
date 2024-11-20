@@ -1,76 +1,120 @@
 """Binary sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOVING,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PairedSensorEntity, ValveControllerEntity
+from . import GuardianData
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
-    API_WIFI_STATUS,
     CONF_UID,
-    DATA_COORDINATOR,
-    DATA_COORDINATOR_PAIRED_SENSOR,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
+)
+from .coordinator import GuardianDataUpdateCoordinator
+from .entity import (
+    PairedSensorEntity,
+    ValveControllerEntity,
+    ValveControllerEntityDescription,
+)
+from .util import (
+    EntityDomainReplacementStrategy,
+    async_finish_entity_domain_replacements,
 )
 
 ATTR_CONNECTED_CLIENTS = "connected_clients"
 
-SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
-SENSOR_ATTRS_MAP = {
-    SENSOR_KIND_AP_INFO: ("Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
-    SENSOR_KIND_LEAK_DETECTED: ("Leak Detected", DEVICE_CLASS_MOISTURE),
-    SENSOR_KIND_MOVED: ("Recently Moved", DEVICE_CLASS_MOVING),
-}
 
-PAIRED_SENSOR_SENSORS = [SENSOR_KIND_LEAK_DETECTED, SENSOR_KIND_MOVED]
-VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_AP_INFO, SENSOR_KIND_LEAK_DETECTED]
+@dataclass(frozen=True, kw_only=True)
+class PairedSensorBinarySensorDescription(BinarySensorEntityDescription):
+    """Describe a Guardian paired sensor binary sensor."""
+
+    is_on_fn: Callable[[dict[str, Any]], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ValveControllerBinarySensorDescription(
+    BinarySensorEntityDescription, ValveControllerEntityDescription
+):
+    """Describe a Guardian valve controller binary sensor."""
+
+    is_on_fn: Callable[[dict[str, Any]], bool]
+
+
+PAIRED_SENSOR_DESCRIPTIONS = (
+    PairedSensorBinarySensorDescription(
+        key=SENSOR_KIND_LEAK_DETECTED,
+        translation_key="leak",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        is_on_fn=lambda data: data["wet"],
+    ),
+    PairedSensorBinarySensorDescription(
+        key=SENSOR_KIND_MOVED,
+        translation_key="moved",
+        device_class=BinarySensorDeviceClass.MOVING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda data: data["moved"],
+    ),
+)
+
+VALVE_CONTROLLER_DESCRIPTIONS = (
+    ValveControllerBinarySensorDescription(
+        key=SENSOR_KIND_LEAK_DETECTED,
+        translation_key="leak",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
+        is_on_fn=lambda data: data["wet"],
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
+    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    uid = entry.data[CONF_UID]
+
+    async_finish_entity_domain_replacements(
+        hass,
+        entry,
+        (
+            EntityDomainReplacementStrategy(
+                BINARY_SENSOR_DOMAIN,
+                f"{uid}_ap_enabled",
+            ),
+        ),
+    )
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
-            uid
-        ]
-
-        entities = []
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class = SENSOR_ATTRS_MAP[kind]
-            entities.append(
-                PairedSensorBinarySensor(
-                    entry,
-                    coordinator,
-                    kind,
-                    name,
-                    device_class,
-                    None,
-                )
+        async_add_entities(
+            PairedSensorBinarySensor(
+                entry, data.paired_sensor_manager.coordinators[uid], description
             )
-
-        async_add_entities(entities)
+            for description in PAIRED_SENSOR_DESCRIPTIONS
+        )
 
     # Handle adding paired sensors after HASS startup:
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
+    entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
@@ -78,38 +122,22 @@ async def async_setup_entry(
         )
     )
 
-    sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = []
-
     # Add all valve controller-specific binary sensors:
-    for kind in VALVE_CONTROLLER_SENSORS:
-        name, device_class = SENSOR_ATTRS_MAP[kind]
-        sensors.append(
-            ValveControllerBinarySensor(
-                entry,
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
-                kind,
-                name,
-                device_class,
-                None,
-            )
+    sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = [
+        ValveControllerBinarySensor(
+            entry, data.valve_controller_coordinators, description
         )
+        for description in VALVE_CONTROLLER_DESCRIPTIONS
+    ]
 
     # Add all paired sensor-specific binary sensors:
-    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-        entry.entry_id
-    ].values():
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class = SENSOR_ATTRS_MAP[kind]
-            sensors.append(
-                PairedSensorBinarySensor(
-                    entry,
-                    coordinator,
-                    kind,
-                    name,
-                    device_class,
-                    None,
-                )
-            )
+    sensors.extend(
+        [
+            PairedSensorBinarySensor(entry, coordinator, description)
+            for coordinator in data.paired_sensor_manager.coordinators.values()
+            for description in PAIRED_SENSOR_DESCRIPTIONS
+        ]
+    )
 
     async_add_entities(sensors)
 
@@ -117,74 +145,42 @@ async def async_setup_entry(
 class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
+    entity_description: PairedSensorBinarySensorDescription
+
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        coordinator: GuardianDataUpdateCoordinator,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinator, kind, name, device_class, icon)
+        super().__init__(entry, coordinator, description)
 
         self._attr_is_on = True
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
-        if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._attr_is_on = self.coordinator.data["wet"]
-        elif self._kind == SENSOR_KIND_MOVED:
-            self._attr_is_on = self.coordinator.data["moved"]
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
 
 
 class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
+    entity_description: ValveControllerBinarySensorDescription
+
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        coordinators: dict[str, GuardianDataUpdateCoordinator],
+        description: ValveControllerBinarySensorDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinators, kind, name, device_class, icon)
+        super().__init__(entry, coordinators, description)
 
         self._attr_is_on = True
 
-    async def _async_continue_entity_setup(self) -> None:
-        """Add an API listener."""
-        if self._kind == SENSOR_KIND_AP_INFO:
-            self.async_add_coordinator_update_listener(API_WIFI_STATUS)
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
-
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
-        if self._kind == SENSOR_KIND_AP_INFO:
-            self._attr_available = self.coordinators[
-                API_WIFI_STATUS
-            ].last_update_success
-            self._attr_is_on = self.coordinators[API_WIFI_STATUS].data[
-                "station_connected"
-            ]
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_CONNECTED_CLIENTS: self.coordinators[API_WIFI_STATUS].data.get(
-                        "ap_clients"
-                    )
-                }
-            )
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._attr_available = self.coordinators[
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            ].last_update_success
-            self._attr_is_on = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
-                "wet"
-            ]
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self.coordinator.data)

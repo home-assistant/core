@@ -1,0 +1,21 @@
+{
+  "1": {
+    "sensor_id": 1,
+    "children": {
+      "1": {
+        "id": 1,
+        "type": 13,
+        "description": "",
+        "values": {
+          "17": "1200"
+        }
+      }
+    },
+    "type": 17,
+    "sketch_name": "Power Sensor",
+    "sketch_version": "1.0",
+    "battery_level": 0,
+    "protocol_version": "2.3.2",
+    "heartbeat": 0
+  }
+}

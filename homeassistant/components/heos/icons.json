@@ -1,0 +1,10 @@
+{
+  "services": {
+    "sign_in": {
+      "service": "mdi:login"
+    },
+    "sign_out": {
+      "service": "mdi:logout"
+    }
+  }
+}

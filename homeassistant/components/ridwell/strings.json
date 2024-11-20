@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please re-enter the password for {username}:",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "description": "Input your username and password:",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_pickup": {
+        "name": "Next pickup"
+      }
+    },
+    "switch": {
+      "opt_in": {
+        "name": "Opt-in to next pickup"
+      }
+    }
+  }
+}

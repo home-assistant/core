@@ -1,0 +1,152 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_mop_attached": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      }
+    },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_blade": {
+        "default": "mdi:saw-blade"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_lens_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_unit_care": {
+        "default": "mdi:robot-vacuum"
+      },
+      "reset_lifespan_round_mop": {
+        "default": "mdi:broom"
+      }
+    },
+    "event": {
+      "last_job": {
+        "default": "mdi:history"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "cut_direction": {
+        "default": "mdi:angle-acute"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle"
+      },
+      "lifespan_blade": {
+        "default": "mdi:saw-blade"
+      },
+      "lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "lifespan_lens_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_side_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_unit_care": {
+        "default": "mdi:robot-vacuum"
+      },
+      "lifespan_round_mop": {
+        "default": "mdi:broom"
+      },
+      "network_ip": {
+        "default": "mdi:ip-network-outline"
+      },
+      "network_rssi": {
+        "default": "mdi:signal-variant"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
+      },
+      "stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_cleanings": {
+        "default": "mdi:counter"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "default": "mdi:tune"
+      },
+      "border_switch": {
+        "default": "mdi:land-fields"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:fan-auto"
+      },
+      "child_lock": {
+        "default": "mdi:teddy-bear"
+      },
+      "clean_preference": {
+        "default": "mdi:broom"
+      },
+      "cross_map_border_warning": {
+        "default": "mdi:border-none-variant"
+      },
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "move_up_warning": {
+        "default": "mdi:arrow-up-bold-box-outline"
+      },
+      "safe_protect": {
+        "default": "mdi:shield-half-full"
+      },
+      "true_detect": {
+        "default": "mdi:laser-pointer"
+      }
+    }
+  },
+  "services": {
+    "raw_get_positions": {
+      "service": "mdi:map-marker-radius-outline"
+    }
+  }
+}

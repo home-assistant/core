@@ -1,22 +1,22 @@
 """Platform for binary sensor integration."""
-from __future__ import annotations
 
-import logging
+from __future__ import annotations
 
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
-
-_LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -30,24 +30,26 @@ ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA = {
+RESET_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=30, max=365)
     )
 }
-SNOOZE_REMINDER_SCHEMA = {
+SNOOZE_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=10, max=120)
     )
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for spa in controller.spas:
         entities.append(SmartTubOnline(controller.coordinator, spa))
         entities.append(SmartTubError(controller.coordinator, spa))
@@ -58,7 +60,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         "snooze_reminder",
@@ -75,19 +77,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    # This seems to be very noisy and not generally useful, so disable by default.
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry.
-
-        This seems to be very noisy and not generally useful, so disable by default.
-        """
-        return False
 
     @property
     def is_on(self) -> bool:
@@ -98,7 +94,7 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
 class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, spa, reminder):
         """Initialize the entity."""
@@ -108,11 +104,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
             f"{reminder.name.title()} Reminder",
         )
         self.reminder_id = reminder.id
-
-    @property
-    def unique_id(self):
-        """Return a unique id for this sensor."""
-        return f"{self.spa.id}-reminder-{self.reminder_id}"
+        self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
 
     @property
     def reminder(self) -> SpaReminder:
@@ -149,7 +141,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     There may be 0 or more errors. If there are >0, we show the first one.
     """
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -175,10 +167,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-
-        error = self.error
-
-        if error is None:
+        if (error := self.error) is None:
             return {}
 
         return {

@@ -1,0 +1,113 @@
+[
+  {
+    "locationInfo": {
+      "locationId": "111111",
+      "name": "My Home",
+      "timeZone": {
+        "timeZoneId": "FLEStandardTime",
+        "displayName": "(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius",
+        "offsetMinutes": 120,
+        "currentOffsetMinutes": 180,
+        "supportsDaylightSaving": true
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "222222",
+          "mac": "00D02DEE0000",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "8557535",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "8557539",
+                "modelType": "RoundWireless",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Thermostat",
+                "zoneType": "Thermostat"
+              },
+              {
+                "zoneId": "8557541",
+                "modelType": "RoundWireless",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Thermostat 2",
+                "zoneType": "Thermostat"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "HeatingOff",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

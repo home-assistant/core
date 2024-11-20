@@ -1,19 +1,19 @@
 """Tests for the WLED integration."""
+
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wled import WLEDConnectionError
 
-from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_load_unload_config_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: AsyncMock
 ) -> None:
@@ -43,7 +43,6 @@ async def test_load_unload_config_entry(
 
     # Ensure everything is cleaned up nicely and are disconnected
     assert mock_wled.disconnect.call_count == 1
-    assert not hass.data.get(DOMAIN)
 
 
 @patch(
@@ -66,5 +65,5 @@ async def test_setting_unique_id(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test we set unique ID if not set yet."""
-    assert hass.data[DOMAIN]
+    assert init_integration.runtime_data
     assert init_integration.unique_id == "aabbccddeeff"

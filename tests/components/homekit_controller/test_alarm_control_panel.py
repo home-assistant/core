@@ -1,14 +1,18 @@
 """Basic checks for HomeKitalarm_control_panel."""
+
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-CURRENT_STATE = ("security-system", "security-system-state.current")
-TARGET_STATE = ("security-system", "security-system-state.target")
+from .common import setup_test_component
 
 
-def create_security_system_service(accessory):
+def create_security_system_service(accessory: Accessory) -> None:
     """Define a security-system characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.SECURITY_SYSTEM)
 
@@ -26,64 +30,127 @@ def create_security_system_service(accessory):
     targ_state.value = 50
 
 
-async def test_switch_change_alarm_state(hass, utcnow):
+async def test_switch_change_alarm_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can turn a HomeKit alarm on and off again."""
-    helper = await setup_test_component(hass, create_security_system_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_security_system_service
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_home",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 0,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_away",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 1,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_night",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 2
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 2,
+        },
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_disarm",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
-    assert helper.characteristics[TARGET_STATE].value == 3
+    helper.async_assert_service_values(
+        ServicesTypes.SECURITY_SYSTEM,
+        {
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: 3,
+        },
+    )
 
 
-async def test_switch_read_alarm_state(hass, utcnow):
+async def test_switch_read_alarm_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read the state of a HomeKit alarm accessory."""
-    helper = await setup_test_component(hass, create_security_system_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_security_system_service
+    )
 
-    helper.characteristics[CURRENT_STATE].value = 0
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 0},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_home"
     assert state.attributes["battery_level"] == 50
 
-    helper.characteristics[CURRENT_STATE].value = 1
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 1},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_away"
 
-    helper.characteristics[CURRENT_STATE].value = 2
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 2},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "armed_night"
 
-    helper.characteristics[CURRENT_STATE].value = 3
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 3},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "disarmed"
 
-    helper.characteristics[CURRENT_STATE].value = 4
+    await helper.async_update(
+        ServicesTypes.SECURITY_SYSTEM,
+        {CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT: 4},
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "triggered"
+
+
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test a we can migrate a alarm_control_panel unique id."""
+    aid = get_next_aid()
+    alarm_control_panel_entry = entity_registry.async_get_or_create(
+        "alarm_control_panel",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, aid, create_security_system_service)
+
+    assert (
+        entity_registry.async_get(alarm_control_panel_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

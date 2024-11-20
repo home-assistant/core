@@ -1,27 +1,34 @@
 """Support for Free Mobile SMS platform."""
+
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 
 from freesms import FreeClient
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_INTERNAL_SERVER_ERROR,
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> FreeSMSNotificationService:
     """Get the Free Mobile SMS notification service."""
     return FreeSMSNotificationService(config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
 
@@ -37,11 +44,11 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 
-        if resp.status_code == HTTP_BAD_REQUEST:
+        if resp.status_code == HTTPStatus.BAD_REQUEST:
             _LOGGER.error("At least one parameter is missing")
-        elif resp.status_code == 402:
+        elif resp.status_code == HTTPStatus.PAYMENT_REQUIRED:
             _LOGGER.error("Too much SMS send in a few time")
-        elif resp.status_code == HTTP_FORBIDDEN:
+        elif resp.status_code == HTTPStatus.FORBIDDEN:
             _LOGGER.error("Wrong Username/Password")
-        elif resp.status_code == HTTP_INTERNAL_SERVER_ERROR:
+        elif resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
             _LOGGER.error("Server error, try later")

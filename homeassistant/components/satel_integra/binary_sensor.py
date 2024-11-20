@@ -1,10 +1,15 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
+
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_OUTPUTS,
@@ -17,7 +22,12 @@ from . import (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Satel Integra binary sensor devices."""
     if not discovery_info:
         return
@@ -31,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED
+            controller, zone_num, zone_name, zone_type, CONF_ZONES, SIGNAL_ZONES_UPDATED
         )
         devices.append(device)
 
@@ -41,7 +51,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED
+            controller,
+            zone_num,
+            zone_name,
+            zone_type,
+            CONF_OUTPUTS,
+            SIGNAL_OUTPUTS_UPDATED,
         )
         devices.append(device)
 
@@ -51,29 +66,37 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
-        self, controller, device_number, device_name, zone_type, react_to_signal
+        self,
+        controller,
+        device_number,
+        device_name,
+        zone_type,
+        sensor_type,
+        react_to_signal,
     ):
         """Initialize the binary_sensor."""
         self._device_number = device_number
+        self._attr_unique_id = f"satel_{sensor_type}_{device_number}"
         self._name = device_name
         self._zone_type = zone_type
         self._state = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
             if self._device_number in self._satel.violated_outputs:
                 self._state = 1
             else:
                 self._state = 0
+        elif self._device_number in self._satel.violated_zones:
+            self._state = 1
         else:
-            if self._device_number in self._satel.violated_zones:
-                self._state = 1
-            else:
-                self._state = 0
+            self._state = 0
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self._react_to_signal, self._devices_updated
@@ -86,15 +109,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon for device by its type."""
-        if self._zone_type == DEVICE_CLASS_SMOKE:
+        if self._zone_type is BinarySensorDeviceClass.SMOKE:
             return "mdi:fire"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        return None
 
     @property
     def is_on(self):

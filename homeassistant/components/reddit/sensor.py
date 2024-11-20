@@ -1,11 +1,17 @@
 """Support for Reddit."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import praw
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ID,
     CONF_CLIENT_ID,
@@ -14,7 +20,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +47,7 @@ LIST_TYPES = ["top", "controversial", "hot", "new"]
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
@@ -53,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Reddit sensor platform."""
     subreddits = config[CONF_SUBREDDITS]
     user_agent = f"{config[CONF_USERNAME]}_home_assistant_sensor"
@@ -84,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
-    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):
+    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str) -> None:
         """Initialize the Reddit sensor."""
         self._reddit = reddit
         self._subreddit = subreddit
@@ -117,7 +131,7 @@ class RedditSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:reddit"
 
-    def update(self):
+    def update(self) -> None:
         """Update data from Reddit API."""
         self._subreddit_data = []
 

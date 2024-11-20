@@ -1,4 +1,5 @@
 """Gather info for scaffolding."""
+
 import json
 
 from homeassistant.util import slugify
@@ -119,6 +120,11 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                     "default": "no",
                     **YES_NO,
                 },
+                "helper": {
+                    "prompt": "Is this a helper integration? (yes/no)",
+                    "default": "no",
+                    **YES_NO,
+                },
                 "oauth2": {
                     "prompt": "Can the user authenticate the device using OAuth2? (yes/no)",
                     "default": "no",
@@ -157,8 +163,8 @@ def _gather_info(fields) -> dict:
                 if "default" in info:
                     msg += f" [{info['default']}]"
                 value = input(f"{msg}\n> ")
-            except (KeyboardInterrupt, EOFError):
-                raise ExitApp("Interrupted!", 1)
+            except (KeyboardInterrupt, EOFError) as err:
+                raise ExitApp("Interrupted!", 1) from err
 
             value = value.strip()
 

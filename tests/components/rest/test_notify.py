@@ -1,18 +1,21 @@
 """The tests for the rest.notify platform."""
-from os import path
+
 from unittest.mock import patch
 
 import respx
 
 from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
+from homeassistant.components import notify
 from homeassistant.components.rest import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 @respx.mock
-async def test_reload_notify(hass):
+async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
     respx.get("http://localhost") % 200
 
@@ -33,11 +36,8 @@ async def test_reload_notify(hass):
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "rest/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "rest")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -49,7 +49,3 @@ async def test_reload_notify(hass):
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "rest_reloaded")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

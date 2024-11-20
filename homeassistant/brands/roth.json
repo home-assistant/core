@@ -1,0 +1,5 @@
+{
+  "domain": "roth",
+  "name": "Roth",
+  "integrations": ["touchline", "touchline_sl"]
+}

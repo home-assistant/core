@@ -1,4 +1,5 @@
 """Vera tests."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,11 +18,13 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry
 
 
 async def test_init(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test function."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -41,14 +44,15 @@ async def test_init(
         ),
     )
 
-    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
 
 
 async def test_init_from_file(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test function."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -68,14 +72,15 @@ async def test_init_from_file(
         ),
     )
 
-    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
 
 
 async def test_multiple_controllers_with_legacy_one(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test multiple controllers with one legacy controller."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -93,7 +98,6 @@ async def test_multiple_controllers_with_legacy_one(
     entity2_id = "binary_sensor.second_dev_2"
 
     # Add existing entity registry entry from previous setup.
-    entity_registry = mock_registry(hass)
     entity_registry.async_get_or_create(
         domain="switch", platform=DOMAIN, unique_id="12"
     )
@@ -117,8 +121,6 @@ async def test_multiple_controllers_with_legacy_one(
             devices=(vera_device2,),
         ),
     )
-
-    entity_registry = er.async_get(hass)
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
@@ -177,10 +179,10 @@ async def test_async_setup_entry_error(
 
 
 @pytest.mark.parametrize(
-    ["options"],
+    "options",
     [
-        [{CONF_LIGHTS: [4, 10, 12, "AAA"], CONF_EXCLUDE: [1, "BBB"]}],
-        [{CONF_LIGHTS: ["4", "10", "12", "AAA"], CONF_EXCLUDE: ["1", "BBB"]}],
+        {CONF_LIGHTS: [4, 10, 12, "AAA"], CONF_EXCLUDE: [1, "BBB"]},
+        {CONF_LIGHTS: ["4", "10", "12", "AAA"], CONF_EXCLUDE: ["1", "BBB"]},
     ],
 )
 async def test_exclude_and_light_ids(
@@ -227,7 +229,7 @@ async def test_exclude_and_light_ids(
         controller_config=new_simple_controller_config(
             config_source=ConfigSource.CONFIG_ENTRY,
             devices=(vera_device1, vera_device2, vera_device3, vera_device4),
-            config={**{CONF_CONTROLLER: "http://127.0.0.1:123"}, **options},
+            config={CONF_CONTROLLER: "http://127.0.0.1:123", **options},
         ),
     )
 

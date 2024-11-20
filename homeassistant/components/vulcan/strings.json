@@ -1,0 +1,62 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "That student has already been added.",
+      "all_student_already_configured": "All students have already been added.",
+      "reauth_successful": "Reauth successful",
+      "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student."
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "expired_token": "Expired token - please generate a new token",
+      "invalid_pin": "Invalid pin",
+      "invalid_symbol": "Invalid symbol",
+      "expired_credentials": "Expired credentials - please create new on Vulcan mobile app registration page",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "auth": {
+        "description": "Login to your Vulcan Account using mobile app registration page.",
+        "data": {
+          "token": "Token",
+          "region": "Symbol",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "[%key:component::vulcan::config::step::auth::description%]",
+        "data": {
+          "token": "Token",
+          "region": "[%key:component::vulcan::config::step::auth::data::region%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "select_student": {
+        "description": "Select student, you can add more students by adding integration again.",
+        "data": {
+          "student_name": "Select student"
+        }
+      },
+      "select_saved_credentials": {
+        "description": "Select saved credentials.",
+        "data": {
+          "credentials": "Login"
+        }
+      },
+      "add_next_config_entry": {
+        "description": "Add another student.",
+        "data": {
+          "use_saved_credentials": "Use saved credentials"
+        }
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "[%key:component::calendar::title%]"
+      }
+    }
+  }
+}

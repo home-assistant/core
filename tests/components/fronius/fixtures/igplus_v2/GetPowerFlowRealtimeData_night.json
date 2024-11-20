@@ -1,0 +1,32 @@
+{
+  "Body": {
+    "Data": {
+      "Inverters": {},
+      "Site": {
+        "E_Day": null,
+        "E_Total": null,
+        "E_Year": null,
+        "Meter_Location": "unknown",
+        "Mode": "produce-only",
+        "P_Akku": null,
+        "P_Grid": null,
+        "P_Load": null,
+        "P_PV": null,
+        "rel_Autonomy": null,
+        "rel_SelfConsumption": null
+      },
+      "Version": "12"
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "humanreadable": "false"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-13T22:04:44+02:00"
+  }
+}

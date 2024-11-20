@@ -1,18 +1,18 @@
 """Support for Soma Smartshades."""
 
+from __future__ import annotations
+
 from api.soma_api import SomaApi
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
-from .const import API, DOMAIN, HOST, PORT
-
-DEVICES = "devices"
+from .const import API, DEVICES, DOMAIN, HOST, PORT
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -26,10 +26,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["cover", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Soma component."""
     if DOMAIN not in config:
         return True
@@ -48,54 +48,15 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
-    devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
-    hass.data[DOMAIN][DEVICES] = devices["shades"]
+    api = await hass.async_add_executor_job(SomaApi, entry.data[HOST], entry.data[PORT])
+    devices = await hass.async_add_executor_job(api.list_devices)
+    hass.data[DOMAIN] = {API: api, DEVICES: devices["shades"]}
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class SomaEntity(Entity):
-    """Representation of a generic Soma device."""
-
-    def __init__(self, device, api):
-        """Initialize the Soma device."""
-        self.device = device
-        self.api = api
-        self.current_position = 50
-        self.battery_state = 0
-        self.is_available = True
-
-    @property
-    def available(self):
-        """Return true if the last API commands returned successfully."""
-        return self.is_available
-
-    @property
-    def unique_id(self):
-        """Return the unique id base on the id returned by pysoma API."""
-        return self.device["mac"]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device["name"]
-
-    @property
-    def device_info(self):
-        """Return device specific attributes.
-
-        Implemented by platform classes.
-        """
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Wazombi Labs",
-        }

@@ -1,4 +1,5 @@
 """Support for Canary devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,9 +10,9 @@ from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -49,7 +50,11 @@ CONFIG_SCHEMA: Final = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: Final[list[str]] = ["alarm_control_panel", "camera", "sensor"]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.CAMERA,
+    Platform.SENSOR,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -112,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -135,10 +140,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 def _get_canary_api_instance(entry: ConfigEntry) -> Api:
     """Initialize a new instance of CanaryApi."""
-    canary = Api(
+    return Api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
-
-    return canary

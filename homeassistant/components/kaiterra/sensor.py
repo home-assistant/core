@@ -1,24 +1,50 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DISPATCHER_KAITERRA, DOMAIN
 
+
+@dataclass(frozen=True, kw_only=True)
+class KaiterraSensorEntityDescription(SensorEntityDescription):
+    """Class describing Renault sensor entities."""
+
+    suffix: str
+
+
 SENSORS = [
-    {"name": "Temperature", "prop": "rtemp", "device_class": DEVICE_CLASS_TEMPERATURE},
-    {"name": "Humidity", "prop": "rhumid", "device_class": DEVICE_CLASS_HUMIDITY},
+    KaiterraSensorEntityDescription(
+        suffix="Temperature",
+        key="rtemp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    KaiterraSensorEntityDescription(
+        suffix="Humidity",
+        key="rhumid",
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the kaiterra temperature and humidity sensor."""
     if discovery_info is None:
         return
@@ -28,56 +54,41 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     device_id = discovery_info[CONF_DEVICE_ID]
 
     async_add_entities(
-        [KaiterraSensor(api, name, device_id, sensor) for sensor in SENSORS]
+        [KaiterraSensor(api, name, device_id, description) for description in SENSORS]
     )
 
 
 class KaiterraSensor(SensorEntity):
     """Implementation of a Kaittera sensor."""
 
-    def __init__(self, api, name, device_id, sensor):
+    _attr_should_poll = False
+
+    def __init__(
+        self, api, name, device_id, description: KaiterraSensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self._api = api
-        self._name = f'{name} {sensor["name"]}'
         self._device_id = device_id
-        self._kind = sensor["name"].lower()
-        self._property = sensor["prop"]
-        self._device_class = sensor["device_class"]
+        self.entity_description = description
+        self._attr_name = f"{name} {description.suffix}"
+        self._attr_unique_id = f"{device_id}_{description.suffix.lower()}"
 
     @property
     def _sensor(self):
         """Return the sensor data."""
-        return self._api.data.get(self._device_id, {}).get(self._property, {})
+        return self._api.data.get(self._device_id, {}).get(
+            self.entity_description.key, {}
+        )
 
     @property
-    def should_poll(self):
-        """Return that the sensor should not be polled."""
-        return False
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
 
     @property
     def native_value(self):
         """Return the state."""
         return self._sensor.get("value")
-
-    @property
-    def unique_id(self):
-        """Return the sensor's unique id."""
-        return f"{self._device_id}_{self._kind}"
 
     @property
     def native_unit_of_measurement(self):
@@ -88,12 +99,12 @@ class KaiterraSensor(SensorEntity):
         value = self._sensor["units"].value
 
         if value == "F":
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
         if value == "C":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return value
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.async_on_remove(
             async_dispatcher_connect(

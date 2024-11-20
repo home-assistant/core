@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "power_output": {
+        "default": "mdi:heat-wave"
+      },
+      "power_input": {
+        "default": "mdi:lightning-bolt"
+      },
+      "cop": {
+        "default": "mdi:speedometer"
+      },
+      "ch_inlet_temperature": {
+        "default": "mdi:radiator"
+      },
+      "outside_temperature": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "thermostat_room_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "default": "mdi:home-thermometer"
+      },
+      "heat_pump_state": {
+        "default": "mdi:state-machine"
+      },
+      "electricity_used": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}

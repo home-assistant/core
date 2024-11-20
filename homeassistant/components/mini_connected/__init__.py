@@ -1,0 +1,1 @@
+"""Virtual integration: MINI Connected."""

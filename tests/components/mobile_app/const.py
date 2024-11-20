@@ -1,4 +1,5 @@
 """Constants for mobile_app tests."""
+
 CALL_SERVICE = {
     "type": "call_service",
     "data": {"domain": "test", "service": "mobile_app", "service_data": {"foo": "bar"}},

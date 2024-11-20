@@ -1,361 +1,183 @@
 """Provides functionality to notify people."""
+
 from __future__ import annotations
 
-import asyncio
+from datetime import timedelta
+from enum import IntFlag
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, final, override
 
+from propcache import cached_property
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
-from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, CONF_PLATFORM
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.loader import async_get_integration, bind_hass
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
-from homeassistant.util import slugify
-from homeassistant.util.yaml import load_yaml
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from .const import (  # noqa: F401
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    ATTR_RECIPIENTS,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    DOMAIN,
+    NOTIFY_SERVICE_SCHEMA,
+    SERVICE_NOTIFY,
+    SERVICE_PERSISTENT_NOTIFICATION,
+    SERVICE_SEND_MESSAGE,
+)
+from .legacy import (  # noqa: F401
+    BaseNotificationService,
+    async_reload,
+    async_reset_platform,
+    async_setup_legacy,
+)
+from .repairs import migrate_notify_issue  # noqa: F401
 
-_LOGGER = logging.getLogger(__name__)
+# mypy: disallow-any-generics
 
 # Platform specific data
-ATTR_DATA = "data"
-
-# Text to notify user of
-ATTR_MESSAGE = "message"
-
-# Target of the notification (user, device, etc)
-ATTR_TARGET = "target"
-
-# Title of notification
-ATTR_TITLE = "title"
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
-DOMAIN = "notify"
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_NOTIFY = "notify"
-SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-NOTIFY_SERVICES = "notify_services"
-
-CONF_FIELDS = "fields"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
     extra=vol.ALLOW_EXTRA,
 )
 
-NOTIFY_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_MESSAGE): cv.template,
-        vol.Optional(ATTR_TITLE): cv.template,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DATA): dict,
-    }
-)
 
-PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_MESSAGE): cv.template,
-        vol.Optional(ATTR_TITLE): cv.template,
-    }
-)
+class NotifyEntityFeature(IntFlag):
+    """Supported features of a notify entity."""
+
+    TITLE = 1
 
 
-@bind_hass
-async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
-    """Register notify services for an integration."""
-    if not _async_integration_has_notify_services(hass, integration_name):
-        return
-
-    tasks = [
-        notify_service.async_register_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
-    ]
-
-    await asyncio.gather(*tasks)
-
-
-@bind_hass
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Unregister notify services for an integration."""
-    if not _async_integration_has_notify_services(hass, integration_name):
-        return
-
-    tasks = [
-        notify_service.async_unregister_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
-    ]
-
-    await asyncio.gather(*tasks)
-
-    del hass.data[NOTIFY_SERVICES][integration_name]
-
-
-def _async_integration_has_notify_services(
-    hass: HomeAssistant, integration_name: str
-) -> bool:
-    """Determine if an integration has notify services registered."""
-    if (
-        NOTIFY_SERVICES not in hass.data
-        or integration_name not in hass.data[NOTIFY_SERVICES]
-    ):
-        return False
-
-    return True
-
-
-class BaseNotificationService:
-    """An abstract class for notification services."""
-
-    # While not purely typed, it makes typehinting more useful for us
-    # and removes the need for constant None checks or asserts.
-    hass: HomeAssistant = None  # type: ignore
-
-    # Name => target
-    registered_targets: dict[str, str]
-
-    def send_message(self, message, **kwargs):
-        """Send a message.
-
-        kwargs can contain ATTR_TITLE to specify a title.
-        """
-        raise NotImplementedError()
-
-    async def async_send_message(self, message: Any, **kwargs: Any) -> None:
-        """Send a message.
-
-        kwargs can contain ATTR_TITLE to specify a title.
-        """
-        await self.hass.async_add_executor_job(
-            partial(self.send_message, message, **kwargs)
-        )
-
-    async def _async_notify_message_service(self, service: ServiceCall) -> None:
-        """Handle sending notification message service calls."""
-        kwargs = {}
-        message = service.data[ATTR_MESSAGE]
-        title = service.data.get(ATTR_TITLE)
-
-        if title:
-            title.hass = self.hass
-            kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
-
-        if self.registered_targets.get(service.service) is not None:
-            kwargs[ATTR_TARGET] = [self.registered_targets[service.service]]
-        elif service.data.get(ATTR_TARGET) is not None:
-            kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
-
-        message.hass = self.hass
-        kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
-        kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
-
-        await self.async_send_message(**kwargs)
-
-    async def async_setup(
-        self,
-        hass: HomeAssistant,
-        service_name: str,
-        target_service_name_prefix: str,
-    ) -> None:
-        """Store the data for the notify service."""
-        # pylint: disable=attribute-defined-outside-init
-        self.hass = hass
-        self._service_name = service_name
-        self._target_service_name_prefix = target_service_name_prefix
-        self.registered_targets = {}
-
-        # Load service descriptions from notify/services.yaml
-        integration = await async_get_integration(hass, DOMAIN)
-        services_yaml = integration.file_path / "services.yaml"
-        self.services_dict = cast(
-            dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
-        )
-
-    async def async_register_services(self) -> None:
-        """Create or update the notify services."""
-        if hasattr(self, "targets"):
-            stale_targets = set(self.registered_targets)
-
-            # pylint: disable=no-member
-            for name, target in self.targets.items():  # type: ignore
-                target_name = slugify(f"{self._target_service_name_prefix}_{name}")
-                if target_name in stale_targets:
-                    stale_targets.remove(target_name)
-                if (
-                    target_name in self.registered_targets
-                    and target == self.registered_targets[target_name]
-                ):
-                    continue
-                self.registered_targets[target_name] = target
-                self.hass.services.async_register(
-                    DOMAIN,
-                    target_name,
-                    self._async_notify_message_service,
-                    schema=NOTIFY_SERVICE_SCHEMA,
-                )
-                # Register the service description
-                service_desc = {
-                    CONF_NAME: f"Send a notification via {target_name}",
-                    CONF_DESCRIPTION: f"Sends a notification message using the {target_name} integration.",
-                    CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
-                }
-                async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
-
-            for stale_target_name in stale_targets:
-                del self.registered_targets[stale_target_name]
-                self.hass.services.async_remove(
-                    DOMAIN,
-                    stale_target_name,
-                )
-
-        if self.hass.services.has_service(DOMAIN, self._service_name):
-            return
-
-        self.hass.services.async_register(
-            DOMAIN,
-            self._service_name,
-            self._async_notify_message_service,
-            schema=NOTIFY_SERVICE_SCHEMA,
-        )
-
-        # Register the service description
-        service_desc = {
-            CONF_NAME: f"Send a notification with {self._service_name}",
-            CONF_DESCRIPTION: f"Sends a notification message using the {self._service_name} service.",
-            CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
-        }
-        async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
-
-    async def async_unregister_services(self) -> None:
-        """Unregister the notify services."""
-        if self.registered_targets:
-            remove_targets = set(self.registered_targets)
-            for remove_target_name in remove_targets:
-                del self.registered_targets[remove_target_name]
-                self.hass.services.async_remove(
-                    DOMAIN,
-                    remove_target_name,
-                )
-
-        if not self.hass.services.has_service(DOMAIN, self._service_name):
-            return
-
-        self.hass.services.async_remove(
-            DOMAIN,
-            self._service_name,
-        )
-
-
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
-    hass.data.setdefault(NOTIFY_SERVICES, {})
+
+    for setup in async_setup_legacy(hass, config):
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use notify as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
+
+    component = hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](
+        _LOGGER, DOMAIN, hass
+    )
+    component.async_register_entity_service(
+        SERVICE_SEND_MESSAGE,
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+        },
+        "_async_send_message",
+    )
 
     async def persistent_notification(service: ServiceCall) -> None:
-        """Send notification via the built-in persistsent_notify integration."""
-        payload = {}
-        message = service.data[ATTR_MESSAGE]
-        message.hass = hass
-        payload[ATTR_MESSAGE] = message.async_render(parse_result=False)
+        """Send notification via the built-in persistent_notify integration."""
+        message: str = service.data[ATTR_MESSAGE]
+        title: str | None = service.data.get(ATTR_TITLE)
 
-        title = service.data.get(ATTR_TITLE)
-        if title:
-            title.hass = hass
-            payload[ATTR_TITLE] = title.async_render(parse_result=False)
+        notification_id = None
+        if data := service.data.get(ATTR_DATA):
+            notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
 
-        await hass.services.async_call(
-            pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True
-        )
-
-    async def async_setup_platform(
-        integration_name, p_config=None, discovery_info=None
-    ):
-        """Set up a notify platform."""
-        if p_config is None:
-            p_config = {}
-
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, integration_name
-        )
-
-        if platform is None:
-            _LOGGER.error("Unknown notification service specified")
-            return
-
-        full_name = f"{DOMAIN}.{integration_name}"
-        _LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(hass, [full_name]):
-            notify_service = None
-            try:
-                if hasattr(platform, "async_get_service"):
-                    notify_service = await platform.async_get_service(
-                        hass, p_config, discovery_info
-                    )
-                elif hasattr(platform, "get_service"):
-                    notify_service = await hass.async_add_executor_job(
-                        platform.get_service, hass, p_config, discovery_info
-                    )
-                else:
-                    raise HomeAssistantError("Invalid notify platform.")
-
-                if notify_service is None:
-                    # Platforms can decide not to create a service based
-                    # on discovery data.
-                    if discovery_info is None:
-                        _LOGGER.error(
-                            "Failed to initialize notification service %s",
-                            integration_name,
-                        )
-                    return
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error setting up platform %s", integration_name)
-                return
-
-            if discovery_info is None:
-                discovery_info = {}
-
-            conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
-            target_service_name_prefix = conf_name or integration_name
-            service_name = slugify(conf_name or SERVICE_NOTIFY)
-
-            await notify_service.async_setup(
-                hass, service_name, target_service_name_prefix
-            )
-            await notify_service.async_register_services()
-
-            hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
-                notify_service
-            )
-            hass.config.components.add(f"{DOMAIN}.{integration_name}")
-
-        return True
+        pn.async_create(hass, message, title, notification_id)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PERSISTENT_NOTIFICATION,
         persistent_notification,
-        schema=PERSISTENT_NOTIFICATION_SERVICE_SCHEMA,
+        schema=NOTIFY_SERVICE_SCHEMA,
     )
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(integration_name, p_config))
-        for integration_name, p_config in config_per_platform(config, DOMAIN)
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
-    async def async_platform_discovered(platform, info):
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
     return True
+
+
+class NotifyEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes button entities."""
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+class NotifyEntity(RestoreEntity):
+    """Representation of a notify entity."""
+
+    entity_description: NotifyEntityDescription
+    _attr_supported_features: NotifyEntityFeature = NotifyEntityFeature(0)
+    _attr_should_poll = False
+    _attr_device_class: None
+    _attr_state: None = None
+    __last_notified_isoformat: str | None = None
+
+    @cached_property
+    @final
+    @override
+    def state(self) -> str | None:
+        """Return the entity state."""
+        return self.__last_notified_isoformat
+
+    def __set_state(self, state: str | None) -> None:
+        """Invalidate the cache of the cached property."""
+        self.__dict__.pop("state", None)
+        self.__last_notified_isoformat = state
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the notify entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
+            self.__set_state(state.state)
+
+    @final
+    async def _async_send_message(self, **kwargs: Any) -> None:
+        """Send a notification message (from e.g., service call).
+
+        Should not be overridden, handle setting last notification timestamp.
+        """
+        self.__set_state(dt_util.utcnow().isoformat())
+        self.async_write_ha_state()
+        await self.async_send_message(**kwargs)
+
+    def send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message."""
+        raise NotImplementedError
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message."""
+        kwargs: dict[str, Any] = {}
+        if (
+            title is not None
+            and self.supported_features
+            and self.supported_features & NotifyEntityFeature.TITLE
+        ):
+            kwargs[ATTR_TITLE] = title
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )

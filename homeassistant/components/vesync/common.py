@@ -1,9 +1,8 @@
 """Common utilities for VeSync Component."""
+
 import logging
 
-from homeassistant.helpers.entity import ToggleEntity
-
-from .const import VS_FANS, VS_LIGHTS, VS_SWITCHES
+from .const import VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,20 +13,25 @@ async def async_process_devices(hass, manager):
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
+    devices[VS_SENSORS] = []
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
         devices[VS_FANS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+        # Expose fan sensors separately
+        devices[VS_SENSORS].extend(manager.fans)
+        _LOGGER.debug("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:
         devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
+        _LOGGER.debug("%d VeSync lights found", len(manager.bulbs))
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
+        # Expose outlets' voltage, power & energy usage as separate sensors
+        devices[VS_SENSORS].extend(manager.outlets)
+        _LOGGER.debug("%d VeSync outlets found", len(manager.outlets))
 
     if manager.switches:
         for switch in manager.switches:
@@ -35,44 +39,6 @@ async def async_process_devices(hass, manager):
                 devices[VS_SWITCHES].append(switch)
             else:
                 devices[VS_LIGHTS].append(switch)
-        _LOGGER.info("%d VeSync switches found", len(manager.switches))
+        _LOGGER.debug("%d VeSync switches found", len(manager.switches))
 
     return devices
-
-
-class VeSyncDevice(ToggleEntity):
-    """Base class for VeSync Device Representations."""
-
-    def __init__(self, device):
-        """Initialize the VeSync device."""
-        self.device = device
-
-    @property
-    def unique_id(self):
-        """Return the ID of this device."""
-        if isinstance(self.device.sub_device_no, int):
-            return f"{self.device.cid}{str(self.device.sub_device_no)}"
-        return self.device.cid
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device.device_name
-
-    @property
-    def is_on(self):
-        """Return True if device is on."""
-        return self.device.device_status == "on"
-
-    @property
-    def available(self) -> bool:
-        """Return True if device is available."""
-        return self.device.connection_status == "online"
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        self.device.turn_off()
-
-    def update(self):
-        """Update vesync device."""
-        self.device.update()

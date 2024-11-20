@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "invalid_date": {
+      "message": "Invalid date provided. Got {date}"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_hour_price": {
+        "name": "Current hour"
+      },
+      "next_hour_price": {
+        "name": "Next hour"
+      },
+      "average_price": {
+        "name": "Average - today"
+      },
+      "max_price": {
+        "name": "Highest price - today"
+      },
+      "min_price": {
+        "name": "Lowest price - today"
+      },
+      "highest_price_time": {
+        "name": "Time of highest price - today"
+      },
+      "lowest_price_time": {
+        "name": "Time of lowest price - today"
+      },
+      "percentage_of_max": {
+        "name": "Current percentage of highest price - today"
+      },
+      "hours_priced_equal_or_lower": {
+        "name": "Hours priced equal or lower than current - today"
+      }
+    }
+  },
+  "services": {
+    "get_gas_prices": {
+      "name": "Get gas prices",
+      "description": "Request gas prices from EnergyZero.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this action."
+        },
+        "incl_vat": {
+          "name": "Including VAT",
+          "description": "Include VAT in the prices."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted."
+        }
+      }
+    },
+    "get_energy_prices": {
+      "name": "Get energy prices",
+      "description": "Request energy prices from EnergyZero.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::config_entry::name%]",
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::config_entry::description%]"
+        },
+        "incl_vat": {
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::name%]",
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::description%]"
+        },
+        "start": {
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::start::name%]",
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::start::description%]"
+        },
+        "end": {
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::end::name%]",
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::end::description%]"
+        }
+      }
+    }
+  }
+}

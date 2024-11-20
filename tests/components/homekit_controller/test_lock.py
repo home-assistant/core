@@ -1,14 +1,18 @@
 """Basic checks for HomeKitLock."""
+
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-LOCK_CURRENT_STATE = ("lock-mechanism", "lock-mechanism.current-state")
-LOCK_TARGET_STATE = ("lock-mechanism", "lock-mechanism.target-state")
+from .common import setup_test_component
 
 
-def create_lock_service(accessory):
+def create_lock_service(accessory: Accessory) -> Service:
     """Define a lock characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.LOCK_MECHANISM)
 
@@ -28,52 +32,114 @@ def create_lock_service(accessory):
     return service
 
 
-async def test_switch_change_lock_state(hass, utcnow):
+async def test_switch_change_lock_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can turn a HomeKit lock on and off again."""
-    helper = await setup_test_component(hass, create_lock_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_lock_service)
 
     await hass.services.async_call(
         "lock", "lock", {"entity_id": "lock.testdevice"}, blocking=True
     )
-    assert helper.characteristics[LOCK_TARGET_STATE].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 1,
+        },
+    )
 
     await hass.services.async_call(
         "lock", "unlock", {"entity_id": "lock.testdevice"}, blocking=True
     )
-    assert helper.characteristics[LOCK_TARGET_STATE].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 0,
+        },
+    )
 
 
-async def test_switch_read_lock_state(hass, utcnow):
+async def test_switch_read_lock_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read the state of a HomeKit lock accessory."""
-    helper = await setup_test_component(hass, create_lock_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_lock_service)
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 0
-    helper.characteristics[LOCK_TARGET_STATE].value = 0
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 0,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 0,
+        },
+    )
     assert state.state == "unlocked"
     assert state.attributes["battery_level"] == 50
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 1
-    helper.characteristics[LOCK_TARGET_STATE].value = 1
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 1,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 1,
+        },
+    )
     assert state.state == "locked"
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 2
-    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 2,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 1,
+        },
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "jammed"
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 3
-    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 3,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 1,
+        },
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "unknown"
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 0
-    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 0,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 1,
+        },
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "locking"
 
-    helper.characteristics[LOCK_CURRENT_STATE].value = 1
-    helper.characteristics[LOCK_TARGET_STATE].value = 0
+    await helper.async_update(
+        ServicesTypes.LOCK_MECHANISM,
+        {
+            CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE: 1,
+            CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: 0,
+        },
+    )
     state = await helper.poll_and_get_state()
     assert state.state == "unlocking"
+
+
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test a we can migrate a lock unique id."""
+    aid = get_next_aid()
+    lock_entry = entity_registry.async_get_or_create(
+        "lock",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, aid, create_lock_service)
+
+    assert (
+        entity_registry.async_get(lock_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

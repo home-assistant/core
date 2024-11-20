@@ -1,4 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+
 import logging
 
 from pythonegardia import egardiadevice, egardiaserver
@@ -12,9 +13,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Egardia platform."""
 
     conf = config[DOMAIN]
@@ -109,7 +113,7 @@ def setup(hass, config):
                 server = egardiaserver.EgardiaServer("", rs_port)
                 bound = server.bind()
                 if not bound:
-                    raise OSError(
+                    raise OSError(  # noqa: TRY301
                         "Binding error occurred while starting EgardiaServer."
                     )
                 hass.data[EGARDIA_SERVER] = server
@@ -127,13 +131,13 @@ def setup(hass, config):
             return False
 
     discovery.load_platform(
-        hass, "alarm_control_panel", DOMAIN, discovered=conf, hass_config=config
+        hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, discovered=conf, hass_config=config
     )
 
     # Get the sensors from the device and add those
     sensors = device.getsensors()
     discovery.load_platform(
-        hass, "binary_sensor", DOMAIN, {ATTR_DISCOVER_DEVICES: sensors}, config
+        hass, Platform.BINARY_SENSOR, DOMAIN, {ATTR_DISCOVER_DEVICES: sensors}, config
     )
 
     return True

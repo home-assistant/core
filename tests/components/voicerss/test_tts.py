@@ -1,227 +1,279 @@
 """The tests for the VoiceRSS speech platform."""
-import asyncio
-import os
-import shutil
 
-from homeassistant.components.media_player.const import (
+from http import HTTPStatus
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+
+from homeassistant.components import tts
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.setup import setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant, mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from tests.common import assert_setup_component, async_mock_service
+from tests.components.tts.common import retrieve_media
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
+
+URL = "https://api.voicerss.org/"
+FORM_DATA = {
+    "key": "1234567xx",
+    "hl": "en-us",
+    "c": "MP3",
+    "f": "8khz_8bit_mono",
+    "src": "I person is on front of your door.",
+}
 
 
-class TestTTSVoiceRSSPlatform:
-    """Test the voicerss speech component."""
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
+    """Mock writing tags."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-        asyncio.run_coroutine_threadsafe(
-            async_process_ha_core_config(
-                self.hass, {"internal_url": "http://example.local:8123"}
-            ),
-            self.hass.loop,
-        )
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
+    """Mock the TTS cache dir with empty dir."""
 
-        self.url = "https://api.voicerss.org/"
-        self.form_data = {
-            "key": "1234567xx",
-            "hl": "en-us",
-            "c": "MP3",
-            "f": "8khz_8bit_mono",
-            "src": "I person is on front of your door.",
+
+async def test_setup_component(hass: HomeAssistant) -> None:
+    """Test setup component."""
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
+
+
+async def test_setup_component_without_api_key(hass: HomeAssistant) -> None:
+    """Test setup component without api key."""
+    config = {tts.DOMAIN: {"platform": "voicerss"}}
+
+    with assert_setup_component(0, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
+
+
+async def test_service_say(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    aioclient_mock.post(URL, data=FORM_DATA, status=HTTPStatus.OK, content=b"test")
+
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == FORM_DATA
+
+
+async def test_service_say_german_config(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say with german code in the config."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    form_data = {**FORM_DATA, "hl": "de-de"}
+    aioclient_mock.post(URL, data=form_data, status=HTTPStatus.OK, content=b"test")
+
+    config = {
+        tts.DOMAIN: {
+            "platform": "voicerss",
+            "api_key": "1234567xx",
+            "language": "de-de",
         }
+    }
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        default_tts = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
-        if os.path.isdir(default_tts):
-            shutil.rmtree(default_tts)
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
-        self.hass.stop()
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        },
+    )
+    await hass.async_block_till_done()
 
-    def test_setup_component(self):
-        """Test setup component."""
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == form_data
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
 
-    def test_setup_component_without_api_key(self):
-        """Test setup component without api key."""
-        config = {tts.DOMAIN: {"platform": "voicerss"}}
+async def test_service_say_german_service(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say with german code in the service."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    form_data = {**FORM_DATA, "hl": "de-de"}
+    aioclient_mock.post(URL, data=form_data, status=HTTPStatus.OK, content=b"test")
 
-    def test_service_say(self, aioclient_mock):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de-de",
+        },
+    )
+    await hass.async_block_till_done()
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == form_data
 
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            },
-        )
-        self.hass.block_till_done()
 
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
+async def test_service_say_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say with http response 400."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    def test_service_say_german_config(self, aioclient_mock):
-        """Test service call say with german code in the config."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    aioclient_mock.post(URL, data=FORM_DATA, status=400, content=b"test")
 
-        self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
-        config = {
-            tts.DOMAIN: {
-                "platform": "voicerss",
-                "api_key": "1234567xx",
-                "language": "de-de",
-            }
-        }
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        },
+    )
+    await hass.async_block_till_done()
 
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            },
-        )
-        self.hass.block_till_done()
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == FORM_DATA
 
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
 
-    def test_service_say_german_service(self, aioclient_mock):
-        """Test service call say with german code in the service."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+async def test_service_say_timeout(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say with http timeout."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+    aioclient_mock.post(URL, data=FORM_DATA, exc=TimeoutError())
 
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-                tts.ATTR_LANGUAGE: "de-de",
-            },
-        )
-        self.hass.block_till_done()
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == FORM_DATA
 
-    def test_service_say_error(self, aioclient_mock):
-        """Test service call say with http response 400."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.post(self.url, data=self.form_data, status=400, content=b"test")
+async def test_service_say_error_msg(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test service call say with http error api message."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
+    aioclient_mock.post(
+        URL,
+        data=FORM_DATA,
+        status=HTTPStatus.OK,
+        content=b"The subscription does not support SSML!",
+    )
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            },
-        )
-        self.hass.block_till_done()
+    with assert_setup_component(1, tts.DOMAIN):
+        await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "voicerss_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        },
+    )
+    await hass.async_block_till_done()
 
-    def test_service_say_timeout(self, aioclient_mock):
-        """Test service call say with http timeout."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.post(self.url, data=self.form_data, exc=asyncio.TimeoutError())
-
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            },
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
-
-    def test_service_say_error_msg(self, aioclient_mock):
-        """Test service call say with http error api message."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.post(
-            self.url,
-            data=self.form_data,
-            status=200,
-            content=b"The subscription does not support SSML!",
-        )
-
-        config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "voicerss_say",
-            {
-                "entity_id": "media_player.something",
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            },
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == self.form_data
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == FORM_DATA

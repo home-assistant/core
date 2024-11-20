@@ -6,8 +6,8 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "Client ID (Optional)",
-          "client_secret": "Client Secret (Optional)"
+          "client_id": "Client ID (optional)",
+          "client_secret": "Client Secret (optional)"
         }
       }
     },
@@ -18,6 +18,13 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power_price": {
+        "name": "Flick power price"
+      }
     }
   }
 }

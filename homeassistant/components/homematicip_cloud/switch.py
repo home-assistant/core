@@ -1,9 +1,11 @@
 """Support for HomematicIP Cloud switches."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homematicip.aio.device import (
+    AsyncBrandSwitch2,
     AsyncBrandSwitchMeasuring,
     AsyncDinRailSwitch,
     AsyncDinRailSwitch4,
@@ -23,18 +25,25 @@ from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .generic_entity import ATTR_GROUP_MEMBER_UNREACHABLE
+from .const import DOMAIN
+from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    hap = hass.data[DOMAIN][config_entry.unique_id]
+    entities: list[HomematicipGenericEntity] = [
+        HomematicipGroupSwitch(hap, group)
+        for group in hap.home.groups
+        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup))
+    ]
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
@@ -46,13 +55,17 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(device, AsyncWiredSwitch8):
-            for channel in range(1, 9):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+            entities.extend(
+                HomematicipMultiSwitch(hap, device, channel=channel)
+                for channel in range(1, 9)
+            )
         elif isinstance(device, AsyncDinRailSwitch):
             entities.append(HomematicipMultiSwitch(hap, device, channel=1))
         elif isinstance(device, AsyncDinRailSwitch4):
-            for channel in range(1, 5):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+            entities.extend(
+                HomematicipMultiSwitch(hap, device, channel=channel)
+                for channel in range(1, 5)
+            )
         elif isinstance(
             device,
             (
@@ -63,24 +76,25 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
-            for channel in range(1, 9):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncHeatingSwitch2):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncMultiIOBox):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+            entities.extend(
+                HomematicipMultiSwitch(hap, device, channel=channel)
+                for channel in range(1, 9)
+            )
+        elif isinstance(
+            device,
+            (
+                AsyncBrandSwitch2,
+                AsyncPrintedCircuitBoardSwitch2,
+                AsyncHeatingSwitch2,
+                AsyncMultiIOBox,
+            ),
+        ):
+            entities.extend(
+                HomematicipMultiSwitch(hap, device, channel=channel)
+                for channel in range(1, 3)
+            )
 
-    for group in hap.home.groups:
-        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
-            entities.append(HomematicipGroupSwitch(hap, group))
-
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
@@ -103,11 +117,11 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._device.functionalChannels[self._channel].on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.turn_on(self._channel)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.turn_off(self._channel)
 
@@ -152,26 +166,14 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
 
         return state_attr
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the group on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the group off."""
         await self._device.turn_off()
 
 
 class HomematicipSwitchMeasuring(HomematicipSwitch):
     """Representation of the HomematicIP measuring switch."""
-
-    @property
-    def current_power_w(self) -> float:
-        """Return the current power usage in W."""
-        return self._device.currentPowerConsumption
-
-    @property
-    def today_energy_kwh(self) -> int:
-        """Return the today total energy usage in kWh."""
-        if self._device.energyCounter is None:
-            return 0
-        return round(self._device.energyCounter)

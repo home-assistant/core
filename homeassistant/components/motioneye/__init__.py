@@ -1,11 +1,14 @@
 """The motionEye integration."""
+
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Callable
+import contextlib
+from http import HTTPStatus
 import json
 import logging
-from types import MappingProxyType
-from typing import Any, Callable
+import os
+from typing import Any
 from urllib.parse import urlencode, urljoin
 
 from aiohttp.web import Request, Response
@@ -13,13 +16,17 @@ from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
     MotionEyeClientInvalidAuthError,
+    MotionEyeClientPathError,
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_HTTP_METHOD_POST_JSON,
     KEY_ID,
     KEY_NAME,
+    KEY_ROOT_DIRECTORY,
     KEY_WEB_HOOK_CONVERSION_SPECIFIERS,
+    KEY_WEB_HOOK_CS_FILE_PATH,
+    KEY_WEB_HOOK_CS_FILE_TYPE,
     KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
     KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
     KEY_WEB_HOOK_NOTIFICATIONS_URL,
@@ -28,7 +35,9 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_source import URI_SCHEME
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
@@ -37,13 +46,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_NAME,
-    CONF_URL,
-    CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-)
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -52,13 +55,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -77,6 +75,8 @@ from .const import (
     DOMAIN,
     EVENT_FILE_STORED,
     EVENT_FILE_STORED_KEYS,
+    EVENT_FILE_URL,
+    EVENT_MEDIA_CONTENT_ID,
     EVENT_MOTION_DETECTED,
     EVENT_MOTION_DETECTED_KEYS,
     MOTIONEYE_MANUFACTURER,
@@ -86,7 +86,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = [CAMERA_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 def create_motioneye_client(
@@ -104,11 +104,18 @@ def get_motioneye_device_identifier(
     return (DOMAIN, f"{config_entry_id}_{camera_id}")
 
 
-def get_motioneye_entity_unique_id(
-    config_entry_id: str, camera_id: int, entity_type: str
-) -> str:
-    """Get the unique_id for a motionEye entity."""
-    return f"{config_entry_id}_{camera_id}_{entity_type}"
+def split_motioneye_device_identifier(
+    identifier: tuple[str, str],
+) -> tuple[str, str, int] | None:
+    """Get the identifiers for a motionEye device."""
+    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
+        return None
+    config_id, camera_id_str = identifier[1].split("_", 1)
+    try:
+        camera_id = int(camera_id_str)
+    except ValueError:
+        return None
+    return (DOMAIN, config_id, camera_id)
 
 
 def get_camera_from_cameras(
@@ -150,14 +157,11 @@ def async_generate_motioneye_webhook(
 ) -> str | None:
     """Generate the full local URL for a webhook_id."""
     try:
-        return "{}{}".format(
-            get_url(hass, allow_cloud=False),
-            async_generate_path(webhook_id),
-        )
+        return f"{get_url(hass, allow_cloud=False)}{async_generate_path(webhook_id)}"
     except NoURLAvailableError:
         _LOGGER.warning(
             "Unable to get Home Assistant URL. Have you set the internal and/or "
-            "external URLs in Configuration -> General?"
+            "external URLs in Settings -> System -> Network?"
         )
         return None
 
@@ -309,7 +313,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    @callback
     async def async_update_data() -> dict[str, Any] | None:
         try:
             return await client.async_get_cameras()
@@ -319,6 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -329,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     current_cameras: set[tuple[str, str]] = set()
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
@@ -372,20 +376,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 device_registry.async_remove_device(device_entry.id)
 
-    async def setup_then_listen() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        entry.async_on_unload(
-            coordinator.async_add_listener(_async_process_motioneye_cameras)
-        )
-        await coordinator.async_refresh()
-        entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.async_create_task(setup_then_listen())
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_process_motioneye_cameras)
+    )
+    await coordinator.async_refresh()
+    entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+
     return True
 
 
@@ -403,7 +401,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> None | Response:
+) -> Response | None:
     """Handle webhook callback."""
 
     try:
@@ -411,26 +409,40 @@ async def handle_webhook(
     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         return Response(
             text="Could not decode request",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     for key in (ATTR_DEVICE_ID, ATTR_EVENT_TYPE):
         if key not in data:
             return Response(
                 text=f"Missing webhook parameter: {key}",
-                status=HTTP_BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     event_type = data[ATTR_EVENT_TYPE]
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
-    device = device_registry.async_get(device_id)
 
-    if not device:
+    if not (device := device_registry.async_get(device_id)):
         return Response(
             text=f"Device not found: {device_id}",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
+
+    if KEY_WEB_HOOK_CS_FILE_PATH in data and KEY_WEB_HOOK_CS_FILE_TYPE in data:
+        try:
+            event_file_type = int(data[KEY_WEB_HOOK_CS_FILE_TYPE])
+        except ValueError:
+            pass
+        else:
+            data.update(
+                _get_media_event_data(
+                    hass,
+                    device,
+                    data[KEY_WEB_HOOK_CS_FILE_PATH],
+                    event_file_type,
+                )
+            )
 
     hass.bus.async_fire(
         f"{DOMAIN}.{event_type}",
@@ -444,42 +456,64 @@ async def handle_webhook(
     return None
 
 
-class MotionEyeEntity(CoordinatorEntity):
-    """Base class for motionEye entities."""
+def _get_media_event_data(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    event_file_path: str,
+    event_file_type: int,
+) -> dict[str, str]:
+    config_entry_id = next(iter(device.config_entries), None)
+    if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
+        return {}
 
-    def __init__(
-        self,
-        config_entry_id: str,
-        type_name: str,
-        camera: dict[str, Any],
-        client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, Any],
-        entity_description: EntityDescription = None,
-    ) -> None:
-        """Initialize a motionEye entity."""
-        self._camera_id = camera[KEY_ID]
-        self._device_identifier = get_motioneye_device_identifier(
-            config_entry_id, self._camera_id
-        )
-        self._unique_id = get_motioneye_entity_unique_id(
-            config_entry_id,
-            self._camera_id,
-            type_name,
-        )
-        self._client = client
-        self._camera: dict[str, Any] | None = camera
-        self._options = options
-        if entity_description is not None:
-            self.entity_description = entity_description
-        super().__init__(coordinator)
+    config_entry_data = hass.data[DOMAIN][config_entry_id]
+    client = config_entry_data[CONF_CLIENT]
+    coordinator = config_entry_data[CONF_COORDINATOR]
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for this instance."""
-        return self._unique_id
+    for identifier in device.identifiers:
+        data = split_motioneye_device_identifier(identifier)
+        if data is not None:
+            camera_id = data[2]
+            camera = get_camera_from_cameras(camera_id, coordinator.data)
+            break
+    else:
+        return {}
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return {"identifiers": {self._device_identifier}}
+    root_directory = camera.get(KEY_ROOT_DIRECTORY) if camera else None
+    if root_directory is None:
+        return {}
+
+    kind = "images" if client.is_file_type_image(event_file_type) else "movies"
+
+    # The file_path in the event is the full local filesystem path to the
+    # media. To convert that to the media path that motionEye will
+    # understand, we need to strip the root directory from the path.
+    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+        return {}
+
+    file_path = "/" + os.path.relpath(event_file_path, root_directory)
+    output = {
+        EVENT_MEDIA_CONTENT_ID: (
+            f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
+        ),
+    }
+    url = get_media_url(
+        client,
+        camera_id,
+        file_path,
+        kind == "images",
+    )
+    if url:
+        output[EVENT_FILE_URL] = url
+    return output
+
+
+def get_media_url(
+    client: MotionEyeClient, camera_id: int, path: str, image: bool
+) -> str | None:
+    """Get the URL for a motionEye media item."""
+    with contextlib.suppress(MotionEyeClientPathError):
+        if image:
+            return client.get_image_url(camera_id, path)
+        return client.get_movie_url(camera_id, path)
+    return None

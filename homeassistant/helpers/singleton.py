@@ -1,59 +1,67 @@
 """Helper to help coordinating calls."""
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
-from typing import Callable, TypeVar, cast
+from typing import Any, cast, overload
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
-T = TypeVar("T")
-
-FUNC = Callable[[HomeAssistant], T]
+type _FuncType[_T] = Callable[[HomeAssistant], _T]
 
 
-def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
+@overload
+def singleton[_T](
+    data_key: HassKey[_T],
+) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
+
+
+@overload
+def singleton[_T](data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
+
+
+def singleton[_T](data_key: Any) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
     """Decorate a function that should be called once per instance.
 
     Result will be cached and simultaneous calls will be handled.
     """
 
-    def wrapper(func: FUNC) -> FUNC:
+    def wrapper(func: _FuncType[_T]) -> _FuncType[_T]:
         """Wrap a function with caching logic."""
         if not asyncio.iscoroutinefunction(func):
 
+            @functools.lru_cache(maxsize=1)
             @bind_hass
             @functools.wraps(func)
-            def wrapped(hass: HomeAssistant) -> T:
-                obj: T | None = hass.data.get(data_key)
-                if obj is None:
-                    obj = hass.data[data_key] = func(hass)
-                return obj
+            def wrapped(hass: HomeAssistant) -> _T:
+                if data_key not in hass.data:
+                    hass.data[data_key] = func(hass)
+                return cast(_T, hass.data[data_key])
 
             return wrapped
 
         @bind_hass
         @functools.wraps(func)
-        async def async_wrapped(hass: HomeAssistant) -> T:
-            obj_or_evt = hass.data.get(data_key)
-
-            if not obj_or_evt:
+        async def async_wrapped(hass: HomeAssistant) -> Any:
+            if data_key not in hass.data:
                 evt = hass.data[data_key] = asyncio.Event()
-
                 result = await func(hass)
-
                 hass.data[data_key] = result
                 evt.set()
-                return cast(T, result)
+                return cast(_T, result)
+
+            obj_or_evt = hass.data[data_key]
 
             if isinstance(obj_or_evt, asyncio.Event):
-                evt = obj_or_evt
-                await evt.wait()
-                return cast(T, hass.data.get(data_key))
+                await obj_or_evt.wait()
+                return cast(_T, hass.data[data_key])
 
-            return cast(T, obj_or_evt)
+            return cast(_T, obj_or_evt)
 
-        return async_wrapped
+        return async_wrapped  # type: ignore[return-value]
 
     return wrapper

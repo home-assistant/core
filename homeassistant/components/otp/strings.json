@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "token": "Authenticator token (OTP)",
+          "new_token": "Generate a new token?"
+        }
+      },
+      "confirm": {
+        "title": "Verify One-Time Password (OTP)",
+        "description": "Before completing the setup of One-Time Password (OTP), confirm with a verification code. Scan the QR code with your authentication app. If you don't have one, we recommend either {auth_app1} or {auth_app2}.\n\nAfter scanning the code, enter the six-digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**.",
+        "data": {
+          "code": "Verification code (OTP)"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_token": "Invalid token",
+      "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock of your Home Assistant system is accurate."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

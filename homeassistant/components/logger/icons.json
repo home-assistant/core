@@ -1,0 +1,10 @@
+{
+  "services": {
+    "set_default_level": {
+      "service": "mdi:cog-outline"
+    },
+    "set_level": {
+      "service": "mdi:cog-outline"
+    }
+  }
+}

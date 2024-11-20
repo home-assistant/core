@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "switch": {
+      "shutoff_valve": {
+        "default": "mdi:valve-closed",
+        "state": {
+          "on": "mdi:valve-open"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
+    },
+    "set_away_mode": {
+      "service": "mdi:home-off"
+    },
+    "set_home_mode": {
+      "service": "mdi:home"
+    },
+    "run_health_test": {
+      "service": "mdi:heart-flash"
+    }
+  }
+}

@@ -1,12 +1,18 @@
 """Test request context middleware."""
+
 from contextvars import ContextVar
+from http import HTTPStatus
 
 from aiohttp import web
 
 from homeassistant.components.http.request_context import setup_request_context
 
+from tests.typing import ClientSessionGenerator
 
-async def test_request_context_middleware(aiohttp_client):
+
+async def test_request_context_middleware(
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
     """Test that request context is set from middleware."""
     context = ContextVar("request", default=None)
     app = web.Application()
@@ -24,7 +30,7 @@ async def test_request_context_middleware(aiohttp_client):
     mock_api_client = await aiohttp_client(app)
 
     resp = await mock_api_client.get("/")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     text = await resp.text()
     assert text == "hi!"

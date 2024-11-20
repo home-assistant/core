@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_uptime_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-03-01T00:00:00+00:00',
+  })
+# ---
+# name: test_uptime_sensor.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'uptime',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_uptime_sensor.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Uptime',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

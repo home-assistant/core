@@ -1,4 +1,5 @@
 """Constants for the Elexa Guardian integration."""
+
 import logging
 
 DOMAIN = "guardian"
@@ -13,11 +14,5 @@ API_VALVE_STATUS = "valve_status"
 API_WIFI_STATUS = "wifi_status"
 
 CONF_UID = "uid"
-
-DATA_CLIENT = "client"
-DATA_COORDINATOR = "coordinator"
-DATA_COORDINATOR_PAIRED_SENSOR = "coordinator_paired_sensor"
-DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
-DATA_UNSUB_DISPATCHER_CONNECT = "unsub_dispatcher_connect"
 
 SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED = "guardian_paired_sensor_coordinator_added_{0}"

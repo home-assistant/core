@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "sleeping": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode": {
+        "default": "mdi:sleep"
+      }
+    },
+    "button": {
+      "reset_waste_drawer": {
+        "default": "mdi:delete-variant"
+      },
+      "give_snack": {
+        "default": "mdi:candy-outline"
+      }
+    },
+    "select": {
+      "cycle_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "meal_insert_size": {
+        "default": "mdi:scale"
+      }
+    },
+    "switch": {
+      "night_light_mode": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "panel_lockout": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
+    }
+  }
+}

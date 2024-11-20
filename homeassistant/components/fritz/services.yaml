@@ -1,13 +1,19 @@
-reconnect:
-  description: Reconnects your FRITZ!Box internet connection
-  target:
-    entity:
-      integration: fritz
-      domain: binary_sensor
-
-reboot:
-  description: Reboots your FRITZ!Box
-  target:
-    entity:
-      integration: fritz
-      domain: binary_sensor
+set_guest_wifi_password:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity
+    password:
+      required: false
+      selector:
+        text:
+    length:
+      required: false
+      selector:
+        number:
+          min: 8
+          max: 63

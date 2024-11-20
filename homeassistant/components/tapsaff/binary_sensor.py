@@ -1,23 +1,30 @@
 """Support for Taps Affs."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from tapsaff import TapsAff
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
+from homeassistant.const import CONF_LOCATION, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_LOCATION = "location"
 
 DEFAULT_NAME = "Taps Aff"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_LOCATION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -25,7 +32,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Taps Aff binary sensor."""
     name = config.get(CONF_NAME)
     location = config.get(CONF_LOCATION)
@@ -53,7 +65,7 @@ class TapsAffSensor(BinarySensorEntity):
         """Return true if taps aff."""
         return self.data.is_taps_aff
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.data.update()
 

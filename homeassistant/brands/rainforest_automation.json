@@ -1,0 +1,5 @@
+{
+  "domain": "rainforest_automation",
+  "name": "Rainforest Automation",
+  "integrations": ["rainforest_eagle", "rainforest_raven"]
+}

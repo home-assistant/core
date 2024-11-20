@@ -1,4 +1,5 @@
 """Support for sending data to Dweet.io."""
+
 from datetime import timedelta
 import logging
 
@@ -12,8 +13,10 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dweet.io component."""
     conf = config[DOMAIN]
     name = conf.get(CONF_NAME)

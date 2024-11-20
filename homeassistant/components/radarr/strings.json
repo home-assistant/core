@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Radarr Web UI.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "zeroconf_failed": "API key not found. Please enter it manually",
+      "wrong_app": "Incorrect application reached. Please try again",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "upcoming_days": "Number of upcoming days to display"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "health": {
+        "name": "Health"
+      }
+    },
+    "sensor": {
+      "movies": {
+        "name": "Movies"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "start_time": {
+        "name": "Start time"
+      }
+    }
+  }
+}

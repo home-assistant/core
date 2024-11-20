@@ -1,4 +1,5 @@
 """Tests for EQ3 Max! component."""
+
 from unittest.mock import create_autospec, patch
 
 from maxcube.device import MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_MANUAL
@@ -9,6 +10,8 @@ from maxcube.windowshutter import MaxWindowShutter
 import pytest
 
 from homeassistant.components.maxcube import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
@@ -41,6 +44,7 @@ def thermostat():
     t.max_temperature = None
     t.min_temperature = None
     t.valve_position = 25  # 25%
+    t.battery = 1
     return t
 
 
@@ -62,6 +66,7 @@ def wallthermostat():
     t.actual_temperature = 19.0
     t.max_temperature = 29.0
     t.min_temperature = 4.5
+    t.battery = 1
     return t
 
 
@@ -77,6 +82,7 @@ def windowshutter():
     shutter.is_thermostat.return_value = False
     shutter.is_wallthermostat.return_value = False
     shutter.is_windowshutter.return_value = True
+    shutter.battery = 1
     return shutter
 
 
@@ -95,7 +101,14 @@ def hass_config():
 
 
 @pytest.fixture
-async def cube(hass, hass_config, room, thermostat, wallthermostat, windowshutter):
+async def cube(
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    room,
+    thermostat,
+    wallthermostat,
+    windowshutter,
+):
     """Build and setup a cube mock with a single room and some devices."""
     with patch("homeassistant.components.maxcube.MaxCube") as mock:
         cube = mock.return_value

@@ -1,0 +1,12 @@
+{
+  "domain": "tedee",
+  "name": "Tedee",
+  "codeowners": ["@patrickhilker", "@zweckj"],
+  "config_flow": true,
+  "dependencies": ["http", "webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/tedee",
+  "iot_class": "local_push",
+  "loggers": ["aiotedee"],
+  "quality_scale": "platinum",
+  "requirements": ["aiotedee==0.2.20"]
+}

@@ -1,0 +1,2068 @@
+# serializer version: 1
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_clients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_clients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clients',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_clients',
+    'unique_id': 'device_clients-20:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_clients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Clients',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_clients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': 'device_state-20:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Device State',
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Connected',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_temperature-20:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Device Temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_uptime-20:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Device Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T01:00:00+00:00',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_budget-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_ac_power_budget',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'AC Power Budget',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ac_power_budget-01:02:03:04:05:ff',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_budget-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dummy USP-PDU-Pro AC Power Budget',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_ac_power_budget',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1875.000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_ac_power_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'AC Power Consumption',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ac_power_conumption-01:02:03:04:05:ff',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dummy USP-PDU-Pro AC Power Consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_ac_power_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '201.683',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_clients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_clients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clients',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_clients',
+    'unique_id': 'device_clients-01:02:03:04:05:ff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_clients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dummy USP-PDU-Pro Clients',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_clients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_cpu_utilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_cpu_utilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU utilization',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_cpu_utilization',
+    'unique_id': 'cpu_utilization-01:02:03:04:05:ff',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_cpu_utilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dummy USP-PDU-Pro CPU utilization',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_cpu_utilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.4',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_memory_utilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_memory_utilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory utilization',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_memory_utilization',
+    'unique_id': 'memory_utilization-01:02:03:04:05:ff',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_memory_utilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dummy USP-PDU-Pro Memory utilization',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_memory_utilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.9',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_outlet_2_outlet_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_outlet_2_outlet_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Outlet 2 Outlet Power',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'outlet_power-01:02:03:04:05:ff_2',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_outlet_2_outlet_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dummy USP-PDU-Pro Outlet 2 Outlet Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_outlet_2_outlet_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '73.827',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': 'device_state-01:02:03:04:05:ff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Dummy USP-PDU-Pro State',
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Connected',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_uptime-01:02:03:04:05:ff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Dummy USP-PDU-Pro Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dummy_usp_pdu_pro_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-12-18T05:36:58+00:00',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_clients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_clients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clients',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_clients',
+    'unique_id': 'device_clients-10:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_clients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'mock-name Clients',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_clients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan2_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_cloudflare_wan2_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cloudflare WAN2 latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'cloudflare_wan2_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan2_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Cloudflare WAN2 latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_cloudflare_wan2_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_cloudflare_wan_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cloudflare WAN latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'cloudflare_wan_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Cloudflare WAN latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_cloudflare_wan_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan2_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_google_wan2_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Google WAN2 latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'google_wan2_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan2_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Google WAN2 latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_google_wan2_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_google_wan_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Google WAN latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'google_wan_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Google WAN latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_google_wan_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan2_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_microsoft_wan2_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Microsoft WAN2 latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'microsoft_wan2_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan2_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Microsoft WAN2 latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_microsoft_wan2_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_microsoft_wan_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Microsoft WAN latency',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'microsoft_wan_latency-10:00:00:00:01:01',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'mock-name Microsoft WAN latency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_microsoft_wan_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '56',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_poe_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_1_poe_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Port 1 PoE Power',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'poe_power-10:00:00:00:01:01_1',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_poe_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'mock-name Port 1 PoE Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_1_poe_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.56',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_1_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 1 RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_rx',
+    'unique_id': 'port_rx-10:00:00:00:01:01_1',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 1 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_1_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_1_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 1 TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_tx',
+    'unique_id': 'port_tx-10:00:00:00:01:01_1',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 1 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_1_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_poe_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_2_poe_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Port 2 PoE Power',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'poe_power-10:00:00:00:01:01_2',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_poe_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'mock-name Port 2 PoE Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_2_poe_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.56',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_2_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 2 RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_rx',
+    'unique_id': 'port_rx-10:00:00:00:01:01_2',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 2 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_2_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_2_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 2 TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_tx',
+    'unique_id': 'port_tx-10:00:00:00:01:01_2',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 2 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_2_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_3_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 3 RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_rx',
+    'unique_id': 'port_rx-10:00:00:00:01:01_3',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 3 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_3_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_3_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 3 TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_tx',
+    'unique_id': 'port_tx-10:00:00:00:01:01_3',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 3 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_3_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_poe_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_4_poe_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Port 4 PoE Power',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'poe_power-10:00:00:00:01:01_4',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_poe_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'mock-name Port 4 PoE Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_4_poe_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_4_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 4 RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_rx',
+    'unique_id': 'port_rx-10:00:00:00:01:01_4',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 4 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_4_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_port_4_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Port 4 TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_bandwidth_tx',
+    'unique_id': 'port_tx-10:00:00:00:01:01_4',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'mock-name Port 4 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_port_4_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00000',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': 'device_state-10:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'mock-name State',
+      'options': list([
+        'Disconnected',
+        'Connected',
+        'Pending',
+        'Firmware Mismatch',
+        'Upgrading',
+        'Provisioning',
+        'Heartbeat Missed',
+        'Adopting',
+        'Deleting',
+        'Inform Error',
+        'Adoption Failed',
+        'Isolated',
+        'Unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Connected',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_name_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_uptime-10:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'mock-name Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_name_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ssid_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wlan_clients',
+    'unique_id': 'wlan_clients-012345678910111213141516',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SSID 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ssid_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'client_bandwidth_rx',
+    'unique_id': 'rx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wired client RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234.0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'client_bandwidth_tx',
+    'unique_id': 'tx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wired client TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5678.0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uptime-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Wired client Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-09-14T14:41:45+00:00',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'client_bandwidth_rx',
+    'unique_id': 'rx-00:00:00:00:00:02',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wireless client RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2345.0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'client_bandwidth_tx',
+    'unique_id': 'tx-00:00:00:00:00:02',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wireless client TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6789.0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uptime-00:00:00:00:00:02',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Wireless client Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T01:00:00+00:00',
+  })
+# ---

@@ -1,4 +1,5 @@
 """Read the balance of your bank accounts via FinTS."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -7,12 +8,19 @@ import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
-from fints.dialog import FinTSDialogError
+from fints.models import SEPAAccount
+from propcache import cached_property
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +28,7 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 ICON = "mdi:currency-eur"
 
-BankCredentials = namedtuple("BankCredentials", "blz login pin url")
+BankCredentials = namedtuple("BankCredentials", "blz login pin url")  # noqa: PYI024
 
 CONF_BIN = "bank_identification_number"
 CONF_ACCOUNTS = "accounts"
@@ -38,7 +46,7 @@ SCHEMA_ACCOUNTS = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BIN): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -51,7 +59,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -70,24 +83,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         acc[CONF_ACCOUNT]: acc[CONF_NAME] for acc in config[CONF_HOLDINGS]
     }
 
-    client = FinTsClient(credentials, fints_name)
+    client = FinTsClient(credentials, fints_name, account_config, holdings_config)
     balance_accounts, holdings_accounts = client.detect_accounts()
-    accounts = []
+    accounts: list[SensorEntity] = []
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.debug("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
-        account_name = account_config.get(account.iban)
-        if not account_name:
+        if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
 
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
@@ -109,18 +121,27 @@ class FinTsClient:
     Use this class as Context Manager to get the FinTS3Client object.
     """
 
-    def __init__(self, credentials: BankCredentials, name: str) -> None:
+    def __init__(
+        self,
+        credentials: BankCredentials,
+        name: str,
+        account_config: dict,
+        holdings_config: dict,
+    ) -> None:
         """Initialize a FinTsClient."""
         self._credentials = credentials
+        self._account_information: dict[str, dict] = {}
+        self._account_information_fetched = False
         self.name = name
+        self.account_config = account_config
+        self.holdings_config = holdings_config
 
-    @property
-    def client(self):
-        """Get the client object.
+    @cached_property
+    def client(self) -> FinTS3PinTanClient:
+        """Get the FinTS client object.
 
-        As the fints library is stateless, there is not benefit in caching
-        the client objects. If that ever changes, consider caching the client
-        object and also think about potential concurrency problems.
+        The FinTS library persists the current dialog with the bank
+        and stores bank capabilities. So caching the client is beneficial.
         """
 
         return FinTS3PinTanClient(
@@ -130,27 +151,77 @@ class FinTsClient:
             self._credentials.url,
         )
 
-    def detect_accounts(self):
+    def get_account_information(self, iban: str) -> dict | None:
+        """Get a dictionary of account IBANs as key and account information as value."""
+
+        if not self._account_information_fetched:
+            self._account_information = {
+                account["iban"]: account
+                for account in self.client.get_information()["accounts"]
+            }
+            self._account_information_fetched = True
+
+        return self._account_information.get(iban, None)
+
+    def is_balance_account(self, account: SEPAAccount) -> bool:
+        """Determine if the given account is of type balance account."""
+        if not account.iban:
+            return False
+
+        account_information = self.get_account_information(account.iban)
+        if not account_information:
+            return False
+
+        if account_type := account_information.get("type"):
+            return 1 <= account_type <= 9
+
+        if (
+            account_information["iban"] in self.account_config
+            or account_information["account_number"] in self.account_config
+        ):
+            return True
+
+        return False
+
+    def is_holdings_account(self, account: SEPAAccount) -> bool:
+        """Determine if the given account of type holdings account."""
+        if not account.iban:
+            return False
+
+        account_information = self.get_account_information(account.iban)
+        if not account_information:
+            return False
+
+        if account_type := account_information.get("type"):
+            return 30 <= account_type <= 39
+
+        if (
+            account_information["iban"] in self.holdings_config
+            or account_information["account_number"] in self.holdings_config
+        ):
+            return True
+
+        return False
+
+    def detect_accounts(self) -> tuple[list, list]:
         """Identify the accounts of the bank."""
 
         balance_accounts = []
         holdings_accounts = []
+
         for account in self.client.get_sepa_accounts():
-            try:
-                self.client.get_balance(account)
+            if self.is_balance_account(account):
                 balance_accounts.append(account)
-            except IndexError:
-                # account is not a balance account.
-                pass
-            except FinTSDialogError:
-                # account is not a balance account.
-                pass
-            try:
-                self.client.get_holdings(account)
+
+            elif self.is_holdings_account(account):
                 holdings_accounts.append(account)
-            except FinTSDialogError:
-                # account is not a holdings account.
-                pass
+
+            else:
+                _LOGGER.warning(
+                    "Could not determine type of account %s from %s",
+                    account.iban,
+                    self.client.user_id,
+                )
 
         return balance_accounts, holdings_accounts
 
@@ -207,7 +278,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

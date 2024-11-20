@@ -1,0 +1,322 @@
+{
+  "state": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "led": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "auto_update_enabled": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "auto_off_enabled": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "smooth_transitions": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "frost_protection_enabled": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "fan_sleep_mode": {
+    "value": false,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "child_lock": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "pir_enabled": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "current_consumption": {
+    "value": 5.23,
+    "type": "Sensor",
+    "category": "Primary",
+    "unit": "W",
+    "precision_hint": 1
+  },
+  "consumption_today": {
+    "value": 5.23,
+    "type": "Sensor",
+    "category": "Info",
+    "unit": "kWh",
+    "precision_hint": 3
+  },
+  "consumption_this_month": {
+    "value": 15.345,
+    "type": "Sensor",
+    "category": "Info",
+    "unit": "kWh",
+    "precision_hint": 3
+  },
+  "consumption_total": {
+    "value": 30.0049,
+    "type": "Sensor",
+    "category": "Info",
+    "unit": "kWh",
+    "precision_hint": 3
+  },
+  "current": {
+    "value": 5.035,
+    "type": "Sensor",
+    "category": "Primary",
+    "unit": "A",
+    "precision_hint": 2
+  },
+  "voltage": {
+    "value": 121.1,
+    "type": "Sensor",
+    "category": "Primary",
+    "unit": "V",
+    "precision_hint": 1
+  },
+  "device_id": {
+    "value": "94hd2dn298812je12u0931828",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "signal_level": {
+    "value": 2,
+    "type": "Sensor",
+    "category": "Info"
+  },
+  "rssi": {
+    "value": -62,
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "ssid": {
+    "value": "HOMEWIFI",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "on_since": {
+    "value": "2024-06-24 10:03:11.046643+01:00",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "battery_level": {
+    "value": 85,
+    "type": "Sensor",
+    "category": "Info",
+    "unit": "%"
+  },
+  "auto_off_at": {
+    "value": "2024-06-24 10:03:11.046643+01:00",
+    "type": "Sensor",
+    "category": "Info"
+  },
+  "humidity": {
+    "value": 12,
+    "type": "Sensor",
+    "category": "Primary",
+    "unit": "%"
+  },
+  "report_interval": {
+    "value": 16,
+    "type": "Sensor",
+    "category": "Debug",
+    "unit": "%"
+  },
+  "alarm_source": {
+    "value": "",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "device_time": {
+    "value": "2024-06-24 10:03:11.046643+01:00",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "temperature": {
+    "value": 19.2,
+    "type": "Sensor",
+    "category": "Debug",
+    "unit": "celsius"
+  },
+  "current_firmware_version": {
+    "value": "1.1.2",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "available_firmware_version": {
+    "value": "1.1.3",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "check_latest_firmware": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Info"
+  },
+  "thermostat_mode": {
+    "value": "off",
+    "type": "Sensor",
+    "category": "Primary"
+  },
+  "overheated": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "battery_low": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Debug"
+  },
+  "update_available": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "cloud_connection": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "temperature_warning": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Debug"
+  },
+  "humidity_warning": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Debug"
+  },
+  "water_alert": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
+  "is_open": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
+  "motion_detected": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
+  "alarm": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "reboot": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "test_alarm": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "stop_alarm": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "smooth_transition_on": {
+    "value": false,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": 0,
+    "maximum_value": 60
+  },
+  "smooth_transition_off": {
+    "value": false,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": 0,
+    "maximum_value": 60
+  },
+  "auto_off_minutes": {
+    "value": false,
+    "type": "Number",
+    "category": "Config",
+    "unit": "min",
+    "minimum_value": 0,
+    "maximum_value": 60
+  },
+  "temperature_offset": {
+    "value": false,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": -10,
+    "maximum_value": 10
+  },
+  "target_temperature": {
+    "value": false,
+    "type": "Number",
+    "category": "Primary"
+  },
+  "fan_speed_level": {
+    "value": 2,
+    "type": "Number",
+    "category": "Primary",
+    "minimum_value": 0,
+    "maximum_value": 4
+  },
+  "light_preset": {
+    "value": "Off",
+    "type": "Choice",
+    "category": "Config",
+    "choices": ["Off", "Preset 1", "Preset 2"]
+  },
+  "alarm_sound": {
+    "value": "Phone Ring",
+    "type": "Choice",
+    "category": "Config",
+    "choices": [
+      "Doorbell Ring 1",
+      "Doorbell Ring 2",
+      "Doorbell Ring 3",
+      "Doorbell Ring 4",
+      "Doorbell Ring 5",
+      "Doorbell Ring 6",
+      "Doorbell Ring 7",
+      "Doorbell Ring 8",
+      "Doorbell Ring 9",
+      "Doorbell Ring 10",
+      "Phone Ring",
+      "Alarm 1",
+      "Alarm 2",
+      "Alarm 3",
+      "Alarm 4",
+      "Dripping Tap",
+      "Alarm 5",
+      "Connection 1",
+      "Connection 2"
+    ]
+  },
+  "alarm_volume": {
+    "value": "normal",
+    "type": "Choice",
+    "category": "Config",
+    "choices": ["low", "normal", "high"]
+  },
+  "water_alert_timestamp": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": "2024-06-24 10:03:11.046643+01:00"
+  }
+}

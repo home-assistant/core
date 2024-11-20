@@ -1,28 +1,61 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from functools import wraps
 import logging
-from typing import cast
+from typing import Any, Concatenate, cast
 
+from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
-from .renault_coordinator import RenaultDataUpdateCoordinator
+from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
+
+
+def with_error_wrapping[**_P, _R](
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_R]],
+) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _R]]:
+    """Catch Renault errors."""
+
+    @wraps(func)
+    async def wrapper(
+        self: RenaultVehicleProxy,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Catch RenaultException errors and raise HomeAssistantError."""
+        try:
+            return await func(self, *args, **kwargs)
+        except RenaultException as err:
+            raise HomeAssistantError(err) from err
+
+    return wrapper
+
+
+@dataclass
+class RenaultCoordinatorDescription:
+    """Class describing Renault coordinators."""
+
+    endpoint: str
+    key: str
+    update_method: Callable[
+        [RenaultVehicle],
+        Callable[[], Awaitable[models.KamereonVehicleDataAttributes]],
+    ]
+    # Optional keys
+    requires_electricity: bool = False
 
 
 class RenaultVehicleProxy:
@@ -39,13 +72,13 @@ class RenaultVehicleProxy:
         self.hass = hass
         self._vehicle = vehicle
         self._details = details
-        self._device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, cast(str, details.vin))},
-            ATTR_MANUFACTURER: (details.get_brand_label() or "").capitalize(),
-            ATTR_MODEL: (details.get_model_label() or "").capitalize(),
-            ATTR_NAME: details.registrationNumber or "",
-            ATTR_SW_VERSION: details.get_model_code() or "",
-        }
+        self._device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, details.vin))},
+            manufacturer=(details.get_brand_label() or "").capitalize(),
+            model=(details.get_model_label() or "").capitalize(),
+            model_id=(details.get_model_code() or ""),
+            name=details.registrationNumber or "",
+        )
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
@@ -61,48 +94,23 @@ class RenaultVehicleProxy:
         return self._device_info
 
     async def async_initialise(self) -> None:
-        """Load available sensors."""
-        if await self.endpoint_available("cockpit"):
-            self.coordinators["cockpit"] = RenaultDataUpdateCoordinator(
+        """Load available coordinators."""
+        self.coordinators = {
+            coord.key: RenaultDataUpdateCoordinator(
                 self.hass,
                 LOGGER,
                 # Name of the data. For logging purposes.
-                name=f"{self.details.vin} cockpit",
-                update_method=self.get_cockpit,
+                name=f"{self.details.vin} {coord.key}",
+                update_method=coord.update_method(self._vehicle),
                 # Polling interval. Will only be polled if there are subscribers.
                 update_interval=self._scan_interval,
             )
-        if await self.endpoint_available("hvac-status"):
-            self.coordinators["hvac_status"] = RenaultDataUpdateCoordinator(
-                self.hass,
-                LOGGER,
-                # Name of the data. For logging purposes.
-                name=f"{self.details.vin} hvac_status",
-                update_method=self.get_hvac_status,
-                # Polling interval. Will only be polled if there are subscribers.
-                update_interval=self._scan_interval,
+            for coord in COORDINATORS
+            if (
+                self.details.supports_endpoint(coord.endpoint)
+                and (not coord.requires_electricity or self.details.uses_electricity())
             )
-        if self.details.uses_electricity():
-            if await self.endpoint_available("battery-status"):
-                self.coordinators["battery"] = RenaultDataUpdateCoordinator(
-                    self.hass,
-                    LOGGER,
-                    # Name of the data. For logging purposes.
-                    name=f"{self.details.vin} battery",
-                    update_method=self.get_battery_status,
-                    # Polling interval. Will only be polled if there are subscribers.
-                    update_interval=self._scan_interval,
-                )
-            if await self.endpoint_available("charge-mode"):
-                self.coordinators["charge_mode"] = RenaultDataUpdateCoordinator(
-                    self.hass,
-                    LOGGER,
-                    # Name of the data. For logging purposes.
-                    name=f"{self.details.vin} charge_mode",
-                    update_method=self.get_charge_mode,
-                    # Polling interval. Will only be polled if there are subscribers.
-                    update_interval=self._scan_interval,
-                )
+        }
         # Check all coordinators
         await asyncio.gather(
             *(
@@ -115,39 +123,111 @@ class RenaultVehicleProxy:
             coordinator = self.coordinators[key]
             if coordinator.not_supported:
                 # Remove endpoint as it is not supported for this vehicle.
-                LOGGER.error(
-                    "Ignoring endpoint %s as it is not supported for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is not supported: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )
                 del self.coordinators[key]
             elif coordinator.access_denied:
                 # Remove endpoint as it is denied for this vehicle.
-                LOGGER.error(
-                    "Ignoring endpoint %s as it is denied for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is denied: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )
                 del self.coordinators[key]
 
-    async def endpoint_available(self, endpoint: str) -> bool:
-        """Ensure the endpoint is available to avoid unnecessary queries."""
-        return await self._vehicle.supports_endpoint(
-            endpoint
-        ) and await self._vehicle.has_contract_for_endpoint(endpoint)
+    @with_error_wrapping
+    async def set_charge_mode(
+        self, charge_mode: str
+    ) -> models.KamereonVehicleChargeModeActionData:
+        """Set vehicle charge mode."""
+        return await self._vehicle.set_charge_mode(charge_mode)
 
-    async def get_battery_status(self) -> models.KamereonVehicleBatteryStatusData:
-        """Get battery status information from vehicle."""
-        return await self._vehicle.get_battery_status()
+    @with_error_wrapping
+    async def set_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
+        """Start vehicle charge."""
+        return await self._vehicle.set_charge_start()
 
-    async def get_charge_mode(self) -> models.KamereonVehicleChargeModeData:
-        """Get charge mode information from vehicle."""
-        return await self._vehicle.get_charge_mode()
+    @with_error_wrapping
+    async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
+        """Stop vehicle charge."""
+        return await self._vehicle.set_charge_stop()
 
-    async def get_cockpit(self) -> models.KamereonVehicleCockpitData:
-        """Get cockpit information from vehicle."""
-        return await self._vehicle.get_cockpit()
+    @with_error_wrapping
+    async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
+        """Stop vehicle ac."""
+        return await self._vehicle.set_ac_stop()
 
-    async def get_hvac_status(self) -> models.KamereonVehicleHvacStatusData:
-        """Get hvac status information from vehicle."""
-        return await self._vehicle.get_hvac_status()
+    @with_error_wrapping
+    async def set_ac_start(
+        self, temperature: float, when: datetime | None = None
+    ) -> models.KamereonVehicleHvacStartActionData:
+        """Start vehicle ac."""
+        return await self._vehicle.set_ac_start(temperature, when)
+
+    @with_error_wrapping
+    async def get_hvac_settings(self) -> models.KamereonVehicleHvacSettingsData:
+        """Get vehicle hvac settings."""
+        return await self._vehicle.get_hvac_settings()
+
+    @with_error_wrapping
+    async def set_hvac_schedules(
+        self, schedules: list[models.HvacSchedule]
+    ) -> models.KamereonVehicleHvacScheduleActionData:
+        """Set vehicle hvac schedules."""
+        return await self._vehicle.set_hvac_schedules(schedules)
+
+    @with_error_wrapping
+    async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
+        """Get vehicle charging settings."""
+        return await self._vehicle.get_charging_settings()
+
+    @with_error_wrapping
+    async def set_charge_schedules(
+        self, schedules: list[models.ChargeSchedule]
+    ) -> models.KamereonVehicleChargeScheduleActionData:
+        """Set vehicle charge schedules."""
+        return await self._vehicle.set_charge_schedules(schedules)
+
+
+COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
+    RenaultCoordinatorDescription(
+        endpoint="cockpit",
+        key="cockpit",
+        update_method=lambda x: x.get_cockpit,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="hvac-status",
+        key="hvac_status",
+        update_method=lambda x: x.get_hvac_status,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="location",
+        key="location",
+        update_method=lambda x: x.get_location,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="battery-status",
+        key="battery",
+        requires_electricity=True,
+        update_method=lambda x: x.get_battery_status,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="charge-mode",
+        key="charge_mode",
+        requires_electricity=True,
+        update_method=lambda x: x.get_charge_mode,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="lock-status",
+        key="lock_status",
+        update_method=lambda x: x.get_lock_status,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="res-state",
+        key="res_state",
+        update_method=lambda x: x.get_res_state,
+    ),
+)

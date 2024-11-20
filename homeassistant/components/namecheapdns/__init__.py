@@ -1,4 +1,5 @@
 """Support for namecheap DNS services."""
+
 from datetime import timedelta
 import logging
 
@@ -6,9 +7,11 @@ import defusedxml.ElementTree as ET
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the namecheap DNS component."""
     host = config[DOMAIN][CONF_HOST]
     domain = config[DOMAIN][CONF_DOMAIN]

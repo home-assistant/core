@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_covers[cover.test_garage_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_garage_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'linear_garage_door',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'test1-GDO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[cover.test_garage_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Test Garage 1',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_garage_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[cover.test_garage_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_garage_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'linear_garage_door',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'test2-GDO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[cover.test_garage_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Test Garage 2',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_garage_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_covers[cover.test_garage_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_garage_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'linear_garage_door',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'test3-GDO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[cover.test_garage_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Test Garage 3',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_garage_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_covers[cover.test_garage_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_garage_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'linear_garage_door',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'test4-GDO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[cover.test_garage_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Test Garage 4',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_garage_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closing',
+  })
+# ---

@@ -1,15 +1,20 @@
 """Support for monitoring the state of Digital Ocean droplets."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_CREATED_AT,
@@ -29,25 +34,28 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Droplet"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Digital Ocean droplet sensor."""
-    digital = hass.data.get(DATA_DIGITAL_OCEAN)
-    if not digital:
-        return False
+    if not (digital := hass.data.get(DATA_DIGITAL_OCEAN)):
+        return
 
     droplets = config[CONF_DROPLETS]
 
     dev = []
     for droplet in droplets:
-        droplet_id = digital.get_droplet_id(droplet)
-        if droplet_id is None:
+        if (droplet_id := digital.get_droplet_id(droplet)) is None:
             _LOGGER.error("Droplet %s is not available", droplet)
-            return False
+            return
         dev.append(DigitalOceanBinarySensor(digital, droplet_id))
 
     add_entities(dev, True)
@@ -55,6 +63,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class DigitalOceanBinarySensor(BinarySensorEntity):
     """Representation of a Digital Ocean droplet sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, do, droplet_id):
         """Initialize a new Digital Ocean sensor."""
@@ -76,13 +86,12 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICE_CLASS_MOVING
+        return BinarySensorDeviceClass.MOVING
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_CREATED_AT: self.data.created_at,
             ATTR_DROPLET_ID: self.data.id,
             ATTR_DROPLET_NAME: self.data.name,
@@ -94,7 +103,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
             ATTR_VCPUS: self.data.vcpus,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._digital_ocean.update()
 

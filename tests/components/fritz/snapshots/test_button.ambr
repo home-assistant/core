@@ -1,0 +1,235 @@
+# serializer version: 1
+# name: test_button_setup[button.mock_title_cleanup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.mock_title_cleanup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleanup',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleanup',
+    'unique_id': '1C:ED:6F:12:34:11-cleanup',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.mock_title_cleanup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Cleanup',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_cleanup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup[button.mock_title_firmware_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.mock_title_firmware_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Firmware update',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_update',
+    'unique_id': '1C:ED:6F:12:34:11-firmware_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.mock_title_firmware_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'Mock Title Firmware update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_firmware_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup[button.mock_title_reconnect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.mock_title_reconnect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Reconnect',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reconnect',
+    'unique_id': '1C:ED:6F:12:34:11-reconnect',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.mock_title_reconnect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'Mock Title Reconnect',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_reconnect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup[button.mock_title_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.mock_title_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-reboot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.mock_title_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'Mock Title Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup[button.printer_wake_on_lan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.printer_wake_on_lan',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lan-pending',
+    'original_name': 'printer Wake on LAN',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AA:BB:CC:00:11:22_wake_on_lan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.printer_wake_on_lan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'printer Wake on LAN',
+      'icon': 'mdi:lan-pending',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.printer_wake_on_lan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -1,274 +1,244 @@
 """Tests for the Tuya config flow."""
-from unittest.mock import Mock, patch
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import pytest
-from tuyaha.devices.climate import STEP_HALVES
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tuya.config_flow import (
-    CONF_LIST_DEVICES,
-    ERROR_DEV_MULTI_TYPE,
-    ERROR_DEV_NOT_CONFIG,
-    ERROR_DEV_NOT_FOUND,
-    RESULT_AUTH_FAILED,
-    RESULT_CONN_ERROR,
-    RESULT_SINGLE_INSTANCE,
-)
-from homeassistant.components.tuya.const import (
-    CONF_BRIGHTNESS_RANGE_MODE,
-    CONF_COUNTRYCODE,
-    CONF_CURR_TEMP_DIVIDER,
-    CONF_DISCOVERY_INTERVAL,
-    CONF_MAX_KELVIN,
-    CONF_MAX_TEMP,
-    CONF_MIN_KELVIN,
-    CONF_MIN_TEMP,
-    CONF_QUERY_DEVICE,
-    CONF_QUERY_INTERVAL,
-    CONF_SET_TEMP_DIVIDED,
-    CONF_SUPPORT_COLOR,
-    CONF_TEMP_DIVIDER,
-    CONF_TEMP_STEP_OVERRIDE,
-    CONF_TUYA_MAX_COLTEMP,
-    DOMAIN,
-    TUYA_DATA,
-)
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-)
-
-from .common import CLIMATE_ID, LIGHT_ID, LIGHT_ID_FAKE1, LIGHT_ID_FAKE2, MockTuya
+from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-USERNAME = "myUsername"
-PASSWORD = "myPassword"
-COUNTRY_CODE = "1"
-TUYA_PLATFORM = "tuya"
-
-TUYA_USER_DATA = {
-    CONF_USERNAME: USERNAME,
-    CONF_PASSWORD: PASSWORD,
-    CONF_COUNTRYCODE: COUNTRY_CODE,
-    CONF_PLATFORM: TUYA_PLATFORM,
-}
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.fixture(name="tuya")
-def tuya_fixture() -> Mock:
-    """Patch libraries."""
-    with patch("homeassistant.components.tuya.config_flow.TuyaApi") as tuya:
-        yield tuya
-
-
-@pytest.fixture(name="tuya_setup", autouse=True)
-def tuya_setup_fixture():
-    """Mock tuya entry setup."""
-    with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
-        yield
-
-
-async def test_user(hass, tuya):
-    """Test user config."""
+@pytest.mark.usefixtures("mock_tuya_login_control")
+async def test_user_flow(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the full happy path user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_USER_DATA
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
-    assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
-    assert not result["result"].unique_id
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "scan"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+    assert result3 == snapshot
 
 
-async def test_abort_if_already_setup(hass, tuya):
-    """Test we abort if Tuya is already setup."""
-    MockConfigEntry(domain=DOMAIN, data=TUYA_USER_DATA).add_to_hass(hass)
-
-    # Should fail, config exist (import)
+async def test_user_flow_failed_qr_code(
+    hass: HomeAssistant,
+    mock_tuya_login_control: MagicMock,
+) -> None:
+    """Test an error occurring while retrieving the QR code."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_SINGLE_INSTANCE
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    # Something went wrong getting the QR code (like an invalid user code)
+    mock_tuya_login_control.qr_code.return_value["success"] = False
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {"base": "login_error"}
+
+    # This time it worked out
+    mock_tuya_login_control.qr_code.return_value["success"] = True
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
+    )
+    assert result3.get("step_id") == "scan"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
-async def test_abort_on_invalid_credentials(hass, tuya):
-    """Test when we have invalid credentials."""
-    tuya().init.side_effect = TuyaAPIException("Boom")
-
+async def test_user_flow_failed_scan(
+    hass: HomeAssistant,
+    mock_tuya_login_control: MagicMock,
+) -> None:
+    """Test an error occurring while verifying login."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": RESULT_AUTH_FAILED}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
-
-async def test_abort_on_connection_error(hass, tuya):
-    """Test when we have a network error."""
-    tuya().init.side_effect = TuyaNetException("Boom")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_CONN_ERROR
-
-
-async def test_options_flow(hass):
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TUYA_USER_DATA,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Set up the integration to make sure the config flow module is loaded.
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Unload the integration to prepare for the test.
-    with patch("homeassistant.components.tuya.async_unload_entry", return_value=True):
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Test check for integration not loaded
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_CONN_ERROR
-
-    # Load integration and enter options
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    hass.data[DOMAIN] = {TUYA_DATA: MockTuya()}
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    # Test dev not found error
-    result = await hass.config_entries.options.async_configure(
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE1}"]},
+        user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_NOT_FOUND}
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "scan"
 
-    # Test dev type error
-    result = await hass.config_entries.options.async_configure(
+    # Access has been denied, or the code hasn't been scanned yet
+    good_values = mock_tuya_login_control.login_result.return_value
+    mock_tuya_login_control.login_result.return_value = (
+        False,
+        {"msg": "oops", "code": 42},
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE2}"]},
+        user_input={},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_NOT_CONFIG}
+    assert result3.get("type") is FlowResultType.FORM
+    assert result3.get("errors") == {"base": "login_error"}
 
-    # Test multi dev error
-    result = await hass.config_entries.options.async_configure(
+    # This time it worked out
+    mock_tuya_login_control.login_result.return_value = good_values
+
+    result4 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"climate-{CLIMATE_ID}", f"light-{LIGHT_ID}"]},
+        user_input={},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_MULTI_TYPE}
+    assert result4.get("type") is FlowResultType.CREATE_ENTRY
 
-    # Test climate options form
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_LIST_DEVICES: [f"climate-{CLIMATE_ID}"]}
-    )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device"
+@pytest.mark.usefixtures("mock_tuya_login_control")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the reauthentication configuration flow."""
+    mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_configure(
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "scan"
+
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            CONF_TEMP_DIVIDER: 10,
-            CONF_CURR_TEMP_DIVIDER: 5,
-            CONF_SET_TEMP_DIVIDED: False,
-            CONF_TEMP_STEP_OVERRIDE: STEP_HALVES,
-            CONF_MIN_TEMP: 12,
-            CONF_MAX_TEMP: 22,
-        },
+        user_input={},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
 
-    # Test light options form
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID}"]}
-    )
+    assert mock_config_entry == snapshot
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device"
 
-    result = await hass.config_entries.options.async_configure(
+@pytest.mark.usefixtures("mock_tuya_login_control")
+async def test_reauth_flow_migration(
+    hass: HomeAssistant,
+    mock_old_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the reauthentication configuration flow.
+
+    This flow tests the migration from an old config entry.
+    """
+    mock_old_config_entry.add_to_hass(hass)
+
+    # Ensure old data is there, new data is missing
+    assert CONF_APP_TYPE in mock_old_config_entry.data
+    assert CONF_USER_CODE not in mock_old_config_entry.data
+
+    result = await mock_old_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_user_code"
+
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_SUPPORT_COLOR: True,
-            CONF_BRIGHTNESS_RANGE_MODE: 1,
-            CONF_MIN_KELVIN: 4000,
-            CONF_MAX_KELVIN: 5000,
-            CONF_TUYA_MAX_COLTEMP: 12000,
-        },
+        user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "scan"
 
-    # Test common options
-    result = await hass.config_entries.options.async_configure(
+    result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_DISCOVERY_INTERVAL: 100,
-            CONF_QUERY_INTERVAL: 50,
-            CONF_QUERY_DEVICE: LIGHT_ID,
-        },
+        user_input={},
     )
 
-    # Verify results
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"
 
-    climate_options = config_entry.options[CLIMATE_ID]
-    assert climate_options[CONF_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert climate_options[CONF_TEMP_DIVIDER] == 10
-    assert climate_options[CONF_CURR_TEMP_DIVIDER] == 5
-    assert climate_options[CONF_SET_TEMP_DIVIDED] is False
-    assert climate_options[CONF_TEMP_STEP_OVERRIDE] == STEP_HALVES
-    assert climate_options[CONF_MIN_TEMP] == 12
-    assert climate_options[CONF_MAX_TEMP] == 22
+    # Ensure the old data is gone, new data is present
+    assert CONF_APP_TYPE not in mock_old_config_entry.data
+    assert CONF_USER_CODE in mock_old_config_entry.data
 
-    light_options = config_entry.options[LIGHT_ID]
-    assert light_options[CONF_SUPPORT_COLOR] is True
-    assert light_options[CONF_BRIGHTNESS_RANGE_MODE] == 1
-    assert light_options[CONF_MIN_KELVIN] == 4000
-    assert light_options[CONF_MAX_KELVIN] == 5000
-    assert light_options[CONF_TUYA_MAX_COLTEMP] == 12000
+    assert mock_old_config_entry == snapshot
 
-    assert config_entry.options[CONF_DISCOVERY_INTERVAL] == 100
-    assert config_entry.options[CONF_QUERY_INTERVAL] == 50
-    assert config_entry.options[CONF_QUERY_DEVICE] == LIGHT_ID
+
+async def test_reauth_flow_failed_qr_code(
+    hass: HomeAssistant,
+    mock_tuya_login_control: MagicMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test an error occurring while retrieving the QR code."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    result = await mock_old_config_entry.start_reauth_flow(hass)
+
+    # Something went wrong getting the QR code (like an invalid user code)
+    mock_tuya_login_control.qr_code.return_value["success"] = False
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {"base": "login_error"}
+
+    # This time it worked out
+    mock_tuya_login_control.qr_code.return_value["success"] = True
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
+    )
+    assert result3.get("step_id") == "scan"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"

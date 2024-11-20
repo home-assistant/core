@@ -1,11 +1,19 @@
 """Support for Iperf3 network measurement tool."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import iperf3
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_HOSTS,
@@ -13,12 +21,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
-    DATA_RATE_MEGABITS_PER_SECOND,
+    UnitOfDataRate,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "iperf3"
 DATA_UPDATED = f"{DOMAIN}_data_updated"
@@ -40,10 +50,25 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
-SENSOR_TYPES = {
-    ATTR_DOWNLOAD: [ATTR_DOWNLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
-    ATTR_UPLOAD: [ATTR_UPLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_DOWNLOAD,
+        name=ATTR_DOWNLOAD.capitalize(),
+        icon="mdi:download",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key=ATTR_UPLOAD,
+        name=ATTR_UPLOAD.capitalize(),
+        icon="mdi:upload",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PROTOCOLS = ["tcp", "udp"]
 
@@ -62,9 +87,9 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA]),
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                ),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
                     cv.time_period, cv.positive_timedelta
                 ),
@@ -78,7 +103,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST, default=None): cv.string})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iperf3 component."""
     hass.data[DOMAIN] = {}
 
@@ -89,7 +114,7 @@ async def async_setup(hass, config):
         if not conf[CONF_MANUAL]:
             async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
 
-    def update(call):
+    def update(call: ServiceCall) -> None:
         """Service call to manually update the data."""
         called_host = call.data[ATTR_HOST]
         if called_host in hass.data[DOMAIN]:
@@ -102,7 +127,11 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+            hass,
+            SENSOR_DOMAIN,
+            DOMAIN,
+            {CONF_MONITORED_CONDITIONS: conf[CONF_MONITORED_CONDITIONS]},
+            config,
         )
     )
 

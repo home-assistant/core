@@ -1,10 +1,11 @@
 """Tests for Sentry integration."""
+
 import logging
 from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.sentry import get_channel, process_before_send
+from homeassistant.components.sentry import process_before_send
 from homeassistant.components.sentry.const import (
     CONF_DSN,
     CONF_ENVIRONMENT,
@@ -29,15 +30,18 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sentry.AioHttpIntegration"
-    ) as sentry_aiohttp_mock, patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
-    ) as sentry_sqlalchemy_mock, patch(
-        "homeassistant.components.sentry.LoggingIntegration"
-    ) as sentry_logging_mock, patch(
-        "homeassistant.components.sentry.sentry_sdk"
-    ) as sentry_mock:
+    with (
+        patch(
+            "homeassistant.components.sentry.AioHttpIntegration"
+        ) as sentry_aiohttp_mock,
+        patch(
+            "homeassistant.components.sentry.SqlalchemyIntegration"
+        ) as sentry_sqlalchemy_mock,
+        patch(
+            "homeassistant.components.sentry.LoggingIntegration"
+        ) as sentry_logging_mock,
+        patch("homeassistant.components.sentry.sentry_sdk") as sentry_mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -47,8 +51,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert entry.options[CONF_ENVIRONMENT] == "production"
 
     assert sentry_logging_mock.call_count == 1
-    assert sentry_logging_mock.called_once_with(
-        level=logging.WARNING, event_level=logging.WARNING
+    sentry_logging_mock.assert_called_once_with(
+        level=logging.WARNING, event_level=logging.ERROR
     )
 
     assert sentry_aiohttp_mock.call_count == 1
@@ -83,11 +87,12 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sentry.AioHttpIntegration"), patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
-    ), patch("homeassistant.components.sentry.LoggingIntegration"), patch(
-        "homeassistant.components.sentry.sentry_sdk"
-    ) as sentry_mock:
+    with (
+        patch("homeassistant.components.sentry.AioHttpIntegration"),
+        patch("homeassistant.components.sentry.SqlalchemyIntegration"),
+        patch("homeassistant.components.sentry.LoggingIntegration"),
+        patch("homeassistant.components.sentry.sentry_sdk") as sentry_mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -101,20 +106,6 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
         "traces_sample_rate",
     }
     assert call_args["traces_sample_rate"] == 0.5
-
-
-@pytest.mark.parametrize(
-    "version,channel",
-    [
-        ("0.115.0.dev20200815", "nightly"),
-        ("0.115.0", "stable"),
-        ("0.115.0b4", "beta"),
-        ("0.115.0dev0", "dev"),
-    ],
-)
-async def test_get_channel(version: str, channel: str) -> None:
-    """Test if channel detection works from Home Assistant version number."""
-    assert get_channel(version) == channel
 
 
 async def test_process_before_send(hass: HomeAssistant) -> None:
@@ -156,7 +147,7 @@ async def test_process_before_send(hass: HomeAssistant) -> None:
     assert user["id"] == "12345"
 
 
-async def test_event_with_platform_context(hass: HomeAssistant):
+async def test_event_with_platform_context(hass: HomeAssistant) -> None:
     """Test extraction of platform context information during Sentry events."""
 
     current_platform_mock = Mock()
@@ -208,7 +199,7 @@ async def test_event_with_platform_context(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "logger,tags",
+    ("logger", "tags"),
     [
         ("adguard", {"package": "adguard"}),
         (
@@ -235,7 +226,7 @@ async def test_event_with_platform_context(hass: HomeAssistant):
         ("tuyapi.test", {"package": "tuyapi"}),
     ],
 )
-async def test_logger_event_extraction(hass: HomeAssistant, logger, tags):
+async def test_logger_event_extraction(hass: HomeAssistant, logger, tags) -> None:
     """Test extraction of information from Sentry logger events."""
 
     result = process_before_send(
@@ -262,7 +253,7 @@ async def test_logger_event_extraction(hass: HomeAssistant, logger, tags):
 
 
 @pytest.mark.parametrize(
-    "logger,options,event",
+    ("logger", "options", "event"),
     [
         ("adguard", {CONF_EVENT_THIRD_PARTY_PACKAGES: True}, True),
         ("adguard", {CONF_EVENT_THIRD_PARTY_PACKAGES: False}, False),
@@ -278,7 +269,7 @@ async def test_logger_event_extraction(hass: HomeAssistant, logger, tags):
         ),
     ],
 )
-async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
+async def test_filter_log_events(hass: HomeAssistant, logger, options, event) -> None:
     """Test filtering of events based on configuration options."""
     result = process_before_send(
         hass,
@@ -298,7 +289,7 @@ async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
 
 
 @pytest.mark.parametrize(
-    "handled,options,event",
+    ("handled", "options", "event"),
     [
         ("yes", {CONF_EVENT_HANDLED: True}, True),
         ("yes", {CONF_EVENT_HANDLED: False}, False),
@@ -306,7 +297,9 @@ async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
         ("no", {CONF_EVENT_HANDLED: True}, True),
     ],
 )
-async def test_filter_handled_events(hass: HomeAssistant, handled, options, event):
+async def test_filter_handled_events(
+    hass: HomeAssistant, handled, options, event
+) -> None:
     """Tests filtering of handled events based on configuration options."""
     result = process_before_send(
         hass,

@@ -1,64 +1,68 @@
 """Support for a ScreenLogic 'circuit' switch."""
-import logging
 
-from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES, ON_OFF
+from dataclasses import dataclass
 
-from homeassistant.components.switch import SwitchEntity
+from screenlogicpy.const.data import ATTR, DEVICE
+from screenlogicpy.const.msg import CODE
+from screenlogicpy.device_const.circuit import GENERIC_CIRCUIT_NAMES, INTERFACE
 
-from . import ScreenlogicEntity
-from .const import DOMAIN
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from .const import LIGHT_CIRCUIT_FUNCTIONS
+from .entity import (
+    ScreenLogicCircuitEntity,
+    ScreenLogicPushEntityDescription,
+    ScreenLogicSwitchingEntity,
+)
+from .types import ScreenLogicConfigEntry
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+@dataclass(frozen=True, kw_only=True)
+class ScreenLogicCircuitSwitchDescription(
+    SwitchEntityDescription, ScreenLogicPushEntityDescription
+):
+    """Describes a ScreenLogic switch entity."""
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ScreenLogicConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
-    entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-
-    for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items():
-        enabled = circuit["name"] not in GENERIC_CIRCUIT_NAMES
-        entities.append(ScreenLogicSwitch(coordinator, circuit_num, enabled))
+    entities: list[ScreenLogicSwitchingEntity] = []
+    coordinator = config_entry.runtime_data
+    gateway = coordinator.gateway
+    for circuit_index, circuit_data in gateway.get_data(DEVICE.CIRCUIT).items():
+        if (
+            not circuit_data
+            or ((circuit_function := circuit_data.get(ATTR.FUNCTION)) is None)
+            or circuit_function in LIGHT_CIRCUIT_FUNCTIONS
+        ):
+            continue
+        circuit_name = circuit_data[ATTR.NAME]
+        circuit_interface = INTERFACE(circuit_data[ATTR.INTERFACE])
+        entities.append(
+            ScreenLogicCircuitSwitch(
+                coordinator,
+                ScreenLogicCircuitSwitchDescription(
+                    subscription_code=CODE.STATUS_CHANGED,
+                    data_root=(DEVICE.CIRCUIT,),
+                    key=circuit_index,
+                    entity_registry_enabled_default=(
+                        circuit_name not in GENERIC_CIRCUIT_NAMES
+                        and circuit_interface != INTERFACE.DONT_SHOW
+                    ),
+                ),
+            )
+        )
 
     async_add_entities(entities)
 
 
-class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
-    """ScreenLogic switch entity."""
+class ScreenLogicCircuitSwitch(ScreenLogicCircuitEntity, SwitchEntity):
+    """Class to represent a ScreenLogic Switch."""
 
-    @property
-    def name(self):
-        """Get the name of the switch."""
-        return f"{self.gateway_name} {self.circuit['name']}"
-
-    @property
-    def is_on(self) -> bool:
-        """Get whether the switch is in on state."""
-        return self.circuit["value"] == 1
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Send the ON command."""
-        return await self._async_set_circuit(ON_OFF.ON)
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Send the OFF command."""
-        return await self._async_set_circuit(ON_OFF.OFF)
-
-    async def _async_set_circuit(self, circuit_value) -> None:
-        async with self.coordinator.api_lock:
-            success = await self.hass.async_add_executor_job(
-                self.gateway.set_circuit, self._data_key, circuit_value
-            )
-
-        if success:
-            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
-            await self.coordinator.async_request_refresh()
-        else:
-            _LOGGER.warning(
-                "Failed to set_circuit %s %s", self._data_key, circuit_value
-            )
-
-    @property
-    def circuit(self):
-        """Shortcut to access the circuit."""
-        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]
+    entity_description: ScreenLogicCircuitSwitchDescription

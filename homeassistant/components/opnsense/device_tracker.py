@@ -1,19 +1,26 @@
 """Device tracker support for OPNSense routers."""
+
+from __future__ import annotations
+
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.components.opnsense import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+
+from . import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 
-async def async_get_scanner(hass, config, discovery_info=None):
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> OPNSenseDeviceScanner:
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(
+    return OPNSenseDeviceScanner(
         interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
     )
-    return scanner
 
 
 class OPNSenseDeviceScanner(DeviceScanner):
-    """This class queries a router running OPNsense."""
+    """Class which queries a router running OPNsense."""
 
     def __init__(self, client, interfaces):
         """Initialize the scanner."""
@@ -25,9 +32,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Create dict with mac address keys from list of devices."""
         out_devices = {}
         for device in devices:
-            if not self.interfaces:
-                out_devices[device["mac"]] = device
-            elif device["intf_description"] in self.interfaces:
+            if not self.interfaces or device["intf_description"] in self.interfaces:
                 out_devices[device["mac"]] = device
         return out_devices
 
@@ -40,8 +45,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        hostname = self.last_results[device].get("hostname") or None
-        return hostname
+        return self.last_results[device].get("hostname") or None
 
     def update_info(self):
         """Ensure the information from the OPNSense router is up to date.
@@ -56,7 +60,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the extra attrs of the given device."""
         if device not in self.last_results:
             return None
-        mfg = self.last_results[device].get("manufacturer")
-        if not mfg:
+        if not (mfg := self.last_results[device].get("manufacturer")):
             return {}
         return {"manufacturer": mfg}

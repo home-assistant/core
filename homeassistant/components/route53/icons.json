@@ -1,0 +1,7 @@
+{
+  "services": {
+    "update_records": {
+      "service": "mdi:database-refresh"
+    }
+  }
+}

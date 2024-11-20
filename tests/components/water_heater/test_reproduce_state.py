@@ -1,4 +1,7 @@
 """Test reproduce state for Water heater."""
+
+import pytest
+
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
@@ -10,12 +13,15 @@ from homeassistant.components.water_heater import (
     STATE_GAS,
 )
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Water heater states."""
     hass.states.async_set("water_heater.entity_off", STATE_OFF, {})
     hass.states.async_set("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45})
@@ -34,7 +40,8 @@ async def test_reproducing_states(hass, caplog):
     set_away_calls = async_mock_service(hass, "water_heater", SERVICE_SET_AWAY_MODE)
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("water_heater.entity_off", STATE_OFF),
             State("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45}),
@@ -45,7 +52,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_ECO,
                 {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
             ),
-        ]
+        ],
     )
 
     assert len(turn_on_calls) == 0
@@ -55,8 +62,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(set_away_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("water_heater.entity_off", "not_supported")]
+    await async_reproduce_state(
+        hass, [State("water_heater.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -67,7 +74,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(set_away_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("water_heater.entity_on", STATE_OFF),
             State("water_heater.entity_off", STATE_ON, {ATTR_TEMPERATURE: 45}),

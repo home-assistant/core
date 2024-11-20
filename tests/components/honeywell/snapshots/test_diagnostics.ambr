@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'Device 1234567': dict({
+      'DR Data': dict({
+        'CoolSetpLimit': None,
+        'HeatSetpLimit': None,
+      }),
+      'Fan Data': dict({
+        'fanModeAutoAllowed': True,
+        'fanModeCirculateAllowed': True,
+        'fanModeOnAllowed': True,
+      }),
+      'UI Data': dict({
+        'CoolLowerSetptLimit': 10,
+        'CoolNextPeriod': 10,
+        'CoolUpperSetptLimit': 20,
+        'HeatLowerSetptLimit': 20,
+        'HeatNextPeriod': 10,
+        'HeatUpperSetptLimit': 35,
+        'SwitchAutoAllowed': True,
+        'SwitchCoolAllowed': True,
+        'SwitchEmergencyHeatAllowed': True,
+        'SwitchHeatAllowed': True,
+        'SwitchOffAllowed': True,
+      }),
+    }),
+    'Device 7654321': dict({
+      'DR Data': dict({
+        'CoolSetpLimit': None,
+        'HeatSetpLimit': None,
+      }),
+      'Fan Data': dict({
+        'fanModeAutoAllowed': True,
+        'fanModeCirculateAllowed': True,
+        'fanModeOnAllowed': True,
+      }),
+      'UI Data': dict({
+        'CoolLowerSetptLimit': 10,
+        'CoolNextPeriod': 10,
+        'CoolUpperSetptLimit': 20,
+        'HeatLowerSetptLimit': 20,
+        'HeatNextPeriod': 10,
+        'HeatUpperSetptLimit': 35,
+        'SwitchAutoAllowed': True,
+        'SwitchCoolAllowed': True,
+        'SwitchEmergencyHeatAllowed': True,
+        'SwitchHeatAllowed': True,
+        'SwitchOffAllowed': True,
+      }),
+    }),
+  })
+# ---

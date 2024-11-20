@@ -1,7 +1,7 @@
 {
   "domain": "yandextts",
   "name": "Yandex TTS",
-  "documentation": "https://www.home-assistant.io/integrations/yandextts",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/yandextts",
   "iot_class": "cloud_push"
 }

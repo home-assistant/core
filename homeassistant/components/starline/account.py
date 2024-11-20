@@ -1,15 +1,18 @@
 """StarLine Account."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Callable
+from typing import Any
 
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -21,6 +24,12 @@ from .const import (
     DEFAULT_SCAN_OBD_INTERVAL,
     DOMAIN,
 )
+
+
+def _parse_datetime(dt_str: str | None) -> str | None:
+    if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
+        return None
+    return parsed.replace(tzinfo=dt_util.UTC).isoformat()
 
 
 class StarlineAccount:
@@ -56,17 +65,24 @@ class StarlineAccount:
             )
             self._api.set_slnet_token(slnet_token)
             self._api.set_user_id(user_id)
-            self._hass.config_entries.async_update_entry(
-                self._config_entry,
-                data={
+            self._hass.add_job(
+                self._save_slnet_token,
+                {
                     **self._config_entry.data,
                     DATA_SLNET_TOKEN: slnet_token,
                     DATA_EXPIRES: slnet_token_expires,
                     DATA_USER_ID: user_id,
                 },
             )
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error updating SLNet token: %s", err)
+
+    @callback
+    def _save_slnet_token(self, data) -> None:
+        self._hass.config_entries.async_update_entry(
+            self._config_entry,
+            data=data,
+        )
 
     def _update_data(self):
         """Update StarLine data."""
@@ -128,19 +144,20 @@ class StarlineAccount:
     @staticmethod
     def device_info(device: StarlineDevice) -> DeviceInfo:
         """Device information for entities."""
-        return {
-            "identifiers": {(DOMAIN, device.device_id)},
-            "manufacturer": "StarLine",
-            "name": device.name,
-            "sw_version": device.fw_version,
-            "model": device.typename,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            manufacturer="StarLine",
+            model=device.typename,
+            name=device.name,
+            sw_version=device.fw_version,
+            configuration_url="https://starline-online.ru/",
+        )
 
     @staticmethod
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": datetime.utcfromtimestamp(device.position["ts"]).isoformat(),
+            "updated": dt_util.utc_from_timestamp(device.position["ts"]).isoformat(),
             "online": device.online,
         }
 
@@ -150,7 +167,7 @@ class StarlineAccount:
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": device.balance.get("ts"),
+            "updated": _parse_datetime(device.balance.get("ts")),
         }
 
     @staticmethod

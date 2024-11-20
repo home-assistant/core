@@ -1,0 +1,197 @@
+# serializer version: 1
+# name: test_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'aqi',
+      'friendly_name': 'de Jongweg, Utrecht Air quality index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29',
+  })
+# ---
+# name: test_sensor.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'humidity',
+      'friendly_name': 'de Jongweg, Utrecht Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor.10
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Visbility using nephelometry',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_visbility_using_nephelometry',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor.11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'enum',
+      'friendly_name': 'de Jongweg, Utrecht Dominant pollutant',
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'so2',
+        'pm10',
+        'pm25',
+        'neph',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'pressure',
+      'friendly_name': 'de Jongweg, Utrecht Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1008.8',
+  })
+# ---
+# name: test_sensor.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'temperature',
+      'friendly_name': 'de Jongweg, Utrecht Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_sensor.4
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Carbon monoxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.3',
+  })
+# ---
+# name: test_sensor.5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Nitrogen dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.3',
+  })
+# ---
+# name: test_sensor.6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Ozone',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29.4',
+  })
+# ---
+# name: test_sensor.7
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Sulphur dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_sulphur_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.3',
+  })
+# ---
+# name: test_sensor.8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensor.9
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
+# ---

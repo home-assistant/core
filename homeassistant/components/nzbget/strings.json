@@ -19,15 +19,67 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update frequency (seconds)"
+  "entity": {
+    "sensor": {
+      "article_cache": {
+        "name": "Article cache"
+      },
+      "average_speed": {
+        "name": "Average speed"
+      },
+      "download_paused": {
+        "name": "Download paused"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "size": {
+        "name": "Size"
+      },
+      "disk_free": {
+        "name": "Disk free"
+      },
+      "post_processing_jobs": {
+        "name": "Post processing jobs"
+      },
+      "post_processing_paused": {
+        "name": "Post processing paused"
+      },
+      "queue_size": {
+        "name": "Queue size"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "speed_limit": {
+        "name": "Speed limit"
+      }
+    },
+    "switch": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  },
+  "services": {
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses download queue."
+    },
+    "resume": {
+      "name": "Resume",
+      "description": "Resumes download queue."
+    },
+    "set_speed": {
+      "name": "Set speed",
+      "description": "Sets download speed limit.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "Speed limit. 0 is unlimited."
         }
       }
     }

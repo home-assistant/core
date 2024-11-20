@@ -1,4 +1,5 @@
 """Errors for the Plex component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -19,4 +20,4 @@ class ShouldUpdateConfigEntry(PlexException):
 
 
 class MediaNotFound(PlexException):
-    """Media lookup failed for a given search query."""
+    """Requested media was not found."""

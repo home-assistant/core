@@ -1,25 +1,34 @@
 """Config flow for the Abode Security System component."""
-from abodepy import Abode
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
-from abodepy.helpers.errors import MFA_CODE_REQUIRED
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from http import HTTPStatus
+from typing import Any, cast
+
+from jaraco.abode.client import Client as Abode
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
+from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER
+from .const import CONF_POLLING, DOMAIN, LOGGER
 
 CONF_MFA = "mfa_code"
-CONF_POLLING = "polling"
 
 
-class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Abode."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
@@ -29,33 +38,34 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_MFA): str,
         }
 
-        self._cache = None
-        self._mfa_code = None
-        self._password = None
-        self._polling = False
-        self._username = None
+        self._mfa_code: str | None = None
+        self._password: str | None = None
+        self._polling: bool = False
+        self._username: str | None = None
 
-    async def _async_abode_login(self, step_id):
+    async def _async_abode_login(self, step_id: str) -> ConfigFlowResult:
         """Handle login with Abode."""
-        self._cache = self.hass.config.path(DEFAULT_CACHEDB)
         errors = {}
 
         try:
             await self.hass.async_add_executor_job(
-                Abode, self._username, self._password, True, False, False, self._cache
+                Abode, self._username, self._password, True, False, False
             )
 
-        except (AbodeException, ConnectTimeout, HTTPError) as ex:
+        except AbodeException as ex:
             if ex.errcode == MFA_CODE_REQUIRED[0]:
                 return await self.async_step_mfa()
 
             LOGGER.error("Unable to connect to Abode: %s", ex)
 
-            if ex.errcode == HTTP_BAD_REQUEST:
+            if ex.errcode == HTTPStatus.BAD_REQUEST:
                 errors = {"base": "invalid_auth"}
 
             else:
                 errors = {"base": "cannot_connect"}
+
+        except (ConnectTimeout, HTTPError):
+            errors = {"base": "cannot_connect"}
 
         if errors:
             return self.async_show_form(
@@ -64,16 +74,11 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry()
 
-    async def _async_abode_mfa_login(self):
+    async def _async_abode_mfa_login(self) -> ConfigFlowResult:
         """Handle multi-factor authentication (MFA) login with Abode."""
         try:
             # Create instance to access login method for passing MFA code
-            abode = Abode(
-                auto_login=False,
-                get_devices=False,
-                get_automations=False,
-                cache_path=self._cache,
-            )
+            abode = Abode(auto_login=False, get_devices=False, get_automations=False)
             await self.hass.async_add_executor_job(
                 abode.login, self._username, self._password, self._mfa_code
             )
@@ -87,7 +92,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry()
 
-    async def _async_create_entry(self):
+    async def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         config_data = {
             CONF_USERNAME: self._username,
@@ -97,19 +102,15 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._username)
 
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
-                existing_entry, data=config_data
-            )
-            # Reload the Abode config entry otherwise devices will remain unavailable
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
+            return self.async_update_reload_and_abort(existing_entry, data=config_data)
 
-            return self.async_abort(reason="reauth_successful")
+        return self.async_create_entry(
+            title=cast(str, self._username), data=config_data
+        )
 
-        return self.async_create_entry(title=self._username, data=config_data)
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -124,7 +125,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_abode_login(step_id="user")
 
-    async def async_step_mfa(self, user_input=None):
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a multi-factor authentication (MFA) flow."""
         if user_input is None:
             return self.async_show_form(
@@ -135,13 +138,17 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_abode_mfa_login()
 
-    async def async_step_reauth(self, config):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from Abode."""
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         if user_input is None:
             return self.async_show_form(

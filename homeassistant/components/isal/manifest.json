@@ -1,0 +1,10 @@
+{
+  "domain": "isal",
+  "name": "Intelligent Storage Acceleration",
+  "codeowners": ["@bdraco"],
+  "documentation": "https://www.home-assistant.io/integrations/isal",
+  "integration_type": "system",
+  "iot_class": "local_polling",
+  "quality_scale": "internal",
+  "requirements": ["isal==1.7.1"]
+}

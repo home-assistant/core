@@ -1,4 +1,5 @@
 """Support for Meteoclimatic weather data."""
+
 import logging
 
 from meteoclimatic import MeteoclimaticClient
@@ -24,13 +25,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data = await hass.async_add_executor_job(
                 meteoclimatic_client.weather_at_station, station_code
             )
-            return data.__dict__
         except MeteoclimaticError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
+        return data.__dict__
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"Meteoclimatic weather for {entry.title} ({station_code})",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -41,12 +43,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

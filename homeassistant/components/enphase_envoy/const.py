@@ -1,82 +1,23 @@
 """The enphase_envoy component."""
 
+from pyenphase import EnvoyAuthenticationError, EnvoyAuthenticationRequired
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    SensorEntityDescription,
-)
-from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, POWER_WATT
-from homeassistant.util import dt
+from homeassistant.const import Platform
 
 DOMAIN = "enphase_envoy"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
+INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
 
-COORDINATOR = "coordinator"
-NAME = "name"
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES = "diagnostics_include_fixtures"
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE = False
 
-SENSORS = (
-    SensorEntityDescription(
-        key="production",
-        name="Current Power Production",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="daily_production",
-        name="Today's Energy Production",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="seven_days_production",
-        name="Last Seven Days Energy Production",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="lifetime_production",
-        name="Lifetime Energy Production",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-    ),
-    SensorEntityDescription(
-        key="consumption",
-        name="Current Power Consumption",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="daily_consumption",
-        name="Today's Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="seven_days_consumption",
-        name="Last Seven Days Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="lifetime_consumption",
-        name="Lifetime Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-    ),
-    SensorEntityDescription(
-        key="inverters",
-        name="Inverter",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-)
+OPTION_DISABLE_KEEP_ALIVE = "disable_keep_alive"
+OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE = False

@@ -1,20 +1,53 @@
 """AVM FRITZ!Box connectivity sensor."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException
-
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import FritzBoxBaseEntity, FritzBoxTools
 from .const import DOMAIN
+from .coordinator import AvmWrapper, ConnectionInfo
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class FritzBinarySensorEntityDescription(
+    BinarySensorEntityDescription, FritzEntityDescription
+):
+    """Describes Fritz sensor entity."""
+
+    is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
+
+
+SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
+    FritzBinarySensorEntityDescription(
+        key="is_connected",
+        translation_key="is_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status, _: bool(status.is_connected),
+    ),
+    FritzBinarySensorEntityDescription(
+        key="is_linked",
+        translation_key="is_linked",
+        device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status, _: bool(status.is_linked),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,74 +55,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    if fritzbox_tools.connection and "WANIPConn1" in fritzbox_tools.connection.services:
-        # Only routers are supported at the moment
-        async_add_entities(
-            [FritzBoxConnectivitySensor(fritzbox_tools, entry.title)], True
-        )
+    connection_info = await avm_wrapper.async_get_connection_info()
+
+    entities = [
+        FritzBoxBinarySensor(avm_wrapper, entry.title, description)
+        for description in SENSOR_TYPES
+        if description.is_suitable(connection_info)
+    ]
+
+    async_add_entities(entities)
 
 
-class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
+class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
 
-    def __init__(
-        self, fritzbox_tools: FritzBoxTools, device_friendly_name: str
-    ) -> None:
-        """Init FRITZ!Box connectivity class."""
-        self._unique_id = f"{fritzbox_tools.unique_id}-connectivity"
-        self._name = f"{device_friendly_name} Connectivity"
-        self._is_on = True
-        self._is_available = True
-        super().__init__(fritzbox_tools, device_friendly_name)
+    entity_description: FritzBinarySensorEntityDescription
 
     @property
-    def name(self) -> str:
-        """Return name."""
-        return self._name
-
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def is_on(self) -> bool:
-        """Return status."""
-        return self._is_on
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return self._unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        return self._is_available
-
-    def update(self) -> None:
-        """Update data."""
-        _LOGGER.debug("Updating FRITZ!Box binary sensors")
-        self._is_on = True
-        try:
-            if (
-                self._fritzbox_tools.connection
-                and "WANCommonInterfaceConfig1"
-                in self._fritzbox_tools.connection.services
-            ):
-                link_props = self._fritzbox_tools.connection.call_action(
-                    "WANCommonInterfaceConfig1", "GetCommonLinkProperties"
-                )
-                is_up = link_props["NewPhysicalLinkStatus"]
-                self._is_on = is_up == "Up"
-            else:
-                if self._fritzbox_tools.fritz_status:
-                    self._is_on = self._fritzbox_tools.fritz_status.is_connected
-
-            self._is_available = True
-
-        except FritzConnectionException:
-            _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
-            self._is_available = False
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if isinstance(
+            state := self.coordinator.data["entity_states"].get(
+                self.entity_description.key
+            ),
+            bool,
+        ):
+            return state
+        return None

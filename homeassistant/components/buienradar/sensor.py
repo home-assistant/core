@@ -1,4 +1,7 @@
 """Support for Buienradar.nl weather service."""
+
+from __future__ import annotations
+
 import logging
 
 from buienradar.constants import (
@@ -19,29 +22,40 @@ from buienradar.constants import (
     WINDSPEED,
 )
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    Platform,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME
+from . import BuienRadarConfigEntry
+from .const import (
+    CONF_TIMEFRAME,
+    DEFAULT_TIMEFRAME,
+    STATE_CONDITION_CODES,
+    STATE_CONDITIONS,
+    STATE_DETAILED_CONDITIONS,
+)
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,268 +69,629 @@ SCHEDULE_OK = 10
 # When an error occurred, new call after (minutes):
 SCHEDULE_NOK = 2
 
-# Supported sensor types:
-# Key: ['label', unit, icon]
-SENSOR_TYPES = {
-    "stationname": ["Stationname", None, None, None],
+STATIONNAME_LABEL = "Stationname"
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="stationname",
+        translation_key="stationname",
+    ),
     # new in json api (>1.0.0):
-    "barometerfc": ["Barometer value", None, "mdi:gauge", None],
+    SensorEntityDescription(
+        key="barometerfc",
+        translation_key="barometerfc",
+        icon="mdi:gauge",
+    ),
     # new in json api (>1.0.0):
-    "barometerfcname": ["Barometer", None, "mdi:gauge", None],
+    SensorEntityDescription(
+        key="barometerfcname",
+        translation_key="barometerfcname",
+        icon="mdi:gauge",
+    ),
     # new in json api (>1.0.0):
-    "barometerfcnamenl": ["Barometer", None, "mdi:gauge", None],
-    "condition": ["Condition", None, None, None],
-    "conditioncode": ["Condition code", None, None, None],
-    "conditiondetailed": ["Detailed condition", None, None, None],
-    "conditionexact": ["Full condition", None, None, None],
-    "symbol": ["Symbol", None, None, None],
+    SensorEntityDescription(
+        key="barometerfcnamenl",
+        translation_key="barometerfcnamenl",
+        icon="mdi:gauge",
+    ),
+    SensorEntityDescription(
+        key="condition",
+        translation_key="condition",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditioncode",
+        translation_key="conditioncode",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed",
+        translation_key="conditiondetailed",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditionexact",
+        translation_key="conditionexact",
+    ),
+    SensorEntityDescription(
+        key="symbol",
+        translation_key="symbol",
+    ),
     # new in json api (>1.0.0):
-    "feeltemperature": [
-        "Feel temperature",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "humidity": ["Humidity", PERCENTAGE, "mdi:water-percent", None],
-    "temperature": [
-        "Temperature",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "groundtemperature": [
-        "Ground temperature",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy", None],
-    "windforce": ["Wind force", "Bft", "mdi:weather-windy", None],
-    "winddirection": ["Wind direction", None, "mdi:compass-outline", None],
-    "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline", None],
-    "pressure": ["Pressure", PRESSURE_HPA, "mdi:gauge", None],
-    "visibility": ["Visibility", LENGTH_KILOMETERS, None, None],
-    "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy", None],
-    "precipitation": [
-        "Precipitation",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "mdi:weather-pouring",
-        None,
-    ],
-    "irradiance": [
-        "Irradiance",
-        IRRADIATION_WATTS_PER_SQUARE_METER,
-        "mdi:sunglasses",
-        None,
-    ],
-    "precipitation_forecast_average": [
-        "Precipitation forecast average",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "mdi:weather-pouring",
-        None,
-    ],
-    "precipitation_forecast_total": [
-        "Precipitation forecast total",
-        LENGTH_MILLIMETERS,
-        "mdi:weather-pouring",
-        None,
-    ],
+    SensorEntityDescription(
+        key="feeltemperature",
+        translation_key="feeltemperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="groundtemperature",
+        translation_key="groundtemperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="windspeed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="windforce",
+        translation_key="windforce",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="winddirection",
+        translation_key="winddirection",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth",
+        translation_key="windazimuth",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="visibility",
+        translation_key="visibility",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="windgust",
+        translation_key="windgust",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="precipitation",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+    ),
+    SensorEntityDescription(
+        key="irradiance",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="precipitation_forecast_average",
+        translation_key="precipitation_forecast_average",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+    ),
+    SensorEntityDescription(
+        key="precipitation_forecast_total",
+        translation_key="precipitation_forecast_total",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
     # new in json api (>1.0.0):
-    "rainlast24hour": [
-        "Rain last 24h",
-        LENGTH_MILLIMETERS,
-        "mdi:weather-pouring",
-        None,
-    ],
+    SensorEntityDescription(
+        key="rainlast24hour",
+        translation_key="rainlast24hour",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
     # new in json api (>1.0.0):
-    "rainlasthour": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "temperature_1d": [
-        "Temperature 1d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "temperature_2d": [
-        "Temperature 2d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "temperature_3d": [
-        "Temperature 3d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "temperature_4d": [
-        "Temperature 4d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "temperature_5d": [
-        "Temperature 5d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "mintemp_1d": [
-        "Minimum temperature 1d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "mintemp_2d": [
-        "Minimum temperature 2d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "mintemp_3d": [
-        "Minimum temperature 3d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "mintemp_4d": [
-        "Minimum temperature 4d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "mintemp_5d": [
-        "Minimum temperature 5d",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "rain_1d": ["Rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "rain_2d": ["Rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "rain_3d": ["Rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "rain_4d": ["Rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "rain_5d": ["Rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    SensorEntityDescription(
+        key="rainlasthour",
+        translation_key="rainlasthour",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="temperature_1d",
+        translation_key="temperature_1d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temperature_2d",
+        translation_key="temperature_2d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temperature_3d",
+        translation_key="temperature_3d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temperature_4d",
+        translation_key="temperature_4d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temperature_5d",
+        translation_key="temperature_5d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="mintemp_1d",
+        translation_key="mintemp_1d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="mintemp_2d",
+        translation_key="mintemp_2d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="mintemp_3d",
+        translation_key="mintemp_3d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="mintemp_4d",
+        translation_key="mintemp_4d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="mintemp_5d",
+        translation_key="mintemp_5d",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="rain_1d",
+        translation_key="rain_1d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="rain_2d",
+        translation_key="rain_2d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="rain_3d",
+        translation_key="rain_3d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="rain_4d",
+        translation_key="rain_4d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="rain_5d",
+        translation_key="rain_5d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
     # new in json api (>1.0.0):
-    "minrain_1d": ["Minimum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "minrain_2d": ["Minimum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "minrain_3d": ["Minimum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "minrain_4d": ["Minimum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "minrain_5d": ["Minimum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    SensorEntityDescription(
+        key="minrain_1d",
+        translation_key="minrain_1d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="minrain_2d",
+        translation_key="minrain_2d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="minrain_3d",
+        translation_key="minrain_3d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="minrain_4d",
+        translation_key="minrain_4d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="minrain_5d",
+        translation_key="minrain_5d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
     # new in json api (>1.0.0):
-    "maxrain_1d": ["Maximum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "maxrain_2d": ["Maximum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "maxrain_3d": ["Maximum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "maxrain_4d": ["Maximum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "maxrain_5d": ["Maximum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
-    "rainchance_1d": ["Rainchance 1d", PERCENTAGE, "mdi:weather-pouring", None],
-    "rainchance_2d": ["Rainchance 2d", PERCENTAGE, "mdi:weather-pouring", None],
-    "rainchance_3d": ["Rainchance 3d", PERCENTAGE, "mdi:weather-pouring", None],
-    "rainchance_4d": ["Rainchance 4d", PERCENTAGE, "mdi:weather-pouring", None],
-    "rainchance_5d": ["Rainchance 5d", PERCENTAGE, "mdi:weather-pouring", None],
-    "sunchance_1d": ["Sunchance 1d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
-    "sunchance_2d": ["Sunchance 2d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
-    "sunchance_3d": ["Sunchance 3d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
-    "sunchance_4d": ["Sunchance 4d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
-    "sunchance_5d": ["Sunchance 5d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
-    "windforce_1d": ["Wind force 1d", "Bft", "mdi:weather-windy", None],
-    "windforce_2d": ["Wind force 2d", "Bft", "mdi:weather-windy", None],
-    "windforce_3d": ["Wind force 3d", "Bft", "mdi:weather-windy", None],
-    "windforce_4d": ["Wind force 4d", "Bft", "mdi:weather-windy", None],
-    "windforce_5d": ["Wind force 5d", "Bft", "mdi:weather-windy", None],
-    "windspeed_1d": [
-        "Wind speed 1d",
-        SPEED_KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        None,
-    ],
-    "windspeed_2d": [
-        "Wind speed 2d",
-        SPEED_KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        None,
-    ],
-    "windspeed_3d": [
-        "Wind speed 3d",
-        SPEED_KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        None,
-    ],
-    "windspeed_4d": [
-        "Wind speed 4d",
-        SPEED_KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        None,
-    ],
-    "windspeed_5d": [
-        "Wind speed 5d",
-        SPEED_KILOMETERS_PER_HOUR,
-        "mdi:weather-windy",
-        None,
-    ],
-    "winddirection_1d": ["Wind direction 1d", None, "mdi:compass-outline", None],
-    "winddirection_2d": ["Wind direction 2d", None, "mdi:compass-outline", None],
-    "winddirection_3d": ["Wind direction 3d", None, "mdi:compass-outline", None],
-    "winddirection_4d": ["Wind direction 4d", None, "mdi:compass-outline", None],
-    "winddirection_5d": ["Wind direction 5d", None, "mdi:compass-outline", None],
-    "windazimuth_1d": [
-        "Wind direction azimuth 1d",
-        DEGREE,
-        "mdi:compass-outline",
-        None,
-    ],
-    "windazimuth_2d": [
-        "Wind direction azimuth 2d",
-        DEGREE,
-        "mdi:compass-outline",
-        None,
-    ],
-    "windazimuth_3d": [
-        "Wind direction azimuth 3d",
-        DEGREE,
-        "mdi:compass-outline",
-        None,
-    ],
-    "windazimuth_4d": [
-        "Wind direction azimuth 4d",
-        DEGREE,
-        "mdi:compass-outline",
-        None,
-    ],
-    "windazimuth_5d": [
-        "Wind direction azimuth 5d",
-        DEGREE,
-        "mdi:compass-outline",
-        None,
-    ],
-    "condition_1d": ["Condition 1d", None, None, None],
-    "condition_2d": ["Condition 2d", None, None, None],
-    "condition_3d": ["Condition 3d", None, None, None],
-    "condition_4d": ["Condition 4d", None, None, None],
-    "condition_5d": ["Condition 5d", None, None, None],
-    "conditioncode_1d": ["Condition code 1d", None, None, None],
-    "conditioncode_2d": ["Condition code 2d", None, None, None],
-    "conditioncode_3d": ["Condition code 3d", None, None, None],
-    "conditioncode_4d": ["Condition code 4d", None, None, None],
-    "conditioncode_5d": ["Condition code 5d", None, None, None],
-    "conditiondetailed_1d": ["Detailed condition 1d", None, None, None],
-    "conditiondetailed_2d": ["Detailed condition 2d", None, None, None],
-    "conditiondetailed_3d": ["Detailed condition 3d", None, None, None],
-    "conditiondetailed_4d": ["Detailed condition 4d", None, None, None],
-    "conditiondetailed_5d": ["Detailed condition 5d", None, None, None],
-    "conditionexact_1d": ["Full condition 1d", None, None, None],
-    "conditionexact_2d": ["Full condition 2d", None, None, None],
-    "conditionexact_3d": ["Full condition 3d", None, None, None],
-    "conditionexact_4d": ["Full condition 4d", None, None, None],
-    "conditionexact_5d": ["Full condition 5d", None, None, None],
-    "symbol_1d": ["Symbol 1d", None, None, None],
-    "symbol_2d": ["Symbol 2d", None, None, None],
-    "symbol_3d": ["Symbol 3d", None, None, None],
-    "symbol_4d": ["Symbol 4d", None, None, None],
-    "symbol_5d": ["Symbol 5d", None, None, None],
-}
+    SensorEntityDescription(
+        key="maxrain_1d",
+        translation_key="maxrain_1d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="maxrain_2d",
+        translation_key="maxrain_2d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="maxrain_3d",
+        translation_key="maxrain_3d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="maxrain_4d",
+        translation_key="maxrain_4d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="maxrain_5d",
+        translation_key="maxrain_5d",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    SensorEntityDescription(
+        key="rainchance_1d",
+        translation_key="rainchance_1d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="rainchance_2d",
+        translation_key="rainchance_2d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="rainchance_3d",
+        translation_key="rainchance_3d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="rainchance_4d",
+        translation_key="rainchance_4d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="rainchance_5d",
+        translation_key="rainchance_5d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="sunchance_1d",
+        translation_key="sunchance_1d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+    ),
+    SensorEntityDescription(
+        key="sunchance_2d",
+        translation_key="sunchance_2d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+    ),
+    SensorEntityDescription(
+        key="sunchance_3d",
+        translation_key="sunchance_3d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+    ),
+    SensorEntityDescription(
+        key="sunchance_4d",
+        translation_key="sunchance_4d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+    ),
+    SensorEntityDescription(
+        key="sunchance_5d",
+        translation_key="sunchance_5d",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+    ),
+    SensorEntityDescription(
+        key="windforce_1d",
+        translation_key="windforce_1d",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="windforce_2d",
+        translation_key="windforce_2d",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="windforce_3d",
+        translation_key="windforce_3d",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="windforce_4d",
+        translation_key="windforce_4d",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="windforce_5d",
+        translation_key="windforce_5d",
+        native_unit_of_measurement="Bft",
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="windspeed_1d",
+        translation_key="windspeed_1d",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="windspeed_2d",
+        translation_key="windspeed_2d",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="windspeed_3d",
+        translation_key="windspeed_3d",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="windspeed_4d",
+        translation_key="windspeed_4d",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="windspeed_5d",
+        translation_key="windspeed_5d",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="winddirection_1d",
+        translation_key="winddirection_1d",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="winddirection_2d",
+        translation_key="winddirection_2d",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="winddirection_3d",
+        translation_key="winddirection_3d",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="winddirection_4d",
+        translation_key="winddirection_4d",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="winddirection_5d",
+        translation_key="winddirection_5d",
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth_1d",
+        translation_key="windazimuth_1d",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth_2d",
+        translation_key="windazimuth_2d",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth_3d",
+        translation_key="windazimuth_3d",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth_4d",
+        translation_key="windazimuth_4d",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="windazimuth_5d",
+        translation_key="windazimuth_5d",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass-outline",
+    ),
+    SensorEntityDescription(
+        key="condition_1d",
+        translation_key="condition_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="condition_2d",
+        translation_key="condition_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="condition_3d",
+        translation_key="condition_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="condition_4d",
+        translation_key="condition_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="condition_5d",
+        translation_key="condition_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditioncode_1d",
+        translation_key="conditioncode_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditioncode_2d",
+        translation_key="conditioncode_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditioncode_3d",
+        translation_key="conditioncode_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditioncode_4d",
+        translation_key="conditioncode_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditioncode_5d",
+        translation_key="conditioncode_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_CONDITION_CODES,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed_1d",
+        translation_key="conditiondetailed_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed_2d",
+        translation_key="conditiondetailed_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed_3d",
+        translation_key="conditiondetailed_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed_4d",
+        translation_key="conditiondetailed_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditiondetailed_5d",
+        translation_key="conditiondetailed_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATE_DETAILED_CONDITIONS,
+    ),
+    SensorEntityDescription(
+        key="conditionexact_1d",
+        translation_key="conditionexact_1d",
+    ),
+    SensorEntityDescription(
+        key="conditionexact_2d",
+        translation_key="conditionexact_2d",
+    ),
+    SensorEntityDescription(
+        key="conditionexact_3d",
+        translation_key="conditionexact_3d",
+    ),
+    SensorEntityDescription(
+        key="conditionexact_4d",
+        translation_key="conditionexact_4d",
+    ),
+    SensorEntityDescription(
+        key="conditionexact_5d",
+        translation_key="conditionexact_5d",
+    ),
+    SensorEntityDescription(
+        key="symbol_1d",
+        translation_key="symbol_1d",
+    ),
+    SensorEntityDescription(
+        key="symbol_2d",
+        translation_key="symbol_2d",
+    ),
+    SensorEntityDescription(
+        key="symbol_3d",
+        translation_key="symbol_3d",
+    ),
+    SensorEntityDescription(
+        key="symbol_4d",
+        translation_key="symbol_4d",
+    ),
+    SensorEntityDescription(
+        key="symbol_5d",
+        translation_key="symbol_5d",
+    ),
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the buienradar sensor."""
     config = entry.data
@@ -341,48 +716,50 @@ async def async_setup_entry(
         timeframe,
     )
 
+    # create weather entities:
     entities = [
-        BrSensor(sensor_type, config.get(CONF_NAME, "Buienradar"), coordinates)
-        for sensor_type in SENSOR_TYPES
+        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        for description in SENSOR_TYPES
     ]
+
+    # create weather data:
+    data = BrData(hass, coordinates, timeframe, entities)
+    entry.runtime_data[Platform.SENSOR] = data
+    await data.async_update()
 
     async_add_entities(entities)
 
-    data = BrData(hass, coordinates, timeframe, entities)
-    # schedule the first update in 1 minute from now:
-    await data.schedule_update(1)
-
 
 class BrSensor(SensorEntity):
-    """Representation of an Buienradar sensor."""
+    """Representation of a Buienradar sensor."""
 
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, sensor_type, client_name, coordinates):
+    def __init__(
+        self, client_name, coordinates, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
-        self._attr_name = f"{client_name} {SENSOR_TYPES[sensor_type][0]}"
-        self._attr_icon = SENSOR_TYPES[sensor_type][2]
-        self.type = sensor_type
-        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self.entity_description = description
         self._measured = None
-        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], sensor_type
+        self._attr_unique_id = (
+            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
+            f"{description.key}"
         )
-        self._attr_device_class = SENSOR_TYPES[sensor_type][3]
 
         # All continuous sensors should be forced to be updated
-        self._attr_force_update = sensor_type != SYMBOL and not sensor_type.startswith(
-            CONDITION
+        self._attr_force_update = (
+            description.key != SYMBOL and not description.key.startswith(CONDITION)
         )
 
-        if sensor_type.startswith(PRECIPITATION_FORECAST):
+        if description.key.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
     @callback
-    def data_updated(self, data):
+    def data_updated(self, data: BrData):
         """Update data."""
-        if self._load_data(data) and self.hass:
+        if self._load_data(data.data) and self.hass:
             self.async_write_ha_state()
 
     @callback
@@ -396,28 +773,22 @@ class BrSensor(SensorEntity):
             return False
 
         self._measured = data.get(MEASURED)
+        sensor_type = self.entity_description.key
 
-        if (
-            self.type.endswith("_1d")
-            or self.type.endswith("_2d")
-            or self.type.endswith("_3d")
-            or self.type.endswith("_4d")
-            or self.type.endswith("_5d")
-        ):
-
-            # update forcasting sensors:
+        if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
+            # update forecasting sensors:
             fcday = 0
-            if self.type.endswith("_2d"):
+            if sensor_type.endswith("_2d"):
                 fcday = 1
-            if self.type.endswith("_3d"):
+            if sensor_type.endswith("_3d"):
                 fcday = 2
-            if self.type.endswith("_4d"):
+            if sensor_type.endswith("_4d"):
                 fcday = 3
-            if self.type.endswith("_5d"):
+            if sensor_type.endswith("_5d"):
                 fcday = 4
 
             # update weather symbol & status text
-            if self.type.startswith(SYMBOL) or self.type.startswith(CONDITION):
+            if sensor_type.startswith((SYMBOL, CONDITION)):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
@@ -426,13 +797,13 @@ class BrSensor(SensorEntity):
 
                 if condition:
                     new_state = condition.get(CONDITION)
-                    if self.type.startswith(SYMBOL):
+                    if sensor_type.startswith(SYMBOL):
                         new_state = condition.get(EXACTNL)
-                    if self.type.startswith("conditioncode"):
+                    if sensor_type.startswith("conditioncode"):
                         new_state = condition.get(CONDCODE)
-                    if self.type.startswith("conditiondetailed"):
+                    if sensor_type.startswith("conditiondetailed"):
                         new_state = condition.get(DETAILED)
-                    if self.type.startswith("conditionexact"):
+                    if sensor_type.startswith("conditionexact"):
                         new_state = condition.get(EXACT)
 
                     img = condition.get(IMAGE)
@@ -443,40 +814,42 @@ class BrSensor(SensorEntity):
                         return True
                 return False
 
-            if self.type.startswith(WINDSPEED):
+            if sensor_type.startswith(WINDSPEED):
                 # hass wants windspeeds in km/h not m/s, so convert:
                 try:
                     self._attr_native_value = data.get(FORECAST)[fcday].get(
-                        self.type[:-3]
+                        sensor_type[:-3]
                     )
-                    if self.state is not None:
-                        self._attr_native_value = round(self.state * 3.6, 1)
-                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
+                if self.state is not None:
+                    self._attr_native_value = round(self.state * 3.6, 1)
+                return True
+
             # update all other sensors
             try:
-                self._attr_native_value = data.get(FORECAST)[fcday].get(self.type[:-3])
-                return True
+                self._attr_native_value = data.get(FORECAST)[fcday].get(
+                    sensor_type[:-3]
+                )
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
+            return True
 
-        if self.type == SYMBOL or self.type.startswith(CONDITION):
+        if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION)
-            if condition:
-                if self.type == SYMBOL:
+            if condition := data.get(CONDITION):
+                if sensor_type == SYMBOL:
                     new_state = condition.get(EXACTNL)
-                if self.type == CONDITION:
+                if sensor_type == CONDITION:
                     new_state = condition.get(CONDITION)
-                if self.type == "conditioncode":
+                if sensor_type == "conditioncode":
                     new_state = condition.get(CONDCODE)
-                if self.type == "conditiondetailed":
+                if sensor_type == "conditiondetailed":
                     new_state = condition.get(DETAILED)
-                if self.type == "conditionexact":
+                if sensor_type == "conditionexact":
                     new_state = condition.get(EXACT)
 
                 img = condition.get(IMAGE)
@@ -488,41 +861,41 @@ class BrSensor(SensorEntity):
 
             return False
 
-        if self.type.startswith(PRECIPITATION_FORECAST):
+        if sensor_type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
             self._attr_native_value = nested.get(
-                self.type[len(PRECIPITATION_FORECAST) + 1 :]
+                sensor_type[len(PRECIPITATION_FORECAST) + 1 :]
             )
             return True
 
-        if self.type in [WINDSPEED, WINDGUST]:
+        if sensor_type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
-            self._attr_native_value = data.get(self.type)
+            self._attr_native_value = data.get(sensor_type)
             if self.state is not None:
-                self._attr_native_value = round(data.get(self.type) * 3.6, 1)
+                self._attr_native_value = round(data.get(sensor_type) * 3.6, 1)
             return True
 
-        if self.type == VISIBILITY:
+        if sensor_type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
-            self._attr_native_value = data.get(self.type)
+            self._attr_native_value = data.get(sensor_type)
             if self.state is not None:
                 self._attr_native_value = round(self.state / 1000, 1)
             return True
 
         # update all other sensors
-        self._attr_native_value = data.get(self.type)
-        if self.type.startswith(PRECIPITATION_FORECAST):
+        self._attr_native_value = data.get(sensor_type)
+        if sensor_type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
-                result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
+                result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 
         result = {
             ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
-            SENSOR_TYPES["stationname"][0]: data.get(STATIONNAME),
+            STATIONNAME_LABEL: data.get(STATIONNAME),
         }
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime

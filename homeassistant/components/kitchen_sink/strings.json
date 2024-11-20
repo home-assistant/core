@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "description": "Select **Submit** to reauthenticate"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      },
+      "options_1": {
+        "sections": {
+          "section_1": {
+            "data": {
+              "bool": "Optional boolean",
+              "int": "Numeric input"
+            },
+            "description": "This section allows input of some extra data",
+            "name": "Collapsible section"
+          }
+        },
+        "submit": "Save!"
+      }
+    }
+  },
+  "device": {
+    "n_ch_power_strip": {
+      "name": "Power strip with {number_of_sockets} sockets"
+    }
+  },
+  "issues": {
+    "bad_psu": {
+      "title": "The power supply is not stable",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The power supply needs to be replaced",
+            "description": "Select **Submit** to confirm the power supply has been replaced"
+          }
+        }
+      }
+    },
+    "out_of_blinker_fluid": {
+      "title": "The blinker fluid is empty and needs to be refilled",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Blinker fluid needs to be refilled",
+            "description": "Select **Submit** when blinker fluid has been refilled"
+          }
+        }
+      }
+    },
+    "cold_tea": {
+      "title": "The tea is cold",
+      "fix_flow": {
+        "step": {},
+        "abort": {
+          "not_tea_time": "Can not re-heat the tea at this time"
+        }
+      }
+    },
+    "transmogrifier_deprecated": {
+      "title": "The transmogrifier component is deprecated",
+      "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
+    },
+    "unfixable_problem": {
+      "title": "This is not a fixable problem",
+      "description": "This issue is never going to give up."
+    }
+  },
+  "services": {
+    "test_service_1": {
+      "name": "Test service 1",
+      "description": "Fake service for testing",
+      "fields": {
+        "field_1": {
+          "name": "Field 1",
+          "description": "Number of seconds"
+        },
+        "field_2": {
+          "name": "Field 2",
+          "description": "Mode"
+        },
+        "field_3": {
+          "name": "Field 3",
+          "description": "Number of hours"
+        },
+        "field_4": {
+          "name": "Field 4",
+          "description": "Direction"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "Advanced options",
+          "description": "Some very advanced things"
+        }
+      }
+    }
+  }
+}

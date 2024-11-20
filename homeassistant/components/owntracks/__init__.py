@@ -1,23 +1,31 @@
 """Support for OwnTracks."""
+
 from collections import defaultdict
 import json
 import logging
 import re
 
-from aiohttp.web import json_response
+from aiohttp import web
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import mqtt
+from homeassistant.components import cloud, mqtt, webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
+from homeassistant.util.json import json_loads
 
 from .config_flow import CONF_SECRET
 from .const import DOMAIN
@@ -32,45 +40,42 @@ CONF_MQTT_TOPIC = "mqtt_topic"
 CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
 BEACON_DEV_ID = "beacon"
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(DOMAIN, default={}): {
-            vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-            vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-            vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-            vol.Optional(
-                CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
-            ): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_SECRET): vol.Any(
-                vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
-            ),
-            vol.Optional(CONF_REGION_MAPPING, default={}): dict,
-            vol.Optional(CONF_WEBHOOK_ID): cv.string,
-        }
-    },
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = vol.All(
+    cv.removed(CONF_WEBHOOK_ID),
+    vol.Schema(
+        {
+            vol.Optional(DOMAIN, default={}): {
+                vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
+                vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+                vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
+                ): mqtt.valid_subscribe_topic,
+                vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_SECRET): vol.Any(
+                    vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
+                ),
+                vol.Optional(CONF_REGION_MAPPING, default={}): dict,
+            }
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize OwnTracks component."""
     hass.data[DOMAIN] = {"config": config[DOMAIN], "devices": {}, "unsub": None}
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-            )
-        )
-
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OwnTracks entry."""
     config = hass.data[DOMAIN]["config"]
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
@@ -98,60 +103,59 @@ async def async_setup_entry(hass, entry):
 
     async_when_setup(hass, "mqtt", async_connect_mqtt)
 
-    hass.components.webhook.async_register(
-        DOMAIN, "OwnTracks", webhook_id, handle_webhook
-    )
+    webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.data[DOMAIN]["unsub"] = hass.helpers.dispatcher.async_dispatcher_connect(
-        DOMAIN, async_handle_message
+    hass.data[DOMAIN]["unsub"] = async_dispatcher_connect(
+        hass, DOMAIN, async_handle_message
     )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN]["unsub"]()
 
     return unload_ok
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove an OwnTracks config entry."""
     if not entry.data.get("cloudhook"):
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+    await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_connect_mqtt(hass, component):
     """Subscribe to MQTT topic."""
     context = hass.data[DOMAIN]["context"]
 
-    async def async_handle_mqtt_message(msg):
+    @callback
+    def async_handle_mqtt_message(msg):
         """Handle incoming OwnTracks message."""
         try:
-            message = json.loads(msg.payload)
+            message = json_loads(msg.payload)
         except ValueError:
             # If invalid JSON
             _LOGGER.error("Unable to parse payload as JSON: %s", msg.payload)
             return
 
         message["topic"] = msg.topic
-        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+        async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
-    await hass.components.mqtt.async_subscribe(
-        context.mqtt_topic, async_handle_mqtt_message, 1
-    )
+    await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle webhook callback.
 
     iOS sets the "topic" as part of the payload.
@@ -164,7 +168,7 @@ async def handle_webhook(hass, webhook_id, request):
         message = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from OwnTracks")
-        return json_response([])
+        return web.json_response([])
 
     # Android doesn't populate topic
     if "topic" not in message:
@@ -181,26 +185,24 @@ async def handle_webhook(hass, webhook_id, request):
                 " set a username in Connection -> Identification"
             )
             # Keep it as a 200 response so the incorrect packet is discarded
-            return json_response([])
+            return web.json_response([])
 
-    hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+    async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
-    response = []
-
-    for person in hass.states.async_all("person"):
-        if "latitude" in person.attributes and "longitude" in person.attributes:
-            response.append(
-                {
-                    "_type": "location",
-                    "lat": person.attributes["latitude"],
-                    "lon": person.attributes["longitude"],
-                    "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
-                    "tst": int(person.last_updated.timestamp()),
-                }
-            )
+    response = [
+        {
+            "_type": "location",
+            "lat": person.attributes["latitude"],
+            "lon": person.attributes["longitude"],
+            "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
+            "tst": int(person.last_updated.timestamp()),
+        }
+        for person in hass.states.async_all("person")
+        if "latitude" in person.attributes and "longitude" in person.attributes
+    ]
 
     if message["_type"] == "encrypted" and context.secret:
-        return json_response(
+        return web.json_response(
             {
                 "_type": "encrypted",
                 "data": encrypt_message(
@@ -209,7 +211,7 @@ async def handle_webhook(hass, webhook_id, request):
             }
         )
 
-    return json_response(response)
+    return web.json_response(response)
 
 
 class OwnTracksContext:
@@ -242,9 +244,7 @@ class OwnTracksContext:
     @callback
     def async_valid_accuracy(self, message):
         """Check if we should ignore this message."""
-        acc = message.get("acc")
-
-        if acc is None:
+        if (acc := message.get("acc")) is None:
             return False
 
         try:
@@ -261,7 +261,7 @@ class OwnTracksContext:
             return False
 
         if self.max_gps_accuracy is not None and acc > self.max_gps_accuracy:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Ignoring %s update because expected GPS accuracy %s is not met: %s",
                 message["_type"],
                 self.max_gps_accuracy,
@@ -279,7 +279,6 @@ class OwnTracksContext:
             func(**msg)
         self._pending_msg.clear()
 
-    # pylint: disable=method-hidden
     @callback
     def async_see(self, **data):
         """Send a see message to the device tracker."""

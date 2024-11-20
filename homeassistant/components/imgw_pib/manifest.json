@@ -1,0 +1,10 @@
+{
+  "domain": "imgw_pib",
+  "name": "IMGW-PIB",
+  "codeowners": ["@bieniu"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/imgw_pib",
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum",
+  "requirements": ["imgw_pib==1.0.6"]
+}

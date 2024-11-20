@@ -1,12 +1,15 @@
 """Test init of Logitch Harmony Hub integration."""
+
 from homeassistant.components.harmony.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import (
     ENTITY_NILE_TV,
     ENTITY_PLAY_MUSIC,
+    ENTITY_SELECT,
     ENTITY_WATCH_TV,
     HUB_NAME,
     NILE_TV_ACTIVITY_ID,
@@ -17,7 +20,9 @@ from .const import (
 from tests.common import MockConfigEntry, mock_registry
 
 
-async def test_unique_id_migration(mock_hc, hass, mock_write_config):
+async def test_unique_id_migration(
+    mock_hc, hass: HomeAssistant, mock_write_config
+) -> None:
     """Test migration of switch unique ids to stable ones."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -55,6 +60,13 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
+            # select entity
+            ENTITY_SELECT: er.RegistryEntry(
+                entity_id=ENTITY_SELECT,
+                unique_id=f"{HUB_NAME}_activities",
+                platform="harmony",
+                config_entry_id=entry.entry_id,
+            ),
         },
     )
     assert await async_setup_component(hass, DOMAIN, {})
@@ -70,3 +82,6 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
 
     switch_music = ent_reg.async_get(ENTITY_PLAY_MUSIC)
     assert switch_music.unique_id == f"activity_{PLAY_MUSIC_ACTIVITY_ID}"
+
+    select_activities = ent_reg.async_get(ENTITY_SELECT)
+    assert select_activities.unique_id == f"{HUB_NAME}_activities"

@@ -1,4 +1,5 @@
 """The Netatmo integration."""
+
 import logging
 
 from aiohttp.web import Request
@@ -10,6 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_FACE_URL,
+    ATTR_HOME_ID,
     ATTR_IS_KNOWN,
     ATTR_PERSONS,
     DATA_DEVICE_IDS,
@@ -36,7 +38,7 @@ async def async_handle_webhook(
         data = await request.json()
     except ValueError as err:
         _LOGGER.error("Error in data: %s", err)
-        return None
+        return
 
     _LOGGER.debug("Got webhook data: %s", data)
 
@@ -60,9 +62,9 @@ def async_evaluate_event(hass: HomeAssistant, event_data: dict) -> None:
         for person in event_data.get(ATTR_PERSONS, {}):
             person_event_data = dict(event_data)
             person_event_data[ATTR_ID] = person.get(ATTR_ID)
-            person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS].get(
-                person_event_data[ATTR_ID], DEFAULT_PERSON
-            )
+            person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS][
+                event_data[ATTR_HOME_ID]
+            ].get(person_event_data[ATTR_ID], DEFAULT_PERSON)
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 

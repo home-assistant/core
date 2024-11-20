@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to The Things Network v3 App",
+        "description": "Enter the API hostname, app id and API key for your TTN application.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> application_id -> API keys.",
+        "data": {
+          "hostname": "[%key:common::config_flow::data::host%]",
+          "app_id": "Application ID",
+          "access_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The Things Network application could not be connected.\n\nPlease check your credentials."
+      }
+    },
+    "abort": {
+      "already_configured": "Application ID is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

@@ -1,7 +1,8 @@
 {
   "domain": "device_automation",
   "name": "Device Automation",
-  "documentation": "https://www.home-assistant.io/integrations/device_automation",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/device_automation",
+  "integration_type": "system",
   "quality_scale": "internal"
 }

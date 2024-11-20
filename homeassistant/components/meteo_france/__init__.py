@@ -1,17 +1,18 @@
 """Support for Meteo-France weather data."""
+
 from datetime import timedelta
 import logging
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
+from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -32,67 +33,28 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Meteo-France from legacy config file."""
-    conf = config.get(DOMAIN)
-    if not conf:
-        return True
-
-    for city_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf
-            )
-        )
-
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    latitude = entry.data.get(CONF_LATITUDE)
-
     client = MeteoFranceClient()
-    # Migrate from previous config
-    if not latitude:
-        places = await hass.async_add_executor_job(
-            client.search_places, entry.data[CONF_CITY]
-        )
-        hass.config_entries.async_update_entry(
-            entry,
-            title=f"{places[0]}",
-            data={
-                CONF_LATITUDE: places[0].latitude,
-                CONF_LONGITUDE: places[0].longitude,
-            },
-        )
-
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    async def _async_update_data_forecast_forecast():
+    async def _async_update_data_forecast_forecast() -> Forecast:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(
             client.get_forecast, latitude, longitude
         )
 
-    async def _async_update_data_rain():
+    async def _async_update_data_rain() -> Rain:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
 
-    async def _async_update_data_alert():
+    async def _async_update_data_alert() -> CurrentPhenomenons:
         """Fetch data from API endpoint."""
+        assert isinstance(department, str)
         return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
         )
@@ -113,24 +75,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator_forecast.last_update_success:
         raise ConfigEntryNotReady
 
-    # Check if rain forecast is available.
-    if coordinator_forecast.data.position.get("rain_product_available") == 1:
-        coordinator_rain = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"Météo-France rain for city {entry.title}",
-            update_method=_async_update_data_rain,
-            update_interval=SCAN_INTERVAL_RAIN,
-        )
-        await coordinator_rain.async_refresh()
-
-        if not coordinator_rain.last_update_success:
-            raise ConfigEntryNotReady
-    else:
-        _LOGGER.warning(
-            "1 hour rain forecast not available. %s is not in covered zone",
-            entry.title,
-        )
+    # Check rain forecast.
+    coordinator_rain = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Météo-France rain for city {entry.title}",
+        update_method=_async_update_data_rain,
+        update_interval=SCAN_INTERVAL_RAIN,
+    )
+    await coordinator_rain.async_config_entry_first_refresh()
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
@@ -138,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.title,
         department,
     )
-    if is_valid_warning_department(department):
+    if department is not None and is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
             coordinator_alert = DataUpdateCoordinator(
                 hass,
@@ -150,46 +103,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             await coordinator_alert.async_refresh()
 
-            if not coordinator_alert.last_update_success:
-                raise ConfigEntryNotReady
-
-            hass.data[DOMAIN][department] = True
+            if coordinator_alert.last_update_success:
+                hass.data[DOMAIN][department] = True
         else:
             _LOGGER.warning(
-                "Weather alert for department %s won't be added with city %s, as it has already been added within another city",
+                (
+                    "Weather alert for department %s won't be added with city %s, as it"
+                    " has already been added within another city"
+                ),
                 department,
                 entry.title,
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in metropolitan France or Andorre",
+            (
+                "Weather alert not available: The city %s is not in metropolitan France"
+                " or Andorre"
+            ),
             entry.title,
         )
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
+    if coordinator_alert and coordinator_alert.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
-
         department = hass.data[DOMAIN][entry.entry_id][
             COORDINATOR_FORECAST
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
+            (
+                "Weather alert for depatment %s unloaded and released. It can be added"
+                " now by another city"
+            ),
             department,
         )
 
@@ -203,6 +163,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

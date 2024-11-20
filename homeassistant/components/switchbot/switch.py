@@ -1,93 +1,69 @@
-"""Support for Switchbot."""
+"""Support for Switchbot bot."""
+
 from __future__ import annotations
 
 from typing import Any
 
-# pylint: disable=import-error
 import switchbot
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-DEFAULT_NAME = "Switchbot"
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotSwitchedEntity
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-    }
-)
+PARALLEL_UPDATES = 0
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Perform the setup for Switchbot devices."""
-    name = config.get(CONF_NAME)
-    mac_addr = config[CONF_MAC]
-    password = config.get(CONF_PASSWORD)
-    add_entities([SwitchBot(mac_addr, name, password)])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Switchbot based on a config entry."""
+    async_add_entities([SwitchBotSwitch(entry.runtime_data)])
 
 
-class SwitchBot(SwitchEntity, RestoreEntity):
-    """Representation of a Switchbot."""
+class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
+    """Representation of a Switchbot switch."""
 
-    def __init__(self, mac, name, password) -> None:
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "bot"
+    _attr_name = None
+    _device: switchbot.Switchbot
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
+        super().__init__(coordinator)
+        self._attr_is_on = False
 
-        self._state = None
-        self._last_run_success = None
-        self._name = name
-        self._mac = mac
-        self._device = switchbot.Switchbot(mac=mac, password=password)
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
+        if not (last_state := await self.async_get_last_state()):
             return
-        self._state = state.state == "on"
-
-    def turn_on(self, **kwargs) -> None:
-        """Turn device on."""
-        if self._device.turn_on():
-            self._state = True
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
-
-    def turn_off(self, **kwargs) -> None:
-        """Turn device off."""
-        if self._device.turn_off():
-            self._state = False
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+        self._attr_is_on = last_state.state == STATE_ON
+        self._last_run_success = last_state.attributes.get("last_run_success")
 
     @property
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
-        return True
+        return not self._device.switch_mode()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._mac.replace(":", "")
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._name
+        if not self._device.switch_mode():
+            return self._attr_is_on
+        return self._device.is_on()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
+        return {
+            **super().extra_state_attributes,
+            "switch_mode": self._device.switch_mode(),
+        }

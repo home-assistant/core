@@ -1,78 +1,223 @@
-"""Platform to retrieve Jewish calendar information for Home Assistant."""
-from datetime import datetime
+"""Support for Jewish calendar sensors."""
+
+from __future__ import annotations
+
+from datetime import date as Date
 import logging
+from typing import Any, cast
 
-import hdate
+from hdate import HDate, HebrewDate, htables
+from hdate.zmanim import Zmanim
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, SENSOR_TYPES
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="date",
+        name="Date",
+        icon="mdi:star-david",
+        translation_key="hebrew_date",
+    ),
+    SensorEntityDescription(
+        key="weekly_portion",
+        name="Parshat Hashavua",
+        icon="mdi:book-open-variant",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="holiday",
+        name="Holiday",
+        icon="mdi:calendar-star",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="omer_count",
+        name="Day of the Omer",
+        icon="mdi:counter",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="daf_yomi",
+        name="Daf Yomi",
+        icon="mdi:book-open-variant",
+        entity_registry_enabled_default=False,
+    ),
+)
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Jewish calendar sensor platform."""
-    if discovery_info is None:
-        return
+TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="first_light",
+        name="Alot Hashachar",  # codespell:ignore alot
+        icon="mdi:weather-sunset-up",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="talit",
+        name="Talit and Tefillin",
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="sunrise",
+        name="Hanetz Hachama",
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
+        key="gra_end_shma",
+        name='Latest time for Shma Gr"a',
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="mga_end_shma",
+        name='Latest time for Shma MG"A',
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="gra_end_tfila",
+        name='Latest time for Tefilla Gr"a',
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="mga_end_tfila",
+        name='Latest time for Tefilla MG"A',
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="midday",
+        name="Chatzot Hayom",
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="big_mincha",
+        name="Mincha Gedola",
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="small_mincha",
+        name="Mincha Ketana",
+        icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="plag_mincha",
+        name="Plag Hamincha",
+        icon="mdi:weather-sunset-down",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="sunset",
+        name="Shkia",
+        icon="mdi:weather-sunset",
+    ),
+    SensorEntityDescription(
+        key="first_stars",
+        name="T'set Hakochavim",
+        icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="three_stars",
+        name="T'set Hakochavim, 3 stars",
+        icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="upcoming_shabbat_candle_lighting",
+        name="Upcoming Shabbat Candle Lighting",
+        icon="mdi:candle",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="upcoming_shabbat_havdalah",
+        name="Upcoming Shabbat Havdalah",
+        icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="upcoming_candle_lighting",
+        name="Upcoming Candle Lighting",
+        icon="mdi:candle",
+    ),
+    SensorEntityDescription(
+        key="upcoming_havdalah",
+        name="Upcoming Havdalah",
+        icon="mdi:weather-night",
+    ),
+)
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: JewishCalendarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Jewish calendar sensors ."""
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in SENSOR_TYPES["data"].items()
+        JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in SENSOR_TYPES["time"].items()
+        JewishCalendarTimeSensor(config_entry, description)
+        for description in TIME_SENSORS
     )
 
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(SensorEntity):
+class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, data, sensor, sensor_info):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        config_entry: JewishCalendarConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the Jewish calendar sensor."""
-        self._type = sensor
-        self._prefix = data["prefix"]
-        self._attr_name = f"{data['name']} {sensor_info[0]}"
-        self._attr_unique_id = f"{self._prefix}_{self._type}"
-        self._attr_icon = sensor_info[1]
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
-        self._diaspora = data["diaspora"]
-        self._state = None
-        self._holiday_attrs = {}
+        super().__init__(config_entry, description)
+        self._attrs: dict[str, str] = {}
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if isinstance(self._state, datetime):
-            return self._state.isoformat()
-        return self._state
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
         _LOGGER.debug("Now: %s Location: %r", now, self._location)
 
         today = now.date()
-        sunset = dt_util.as_local(
-            get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
-        )
+        event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
+
+        if event_date is None:
+            _LOGGER.error("Can't get sunset event date for %s", today)
+            return
+
+        sunset = dt_util.as_local(event_date)
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
+        daytime_date = HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
-        # sunset ("shkia"). The time in between is a gray area (aka "Bein
-        # Hashmashot" - literally: "in between the sun and the moon").
+        # sunset ("shkia"). The time in between is a gray area
+        # (aka "Bein Hashmashot"  # codespell:ignore
+        # - literally: "in between the sun and the moon").
 
         # For some sensors, it is more interesting to consider the date to be
         # tomorrow based on sunset ("shkia"), for others based on "tzais".
@@ -86,12 +231,16 @@ class JewishCalendarSensor(SensorEntity):
         if today_times.havdalah and now > today_times.havdalah:
             after_tzais_date = daytime_date.next_day
 
-        self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
-        _LOGGER.debug("New value for %s: %s", self._type, self._state)
+        self._attr_native_value = self.get_state(
+            daytime_date, after_shkia_date, after_tzais_date
+        )
+        _LOGGER.debug(
+            "New value for %s: %s", self.entity_description.key, self._attr_native_value
+        )
 
-    def make_zmanim(self, date):
+    def make_zmanim(self, date: Date) -> Zmanim:
         """Create a Zmanim object."""
-        return hdate.Zmanim(
+        return Zmanim(
             date=date,
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
@@ -100,76 +249,78 @@ class JewishCalendarSensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        if self._type != "holiday":
-            return {}
-        return self._holiday_attrs
+        return self._attrs
 
-    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
+    def get_state(
+        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+    ) -> Any | None:
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
-        if self._type == "date":
+        if self.entity_description.key == "date":
+            hdate = cast(HebrewDate, after_shkia_date.hdate)
+            month = htables.MONTHS[hdate.month.value - 1]
+            self._attrs = {
+                "hebrew_year": hdate.year,
+                "hebrew_month_name": month.hebrew if self._hebrew else month.english,
+                "hebrew_day": hdate.day,
+            }
             return after_shkia_date.hebrew_date
-        if self._type == "weekly_portion":
+        if self.entity_description.key == "weekly_portion":
+            self._attr_options = [
+                (p.hebrew if self._hebrew else p.english) for p in htables.PARASHAOT
+            ]
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        if self._type == "holiday":
-            self._holiday_attrs["id"] = after_shkia_date.holiday_name
-            self._holiday_attrs["type"] = after_shkia_date.holiday_type.name
-            self._holiday_attrs["type_id"] = after_shkia_date.holiday_type.value
+        if self.entity_description.key == "holiday":
+            self._attrs = {
+                "id": after_shkia_date.holiday_name,
+                "type": after_shkia_date.holiday_type.name,
+                "type_id": after_shkia_date.holiday_type.value,
+            }
+            self._attr_options = [
+                h.description.hebrew.long if self._hebrew else h.description.english
+                for h in htables.HOLIDAYS
+            ]
+
             return after_shkia_date.holiday_description
-        if self._type == "omer_count":
+        if self.entity_description.key == "omer_count":
             return after_shkia_date.omer_day
-        if self._type == "daf_yomi":
+        if self.entity_description.key == "daf_yomi":
             return daytime_date.daf_yomi
 
         return None
 
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
-    """Implement attrbutes for sensors returning times."""
+    """Implement attributes for sensors returning times."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self._state is None:
-            return None
-        return dt_util.as_utc(self._state).isoformat()
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-
-        if self._state is None:
-            return attrs
-
-        return attrs
-
-    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
+    def get_state(
+        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+    ) -> Any | None:
         """For a given type of sensor, return the state."""
-        if self._type == "upcoming_shabbat_candle_lighting":
+        if self.entity_description.key == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat.previous_day.gdate
             )
             return times.candle_lighting
-        if self._type == "upcoming_candle_lighting":
+        if self.entity_description.key == "upcoming_candle_lighting":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
             )
             return times.candle_lighting
-        if self._type == "upcoming_shabbat_havdalah":
+        if self.entity_description.key == "upcoming_shabbat_havdalah":
             times = self.make_zmanim(after_tzais_date.upcoming_shabbat.gdate)
             return times.havdalah
-        if self._type == "upcoming_havdalah":
+        if self.entity_description.key == "upcoming_havdalah":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.last_day.gdate
             )
             return times.havdalah
 
         times = self.make_zmanim(dt_util.now()).zmanim
-        return times[self._type]
+        return times[self.entity_description.key]

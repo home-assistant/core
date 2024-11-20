@@ -1,70 +1,61 @@
 """Switcher integration Sensor platform."""
-from __future__ import annotations
 
-from dataclasses import dataclass
+from __future__ import annotations
 
 from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
+from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDeviceWrapper
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
-
-@dataclass
-class AttributeDescription:
-    """Class to describe a sensor."""
-
-    name: str
-    icon: str | None = None
-    unit: str | None = None
-    device_class: str | None = None
-    state_class: str | None = None
-    default_enabled: bool = True
-
-
-POWER_SENSORS = {
-    "power_consumption": AttributeDescription(
-        name="Power Consumption",
-        unit=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+POWER_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="power_consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    "electric_current": AttributeDescription(
-        name="Electric Current",
-        unit=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription(
+        key="electric_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-}
-
-TIME_SENSORS = {
-    "remaining_time": AttributeDescription(
-        name="Remaining Time",
-        icon="mdi:av-timer",
+]
+TIME_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="remaining_time",
+        translation_key="remaining_time",
     ),
-    "auto_off_set": AttributeDescription(
-        name="Auto Shutdown",
-        icon="mdi:progress-clock",
-        default_enabled=False,
+    SensorEntityDescription(
+        key="auto_off_set",
+        translation_key="auto_shutdown",
+        entity_registry_enabled_default=False,
     ),
-}
+]
+TEMPERATURE_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+    ),
+]
 
 POWER_PLUG_SENSORS = POWER_SENSORS
-WATER_HEATER_SENSORS = {**POWER_SENSORS, **TIME_SENSORS}
+WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
+THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
 
 
 async def async_setup_entry(
@@ -75,17 +66,22 @@ async def async_setup_entry(
     """Set up Switcher sensor from config entry."""
 
     @callback
-    def async_add_sensors(wrapper: SwitcherDeviceWrapper) -> None:
+    def async_add_sensors(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add sensors from Switcher device."""
-        if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             async_add_entities(
-                SwitcherSensorEntity(wrapper, attribute, info)
-                for attribute, info in POWER_PLUG_SENSORS.items()
+                SwitcherSensorEntity(coordinator, description)
+                for description in POWER_PLUG_SENSORS
             )
-        elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
+        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities(
-                SwitcherSensorEntity(wrapper, attribute, info)
-                for attribute, info in WATER_HEATER_SENSORS.items()
+                SwitcherSensorEntity(coordinator, description)
+                for description in WATER_HEATER_SENSORS
+            )
+        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+            async_add_entities(
+                SwitcherSensorEntity(coordinator, description)
+                for description in THERMOSTAT_SENSORS
             )
 
     config_entry.async_on_unload(
@@ -93,35 +89,23 @@ async def async_setup_entry(
     )
 
 
-class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
+class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
     """Representation of a Switcher sensor entity."""
 
     def __init__(
         self,
-        wrapper: SwitcherDeviceWrapper,
-        attribute: str,
-        description: AttributeDescription,
+        coordinator: SwitcherDataUpdateCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(wrapper)
-        self.wrapper = wrapper
-        self.attribute = attribute
+        super().__init__(coordinator)
+        self.entity_description = description
 
-        # Entity class attributes
-        self._attr_name = f"{wrapper.name} {description.name}"
-        self._attr_icon = description.icon
-        self._attr_native_unit_of_measurement = description.unit
-        self._attr_device_class = description.device_class
-        self._attr_entity_registry_enabled_default = description.default_enabled
-
-        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}-{attribute}"
-        self._attr_device_info = {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
-            }
-        }
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{description.key}"
+        )
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return getattr(self.wrapper.data, self.attribute)  # type: ignore[no-any-return]
+        return getattr(self.coordinator.data, self.entity_description.key)  # type: ignore[no-any-return]

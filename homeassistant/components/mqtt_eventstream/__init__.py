@@ -1,8 +1,11 @@
 """Connect two Home Assistant instances via MQTT."""
+
 import json
+import logging
 
 import voluptuous as vol
 
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.const import (
     ATTR_SERVICE_DATA,
@@ -13,12 +16,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import EventOrigin, State, callback
+from homeassistant.core import EventOrigin, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mqtt_eventstream"
 CONF_PUBLISH_TOPIC = "publish_topic"
@@ -51,17 +56,19 @@ BLOCKED_EVENTS = [
 ]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT eventstream component."""
-    mqtt = hass.components.mqtt
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
     ignore_event = conf.get(CONF_IGNORE_EVENT)
-    ignore_event.append(EVENT_TIME_CHANGED)
 
-    @callback
-    def _event_publisher(event):
+    async def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
         if event.origin != EventOrigin.local:
             return
@@ -82,7 +89,7 @@ async def async_setup(hass, config):
 
         event_info = {"event_type": event.event_type, "event_data": event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.async_publish(pub_topic, msg)
+        await mqtt.async_publish(hass, pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
@@ -117,6 +124,6 @@ async def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        await mqtt.async_subscribe(sub_topic, _event_receiver)
+        await mqtt.async_subscribe(hass, sub_topic, _event_receiver)
 
     return True

@@ -1,0 +1,122 @@
+# serializer version: 1
+# name: test_entity_states
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'current_temperature': 25,
+        'fan_mode': 'auto',
+        'fan_modes': list([
+          'auto',
+          'low',
+          'medium low',
+          'medium',
+          'medium high',
+          'high',
+        ]),
+        'friendly_name': 'fake-device-1',
+        'hvac_modes': list([
+          <HVACMode.AUTO: 'auto'>,
+          <HVACMode.COOL: 'cool'>,
+          <HVACMode.DRY: 'dry'>,
+          <HVACMode.FAN_ONLY: 'fan_only'>,
+          <HVACMode.HEAT: 'heat'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        'max_temp': 30,
+        'min_temp': 8,
+        'preset_mode': 'none',
+        'preset_modes': list([
+          'eco',
+          'away',
+          'boost',
+          'none',
+          'sleep',
+        ]),
+        'supported_features': <ClimateEntityFeature: 441>,
+        'swing_mode': 'off',
+        'swing_modes': list([
+          'off',
+          'vertical',
+          'horizontal',
+          'both',
+        ]),
+        'target_temp_step': 1,
+        'temperature': 25,
+      }),
+      'context': <ANY>,
+      'entity_id': 'climate.fake_device_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_registry_settings
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'fan_modes': list([
+          'auto',
+          'low',
+          'medium low',
+          'medium',
+          'medium high',
+          'high',
+        ]),
+        'hvac_modes': list([
+          <HVACMode.AUTO: 'auto'>,
+          <HVACMode.COOL: 'cool'>,
+          <HVACMode.DRY: 'dry'>,
+          <HVACMode.FAN_ONLY: 'fan_only'>,
+          <HVACMode.HEAT: 'heat'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        'max_temp': 30,
+        'min_temp': 8,
+        'preset_modes': list([
+          'eco',
+          'away',
+          'boost',
+          'none',
+          'sleep',
+        ]),
+        'swing_modes': list([
+          'off',
+          'vertical',
+          'horizontal',
+          'both',
+        ]),
+        'target_temp_step': 1,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'climate',
+      'entity_category': None,
+      'entity_id': 'climate.fake_device_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'gree',
+      'previous_unique_id': None,
+      'supported_features': <ClimateEntityFeature: 441>,
+      'translation_key': None,
+      'unique_id': 'aabbcc112233',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---

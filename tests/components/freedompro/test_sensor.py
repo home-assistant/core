@@ -1,18 +1,21 @@
 """Tests for the Freedompro sensor."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
+from .conftest import get_states_response_for_uid
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name",
+    ("entity_id", "uid", "name"),
     [
         (
             "sensor.garden_humidity_sensor",
@@ -32,36 +35,36 @@ from tests.components.freedompro.const import DEVICES_STATE
     ],
 )
 async def test_sensor_get_state(
-    hass, init_integration, entity_id: str, uid: str, name: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    entity_id: str,
+    uid: str,
+    name: str,
+) -> None:
     """Test states of the sensor."""
-    init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     assert state.state == "0"
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            if state_response["type"] == "lightSensor":
-                state_response["state"]["currentAmbientLightLevel"] = "1"
-            if state_response["type"] == "temperatureSensor":
-                state_response["state"]["currentTemperature"] = "1"
-            if state_response["type"] == "humiditySensor":
-                state_response["state"]["currentRelativeHumidity"] = "1"
+    states_response = get_states_response_for_uid(uid)
+    if states_response[0]["type"] == "lightSensor":
+        states_response[0]["state"]["currentAmbientLightLevel"] = "1"
+    elif states_response[0]["type"] == "temperatureSensor":
+        states_response[0]["state"]["currentTemperature"] = "1"
+    elif states_response[0]["type"] == "humiditySensor":
+        states_response[0]["state"]["currentRelativeHumidity"] = "1"
     with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        "homeassistant.components.freedompro.coordinator.get_states",
+        return_value=states_response,
     ):
-
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 
@@ -69,7 +72,7 @@ async def test_sensor_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 

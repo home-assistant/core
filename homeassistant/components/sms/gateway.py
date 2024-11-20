@@ -1,12 +1,13 @@
 """The sms gateway to interact with a GSM modem."""
+
 import logging
 
-import gammu  # pylint: disable=import-error
-from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
+import gammu
+from gammu.asyncworker import GammuAsyncWorker
 
 from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import DOMAIN, SMS_STATE_UNREAD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,38 +15,43 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, worker, hass):
+    def __init__(self, config, hass):
         """Initialize the sms gateway."""
-        self._worker = worker
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
+        self._worker = GammuAsyncWorker(self.sms_pull)
+        self._worker.configure(config)
         self._hass = hass
+        self._first_pull = True
+        self.manufacturer = None
+        self.model = None
+        self.firmware = None
 
     async def init_async(self):
-        """Initialize the sms gateway asynchronously."""
-        try:
-            await self._worker.set_incoming_sms_async()
-        except gammu.ERR_NOTSUPPORTED:
-            _LOGGER.warning("Your phone does not support incoming SMS notifications!")
-        except gammu.GSMError:
-            _LOGGER.warning(
-                "GSM error, your phone does not support incoming SMS notifications!"
-            )
-        else:
-            await self._worker.set_incoming_callback_async(self.sms_callback)
+        """Initialize the sms gateway asynchronously. This method is also called in config flow to verify connection."""
+        await self._worker.init_async()
+        self.manufacturer = await self.get_manufacturer_async()
+        self.model = await self.get_model_async()
+        self.firmware = await self.get_firmware_async()
 
-    def sms_callback(self, state_machine, callback_type, callback_data):
-        """Receive notification about incoming event.
+    def sms_pull(self, state_machine):
+        """Pull device.
+
+        @param state_machine: state machine
+        @type state_machine: gammu.StateMachine
+        """
+        state_machine.ReadDevice()
+
+        _LOGGER.debug("Pulling modem")
+        self.sms_read_messages(state_machine, self._first_pull)
+        self._first_pull = False
+
+    def sms_read_messages(self, state_machine, force=False):
+        """Read all received SMS messages.
 
         @param state_machine: state machine which invoked action
         @type state_machine: gammu.StateMachine
-        @param callback_type: type of action, one of Call, SMS, CB, USSD
-        @type callback_type: string
-        @param data: event data
-        @type data: hash
         """
-        _LOGGER.debug(
-            "Received incoming event type:%s,data:%s", callback_type, callback_data
-        )
-        entries = self.get_and_delete_all_sms(state_machine)
+        entries = self.get_and_delete_all_sms(state_machine, force)
         _LOGGER.debug("SMS entries:%s", entries)
         data = []
 
@@ -53,26 +59,28 @@ class Gateway:
             decoded_entry = gammu.DecodeSMS(entry)
             message = entry[0]
             _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
-            if decoded_entry is None:
-                text = message["Text"]
-            else:
-                text = ""
-                for inner_entry in decoded_entry["Entries"]:
-                    if inner_entry["Buffer"] is not None:
-                        text = text + inner_entry["Buffer"]
+            sms_state = message["State"]
+            _LOGGER.debug("SMS state:%s", sms_state)
+            if sms_state == SMS_STATE_UNREAD:
+                if decoded_entry is None:
+                    text = message["Text"]
+                else:
+                    text = ""
+                    for inner_entry in decoded_entry["Entries"]:
+                        if inner_entry["Buffer"] is not None:
+                            text += inner_entry["Buffer"]
 
-            event_data = {
-                "phone": message["Number"],
-                "date": str(message["DateTime"]),
-                "message": text,
-            }
+                event_data = {
+                    "phone": message["Number"],
+                    "date": str(message["DateTime"]),
+                    "message": text,
+                }
 
-            _LOGGER.debug("Append event data:%s", event_data)
-            data.append(event_data)
+                _LOGGER.debug("Append event data:%s", event_data)
+                data.append(event_data)
 
         self._hass.add_job(self._notify_incoming_sms, data)
 
-    # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""
         # Read SMS memory status ...
@@ -84,7 +92,6 @@ class Gateway:
         start = True
         entries = []
         all_parts = -1
-        all_parts_arrived = False
         _LOGGER.debug("Start remaining:%i", start_remaining)
 
         try:
@@ -93,42 +100,38 @@ class Gateway:
                     entry = state_machine.GetNextSMS(Folder=0, Start=True)
                     all_parts = entry[0]["UDH"]["AllParts"]
                     part_number = entry[0]["UDH"]["PartNumber"]
-                    is_single_part = all_parts == 0
-                    is_multi_part = 0 <= all_parts < start_remaining
+                    part_is_missing = all_parts > start_remaining
                     _LOGGER.debug("All parts:%i", all_parts)
                     _LOGGER.debug("Part Number:%i", part_number)
                     _LOGGER.debug("Remaining:%i", remaining)
-                    all_parts_arrived = is_multi_part or is_single_part
-                    _LOGGER.debug("Start all_parts_arrived:%s", all_parts_arrived)
+                    _LOGGER.debug("Start is_part_missing:%s", part_is_missing)
                     start = False
                 else:
                     entry = state_machine.GetNextSMS(
                         Folder=0, Location=entry[0]["Location"]
                     )
 
-                if all_parts_arrived or force:
-                    remaining = remaining - 1
-                    entries.append(entry)
-
-                    # delete retrieved sms
-                    _LOGGER.debug("Deleting message")
-                    try:
-                        state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
-                    except gammu.ERR_MEMORY_NOT_AVAILABLE:
-                        _LOGGER.error("Error deleting SMS, memory not available")
-                else:
+                if part_is_missing and not force:
                     _LOGGER.debug("Not all parts have arrived")
                     break
+
+                remaining = remaining - 1
+                entries.append(entry)
+
+                # delete retrieved sms
+                _LOGGER.debug("Deleting message")
+                try:
+                    state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
+                except gammu.ERR_MEMORY_NOT_AVAILABLE:
+                    _LOGGER.error("Error deleting SMS, memory not available")
 
         except gammu.ERR_EMPTY:
             # error is raised if memory is empty (this induces wrong reported
             # memory status)
-            _LOGGER.info("Failed to read messages!")
+            _LOGGER.warning("Failed to read messages!")
 
         # Link all SMS when there are concatenated messages
-        entries = gammu.LinkSMS(entries)
-
-        return entries
+        return gammu.LinkSMS(entries)
 
     @callback
     def _notify_incoming_sms(self, messages):
@@ -153,6 +156,40 @@ class Gateway:
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
 
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        network_info = await self._worker.get_network_info_async()
+        # Looks like there is a bug and it's empty for any modem https://github.com/gammu/python-gammu/issues/31, so try workaround
+        if not network_info["NetworkName"]:
+            network_info["NetworkName"] = gammu.GSMNetworks.get(
+                network_info["NetworkCode"]
+            )
+        return network_info
+
+    async def get_manufacturer_async(self):
+        """Get the manufacturer of the modem."""
+        return await self._worker.get_manufacturer_async()
+
+    async def get_model_async(self):
+        """Get the model of the modem."""
+        model = await self._worker.get_model_async()
+        if not model or not model[0]:
+            return None
+        display = model[0]  # Identification model
+        if model[1]:  # Real model
+            display = f"{display} ({model[1]})"
+        return display
+
+    async def get_firmware_async(self):
+        """Get the firmware information of the modem."""
+        firmware = await self._worker.get_firmware_async()
+        if not firmware or not firmware[0]:
+            return None
+        display = firmware[0]  # Version
+        if firmware[1]:  # Date
+            display = f"{display} ({firmware[1]})"
+        return display
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
@@ -161,12 +198,14 @@ class Gateway:
 async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
-        worker = GammuAsyncWorker()
-        worker.configure(config)
-        await worker.init_async()
-        gateway = Gateway(worker, hass)
-        await gateway.init_async()
-        return gateway
+        gateway = Gateway(config, hass)
+        try:
+            await gateway.init_async()
+        except gammu.GSMError as exc:
+            _LOGGER.error("Failed to initialize, error %s", exc)
+            await gateway.terminate_async()
+            return None
     except gammu.GSMError as exc:
-        _LOGGER.error("Failed to initialize, error %s", exc)
+        _LOGGER.error("Failed to create async worker, error %s", exc)
         return None
+    return gateway

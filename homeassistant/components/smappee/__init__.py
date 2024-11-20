@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import api, config_flow
@@ -23,6 +24,8 @@ from .const import (
     PLATFORMS,
     TOKEN_URL,
 )
+
+type SmappeeConfigEntry = ConfigEntry[SmappeeBase]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -37,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Smappee component."""
     hass.data[DOMAIN] = {}
 
@@ -71,7 +74,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmappeeConfigEntry) -> bool:
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
         if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):
@@ -102,31 +105,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         smappee = Smappee(api=smappee_api)
         await hass.async_add_executor_job(smappee.load_service_locations)
 
-    hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
+    entry.runtime_data = SmappeeBase(hass, smappee)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: SmappeeConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SmappeeBase:
     """An object to hold the PySmappee instance."""
 
-    def __init__(self, hass, smappee):
+    def __init__(self, hass: HomeAssistant, smappee: Smappee) -> None:
         """Initialize the Smappee API wrapper class."""
         self.hass = hass
         self.smappee = smappee
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Smappee trends and appliance states."""
         await self.hass.async_add_executor_job(
             self.smappee.update_trends_and_appliance_states

@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "find_count": {
+        "default": "mdi:notebook-edit-outline"
+      },
+      "hide_count": {
+        "default": "mdi:eye-off-outline"
+      },
+      "favorite_points": {
+        "default": "mdi:heart-outline"
+      },
+      "souvenir_count": {
+        "default": "mdi:license"
+      },
+      "awarded_favorite_points": {
+        "default": "mdi:heart"
+      }
+    }
+  }
+}

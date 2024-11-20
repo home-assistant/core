@@ -1,6 +1,9 @@
 """Constants used by the SmartThings component and platforms."""
+
 from datetime import timedelta
 import re
+
+from homeassistant.const import Platform
 
 DOMAIN = "smartthings"
 
@@ -32,15 +35,15 @@ STORAGE_VERSION = 1
 # Ordered 'specific to least-specific platform' in order for capabilities
 # to be drawn-down and represented by the most appropriate platform.
 PLATFORMS = [
-    "climate",
-    "fan",
-    "light",
-    "lock",
-    "cover",
-    "switch",
-    "binary_sensor",
-    "sensor",
-    "scene",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 IGNORED_CAPABILITIES = [

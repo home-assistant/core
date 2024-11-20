@@ -1,8 +1,12 @@
 """The tests for the GDACS Feed integration."""
+
 from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.gdacs.const import CONF_CATEGORIES
 from homeassistant.components.gdacs.sensor import (
     ATTR_CREATED,
     ATTR_LAST_UPDATE,
@@ -12,21 +16,22 @@ from homeassistant.components.gdacs.sensor import (
     ATTR_UPDATED,
 )
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.gdacs import _generate_mock_feed_entry
+from . import _generate_mock_feed_entry
 
-CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -52,23 +57,44 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
+        latitude = 32.87336
+        longitude = -117.22743
+        radius = 200
+        entry_data = {
+            CONF_RADIUS: radius,
+            CONF_LATITUDE: latitude,
+            CONF_LONGITUDE: longitude,
+            CONF_CATEGORIES: [],
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL.seconds,
+        }
+        config_entry = MockConfigEntry(
+            domain=gdacs.DOMAIN,
+            title=f"{latitude}, {longitude}",
+            data=entry_data,
+            unique_id="my_very_unique_id",
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         assert state is not None
         assert int(state.state) == 3
-        assert state.name == "GDACS (32.87336, -117.22743)"
+        assert state.name == "32.87336, -117.22743"
         attributes = state.attributes
         assert attributes[ATTR_STATUS] == "OK"
         assert attributes[ATTR_CREATED] == 3
@@ -76,17 +102,19 @@ async def test_setup(hass, legacy_patchable_time):
         assert attributes[ATTR_LAST_UPDATE_SUCCESSFUL].tzinfo == dt_util.UTC
         assert attributes[ATTR_LAST_UPDATE] == attributes[ATTR_LAST_UPDATE_SUCCESSFUL]
         assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "alerts"
-        assert attributes[ATTR_ICON] == "mdi:alert"
 
         # Simulate an update - two existing, one new entry, one outdated entry
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_4, mock_entry_3]
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_CREATED] == 1
         assert attributes[ATTR_UPDATED] == 2
@@ -98,17 +126,23 @@ async def test_setup(hass, legacy_patchable_time):
         async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 1
+        )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_REMOVED] == 3

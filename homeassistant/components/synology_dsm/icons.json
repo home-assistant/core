@@ -1,0 +1,88 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu_other_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_user_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_system_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_total_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_1min_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_5min_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_15min_load": {
+        "default": "mdi:chip"
+      },
+      "memory_real_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_size": {
+        "default": "mdi:memory"
+      },
+      "memory_cached": {
+        "default": "mdi:memory"
+      },
+      "memory_available_swap": {
+        "default": "mdi:memory"
+      },
+      "memory_available_real": {
+        "default": "mdi:memory"
+      },
+      "memory_total_swap": {
+        "default": "mdi:memory"
+      },
+      "memory_total_real": {
+        "default": "mdi:memory"
+      },
+      "network_up": {
+        "default": "mdi:upload"
+      },
+      "network_down": {
+        "default": "mdi:download"
+      },
+      "volume_status": {
+        "default": "mdi:checkbox-marked-circle-outline",
+        "state": {
+          "degrade": "mdi:alert-circle-outline"
+        }
+      },
+      "volume_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "volume_size_used": {
+        "default": "mdi:chart-pie"
+      },
+      "volume_percentage_used": {
+        "default": "mdi:chart-pie"
+      },
+      "disk_smart_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
+      "disk_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      }
+    },
+    "switch": {
+      "home_mode": {
+        "default": "mdi:home-account"
+      }
+    }
+  },
+  "services": {
+    "reboot": {
+      "service": "mdi:restart"
+    },
+    "shutdown": {
+      "service": "mdi:power"
+    }
+  }
+}

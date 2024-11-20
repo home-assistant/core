@@ -1,0 +1,101 @@
+{
+  "plate": {
+    "data_type": "alpr_results",
+    "epoch_time": 1483953071942,
+    "img_height": 640,
+    "img_width": 480,
+    "results": [
+      {
+        "plate": "H786P0J",
+        "confidence": 90.436699,
+        "region_confidence": 0,
+        "region": "",
+        "plate_index": 0,
+        "processing_time_ms": 16.495636,
+        "candidates": [
+          {
+            "matches_template": 0,
+            "plate": "H786P0J",
+            "confidence": 90.436699
+          },
+          {
+            "matches_template": 0,
+            "plate": "H786POJ",
+            "confidence": 88.046814
+          },
+          {
+            "matches_template": 0,
+            "plate": "H786PDJ",
+            "confidence": 85.58432
+          },
+          {
+            "matches_template": 0,
+            "plate": "H786PQJ",
+            "confidence": 85.472939
+          },
+          {
+            "matches_template": 0,
+            "plate": "HS786P0J",
+            "confidence": 75.455666
+          },
+          {
+            "matches_template": 0,
+            "plate": "H2786P0J",
+            "confidence": 75.256081
+          },
+          {
+            "matches_template": 0,
+            "plate": "H3786P0J",
+            "confidence": 65.228058
+          },
+          {
+            "matches_template": 0,
+            "plate": "H786PGJ",
+            "confidence": 63.303329
+          },
+          {
+            "matches_template": 0,
+            "plate": "HS786POJ",
+            "confidence": 83.065773
+          },
+          {
+            "matches_template": 0,
+            "plate": "H2786POJ",
+            "confidence": 52.866196
+          }
+        ],
+        "coordinates": [
+          {
+            "y": 384,
+            "x": 156
+          },
+          {
+            "y": 384,
+            "x": 289
+          },
+          {
+            "y": 409,
+            "x": 289
+          },
+          {
+            "y": 409,
+            "x": 156
+          }
+        ],
+        "matches_template": 0,
+        "requested_topn": 10
+      }
+    ],
+    "version": 2,
+    "processing_time_ms": 115.687286,
+    "regions_of_interest": []
+  },
+  "image_bytes": "",
+  "img_width": 480,
+  "credits_monthly_used": 5791,
+  "img_height": 640,
+  "total_processing_time": 120.71599999762839,
+  "credits_monthly_total": 10000000000,
+  "image_bytes_prefix": "data:image/jpeg;base64,",
+  "credit_cost": 1
+}

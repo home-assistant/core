@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_static_attributes
+  ReadOnlyDict({
+    'current_humidity': 50,
+    'current_temperature': 20,
+    'fan_action': 'idle',
+    'fan_mode': 'auto',
+    'fan_modes': list([
+      'on',
+      'auto',
+      'diffuse',
+    ]),
+    'friendly_name': 'device1',
+    'humidity': None,
+    'hvac_modes': list([
+      <HVACMode.OFF: 'off'>,
+      <HVACMode.HEAT_COOL: 'heat_cool'>,
+      <HVACMode.COOL: 'cool'>,
+      <HVACMode.HEAT: 'heat'>,
+    ]),
+    'max_humidity': 99,
+    'max_temp': 35,
+    'min_humidity': 30,
+    'min_temp': 7,
+    'permanent_hold': False,
+    'preset_mode': 'none',
+    'preset_modes': list([
+      'none',
+      'away',
+      'hold',
+    ]),
+    'supported_features': <ClimateEntityFeature: 415>,
+    'target_temp_high': None,
+    'target_temp_low': None,
+    'temperature': None,
+  })
+# ---

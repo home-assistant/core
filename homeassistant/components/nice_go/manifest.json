@@ -1,0 +1,11 @@
+{
+  "domain": "nice_go",
+  "name": "Nice G.O.",
+  "codeowners": ["@IceBotYT"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nice_go",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["nice_go"],
+  "requirements": ["nice-go==0.3.10"]
+}

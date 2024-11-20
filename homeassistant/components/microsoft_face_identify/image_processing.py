@@ -1,4 +1,7 @@
 """Component that will help set the Microsoft face for verify processing."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -6,44 +9,47 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import split_entity_id
+from homeassistant.const import ATTR_NAME, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP = "group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_GROUP): cv.slugify})
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_GROUP): cv.slugify}
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Microsoft Face identify platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     face_group = config[CONF_GROUP]
     confidence = config[CONF_CONFIDENCE]
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            MicrosoftFaceIdentifyEntity(
-                camera[CONF_ENTITY_ID],
-                api,
-                face_group,
-                confidence,
-                camera.get(CONF_NAME),
-            )
+    async_add_entities(
+        MicrosoftFaceIdentifyEntity(
+            camera[CONF_ENTITY_ID],
+            api,
+            face_group,
+            confidence,
+            camera.get(CONF_NAME),
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):

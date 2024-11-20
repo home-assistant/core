@@ -1,0 +1,36 @@
+calibrate:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: keymitt_ble
+          domain: switch
+    depth:
+      example: 50
+      required: true
+      selector:
+        number:
+          mode: slider
+          step: 1
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    duration:
+      example: 1
+      required: true
+      selector:
+        number:
+          mode: box
+          step: 1
+          min: 0
+          max: 60
+          unit_of_measurement: seconds
+    mode:
+      example: "normal"
+      required: true
+      selector:
+        select:
+          options:
+            - "normal"
+            - "invert"
+            - "toggle"

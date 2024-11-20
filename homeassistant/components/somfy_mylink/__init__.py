@@ -1,5 +1,5 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
-import asyncio
+
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
@@ -8,15 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_SYSTEM_ID, DATA_SOMFY_MYLINK, DOMAIN, MYLINK_STATUS, PLATFORMS
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -30,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         mylink_status = await somfy_mylink.status_info()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady(
             "Unable to connect to the Somfy MyLink device, please check your settings"
         ) from ex
@@ -55,17 +52,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

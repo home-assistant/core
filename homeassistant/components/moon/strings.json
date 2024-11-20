@@ -1,0 +1,41 @@
+{
+  "title": "Moon",
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "phase": {
+        "name": "Phase",
+        "state": {
+          "first_quarter": "First quarter",
+          "full_moon": "Full moon",
+          "last_quarter": "Last quarter",
+          "new_moon": "New moon",
+          "waning_crescent": "Waning crescent",
+          "waning_gibbous": "Waning gibbous",
+          "waxing_crescent": "Waxing crescent",
+          "waxing_gibbous": "Waxing gibbous"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "first_quarter": "[%key:component::moon::entity::sensor::phase::state::first_quarter%]",
+              "full_moon": "[%key:component::moon::entity::sensor::phase::state::full_moon%]",
+              "last_quarter": "[%key:component::moon::entity::sensor::phase::state::last_quarter%]",
+              "new_moon": "[%key:component::moon::entity::sensor::phase::state::new_moon%]",
+              "waning_crescent": "[%key:component::moon::entity::sensor::phase::state::waning_crescent%]",
+              "waning_gibbous": "[%key:component::moon::entity::sensor::phase::state::waning_gibbous%]",
+              "waxing_crescent": "[%key:component::moon::entity::sensor::phase::state::waxing_crescent%]",
+              "waxing_gibbous": "[%key:component::moon::entity::sensor::phase::state::waxing_gibbous%]"
+            }
+          }
+        }
+      }
+    }
+  }
+}

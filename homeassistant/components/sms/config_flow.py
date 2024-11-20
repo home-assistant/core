@@ -1,27 +1,43 @@
 """Config flow for SMS integration."""
-import logging
 
-import gammu  # pylint: disable=import-error
+import logging
+from typing import Any
+
+import gammu
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
-from .const import DOMAIN
+from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DEFAULT_BAUD_SPEEDS, DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE): str,
+        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): selector.selector(
+            {"select": {"options": DEFAULT_BAUD_SPEEDS}}
+        ),
+    }
+)
 
 
-async def get_imei_from_config(hass: core.HomeAssistant, data):
+async def get_imei_from_config(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    config = {"Device": device, "Connection": "at"}
+    connection_mode = "at"
+    baud_speed = data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED)
+    if baud_speed != DEFAULT_BAUD_SPEED:
+        connection_mode += baud_speed
+    config = {"Device": device, "Connection": connection_mode}
     gateway = await create_sms_gateway(config, hass)
     if not gateway:
         raise CannotConnect
@@ -36,12 +52,14 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     return imei
 
 
-class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SMSFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMS integration."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -51,7 +69,7 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 imei = await get_imei_from_config(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -64,10 +82,6 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
-
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

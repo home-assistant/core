@@ -7,9 +7,9 @@ docs
 # Development
 .devcontainer
 .vscode
+.tool-versions
 
 # Test related files
-.tox
 tests
 
 # Other virtualization methods

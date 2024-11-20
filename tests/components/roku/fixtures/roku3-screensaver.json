@@ -1,0 +1,95 @@
+{
+  "available": true,
+  "standby": false,
+  "info": {
+    "udn": "015e5108-9000-1046-8035-b0a737964dfb",
+    "serial-number": "1GU48T017973",
+    "device-id": "1GU48T017973",
+    "vendor-name": "Roku",
+    "model-number": "4200X",
+    "model-name": "Roku 3",
+    "model-region": "US",
+    "supports-ethernet": "true",
+    "wifi-mac": "b0:a7:37:96:4d:fb",
+    "ethernet-mac": "b0:a7:37:96:4d:fa",
+    "network-type": "ethernet",
+    "user-device-name": "My Roku 3",
+    "software-version": "7.5.0",
+    "software-build": "09021",
+    "secure-device": "true",
+    "language": "en",
+    "country": "US",
+    "locale": "en_US",
+    "time-zone": "US/Pacific",
+    "time-zone-offset": "-480",
+    "power-mode": "PowerOn",
+    "supports-suspend": "false",
+    "supports-find-remote": "false",
+    "supports-audio-guide": "false",
+    "developer-enabled": "true",
+    "keyed-developer-id": "70f6ed9c90cf60718a26f3a7c3e5af1c3ec29558",
+    "search-enabled": "true",
+    "voice-search-enabled": "true",
+    "notifications-enabled": "true",
+    "notifications-first-use": "false",
+    "supports-private-listening": "false",
+    "headphones-connected": "false"
+  },
+  "app": {
+    "app": "Roku",
+    "screensaver": {
+      "@id": "55545",
+      "@type": "ssvr",
+      "@version": "2.0.1",
+      "#text": "Default screensaver"
+    }
+  },
+  "apps": [
+    {
+      "@id": "11",
+      "#text": "Roku Channel Store"
+    },
+    {
+      "@id": "12",
+      "#text": "Netflix"
+    },
+    {
+      "@id": "13",
+      "#text": "Amazon Video on Demand"
+    },
+    {
+      "@id": "14",
+      "#text": "MLB.TV®"
+    },
+    {
+      "@id": "26",
+      "#text": "Free FrameChannel Service"
+    },
+    {
+      "@id": "27",
+      "#text": "Mediafly"
+    },
+    {
+      "@id": "28",
+      "#text": "Pandora"
+    },
+    {
+      "@id": "74519",
+      "@subtype": "rsga",
+      "@type": "appl",
+      "@version": "5.2.0",
+      "#text": "Pluto TV - It's Free TV"
+    }
+  ],
+  "media": {
+    "@error": "false",
+    "@state": "close",
+    "format": {
+      "@audio": "eac3",
+      "@captions": "none",
+      "@drm": "none",
+      "@video": "hevc_b"
+    },
+    "is_live": "false"
+  }
+}

@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_sensors[default_user]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Last.fm',
+      'entity_picture': 'image',
+      'friendly_name': 'LastFM testaccount1',
+      'last_played': 'artist - title',
+      'play_count': 1,
+      'top_played': 'artist - title',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_sensors[first_time_user]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Last.fm',
+      'entity_picture': 'image',
+      'friendly_name': 'LastFM testaccount1',
+      'last_played': None,
+      'play_count': 0,
+      'top_played': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Scrobbling',
+  })
+# ---
+# name: test_sensors[not_found_user]
+  None
+# ---

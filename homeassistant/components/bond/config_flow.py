@@ -1,24 +1,22 @@
 """Config flow for Bond integration."""
+
 from __future__ import annotations
 
+import contextlib
+from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_api import Bond
+from bond_async import Bond
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    CONF_NAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 from .utils import BondHub
@@ -33,6 +31,15 @@ DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
 
 
+async def async_get_token(hass: HomeAssistant, host: str) -> str | None:
+    """Try to fetch the token from the bond device."""
+    bond = Bond(host, "", session=async_get_clientsession(hass))
+    response: dict[str, str] = {}
+    with contextlib.suppress(ClientConnectionError):
+        response = await bond.token()
+    return response.get("token")
+
+
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Validate the user input allows us to connect."""
 
@@ -40,12 +47,12 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
         data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
     try:
-        hub = BondHub(bond)
+        hub = BondHub(bond, data[CONF_HOST])
         await hub.setup(max_devices=1)
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
     except ClientResponseError as error:
-        if error.status == HTTP_UNAUTHORIZED:
+        if error.status == HTTPStatus.UNAUTHORIZED:
             raise InputValidationError("invalid_auth") from error
         raise InputValidationError("unknown") from error
     except Exception as error:
@@ -59,7 +66,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
     return hub.bond_id, hub.name
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BondConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bond."""
 
     VERSION = 1
@@ -75,31 +82,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        bond = Bond(
-            self._discovered[CONF_HOST], "", session=async_get_clientsession(self.hass)
-        )
+        host = self._discovered[CONF_HOST]
         try:
-            response = await bond.token()
-        except ClientConnectionError:
-            return
-
-        token = response.get("token")
-        if token is None:
+            if not (token := await async_get_token(self.hass, host)):
+                return
+        except TimeoutError:
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self.hass, self._discovered)
+        try:
+            _, hub_name = await _validate_input(self.hass, self._discovered)
+        except InputValidationError:
+            return
         self._discovered[CONF_NAME] = hub_name
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[CONF_NAME]
-        host: str = discovery_info[CONF_HOST]
+        name: str = discovery_info.name
+        host: str = discovery_info.host
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
+        for entry in self._async_current_entries():
+            if entry.unique_id != bond_id:
+                continue
+            updates = {CONF_HOST: host}
+            if entry.state == ConfigEntryState.SETUP_ERROR and (
+                token := await async_get_token(self.hass, host)
+            ):
+                updates[CONF_ACCESS_TOKEN] = token
+            return self.async_update_reload_and_abort(
+                entry,
+                data={**entry.data, **updates},
+                reason="already_configured",
+                reload_even_if_entry_is_unchanged=False,
+            )
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
         await self._async_try_automatic_configure()
@@ -117,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
@@ -158,7 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -176,7 +194,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InputValidationError(exceptions.HomeAssistantError):
+class InputValidationError(HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
     def __init__(self, base: str) -> None:

@@ -1,0 +1,371 @@
+# serializer version: 1
+# name: test_climate_state
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.midea_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ccm15',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': '1.1.1.1.0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_state.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.midea_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ccm15',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': '1.1.1.1.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_state.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 27,
+      'error_code': 0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Midea 0',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+      'temperature': 23,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.midea_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climate_state.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26,
+      'error_code': 0,
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Midea 1',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+      'temperature': 24,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.midea_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climate_state.4
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.midea_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ccm15',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': '1.1.1.1.0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_state.5
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.midea_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ccm15',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': '1.1.1.1.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_state.6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Midea 0',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.midea_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_climate_state.7
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Midea 1',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_modes': list([
+        'off',
+        'on',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.midea_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

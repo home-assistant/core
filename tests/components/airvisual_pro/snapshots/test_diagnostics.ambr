@@ -1,0 +1,109 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'date_and_time': dict({
+        'date': '2022/10/06',
+        'time': '16:00:44',
+        'timestamp': '1665072044',
+      }),
+      'history': dict({
+      }),
+      'last_measurement_timestamp': 1665072044,
+      'measurements': dict({
+        'aqi_cn': '0',
+        'aqi_us': '0',
+        'co2': '472',
+        'humidity': '57',
+        'pm0_1': '0',
+        'pm1_0': '0',
+        'pm2_5': '0',
+        'temperature_C': '23.0',
+        'temperature_F': '73.4',
+        'voc': '-1',
+      }),
+      'serial_number': '**REDACTED**',
+      'settings': dict({
+        'follow_mode': 'station',
+        'followed_station': '0',
+        'is_aqi_usa': True,
+        'is_concentration_showed': True,
+        'is_indoor': True,
+        'is_lcd_on': True,
+        'is_network_time': True,
+        'is_temperature_celsius': False,
+        'language': 'en-US',
+        'lcd_brightness': 80,
+        'node_name': 'Office',
+        'power_saving': dict({
+          '2slots': list([
+            dict({
+              'hour_off': 9,
+              'hour_on': 7,
+            }),
+            dict({
+              'hour_off': 22,
+              'hour_on': 18,
+            }),
+          ]),
+          'mode': 'yes',
+          'running_time': 99,
+          'yes': list([
+            dict({
+              'hour': 8,
+              'minute': 0,
+            }),
+            dict({
+              'hour': 21,
+              'minute': 0,
+            }),
+          ]),
+        }),
+        'sensor_mode': dict({
+          'custom_mode_interval': 3,
+          'mode': 1,
+        }),
+        'speed_unit': 'mph',
+        'timezone': 'America/New York',
+        'tvoc_unit': 'ppb',
+      }),
+      'status': dict({
+        'app_version': '1.1826',
+        'battery': 100,
+        'datetime': 1665072044,
+        'device_name': 'AIRVISUAL-XXXXXXX',
+        'ip_address': '192.168.1.101',
+        'mac_address': '**REDACTED**',
+        'model': 20,
+        'sensor_life': dict({
+          'pm2_5': 1567924345130,
+        }),
+        'sensor_pm25_serial': '00000005050224011145',
+        'sync_time': 250000,
+        'system_version': 'KBG63F84',
+        'used_memory': 3,
+        'wifi_strength': 4,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'ip_address': '192.168.1.101',
+        'password': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'airvisual_pro',
+      'entry_id': '6a2b3770e53c28dc1eeb2515e906b0ce',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': 'XXXXXXX',
+      'version': 1,
+    }),
+  })
+# ---

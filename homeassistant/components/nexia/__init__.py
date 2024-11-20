@@ -1,30 +1,27 @@
 """Support for Nexia / Trane XL Thermostats."""
-from datetime import timedelta
-from functools import partial
+
 import logging
 
+import aiohttp
 from nexia.const import BRAND_NEXIA
 from nexia.home import NexiaHome
-from requests.exceptions import ConnectTimeout, HTTPError
+from nexia.thermostat import NexiaThermostat
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRAND, DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
+from .const import CONF_BRAND, DOMAIN, PLATFORMS
+from .coordinator import NexiaDataUpdateCoordinator
+from .types import NexiaConfigEntry
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
-DEFAULT_UPDATE_RATE = 120
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
     """Configure the base Nexia device for Home Assistant."""
 
     conf = entry.data
@@ -33,57 +30,77 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     brand = conf.get(CONF_BRAND, BRAND_NEXIA)
 
     state_file = hass.config.path(f"nexia_config_{username}.conf")
+    session = async_get_clientsession(hass)
+    nexia_home = NexiaHome(
+        session,
+        username=username,
+        password=password,
+        device_name=hass.config.location_name,
+        state_file=state_file,
+        brand=brand,
+    )
 
     try:
-        nexia_home = await hass.async_add_executor_job(
-            partial(
-                NexiaHome,
-                username=username,
-                password=password,
-                device_name=hass.config.location_name,
-                state_file=state_file,
-                brand=brand,
-            )
-        )
-    except ConnectTimeout as ex:
-        _LOGGER.error("Unable to connect to Nexia service: %s", ex)
-        raise ConfigEntryNotReady from ex
-    except HTTPError as http_ex:
-        if is_invalid_auth_code(http_ex.response.status_code):
+        await nexia_home.login()
+    except TimeoutError as ex:
+        raise ConfigEntryNotReady(
+            f"Timed out trying to connect to Nexia service: {ex}"
+        ) from ex
+    except aiohttp.ClientResponseError as http_ex:
+        if is_invalid_auth_code(http_ex.status):
             _LOGGER.error(
                 "Access error from Nexia service, please check credentials: %s", http_ex
             )
             return False
-        _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
-        raise ConfigEntryNotReady from http_ex
+        raise ConfigEntryNotReady(f"Error from Nexia service: {http_ex}") from http_ex
+    except aiohttp.ClientOSError as os_error:
+        raise ConfigEntryNotReady(
+            f"Error connecting to Nexia service: {os_error}"
+        ) from os_error
 
-    async def _async_update_data():
-        """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(nexia_home.update)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Nexia update",
-        update_method=_async_update_data,
-        update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        NEXIA_DEVICE: nexia_home,
-        UPDATE_COORDINATOR: coordinator,
-    }
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: NexiaConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a nexia config entry from a device."""
+    coordinator = entry.runtime_data
+    nexia_home = coordinator.nexia_home
+    dev_ids = {dev_id[1] for dev_id in device_entry.identifiers if dev_id[0] == DOMAIN}
+    for thermostat_id in nexia_home.get_thermostat_ids():
+        if thermostat_id in dev_ids:
+            return False
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        for zone_id in thermostat.get_zone_ids():
+            if zone_id in dev_ids:
+                return False
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+    """Migrate entry."""
+
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
+    _LOGGER.debug("Migration successful")
+
+    return True

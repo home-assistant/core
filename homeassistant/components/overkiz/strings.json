@@ -1,0 +1,161 @@
+{
+  "config": {
+    "flow_title": "Gateway: {gateway_id}",
+    "step": {
+      "user": {
+        "description": "Select your server. The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo) and Atlantic (Cozytouch).",
+        "data": {
+          "hub": "Server"
+        }
+      },
+      "local_or_cloud": {
+        "description": "Choose between local or cloud API. Local API supports TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are not supported in local API.",
+        "data": {
+          "api_type": "API type"
+        }
+      },
+      "cloud": {
+        "description": "Enter your application credentials.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "local": {
+        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network. \n\n After activation, enter your application credentials and change the host to include your gateway-pin or enter the IP address of your gateway.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "certificate_verify_failed": "Cannot connect to host, certificate verify failed.",
+      "developer_mode_disabled": "Developer Mode disabled. Activate the Developer Mode of your Somfy TaHoma box first.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_such_token": "Cannot create a token for this gateway. Please confirm if the account is linked to this gateway.",
+      "server_in_maintenance": "Server is down for maintenance",
+      "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
+      "too_many_requests": "Too many requests, try again later",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_hardware": "Your {unsupported_device} hardware is not supported by this integration."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
+    }
+  },
+  "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "comfort-1": "Comfort 1",
+              "comfort-2": "Comfort 2",
+              "drying": "Drying",
+              "external": "External",
+              "freeze": "Freeze",
+              "frost_protection": "Frost protection",
+              "manual": "Manual",
+              "night": "Night",
+              "prog": "Prog"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "away": "[%key:common::state::not_home%]",
+              "bypass_boost": "Bypass boost",
+              "home_boost": "Home boost",
+              "kitchen_boost": "Kitchen boost"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "open_closed_pedestrian": {
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "pedestrian": "Pedestrian",
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
+      "open_closed_partial": {
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "partial": "Partial",
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
+      "memorized_simple_volume": {
+        "state": {
+          "highest": "Highest",
+          "standard": "Standard"
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "normal": "Normal",
+          "medium": "Medium",
+          "verylow": "Very low"
+        }
+      },
+      "discrete_rssi_level": {
+        "state": {
+          "good": "Good",
+          "low": "Low",
+          "normal": "Normal",
+          "verylow": "Very low"
+        }
+      },
+      "priority_lock_originator": {
+        "state": {
+          "lsc": "LSC",
+          "saac": "SAAC",
+          "sfc": "SFC",
+          "ups": "UPS",
+          "external_gateway": "External gateway",
+          "local_user": "Local user",
+          "myself": "Myself",
+          "rain": "Rain",
+          "security": "Security",
+          "temperature": "Temperature",
+          "timer": "Timer",
+          "user": "User",
+          "wind": "Wind"
+        }
+      },
+      "sensor_room": {
+        "state": {
+          "clean": "Clean",
+          "dirty": "Dirty"
+        }
+      },
+      "sensor_defect": {
+        "state": {
+          "dead": "Dead",
+          "low_battery": "Low battery",
+          "maintenance_required": "Maintenance required",
+          "no_defect": "No defect"
+        }
+      },
+      "three_way_handle_direction": {
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
+          "tilt": "Tilt"
+        }
+      }
+    }
+  }
+}

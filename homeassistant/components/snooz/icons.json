@@ -1,0 +1,10 @@
+{
+  "services": {
+    "transition_on": {
+      "service": "mdi:blur"
+    },
+    "transition_off": {
+      "service": "mdi:blur-off"
+    }
+  }
+}

@@ -18,21 +18,22 @@ async def test_something(hass, knx):
 
 ## Asserting outgoing telegrams
 
-All outgoing telegrams are pushed to an assertion queue. Assert them in order they were sent.
+All outgoing telegrams are appended to an assertion list. Assert them in order they were sent or pass `ignore_order=True` to the assertion method.
 
 - `knx.assert_no_telegram`
-  Asserts that no telegram was sent (assertion queue is empty).
+  Asserts that no telegram was sent (assertion list is empty).
 - `knx.assert_telegram_count(count: int)`
   Asserts that `count` telegrams were sent.
-- `knx.assert_read(group_address: str)`
+- `knx.assert_read(group_address: str,  response: int | tuple[int, ...] | None = None, ignore_order: bool = False)`
   Asserts that a GroupValueRead telegram was sent to `group_address`.
-  The telegram will be removed from the assertion queue.
-- `knx.assert_response(group_address: str, payload: int | tuple[int, ...])`
+  The telegram will be removed from the assertion list.
+  Optionally inject incoming GroupValueResponse telegram after reception to clear the value reader waiting task. This can also be done manually with `knx.receive_response`.
+- `knx.assert_response(group_address: str, payload: int | tuple[int, ...], ignore_order: bool = False)`
   Asserts that a GroupValueResponse telegram with `payload` was sent to `group_address`.
-  The telegram will be removed from the assertion queue.
-- `knx.assert_write(group_address: str, payload: int | tuple[int, ...])`
+  The telegram will be removed from the assertion list.
+- `knx.assert_write(group_address: str, payload: int | tuple[int, ...], ignore_order: bool = False)`
   Asserts that a GroupValueWrite telegram with `payload` was sent to `group_address`.
-  The telegram will be removed from the assertion queue.
+  The telegram will be removed from the assertion list.
 
 Change some states or call some services and assert outgoing telegrams.
 
@@ -69,3 +70,4 @@ Receive some telegrams and assert state.
 - For `payload` in `assert_*` and `receive_*` use `int` for DPT 1, 2 and 3 payload values (DPTBinary) and `tuple` for other DPTs (DPTArray).
 - `await self.hass.async_block_till_done()` is called before `KNXTestKit.assert_*` and after `KNXTestKit.receive_*` so you don't have to explicitly call it.
 - Make sure to assert every outgoing telegram that was created in a test. `assert_no_telegram` is automatically called on teardown.
+- Make sure to `knx.receive_response()` for every Read-request sent form StateUpdater, or to pass its timeout, to not have lingering tasks when finishing the tests.

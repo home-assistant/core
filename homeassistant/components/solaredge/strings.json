@@ -19,5 +19,72 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "energy_this_year": {
+        "name": "Energy this year"
+      },
+      "energy_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "site_details": {
+        "name": "Site details"
+      },
+      "meters": {
+        "name": "Meters"
+      },
+      "sensors": {
+        "name": "Sensors"
+      },
+      "gateways": {
+        "name": "Gateways"
+      },
+      "batteries": {
+        "name": "Batteries"
+      },
+      "inverters": {
+        "name": "Inverters"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "solar_power": {
+        "name": "Solar power"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "storage_power": {
+        "name": "Stored power"
+      },
+      "purchased_energy": {
+        "name": "Imported energy"
+      },
+      "production_energy": {
+        "name": "Produced energy"
+      },
+      "consumption_energy": {
+        "name": "Consumed energy"
+      },
+      "selfconsumption_energy": {
+        "name": "Self-consumed energy"
+      },
+      "feedin_energy": {
+        "name": "Exported energy"
+      },
+      "storage_level": {
+        "name": "Storage level"
+      }
+    }
   }
 }

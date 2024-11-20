@@ -1,5 +1,9 @@
 """Sensor for SigFox devices."""
+
+from __future__ import annotations
+
 import datetime
+from http import HTTPStatus
 import json
 import logging
 from urllib.parse import urljoin
@@ -7,9 +11,15 @@ from urllib.parse import urljoin
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, HTTP_OK, HTTP_UNAUTHORIZED
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +29,7 @@ CONF_API_LOGIN = "api_login"
 CONF_API_PASSWORD = "api_password"
 DEFAULT_NAME = "sigfox"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_LOGIN): cv.string,
         vol.Required(CONF_API_PASSWORD): cv.string,
@@ -28,7 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sigfox sensor."""
     api_login = config[CONF_API_LOGIN]
     api_password = config[CONF_API_PASSWORD]
@@ -36,14 +51,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         sigfox = SigfoxAPI(api_login, api_password)
     except ValueError:
-        return False
+        return
     auth = sigfox.auth
     devices = sigfox.devices
 
-    sensors = []
-    for device in devices:
-        sensors.append(SigfoxDevice(device, auth, name))
-    add_entities(sensors, True)
+    add_entities((SigfoxDevice(device, auth, name) for device in devices), True)
 
 
 def epoch_to_datetime(epoch_time):
@@ -65,8 +77,8 @@ class SigfoxAPI:
         """Check API credentials are valid."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        if response.status_code != HTTP_OK:
-            if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code != HTTPStatus.OK:
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
                 _LOGGER.error("Invalid credentials for Sigfox API")
             else:
                 _LOGGER.error(
@@ -80,10 +92,7 @@ class SigfoxAPI:
         """Get a list of device types."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        device_types = []
-        for device in json.loads(response.text)["data"]:
-            device_types.append(device["id"])
-        return device_types
+        return [device["id"] for device in json.loads(response.text)["data"]]
 
     def get_devices(self, device_types):
         """Get the device_id of each device registered."""
@@ -93,8 +102,7 @@ class SigfoxAPI:
             url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)["data"]
-            for device in devices_data:
-                devices.append(device["id"])
+            devices.extend(device["id"] for device in devices_data)
         return devices
 
     @property
@@ -138,7 +146,7 @@ class SigfoxDevice(SensorEntity):
             "time": epoch_to_datetime(epoch_time),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Fetch the latest device message."""
         self._message_data = self.get_last_message()
         self._state = self._message_data["payload"]

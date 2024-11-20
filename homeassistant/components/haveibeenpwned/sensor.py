@@ -1,27 +1,28 @@
 """Support for haveibeenpwned (email breaches) sensor."""
+
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_EMAIL,
-    HTTP_NOT_FOUND,
-    HTTP_OK,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
 )
+from homeassistant.const import CONF_API_KEY, CONF_EMAIL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Have I Been Pwned (HIBP)"
 
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -32,7 +33,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_API_KEY): cv.string,
@@ -40,21 +41,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HaveIBeenPwned sensor."""
-    emails = config.get(CONF_EMAIL)
+    emails = config[CONF_EMAIL]
     api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
-    devices = []
-    for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email))
-
-    add_entities(devices)
+    add_entities(HaveIBeenPwnedSensor(data, email) for email in emails)
 
 
 class HaveIBeenPwnedSensor(SensorEntity):
     """Implementation of a HaveIBeenPwned sensor."""
+
+    _attr_attribution = "Data provided by Have I Been Pwned (HIBP)"
 
     def __init__(self, data, email):
         """Initialize the HaveIBeenPwned sensor."""
@@ -81,7 +85,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the attributes of the sensor."""
-        val = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        val = {}
         if self._email not in self._data.data:
             return val
 
@@ -95,7 +99,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
 
         return val
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Get initial data."""
         # To make sure we get initial data for the sensors ignoring the normal
         # throttle of 15 minutes but using an update throttle of 5 seconds
@@ -121,7 +125,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
         self._state = len(self._data.data[self._email])
         self.schedule_update_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Update data and see if it contains data for our email."""
         self._data.update()
 
@@ -155,7 +159,7 @@ class HaveIBeenPwnedData:
         """Get the latest data for current email from REST service."""
         try:
             url = f"{URL}{self._email}?truncateResponse=false"
-            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
+            header = {"User-Agent": HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
             req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 
@@ -163,7 +167,7 @@ class HaveIBeenPwnedData:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
-        if req.status_code == HTTP_OK:
+        if req.status_code == HTTPStatus.OK:
             self.data[self._email] = sorted(
                 req.json(), key=lambda k: k["AddedDate"], reverse=True
             )
@@ -172,7 +176,7 @@ class HaveIBeenPwnedData:
             # the forced updates try this current email again
             self.set_next_email()
 
-        elif req.status_code == HTTP_NOT_FOUND:
+        elif req.status_code == HTTPStatus.NOT_FOUND:
             self.data[self._email] = []
 
             # only goto next email if we had data so that

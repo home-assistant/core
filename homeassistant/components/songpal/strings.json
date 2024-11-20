@@ -18,5 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "not_songpal_device": "Not a Songpal device"
     }
+  },
+  "services": {
+    "set_sound_setting": {
+      "name": "Sets sound setting",
+      "description": "Change sound setting.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the setting."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value to set."
+        }
+      }
+    }
   }
 }

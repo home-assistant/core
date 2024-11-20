@@ -1,0 +1,333 @@
+# serializer version: 1
+# name: test_switch_state[switch.wled_rgb_light_nightlight-nightlight-called_with_on0-called_with_off0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'duration': 60,
+      'friendly_name': 'WLED RGB Light Nightlight',
+      'target_brightness': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_nightlight',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_nightlight-nightlight-called_with_on0-called_with_off0].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_nightlight',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nightlight',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nightlight',
+    'unique_id': 'aabbccddeeff_nightlight',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_nightlight-nightlight-called_with_on0-called_with_off0].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_reverse-segment-called_with_on1-called_with_off1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Reverse',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_reverse',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_reverse-segment-called_with_on1-called_with_off1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_reverse',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse',
+    'unique_id': 'aabbccddeeff_reverse_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_reverse-segment-called_with_on1-called_with_off1].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_receive-sync-called_with_on2-called_with_off2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Sync receive',
+      'udp_port': 21324,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_sync_receive',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_receive-sync-called_with_on2-called_with_off2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_sync_receive',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync receive',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_receive',
+    'unique_id': 'aabbccddeeff_sync_receive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_receive-sync-called_with_on2-called_with_off2].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_send-sync-called_with_on3-called_with_off3]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Sync send',
+      'udp_port': 21324,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_sync_send',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_send-sync-called_with_on3-called_with_off3].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_sync_send',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync send',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_send',
+    'unique_id': 'aabbccddeeff_sync_send',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_state[switch.wled_rgb_light_sync_send-sync-called_with_on3-called_with_off3].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
+  })
+# ---

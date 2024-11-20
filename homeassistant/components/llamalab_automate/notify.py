@@ -1,4 +1,8 @@
 """LlamaLab Automate notification service."""
+
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 
 import requests
@@ -6,11 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://llamalab.com/automate/cloud/message"
@@ -19,7 +25,7 @@ ATTR_PRIORITY = "priority"
 
 CONF_TO = "to"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_TO): cv.string,
@@ -28,7 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AutomateNotificationService:
     """Get the LlamaLab Automate notification service."""
     secret = config.get(CONF_API_KEY)
     recipient = config.get(CONF_TO)
@@ -65,6 +75,6 @@ class AutomateNotificationService(BaseNotificationService):
             "payload": message,
         }
 
-        response = requests.post(_RESOURCE, json=data)
-        if response.status_code != HTTP_OK:
+        response = requests.post(_RESOURCE, json=data, timeout=10)
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Error sending message: %s", response)

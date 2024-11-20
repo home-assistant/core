@@ -1,0 +1,378 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "U by Moen-015F44",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Moen Incorporated",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "TS3304",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "3.3.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "000000D7-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 9,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "u by moen",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ],
+        "linked": [11, 17, 22, 27, 32]
+      },
+      {
+        "iid": 11,
+        "type": "000000BC-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 21.66666,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0.0,
+            "maxValue": 100.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "000000B1-0000-1000-8000-0026BB765291",
+            "iid": 14,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Current Heater Cooler State",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "000000B2-0000-1000-8000-0026BB765291",
+            "iid": 15,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Target Heater Cooler State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000012-0000-1000-8000-0026BB765291",
+            "iid": 16,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 37.77777,
+            "description": "Heating Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 15.55556,
+            "maxValue": 48.88888,
+            "minStep": 0.1
+          }
+        ]
+      },
+      {
+        "iid": 17,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "iid": 19,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "In Use"
+          },
+          {
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "iid": 20,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Valve Type"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 21,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Outlet 1",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 22,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 23,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "iid": 24,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "In Use"
+          },
+          {
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "iid": 25,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Valve Type"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 26,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Outlet 2",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 27,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "In Use"
+          },
+          {
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "iid": 30,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Valve Type"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 31,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Outlet 3",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 32,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 33,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "iid": 34,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "In Use"
+          },
+          {
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "iid": 35,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Valve Type"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 36,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Outlet 4",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 37,
+        "type": "00000010-0000-1000-8000-001D4B474349",
+        "characteristics": [
+          {
+            "type": "00000011-0000-1000-8000-001D4B474349",
+            "iid": 38,
+            "perms": ["pr", "ev", "hd"],
+            "format": "uint8",
+            "value": 1
+          },
+          {
+            "type": "00000012-0000-1000-8000-001D4B474349",
+            "iid": 39,
+            "perms": ["pw", "hd"],
+            "format": "uint8"
+          },
+          {
+            "type": "00000013-0000-1000-8000-001D4B474349",
+            "iid": 40,
+            "perms": ["pw", "hd"],
+            "format": "string",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-001D4B474349",
+            "iid": 41,
+            "perms": ["pw", "hd"],
+            "format": "string",
+            "maxLen": 64
+          },
+          {
+            "type": "00000015-0000-1000-8000-001D4B474349",
+            "iid": 42,
+            "perms": ["pw", "hd"],
+            "format": "string",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 43,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 44,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.1.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  }
+]

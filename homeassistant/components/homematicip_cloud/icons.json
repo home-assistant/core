@@ -1,0 +1,31 @@
+{
+  "services": {
+    "activate_eco_mode_with_duration": {
+      "service": "mdi:leaf"
+    },
+    "activate_eco_mode_with_period": {
+      "service": "mdi:leaf"
+    },
+    "activate_vacation": {
+      "service": "mdi:compass"
+    },
+    "deactivate_eco_mode": {
+      "service": "mdi:leaf-off"
+    },
+    "deactivate_vacation": {
+      "service": "mdi:compass-off"
+    },
+    "set_active_climate_profile": {
+      "service": "mdi:home-thermometer"
+    },
+    "dump_hap_config": {
+      "service": "mdi:database-export"
+    },
+    "reset_energy_counter": {
+      "service": "mdi:reload"
+    },
+    "set_home_cooling_mode": {
+      "service": "mdi:snowflake"
+    }
+  }
+}

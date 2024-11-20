@@ -1,0 +1,43 @@
+{
+  "settings": {
+    "canUpdate": true,
+    "supportsPlugins": true,
+    "isArmed": true,
+    "background": "255,255,255"
+  },
+  "directories": [
+    {
+      "ID": 0,
+      "dir": "D:\\Projects\\agent-service\\AgentService\\Media\\WebServerRoot\\Media\\"
+    }
+  ],
+  "locations": [],
+  "objectList": [],
+  "profiles": [
+    { "name": "Home", "active": true, "id": 0 },
+    { "name": "Away", "active": false, "id": 1 },
+    { "name": "Night", "active": false, "id": 2 }
+  ],
+  "views": [
+    {
+      "name": "0",
+      "mode": "column",
+      "objects": [],
+      "maxWidth": 1266,
+      "maxHeight": 1222,
+      "backColor": "#222222",
+      "id": 1,
+      "typeID": 2,
+      "focused": false
+    },
+    { "name": "1", "mode": "grid", "objects": [] },
+    { "name": "2", "mode": "grid", "objects": [] },
+    { "name": "3", "mode": "grid", "objects": [] },
+    { "name": "4", "mode": "grid", "objects": [] },
+    { "name": "5", "mode": "grid", "objects": [] },
+    { "name": "6", "mode": "grid", "objects": [] },
+    { "name": "7", "mode": "grid", "objects": [] },
+    { "name": "8", "mode": "grid", "objects": [] }
+  ],
+  "rtmpStreaming": false
+}

@@ -1,13 +1,15 @@
 """Define fixtures available for all tests."""
+
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from pytest import fixture
+import pytest
 
 from . import MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION
 
 
-@fixture
-def nzbget_api(hass):
+@pytest.fixture
+def nzbget_api() -> Generator[MagicMock]:
     """Mock NZBGetApi for easier testing."""
     with patch("homeassistant.components.nzbget.coordinator.NZBGetAPI") as mock_api:
         instance = mock_api.return_value

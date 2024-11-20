@@ -1,4 +1,5 @@
 """The youless integration."""
+
 from datetime import timedelta
 import logging
 from urllib.error import URLError
@@ -6,14 +7,14 @@ from urllib.error import URLError
 from youless_api import YoulessAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except URLError as exception:
         raise ConfigEntryNotReady from exception
 
-    async def async_update_data():
+    async def async_update_data() -> YoulessAPI:
         """Fetch data from the API."""
         await hass.async_add_executor_job(api.update)
         return api
@@ -35,16 +36,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="youless_gateway",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=2),
+        update_interval=timedelta(seconds=10),
     )
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

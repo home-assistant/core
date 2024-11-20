@@ -1,4 +1,7 @@
 """Support for displaying IPs banned by fail2ban."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import os
@@ -6,9 +9,15 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +30,7 @@ STATE_CURRENT_BANS = "current_bans"
 STATE_ALL_BANS = "total_bans"
 SCAN_INTERVAL = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
         vol.Optional(CONF_FILE_PATH): cv.isfile,
@@ -30,18 +39,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the fail2ban sensor."""
-    name = config.get(CONF_NAME)
-    jails = config.get(CONF_JAILS)
+    name = config[CONF_NAME]
+    jails = config[CONF_JAILS]
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
-    device_list = []
     log_parser = BanLogParser(log_file)
-    for jail in jails:
-        device_list.append(BanSensor(name, jail, log_parser))
 
-    async_add_entities(device_list, True)
+    async_add_entities((BanSensor(name, jail, log_parser) for jail in jails), True)
 
 
 class BanSensor(SensorEntity):
@@ -55,7 +66,7 @@ class BanSensor(SensorEntity):
         self.last_ban = None
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
-            fr"\[{re.escape(self.jail)}\]\s*(Ban|Unban) (.*)"
+            rf"\[{re.escape(self.jail)}\]\s*(Ban|Unban) (.*)"
         )
         _LOGGER.debug("Setting up jail %s", self.jail)
 
@@ -74,7 +85,7 @@ class BanSensor(SensorEntity):
         """Return the most recently banned IP Address."""
         return self.last_ban
 
-    def update(self):
+    def update(self) -> None:
         """Update the list of banned ips."""
         self.log_parser.read_log(self.jail)
 

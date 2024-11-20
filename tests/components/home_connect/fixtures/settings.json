@@ -1,0 +1,161 @@
+{
+  "Dishwasher": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.AmbientLightEnabled",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightColor",
+          "value": "BSH.Common.EnumType.AmbientLightColor.Color43",
+          "type": "BSH.Common.EnumType.AmbientLightColor"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightCustomColor",
+          "value": "#4a88f8",
+          "type": "String"
+        },
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "Hood": {
+    "data": {
+      "settings": [
+        {
+          "key": "Cooking.Common.Setting.Lighting",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Cooking.Common.Setting.LightingBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "Cooking.Hood.Setting.ColorTemperaturePercent",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "BSH.Common.Setting.ColorTemperature",
+          "value": "Cooking.Hood.EnumType.ColorTemperature.warmToNeutral",
+          "type": "BSH.Common.EnumType.ColorTemperature"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightEnabled",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightColor",
+          "value": "BSH.Common.EnumType.AmbientLightColor.Color43",
+          "type": "BSH.Common.EnumType.AmbientLightColor"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightCustomColor",
+          "value": "#4a88f8",
+          "type": "String"
+        }
+      ]
+    }
+  },
+  "Oven": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        }
+      ]
+    }
+  },
+  "Washer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100,
+            "access": "readWrite"
+          }
+        }
+      ]
+    }
+  }
+}

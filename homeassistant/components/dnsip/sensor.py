@@ -1,74 +1,105 @@
 """Get your own public IP address or that of any host."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 import logging
 
 import aiodns
 from aiodns.error import DNSError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CONF_HOSTNAME,
+    CONF_IPV4,
+    CONF_IPV6,
+    CONF_PORT_IPV6,
+    CONF_RESOLVER,
+    CONF_RESOLVER_IPV6,
+    DOMAIN,
+)
+
+DEFAULT_RETRIES = 2
+MAX_RESULTS = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOSTNAME = "hostname"
-CONF_IPV6 = "ipv6"
-CONF_RESOLVER = "resolver"
-CONF_RESOLVER_IPV6 = "resolver_ipv6"
-
-DEFAULT_HOSTNAME = "myip.opendns.com"
-DEFAULT_IPV6 = False
-DEFAULT_NAME = "myip"
-DEFAULT_RESOLVER = "208.67.222.222"
-DEFAULT_RESOLVER_IPV6 = "2620:0:ccc::2"
-
 SCAN_INTERVAL = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
-        vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-    }
-)
+
+def sort_ips(ips: list, querytype: str) -> list:
+    """Join IPs into a single string."""
+
+    if querytype == "AAAA":
+        ips = [IPv6Address(ip) for ip in ips]
+    else:
+        ips = [IPv4Address(ip) for ip in ips]
+    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the DNS IP sensor."""
-    hostname = config[CONF_HOSTNAME]
-    name = config.get(CONF_NAME)
-    ipv6 = config[CONF_IPV6]
+    """Set up the dnsip sensor entry."""
 
-    if not name:
-        name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-    resolver = config[CONF_RESOLVER_IPV6] if ipv6 else config[CONF_RESOLVER]
+    hostname = entry.data[CONF_HOSTNAME]
+    name = entry.data[CONF_NAME]
 
-    async_add_devices([WanIpSensor(name, hostname, resolver, ipv6)], True)
+    resolver_ipv4 = entry.options[CONF_RESOLVER]
+    resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+    port_ipv4 = entry.options[CONF_PORT]
+    port_ipv6 = entry.options[CONF_PORT_IPV6]
+
+    entities = []
+    if entry.data[CONF_IPV4]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False, port_ipv4))
+    if entry.data[CONF_IPV6]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True, port_ipv6))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    def __init__(self, name: str, hostname: str, resolver: str, ipv6: bool) -> None:
+    _attr_has_entity_name = True
+    _attr_translation_key = "dnsip"
+    _unrecorded_attributes = frozenset({"resolver", "querytype", "ip_addresses"})
+
+    def __init__(
+        self,
+        name: str,
+        hostname: str,
+        resolver: str,
+        ipv6: bool,
+        port: int,
+    ) -> None:
         """Initialize the DNS IP sensor."""
-        self._attr_name = name
+        self._attr_name = "IPv6" if ipv6 else None
+        self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver()
+        self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
+        self._retries = DEFAULT_RETRIES
+        self._attr_extra_state_attributes = {
+            "resolver": resolver,
+            "querytype": self.querytype,
+        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, hostname)},
+            manufacturer="DNS",
+            model=aiodns.__version__,
+            name=name,
+        )
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
@@ -79,6 +110,14 @@ class WanIpSensor(SensorEntity):
             response = None
 
         if response:
-            self._attr_native_value = response[0].host
+            sorted_ips = sort_ips(
+                [res.host for res in response], querytype=self.querytype
+            )
+            self._attr_native_value = sorted_ips[0]
+            self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
+            self._attr_available = True
+            self._retries = DEFAULT_RETRIES
+        elif self._retries > 0:
+            self._retries -= 1
         else:
-            self._attr_native_value = None
+            self._attr_available = False

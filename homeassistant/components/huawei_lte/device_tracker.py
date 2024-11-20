@@ -1,26 +1,25 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
-import attr
 from stringcase import snakecase
 
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    ScannerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity, Router
+from . import Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -29,12 +28,13 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
 )
+from .entity import HuaweiLteBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = Dict[str, Any]
+type _HostType = dict[str, Any]
 
 
 def _get_hosts(
@@ -44,7 +44,7 @@ def _get_hosts(
         if not ignore_subscriptions and key not in router.subscriptions:
             continue
         try:
-            return cast(List[_HostType], router.data[key]["Hosts"]["Host"])
+            return cast(list[_HostType], router.data[key]["Hosts"]["Host"])
         except KeyError:
             _LOGGER.debug("%s[%s][%s] not in data", key, "Hosts", "Host")
     return None
@@ -60,22 +60,21 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
-    router = hass.data[DOMAIN].routers[config_entry.unique_id]
+    router = hass.data[DOMAIN].routers[config_entry.entry_id]
     if (hosts := _get_hosts(router, True)) is None:
         return
 
     # Initialize already tracked entities
     tracked: set[str] = set()
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     known_entities: list[Entity] = []
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
     )
-    for entity in registry.entities.values():
-        if (
-            entity.domain == DEVICE_TRACKER_DOMAIN
-            and entity.config_entry_id == config_entry.entry_id
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity.unique_id.partition("-")[2]
             # Do not add known wired clients if not tracking them (any more)
             skip = False
@@ -90,8 +89,8 @@ async def async_setup_entry(
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
-    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
-    router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
+    router.subscriptions[KEY_LAN_HOST_INFO].append(_DEVICE_SCAN)
+    router.subscriptions[KEY_WLAN_HOST_LIST].append(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(unique_id: str) -> None:
         """Add new entities if the update signal comes from our router."""
@@ -133,8 +132,7 @@ def async_add_new_entities(
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
-    hosts = _get_hosts(router)
-    if not hosts:
+    if not (hosts := _get_hosts(router)):
         return
 
     track_wired_clients = router.config_entry.options.get(
@@ -174,29 +172,27 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@attr.s
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str = attr.ib()
+    _ip_address: str | None = None
+    _is_connected: bool = False
+    _hostname: str | None = None
 
-    _ip_address: str | None = attr.ib(init=False, default=None)
-    _is_connected: bool = attr.ib(init=False, default=False)
-    _hostname: str | None = attr.ib(init=False, default=None)
-    _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
+    def __init__(self, router: Router, mac_address: str) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self._extra_state_attributes: dict[str, Any] = {}
+        self._mac_address = mac_address
 
     @property
-    def _entity_name(self) -> str:
+    def name(self) -> str:
+        """Return the name of the entity."""
         return self.hostname or self.mac_address
 
     @property
     def _device_unique_id(self) -> str:
         return self.mac_address
-
-    @property
-    def source_type(self) -> str:
-        """Return SOURCE_TYPE_ROUTER."""
-        return SOURCE_TYPE_ROUTER
 
     @property
     def ip_address(self) -> str | None:
@@ -225,8 +221,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = _get_hosts(self.router)
-        if hosts is None:
+        if (hosts := _get_hosts(self.router)) is None:
             self._available = False
             return
         self._available = True

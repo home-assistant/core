@@ -1,65 +1,39 @@
 """The MyQ integration."""
-from datetime import timedelta
-import logging
 
-import pymyq
-from pymyq.errors import InvalidCredentialsError, MyQError
+from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, PLATFORMS, UPDATE_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = "myq"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
     """Set up MyQ from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
-    websession = aiohttp_client.async_get_clientsession(hass)
-    conf = entry.data
-
-    try:
-        myq = await pymyq.login(conf[CONF_USERNAME], conf[CONF_PASSWORD], websession)
-    except InvalidCredentialsError as err:
-        raise ConfigEntryAuthFailed from err
-    except MyQError as err:
-        raise ConfigEntryNotReady from err
-
-    # Called by DataUpdateCoordinator, allows to capture any MyQError exceptions and to throw an HASS UpdateFailed
-    # exception instead, preventing traceback in HASS logs.
-    async def async_update_data():
-        try:
-            return await myq.update_device_info()
-        except InvalidCredentialsError as err:
-            raise ConfigEntryAuthFailed from err
-        except MyQError as err:
-            raise UpdateFailed(str(err)) from err
-
-    coordinator = DataUpdateCoordinator(
+    ir.async_create_issue(
         hass,
-        _LOGGER,
-        name="myq devices",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "blog": "https://www.home-assistant.io/blog/2023/11/06/removal-of-myq-integration/",
+            "entries": "/config/integrations/integration/myQ",
+        },
     )
-
-    hass.data[DOMAIN][entry.entry_id] = {MYQ_GATEWAY: myq, MYQ_COORDINATOR: coordinator}
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if all(
+        config_entry.state is ConfigEntryState.NOT_LOADED
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.entry_id != entry.entry_id
+    ):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
 
-    return unload_ok
+    return True

@@ -1,23 +1,28 @@
 """Support for X10 lights."""
+
+from __future__ import annotations
+
 import logging
 from subprocess import STDOUT, CalledProcessError, check_output
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_X10 = SUPPORT_BRIGHTNESS
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICES): vol.All(
             cv.ensure_list,
@@ -29,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def x10_command(command):
     """Execute X10 command and check output."""
-    return check_output(["heyu"] + command.split(" "), stderr=STDOUT)
+    return check_output(["heyu", *command.split(" ")], stderr=STDOUT)
 
 
 def get_unit_status(code):
@@ -38,13 +43,18 @@ def get_unit_status(code):
     return int(output.decode("utf-8")[0])
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the x10 Light platform."""
     is_cm11a = True
     try:
         x10_command("info")
     except CalledProcessError as err:
-        _LOGGER.info("Assuming that the device is CM17A: %s", err.output)
+        _LOGGER.warning("Assuming that the device is CM17A: %s", err.output)
         is_cm11a = False
 
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])
@@ -52,6 +62,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class X10Light(LightEntity):
     """Representation of an X10 Light."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, light, is_cm11a):
         """Initialize an X10 Light."""
@@ -76,12 +89,7 @@ class X10Light(LightEntity):
         """Return true if light is on."""
         return self._state
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_X10
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if self._is_cm11a:
             x10_command(f"on {self._id}")
@@ -90,7 +98,7 @@ class X10Light(LightEntity):
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if self._is_cm11a:
             x10_command(f"off {self._id}")
@@ -98,7 +106,7 @@ class X10Light(LightEntity):
             x10_command(f"foff {self._id}")
         self._state = False
 
-    def update(self):
+    def update(self) -> None:
         """Fetch update state."""
         if self._is_cm11a:
             self._state = bool(get_unit_status(self._id))

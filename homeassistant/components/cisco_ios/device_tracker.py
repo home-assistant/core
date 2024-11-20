@@ -1,4 +1,7 @@
 """Support for Cisco IOS Routers."""
+
+from __future__ import annotations
+
 import logging
 import re
 
@@ -6,17 +9,19 @@ from pexpect import pxssh
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
-    PARENT_PLATFORM_SCHEMA.extend(
+    DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_USERNAME): cv.string,
@@ -27,15 +32,15 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner | None:
     """Validate the configuration and return a Cisco scanner."""
-    scanner = CiscoDeviceScanner(config[DOMAIN])
+    scanner = CiscoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class CiscoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Cisco IOS firmware."""
+    """Class which queries a wireless router running Cisco IOS firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -47,9 +52,8 @@ class CiscoDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info("Initialized cisco_ios scanner")
 
-    def get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Get the firmware doesn't save the name of the wireless device."""
         return None
 
@@ -60,14 +64,11 @@ class CiscoDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _update_info(self):
-        """
-        Ensure the information from the Cisco router is up to date.
+        """Ensure the information from the Cisco router is up to date.
 
         Returns boolean if scanning successful.
         """
-        string_result = self._get_arp_data()
-
-        if string_result:
+        if string_result := self._get_arp_data():
             self.last_results = []
             last_results = []
 
@@ -137,8 +138,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
 
 def _parse_cisco_mac_address(cisco_hardware_addr):
-    """
-    Parse a Cisco formatted HW address to normal MAC.
+    """Parse a Cisco formatted HW address to normal MAC.
 
     e.g. convert
     001d.ec02.07ab

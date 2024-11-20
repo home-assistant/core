@@ -1,0 +1,688 @@
+{
+  "nodeId": 40,
+  "index": 0,
+  "installerIcon": 6912,
+  "userIcon": 6912,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": "unknown",
+  "manufacturerId": 134,
+  "productId": 117,
+  "productType": 4,
+  "firmwareVersion": "1.5",
+  "zwavePlusVersion": 1,
+  "name": "Repeater",
+  "location": "Dining Room",
+  "deviceConfig": {
+    "filename": "/usr/src/app/node_modules/@zwave-js/config/config/devices/0x0086/zw117.json",
+    "manufacturer": "AEON Labs",
+    "manufacturerId": 134,
+    "label": "ZW117",
+    "description": "Range Extender 6",
+    "devices": [
+      {
+        "productType": 4,
+        "productId": 117
+      },
+      {
+        "productType": 260,
+        "productId": 117
+      },
+      {
+        "productType": 516,
+        "productId": 117
+      },
+      {
+        "productType": 2564,
+        "productId": 117
+      },
+      {
+        "productType": 7172,
+        "productId": 117
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, press the Z-Wave Button on Range Extender 6",
+      "exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, press the Z-Wave Button on Range Extender 6",
+      "reset": "Press and hold the Z-Wave Button for 20 seconds and then release it.\nUse this procedure only in the event that your primary network controller is missing or inoperable",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2520/Range%20Extender%206%20manual.pdf"
+    },
+    "isEmbedded": true
+  },
+  "label": "ZW117",
+  "neighbors": [4, 17, 28, 29],
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 39,
+      "index": 0,
+      "installerIcon": 6912,
+      "userIcon": 6912,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 15,
+          "label": "Repeater Slave"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Repeater Slave"
+        },
+        "mandatorySupportedCCs": [32],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 51,
+          "name": "Color Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 99
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 2,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Red color.",
+        "label": "Current value (Red)",
+        "min": 0,
+        "max": 255
+      },
+      "value": null
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 3,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Green color.",
+        "label": "Current value (Green)",
+        "min": 0,
+        "max": 255
+      },
+      "value": null
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 4,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Blue color.",
+        "label": "Current value (Blue)",
+        "min": 0,
+        "max": 255
+      },
+      "value": null
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyName": "currentColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Color"
+      },
+      "value": {
+        "red": null,
+        "green": null,
+        "blue": null
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "hexColor",
+      "propertyName": "hexColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "color",
+        "readable": true,
+        "writeable": true,
+        "label": "RGB Color",
+        "minLength": 6,
+        "maxLength": 7
+      },
+      "value": "00ff00"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 2,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Red color.",
+        "label": "Target value (Red)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 3,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Green color.",
+        "label": "Target value (Green)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 4,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Blue color.",
+        "label": "Target value (Blue)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyName": "targetColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Target Color",
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 82,
+      "propertyName": "LED Indicator",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "LED Indicator",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "On for 2 seconds",
+          "1": "Disable"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 200,
+      "propertyName": "Partner ID",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Partner ID",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Aeotec",
+          "1": "Other"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 252,
+      "propertyName": "Lock Configuration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Lock Configuration",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 254,
+      "propertyName": "Device Tag",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Device Tag",
+        "default": 0,
+        "min": 0,
+        "max": 65535,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 255,
+      "propertyName": "Reset to Factory Default Setting",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset to Factory Default Setting",
+        "default": 0,
+        "min": 1,
+        "max": 1431655765,
+        "states": {
+          "1": "Resets all configuration parameters to default setting",
+          "1431655765": "Reset the product to factory default setting and exclude from Z-Wave network"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 134
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 117
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.54"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.5"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "interviewStage": 6,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 15,
+      "label": "Repeater Slave"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Repeater Slave"
+    },
+    "mandatorySupportedCCs": [32],
+    "mandatoryControlledCCs": []
+  },
+  "isControllerNode": false
+}

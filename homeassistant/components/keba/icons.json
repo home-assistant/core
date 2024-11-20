@@ -1,0 +1,28 @@
+{
+  "services": {
+    "request_data": {
+      "service": "mdi:database-arrow-down"
+    },
+    "authorize": {
+      "service": "mdi:lock"
+    },
+    "deauthorize": {
+      "service": "mdi:lock-open"
+    },
+    "set_energy": {
+      "service": "mdi:flash"
+    },
+    "set_current": {
+      "service": "mdi:flash"
+    },
+    "enable": {
+      "service": "mdi:flash"
+    },
+    "disable": {
+      "service": "mdi:fash-off"
+    },
+    "set_failsafe": {
+      "service": "mdi:message-alert"
+    }
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "online_status": {
+        "default": "mdi:heart"
+      }
+    },
+    "sensor": {
+      "alarm_delay": {
+        "default": "mdi:alarm"
+      },
+      "apc_status": {
+        "default": "mdi:information-outline"
+      },
+      "apc_model": {
+        "default": "mdi:information-outline"
+      },
+      "bad_batteries": {
+        "default": "mdi:information-outline"
+      },
+      "battery_replacement_date": {
+        "default": "mdi:calendar-clock"
+      },
+      "battery_status": {
+        "default": "mdi:information-outline"
+      },
+      "cable_type": {
+        "default": "mdi:ethernet-cable"
+      },
+      "total_time_on_battery": {
+        "default": "mdi:timer-outline"
+      },
+      "date": {
+        "default": "mdi:calendar-clock"
+      },
+      "dip_switch_settings": {
+        "default": "mdi:information-outline"
+      },
+      "low_battery_signal": {
+        "default": "mdi:clock-alert"
+      },
+      "driver": {
+        "default": "mdi:information-outline"
+      },
+      "shutdown_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "wake_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "date_and_time": {
+        "default": "mdi:calendar-clock"
+      },
+      "external_batteries": {
+        "default": "mdi:information-outline"
+      },
+      "firmware_version": {
+        "default": "mdi:information-outline"
+      },
+      "hostname": {
+        "default": "mdi:information-outline"
+      },
+      "last_self_test": {
+        "default": "mdi:calendar-clock"
+      },
+      "last_transfer": {
+        "default": "mdi:transfer"
+      },
+      "line_failure": {
+        "default": "mdi:information-outline"
+      },
+      "load_capacity": {
+        "default": "mdi:gauge"
+      },
+      "apparent_power": {
+        "default": "mdi:gauge"
+      },
+      "manufacture_date": {
+        "default": "mdi:calendar"
+      },
+      "master_update": {
+        "default": "mdi:information-outline"
+      },
+      "max_time": {
+        "default": "mdi:timer-off-outline"
+      },
+      "max_battery_charge": {
+        "default": "mdi:battery-alert"
+      },
+      "min_time": {
+        "default": "mdi:timer-outline"
+      },
+      "model": {
+        "default": "mdi:information-outline"
+      },
+      "transfer_count": {
+        "default": "mdi:counter"
+      },
+      "register_1_fault": {
+        "default": "mdi:information-outline"
+      },
+      "register_2_fault": {
+        "default": "mdi:information-outline"
+      },
+      "register_3_fault": {
+        "default": "mdi:information-outline"
+      },
+      "restore_capacity": {
+        "default": "mdi:battery-alert"
+      },
+      "self_test_result": {
+        "default": "mdi:information-outline"
+      },
+      "sensitivity": {
+        "default": "mdi:information-outline"
+      },
+      "serial_number": {
+        "default": "mdi:information-outline"
+      },
+      "startup_time": {
+        "default": "mdi:calendar-clock"
+      },
+      "online_status": {
+        "default": "mdi:information-outline"
+      },
+      "status": {
+        "default": "mdi:information-outline"
+      },
+      "self_test_interval": {
+        "default": "mdi:information-outline"
+      },
+      "time_left": {
+        "default": "mdi:clock-alert"
+      },
+      "time_on_battery": {
+        "default": "mdi:timer-outline"
+      },
+      "ups_mode": {
+        "default": "mdi:information-outline"
+      },
+      "ups_name": {
+        "default": "mdi:information-outline"
+      },
+      "version": {
+        "default": "mdi:information-outline"
+      },
+      "transfer_from_battery": {
+        "default": "mdi:transfer"
+      },
+      "transfer_to_battery": {
+        "default": "mdi:transfer"
+      }
+    }
+  }
+}

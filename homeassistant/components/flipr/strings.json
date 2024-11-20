@@ -8,23 +8,53 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "flipr_id": {
-        "title": "Choose your Flipr",
-        "description": "Choose your Flipr ID in the list",
-        "data": {
-          "flipr_id": "Flipr ID"
-        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_flipr_id_found": "No flipr id associated to your account for now. You should verify it is working with the Flipr's mobile app first."
+      "no_flipr_id_found": "No flipr or hub associated to your account for now. You should verify it is working with the Flipr's mobile app first."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ph_status": {
+        "name": "pH status"
+      },
+      "chlorine_status": {
+        "name": "Chlorine status"
+      }
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "sensor": {
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "last_measured": {
+        "name": "Last measured"
+      },
+      "red_ox": {
+        "name": "Red OX"
+      }
+    },
+    "select": {
+      "hub_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Automatic",
+          "manual": "Manual",
+          "planning": "Planning"
+        }
+      }
+    }
+  },
+  "issues": {
+    "duplicate_config": {
+      "title": "Multiple flipr configurations with the same account",
+      "description": "The Flipr integration has been updated to work account based rather than device based. This means that if you have 2 devices, you only need one configuration. For every account you have, please delete all but one configuration and restart Home Assistant for it to set up the devices linked to your account."
     }
   }
 }

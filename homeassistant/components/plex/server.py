@@ -1,4 +1,8 @@
 """Shared class to maintain Plex server instances."""
+
+from __future__ import annotations
+
+from copy import copy
 import logging
 import ssl
 import time
@@ -12,14 +16,7 @@ import plexapi.server
 from requests import Session
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_VIDEO,
-)
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaType
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -30,10 +27,10 @@ from .const import (
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
@@ -53,7 +50,8 @@ from .errors import (
     ServerNotSpecified,
     ShouldUpdateConfigEntry,
 )
-from .media_search import lookup_movie, lookup_music, lookup_tv
+from .helpers import get_plex_data
+from .media_search import search_media
 from .models import PlexSession
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +82,7 @@ class PlexServer:
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-        self._server_id = known_server_id
+        self._server_id = known_server_id or server_config.get(CONF_SERVER_IDENTIFIER)
         self.options = options
         self.server_choice = None
         self._accounts = []
@@ -100,6 +98,7 @@ class PlexServer:
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
+            background=True,
         ).async_call
         self.thumbnail_cache = {}
 
@@ -144,22 +143,23 @@ class PlexServer:
         config_entry_update_needed = False
 
         def _connect_with_token():
+            all_servers = [
+                x for x in self.account.resources() if "server" in x.provides
+            ]
             available_servers = [
-                (x.name, x.clientIdentifier)
-                for x in self.account.resources()
-                if "server" in x.provides and x.presence
+                (x.name, x.clientIdentifier, x.sourceTitle) for x in all_servers
             ]
 
-            if not available_servers:
+            if not all_servers:
                 raise NoServersFound
-            if not self._server_name and len(available_servers) > 1:
+            if not self._server_id and len(all_servers) > 1:
                 raise ServerNotSpecified(available_servers)
 
-            self.server_choice = (
-                self._server_name if self._server_name else available_servers[0][0]
-            )
-            self._plex_server = self.account.resource(self.server_choice).connect(
-                timeout=10
+            self.server_choice = self._server_id or available_servers[0][1]
+            self._plex_server = next(
+                x.connect(timeout=10)
+                for x in all_servers
+                if x.clientIdentifier == self.server_choice
             )
 
         def _connect_with_url():
@@ -202,8 +202,10 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            raise Unauthorized(  # pylint: disable=raise-missing-from
-                                "New certificate cannot be validated with provided token"
+                            # pylint: disable-next=raise-missing-from
+                            raise Unauthorized(  # noqa: TRY200
+                                "New certificate cannot be validated"
+                                " with provided token"
                             )
                     else:
                         raise
@@ -217,7 +219,8 @@ class PlexServer:
             shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available"
+                "Plex account has limited permissions,"
+                " shared account filtering will not be available"
             )
         else:
             self._accounts = []
@@ -259,8 +262,7 @@ class PlexServer:
         """Process a session payload received from a websocket callback."""
         session_payload = payload["PlaySessionStateNotification"][0]
 
-        state = session_payload["state"]
-        if state == "buffering":
+        if (state := session_payload["state"]) == "buffering":
             return
 
         session_key = int(session_payload["sessionKey"])
@@ -320,7 +322,7 @@ class PlexServer:
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
-        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
+        await get_plex_data(self.hass)[GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -433,7 +435,7 @@ class PlexServer:
 
         def connect_new_clients():
             """Create connections to newly discovered clients."""
-            for gdm_entry in self.hass.data[DOMAIN][GDM_SCANNER].entries:
+            for gdm_entry in get_plex_data(self.hass)[GDM_SCANNER].entries:
                 machine_identifier = gdm_entry["data"]["Resource-Identifier"]
                 if machine_identifier in self._client_device_cache:
                     client = self._client_device_cache[machine_identifier]
@@ -466,25 +468,25 @@ class PlexServer:
                     _LOGGER.debug("Photo session detected, skipping: %s", session)
                     continue
 
-                session_username = session.usernames[0]
-                for player in session.players:
-                    unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
-                    if unique_id not in self.active_sessions:
-                        _LOGGER.debug("Creating new Plex session: %s", session)
-                        self.active_sessions[unique_id] = PlexSession(self, session)
-                    if session_username and session_username not in monitored_users:
-                        ignored_clients.add(player.machineIdentifier)
-                        _LOGGER.debug(
-                            "Ignoring %s client owned by '%s'",
-                            player.product,
-                            session_username,
-                        )
-                        continue
+                session_username = next(iter(session.usernames), None)
+                player = session.player
+                unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
+                if unique_id not in self.active_sessions:
+                    _LOGGER.debug("Creating new Plex session: %s", session)
+                    self.active_sessions[unique_id] = PlexSession(self, session)
+                if session_username and session_username not in monitored_users:
+                    ignored_clients.add(player.machineIdentifier)
+                    _LOGGER.debug(
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
+                    )
+                    continue
 
-                    process_device("session", player)
-                    available_clients[player.machineIdentifier][
-                        "session"
-                    ] = self.active_sessions[unique_id]
+                process_device("session", player)
+                available_clients[player.machineIdentifier]["session"] = (
+                    self.active_sessions[unique_id]
+                )
 
         for device in devices:
             process_device("PMS", device)
@@ -570,7 +572,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=protected-access
+        return self._plex_server._baseurl  # noqa: SLF001
 
     @property
     def option_ignore_new_shared_users(self):
@@ -609,6 +611,10 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
+    def create_station_playqueue(self, key):
+        """Create playqueue on Plex server using a radio station key."""
+        return plexapi.playqueue.PlayQueue.fromStationKey(self._plex_server, key)
+
     def get_playqueue(self, playqueue_id):
         """Retrieve existing playqueue from Plex server."""
         return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
@@ -625,56 +631,48 @@ class PlexServer:
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
-            except NotFound:
-                _LOGGER.error("Media for key %s not found", key)
-                return None
+            except NotFound as err:
+                raise MediaNotFound(f"Media for key {key} not found") from err
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]
                 return self.playlist(playlist_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'playlist_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error(
-                    "Playlist '%s' not found",
-                    playlist_name,
-                )
-                return None
+            except KeyError as err:
+                raise MediaNotFound(
+                    "Must specify 'playlist_name' for this search"
+                ) from err
+            except NotFound as err:
+                raise MediaNotFound(f"Playlist '{playlist_name}' not found") from err
 
         try:
             library_name = kwargs.pop("library_name")
             library_section = self.library.section(library_name)
-        except KeyError:
-            _LOGGER.error("Must specify 'library_name' for this search")
-            return None
-        except NotFound:
-            _LOGGER.error("Library '%s' not found", library_name)
-            return None
+        except KeyError as err:
+            raise MediaNotFound("Must specify 'library_name' for this search") from err
+        except NotFound as err:
+            library_sections = [section.title for section in self.library.sections()]
+            raise MediaNotFound(
+                f"Library '{library_name}' not found in {library_sections}"
+            ) from err
 
-        try:
-            if media_type == MEDIA_TYPE_EPISODE:
-                return lookup_tv(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MOVIE:
-                return lookup_movie(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MUSIC:
-                return lookup_music(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_VIDEO:
-                # Legacy method for compatibility
-                try:
-                    video_name = kwargs["video_name"]
-                    return library_section.get(video_name)
-                except KeyError:
-                    _LOGGER.error("Must specify 'video_name' for this search")
-                    return None
-                except NotFound as err:
-                    raise MediaNotFound(f"Video {video_name}") from err
-        except MediaNotFound as failed_item:
-            _LOGGER.error("%s not found in %s", failed_item, library_name)
-            return None
+        _LOGGER.debug(
+            "Searching for %s in %s using: %s", media_type, library_section, kwargs
+        )
+        return search_media(media_type, library_section, **kwargs)
 
     @property
     def sensor_attributes(self):
         """Return active session information for use in activity sensor."""
         return {x.sensor_user: x.sensor_title for x in self.active_sessions.values()}
+
+    def set_plex_server(self, plex_server: PlexServer) -> None:
+        """Set the PlexServer instance."""
+        self._plex_server = plex_server
+
+    def switch_user(self, username: str) -> PlexServer:
+        """Return a shallow copy of a PlexServer as the provided user."""
+        new_server = copy(self)
+        new_server.set_plex_server(self.plex_server.switchUser(username))
+
+        return new_server

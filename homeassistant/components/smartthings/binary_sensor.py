@@ -1,4 +1,5 @@
 """Support for binary sensors through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -6,18 +7,16 @@ from collections.abc import Sequence
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 CAPABILITY_TO_ATTRIB = {
     Capability.acceleration_sensor: Attribute.acceleration,
@@ -31,19 +30,26 @@ CAPABILITY_TO_ATTRIB = {
     Capability.water_sensor: Attribute.water,
 }
 ATTRIB_TO_CLASS = {
-    Attribute.acceleration: DEVICE_CLASS_MOVING,
-    Attribute.contact: DEVICE_CLASS_OPENING,
-    Attribute.filter_status: DEVICE_CLASS_PROBLEM,
-    Attribute.motion: DEVICE_CLASS_MOTION,
-    Attribute.presence: DEVICE_CLASS_PRESENCE,
-    Attribute.sound: DEVICE_CLASS_SOUND,
-    Attribute.tamper: DEVICE_CLASS_PROBLEM,
-    Attribute.valve: DEVICE_CLASS_OPENING,
-    Attribute.water: DEVICE_CLASS_MOISTURE,
+    Attribute.acceleration: BinarySensorDeviceClass.MOVING,
+    Attribute.contact: BinarySensorDeviceClass.OPENING,
+    Attribute.filter_status: BinarySensorDeviceClass.PROBLEM,
+    Attribute.motion: BinarySensorDeviceClass.MOTION,
+    Attribute.presence: BinarySensorDeviceClass.PRESENCE,
+    Attribute.sound: BinarySensorDeviceClass.SOUND,
+    Attribute.tamper: BinarySensorDeviceClass.PROBLEM,
+    Attribute.valve: BinarySensorDeviceClass.OPENING,
+    Attribute.water: BinarySensorDeviceClass.MOISTURE,
+}
+ATTRIB_TO_ENTTIY_CATEGORY = {
+    Attribute.tamper: EntityCategory.DIAGNOSTIC,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add binary sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
@@ -68,23 +74,12 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         """Init the class."""
         super().__init__(device)
         self._attribute = attribute
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._attribute}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
+        self._attr_name = f"{device.label} {attribute}"
+        self._attr_unique_id = f"{device.device_id}.{attribute}"
+        self._attr_device_class = ATTRIB_TO_CLASS[attribute]
+        self._attr_entity_category = ATTRIB_TO_ENTTIY_CATEGORY.get(attribute)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._device.status.is_on(self._attribute)
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return ATTRIB_TO_CLASS[self._attribute]

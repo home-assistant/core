@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "Provide URL for the Open Thread Border Router's REST API"
+      }
+    },
+    "error": {
+      "already_configured": "The Thread border router is already configured",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "The Thread border router is already configured",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "issues": {
+    "get_get_border_agent_id_unsupported": {
+      "title": "The OTBR does not support border agent ID",
+      "description": "Your OTBR does not support border agent ID.\n\nTo fix this issue, update the OTBR to the latest version and restart Home Assistant.\nTo update the OTBR, update the Open Thread Border Router or Silicon Labs Multiprotocol add-on if you use the OTBR from the add-on, otherwise update your self managed OTBR."
+    },
+    "insecure_thread_network": {
+      "title": "Insecure Thread network settings detected",
+      "description": "Your Thread network is using a default network key or pass phrase.\n\nThis is a security risk, please create a new Thread network."
+    },
+    "otbr_zha_channel_collision": {
+      "title": "OTBR and ZHA share the same radio but use different channels",
+      "description": "When OTBR and ZHA share the radio, they must use the same network channel.\n\nIf OTBR and ZHA attempt to connect to networks on different channels, neither Thread/Matter nor Zigbee will work.\n\nOTBR is configured with a Thread network on channel {otbr_channel}, ZHA is configured with a Zigbee network on channel {zha_channel}."
+    }
+  }
+}

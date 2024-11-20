@@ -1,4 +1,5 @@
 """Support for submitting data to Thingspeak."""
+
 import logging
 
 from requests.exceptions import RequestException
@@ -12,8 +13,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event, state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Thingspeak environment."""
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)

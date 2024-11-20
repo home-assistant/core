@@ -1,5 +1,7 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
 
+from homeassistant.const import Platform
+
 CONF_SYSTEM_ID = "system_id"
 CONF_REVERSE = "reverse"
 CONF_TARGET_NAME = "target_name"
@@ -12,6 +14,6 @@ DATA_SOMFY_MYLINK = "somfy_mylink_data"
 MYLINK_STATUS = "mylink_status"
 DOMAIN = "somfy_mylink"
 
-PLATFORMS = ["cover"]
+PLATFORMS = [Platform.COVER]
 
 MANUFACTURER = "Somfy"

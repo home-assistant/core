@@ -1,4 +1,6 @@
 """Support for EcoNet products."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -12,32 +14,29 @@ from pyeconet.errors import (
     PyeconetError,
 )
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import API_CLIENT, DOMAIN, EQUIPMENT
+from .const import API_CLIENT, DOMAIN, EQUIPMENT, PUSH_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "binary_sensor", "sensor", "water_heater"]
-PUSH_UPDATE = "econet.push_update"
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WATER_HEATER,
+]
 
 INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup(hass, config):
-    """Set up the EcoNet component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API_CLIENT] = {}
-    hass.data[DOMAIN][EQUIPMENT] = {}
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -58,10 +57,11 @@ async def async_setup_entry(hass, config_entry):
         )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
+    hass.data.setdefault(DOMAIN, {API_CLIENT: {}, EQUIPMENT: {}})
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     api.subscribe()
 
@@ -80,81 +80,19 @@ async def async_setup_entry(hass, config_entry):
         await hass.async_add_executor_job(api.unsubscribe)
         api.subscribe()
 
-    async def fetch_update(now):
-        """Fetch the latest changes from the API."""
+        # Refresh values
+        await asyncio.sleep(60)
         await api.refresh_equipment()
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
-    config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
-    )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a EcoNet config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
     return unload_ok
-
-
-class EcoNetEntity(Entity):
-    """Define a base EcoNet entity."""
-
-    def __init__(self, econet):
-        """Initialize."""
-        self._econet = econet
-
-    async def async_added_to_hass(self):
-        """Subscribe to device events."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                PUSH_UPDATE, self.on_update_received
-            )
-        )
-
-    @callback
-    def on_update_received(self):
-        """Update was pushed from the ecoent API."""
-        self.async_write_ha_state()
-
-    @property
-    def available(self):
-        """Return if the the device is online or not."""
-        return self._econet.connected
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._econet.device_id)},
-            "manufacturer": "Rheem",
-            "name": self._econet.device_name,
-        }
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._econet.device_name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}"
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False

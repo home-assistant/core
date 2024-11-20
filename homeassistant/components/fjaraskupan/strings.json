@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Fjäråskupan?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "grease_filter": {
+        "name": "Grease filter"
+      },
+      "carbon_filter": {
+        "name": "Carbon filter"
+      }
+    },
+    "number": {
+      "periodic_venting": {
+        "name": "Periodic venting"
+      }
+    }
+  },
+  "exceptions": {
+    "write_error": {
+      "message": "Failed to write data to device"
+    },
+    "read_error": {
+      "message": "Failed to read data from device"
+    },
+    "connection_error": {
+      "message": "Failed to connect to device"
+    },
+    "unexpected_error": {
+      "message": "Unexpected error occurred: {msg}"
+    }
+  }
+}

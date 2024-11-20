@@ -1,26 +1,33 @@
 """Real-time information about public transport departures in Norway."""
+
+from __future__ import annotations
+
 from datetime import datetime, timedelta
+from random import randint
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-API_CLIENT_NAME = "homeassistant-homeassistant"
-
-ATTRIBUTION = "Data provided by entur.org under NLOD"
+API_CLIENT_NAME = "homeassistant-{}"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
@@ -42,7 +49,7 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(seconds=45)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
@@ -83,22 +90,27 @@ def due_in_minutes(timestamp: datetime) -> int:
     return int(diff.total_seconds() / 60)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Entur public transport sensor."""
 
-    expand = config.get(CONF_EXPAND_PLATFORMS)
-    line_whitelist = config.get(CONF_WHITELIST_LINES)
-    name = config.get(CONF_NAME)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
-    stop_ids = config.get(CONF_STOP_IDS)
-    omit_non_boarding = config.get(CONF_OMIT_NON_BOARDING)
-    number_of_departures = config.get(CONF_NUMBER_OF_DEPARTURES)
+    expand = config[CONF_EXPAND_PLATFORMS]
+    line_whitelist = config[CONF_WHITELIST_LINES]
+    name = config[CONF_NAME]
+    show_on_map = config[CONF_SHOW_ON_MAP]
+    stop_ids = config[CONF_STOP_IDS]
+    omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
+    number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(
-        API_CLIENT_NAME,
+        API_CLIENT_NAME.format(str(randint(100000, 999999))),
         stops=stops,
         quays=quays,
         line_whitelist=line_whitelist,
@@ -150,6 +162,8 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
+    _attr_attribution = "Data provided by entur.org under NLOD"
+
     def __init__(
         self, api: EnturProxy, name: str, stop: str, show_on_map: bool
     ) -> None:
@@ -158,9 +172,9 @@ class EnturPublicTransportSensor(SensorEntity):
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
-        self._state = None
+        self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
-        self._attributes = {}
+        self._attributes: dict[str, str] = {}
 
     @property
     def name(self) -> str:
@@ -168,21 +182,20 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self) -> str:
@@ -195,7 +208,7 @@ class EnturPublicTransportSensor(SensorEntity):
 
         self._attributes = {}
 
-        data = self.api.get_stop_info(self._stop)
+        data: EnturPublicTransportData = self.api.get_stop_info(self._stop)
         if data is None:
             self._state = None
             return
@@ -204,8 +217,7 @@ class EnturPublicTransportSensor(SensorEntity):
             self._attributes[CONF_LATITUDE] = data.latitude
             self._attributes[CONF_LONGITUDE] = data.longitude
 
-        calls = data.estimated_calls
-        if not calls:
+        if not (calls := data.estimated_calls):
             self._state = None
             return
 
@@ -229,9 +241,9 @@ class EnturPublicTransportSensor(SensorEntity):
         self._attributes[ATTR_NEXT_UP_AT] = calls[1].expected_departure_time.strftime(
             "%H:%M"
         )
-        self._attributes[
-            ATTR_NEXT_UP_IN
-        ] = f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        self._attributes[ATTR_NEXT_UP_IN] = (
+            f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        )
         self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
         self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
 

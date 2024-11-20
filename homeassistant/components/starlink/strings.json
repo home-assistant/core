@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "roaming": {
+        "name": "Roaming mode"
+      },
+      "currently_obstructed": {
+        "name": "Obstructed"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "power_save_idle": {
+        "name": "Sleep"
+      },
+      "mast_near_vertical": {
+        "name": "Mast near vertical"
+      },
+      "motors_stuck": {
+        "name": "Motors stuck"
+      },
+      "slow_ethernet": {
+        "name": "Ethernet speeds"
+      },
+      "thermal_throttle": {
+        "name": "Thermal throttle"
+      },
+      "unexpected_location": {
+        "name": "Unexpected location"
+      }
+    },
+    "device_tracker": {
+      "device_location": {
+        "name": "Device location"
+      }
+    },
+    "sensor": {
+      "ping": {
+        "name": "Ping"
+      },
+      "azimuth": {
+        "name": "Azimuth"
+      },
+      "elevation": {
+        "name": "[%key:common::config_flow::data::elevation%]"
+      },
+      "uplink_throughput": {
+        "name": "Uplink throughput"
+      },
+      "downlink_throughput": {
+        "name": "Downlink throughput"
+      },
+      "last_boot_time": {
+        "name": "Last boot time"
+      },
+      "ping_drop_rate": {
+        "name": "Ping drop rate"
+      }
+    },
+    "switch": {
+      "stowed": {
+        "name": "Stowed"
+      },
+      "sleep_schedule": {
+        "name": "Sleep schedule"
+      }
+    },
+    "time": {
+      "sleep_start": {
+        "name": "Sleep start"
+      },
+      "sleep_end": {
+        "name": "Sleep end"
+      }
+    }
+  }
+}

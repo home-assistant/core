@@ -1,13 +1,17 @@
 """Support for Alexa skill service end point."""
-import copy
+
 import hmac
+from http import HTTPStatus
 import logging
 import uuid
 
+from aiohttp.web_response import StreamResponse
+
 from homeassistant.components import http
-from homeassistant.const import CONF_PASSWORD, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
-from homeassistant.core import callback
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -32,7 +36,7 @@ FLASH_BRIEFINGS_API_ENDPOINT = "/api/alexa/flash_briefings/{briefing_id}"
 
 
 @callback
-def async_setup(hass, flash_briefing_config):
+def async_setup(hass: HomeAssistant, flash_briefing_config: ConfigType) -> None:
     """Activate Alexa component."""
     hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefing_config))
 
@@ -44,21 +48,22 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
     requires_auth = False
     name = "api:alexa:flash_briefings"
 
-    def __init__(self, hass, flash_briefings):
+    def __init__(self, hass: HomeAssistant, flash_briefings: ConfigType) -> None:
         """Initialize Alexa view."""
         super().__init__()
-        self.flash_briefings = copy.deepcopy(flash_briefings)
-        template.attach(hass, self.flash_briefings)
+        self.flash_briefings = flash_briefings
 
     @callback
-    def get(self, request, briefing_id):
+    def get(
+        self, request: http.HomeAssistantRequest, briefing_id: str
+    ) -> StreamResponse | tuple[bytes, HTTPStatus]:
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
         if request.query.get(API_PASSWORD) is None:
             err = "No password provided for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
+            return b"", HTTPStatus.UNAUTHORIZED
 
         if not hmac.compare_digest(
             request.query[API_PASSWORD].encode("utf-8"),
@@ -66,12 +71,12 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         ):
             err = "Wrong password for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
+            return b"", HTTPStatus.UNAUTHORIZED
 
         if not isinstance(self.flash_briefings.get(briefing_id), list):
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_NOT_FOUND
+            return b"", HTTPStatus.NOT_FOUND
 
         briefing = []
 
@@ -93,8 +98,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
-            uid = item.get(CONF_UID)
-            if uid is None:
+            if (uid := item.get(CONF_UID)) is None:
                 uid = str(uuid.uuid4())
             output[ATTR_UID] = uid
 

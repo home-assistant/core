@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_cleanup_mac
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          'aa:bb:cc:dd:ee:ff',
+        ),
+        tuple(
+          'mac',
+          'none',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'samsungtv',
+          'any',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': '82GXARRS',
+      'model_id': None,
+      'name': 'fake',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_cleanup_mac.1
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          'aa:bb:cc:dd:ee:ff',
+        ),
+        tuple(
+          'mac',
+          'none',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'samsungtv',
+          'any',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': '82GXARRS',
+      'model_id': '82GXARRS',
+      'name': 'fake',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_setup_updates_from_ssdp
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tv',
+      'friendly_name': 'any',
+      'is_volume_muted': False,
+      'source_list': list([
+        'TV',
+        'HDMI',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 24509>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.any',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_updates_from_ssdp.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'TV',
+        'HDMI',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.any',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'samsungtv',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 24509>,
+    'translation_key': None,
+    'unique_id': 'sample-entry-id',
+    'unit_of_measurement': None,
+  })
+# ---

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_time_to": {
+      "service": "mdi:timer-cog"
+    }
+  }
+}

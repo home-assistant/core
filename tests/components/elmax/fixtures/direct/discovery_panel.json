@@ -1,0 +1,148 @@
+{
+  "release": "PHANTOM64PRO_GSM 11.9.844",
+  "tappFeature": true,
+  "sceneFeature": true,
+  "zone": [
+    {
+      "endpointId": "13762559c53cd093171-zona-0",
+      "visibile": true,
+      "indice": 0,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  01"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-1",
+      "visibile": true,
+      "indice": 1,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  02e"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-2",
+      "visibile": true,
+      "indice": 2,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  03a"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-3",
+      "visibile": true,
+      "indice": 3,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  04"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-4",
+      "visibile": true,
+      "indice": 4,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  05"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-5",
+      "visibile": true,
+      "indice": 5,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  06"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-6",
+      "visibile": true,
+      "indice": 6,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  07"
+    },
+    {
+      "endpointId": "13762559c53cd093171-zona-7",
+      "visibile": true,
+      "indice": 7,
+      "aperta": true,
+      "esclusa": false,
+      "nome": "ZONA  08"
+    }
+  ],
+  "uscite": [
+    {
+      "endpointId": "13762559c53cd093171-uscita-1",
+      "visibile": true,
+      "indice": 1,
+      "aperta": true,
+      "nome": "USCITA 02"
+    }
+  ],
+  "aree": [
+    {
+      "endpointId": "13762559c53cd093171-area-0",
+      "visibile": true,
+      "indice": 0,
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 1,
+      "zoneBmask": "0700000000000000",
+      "nome": "AREA 1"
+    },
+    {
+      "endpointId": "13762559c53cd093171-area-1",
+      "visibile": true,
+      "indice": 1,
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 1,
+      "zoneBmask": "3800000000000000",
+      "nome": "AREA 2"
+    },
+    {
+      "endpointId": "13762559c53cd093171-area-2",
+      "visibile": true,
+      "indice": 2,
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 1,
+      "zoneBmask": "C000000000000000",
+      "nome": "AREA 3"
+    }
+  ],
+  "tapparelle": [
+    {
+      "endpointId": "13762559c53cd093171-tapparella-0",
+      "visibile": true,
+      "indice": 0,
+      "stato": "stop",
+      "posizione": 0,
+      "nome": "ESPAN.DOM.01"
+    }
+  ],
+  "gruppi": [
+    {
+      "endpointId": "13762559c53cd093171-gruppo-1",
+      "visibile": true,
+      "indice": 1,
+      "nome": "GRUPPOUSC02"
+    }
+  ],
+  "scenari": [
+    {
+      "endpointId": "13762559c53cd093171-scenario-1",
+      "visibile": true,
+      "indice": 1,
+      "nome": "SCENARIO02"
+    },
+    {
+      "endpointId": "13762559c53cd093171-scenario-2",
+      "visibile": true,
+      "indice": 2,
+      "nome": "SCENARIO03"
+    }
+  ],
+  "datetime": "19:16:44 23/10/2022"
+}

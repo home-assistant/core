@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_devices[ondilo_ico-W1122333044455]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ondilo_ico',
+        'W1122333044455',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Ondilo',
+    'model': 'ICO',
+    'model_id': None,
+    'name': 'Pool 1',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.7.1-stable',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[ondilo_ico-W2233304445566]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ondilo_ico',
+        'W2233304445566',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Ondilo',
+    'model': 'ICO',
+    'model_id': None,
+    'name': 'Pool 2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.7.1-stable',
+    'via_device_id': None,
+  })
+# ---

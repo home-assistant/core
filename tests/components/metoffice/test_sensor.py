@@ -1,11 +1,18 @@
 """The tests for the Met Office sensor component."""
+
+import datetime
 import json
-from unittest.mock import patch
+
+import pytest
+import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from . import NewDateTime
 from .const import (
+    DEVICE_KEY_KINGSLYNN,
+    DEVICE_KEY_WAVERTREE,
     KINGSLYNN_SENSOR_RESULTS,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
@@ -18,14 +25,15 @@ from .const import (
 from tests.common import MockConfigEntry, load_fixture
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_time):
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+async def test_one_sensor_site_running(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
@@ -48,6 +56,12 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert len(device_registry.devices) == 1
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
+    assert device_wavertree.name == "Met Office Wavertree"
+
     running_sensor_ids = hass.states.async_entity_ids("sensor")
     assert len(running_sensor_ids) > 0
     for running_id in running_sensor_ids:
@@ -62,15 +76,16 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_time):
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+async def test_two_sensor_sites_running(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
@@ -104,6 +119,16 @@ async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_ti
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 2
+    device_kingslynn = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_KINGSLYNN
+    )
+    assert device_kingslynn.name == "Met Office King's Lynn"
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
+    assert device_wavertree.name == "Met Office Wavertree"
 
     running_sensor_ids = hass.states.async_entity_ids("sensor")
     assert len(running_sensor_ids) > 0

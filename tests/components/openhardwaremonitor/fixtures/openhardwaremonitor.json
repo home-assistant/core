@@ -1,0 +1,571 @@
+{
+  "id": 0,
+  "Text": "Sensor",
+  "Children": [
+    {
+      "id": 1,
+      "Text": "TEST-PC",
+      "Children": [
+        {
+          "id": 2,
+          "Text": "ASUS PRIME Z270-P",
+          "Children": [],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/mainboard.png"
+        },
+        {
+          "id": 3,
+          "Text": "Intel Core i7-7700",
+          "Children": [
+            {
+              "id": 4,
+              "Text": "Clocks",
+              "Children": [
+                {
+                  "id": 5,
+                  "Text": "Bus Speed",
+                  "Children": [],
+                  "Min": "100 MHz",
+                  "Value": "100 MHz",
+                  "Max": "100 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 6,
+                  "Text": "CPU Core #1",
+                  "Children": [],
+                  "Min": "800 MHz",
+                  "Value": "800 MHz",
+                  "Max": "4200 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 7,
+                  "Text": "CPU Core #2",
+                  "Children": [],
+                  "Min": "800 MHz",
+                  "Value": "800 MHz",
+                  "Max": "4200 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 8,
+                  "Text": "CPU Core #3",
+                  "Children": [],
+                  "Min": "800 MHz",
+                  "Value": "800 MHz",
+                  "Max": "4200 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 9,
+                  "Text": "CPU Core #4",
+                  "Children": [],
+                  "Min": "800 MHz",
+                  "Value": "800 MHz",
+                  "Max": "4200 MHz",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/clock.png"
+            },
+            {
+              "id": 10,
+              "Text": "Temperatures",
+              "Children": [
+                {
+                  "id": 11,
+                  "Text": "CPU Core #1",
+                  "Children": [],
+                  "Min": "29.0 °C",
+                  "Value": "31.0 °C",
+                  "Max": "60.0 °C",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 12,
+                  "Text": "CPU Core #2",
+                  "Children": [],
+                  "Min": "29,0 °C",
+                  "Value": "30,0 °C",
+                  "Max": "61,0 °C",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 13,
+                  "Text": "CPU Core #3",
+                  "Children": [],
+                  "Min": "28.0 °C",
+                  "Value": "29.0 °C",
+                  "Max": "58.0 °C",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 14,
+                  "Text": "CPU Core #4",
+                  "Children": [],
+                  "Min": "29.0 °C",
+                  "Value": "31.0 °C",
+                  "Max": "57.0 °C",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 15,
+                  "Text": "CPU Package",
+                  "Children": [],
+                  "Min": "30.0 °C",
+                  "Value": "31.0 °C",
+                  "Max": "61.0 °C",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/temperature.png"
+            },
+            {
+              "id": 16,
+              "Text": "Load",
+              "Children": [
+                {
+                  "id": 17,
+                  "Text": "CPU Total",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "1.0 %",
+                  "Max": "42.2 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 18,
+                  "Text": "CPU Core #1",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "1.6 %",
+                  "Max": "50.8 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 19,
+                  "Text": "CPU Core #2",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "1.6 %",
+                  "Max": "52.0 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 20,
+                  "Text": "CPU Core #3",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.0 %",
+                  "Max": "52.2 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 21,
+                  "Text": "CPU Core #4",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.8 %",
+                  "Max": "51.8 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png"
+            },
+            {
+              "id": 22,
+              "Text": "Powers",
+              "Children": [
+                {
+                  "id": 23,
+                  "Text": "CPU Package",
+                  "Children": [],
+                  "Min": "4.4 W",
+                  "Value": "12.1 W",
+                  "Max": "44.6 W",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 24,
+                  "Text": "CPU Cores",
+                  "Children": [],
+                  "Min": "0.9 W",
+                  "Value": "1.0 W",
+                  "Max": "33.5 W",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 25,
+                  "Text": "CPU Graphics",
+                  "Children": [],
+                  "Min": "0.0 W",
+                  "Value": "0.0 W",
+                  "Max": "0.0 W",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 26,
+                  "Text": "CPU DRAM",
+                  "Children": [],
+                  "Min": "1.0 W",
+                  "Value": "1.0 W",
+                  "Max": "2.4 W",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/power.png"
+            }
+          ],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/cpu.png"
+        },
+        {
+          "id": 27,
+          "Text": "Generic Memory",
+          "Children": [
+            {
+              "id": 28,
+              "Text": "Load",
+              "Children": [
+                {
+                  "id": 29,
+                  "Text": "Memory",
+                  "Children": [],
+                  "Min": "13.1 %",
+                  "Value": "13.6 %",
+                  "Max": "14.5 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png"
+            },
+            {
+              "id": 30,
+              "Text": "Data",
+              "Children": [
+                {
+                  "id": 31,
+                  "Text": "Used Memory",
+                  "Children": [],
+                  "Min": "4.2 GB",
+                  "Value": "4.3 GB",
+                  "Max": "4.6 GB",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 32,
+                  "Text": "Available Memory",
+                  "Children": [],
+                  "Min": "27.2 GB",
+                  "Value": "27.5 GB",
+                  "Max": "27.7 GB",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/power.png"
+            }
+          ],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/ram.png"
+        },
+        {
+          "id": 33,
+          "Text": "NVIDIA GeForce GTX 1080",
+          "Children": [
+            {
+              "id": 34,
+              "Text": "Clocks",
+              "Children": [
+                {
+                  "id": 35,
+                  "Text": "GPU Core",
+                  "Children": [],
+                  "Min": "215 MHz",
+                  "Value": "215 MHz",
+                  "Max": "1683 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 36,
+                  "Text": "GPU Memory",
+                  "Children": [],
+                  "Min": "405 MHz",
+                  "Value": "405 MHz",
+                  "Max": "5006 MHz",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 37,
+                  "Text": "GPU Shader",
+                  "Children": [],
+                  "Min": "430 MHz",
+                  "Value": "430 MHz",
+                  "Max": "3366 MHz",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/clock.png"
+            },
+            {
+              "id": 38,
+              "Text": "Temperatures",
+              "Children": [
+                {
+                  "id": 39,
+                  "Text": "GPU Core",
+                  "Children": [],
+                  "Min": "38.0 °C",
+                  "Value": "39.0 °C",
+                  "Max": "42.0 °C",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/temperature.png"
+            },
+            {
+              "id": 40,
+              "Text": "Load",
+              "Children": [
+                {
+                  "id": 41,
+                  "Text": "GPU Core",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.0 %",
+                  "Max": "19.0 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 42,
+                  "Text": "GPU Memory Controller",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.0 %",
+                  "Max": "2.0 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 43,
+                  "Text": "GPU Video Engine",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.0 %",
+                  "Max": "0.0 %",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 44,
+                  "Text": "GPU Memory",
+                  "Children": [],
+                  "Min": "3.9 %",
+                  "Value": "3.9 %",
+                  "Max": "4.1 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png"
+            },
+            {
+              "id": 45,
+              "Text": "Fans",
+              "Children": [
+                {
+                  "id": 46,
+                  "Text": "GPU",
+                  "Children": [],
+                  "Min": "0 RPM",
+                  "Value": "0 RPM",
+                  "Max": "0 RPM",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/fan.png"
+            },
+            {
+              "id": 47,
+              "Text": "Controls",
+              "Children": [
+                {
+                  "id": 48,
+                  "Text": "GPU Fan",
+                  "Children": [],
+                  "Min": "0.0 %",
+                  "Value": "0.0 %",
+                  "Max": "0.0 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/control.png"
+            },
+            {
+              "id": 49,
+              "Text": "Data",
+              "Children": [
+                {
+                  "id": 50,
+                  "Text": "GPU Memory Free",
+                  "Children": [],
+                  "Min": "7854.8 MB",
+                  "Value": "7873.1 MB",
+                  "Max": "7873.1 MB",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 51,
+                  "Text": "GPU Memory Used",
+                  "Children": [],
+                  "Min": "318.9 MB",
+                  "Value": "318.9 MB",
+                  "Max": "337.2 MB",
+                  "ImageURL": "images/transparent.png"
+                },
+                {
+                  "id": 52,
+                  "Text": "GPU Memory Total",
+                  "Children": [],
+                  "Min": "8192.0 MB",
+                  "Value": "8192.0 MB",
+                  "Max": "8192.0 MB",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/power.png"
+            }
+          ],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/nvidia.png"
+        },
+        {
+          "id": 53,
+          "Text": "Generic Hard Disk",
+          "Children": [
+            {
+              "id": 54,
+              "Text": "Load",
+              "Children": [
+                {
+                  "id": 55,
+                  "Text": "Used Space",
+                  "Children": [],
+                  "Min": "74.6 %",
+                  "Value": "75.3 %",
+                  "Max": "75.6 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png"
+            }
+          ],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/hdd.png"
+        },
+        {
+          "id": 56,
+          "Text": "WDC WD30EZRZ-00Z5HB0",
+          "Children": [
+            {
+              "id": 57,
+              "Text": "Temperatures",
+              "Children": [
+                {
+                  "id": 58,
+                  "Text": "Temperature",
+                  "Children": [],
+                  "Min": "30.0 °C",
+                  "Value": "30.0 °C",
+                  "Max": "32.0 °C",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/temperature.png"
+            },
+            {
+              "id": 59,
+              "Text": "Load",
+              "Children": [
+                {
+                  "id": 60,
+                  "Text": "Used Space",
+                  "Children": [],
+                  "Min": "14.4 %",
+                  "Value": "14.4 %",
+                  "Max": "14.4 %",
+                  "ImageURL": "images/transparent.png"
+                }
+              ],
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png"
+            }
+          ],
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/hdd.png"
+        }
+      ],
+      "Min": "",
+      "Value": "",
+      "Max": "",
+      "ImageURL": "images_icon/computer.png"
+    }
+  ],
+  "Min": "Min",
+  "Value": "Value",
+  "Max": "Max",
+  "ImageURL": ""
+}

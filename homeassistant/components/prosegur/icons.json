@@ -1,0 +1,7 @@
+{
+  "services": {
+    "request_image": {
+      "service": "mdi:image-sync"
+    }
+  }
+}

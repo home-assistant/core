@@ -1,40 +1,56 @@
 """Support for Netgear LTE binary sensors."""
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
-from homeassistant.exceptions import PlatformNotReady
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import BINARY_SENSOR_CLASSES
+from __future__ import annotations
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import NetgearLTEConfigEntry
+from .entity import LTEEntity
+
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="roaming",
+        translation_key="roaming",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="wire_connected",
+        translation_key="wire_connected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key="mobile_connected",
+        translation_key="mobile_connected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
-    """Set up Netgear LTE binary sensor devices."""
-    if discovery_info is None:
-        return
-
-    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
-
-    if not modem_data or not modem_data.data:
-        raise PlatformNotReady
-
-    binary_sensor_conf = discovery_info[DOMAIN]
-    monitored_conditions = binary_sensor_conf[CONF_MONITORED_CONDITIONS]
-
-    binary_sensors = []
-    for sensor_type in monitored_conditions:
-        binary_sensors.append(LTEBinarySensor(modem_data, sensor_type))
-
-    async_add_entities(binary_sensors)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NetgearLTEConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Netgear LTE binary sensor."""
+    async_add_entities(
+        NetgearLTEBinarySensor(entry, description) for description in BINARY_SENSORS
+    )
 
 
-class LTEBinarySensor(LTEEntity, BinarySensorEntity):
+class NetgearLTEBinarySensor(LTEEntity, BinarySensorEntity):
     """Netgear LTE binary sensor entity."""
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return getattr(self.modem_data.data, self.sensor_type)
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return BINARY_SENSOR_CLASSES[self.sensor_type]
+        return getattr(self.coordinator.data, self.entity_description.key)

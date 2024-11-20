@@ -1,0 +1,27 @@
+{
+  "traceId": "0000000000",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "0000000000",
+    "code": 0,
+    "result": {
+      "enabled": false,
+      "mist_virtual_level": 9,
+      "mist_level": 3,
+      "mode": "humidity",
+      "water_lacks": false,
+      "water_tank_lifted": false,
+      "humidity": 35,
+      "humidity_high": false,
+      "display": false,
+      "warm_enabled": false,
+      "warm_level": 0,
+      "automatic_stop_reach_target": true,
+      "configuration": { "auto_target_humidity": 60, "display": true },
+      "extension": { "schedule_count": 0, "timer_remain": 0 }
+    }
+  }
+}

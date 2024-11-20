@@ -1,0 +1,9 @@
+{
+  "domain": "purpleair",
+  "name": "PurpleAir",
+  "codeowners": ["@bachya"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/purpleair",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiopurpleair==2022.12.1"]
+}

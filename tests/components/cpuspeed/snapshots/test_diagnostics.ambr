@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'arch_string_raw': 'aargh',
+    'brand_raw': 'Intel Ryzen 7',
+    'hz_actual': list([
+      3200000001,
+      0,
+    ]),
+    'hz_advertised': list([
+      3600000001,
+      0,
+    ]),
+  })
+# ---

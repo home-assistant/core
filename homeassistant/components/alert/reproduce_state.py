@@ -1,9 +1,9 @@
 """Reproduce an Alert state."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-import logging
 from typing import Any
 
 from homeassistant.const import (
@@ -15,9 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
@@ -30,14 +28,12 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
-        _LOGGER.warning("Unable to find entity %s", state.entity_id)
+    if (cur_state := hass.states.get(state.entity_id)) is None:
+        LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
     if state.state not in VALID_STATES:
-        _LOGGER.warning(
+        LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
         return

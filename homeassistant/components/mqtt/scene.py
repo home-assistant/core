@@ -1,127 +1,89 @@
 """Support for MQTT scenes."""
-import functools
+
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import scene
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD_ON
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN, PLATFORMS
-from .. import mqtt
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    async_setup_entry_helper,
-)
+from .config import MQTT_BASE_SCHEMA
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN
+from .entity import MqttEntity, async_setup_entity_entry_helper
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+ENTITY_ID_FORMAT = scene.DOMAIN + ".{}"
+
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
-).extend(MQTT_AVAILABILITY_SCHEMA.schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up MQTT scene through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT scene dynamically through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up MQTT scene through YAML and through MQTT discovery."""
+    async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttScene,
+        scene.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, scene.DOMAIN, setup, PLATFORM_SCHEMA)
-
-
-async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
-):
-    """Set up the MQTT scene."""
-    async_add_entities([MqttScene(config, config_entry, discovery_data)])
 
 
 class MqttScene(
-    MqttAvailability,
-    MqttDiscoveryUpdate,
+    MqttEntity,
     Scene,
 ):
     """Representation of a scene that can be activated using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_data):
-        """Initialize the MQTT scene."""
-        self._state = False
-        self._sub_state = None
+    _default_name = DEFAULT_NAME
+    _entity_id_format = scene.DOMAIN + ".{}"
 
-        self._unique_id = config.get(CONF_UNIQUE_ID)
+    @staticmethod
+    def config_schema() -> vol.Schema:
+        """Return the config schema."""
+        return DISCOVERY_SCHEMA
 
-        # Load config
-        self._setup_from_config(config)
-
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.availability_discovery_update(config)
-        self.async_write_ha_state()
-
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._config = config
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+    @callback
+    def _prepare_subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
 
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._config[CONF_NAME]
+    async def _subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
-
-    async def async_activate(self, **kwargs):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
-            self.hass,
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_ON],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
         )

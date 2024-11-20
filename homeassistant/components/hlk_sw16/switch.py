@@ -1,8 +1,15 @@
 """Support for HLK-SW16 switches."""
-from homeassistant.components.switch import ToggleEntity
 
-from . import DATA_DEVICE_REGISTER, SW16Device
+from typing import Any
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import DATA_DEVICE_REGISTER
 from .const import DOMAIN
+from .entity import SW16Entity
 
 PARALLEL_UPDATES = 0
 
@@ -18,12 +25,14 @@ def devices_from_entities(hass, entry):
     return devices
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the HLK-SW16 platform."""
     async_add_entities(devices_from_entities(hass, entry))
 
 
-class SW16Switch(SW16Device, ToggleEntity):
+class SW16Switch(SW16Entity, SwitchEntity):
     """Representation of a HLK-SW16 switch."""
 
     @property
@@ -31,10 +40,10 @@ class SW16Switch(SW16Device, ToggleEntity):
         """Return true if device is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._device_port)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._device_port)

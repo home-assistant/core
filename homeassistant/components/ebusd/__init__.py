@@ -1,6 +1,6 @@
 """Support for Ebusd daemon for communication with eBUS heating systems."""
+
 import logging
-import socket
 
 import ebusdpy
 import voluptuous as vol
@@ -10,9 +10,12 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SENSOR_TYPES
 
@@ -53,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the eBusd component."""
     _LOGGER.debug("Integration setup started")
     conf = config[DOMAIN]
@@ -63,23 +66,21 @@ def setup(hass, config):
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-
         ebusdpy.init(server_address)
-        hass.data[DOMAIN] = EbusdData(server_address, circuit)
-
-        sensor_config = {
-            CONF_MONITORED_CONDITIONS: monitored_conditions,
-            "client_name": name,
-            "sensor_types": SENSOR_TYPES[circuit],
-        }
-        load_platform(hass, "sensor", DOMAIN, sensor_config, config)
-
-        hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
-
-        _LOGGER.debug("Ebusd integration setup completed")
-        return True
-    except (socket.timeout, OSError):
+    except (TimeoutError, OSError):
         return False
+    hass.data[DOMAIN] = EbusdData(server_address, circuit)
+    sensor_config = {
+        CONF_MONITORED_CONDITIONS: monitored_conditions,
+        "client_name": name,
+        "sensor_types": SENSOR_TYPES[circuit],
+    }
+    load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
+
+    hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
+
+    _LOGGER.debug("Ebusd integration setup completed")
+    return True
 
 
 class EbusdData:
@@ -107,8 +108,8 @@ class EbusdData:
             _LOGGER.error(err)
             raise RuntimeError(err) from err
 
-    def write(self, call):
-        """Call write methon on ebusd."""
+    def write(self, call: ServiceCall) -> None:
+        """Call write method on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")
 

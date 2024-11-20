@@ -1,63 +1,50 @@
 """Support for PoolSense binary sensors."""
+
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_EMAIL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PoolSenseEntity
-from .const import DOMAIN
+from . import PoolSenseConfigEntry
+from .entity import PoolSenseEntity
 
-BINARY_SENSORS = {
-    "pH Status": {
-        "unit": None,
-        "icon": None,
-        "name": "pH Status",
-        "device_class": DEVICE_CLASS_PROBLEM,
-    },
-    "Chlorine Status": {
-        "unit": None,
-        "icon": None,
-        "name": "Chlorine Status",
-        "device_class": DEVICE_CLASS_PROBLEM,
-    },
-}
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="pH Status",
+        translation_key="ph_status",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    BinarySensorEntityDescription(
+        key="Chlorine Status",
+        translation_key="chlorine_status",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: PoolSenseConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    binary_sensors_list = []
-    for binary_sensor in BINARY_SENSORS:
-        binary_sensors_list.append(
-            PoolSenseBinarySensor(
-                coordinator, config_entry.data[CONF_EMAIL], binary_sensor
-            )
-        )
-
-    async_add_entities(binary_sensors_list, False)
+    async_add_entities(
+        PoolSenseBinarySensor(coordinator, description)
+        for description in BINARY_SENSOR_TYPES
+    )
 
 
 class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     """Representation of PoolSense binary sensors."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[self.info_type] == "red"
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return BINARY_SENSORS[self.info_type]["icon"]
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return BINARY_SENSORS[self.info_type]["device_class"]
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return f"PoolSense {BINARY_SENSORS[self.info_type]['name']}"
+        return self.coordinator.data[self.entity_description.key] == "red"

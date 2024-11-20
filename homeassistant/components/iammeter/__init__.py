@@ -1,1 +1,1 @@
-"""Support for IamMeter Devices."""
+"""Iammeter integration."""

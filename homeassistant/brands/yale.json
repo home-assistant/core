@@ -1,0 +1,11 @@
+{
+  "domain": "yale",
+  "name": "Yale",
+  "integrations": [
+    "august",
+    "yale_smart_alarm",
+    "yalexs_ble",
+    "yale_home",
+    "yale"
+  ]
+}

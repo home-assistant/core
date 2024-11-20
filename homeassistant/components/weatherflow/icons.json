@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "lightning_average_distance": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_count": {
+        "default": "mdi:lightning-bolt"
+      },
+      "precipitation_type": {
+        "default": "mdi:weather-rainy"
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline"
+      },
+      "wind_direction_average": {
+        "default": "mdi:compass-outline"
+      }
+    }
+  }
+}

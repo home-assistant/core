@@ -1,9 +1,10 @@
 """Support for the SpaceAPI."""
+
 from contextlib import suppress
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -14,12 +15,15 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_EMAIL,
     CONF_ENTITY_ID,
+    CONF_LOCATION,
     CONF_SENSORS,
     CONF_STATE,
     CONF_URL,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 ATTR_ADDRESS = "address"
@@ -33,7 +37,7 @@ ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
 ATTR_API = "api"
-ATTR_CLOSE = "close"
+ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
@@ -53,7 +57,6 @@ CONF_ICON_OPEN = "icon_open"
 CONF_ICONS = "icons"
 CONF_IRC = "irc"
 CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
-CONF_LOCATION = "location"
 CONF_SPACEFED = "spacefed"
 CONF_SPACENET = "spacenet"
 CONF_SPACESAML = "spacesaml"
@@ -232,7 +235,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the SpaceAPI with the HTTP interface."""
     hass.data[DATA_SPACEAPI] = config[DOMAIN]
     hass.http.register_view(APISpaceApiView)
@@ -249,8 +252,7 @@ class APISpaceApiView(HomeAssistantView):
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
         """Get data from a sensor."""
-        sensor_state = hass.states.get(sensor)
-        if not sensor_state:
+        if not (sensor_state := hass.states.get(sensor)):
             return None
         sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
@@ -265,7 +267,7 @@ class APISpaceApiView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get SpaceAPI data."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         spaceapi = dict(hass.data[DATA_SPACEAPI])
         is_sensors = spaceapi.get("sensors")
 
@@ -279,9 +281,8 @@ class APISpaceApiView(HomeAssistantView):
             pass
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
-        space_state = hass.states.get(state_entity)
 
-        if space_state is not None:
+        if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
@@ -292,7 +293,7 @@ class APISpaceApiView(HomeAssistantView):
         with suppress(KeyError):
             state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
-                ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
+                ATTR_CLOSED: spaceapi["state"][CONF_ICON_CLOSED],
             }
 
         data = {

@@ -1,11 +1,15 @@
 """Platform for UPB link integration."""
+
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpbEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from .entity import UpbEntity
 
 SERVICE_LINK_DEACTIVATE = "link_deactivate"
 SERVICE_LINK_FADE_STOP = "link_fade_stop"
@@ -14,7 +18,11 @@ SERVICE_LINK_FADE_START = "link_fade_start"
 SERVICE_LINK_BLINK = "link_blink"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the UPB link based on a config entry."""
     upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
     unique_id = config_entry.entry_id
@@ -23,10 +31,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_LINK_DEACTIVATE, {}, "async_link_deactivate"
+        SERVICE_LINK_DEACTIVATE, None, "async_link_deactivate"
     )
     platform.async_register_entity_service(
-        SERVICE_LINK_FADE_STOP, {}, "async_link_fade_stop"
+        SERVICE_LINK_FADE_STOP, None, "async_link_fade_stop"
     )
     platform.async_register_entity_service(
         SERVICE_LINK_GOTO, UPB_BRIGHTNESS_RATE_SCHEMA, "async_link_goto"
@@ -40,7 +48,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class UpbLink(UpbEntity, Scene):
-    """Representation of an UPB Link."""
+    """Representation of a UPB Link."""
+
+    def __init__(self, element, unique_id, upb):
+        """Initialize the base of all UPB devices."""
+        super().__init__(element, unique_id, upb)
+        self._attr_name = element.name
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""

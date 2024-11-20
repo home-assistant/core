@@ -1,4 +1,5 @@
 """Script variables."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -35,7 +36,6 @@ class ScriptVariables:
         """
         if self._has_template is None:
             self._has_template = template.is_complex(self.variables)
-            template.attach(hass, self.variables)
 
         if not self._has_template:
             if render_as_defaults:
@@ -65,6 +65,6 @@ class ScriptVariables:
 
         return rendered_variables
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Return dict version of this class."""
         return self.variables

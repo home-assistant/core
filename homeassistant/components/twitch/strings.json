@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Twitch integration needs to re-authenticate your account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "Wrong account: Please authenticate with {username}.",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+    }
+  }
+}

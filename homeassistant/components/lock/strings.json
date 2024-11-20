@@ -8,17 +8,75 @@
     },
     "condition_type": {
       "is_locked": "{entity_name} is locked",
-      "is_unlocked": "{entity_name} is unlocked"
+      "is_unlocked": "{entity_name} is unlocked",
+      "is_open": "{entity_name} is open"
     },
     "trigger_type": {
       "locked": "{entity_name} locked",
-      "unlocked": "{entity_name} unlocked"
+      "unlocked": "{entity_name} unlocked",
+      "open": "{entity_name} opened"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "locked": "[%key:common::state::locked%]",
-      "unlocked": "[%key:common::state::unlocked%]"
+      "name": "[%key:component::lock::title%]",
+      "state": {
+        "jammed": "Jammed",
+        "locked": "[%key:common::state::locked%]",
+        "locking": "Locking",
+        "open": "[%key:common::state::open%]",
+        "opening": "Opening",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
+      },
+      "state_attributes": {
+        "code_format": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::code_format::name%]"
+        },
+        "changed_by": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::changed_by::name%]"
+        }
+      }
+    }
+  },
+  "services": {
+    "lock": {
+      "name": "Lock",
+      "description": "Locks a lock.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code used to lock the lock."
+        }
+      }
+    },
+    "open": {
+      "name": "[%key:common::action::open%]",
+      "description": "Opens a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code used to open the lock."
+        }
+      }
+    },
+    "unlock": {
+      "name": "Unlock",
+      "description": "Unlocks a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code used to unlock the lock."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "add_default_code": {
+      "message": "The code for {entity_id} doesn't match pattern {code_format}."
     }
   }
 }

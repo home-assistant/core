@@ -1,14 +1,24 @@
 """Support for Open Hardware Monitor Sensor Platform."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -30,12 +40,17 @@ OHM_MAX = "Max"
 OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
     if data.data is None:
@@ -45,6 +60,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
@@ -69,6 +86,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
+        if self.value == "-":
+            return None
         return self.value
 
     @property
@@ -81,7 +100,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self):
+    def update(self) -> None:
         """Update the device from a new JSON object."""
         self._data.update()
 
@@ -157,7 +176,7 @@ class OpenHardwareMonitorData:
         result = devices.copy()
 
         if json[OHM_CHILDREN]:
-            for child_index in range(0, len(json[OHM_CHILDREN])):
+            for child_index in range(len(json[OHM_CHILDREN])):
                 child_path = path.copy()
                 child_path.append(child_index)
 

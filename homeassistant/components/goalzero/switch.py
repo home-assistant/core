@@ -1,61 +1,59 @@
 """Support for Goal Zero Yeti Switches."""
+
 from __future__ import annotations
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
+from typing import Any, cast
 
-from . import YetiEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, SWITCH_DICT
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import GoalZeroConfigEntry
+from .entity import GoalZeroEntity
+
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="v12PortStatus",
+        translation_key="v12_port_status",
+    ),
+    SwitchEntityDescription(
+        key="usbPortStatus",
+        translation_key="usb_port_status",
+    ),
+    SwitchEntityDescription(
+        key="acPortStatus",
+        translation_key="ac_port_status",
+    ),
+)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: GoalZeroConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Goal Zero Yeti switch."""
-    name = entry.data[CONF_NAME]
-    goalzero_data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        YetiSwitch(
-            goalzero_data[DATA_KEY_API],
-            goalzero_data[DATA_KEY_COORDINATOR],
-            name,
-            switch_name,
-            entry.entry_id,
-        )
-        for switch_name in SWITCH_DICT
+        GoalZeroSwitch(entry.runtime_data, description) for description in SWITCH_TYPES
     )
 
 
-class YetiSwitch(YetiEntity, SwitchEntity):
+class GoalZeroSwitch(GoalZeroEntity, SwitchEntity):
     """Representation of a Goal Zero Yeti switch."""
-
-    def __init__(
-        self,
-        api,
-        coordinator,
-        name,
-        switch_name,
-        server_unique_id,
-    ):
-        """Initialize a Goal Zero Yeti switch."""
-        super().__init__(api, coordinator, name, server_unique_id)
-        self._condition = switch_name
-        self._attr_name = f"{name} {SWITCH_DICT[switch_name]}"
-        self._attr_unique_id = f"{server_unique_id}/{switch_name}"
 
     @property
     def is_on(self) -> bool:
         """Return state of the switch."""
-        if self.api.data:
-            return self.api.data[self._condition]
-        return False
+        return cast(bool, self._api.data[self.entity_description.key] == 1)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        payload = {self._condition: 0}
-        await self.api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        payload = {self.entity_description.key: 0}
+        await self._api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(None)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        payload = {self._condition: 1}
-        await self.api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        payload = {self.entity_description.key: 1}
+        await self._api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(None)

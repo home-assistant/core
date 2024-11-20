@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Dict, TypedDict
-
-KrakenResponse = Dict[str, Dict[str, float]]
+from typing import TypedDict
 
 
-class SensorType(TypedDict):
-    """SensorType class."""
+class KrakenResponseEntry(TypedDict):
+    """Dict describing a single response entry."""
 
-    name: str
-    enabled_by_default: bool
+    ask: tuple[float, float, float]
+    bid: tuple[float, float, float]
+    last_trade_closed: tuple[float, float]
+    volume: tuple[float, float]
+    volume_weighted_average: tuple[float, float]
+    number_of_trades: tuple[int, int]
+    low: tuple[float, float]
+    high: tuple[float, float]
+    opening_price: float
+
+
+type KrakenResponse = dict[str, KrakenResponseEntry]
 
 
 DEFAULT_SCAN_INTERVAL = 60
@@ -21,22 +29,3 @@ DISPATCH_CONFIG_UPDATED = "kraken_config_updated"
 CONF_TRACKED_ASSET_PAIRS = "tracked_asset_pairs"
 
 DOMAIN = "kraken"
-
-SENSOR_TYPES: list[SensorType] = [
-    {"name": "ask", "enabled_by_default": True},
-    {"name": "ask_volume", "enabled_by_default": False},
-    {"name": "bid", "enabled_by_default": True},
-    {"name": "bid_volume", "enabled_by_default": False},
-    {"name": "volume_today", "enabled_by_default": False},
-    {"name": "volume_last_24h", "enabled_by_default": False},
-    {"name": "volume_weighted_average_today", "enabled_by_default": False},
-    {"name": "volume_weighted_average_last_24h", "enabled_by_default": False},
-    {"name": "number_of_trades_today", "enabled_by_default": False},
-    {"name": "number_of_trades_last_24h", "enabled_by_default": False},
-    {"name": "last_trade_closed", "enabled_by_default": False},
-    {"name": "low_today", "enabled_by_default": True},
-    {"name": "low_last_24h", "enabled_by_default": False},
-    {"name": "high_today", "enabled_by_default": True},
-    {"name": "high_last_24h", "enabled_by_default": False},
-    {"name": "opening_price_today", "enabled_by_default": False},
-]

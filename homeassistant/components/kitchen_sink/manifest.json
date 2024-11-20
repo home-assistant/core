@@ -1,0 +1,10 @@
+{
+  "domain": "kitchen_sink",
+  "name": "Everything but the Kitchen Sink",
+  "after_dependencies": ["recorder"],
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/kitchen_sink",
+  "iot_class": "calculated",
+  "quality_scale": "internal",
+  "single_config_entry": true
+}

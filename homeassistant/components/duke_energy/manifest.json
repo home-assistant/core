@@ -1,0 +1,10 @@
+{
+  "domain": "duke_energy",
+  "name": "Duke Energy",
+  "codeowners": ["@hunterjm"],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/duke_energy",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiodukeenergy==0.2.2"]
+}

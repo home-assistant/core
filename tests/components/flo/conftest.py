@@ -1,4 +1,6 @@
 """Define fixtures available for all tests."""
+
+from http import HTTPStatus
 import json
 import time
 
@@ -10,10 +12,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
-def config_entry(hass):
+def config_entry() -> MockConfigEntry:
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=FLO_DOMAIN,
@@ -23,7 +26,7 @@ def config_entry(hass):
 
 
 @pytest.fixture
-def aioclient_mock_fixture(aioclient_mock):
+def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture to provide a aioclient mocker."""
     now = round(time.time())
     # Mocks the login response for flo.
@@ -41,40 +44,47 @@ def aioclient_mock_fixture(aioclient_mock):
             }
         ),
         headers={"Content-Type": CONTENT_TYPE_JSON},
-        status=200,
+        status=HTTPStatus.OK,
+    )
+    # Mocks the presence ping response for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/presence/me",
+        text=load_fixture("flo/ping_response.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+        status=HTTPStatus.OK,
     )
     # Mocks the devices for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/devices/98765",
         text=load_fixture("flo/device_info_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/devices/32839",
         text=load_fixture("flo/device_info_response_detector.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     # Mocks the water consumption for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/water/consumption",
         text=load_fixture("flo/water_consumption_info_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     # Mocks the location info for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp",
         text=load_fixture("flo/location_info_expand_devices_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     # Mocks the user info for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/users/12345abcde",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         params={"expand": "locations"},
     )
@@ -82,14 +92,14 @@ def aioclient_mock_fixture(aioclient_mock):
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/users/12345abcde",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     # Mocks the valve open call for flo.
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/devices/98765",
         text=load_fixture("flo/device_info_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         json={"valve": {"target": "open"}},
     )
@@ -97,7 +107,7 @@ def aioclient_mock_fixture(aioclient_mock):
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/devices/98765",
         text=load_fixture("flo/device_info_response_closed.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         json={"valve": {"target": "closed"}},
     )
@@ -105,14 +115,14 @@ def aioclient_mock_fixture(aioclient_mock):
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/devices/98765/healthTest/run",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     # Mocks the health test call for flo.
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         json={"systemMode": {"target": "home"}},
     )
@@ -120,7 +130,7 @@ def aioclient_mock_fixture(aioclient_mock):
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         json={"systemMode": {"target": "away"}},
     )
@@ -128,7 +138,7 @@ def aioclient_mock_fixture(aioclient_mock):
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
         json={
             "systemMode": {

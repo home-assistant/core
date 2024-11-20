@@ -1,0 +1,43 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:pi-hole"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "ads_percentage_today": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "clients_ever_seen": {
+        "default": "mdi:account-outline"
+      },
+      "dns_queries_today": {
+        "default": "mdi:comment-question-outline"
+      },
+      "domains_being_blocked": {
+        "default": "mdi:block-helper"
+      },
+      "queries_cached": {
+        "default": "mdi:comment-question-outline"
+      },
+      "queries_forwarded": {
+        "default": "mdi:comment-question-outline"
+      },
+      "unique_clients": {
+        "default": "mdi:account-outline"
+      },
+      "unique_domains": {
+        "default": "mdi:domain"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "service": "mdi:server-off"
+    }
+  }
+}

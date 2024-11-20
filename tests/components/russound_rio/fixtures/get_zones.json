@@ -1,0 +1,22 @@
+{
+  "1": {
+    "name": "Backyard",
+    "volume": "10",
+    "status": "ON",
+    "enabled": "True",
+    "current_source": "1"
+  },
+  "2": {
+    "name": "Kitchen",
+    "volume": "50",
+    "status": "OFF",
+    "enabled": "True",
+    "current_source": "2"
+  },
+  "3": {
+    "name": "Bedroom",
+    "volume": "10",
+    "status": "OFF",
+    "enabled": "False"
+  }
+}

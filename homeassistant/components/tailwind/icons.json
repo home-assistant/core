@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "operational_problem": {
+        "default": "mdi:garage-alert"
+      }
+    },
+    "number": {
+      "brightness": {
+        "default": "mdi:led-on"
+      }
+    }
+  }
+}

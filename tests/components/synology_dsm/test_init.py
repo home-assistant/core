@@ -1,10 +1,9 @@
 """Tests for the Synology DSM component."""
-from unittest.mock import patch
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 from synology_dsm.exceptions import SynologyDSMLoginInvalidException
 
-from homeassistant import data_entry_flow
 from homeassistant.components.synology_dsm.const import DOMAIN, SERVICES
 from homeassistant.const import (
     CONF_HOST,
@@ -15,18 +14,22 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.no_bypass_setup
-async def test_services_registered(hass: HomeAssistant):
+async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> None:
     """Test if all services are registered."""
-    with patch(
-        "homeassistant.components.synology_dsm.SynoApi.async_setup", return_value=True
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=mock_dsm,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -44,16 +47,22 @@ async def test_services_registered(hass: HomeAssistant):
             assert hass.services.has_service(DOMAIN, service)
 
 
-@pytest.mark.no_bypass_setup
-async def test_reauth_triggered(hass: HomeAssistant):
+async def test_reauth_triggered(hass: HomeAssistant) -> None:
     """Test if reauthentication flow is triggered."""
-    with patch(
-        "homeassistant.components.synology_dsm.SynoApi.async_setup",
-        side_effect=SynologyDSMLoginInvalidException(USERNAME),
-    ), patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
-        return_value={"type": data_entry_flow.RESULT_TYPE_FORM},
-    ) as mock_async_step_reauth:
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.SynoApi.async_setup",
+            side_effect=SynologyDSMLoginInvalidException(USERNAME),
+        ),
+        patch(
+            "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
+            return_value={
+                "type": FlowResultType.FORM,
+                "flow_id": "mock_flow",
+                "step_id": "reauth_confirm",
+            },
+        ) as mock_async_step_reauth,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -67,4 +76,5 @@ async def test_reauth_triggered(hass: HomeAssistant):
         )
         entry.add_to_hass(hass)
         assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
         mock_async_step_reauth.assert_called_once()

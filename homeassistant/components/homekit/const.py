@@ -1,21 +1,30 @@
 """Constants used be the HomeKit component."""
 
+from __future__ import annotations
+
+from homeassistant.const import CONF_DEVICES
+from homeassistant.util.signal_type import SignalTypeFormat
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
+PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
-HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
-HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
-HOMEKIT = "homekit"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
+EMPTY_MAC = "00:00:00:00:00:00"
+SIGNAL_RELOAD_ENTITIES: SignalTypeFormat[tuple[str, ...]] = SignalTypeFormat(
+    "homekit_reload_entities_{}"
+)
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
 VIDEO_CODEC_LIBX264 = "libx264"
 AUDIO_CODEC_OPUS = "libopus"
 VIDEO_CODEC_H264_OMX = "h264_omx"
+VIDEO_CODEC_H264_V4L2M2M = "h264_v4l2m2m"
+VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 AUDIO_CODEC_COPY = "copy"
 
 # #### Attributes ####
@@ -32,7 +41,6 @@ CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
 CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
-CONF_AUTO_START = "auto_start"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
@@ -48,12 +56,13 @@ CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
 CONF_MAX_WIDTH = "max_width"
-CONF_SAFE_MODE = "safe_mode"
-CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
+CONF_THRESHOLD_CO = "co_threshold"
+CONF_THRESHOLD_CO2 = "co2_threshold"
 CONF_VIDEO_CODEC = "video_codec"
+CONF_VIDEO_PROFILE_NAMES = "video_profile_names"
 CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 CONF_STREAM_COUNT = "stream_count"
@@ -63,7 +72,6 @@ DEFAULT_SUPPORT_AUDIO = False
 DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188
-DEFAULT_AUTO_START = True
 DEFAULT_EXCLUDE_ACCESSORY_MODE = False
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_MAX_FPS = 30
@@ -71,8 +79,8 @@ DEFAULT_MAX_HEIGHT = 1080
 DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 21063
 DEFAULT_CONFIG_FLOW_PORT = 21064
-DEFAULT_SAFE_MODE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
+DEFAULT_VIDEO_PROFILE_NAMES = VIDEO_PROFILE_NAMES
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
 DEFAULT_STREAM_COUNT = 3
@@ -94,7 +102,6 @@ DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
-SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 SERVICE_HOMEKIT_UNPAIR = "unpair"
 
@@ -114,6 +121,9 @@ TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
 TYPE_VALVE = "valve"
 
+# #### Categories ####
+CATEGORY_RECEIVER = 34
+
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"
@@ -122,6 +132,7 @@ SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
 SERV_CARBON_DIOXIDE_SENSOR = "CarbonDioxideSensor"
 SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
+SERV_DOOR = "Door"
 SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
@@ -136,6 +147,7 @@ SERV_MOTION_SENSOR = "MotionSensor"
 SERV_OCCUPANCY_SENSOR = "OccupancySensor"
 SERV_OUTLET = "Outlet"
 SERV_SECURITY_SYSTEM = "SecuritySystem"
+SERV_SERVICE_LABEL = "ServiceLabel"
 SERV_SMOKE_SENSOR = "SmokeSensor"
 SERV_SPEAKER = "Speaker"
 SERV_STATELESS_PROGRAMMABLE_SWITCH = "StatelessProgrammableSwitch"
@@ -152,6 +164,8 @@ SERV_WINDOW_COVERING = "WindowCovering"
 CHAR_ACTIVE = "Active"
 CHAR_ACTIVE_IDENTIFIER = "ActiveIdentifier"
 CHAR_AIR_PARTICULATE_DENSITY = "AirParticulateDensity"
+CHAR_PM25_DENSITY = "PM2.5Density"
+CHAR_PM10_DENSITY = "PM10Density"
 CHAR_AIR_QUALITY = "AirQuality"
 CHAR_BATTERY_LEVEL = "BatteryLevel"
 CHAR_BRIGHTNESS = "Brightness"
@@ -168,6 +182,7 @@ CHAR_CONTACT_SENSOR_STATE = "ContactSensorState"
 CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
 CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
+CHAR_CURRENT_FAN_STATE = "CurrentFanState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
 CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
@@ -178,6 +193,7 @@ CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
+CHAR_HARDWARE_REVISION = "HardwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
 CHAR_HUE = "Hue"
 CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityHumidifierThreshold"
@@ -194,6 +210,7 @@ CHAR_MODEL = "Model"
 CHAR_MOTION_DETECTED = "MotionDetected"
 CHAR_MUTE = "Mute"
 CHAR_NAME = "Name"
+CHAR_NITROGEN_DIOXIDE_DENSITY = "NitrogenDioxideDensity"
 CHAR_OBSTRUCTION_DETECTED = "ObstructionDetected"
 CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
@@ -205,6 +222,8 @@ CHAR_ROTATION_DIRECTION = "RotationDirection"
 CHAR_ROTATION_SPEED = "RotationSpeed"
 CHAR_SATURATION = "Saturation"
 CHAR_SERIAL_NUMBER = "SerialNumber"
+CHAR_SERVICE_LABEL_INDEX = "ServiceLabelIndex"
+CHAR_SERVICE_LABEL_NAMESPACE = "ServiceLabelNamespace"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
@@ -213,6 +232,7 @@ CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
+CHAR_TARGET_FAN_STATE = "TargetFanState"
 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER = "TargetHumidifierDehumidifierState"
 CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
@@ -221,6 +241,7 @@ CHAR_TARGET_TILT_ANGLE = "TargetHorizontalTiltAngle"
 CHAR_HOLD_POSITION = "HoldPosition"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
+CHAR_VOC_DENSITY = "VOCDensity"
 CHAR_VOLUME = "Volume"
 CHAR_VOLUME_SELECTOR = "VolumeSelector"
 CHAR_VOLUME_CONTROL_TYPE = "VolumeControlType"
@@ -232,19 +253,6 @@ PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
-
-# #### Device Classes ####
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE_DOOR = "garage_door"
-DEVICE_CLASS_GAS = "gas"
-DEVICE_CLASS_MOISTURE = "moisture"
-DEVICE_CLASS_MOTION = "motion"
-DEVICE_CLASS_OCCUPANCY = "occupancy"
-DEVICE_CLASS_OPENING = "opening"
-DEVICE_CLASS_PM25 = "pm25"
-DEVICE_CLASS_SMOKE = "smoke"
-DEVICE_CLASS_WINDOW = "window"
-
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000
@@ -288,10 +296,9 @@ HK_NOT_CHARGABLE = 2
 # ### Config Options ###
 CONFIG_OPTIONS = [
     CONF_FILTER,
-    CONF_AUTO_START,
-    CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_DEVICES,
 ]
 
 # ### Maximum Lengths ###

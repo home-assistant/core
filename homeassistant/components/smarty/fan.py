@@ -1,19 +1,24 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
 
+from __future__ import annotations
+
 import logging
 import math
+from typing import Any
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import SmartyConfigEntry
+from .coordinator import SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,45 +26,39 @@ DEFAULT_ON_PERCENTAGE = 66
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SmartyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smarty Fan Platform."""
-    smarty = hass.data[DOMAIN]["api"]
-    name = hass.data[DOMAIN]["name"]
 
-    async_add_entities([SmartyFan(name, smarty)], True)
+    coordinator = entry.runtime_data
+
+    async_add_entities([SmartyFan(coordinator)])
 
 
-class SmartyFan(FanEntity):
+class SmartyFan(SmartyEntity, FanEntity):
     """Representation of a Smarty Fan."""
 
-    def __init__(self, name, smarty):
+    _attr_name = None
+    _attr_translation_key = "fan"
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(self, coordinator: SmartyCoordinator) -> None:
         """Initialize the entity."""
-        self._name = name
+        super().__init__(coordinator)
         self._smarty_fan_speed = 0
-        self._smarty = smarty
+        self._smarty = coordinator.client
+        self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
-    def should_poll(self):
-        """Do not poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the fan."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return state of the fan."""
         return bool(self._smarty_fan_speed)
 
@@ -91,12 +90,17 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn on the fan."""
-        _LOGGER.debug("Turning on fan. Speed is %s", speed)
+        _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         _LOGGER.debug("Turning off fan")
         if not self._smarty.turn_off():
@@ -105,17 +109,8 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = 0
         self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
-        """Call to update fan."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_SMARTY, self._update_callback
-            )
-        )
-
     @callback
-    def _update_callback(self):
+    def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        _LOGGER.debug("Updating state")
         self._smarty_fan_speed = self._smarty.fan_speed
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

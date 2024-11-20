@@ -1,0 +1,22 @@
+{
+  "did": "E1234567890000000001",
+  "name": "E1234567890000000001",
+  "class": "yna5xi",
+  "resource": "upQ6",
+  "company": "eco-ng",
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-as.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT OZMO 950 Series",
+  "icon": "https://portal-ww.ecouser.net/api/pim/file/get/606278df4a84d700082b39f1",
+  "UILogicId": "DX_9G",
+  "materialNo": "110-1820-0101",
+  "pid": "5c19a91ca1e6ee000178224a",
+  "product_category": "DEEBOT",
+  "model": "DX9G",
+  "nick": "Ozmo 950",
+  "homeSort": 9999,
+  "status": 1,
+  "otaUpgrade": {}
+}

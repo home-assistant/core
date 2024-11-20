@@ -1,51 +1,36 @@
 """Entities for The Internet Printing Protocol (IPP) integration."""
+
 from __future__ import annotations
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import IPPDataUpdateCoordinator
 
 
-class IPPEntity(CoordinatorEntity):
+class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
     """Defines a base IPP entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
-        entry_id: str,
-        device_id: str,
         coordinator: IPPDataUpdateCoordinator,
-        name: str,
-        icon: str,
-        enabled_default: bool = True,
+        description: EntityDescription,
     ) -> None:
         """Initialize the IPP entity."""
         super().__init__(coordinator)
-        self._device_id = device_id
-        self._entry_id = entry_id
-        self._attr_name = name
-        self._attr_icon = icon
-        self._attr_entity_registry_enabled_default = enabled_default
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this IPP device."""
-        if self._device_id is None:
-            return None
+        self.entity_description = description
 
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.coordinator.data.info.name,
-            ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
-            ATTR_MODEL: self.coordinator.data.info.model,
-            ATTR_SW_VERSION: self.coordinator.data.info.version,
-        }
+        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.device_id)},
+            manufacturer=self.coordinator.data.info.manufacturer,
+            model=self.coordinator.data.info.model,
+            name=self.coordinator.data.info.name,
+            sw_version=self.coordinator.data.info.version,
+            configuration_url=self.coordinator.data.info.more_info,
+        )

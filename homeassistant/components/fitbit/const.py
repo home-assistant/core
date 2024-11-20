@@ -1,18 +1,13 @@
 """Constants for the Fitbit platform."""
+
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    LENGTH_FEET,
-    MASS_KILOGRAMS,
-    MASS_MILLIGRAMS,
-    PERCENTAGE,
-    TIME_MILLISECONDS,
-    TIME_MINUTES,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+
+DOMAIN: Final = "fitbit"
 
 ATTR_ACCESS_TOKEN: Final = "access_token"
 ATTR_REFRESH_TOKEN: Final = "refresh_token"
@@ -43,106 +38,51 @@ DEFAULT_CONFIG: Final[dict[str, str]] = {
 }
 DEFAULT_CLOCK_FORMAT: Final = "24H"
 
-FITBIT_RESOURCES_LIST: Final[dict[str, tuple[str, str | None, str]]] = {
-    "activities/activityCalories": ("Activity Calories", "cal", "fire"),
-    "activities/calories": ("Calories", "cal", "fire"),
-    "activities/caloriesBMR": ("Calories BMR", "cal", "fire"),
-    "activities/distance": ("Distance", "", "map-marker"),
-    "activities/elevation": ("Elevation", "", "walk"),
-    "activities/floors": ("Floors", "floors", "walk"),
-    "activities/heart": ("Resting Heart Rate", "bpm", "heart-pulse"),
-    "activities/minutesFairlyActive": ("Minutes Fairly Active", TIME_MINUTES, "walk"),
-    "activities/minutesLightlyActive": ("Minutes Lightly Active", TIME_MINUTES, "walk"),
-    "activities/minutesSedentary": (
-        "Minutes Sedentary",
-        TIME_MINUTES,
-        "seat-recline-normal",
-    ),
-    "activities/minutesVeryActive": ("Minutes Very Active", TIME_MINUTES, "run"),
-    "activities/steps": ("Steps", "steps", "walk"),
-    "activities/tracker/activityCalories": ("Tracker Activity Calories", "cal", "fire"),
-    "activities/tracker/calories": ("Tracker Calories", "cal", "fire"),
-    "activities/tracker/distance": ("Tracker Distance", "", "map-marker"),
-    "activities/tracker/elevation": ("Tracker Elevation", "", "walk"),
-    "activities/tracker/floors": ("Tracker Floors", "floors", "walk"),
-    "activities/tracker/minutesFairlyActive": (
-        "Tracker Minutes Fairly Active",
-        TIME_MINUTES,
-        "walk",
-    ),
-    "activities/tracker/minutesLightlyActive": (
-        "Tracker Minutes Lightly Active",
-        TIME_MINUTES,
-        "walk",
-    ),
-    "activities/tracker/minutesSedentary": (
-        "Tracker Minutes Sedentary",
-        TIME_MINUTES,
-        "seat-recline-normal",
-    ),
-    "activities/tracker/minutesVeryActive": (
-        "Tracker Minutes Very Active",
-        TIME_MINUTES,
-        "run",
-    ),
-    "activities/tracker/steps": ("Tracker Steps", "steps", "walk"),
-    "body/bmi": ("BMI", "BMI", "human"),
-    "body/fat": ("Body Fat", PERCENTAGE, "human"),
-    "body/weight": ("Weight", "", "human"),
-    "devices/battery": ("Battery", None, "battery"),
-    "sleep/awakeningsCount": ("Awakenings Count", "times awaken", "sleep"),
-    "sleep/efficiency": ("Sleep Efficiency", PERCENTAGE, "sleep"),
-    "sleep/minutesAfterWakeup": ("Minutes After Wakeup", TIME_MINUTES, "sleep"),
-    "sleep/minutesAsleep": ("Sleep Minutes Asleep", TIME_MINUTES, "sleep"),
-    "sleep/minutesAwake": ("Sleep Minutes Awake", TIME_MINUTES, "sleep"),
-    "sleep/minutesToFallAsleep": (
-        "Sleep Minutes to Fall Asleep",
-        TIME_MINUTES,
-        "sleep",
-    ),
-    "sleep/startTime": ("Sleep Start Time", None, "clock"),
-    "sleep/timeInBed": ("Sleep Time in Bed", TIME_MINUTES, "hotel"),
-}
-
-FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
-    "en_US": {
-        ATTR_DURATION: TIME_MILLISECONDS,
-        ATTR_DISTANCE: "mi",
-        ATTR_ELEVATION: LENGTH_FEET,
-        ATTR_HEIGHT: "in",
-        ATTR_WEIGHT: "lbs",
-        ATTR_BODY: "in",
-        ATTR_LIQUIDS: "fl. oz.",
-        ATTR_BLOOD_GLUCOSE: f"{MASS_MILLIGRAMS}/dL",
-        ATTR_BATTERY: "",
-    },
-    "en_GB": {
-        ATTR_DURATION: TIME_MILLISECONDS,
-        ATTR_DISTANCE: "kilometers",
-        ATTR_ELEVATION: "meters",
-        ATTR_HEIGHT: "centimeters",
-        ATTR_WEIGHT: "stone",
-        ATTR_BODY: "centimeters",
-        ATTR_LIQUIDS: "milliliters",
-        ATTR_BLOOD_GLUCOSE: "mmol/L",
-        ATTR_BATTERY: "",
-    },
-    "metric": {
-        ATTR_DURATION: TIME_MILLISECONDS,
-        ATTR_DISTANCE: "kilometers",
-        ATTR_ELEVATION: "meters",
-        ATTR_HEIGHT: "centimeters",
-        ATTR_WEIGHT: MASS_KILOGRAMS,
-        ATTR_BODY: "centimeters",
-        ATTR_LIQUIDS: "milliliters",
-        ATTR_BLOOD_GLUCOSE: "mmol/L",
-        ATTR_BATTERY: "",
-    },
-}
-
 BATTERY_LEVELS: Final[dict[str, int]] = {
     "High": 100,
     "Medium": 50,
     "Low": 20,
     "Empty": 0,
 }
+
+
+class FitbitUnitSystem(StrEnum):
+    """Fitbit unit system set when sending requests to the Fitbit API.
+
+    This is used as a header to tell the Fitbit API which type of units to return.
+    https://dev.fitbit.com/build/reference/web-api/developer-guide/application-design/#Units
+
+    Prefer to leave unset for newer configurations to use the Home Assistant default units.
+    """
+
+    LEGACY_DEFAULT = "default"
+    """When set, will use an appropriate default using a legacy algorithm."""
+
+    METRIC = "metric"
+    """Use metric units."""
+
+    EN_US = "en_US"
+    """Use United States units."""
+
+    EN_GB = "en_GB"
+    """Use United Kingdom units."""
+
+
+CONF_SCOPE: Final = "scope"
+
+
+class FitbitScope(StrEnum):
+    """OAuth scopes for fitbit."""
+
+    ACTIVITY = "activity"
+    HEART_RATE = "heartrate"
+    NUTRITION = "nutrition"
+    PROFILE = "profile"
+    DEVICE = "settings"
+    SLEEP = "sleep"
+    WEIGHT = "weight"
+
+
+OAUTH2_AUTHORIZE = "https://www.fitbit.com/oauth2/authorize"
+OAUTH2_TOKEN = "https://api.fitbit.com/oauth2/token"
+OAUTH_SCOPES = [scope.value for scope in FitbitScope]

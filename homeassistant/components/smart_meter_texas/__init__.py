@@ -1,23 +1,21 @@
 """The Smart Meter Texas integration."""
-import asyncio
-import logging
 
-from smart_meter_texas import Account, Client
+import logging
+import ssl
+
+from smart_meter_texas import Account, Client, ClientSSLContext
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    Debouncer,
-    UpdateFailed,
-)
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DATA_COORDINATOR,
@@ -29,7 +27,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,13 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     account = Account(username, password)
-    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account)
+
+    client_ssl_context = ClientSSLContext()
+    ssl_context = await client_ssl_context.get_ssl_context()
+
+    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
     try:
         await smart_meter_texas_data.client.authenticate()
     except SmartMeterTexasAuthError:
         _LOGGER.error("Username or password was not accepted")
         return False
-    except asyncio.TimeoutError as error:
+    except TimeoutError as error:
         raise ConfigEntryNotReady from error
 
     await smart_meter_texas_data.setup()
@@ -62,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Smart Meter Texas",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -76,9 +79,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SMART_METER: smart_meter_texas_data,
     }
 
-    asyncio.create_task(coordinator.async_refresh())
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -87,13 +92,17 @@ class SmartMeterTexasData:
     """Manages coordinatation of API data updates."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, account: Account
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        account: Account,
+        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(websession, account)
+        self.client = Client(websession, account, ssl_context=ssl_context)
         self.meters: list = []
 
     async def setup(self):
@@ -111,7 +120,7 @@ class SmartMeterTexasData:
         return self.meters
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

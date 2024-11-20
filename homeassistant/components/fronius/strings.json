@@ -1,0 +1,298 @@
+{
+  "config": {
+    "flow_title": "{device}",
+    "step": {
+      "user": {
+        "title": "Fronius SolarNet",
+        "description": "Configure the IP address or local hostname of your Fronius device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to add {device} to Home Assistant?"
+      },
+      "reconfigure": {
+        "description": "Update your configuration information for {device}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_day": {
+        "name": "Energy day"
+      },
+      "energy_year": {
+        "name": "Energy year"
+      },
+      "energy_total": {
+        "name": "Total energy"
+      },
+      "frequency_ac": {
+        "name": "[%key:component::sensor::entity_component::frequency::name%]"
+      },
+      "current_ac": {
+        "name": "AC current"
+      },
+      "current_dc": {
+        "name": "DC current"
+      },
+      "current_dc_2": {
+        "name": "DC current 2"
+      },
+      "power_ac": {
+        "name": "AC power"
+      },
+      "voltage_ac": {
+        "name": "AC voltage"
+      },
+      "voltage_dc": {
+        "name": "DC voltage"
+      },
+      "voltage_dc_2": {
+        "name": "DC voltage 2"
+      },
+      "inverter_state": {
+        "name": "Inverter state"
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "status_code": {
+        "name": "Status code"
+      },
+      "status_message": {
+        "name": "Status message",
+        "state": {
+          "startup": "Startup",
+          "running": "Running",
+          "standby": "Standby",
+          "bootloading": "Bootloading",
+          "error": "Error",
+          "idle": "Idle",
+          "ready": "Ready",
+          "sleeping": "Sleeping",
+          "unknown": "Unknown",
+          "invalid": "Invalid"
+        }
+      },
+      "led_state": {
+        "name": "LED state"
+      },
+      "led_color": {
+        "name": "LED color"
+      },
+      "co2_factor": {
+        "name": "CO₂ factor"
+      },
+      "cash_factor": {
+        "name": "Grid export tariff"
+      },
+      "delivery_factor": {
+        "name": "Grid import tariff"
+      },
+      "current_ac_phase_1": {
+        "name": "Current phase 1"
+      },
+      "current_ac_phase_2": {
+        "name": "Current phase 2"
+      },
+      "current_ac_phase_3": {
+        "name": "Current phase 3"
+      },
+      "energy_reactive_ac_consumed": {
+        "name": "Reactive energy consumed"
+      },
+      "energy_reactive_ac_produced": {
+        "name": "Reactive energy produced"
+      },
+      "energy_real_ac_minus": {
+        "name": "Real energy minus"
+      },
+      "energy_real_ac_plus": {
+        "name": "Real energy plus"
+      },
+      "energy_real_consumed": {
+        "name": "Real energy consumed"
+      },
+      "energy_real_produced": {
+        "name": "Real energy produced"
+      },
+      "frequency_phase_average": {
+        "name": "Frequency phase average"
+      },
+      "meter_location": {
+        "name": "Meter location"
+      },
+      "meter_location_description": {
+        "name": "Meter location description",
+        "state": {
+          "feed_in": "Grid interconnection point",
+          "consumption_path": "Consumption path",
+          "external_generator": "External generator",
+          "external_battery": "External battery",
+          "subload": "Subload"
+        }
+      },
+      "power_apparent_phase_1": {
+        "name": "Apparent power phase 1"
+      },
+      "power_apparent_phase_2": {
+        "name": "Apparent power phase 2"
+      },
+      "power_apparent_phase_3": {
+        "name": "Apparent power phase 3"
+      },
+      "power_apparent": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
+      },
+      "power_factor_phase_1": {
+        "name": "Power factor phase 1"
+      },
+      "power_factor_phase_2": {
+        "name": "Power factor phase 2"
+      },
+      "power_factor_phase_3": {
+        "name": "Power factor phase 3"
+      },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
+      "power_reactive_phase_1": {
+        "name": "Reactive power phase 1"
+      },
+      "power_reactive_phase_2": {
+        "name": "Reactive power phase 2"
+      },
+      "power_reactive_phase_3": {
+        "name": "Reactive power phase 3"
+      },
+      "power_reactive": {
+        "name": "Reactive power"
+      },
+      "power_real_phase_1": {
+        "name": "Real power phase 1"
+      },
+      "power_real_phase_2": {
+        "name": "Real power phase 2"
+      },
+      "power_real_phase_3": {
+        "name": "Real power phase 3"
+      },
+      "power_real": {
+        "name": "Real power"
+      },
+      "voltage_ac_phase_1": {
+        "name": "Voltage phase 1"
+      },
+      "voltage_ac_phase_2": {
+        "name": "Voltage phase 2"
+      },
+      "voltage_ac_phase_3": {
+        "name": "Voltage phase 3"
+      },
+      "voltage_ac_phase_to_phase_12": {
+        "name": "Voltage phase 1-2"
+      },
+      "voltage_ac_phase_to_phase_23": {
+        "name": "Voltage phase 2-3"
+      },
+      "voltage_ac_phase_to_phase_31": {
+        "name": "Voltage phase 3-1"
+      },
+      "energy_real_ac_consumed": {
+        "name": "Energy consumed"
+      },
+      "power_real_ac": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "temperature_channel_1": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "state_code": {
+        "name": "State code"
+      },
+      "state_message": {
+        "name": "State message",
+        "state": {
+          "up_and_running": "Up and running",
+          "keep_minimum_temperature": "Keep minimum temperature",
+          "legionella_protection": "Legionella protection",
+          "critical_fault": "Critical fault",
+          "fault": "Fault",
+          "boost_mode": "Boost mode"
+        }
+      },
+      "meter_mode": {
+        "name": "Meter mode"
+      },
+      "power_battery": {
+        "name": "Power battery"
+      },
+      "power_battery_discharge": {
+        "name": "Power battery discharge"
+      },
+      "power_battery_charge": {
+        "name": "Power battery charge"
+      },
+      "power_grid": {
+        "name": "Power grid"
+      },
+      "power_grid_import": {
+        "name": "Power grid import"
+      },
+      "power_grid_export": {
+        "name": "Power grid export"
+      },
+      "power_load": {
+        "name": "Power load"
+      },
+      "power_load_generated": {
+        "name": "Power load generated"
+      },
+      "power_load_consumed": {
+        "name": "Power load consumed"
+      },
+      "power_photovoltaics": {
+        "name": "Power photovoltaics"
+      },
+      "relative_autonomy": {
+        "name": "Relative autonomy"
+      },
+      "relative_self_consumption": {
+        "name": "Relative self consumption"
+      },
+      "capacity_maximum": {
+        "name": "Maximum capacity"
+      },
+      "capacity_designed": {
+        "name": "Designed capacity"
+      },
+      "voltage_dc_maximum_cell": {
+        "name": "Maximum cell voltage"
+      },
+      "voltage_dc_minimum_cell": {
+        "name": "Minimum cell voltage"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "temperature_cell": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      }
+    }
+  }
+}

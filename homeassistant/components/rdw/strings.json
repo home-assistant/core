@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "license_plate": "License plate"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown_license_plate": "Unknown license plate"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "liability_insured": {
+        "name": "Liability insured"
+      },
+      "pending_recall": {
+        "name": "Pending recall"
+      }
+    },
+    "sensor": {
+      "apk_expiration": {
+        "name": "APK expiration"
+      },
+      "ascription_date": {
+        "name": "Ascription date"
+      }
+    }
+  }
+}

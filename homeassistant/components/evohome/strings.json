@@ -1,0 +1,58 @@
+{
+  "services": {
+    "set_system_mode": {
+      "name": "Set system mode",
+      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
+      "fields": {
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Mode to set the system to."
+        },
+        "period": {
+          "name": "Period",
+          "description": "A period of time in days; used only with Away, DayOff, or Custom. The system will revert to Auto at midnight (up to 99 days, today is day 1)."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "The duration in hours; used only with AutoWithEco (up to 24 hours)."
+        }
+      }
+    },
+    "reset_system": {
+      "name": "Reset system",
+      "description": "Sets the system to Auto mode and reset all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode)."
+    },
+    "refresh_system": {
+      "name": "Refresh system",
+      "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update."
+    },
+    "set_zone_override": {
+      "name": "Set zone override",
+      "description": "Overrides a zone's setpoint, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The entity_id of the Evohome zone."
+        },
+        "setpoint": {
+          "name": "Setpoint",
+          "description": "The temperature to be used instead of the scheduled setpoint."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint."
+        }
+      }
+    },
+    "clear_zone_override": {
+      "name": "Clear zone override",
+      "description": "Sets a zone to follow its schedule.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The entity_id of the zone."
+        }
+      }
+    }
+  }
+}

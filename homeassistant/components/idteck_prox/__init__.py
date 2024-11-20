@@ -1,4 +1,7 @@
 """Component for interfacing RFK101 proximity card readers."""
+
+from __future__ import annotations
+
 import logging
 
 from rfk101py.rfk101py import rfk101py
@@ -10,7 +13,9 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IDTECK proximity card component."""
     conf = config[DOMAIN]
     for unit in conf:
@@ -78,7 +83,7 @@ class IdteckReader:
             EVENT_IDTECK_PROX_KEYCARD, {"card": card, "name": self._name}
         )
 
-    def stop(self):
+    def stop(self, _: Event) -> None:
         """Close resources."""
         if self._connection:
             self._connection.close()

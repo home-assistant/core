@@ -1,2 +1,4 @@
 """Tests for the tradfri component."""
-MOCK_GATEWAY_ID = "mock-gateway-id"
+
+GATEWAY_ID = "mock-gateway-id"
+TRADFRI_PATH = "homeassistant.components.tradfri"

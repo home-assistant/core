@@ -1,0 +1,5 @@
+{
+  "domain": "aqara",
+  "name": "Aqara",
+  "iot_standards": ["matter", "zigbee"]
+}

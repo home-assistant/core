@@ -1,38 +1,36 @@
 """Support for interfacing with Russound via RNET Protocol."""
+
+from __future__ import annotations
+
 import logging
+import math
 
 from russound import russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
 
-SUPPORT_RUSSOUND = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
 SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_NAME): cv.string,
@@ -43,21 +41,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Russound RNET platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
     if host is None or port is None:
         _LOGGER.error("Invalid config. Expected %s and %s", CONF_HOST, CONF_PORT)
-        return False
+        return
 
     russ = russound.Russound(host, port)
     russ.connect()
 
-    sources = []
-    for source in config[CONF_SOURCES]:
-        sources.append(source["name"])
+    sources = [source["name"] for source in config[CONF_SOURCES]]
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
@@ -71,101 +72,83 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RussoundRNETDevice(MediaPlayerEntity):
     """Representation of a Russound RNET device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, hass, russ, sources, zone_id, extra):
         """Initialise the Russound RNET device."""
-        self._name = extra["name"]
+        self._attr_name = extra["name"]
         self._russ = russ
-        self._sources = sources
-        self._zone_id = zone_id
+        self._attr_source_list = sources
+        # Each controller has a maximum of 6 zones, every increment of 6 zones
+        # maps to an additional controller for easier backward compatibility
+        self._controller_id = str(math.ceil(zone_id / 6))
+        # Each zone resets to 1-6 per controller
+        self._zone_id = (zone_id - 1) % 6 + 1
 
-        self._state = None
-        self._volume = None
-        self._source = None
-
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         # Updated this function to make a single call to get_zone_info, so that
         # with a single call we can get On/Off, Volume and Source, reducing the
         # amount of traffic and speeding up the update process.
-        ret = self._russ.get_zone_info("1", self._zone_id, 4)
+        try:
+            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+        except BrokenPipeError:
+            _LOGGER.error("Broken Pipe Error, trying to reconnect to Russound RNET")
+            self._russ.connect()
+            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+
         _LOGGER.debug("ret= %s", ret)
         if ret is not None:
-            _LOGGER.debug("Updating status for zone %s", self._zone_id)
+            _LOGGER.debug(
+                "Updating status for RNET zone %s on controller %s",
+                self._zone_id,
+                self._controller_id,
+            )
             if ret[0] == 0:
-                self._state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
             else:
-                self._state = STATE_ON
-            self._volume = ret[2] * 2 / 100.0
+                self._attr_state = MediaPlayerState.ON
+            self._attr_volume_level = ret[2] * 2 / 100.0
             # Returns 0 based index for source.
             index = ret[1]
             # Possibility exists that user has defined list of all sources.
             # If a source is set externally that is beyond the defined list then
             # an exception will be thrown.
             # In this case return and unknown source (None)
-            try:
-                self._source = self._sources[index]
-            except IndexError:
-                self._source = None
+            if self.source_list and 0 <= index < len(self.source_list):
+                self._attr_source = self.source_list[index]
         else:
             _LOGGER.error("Could not update status for zone %s", self._zone_id)
 
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_RUSSOUND
-
-    @property
-    def source(self):
-        """Get the currently selected source."""
-        return self._source
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1).
-
-        Value is returned based on a range (0..100).
-        Therefore float divide by 100 to get to the required range.
-        """
-        return self._volume
-
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level.  Volume has a range (0..1).
 
         Translate this to a range of (0..100) as expected
         by _russ.set_volume()
         """
-        self._russ.set_volume("1", self._zone_id, volume * 100)
+        self._russ.set_volume(self._controller_id, self._zone_id, volume * 100)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
-        self._russ.set_power("1", self._zone_id, "1")
+        self._russ.set_power(self._controller_id, self._zone_id, "1")
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
-        self._russ.set_power("1", self._zone_id, "0")
+        self._russ.set_power(self._controller_id, self._zone_id, "0")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._russ.toggle_mute("1", self._zone_id)
+        self._russ.toggle_mute(self._controller_id, self._zone_id)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
-        if source in self._sources:
-            index = self._sources.index(source)
+        if self.source_list and source in self.source_list:
+            index = self.source_list.index(source)
             # 0 based value for source
-            self._russ.set_source("1", self._zone_id, index)
-
-    @property
-    def source_list(self):
-        """Return a list of available input sources."""
-        return self._sources
+            self._russ.set_source(self._controller_id, self._zone_id, index)

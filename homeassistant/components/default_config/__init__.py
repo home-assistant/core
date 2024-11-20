@@ -1,17 +1,14 @@
 """Component providing default configuration for new users."""
-try:
-    import av
-except ImportError:
-    av = None
 
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "default_config"
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize default configuration."""
-    if av is None:
-        return True
-
-    return await async_setup_component(hass, "stream", config)
+    return True

@@ -1,0 +1,66 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Set up your Cambridge Audio Streamer to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Cambridge Audio Streamer."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "select": {
+      "display_brightness": {
+        "name": "Display brightness",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "audio_output": {
+        "name": "Audio output"
+      }
+    },
+    "switch": {
+      "pre_amp": {
+        "name": "Pre-Amp"
+      },
+      "early_update": {
+        "name": "Early update"
+      }
+    }
+  },
+  "exceptions": {
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Cambridge Audio device: {media_type}"
+    },
+    "missing_preset": {
+      "message": "Missing preset for media_id: {preset_id}"
+    },
+    "preset_non_integer": {
+      "message": "Preset must be an integer, got: {preset_id}"
+    },
+    "entry_cannot_connect": {
+      "message": "Error while connecting to {host}"
+    },
+    "command_error": {
+      "message": "Error executing {function_name} on entity {entity_id}"
+    }
+  }
+}

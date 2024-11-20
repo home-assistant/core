@@ -1,13 +1,13 @@
 """Provides device triggers for Shelly."""
+
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -20,47 +20,89 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    BLOCK_INPUTS_EVENTS_TYPES,
     CONF_SUBTYPE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_SUBTYPES,
-    SHBTN_INPUTS_EVENTS_TYPES,
+    RPC_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
-    SUPPORTED_INPUTS_EVENTS_TYPES,
 )
-from .utils import get_input_triggers
+from .coordinator import (
+    get_block_coordinator_by_device_id,
+    get_rpc_coordinator_by_device_id,
+)
+from .utils import (
+    get_block_input_triggers,
+    get_rpc_input_triggers,
+    get_shbtn_input_triggers,
+)
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
+        vol.Required(CONF_TYPE): vol.In(
+            RPC_INPUTS_EVENTS_TYPES | BLOCK_INPUTS_EVENTS_TYPES
+        ),
         vol.Required(CONF_SUBTYPE): vol.In(INPUTS_EVENTS_SUBTYPES),
     }
 )
 
 
+def append_input_triggers(
+    triggers: list[dict[str, str]],
+    input_triggers: list[tuple[str, str]],
+    device_id: str,
+) -> None:
+    """Add trigger to triggers list."""
+    for trigger, subtype in input_triggers:
+        triggers.append(
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: trigger,
+                CONF_SUBTYPE: subtype,
+            }
+        )
+
+
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> dict[str, Any]:
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
     # if device is available verify parameters against device capabilities
-    wrapper = get_device_wrapper(hass, config[CONF_DEVICE_ID])
-    if not wrapper or not wrapper.device.initialized:
-        return config
-
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    for block in wrapper.device.blocks:
-        input_triggers = get_input_triggers(wrapper.device, block)
+    if config[CONF_TYPE] in RPC_INPUTS_EVENTS_TYPES:
+        rpc_coordinator = get_rpc_coordinator_by_device_id(hass, config[CONF_DEVICE_ID])
+        if not rpc_coordinator or not rpc_coordinator.device.initialized:
+            return config
+
+        input_triggers = get_rpc_input_triggers(rpc_coordinator.device)
         if trigger in input_triggers:
             return config
+
+    elif config[CONF_TYPE] in BLOCK_INPUTS_EVENTS_TYPES:
+        block_coordinator = get_block_coordinator_by_device_id(
+            hass, config[CONF_DEVICE_ID]
+        )
+        if not block_coordinator or not block_coordinator.device.initialized:
+            return config
+
+        assert block_coordinator.device.blocks
+
+        for block in block_coordinator.device.blocks:
+            input_triggers = get_block_input_triggers(block_coordinator.device, block)
+            if trigger in input_triggers:
+                return config
 
     raise InvalidDeviceAutomationConfig(
         f"Invalid ({CONF_TYPE},{CONF_SUBTYPE}): {trigger}"
@@ -71,47 +113,38 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
-    wrapper = get_device_wrapper(hass, device_id)
-    if not wrapper:
-        raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
-
-    if wrapper.model in SHBTN_MODELS:
-        for trigger in SHBTN_INPUTS_EVENTS_TYPES:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_TYPE: trigger,
-                    CONF_SUBTYPE: "button",
-                }
-            )
+    if rpc_coordinator := get_rpc_coordinator_by_device_id(hass, device_id):
+        input_triggers = get_rpc_input_triggers(rpc_coordinator.device)
+        append_input_triggers(triggers, input_triggers, device_id)
         return triggers
 
-    for block in wrapper.device.blocks:
-        input_triggers = get_input_triggers(wrapper.device, block)
+    if block_coordinator := get_block_coordinator_by_device_id(hass, device_id):
+        if block_coordinator.model in SHBTN_MODELS:
+            input_triggers = get_shbtn_input_triggers()
+            append_input_triggers(triggers, input_triggers, device_id)
+            return triggers
 
-        for trigger, subtype in input_triggers:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_TYPE: trigger,
-                    CONF_SUBTYPE: subtype,
-                }
-            )
+        if not block_coordinator.device.initialized:
+            return triggers
 
-    return triggers
+        assert block_coordinator.device.blocks
+
+        for block in block_coordinator.device.blocks:
+            input_triggers = get_block_input_triggers(block_coordinator.device, block)
+            append_input_triggers(triggers, input_triggers, device_id)
+
+        return triggers
+
+    raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
 
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: dict,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = {
@@ -123,7 +156,8 @@ async def async_attach_trigger(
             ATTR_CLICK_TYPE: config[CONF_TYPE],
         },
     }
+
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )

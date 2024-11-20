@@ -1,9 +1,11 @@
 """Config flow to configure the GeoNet NZ Quakes integration."""
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -34,7 +36,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Quakes config flow."""
 
     async def _show_form(self, errors=None):
@@ -43,11 +45,13 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         _LOGGER.debug("User input: %s", user_input)
         if not user_input:

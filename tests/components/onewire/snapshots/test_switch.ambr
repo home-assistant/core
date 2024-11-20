@@ -1,0 +1,2565 @@
+# serializer version: 1
+# name: test_switches[00.111111111111]
+  list([
+  ])
+# ---
+# name: test_switches[00.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[00.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[05.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '05.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2405',
+      'model_id': None,
+      'name': '05.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[05.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.05_111111111111_programmed_input_output',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio',
+      'unique_id': '/05.111111111111/PIO',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[05.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/05.111111111111/PIO',
+        'friendly_name': '05.111111111111 Programmed input-output',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.05_111111111111_programmed_input_output',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
+# name: test_switches[10.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '10.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18S20',
+      'model_id': None,
+      'name': '10.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[10.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[10.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[12.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '12.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2406',
+      'model_id': None,
+      'name': '12.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[12.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.12_111111111111_programmed_input_output_a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output A',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/12.111111111111/PIO.A',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.12_111111111111_programmed_input_output_b',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output B',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/12.111111111111/PIO.B',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.12_111111111111_latch_a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch A',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/12.111111111111/latch.A',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.12_111111111111_latch_b',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch B',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/12.111111111111/latch.B',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[12.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/PIO.A',
+        'friendly_name': '12.111111111111 Programmed input-output A',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.12_111111111111_programmed_input_output_a',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/PIO.B',
+        'friendly_name': '12.111111111111 Programmed input-output B',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.12_111111111111_programmed_input_output_b',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/latch.A',
+        'friendly_name': '12.111111111111 Latch A',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.12_111111111111_latch_a',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/latch.B',
+        'friendly_name': '12.111111111111 Latch B',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.12_111111111111_latch_b',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_switches[16.111111111111]
+  list([
+  ])
+# ---
+# name: test_switches[16.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[16.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[1D.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1D.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2423',
+      'model_id': None,
+      'name': '1D.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[1D.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[1D.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[1F.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1F.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2409',
+      'model_id': None,
+      'name': '1F.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1D.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2423',
+      'model_id': None,
+      'name': '1D.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---
+# name: test_switches[1F.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[1F.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[22.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '22.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS1822',
+      'model_id': None,
+      'name': '22.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[22.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[22.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[26.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '26.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'model_id': None,
+      'name': '26.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[26.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.26_111111111111_current_a_d_control',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Current A/D control',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'iad',
+      'unique_id': '/26.111111111111/IAD',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[26.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/26.111111111111/IAD',
+        'friendly_name': '26.111111111111 Current A/D control',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.26_111111111111_current_a_d_control',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
+# name: test_switches[28.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'model_id': None,
+      'name': '28.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[28.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[28.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[28.222222222222]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.222222222222',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'model_id': None,
+      'name': '28.222222222222',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[28.222222222222].1
+  list([
+  ])
+# ---
+# name: test_switches[28.222222222222].2
+  list([
+  ])
+# ---
+# name: test_switches[28.222222222223]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.222222222223',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'model_id': None,
+      'name': '28.222222222223',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[28.222222222223].1
+  list([
+  ])
+# ---
+# name: test_switches[28.222222222223].2
+  list([
+  ])
+# ---
+# name: test_switches[29.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '29.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2408',
+      'model_id': None,
+      'name': '29.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[29.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 0',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 1',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 2',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 3',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.3',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_4',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 4',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.4',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_5',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 5',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.5',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_6',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 6',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.6',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_7',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output 7',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/29.111111111111/PIO.7',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 0',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 1',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 2',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 3',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.3',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_4',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 4',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.4',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_5',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 5',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.5',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_6',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 6',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.6',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.29_111111111111_latch_7',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Latch 7',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'latch_id',
+      'unique_id': '/29.111111111111/latch.7',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[29.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.0',
+        'friendly_name': '29.111111111111 Programmed input-output 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_0',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.1',
+        'friendly_name': '29.111111111111 Programmed input-output 1',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.2',
+        'friendly_name': '29.111111111111 Programmed input-output 2',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.3',
+        'friendly_name': '29.111111111111 Programmed input-output 3',
+        'raw_value': None,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.4',
+        'friendly_name': '29.111111111111 Programmed input-output 4',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_4',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.5',
+        'friendly_name': '29.111111111111 Programmed input-output 5',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_5',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.6',
+        'friendly_name': '29.111111111111 Programmed input-output 6',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_6',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/PIO.7',
+        'friendly_name': '29.111111111111 Programmed input-output 7',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_programmed_input_output_7',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.0',
+        'friendly_name': '29.111111111111 Latch 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_0',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.1',
+        'friendly_name': '29.111111111111 Latch 1',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.2',
+        'friendly_name': '29.111111111111 Latch 2',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.3',
+        'friendly_name': '29.111111111111 Latch 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.4',
+        'friendly_name': '29.111111111111 Latch 4',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_4',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.5',
+        'friendly_name': '29.111111111111 Latch 5',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_5',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.6',
+        'friendly_name': '29.111111111111 Latch 6',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_6',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/latch.7',
+        'friendly_name': '29.111111111111 Latch 7',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.29_111111111111_latch_7',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_switches[30.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '30.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2760',
+      'model_id': None,
+      'name': '30.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[30.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[30.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[3A.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '3A.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2413',
+      'model_id': None,
+      'name': '3A.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[3A.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.3a_111111111111_programmed_input_output_a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output A',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/3A.111111111111/PIO.A',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.3a_111111111111_programmed_input_output_b',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Programmed input-output B',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'pio_id',
+      'unique_id': '/3A.111111111111/PIO.B',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[3A.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/3A.111111111111/PIO.A',
+        'friendly_name': '3A.111111111111 Programmed input-output A',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.3a_111111111111_programmed_input_output_a',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/3A.111111111111/PIO.B',
+        'friendly_name': '3A.111111111111 Programmed input-output B',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.3a_111111111111_programmed_input_output_b',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_switches[3B.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '3B.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS1825',
+      'model_id': None,
+      'name': '3B.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[3B.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[3B.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[42.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '42.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS28EA00',
+      'model_id': None,
+      'name': '42.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[42.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[42.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[7E.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '7E.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Embedded Data Systems',
+      'model': 'EDS0068',
+      'model_id': None,
+      'name': '7E.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[7E.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[7E.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[7E.222222222222]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '7E.222222222222',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Embedded Data Systems',
+      'model': 'EDS0066',
+      'model_id': None,
+      'name': '7E.222222222222',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[7E.222222222222].1
+  list([
+  ])
+# ---
+# name: test_switches[7E.222222222222].2
+  list([
+  ])
+# ---
+# name: test_switches[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'model_id': None,
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[A6.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.a6_111111111111_current_a_d_control',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Current A/D control',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'iad',
+      'unique_id': '/A6.111111111111/IAD',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[A6.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/A6.111111111111/IAD',
+        'friendly_name': 'A6.111111111111 Current A/D control',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.a6_111111111111_current_a_d_control',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Hobby Boards',
+      'model': 'HobbyBoards_EF',
+      'model_id': None,
+      'name': 'EF.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[EF.111111111111].2
+  list([
+  ])
+# ---
+# name: test_switches[EF.111111111112]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111112',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Hobby Boards',
+      'model': 'HB_MOISTURE_METER',
+      'model_id': None,
+      'name': 'EF.111111111112',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111112].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Leaf sensor 0',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'leaf_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_leaf.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Leaf sensor 1',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'leaf_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_leaf.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Leaf sensor 2',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'leaf_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_leaf.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Leaf sensor 3',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'leaf_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_leaf.3',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Moisture sensor 0',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'moisture_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_moisture.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Moisture sensor 1',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'moisture_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_moisture.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Moisture sensor 2',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'moisture_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_moisture.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Moisture sensor 3',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'moisture_sensor_id',
+      'unique_id': '/EF.111111111112/moisture/is_moisture.3',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111112].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_leaf.0',
+        'friendly_name': 'EF.111111111112 Leaf sensor 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_0',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_leaf.1',
+        'friendly_name': 'EF.111111111112 Leaf sensor 1',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_leaf.2',
+        'friendly_name': 'EF.111111111112 Leaf sensor 2',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_leaf.3',
+        'friendly_name': 'EF.111111111112 Leaf sensor 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_leaf_sensor_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_moisture.0',
+        'friendly_name': 'EF.111111111112 Moisture sensor 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_0',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_moisture.1',
+        'friendly_name': 'EF.111111111112 Moisture sensor 1',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_moisture.2',
+        'friendly_name': 'EF.111111111112 Moisture sensor 2',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111112/moisture/is_moisture.3',
+        'friendly_name': 'EF.111111111112 Moisture sensor 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111112_moisture_sensor_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111113]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111113',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Hobby Boards',
+      'model': 'HB_HUB',
+      'model_id': None,
+      'name': 'EF.111111111113',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111113].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Hub branch 0',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hub_branch_id',
+      'unique_id': '/EF.111111111113/hub/branch.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Hub branch 1',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hub_branch_id',
+      'unique_id': '/EF.111111111113/hub/branch.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Hub branch 2',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hub_branch_id',
+      'unique_id': '/EF.111111111113/hub/branch.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Hub branch 3',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hub_branch_id',
+      'unique_id': '/EF.111111111113/hub/branch.3',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[EF.111111111113].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111113/hub/branch.0',
+        'friendly_name': 'EF.111111111113 Hub branch 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_0',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111113/hub/branch.1',
+        'friendly_name': 'EF.111111111113 Hub branch 1',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111113/hub/branch.2',
+        'friendly_name': 'EF.111111111113 Hub branch 2',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/EF.111111111113/hub/branch.3',
+        'friendly_name': 'EF.111111111113 Hub branch 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.ef_111111111113_hub_branch_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---

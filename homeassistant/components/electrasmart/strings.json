@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "phone_number": "Phone Number"
+        }
+      },
+      "one_time_password": {
+        "data": {
+          "one_time_password": "One Time Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_phone_number": "Either wrong phone number or unregistered user"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

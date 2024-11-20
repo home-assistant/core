@@ -1,9 +1,11 @@
 """Reproduce an NEW_NAME state."""
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,

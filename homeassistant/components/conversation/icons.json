@@ -1,0 +1,10 @@
+{
+  "services": {
+    "process": {
+      "service": "mdi:message-processing"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

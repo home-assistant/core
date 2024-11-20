@@ -1,29 +1,32 @@
 """Support for Genius Hub binary_sensor devices."""
+
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, GeniusDevice
+from . import GeniusHubConfigEntry
+from .entity import GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
+GH_TYPE = "Receiver"
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: GeniusHubConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Genius Hub sensor entities."""
-    if discovery_info is None:
-        return
+    """Set up the Genius Hub binary sensor entities."""
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
-    switches = [
+    async_add_entities(
         GeniusBinarySensor(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
-        if GH_STATE_ATTR in d.data["state"]
-    ]
-
-    async_add_entities(switches, update_before_add=True)
+        if GH_TYPE in d.data["type"]
+    )
 
 
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
@@ -36,9 +39,9 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
         self._state_attr = state_attr
 
         if device.type[:21] == "Dual Channel Receiver":
-            self._name = f"{device.type[:21]} {device.id}"
+            self._attr_name = f"{device.type[:21]} {device.id}"
         else:
-            self._name = f"{device.type} {device.id}"
+            self._attr_name = f"{device.type} {device.id}"
 
     @property
     def is_on(self) -> bool:

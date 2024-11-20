@@ -1,19 +1,23 @@
 """Support for w800rf32 binary sensors."""
+
+from __future__ import annotations
+
 import logging
 
-import W800rf32 as w800
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICES, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, event as evt
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import W800RF32_DEVICE
 
@@ -21,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_DELAY = "off_delay"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICES): {
             cv.string: vol.Schema(
@@ -39,13 +43,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Binary Sensor platform to w800rf32."""
     binary_sensors = []
     # device_id --> "c1 or a3" X10 device. entity (type dictionary)
     # --> name, device_class etc
     for device_id, entity in config[CONF_DEVICES].items():
-
         _LOGGER.debug(
             "Add %s w800rf32.binary_sensor (class %s)",
             entity[CONF_NAME],
@@ -67,6 +75,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class W800rf32BinarySensor(BinarySensorEntity):
     """A representation of a w800rf32 binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_id, name, device_class=None, off_delay=None):
         """Initialize the w800rf32 sensor."""
         self._signal = W800RF32_DEVICE.format(device_id)
@@ -86,11 +96,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self):
@@ -122,9 +127,8 @@ class W800rf32BinarySensor(BinarySensorEntity):
             self.update_state(is_on)
 
         if self.is_on and self._off_delay is not None and self._delay_listener is None:
-
-            self._delay_listener = evt.async_track_point_in_time(
-                self.hass, self._off_delay_listener, dt_util.utcnow() + self._off_delay
+            self._delay_listener = evt.async_call_later(
+                self.hass, self._off_delay, self._off_delay_listener
             )
 
     def update_state(self, state):
@@ -132,6 +136,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

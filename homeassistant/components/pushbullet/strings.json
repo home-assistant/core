@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "application_name": {
+        "name": "Application name"
+      },
+      "body": {
+        "name": "Body"
+      },
+      "notification_id": {
+        "name": "Notification ID"
+      },
+      "notification_tag": {
+        "name": "Notification tag"
+      },
+      "package_name": {
+        "name": "Package name"
+      },
+      "receiver_email": {
+        "name": "Receiver email"
+      },
+      "sender_email": {
+        "name": "Sender email"
+      },
+      "source_device_identifier": {
+        "name": "Sender device ID"
+      },
+      "title": {
+        "name": "Title"
+      },
+      "type": {
+        "name": "Type"
+      }
+    }
+  }
+}

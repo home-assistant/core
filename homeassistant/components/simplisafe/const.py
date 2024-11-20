@@ -1,16 +1,10 @@
 """Define constants for the SimpliSafe component."""
-from datetime import timedelta
-import logging
 
-from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
+import logging
 
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "simplisafe"
-
-DATA_CLIENT = "client"
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 ATTR_ALARM_DURATION = "alarm_duration"
 ATTR_ALARM_VOLUME = "alarm_volume"
@@ -19,13 +13,12 @@ ATTR_ENTRY_DELAY_AWAY = "entry_delay_away"
 ATTR_ENTRY_DELAY_HOME = "entry_delay_home"
 ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
 ATTR_EXIT_DELAY_HOME = "exit_delay_home"
+ATTR_LAST_EVENT_INFO = "last_event_info"
+ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
+ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
+ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
 ATTR_LIGHT = "light"
+ATTR_SYSTEM_ID = "system_id"
 ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
-VOLUME_STRING_MAP = {
-    VOLUME_HIGH: "high",
-    VOLUME_LOW: "low",
-    VOLUME_MEDIUM: "medium",
-    VOLUME_OFF: "off",
-}
+DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"

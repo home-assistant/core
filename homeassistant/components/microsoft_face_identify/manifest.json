@@ -1,8 +1,8 @@
 {
   "domain": "microsoft_face_identify",
   "name": "Microsoft Face Identify",
-  "documentation": "https://www.home-assistant.io/integrations/microsoft_face_identify",
-  "dependencies": ["microsoft_face"],
   "codeowners": [],
+  "dependencies": ["microsoft_face"],
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_face_identify",
   "iot_class": "cloud_push"
 }

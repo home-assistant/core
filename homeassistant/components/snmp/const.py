@@ -1,4 +1,5 @@
 """SNMP constants."""
+
 CONF_ACCEPT_ERRORS = "accept_errors"
 CONF_AUTH_KEY = "auth_key"
 CONF_AUTH_PROTOCOL = "auth_protocol"
@@ -16,6 +17,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "SNMP"
 DEFAULT_PORT = "161"
 DEFAULT_PRIV_PROTOCOL = "none"
+DEFAULT_TIMEOUT = 8
 DEFAULT_VERSION = "1"
 DEFAULT_VARTYPE = "none"
 

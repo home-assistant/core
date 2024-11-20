@@ -1,7 +1,7 @@
 {
   "domain": "voicerss",
   "name": "VoiceRSS",
-  "documentation": "https://www.home-assistant.io/integrations/voicerss",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/voicerss",
   "iot_class": "cloud_push"
 }

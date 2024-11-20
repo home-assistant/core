@@ -1,7 +1,9 @@
 """Vera tests."""
+
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock
 
 import pyvera as pv
@@ -18,8 +20,8 @@ async def run_sensor_test(
     category: int,
     class_property: str,
     assert_states: tuple[tuple[Any, Any]],
-    assert_unit_of_measurement: str = None,
-    setup_callback: Callable[[pv.VeraController], None] = None,
+    assert_unit_of_measurement: str | None = None,
+    setup_callback: Callable[[pv.VeraController], None] | None = None,
 ) -> None:
     """Test generic sensor."""
     vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
@@ -39,7 +41,7 @@ async def run_sensor_test(
     )
     update_callback = component_data.controller_data[0].update_callback
 
-    for (initial_value, state_value) in assert_states:
+    for initial_value, state_value in assert_states:
         setattr(vera_device, class_property, initial_value)
         update_callback(vera_device)
         await hass.async_block_till_done()
@@ -134,7 +136,7 @@ async def test_power_meter_sensor(
         category=pv.CATEGORY_POWER_METER,
         class_property="power",
         assert_states=(("12", "12"), ("13", "13")),
-        assert_unit_of_measurement="watts",
+        assert_unit_of_measurement="W",
     )
 
 

@@ -1,13 +1,20 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
-from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from ismartgate.common import AbstractDoor, get_door_by_id
+from ismartgate import (
+    AbstractGateApi,
+    GogoGate2Api,
+    GogoGate2InfoResponse,
+    ISmartGateApi,
+    ISmartGateInfoResponse,
+)
+from ismartgate.common import AbstractDoor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,15 +24,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN
+from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,72 +39,6 @@ class StateData(NamedTuple):
     config_unique_id: str
     unique_id: str | None
     door: AbstractDoor | None
-
-
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
-    """Manages polling for state changes from the device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        api: AbstractGateApi,
-        *,
-        name: str,
-        update_interval: timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
-        request_refresh_debouncer: Debouncer | None = None,
-    ) -> None:
-        """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,
-            request_refresh_debouncer=request_refresh_debouncer,
-        )
-        self.api = api
-
-
-class GoGoGate2Entity(CoordinatorEntity):
-    """Base class for gogogate2 entities."""
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        data_update_coordinator: DeviceDataUpdateCoordinator,
-        door: AbstractDoor,
-        unique_id: str,
-    ) -> None:
-        """Initialize gogogate2 base entity."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
-
-    def _get_door(self) -> AbstractDoor:
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    @property
-    def device_info(self):
-        """Device info for the controller."""
-        data = self.coordinator.data
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self._config_entry.title,
-            "manufacturer": MANUFACTURER,
-            "model": data.model,
-            "sw_version": data.firmwareversion,
-        }
 
 
 def get_data_update_coordinator(
@@ -115,7 +52,7 @@ def get_data_update_coordinator(
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
         api = get_api(hass, config_entry.data)
 
-        async def async_update_data():
+        async def async_update_data() -> GogoGate2InfoResponse | ISmartGateInfoResponse:
             try:
                 return await api.async_info()
             except Exception as exception:

@@ -1,7 +1,14 @@
 """Support for VersaSense actuator peripheral."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 from .const import (
@@ -18,16 +25,21 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up actuator platform."""
     if discovery_info is None:
-        return None
+        return
 
     consumer = hass.data[DOMAIN][KEY_CONSUMER]
 
     actuator_list = []
 
-    for entity_info in discovery_info:
+    for entity_info in discovery_info.values():
         peripheral = hass.data[DOMAIN][entity_info[KEY_PARENT_MAC]][
             entity_info[KEY_IDENTIFIER]
         ]
@@ -76,11 +88,11 @@ class VActuator(SwitchEntity):
         """Return if the actuator is available."""
         return self._available
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the actuator."""
         await self.update_state(0)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the actuator."""
         await self.update_state(1)
 
@@ -92,7 +104,7 @@ class VActuator(SwitchEntity):
             None, self._identifier, self._parent_mac, payload
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state data from the actuator."""
         samples = await self.consumer.fetchPeripheralSample(
             None, self._identifier, self._parent_mac

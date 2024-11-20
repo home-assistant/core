@@ -1,4 +1,6 @@
 """Tests for the sigfox sensor."""
+
+from http import HTTPStatus
 import re
 
 import requests_mock
@@ -8,6 +10,7 @@ from homeassistant.components.sigfox.sensor import (
     CONF_API_LOGIN,
     CONF_API_PASSWORD,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 TEST_API_LOGIN = "foo"
@@ -30,21 +33,23 @@ VALID_MESSAGE = """
 """
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test for invalid credentials."""
     with requests_mock.Mocker() as mock_req:
         url = re.compile(API_URL + "devicetypes")
-        mock_req.get(url, text="{}", status_code=401)
+        mock_req.get(url, text="{}", status_code=HTTPStatus.UNAUTHORIZED)
         assert await async_setup_component(hass, "sensor", VALID_CONFIG)
         await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_valid_credentials(hass):
+async def test_valid_credentials(hass: HomeAssistant) -> None:
     """Test for valid credentials."""
     with requests_mock.Mocker() as mock_req:
         url1 = re.compile(API_URL + "devicetypes")
-        mock_req.get(url1, text='{"data":[{"id":"fake_type"}]}', status_code=200)
+        mock_req.get(
+            url1, text='{"data":[{"id":"fake_type"}]}', status_code=HTTPStatus.OK
+        )
 
         url2 = re.compile(API_URL + "devicetypes/fake_type/devices")
         mock_req.get(url2, text='{"data":[{"id":"fake_id"}]}')

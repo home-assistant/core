@@ -1,4 +1,5 @@
 """Script to install/uninstall HA into OS X."""
+
 import os
 import time
 
@@ -32,10 +33,7 @@ def install_osx():
 
     os.popen(f"launchctl load -w -F {path}")
 
-    print(
-        "Home Assistant has been installed. \
-        Open it here: http://localhost:8123"
-    )
+    print("Home Assistant has been installed. Open it here: http://localhost:8123")
 
 
 def uninstall_osx():
@@ -46,7 +44,7 @@ def uninstall_osx():
     print("Home Assistant has been uninstalled.")
 
 
-def run(args):
+def run(args: list[str]) -> int:
     """Handle OSX commandline script."""
     commands = "install", "uninstall", "restart"
     if not args or args[0] not in commands:
@@ -65,3 +63,5 @@ def run(args):
         time.sleep(0.5)
         install_osx()
         return 0
+
+    raise ValueError(f"Invalid command {args[0]}")

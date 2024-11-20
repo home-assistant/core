@@ -1,8 +1,9 @@
 """Test the conversation utils."""
+
 from homeassistant.components.conversation.util import create_matcher
 
 
-def test_create_matcher():
+def test_create_matcher() -> None:
     """Test the create matcher method."""
     # Basic sentence
     pattern = create_matcher("Hello world")

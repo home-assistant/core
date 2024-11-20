@@ -1,4 +1,5 @@
 """Reproduce an Cover state."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,12 +7,6 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -20,18 +15,26 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN
+from . import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN,
+    CoverState,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING}
+VALID_STATES = {
+    CoverState.CLOSED,
+    CoverState.CLOSING,
+    CoverState.OPEN,
+    CoverState.OPENING,
+}
 
 
 async def _async_reproduce_state(
@@ -42,9 +45,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
@@ -73,9 +74,9 @@ async def _async_reproduce_state(
         == state.attributes.get(ATTR_CURRENT_POSITION)
     ):
         # Open/Close
-        if state.state in [STATE_CLOSED, STATE_CLOSING]:
+        if state.state in [CoverState.CLOSED, CoverState.CLOSING]:
             service = SERVICE_CLOSE_COVER
-        elif state.state in [STATE_OPEN, STATE_OPENING]:
+        elif state.state in [CoverState.OPEN, CoverState.OPENING]:
             if (
                 ATTR_CURRENT_POSITION in cur_state.attributes
                 and ATTR_CURRENT_POSITION in state.attributes

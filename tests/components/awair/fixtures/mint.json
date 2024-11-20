@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "timestamp": "2020-04-10T16:25:03.606Z",
+      "score": 98.0,
+      "sensors": [
+        { "comp": "temp", "value": 20.639999389648438 },
+        { "comp": "humid", "value": 45.04999923706055 },
+        { "comp": "voc", "value": 269.0 },
+        { "comp": "pm25", "value": 1.0 },
+        { "comp": "lux", "value": 441.70001220703125 }
+      ],
+      "indices": [
+        { "comp": "temp", "value": 0.0 },
+        { "comp": "humid", "value": 0.0 },
+        { "comp": "voc", "value": 0.0 },
+        { "comp": "pm25", "value": 0.0 }
+      ]
+    }
+  ]
+}

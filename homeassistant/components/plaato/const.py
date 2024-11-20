@@ -1,5 +1,8 @@
 """Const for Plaato."""
+
 from datetime import timedelta
+
+from homeassistant.const import Platform
 
 DOMAIN = "plaato"
 PLAATO_DEVICE_SENSORS = "sensors"
@@ -15,7 +18,7 @@ PLACEHOLDER_DOCS_URL = "docs_url"
 PLACEHOLDER_DEVICE_TYPE = "device_type"
 PLACEHOLDER_DEVICE_NAME = "device_name"
 DOCS_URL = "https://www.home-assistant.io/integrations/plaato/"
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 SENSOR_DATA = "sensor_data"
 COORDINATOR = "coordinator"
 DEVICE = "device"
@@ -26,7 +29,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 
-DEVICE_STATE_ATTRIBUTES = {
+EXTRA_STATE_ATTRIBUTES = {
     "beer_name": "beer_name",
     "keg_date": "keg_date",
     "mode": "mode",

@@ -1,278 +1,439 @@
 """Component to embed TP-Link smart home devices."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import asyncio
+from collections.abc import Iterable
+from datetime import timedelta
 import logging
-import time
 from typing import Any
 
-from pyHS100.smartdevice import SmartDevice, SmartDeviceException
-from pyHS100.smartplug import SmartPlug
-import voluptuous as vol
+from aiohttp import ClientSession
+from kasa import (
+    AuthenticationError,
+    Credentials,
+    Device,
+    DeviceConfig,
+    Discover,
+    KasaException,
+)
+from kasa.httpclient import get_cookie_jar
+from kasa.iot import IotStrip
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import ATTR_LAST_RESET
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
+from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_VOLTAGE,
     CONF_ALIAS,
-    CONF_DEVICE_ID,
+    CONF_AUTHENTICATION,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
-    CONF_STATE,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utc_from_timestamp
 
-from .common import SmartDevices, async_discover_devices, get_static_devices
 from .const import (
-    ATTR_CONFIG,
-    ATTR_CURRENT_A,
-    ATTR_TOTAL_ENERGY_KWH,
-    CONF_DIMMER,
-    CONF_DISCOVERY,
-    CONF_EMETER_PARAMS,
-    CONF_LIGHT,
-    CONF_MODEL,
-    CONF_STRIP,
-    CONF_SW_VERSION,
-    CONF_SWITCH,
-    COORDINATORS,
+    CONF_AES_KEYS,
+    CONF_CONFIG_ENTRY_MINOR_VERSION,
+    CONF_CONNECTION_PARAMETERS,
+    CONF_CREDENTIALS_HASH,
+    CONF_DEVICE_CONFIG,
+    CONF_USES_HTTP,
+    CONNECT_TIMEOUT,
+    DISCOVERY_TIMEOUT,
+    DOMAIN,
     PLATFORMS,
-    UNAVAILABLE_DEVICES,
-    UNAVAILABLE_RETRY_DELAY,
 )
+from .coordinator import TPLinkDataUpdateCoordinator
+from .models import TPLinkData
+
+type TPLinkConfigEntry = ConfigEntry[TPLinkData]
+
+DISCOVERY_INTERVAL = timedelta(minutes=15)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "tplink"
 
-TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
+def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
+    """Return aiohttp clientsession with cookie jar configured."""
+    return async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=get_cookie_jar()
+    )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_STRIP, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-            }
+
+@callback
+def async_trigger_discovery(
+    hass: HomeAssistant,
+    discovered_devices: dict[str, Device],
+) -> None:
+    """Trigger config flows for discovered devices."""
+
+    for formatted_mac, device in discovered_devices.items():
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_ALIAS: device.alias or mac_alias(device.mac),
+                CONF_HOST: device.host,
+                CONF_MAC: formatted_mac,
+                CONF_DEVICE: device,
+            },
         )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+
+
+async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
+    """Discover TPLink devices on configured network interfaces."""
+
+    credentials = await get_credentials(hass)
+    broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
+    tasks = [
+        Discover.discover(
+            target=str(address),
+            discovery_timeout=DISCOVERY_TIMEOUT,
+            timeout=CONNECT_TIMEOUT,
+            credentials=credentials,
+        )
+        for address in broadcast_addresses
+    ]
+    discovered_devices: dict[str, Device] = {}
+    for device_list in await asyncio.gather(*tasks):
+        for device in device_list.values():
+            discovered_devices[dr.format_mac(device.mac)] = device
+    return discovered_devices
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
-    conf = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_CONFIG] = conf
+    async def _async_discovery(*_: Any) -> None:
+        if discovered := await async_discover_devices(hass):
+            async_trigger_discovery(hass, discovered)
 
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
+    hass.async_create_background_task(
+        _async_discovery(), "tplink first discovery", eager_start=True
+    )
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
-    config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
-    if config_data is None and entry.data:
-        config_data = entry.data
-    elif config_data is not None:
-        hass.config_entries.async_update_entry(entry, data=config_data)
+    host: str = entry.data[CONF_HOST]
+    credentials = await get_credentials(hass)
+    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
+    entry_use_http = entry.data.get(CONF_USES_HTTP, False)
+    entry_aes_keys = entry.data.get(CONF_AES_KEYS)
+    port_override = entry.data.get(CONF_PORT)
 
-    device_registry = dr.async_get(hass)
-    tplink_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    device_count = len(tplink_devices)
-    hass_data: dict[str, Any] = hass.data[DOMAIN]
-
-    # These will contain the initialized devices
-    hass_data[CONF_LIGHT] = []
-    hass_data[CONF_SWITCH] = []
-    hass_data[UNAVAILABLE_DEVICES] = []
-    lights: list[SmartDevice] = hass_data[CONF_LIGHT]
-    switches: list[SmartPlug] = hass_data[CONF_SWITCH]
-    unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
-
-    # Add static devices
-    static_devices = SmartDevices()
-    if config_data is not None:
-        static_devices = get_static_devices(config_data)
-
-        lights.extend(static_devices.lights)
-        switches.extend(static_devices.switches)
-
-    # Add discovered devices
-    if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(
-            hass, static_devices, device_count
-        )
-
-        lights.extend(discovered_devices.lights)
-        switches.extend(discovered_devices.switches)
-
-    if lights:
-        _LOGGER.debug(
-            "Got %s lights: %s", len(lights), ", ".join(d.host for d in lights)
-        )
-
-    if switches:
-        _LOGGER.debug(
-            "Got %s switches: %s",
-            len(switches),
-            ", ".join(d.host for d in switches),
-        )
-
-    async def async_retry_devices(self) -> None:
-        """Retry unavailable devices."""
-        unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
-        _LOGGER.debug(
-            "retry during setup unavailable devices: %s",
-            [d.host for d in unavailable_devices],
-        )
-
-        for device in unavailable_devices:
-            try:
-                device.get_sysinfo()
-            except SmartDeviceException:
-                continue
-            _LOGGER.debug(
-                "at least one device is available again, so reload integration"
-            )
-            await hass.config_entries.async_reload(entry.entry_id)
-            break
-
-    # prepare DataUpdateCoordinators
-    hass_data[COORDINATORS] = {}
-    for switch in switches:
-
+    conn_params: Device.ConnectionParameters | None = None
+    if conn_params_dict := entry.data.get(CONF_CONNECTION_PARAMETERS):
         try:
-            await hass.async_add_executor_job(switch.get_sysinfo)
-        except SmartDeviceException:
+            conn_params = Device.ConnectionParameters.from_dict(conn_params_dict)
+        except KasaException:
             _LOGGER.warning(
-                "Device at '%s' not reachable during setup, will retry later",
-                switch.host,
+                "Invalid connection parameters dict for %s: %s", host, conn_params_dict
             )
-            unavailable_devices.append(switch)
-            continue
 
-        hass_data[COORDINATORS][
-            switch.context or switch.mac
-        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch)
-        await coordinator.async_config_entry_first_refresh()
+    client = create_async_tplink_clientsession(hass) if entry_use_http else None
+    config = DeviceConfig(
+        host,
+        timeout=CONNECT_TIMEOUT,
+        http_client=client,
+        aes_keys=entry_aes_keys,
+        port_override=port_override,
+    )
+    if conn_params:
+        config.connection_type = conn_params
+    # If we have in memory credentials use them otherwise check for credentials_hash
+    if credentials:
+        config.credentials = credentials
+    elif entry_credentials_hash:
+        config.credentials_hash = entry_credentials_hash
 
-    if unavailable_devices:
-        entry.async_on_unload(
-            async_track_time_interval(
-                hass, async_retry_devices, UNAVAILABLE_RETRY_DELAY
-            )
+    try:
+        device: Device = await Device.connect(config=config)
+    except AuthenticationError as ex:
+        # If the stored credentials_hash was used but doesn't work remove it
+        if not credentials and entry_credentials_hash:
+            data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
+            hass.config_entries.async_update_entry(entry, data=data)
+        raise ConfigEntryAuthFailed from ex
+    except KasaException as ex:
+        raise ConfigEntryNotReady from ex
+
+    device_credentials_hash = device.credentials_hash
+
+    # We not need to update the connection parameters or the use_http here
+    # because if they were wrong we would have failed to connect.
+    # Discovery will update those if necessary.
+    updates: dict[str, Any] = {}
+    if device_credentials_hash and device_credentials_hash != entry_credentials_hash:
+        updates[CONF_CREDENTIALS_HASH] = device_credentials_hash
+    if entry_aes_keys != device.config.aes_keys:
+        updates[CONF_AES_KEYS] = device.config.aes_keys
+    if entry.data.get(CONF_ALIAS) != device.alias:
+        updates[CONF_ALIAS] = device.alias
+    if entry.data.get(CONF_MODEL) != device.model:
+        updates[CONF_MODEL] = device.model
+    if updates:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                **updates,
+            },
         )
-        unavailable_devices_hosts = [d.host for d in unavailable_devices]
-        hass_data[CONF_SWITCH] = [
-            s for s in switches if s.host not in unavailable_devices_hosts
+    found_mac = dr.format_mac(device.mac)
+    if found_mac != entry.unique_id:
+        # If the mac address of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+        )
+
+    parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
+    child_coordinators: list[TPLinkDataUpdateCoordinator] = []
+
+    # The iot HS300 allows a limited number of concurrent requests and fetching the
+    # emeter information requires separate ones so create child coordinators here.
+    if isinstance(device, IotStrip):
+        child_coordinators = [
+            # The child coordinators only update energy data so we can
+            # set a longer update interval to avoid flooding the device
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
+            for child in device.children
         ]
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    entry.runtime_data = TPLinkData(parent_coordinator, child_coordinators)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Unload a config entry."""
+    data = entry.runtime_data
+    device = data.parent_coordinator.device
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass_data: dict[str, Any] = hass.data[DOMAIN]
-    if unload_ok:
-        hass_data.clear()
+    await device.protocol.close()
 
     return unload_ok
 
 
-class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for specific SmartPlug."""
+def legacy_device_id(device: Device) -> str:
+    """Convert the device id so it matches what was used in the original version."""
+    device_id: str = device.device_id
+    # Plugs are prefixed with the mac in python-kasa but not
+    # in pyHS100 so we need to strip off the mac
+    if "_" not in device_id:
+        return device_id
+    return device_id.split("_")[1]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        smartplug: SmartPlug,
-    ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
-        self.smartplug = smartplug
 
-        update_interval = timedelta(seconds=30)
-        super().__init__(
-            hass, _LOGGER, name=smartplug.alias, update_interval=update_interval
+def get_device_name(device: Device, parent: Device | None = None) -> str:
+    """Get a name for the device. alias can be none on some devices."""
+    if device.alias:
+        return device.alias
+    # Return the child device type with an index if there's more than one child device
+    # of the same type. i.e. Devices like the ks240 with one child of each type
+    # skip the suffix
+    if parent:
+        devices = [
+            child.device_id
+            for child in parent.children
+            if child.device_type is device.device_type
+        ]
+        suffix = f" {devices.index(device.device_id) + 1}" if len(devices) > 1 else ""
+        return f"{device.device_type.value.capitalize()}{suffix}"
+    return f"Unnamed {device.model}"
+
+
+async def get_credentials(hass: HomeAssistant) -> Credentials | None:
+    """Retrieve the credentials from hass data."""
+    if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:
+        auth = hass.data[DOMAIN][CONF_AUTHENTICATION]
+        return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
+
+    return None
+
+
+async def set_credentials(hass: HomeAssistant, username: str, password: str) -> None:
+    """Save the credentials to HASS data."""
+    hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = {
+        CONF_USERNAME: username,
+        CONF_PASSWORD: password,
+    }
+
+
+def mac_alias(mac: str) -> str:
+    """Convert a MAC address to a short address for the UI."""
+    return mac.replace(":", "")[-4:].upper()
+
+
+def _mac_connection_or_none(device: dr.DeviceEntry) -> str | None:
+    return next(
+        (
+            conn
+            for type_, conn in device.connections
+            if type_ == dr.CONNECTION_NETWORK_MAC
+        ),
+        None,
+    )
+
+
+def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None:
+    # Previously only iot devices had child devices and iot devices use
+    # the upper and lcase MAC addresses as device_id so match on case
+    # insensitive mac address as the parent device.
+    upper_mac = mac.upper()
+    return next(
+        (device_id for device_id in device_ids if device_id.upper() == upper_mac),
+        None,
+    )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    entry_version = config_entry.version
+    entry_minor_version = config_entry.minor_version
+    # having a condition to check for the current version allows
+    # tests to be written per migration step.
+    config_flow_minor_version = CONF_CONFIG_ENTRY_MINOR_VERSION
+
+    new_minor_version = 3
+    if (
+        entry_version == 1
+        and entry_minor_version < new_minor_version <= config_flow_minor_version
+    ):
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry_version, entry_minor_version
+        )
+        # Previously entities on child devices added themselves to the parent
+        # device and set their device id as identifiers along with mac
+        # as a connection which creates a single device entry linked by all
+        # identifiers. Now we create separate devices connected with via_device
+        # so the identifier linkage must be removed otherwise the devices will
+        # always be linked into one device.
+        dev_reg = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+            original_identifiers = device.identifiers
+            # Get only the tplink identifier, could be tapo or other integrations.
+            tplink_identifiers = [
+                ident[1] for ident in original_identifiers if ident[0] == DOMAIN
+            ]
+            # Nothing to fix if there's only one identifier. mac connection
+            # should never be none but if it is there's no problem.
+            if len(tplink_identifiers) <= 1 or not (
+                mac := _mac_connection_or_none(device)
+            ):
+                continue
+            if not (
+                tplink_parent_device_id := _device_id_is_mac_or_none(
+                    mac, tplink_identifiers
+                )
+            ):
+                # No match on mac so raise an error.
+                _LOGGER.error(
+                    "Unable to replace identifiers for device %s (%s): %s",
+                    device.name,
+                    device.model,
+                    device.identifiers,
+                )
+                continue
+            # Retain any identifiers for other domains
+            new_identifiers = {
+                ident for ident in device.identifiers if ident[0] != DOMAIN
+            }
+            new_identifiers.add((DOMAIN, tplink_parent_device_id))
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            _LOGGER.debug(
+                "Replaced identifiers for device %s (%s): %s with: %s",
+                device.name,
+                device.model,
+                original_identifiers,
+                new_identifiers,
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry, minor_version=new_minor_version
         )
 
-    async def _async_update_data(self) -> dict:
-        """Fetch all device and sensor data from api."""
-        try:
-            info = self.smartplug.sys_info
-            data = {
-                CONF_HOST: self.smartplug.host,
-                CONF_MAC: info["mac"],
-                CONF_MODEL: info["model"],
-                CONF_SW_VERSION: info["sw_ver"],
-            }
-            if self.smartplug.context is None:
-                data[CONF_ALIAS] = info["alias"]
-                data[CONF_DEVICE_ID] = info["mac"]
-                data[CONF_STATE] = (
-                    self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-                )
-            else:
-                plug_from_context = next(
-                    c
-                    for c in self.smartplug.sys_info["children"]
-                    if c["id"] == self.smartplug.context
-                )
-                data[CONF_ALIAS] = plug_from_context["alias"]
-                data[CONF_DEVICE_ID] = self.smartplug.context
-                data[CONF_STATE] = plug_from_context["state"] == 1
-            if self.smartplug.has_emeter:
-                emeter_readings = self.smartplug.get_emeter_realtime()
-                data[CONF_EMETER_PARAMS] = {
-                    ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
-                    ATTR_TOTAL_ENERGY_KWH: round(float(emeter_readings["total"]), 3),
-                    ATTR_VOLTAGE: round(float(emeter_readings["voltage"]), 1),
-                    ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
-                    ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
-                }
-                emeter_statics = self.smartplug.get_emeter_daily()
-                data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
-                    ATTR_TODAY_ENERGY_KWH
-                ] = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                if emeter_statics.get(int(time.strftime("%e"))):
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
-                        float(emeter_statics[int(time.strftime("%e"))]), 3
-                    )
-                else:
-                    # today's consumption not available, when device was off all the day
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
-        except SmartDeviceException as ex:
-            raise UpdateFailed(ex) from ex
+        _LOGGER.debug(
+            "Migration to version %s.%s complete", entry_version, new_minor_version
+        )
 
-        self.name = data[CONF_ALIAS]
-        return data
+    new_minor_version = 4
+    if (
+        entry_version == 1
+        and entry_minor_version < new_minor_version <= config_flow_minor_version
+    ):
+        # credentials_hash stored in the device_config should be moved to data.
+        updates: dict[str, Any] = {}
+        if config_dict := config_entry.data.get(CONF_DEVICE_CONFIG):
+            assert isinstance(config_dict, dict)
+            if credentials_hash := config_dict.pop(CONF_CREDENTIALS_HASH, None):
+                updates[CONF_CREDENTIALS_HASH] = credentials_hash
+                updates[CONF_DEVICE_CONFIG] = config_dict
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                **updates,
+            },
+            minor_version=new_minor_version,
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s complete", entry_version, new_minor_version
+        )
+
+    new_minor_version = 5
+    if (
+        entry_version == 1
+        and entry_minor_version < new_minor_version <= config_flow_minor_version
+    ):
+        # complete device config no longer to be stored, only required
+        # attributes like connection parameters and aes_keys
+        updates = {}
+        entry_data = {
+            k: v for k, v in config_entry.data.items() if k != CONF_DEVICE_CONFIG
+        }
+        if config_dict := config_entry.data.get(CONF_DEVICE_CONFIG):
+            assert isinstance(config_dict, dict)
+            if connection_parameters := config_dict.get("connection_type"):
+                updates[CONF_CONNECTION_PARAMETERS] = connection_parameters
+            if (use_http := config_dict.get(CONF_USES_HTTP)) is not None:
+                updates[CONF_USES_HTTP] = use_http
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **entry_data,
+                **updates,
+            },
+            minor_version=new_minor_version,
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s complete", entry_version, new_minor_version
+        )
+    return True

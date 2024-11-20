@@ -1,8 +1,11 @@
 """Util for Conversation."""
+
+from __future__ import annotations
+
 import re
 
 
-def create_matcher(utterance):
+def create_matcher(utterance: str) -> re.Pattern[str]:
     """Create a regex that matches the utterance."""
     # Split utterance into parts that are type: NORMAL, GROUP or OPTIONAL
     # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {name}
@@ -24,11 +27,11 @@ def create_matcher(utterance):
 
         # Group part
         if group_match is not None:
-            pattern.append(fr"(?P<{group_match.groups()[0]}>[\w ]+?)\s*")
+            pattern.append(rf"(?P<{group_match.groups()[0]}>[\w ]+?)\s*")
 
         # Optional part
         elif optional_match is not None:
-            pattern.append(fr"(?:{optional_match.groups()[0]} *)?")
+            pattern.append(rf"(?:{optional_match.groups()[0]} *)?")
 
     pattern.append("$")
-    return re.compile("".join(pattern), re.I)
+    return re.compile("".join(pattern), re.IGNORECASE)

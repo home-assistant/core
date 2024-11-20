@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'name': 'Home',
+        'station_id': 123,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'gios',
+      'entry_id': '86129426118ae32020417a53712d6eef',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Home',
+      'unique_id': '123',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'aqi': dict({
+        'id': None,
+        'index': None,
+        'name': 'AQI',
+        'value': 'good',
+      }),
+      'c6h6': dict({
+        'id': 658,
+        'index': 'very_good',
+        'name': 'benzene',
+        'value': 0.23789,
+      }),
+      'co': dict({
+        'id': 660,
+        'index': 'good',
+        'name': 'carbon monoxide',
+        'value': 251.874,
+      }),
+      'no2': dict({
+        'id': 665,
+        'index': 'good',
+        'name': 'nitrogen dioxide',
+        'value': 7.13411,
+      }),
+      'o3': dict({
+        'id': 667,
+        'index': 'good',
+        'name': 'ozone',
+        'value': 95.7768,
+      }),
+      'pm10': dict({
+        'id': 14395,
+        'index': 'good',
+        'name': 'particulate matter 10',
+        'value': 16.8344,
+      }),
+      'pm25': dict({
+        'id': 670,
+        'index': 'good',
+        'name': 'particulate matter 2.5',
+        'value': 4,
+      }),
+      'so2': dict({
+        'id': 672,
+        'index': 'very_good',
+        'name': 'sulfur dioxide',
+        'value': 4.35478,
+      }),
+    }),
+  })
+# ---

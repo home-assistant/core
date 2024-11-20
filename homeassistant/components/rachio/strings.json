@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to your Rachio device",
-        "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then click 'GET API KEY'.",
+        "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -23,6 +23,92 @@
       "init": {
         "data": {
           "manual_run_mins": "Duration in minutes to run when activating a zone switch"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rain": {
+        "name": "Rain"
+      }
+    },
+    "calendar": {
+      "calendar": {
+        "name": "Rachio Base Station {base}"
+      }
+    },
+    "switch": {
+      "standby": {
+        "name": "Standby"
+      },
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    }
+  },
+  "services": {
+    "set_zone_moisture_percent": {
+      "name": "Set zone moisture percent",
+      "description": "Sets the moisture percentage of a zone or list of zones.",
+      "fields": {
+        "percent": {
+          "name": "Percent",
+          "description": "Set the desired zone moisture percentage."
+        }
+      }
+    },
+    "start_multiple_zone_schedule": {
+      "name": "Start multiple zones",
+      "description": "Creates a custom schedule of zones and runtimes. Note that all zones should be on the same controller to avoid issues.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zones listed above."
+        }
+      }
+    },
+    "start_watering": {
+      "name": "Start watering",
+      "description": "Start a single zone, a schedule or any number of smart hose timers.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Number of minutes to run. For sprinkler zones the maximum duration is 3 hours, or 24 hours for smart hose timers. Leave empty for schedules."
+        }
+      }
+    },
+    "pause_watering": {
+      "name": "Pause watering",
+      "description": "Pause any currently running zones or schedules.",
+      "fields": {
+        "devices": {
+          "name": "Devices",
+          "description": "Name of controllers to pause. Defaults to all controllers on the account if not provided."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "The time to pause running schedules."
+        }
+      }
+    },
+    "resume_watering": {
+      "name": "Resume watering",
+      "description": "Resume any paused zone runs or schedules.",
+      "fields": {
+        "devices": {
+          "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",
+          "description": "Name of controllers to resume. Defaults to all controllers on the account if not provided."
+        }
+      }
+    },
+    "stop_watering": {
+      "name": "Stop watering",
+      "description": "Stop any currently running zones or schedules.",
+      "fields": {
+        "devices": {
+          "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",
+          "description": "Name of controllers to stop. Defaults to all controllers on the account if not provided."
         }
       }
     }

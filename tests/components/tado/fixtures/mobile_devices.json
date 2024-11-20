@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Home",
+    "id": 123456,
+    "settings": {
+      "geoTrackingEnabled": false,
+      "specialOffersEnabled": false,
+      "onDemandLogRetrievalEnabled": false,
+      "pushNotifications": {
+        "lowBatteryReminder": true,
+        "awayModeReminder": true,
+        "homeModeReminder": true,
+        "openWindowReminder": true,
+        "energySavingsReportReminder": true,
+        "incidentDetection": true,
+        "energyIqReminder": false
+      }
+    },
+    "deviceMetadata": {
+      "platform": "Android",
+      "osVersion": "14",
+      "model": "Samsung",
+      "locale": "nl"
+    }
+  }
+]

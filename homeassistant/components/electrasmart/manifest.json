@@ -1,0 +1,9 @@
+{
+  "domain": "electrasmart",
+  "name": "Electra Smart",
+  "codeowners": ["@jafar-atili"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/electrasmart",
+  "iot_class": "cloud_polling",
+  "requirements": ["pyElectra==1.2.4"]
+}

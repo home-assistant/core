@@ -1,4 +1,5 @@
 """The Vilfo Router integration."""
+
 from datetime import timedelta
 import logging
 
@@ -6,14 +7,14 @@ from vilfo import Client as VilfoClient
 from vilfo.exceptions import VilfoException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
 from .const import ATTR_BOOT_TIME, ATTR_LOAD, DOMAIN, ROUTER_DEFAULT_HOST
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -35,12 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = vilfo_router
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -104,5 +105,5 @@ class VilfoRouterData:
             return
 
         if self.available and self._unavailable_logged:
-            _LOGGER.info("Vilfo Router %s is available again", self.host)
+            _LOGGER.warning("Vilfo Router %s is available again", self.host)
             self._unavailable_logged = False

@@ -1,0 +1,6 @@
+{
+  "domain": "pge",
+  "name": "Pacific Gas & Electric (PG&E)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

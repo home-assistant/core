@@ -1,4 +1,5 @@
 """The syncthing integration."""
+
 import asyncio
 import logging
 
@@ -10,6 +11,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,7 +25,7 @@ from .const import (
     SERVER_UNAVAILABLE,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     syncthing.subscribe()
     hass.data[DOMAIN][entry.entry_id] = syncthing
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def cancel_listen_task(_):
         await syncthing.unsubscribe()
@@ -122,7 +124,7 @@ class SyncthingClient:
         while True:
             if await self._server_available():
                 if server_was_unavailable:
-                    _LOGGER.info(
+                    _LOGGER.warning(
                         "The syncthing server '%s' is back online", self._client.url
                     )
                     async_dispatcher_send(
@@ -151,8 +153,11 @@ class SyncthingClient:
                         event,
                     )
             except aiosyncthing.exceptions.SyncthingError:
-                _LOGGER.info(
-                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
+                _LOGGER.warning(
+                    (
+                        "The syncthing server '%s' is not available. Sleeping %i"
+                        " seconds and retrying"
+                    ),
                     self._client.url,
                     RECONNECT_INTERVAL.total_seconds(),
                 )
@@ -168,5 +173,5 @@ class SyncthingClient:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:
             return False
-        else:
-            return True
+
+        return True

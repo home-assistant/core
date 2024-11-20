@@ -1,4 +1,5 @@
 """Tests for the Keenetic NDMS2 component."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.keenetic_ndms2 import const
 from homeassistant.const import (
@@ -29,8 +30,12 @@ MOCK_OPTIONS = {
     const.CONF_INTERFACES: ["Home", "VPS0"],
 }
 
-MOCK_SSDP_DISCOVERY_INFO = {
-    ssdp.ATTR_SSDP_LOCATION: SSDP_LOCATION,
-    ssdp.ATTR_UPNP_UDN: "uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_NAME,
-}
+MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=SSDP_LOCATION,
+    upnp={
+        ssdp.ATTR_UPNP_UDN: "uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_NAME,
+    },
+)

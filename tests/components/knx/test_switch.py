@@ -1,5 +1,4 @@
 """Test KNX switch."""
-from unittest.mock import patch
 
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -7,23 +6,25 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
+from tests.common import mock_restore_cache
 
-async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
+
+async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX switch."""
     await knx.setup_integration(
         {
-            SwitchSchema.PLATFORM_NAME: {
+            SwitchSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # turn on switch
     await hass.services.async_call(
@@ -52,21 +53,20 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
+async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX switch with state_address."""
     _ADDRESS = "1/1/1"
     _STATE_ADDRESS = "2/2/2"
 
     await knx.setup_integration(
         {
-            SwitchSchema.PLATFORM_NAME: {
+            SwitchSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: _ADDRESS,
                 CONF_STATE_ADDRESS: _STATE_ADDRESS,
             },
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # StateUpdater initialize state
     await knx.assert_read(_STATE_ADDRESS)
@@ -111,24 +111,21 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_restore_and_respond(hass, knx):
+async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                SwitchSchema.PLATFORM_NAME: {
-                    CONF_NAME: "test",
-                    KNX_ADDRESS: _ADDRESS,
-                    CONF_RESPOND_TO_READ: True,
-                },
-            }
-        )
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: _ADDRESS,
+                CONF_RESPOND_TO_READ: True,
+            },
+        }
+    )
 
     # restored state - doesn't send telegram
     state = hass.states.get("switch.test")
@@ -150,3 +147,27 @@ async def test_switch_restore_and_respond(hass, knx):
     # respond to new state
     await knx.receive_read(_ADDRESS)
     await knx.assert_response(_ADDRESS, False)
+
+
+async def test_switch_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a switch."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.SWITCH,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "respond_to_read": True,
+            "sync_state": True,
+            "invert": False,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+    state = hass.states.get("switch.test")
+    assert state.state is STATE_ON

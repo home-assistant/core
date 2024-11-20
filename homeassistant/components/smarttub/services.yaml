@@ -1,14 +1,10 @@
 set_primary_filtration:
-  name: Update primary filtration settings
-  description: Updates the primary filtration settings
   target:
     entity:
       integration: smarttub
       domain: sensor
   fields:
     duration:
-      name: Duration
-      description: The desired duration of the primary filtration cycle
       default: 8
       selector:
         number:
@@ -18,7 +14,6 @@ set_primary_filtration:
           mode: slider
       example: 8
     start_hour:
-      description: The hour of the day at which to begin the primary filtration cycle
       default: 0
       example: 2
       selector:
@@ -28,15 +23,12 @@ set_primary_filtration:
           unit_of_measurement: "hour"
 
 set_secondary_filtration:
-  name: Update secondary filtration settings
-  description: Updates the secondary filtration settings
   target:
     entity:
       integration: smarttub
       domain: sensor
   fields:
     mode:
-      description: The secondary filtration mode.
       selector:
         select:
           options:
@@ -47,16 +39,12 @@ set_secondary_filtration:
       example: "frequent"
 
 snooze_reminder:
-  name: Snooze a reminder
-  description: Delay a reminder, so that it won't trigger again for a period of time.
   target:
     entity:
       integration: smarttub
       domain: binary_sensor
   fields:
     days:
-      name: Days
-      description: The number of days to delay the reminder.
       required: true
       example: 7
       selector:
@@ -66,16 +54,12 @@ snooze_reminder:
           unit_of_measurement: days
 
 reset_reminder:
-  name: Reset a reminder
-  description: Reset a reminder, and set the next time it will be triggered.
   target:
     entity:
       integration: smarttub
       domain: binary_sensor
   fields:
     days:
-      name: Days
-      description: The number of days when the next reminder should trigger.
       required: true
       example: 180
       selector:

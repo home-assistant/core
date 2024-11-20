@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "Enter your permobil email"
+        }
+      },
+      "email_code": {
+        "description": "Enter the code that was sent to your email.",
+        "data": {
+          "code": "Email code"
+        }
+      },
+      "region": {
+        "description": "Select the region of your account.",
+        "data": {
+          "region": "Region"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "unknown": "Unexpected error, more information in the logs",
+      "region_fetch_error": "Error fetching regions",
+      "code_request_error": "Error requesting application code",
+      "invalid_email": "Invalid email",
+      "invalid_code": "The code you gave is incorrect",
+      "unsigned_eula": "Please sign the EULA in the {app_name} app"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "state_of_charge": {
+        "name": "Battery charge"
+      },
+      "state_of_health": {
+        "name": "Battery health"
+      },
+      "charge_time_left": {
+        "name": "Charge time left"
+      },
+      "distance_left": {
+        "name": "Distance left"
+      },
+      "indoor_drive_time": {
+        "name": "Indoor drive time"
+      },
+      "max_watt_hours": {
+        "name": "Battery max watt hours"
+      },
+      "watt_hours_left": {
+        "name": "Watt hours left"
+      },
+      "max_distance_left": {
+        "name": "Full charge distance"
+      },
+      "usage_distance": {
+        "name": "Distance traveled"
+      },
+      "usage_adjustments": {
+        "name": "Number of adjustments"
+      },
+      "record_adjustments": {
+        "name": "Record number of adjustments"
+      },
+      "record_distance": {
+        "name": "Record distance"
+      }
+    },
+    "binary_sensor": {
+      "is_charging": {
+        "name": "Is charging"
+      }
+    }
+  }
+}

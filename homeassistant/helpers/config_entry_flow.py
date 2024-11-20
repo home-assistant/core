@@ -1,20 +1,33 @@
 """Helpers for data entry flows for config entries."""
+
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant import config_entries
+from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
-DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
+from .typing import DiscoveryInfoType
+
+if TYPE_CHECKING:
+    import asyncio
+
+    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.ssdp import SsdpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
+    from .service_info.mqtt import MqttServiceInfo
+
+type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryFlowHandler(config_entries.ConfigFlow):
+class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow):
     """Handle a discovery config flow."""
 
     VERSION = 1
@@ -23,7 +36,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self,
         domain: str,
         title: str,
-        discovery_function: DiscoveryFunctionType,
+        discovery_function: DiscoveryFunctionType[_R],
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
@@ -32,7 +45,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -43,9 +56,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Confirm setup."""
-        if user_input is None:
+        if user_input is None and onboarding.async_is_onboarded(self.hass):
             self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
@@ -53,10 +66,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
-            has_devices = in_progress
-            if not has_devices:
-                has_devices = await self.hass.async_add_job(  # type: ignore
-                    self._discovery_function, self.hass
+            if not (has_devices := bool(in_progress)):
+                has_devices = await cast(
+                    "asyncio.Future[bool]", self._discovery_function(self.hass)
                 )
 
             if not has_devices:
@@ -73,7 +85,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -82,13 +94,75 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async_step_zeroconf = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_mqtt = async_step_discovery
-    async_step_homekit = async_step_discovery
-    async_step_dhcp = async_step_discovery
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by bluetooth discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by dhcp discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Homekit discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by mqtt discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Ssdp discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_import(
+        self, _: dict[str, Any] | None
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -104,26 +178,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 def register_discovery_flow(
     domain: str,
     title: str,
-    discovery_function: DiscoveryFunctionType,
-    connection_class: str | UndefinedType = UNDEFINED,
+    discovery_function: DiscoveryFunctionType[Awaitable[bool] | bool],
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
-    if connection_class is not UNDEFINED:
-        _LOGGER.warning(
-            (
-                "The %s (%s) integration is setting a connection_class"
-                " when calling the 'register_discovery_flow()' method in its"
-                " config flow. The connection class has been deprecated and will"
-                " be removed in a future release of Home Assistant."
-                " If '%s' is a custom integration, please contact the author"
-                " of that integration about this warning.",
-            ),
-            title,
-            domain,
-            domain,
-        )
 
-    class DiscoveryFlow(DiscoveryFlowHandler):
+    class DiscoveryFlow(DiscoveryFlowHandler[Awaitable[bool] | bool]):
         """Discovery flow handler."""
 
         def __init__(self) -> None:
@@ -152,7 +211,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -160,18 +219,33 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id = self.hass.components.webhook.async_generate_id()
+        # Local import to be sure cloud is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.cloud import (
+            async_active_subscription,
+            async_create_cloudhook,
+            async_is_connected,
+        )
 
-        if (
-            "cloud" in self.hass.config.components
-            and self.hass.components.cloud.async_active_subscription()
+        # Local import to be sure webhook is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.webhook import (
+            async_generate_id,
+            async_generate_url,
+        )
+
+        webhook_id = async_generate_id()
+
+        if "cloud" in self.hass.config.components and async_active_subscription(
+            self.hass
         ):
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+            if not async_is_connected(self.hass):
+                return self.async_abort(reason="cloud_not_connected")
+
+            webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
+            webhook_url = async_generate_url(self.hass, webhook_id)
             cloudhook = False
 
         self._description_placeholder["webhook_url"] = webhook_url
@@ -204,4 +278,8 @@ async def webhook_async_remove_entry(
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data["webhook_id"])
+    # Local import to be sure cloud is loaded and setup
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.cloud import async_delete_cloudhook
+
+    await async_delete_cloudhook(hass, entry.data["webhook_id"])

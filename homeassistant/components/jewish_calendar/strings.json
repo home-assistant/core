@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "sensor": {
+      "hebrew_date": {
+        "state_attributes": {
+          "hebrew_year": { "name": "Hebrew Year" },
+          "hebrew_month_name": { "name": "Hebrew Month Name" },
+          "hebrew_day": { "name": "Hebrew Day" }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "diaspora": "Outside of Israel?",
+          "language": "Language for Holidays and Dates",
+          "location": "[%key:common::config_flow::data::location%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "time_zone": "Time Zone"
+        },
+        "data_description": {
+          "time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Jewish Calendar",
+        "data": {
+          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+        },
+        "data_description": {
+          "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
+          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
+        }
+      }
+    }
+  }
+}

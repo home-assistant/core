@@ -1,166 +1,248 @@
-"""Reads vehicle status from BMW connected drive portal."""
-import logging
+"""Reads vehicle status from BMW MyBMW portal."""
 
-from bimmer_connected.state import ChargingState, LockState
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+import logging
+from typing import Any
+
+from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.doors_windows import LockState
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
+from bimmer_connected.vehicle.reports import ConditionBasedService
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import UnitSystem
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from . import BMWConfigEntry
+from .const import UNIT_MAP
+from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "lids": ["Doors", DEVICE_CLASS_OPENING, "mdi:car-door-lock"],
-    "windows": ["Windows", DEVICE_CLASS_OPENING, "mdi:car-door"],
-    "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
-    "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
-    "condition_based_services": [
-        "Condition based services",
-        DEVICE_CLASS_PROBLEM,
-        "mdi:wrench",
-    ],
-    "check_control_messages": [
-        "Control messages",
-        DEVICE_CLASS_PROBLEM,
-        "mdi:car-tire-alert",
-    ],
+
+ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
+    "BRAKE_FLUID",
+    "BRAKE_PADS_FRONT",
+    "BRAKE_PADS_REAR",
+    "EMISSION_CHECK",
+    "ENGINE_OIL",
+    "OIL",
+    "TIRE_WEAR_FRONT",
+    "TIRE_WEAR_REAR",
+    "VEHICLE_CHECK",
+    "VEHICLE_TUV",
 }
+LOGGED_CONDITION_BASED_SERVICE_WARNINGS: set[str] = set()
 
-SENSOR_TYPES_ELEC = {
-    "charging_status": ["Charging status", "power", "mdi:ev-station"],
-    "connection_status": ["Connection status", DEVICE_CLASS_PLUG, "mdi:car-electric"],
+ALLOWED_CHECK_CONTROL_MESSAGE_KEYS = {
+    "ENGINE_OIL",
+    "TIRE_PRESSURE",
+    "WASHING_FLUID",
 }
-
-SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
-    entities = []
-
-    for vehicle in account.account.vehicles:
-        if vehicle.has_hv_battery:
-            _LOGGER.debug("BMW with a high voltage battery")
-            for key, value in sorted(SENSOR_TYPES_ELEC.items()):
-                if key in vehicle.available_attributes:
-                    device = BMWConnectedDriveSensor(
-                        account, vehicle, key, value[0], value[1], value[2]
-                    )
-                    entities.append(device)
-        elif vehicle.has_internal_combustion_engine:
-            _LOGGER.debug("BMW with an internal combustion engine")
-            for key, value in sorted(SENSOR_TYPES.items()):
-                if key in vehicle.available_attributes:
-                    device = BMWConnectedDriveSensor(
-                        account, vehicle, key, value[0], value[1], value[2]
-                    )
-                    entities.append(device)
-    async_add_entities(entities, True)
+LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS: set[str] = set()
 
 
-class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
+def _condition_based_services(
+    vehicle: MyBMWVehicle, unit_system: UnitSystem
+) -> dict[str, Any]:
+    extra_attributes = {}
+    for report in vehicle.condition_based_services.messages:
+        if (
+            report.service_type not in ALLOWED_CONDITION_BASED_SERVICE_KEYS
+            and report.service_type not in LOGGED_CONDITION_BASED_SERVICE_WARNINGS
+        ):
+            _LOGGER.warning(
+                "'%s' not an allowed condition based service (%s)",
+                report.service_type,
+                report,
+            )
+            LOGGED_CONDITION_BASED_SERVICE_WARNINGS.add(report.service_type)
+            continue
+
+        extra_attributes.update(_format_cbs_report(report, unit_system))
+    return extra_attributes
+
+
+def _check_control_messages(vehicle: MyBMWVehicle) -> dict[str, Any]:
+    extra_attributes: dict[str, Any] = {}
+    for message in vehicle.check_control_messages.messages:
+        if (
+            message.description_short not in ALLOWED_CHECK_CONTROL_MESSAGE_KEYS
+            and message.description_short not in LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS
+        ):
+            _LOGGER.warning(
+                "'%s' not an allowed check control message (%s)",
+                message.description_short,
+                message,
+            )
+            LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS.add(message.description_short)
+            continue
+
+        extra_attributes[message.description_short.lower()] = message.state.value
+    return extra_attributes
+
+
+def _format_cbs_report(
+    report: ConditionBasedService, unit_system: UnitSystem
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    service_type = report.service_type.lower()
+    result[service_type] = report.state.value
+    if report.due_date is not None:
+        result[f"{service_type}_date"] = report.due_date.strftime("%Y-%m-%d")
+    if report.due_distance.value and report.due_distance.unit:
+        distance = round(
+            unit_system.length(
+                report.due_distance.value,
+                UNIT_MAP.get(report.due_distance.unit, report.due_distance.unit),
+            )
+        )
+        result[f"{service_type}_distance"] = f"{distance} {unit_system.length_unit}"
+    return result
+
+
+@dataclass(frozen=True, kw_only=True)
+class BMWBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes BMW binary_sensor entity."""
+
+    value_fn: Callable[[MyBMWVehicle], bool]
+    attr_fn: Callable[[MyBMWVehicle, UnitSystem], dict[str, Any]] | None = None
+    is_available: Callable[[MyBMWVehicle], bool] = lambda v: v.is_lsc_enabled
+
+
+SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
+    BMWBinarySensorEntityDescription(
+        key="lids",
+        translation_key="lids",
+        device_class=BinarySensorDeviceClass.OPENING,
+        # device class opening: On means open, Off means closed
+        value_fn=lambda v: not v.doors_and_windows.all_lids_closed,
+        attr_fn=lambda v, u: {
+            lid.name: lid.state.value for lid in v.doors_and_windows.lids
+        },
+    ),
+    BMWBinarySensorEntityDescription(
+        key="windows",
+        translation_key="windows",
+        device_class=BinarySensorDeviceClass.OPENING,
+        # device class opening: On means open, Off means closed
+        value_fn=lambda v: not v.doors_and_windows.all_windows_closed,
+        attr_fn=lambda v, u: {
+            window.name: window.state.value for window in v.doors_and_windows.windows
+        },
+    ),
+    BMWBinarySensorEntityDescription(
+        key="door_lock_state",
+        translation_key="door_lock_state",
+        device_class=BinarySensorDeviceClass.LOCK,
+        # device class lock: On means unlocked, Off means locked
+        # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
+        value_fn=lambda v: v.doors_and_windows.door_lock_state
+        not in {LockState.LOCKED, LockState.SECURED},
+        attr_fn=lambda v, u: {
+            "door_lock_state": v.doors_and_windows.door_lock_state.value
+        },
+    ),
+    BMWBinarySensorEntityDescription(
+        key="condition_based_services",
+        translation_key="condition_based_services",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        # device class problem: On means problem detected, Off means no problem
+        value_fn=lambda v: v.condition_based_services.is_service_required,
+        attr_fn=_condition_based_services,
+    ),
+    BMWBinarySensorEntityDescription(
+        key="check_control_messages",
+        translation_key="check_control_messages",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        # device class problem: On means problem detected, Off means no problem
+        value_fn=lambda v: v.check_control_messages.has_check_control_messages,
+        attr_fn=lambda v, u: _check_control_messages(v),
+    ),
+    # electric
+    BMWBinarySensorEntityDescription(
+        key="charging_status",
+        translation_key="charging_status",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        # device class power: On means power detected, Off means no power
+        value_fn=lambda v: v.fuel_and_battery.charging_status == ChargingState.CHARGING,
+        is_available=lambda v: v.has_electric_drivetrain,
+    ),
+    BMWBinarySensorEntityDescription(
+        key="connection_status",
+        translation_key="connection_status",
+        device_class=BinarySensorDeviceClass.PLUG,
+        value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
+        is_available=lambda v: v.has_electric_drivetrain,
+    ),
+    BMWBinarySensorEntityDescription(
+        key="is_pre_entry_climatization_enabled",
+        translation_key="is_pre_entry_climatization_enabled",
+        value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
+        if v.charging_profile
+        else False,
+        is_available=lambda v: v.has_electric_drivetrain,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: BMWConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the BMW binary sensors from config entry."""
+    coordinator = config_entry.runtime_data.coordinator
+
+    entities = [
+        BMWBinarySensor(coordinator, vehicle, description, hass.config.units)
+        for vehicle in coordinator.account.vehicles
+        for description in SENSOR_TYPES
+        if description.is_available(vehicle)
+    ]
+    async_add_entities(entities)
+
+
+class BMWBinarySensor(BMWBaseEntity, BinarySensorEntity):
     """Representation of a BMW vehicle binary sensor."""
 
+    entity_description: BMWBinarySensorEntityDescription
+
     def __init__(
-        self, account, vehicle, attribute: str, sensor_name, device_class, icon
-    ):
+        self,
+        coordinator: BMWDataUpdateCoordinator,
+        vehicle: MyBMWVehicle,
+        description: BMWBinarySensorEntityDescription,
+        unit_system: UnitSystem,
+    ) -> None:
         """Initialize sensor."""
-        super().__init__(account, vehicle)
+        super().__init__(coordinator, vehicle)
+        self.entity_description = description
+        self._unit_system = unit_system
+        self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-        self._attribute = attribute
-        self._attr_name = f"{vehicle.name} {attribute}"
-        self._attr_unique_id = f"{vehicle.vin}-{attribute}"
-        self._sensor_name = sensor_name
-        self._attr_device_class = device_class
-        self._attr_icon = icon
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(
+            "Updating binary sensor '%s' of %s",
+            self.entity_description.key,
+            self.vehicle.name,
+        )
+        self._attr_is_on = self.entity_description.value_fn(self.vehicle)
 
-    def update(self):
-        """Read new state data from the library."""
-        vehicle_state = self._vehicle.state
-
-        # device class opening: On means open, Off means closed
-        if self._attribute == "lids":
-            _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
-            self._attr_state = not vehicle_state.all_lids_closed
-        if self._attribute == "windows":
-            self._attr_state = not vehicle_state.all_windows_closed
-        # device class lock: On means unlocked, Off means locked
-        if self._attribute == "door_lock_state":
-            # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
-            self._attr_state = vehicle_state.door_lock_state not in [
-                LockState.LOCKED,
-                LockState.SECURED,
-            ]
-        # device class light: On means light detected, Off means no light
-        if self._attribute == "lights_parking":
-            self._attr_state = vehicle_state.are_parking_lights_on
-        # device class problem: On means problem detected, Off means no problem
-        if self._attribute == "condition_based_services":
-            self._attr_state = not vehicle_state.are_all_cbs_ok
-        if self._attribute == "check_control_messages":
-            self._attr_state = vehicle_state.has_check_control_messages
-        # device class power: On means power detected, Off means no power
-        if self._attribute == "charging_status":
-            self._attr_state = vehicle_state.charging_status in [ChargingState.CHARGING]
-        # device class plug: On means device is plugged in,
-        #                    Off means device is unplugged
-        if self._attribute == "connection_status":
-            self._attr_state = vehicle_state.connection_status == "CONNECTED"
-
-        vehicle_state = self._vehicle.state
-        result = self._attrs.copy()
-
-        if self._attribute == "lids":
-            for lid in vehicle_state.lids:
-                result[lid.name] = lid.state.value
-        elif self._attribute == "windows":
-            for window in vehicle_state.windows:
-                result[window.name] = window.state.value
-        elif self._attribute == "door_lock_state":
-            result["door_lock_state"] = vehicle_state.door_lock_state.value
-            result["last_update_reason"] = vehicle_state.last_update_reason
-        elif self._attribute == "lights_parking":
-            result["lights_parking"] = vehicle_state.parking_lights.value
-        elif self._attribute == "condition_based_services":
-            for report in vehicle_state.condition_based_services:
-                result.update(self._format_cbs_report(report))
-        elif self._attribute == "check_control_messages":
-            check_control_messages = vehicle_state.check_control_messages
-            has_check_control_messages = vehicle_state.has_check_control_messages
-            if has_check_control_messages:
-                cbs_list = []
-                for message in check_control_messages:
-                    cbs_list.append(message["ccmDescriptionShort"])
-                result["check_control_messages"] = cbs_list
-            else:
-                result["check_control_messages"] = "OK"
-        elif self._attribute == "charging_status":
-            result["charging_status"] = vehicle_state.charging_status.value
-            result["last_charging_end_result"] = vehicle_state.last_charging_end_result
-        elif self._attribute == "connection_status":
-            result["connection_status"] = vehicle_state.connection_status
-
-        self._attr_extra_state_attributes = sorted(result.items())
-
-    def _format_cbs_report(self, report):
-        result = {}
-        service_type = report.service_type.lower().replace("_", " ")
-        result[f"{service_type} status"] = report.state.value
-        if report.due_date is not None:
-            result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
-        if report.due_distance is not None:
-            distance = round(
-                self.hass.config.units.length(report.due_distance, LENGTH_KILOMETERS)
+        if self.entity_description.attr_fn:
+            self._attr_extra_state_attributes = self.entity_description.attr_fn(
+                self.vehicle, self._unit_system
             )
-            result[
-                f"{service_type} distance"
-            ] = f"{distance} {self.hass.config.units.length_unit}"
-        return result
+
+        super()._handle_coordinator_update()

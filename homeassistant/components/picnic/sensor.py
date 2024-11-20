@@ -1,115 +1,251 @@
 """Definition of Picnic sensors."""
+
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Literal, cast
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CURRENCY_EURO
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .const import ADDRESS, ATTRIBUTION, CONF_COORDINATOR, DOMAIN, SENSOR_TYPES
+from .const import (
+    ATTRIBUTION,
+    CONF_COORDINATOR,
+    DOMAIN,
+    SENSOR_CART_ITEMS_COUNT,
+    SENSOR_CART_TOTAL_PRICE,
+    SENSOR_LAST_ORDER_DELIVERY_TIME,
+    SENSOR_LAST_ORDER_MAX_ORDER_TIME,
+    SENSOR_LAST_ORDER_SLOT_END,
+    SENSOR_LAST_ORDER_SLOT_START,
+    SENSOR_LAST_ORDER_STATUS,
+    SENSOR_LAST_ORDER_TOTAL_PRICE,
+    SENSOR_NEXT_DELIVERY_ETA_END,
+    SENSOR_NEXT_DELIVERY_ETA_START,
+    SENSOR_NEXT_DELIVERY_SLOT_END,
+    SENSOR_NEXT_DELIVERY_SLOT_START,
+    SENSOR_SELECTED_SLOT_END,
+    SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
+    SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
+    SENSOR_SELECTED_SLOT_START,
+)
+from .coordinator import PicnicUpdateCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class PicnicSensorEntityDescription(SensorEntityDescription):
+    """Describes Picnic sensor entity."""
+
+    data_type: Literal[
+        "cart_data", "slot_data", "next_delivery_data", "last_order_data"
+    ]
+    value_fn: Callable[[Any], StateType | datetime]
+
+    entity_registry_enabled_default: bool = False
+
+
+SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
+    PicnicSensorEntityDescription(
+        key=SENSOR_CART_ITEMS_COUNT,
+        translation_key=SENSOR_CART_ITEMS_COUNT,
+        data_type="cart_data",
+        value_fn=lambda cart: cart.get("total_count", 0),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_CART_TOTAL_PRICE,
+        translation_key=SENSOR_CART_TOTAL_PRICE,
+        native_unit_of_measurement=CURRENCY_EURO,
+        entity_registry_enabled_default=True,
+        data_type="cart_data",
+        value_fn=lambda cart: cart.get("total_price", 0) / 100,
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_SELECTED_SLOT_START,
+        translation_key=SENSOR_SELECTED_SLOT_START,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="slot_data",
+        value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_start"))),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_SELECTED_SLOT_END,
+        translation_key=SENSOR_SELECTED_SLOT_END,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="slot_data",
+        value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_end"))),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
+        translation_key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="slot_data",
+        value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("cut_off_time"))),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
+        translation_key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
+        native_unit_of_measurement=CURRENCY_EURO,
+        entity_registry_enabled_default=True,
+        data_type="slot_data",
+        value_fn=lambda slot: (
+            slot["minimum_order_value"] / 100
+            if slot.get("minimum_order_value")
+            else None
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_SLOT_START,
+        translation_key=SENSOR_LAST_ORDER_SLOT_START,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="last_order_data",
+        value_fn=lambda last_order: dt_util.parse_datetime(
+            str(last_order.get("slot", {}).get("window_start"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_SLOT_END,
+        translation_key=SENSOR_LAST_ORDER_SLOT_END,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="last_order_data",
+        value_fn=lambda last_order: dt_util.parse_datetime(
+            str(last_order.get("slot", {}).get("window_end"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_STATUS,
+        translation_key=SENSOR_LAST_ORDER_STATUS,
+        data_type="last_order_data",
+        value_fn=lambda last_order: last_order.get("status"),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
+        translation_key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="last_order_data",
+        value_fn=lambda last_order: dt_util.parse_datetime(
+            str(last_order.get("slot", {}).get("cut_off_time"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_DELIVERY_TIME,
+        translation_key=SENSOR_LAST_ORDER_DELIVERY_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="last_order_data",
+        value_fn=lambda last_order: dt_util.parse_datetime(
+            str(last_order.get("delivery_time", {}).get("start"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_TOTAL_PRICE,
+        translation_key=SENSOR_LAST_ORDER_TOTAL_PRICE,
+        native_unit_of_measurement=CURRENCY_EURO,
+        data_type="last_order_data",
+        value_fn=lambda last_order: last_order.get("total_price", 0) / 100,
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_ETA_START,
+        translation_key=SENSOR_NEXT_DELIVERY_ETA_START,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: dt_util.parse_datetime(
+            str(next_delivery.get("eta", {}).get("start"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_ETA_END,
+        translation_key=SENSOR_NEXT_DELIVERY_ETA_END,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=True,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: dt_util.parse_datetime(
+            str(next_delivery.get("eta", {}).get("end"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_SLOT_START,
+        translation_key=SENSOR_NEXT_DELIVERY_SLOT_START,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: dt_util.parse_datetime(
+            str(next_delivery.get("slot", {}).get("window_start"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_SLOT_END,
+        translation_key=SENSOR_NEXT_DELIVERY_SLOT_END,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: dt_util.parse_datetime(
+            str(next_delivery.get("slot", {}).get("window_end"))
+        ),
+    ),
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Picnic sensor entries."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
     # Add an entity for each sensor type
     async_add_entities(
-        PicnicSensor(picnic_coordinator, config_entry, sensor_type, props)
-        for sensor_type, props in SENSOR_TYPES.items()
+        PicnicSensor(picnic_coordinator, config_entry, description)
+        for description in SENSOR_TYPES
     )
 
-    return True
 
-
-class PicnicSensor(SensorEntity, CoordinatorEntity):
+class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """The CoordinatorEntity subclass representing Picnic sensors."""
+
+    _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
+    entity_description: PicnicSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: PicnicUpdateCoordinator,
         config_entry: ConfigEntry,
-        sensor_type,
-        properties,
-    ):
+        description: PicnicSensorEntityDescription,
+    ) -> None:
         """Init a Picnic sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
 
-        self.sensor_type = sensor_type
-        self.properties = properties
-        self.entity_id = f"sensor.picnic_{sensor_type}"
-        self._service_unique_id = config_entry.unique_id
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return self.properties.get("unit")
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self._service_unique_id}.{self.sensor_type}"
+        self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, cast(str, config_entry.unique_id))},
+            manufacturer="Picnic",
+            model=config_entry.unique_id,
+        )
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._to_capitalized_name(self.sensor_type)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
         data_set = (
-            self.coordinator.data.get(self.properties["data_type"], {})
+            self.coordinator.data.get(self.entity_description.data_type, {})
             if self.coordinator.data is not None
             else {}
         )
-        return self.properties["state"](data_set)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.properties.get("class")
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        return self.properties["icon"]
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self.state is not None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.properties.get("default_enabled", False)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the sensor specific state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._service_unique_id)},
-            "manufacturer": "Picnic",
-            "model": self._service_unique_id,
-            "name": f"Picnic: {self.coordinator.data[ADDRESS]}",
-            "entry_type": "service",
-        }
-
-    @staticmethod
-    def _to_capitalized_name(name: str) -> str:
-        return name.replace("_", " ").capitalize()
+        return self.entity_description.value_fn(data_set)

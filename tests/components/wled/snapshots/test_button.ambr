@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_button_restart
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'WLED RGB Light Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.wled_rgb_light_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_restart.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.wled_rgb_light_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_restart.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
+  })
+# ---

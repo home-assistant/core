@@ -1,11 +1,11 @@
 """Support for Arduino-compatible Microcontrollers through Firmata."""
-import asyncio
+
 from copy import copy
 import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_LIGHTS,
@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .board import FirmataBoard
 from .const import (
@@ -122,7 +123,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Firmata domain."""
     # Delete specific entries that no longer exist in the config
     if hass.config_entries.async_entries(DOMAIN):
@@ -149,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
+                    context={"source": SOURCE_IMPORT},
                     data=firmata_config,
                 )
             )
@@ -157,9 +158,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a Firmata board for a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -188,39 +187,39 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
     )
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={},
+        connections=set(),
         identifiers={(DOMAIN, board.name)},
         manufacturer=FIRMATA_MANUFACTURER,
         name=board.name,
         sw_version=board.firmware_version,
     )
 
-    for (conf, platform) in CONF_PLATFORM_MAP.items():
-        if conf in config_entry.data:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
-            )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry,
+        [
+            platform
+            for conf, platform in CONF_PLATFORM_MAP.items()
+            if conf in config_entry.data
+        ],
+    )
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> None:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Shutdown and close a Firmata board for a config entry."""
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
-
-    unload_entries = []
-    for (conf, platform) in CONF_PLATFORM_MAP.items():
-        if conf in config_entry.data:
-            unload_entries.append(
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            )
-    results = []
-    if unload_entries:
-        results = await asyncio.gather(*unload_entries)
+    results: list[bool] = []
+    if platforms := [
+        platform
+        for conf, platform in CONF_PLATFORM_MAP.items()
+        if conf in config_entry.data
+    ]:
+        results.append(
+            await hass.config_entries.async_unload_platforms(config_entry, platforms)
+        )
     results.append(await hass.data[DOMAIN].pop(config_entry.entry_id).async_reset())
 
     return False not in results

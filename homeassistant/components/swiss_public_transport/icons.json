@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "sensor": {
+      "departure0": {
+        "default": "mdi:bus-clock"
+      },
+      "departure1": {
+        "default": "mdi:bus-clock"
+      },
+      "departure2": {
+        "default": "mdi:bus-clock"
+      },
+      "duration": {
+        "default": "mdi:timeline-clock"
+      },
+      "transfers": {
+        "default": "mdi:transit-transfer"
+      },
+      "platform": {
+        "default": "mdi:bus-stop-uncovered"
+      },
+      "delay": {
+        "default": "mdi:clock-plus"
+      },
+      "line": {
+        "default": "mdi:transit-connection-variant"
+      }
+    }
+  },
+  "services": {
+    "fetch_connections": {
+      "service": "mdi:bus-clock"
+    }
+  }
+}

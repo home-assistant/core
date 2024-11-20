@@ -1,51 +1,58 @@
 """Support for KNX/IP binary sensors."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from xknx import XKNX
 from xknx.devices import BinarySensor as XknxBinarySensor
 
+from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_COUNTER, ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
-from .knx_entity import KnxEntity
+from . import KNXModule
+from .const import ATTR_COUNTER, ATTR_SOURCE, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import BinarySensorSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up binary sensor(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    """Set up the KNX binary sensor platform."""
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.BINARY_SENSOR]
 
     async_add_entities(
-        KNXBinarySensor(xknx, entity_config) for entity_config in platform_config
+        KNXBinarySensor(knx_module, entity_config) for entity_config in config
     )
 
 
-class KNXBinarySensor(KnxEntity, BinarySensorEntity):
+class KNXBinarySensor(KnxYamlEntity, BinarySensorEntity, RestoreEntity):
     """Representation of a KNX binary sensor."""
 
     _device: XknxBinarySensor
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
         super().__init__(
+            knx_module=knx_module,
             device=XknxBinarySensor(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
                 invert=config[BinarySensorSchema.CONF_INVERT],
@@ -55,11 +62,20 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 ],
                 context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
-            )
+            ),
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
         self._attr_unique_id = str(self._device.remote_value.group_address_state)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            last_state := await self.async_get_last_state()
+        ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            self._device.remote_value.update_value(last_state.state == STATE_ON)
 
     @property
     def is_on(self) -> bool:
@@ -75,7 +91,4 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
             attr[ATTR_COUNTER] = self._device.counter
         if self._device.last_telegram is not None:
             attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
-            attr[ATTR_LAST_KNX_UPDATE] = str(
-                dt.as_utc(self._device.last_telegram.timestamp)
-            )
         return attr

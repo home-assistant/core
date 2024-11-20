@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.water_monitor_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.water_monitor_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Away mode',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'away_mode',
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.water_monitor_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Monitor Away mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.water_monitor_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

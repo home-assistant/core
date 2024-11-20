@@ -1,7 +1,7 @@
 {
   "domain": "fail2ban",
   "name": "Fail2Ban",
-  "documentation": "https://www.home-assistant.io/integrations/fail2ban",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/fail2ban",
   "iot_class": "local_polling"
 }

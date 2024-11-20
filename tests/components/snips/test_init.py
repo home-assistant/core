@@ -1,19 +1,21 @@
 """Test the Snips component."""
+
 import json
 import logging
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
-import homeassistant.components.snips as snips
+from homeassistant.components import snips
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import ServiceIntentHandler, async_register
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_intent, async_mock_service
+from tests.typing import MqttMockHAClient
 
 
-async def test_snips_config(hass, mqtt_mock):
+async def test_snips_config(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test Snips Config."""
     result = await async_setup_component(
         hass,
@@ -29,7 +31,28 @@ async def test_snips_config(hass, mqtt_mock):
     assert result
 
 
-async def test_snips_bad_config(hass, mqtt_mock):
+async def test_snips_no_mqtt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Snips Config."""
+    result = await async_setup_component(
+        hass,
+        "snips",
+        {
+            "snips": {
+                "feedback_sounds": True,
+                "probability_threshold": 0.5,
+                "site_ids": ["default", "remote"],
+            }
+        },
+    )
+    assert not result
+    assert "MQTT integration is not available" in caplog.text
+
+
+async def test_snips_bad_config(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test Snips bad config."""
     result = await async_setup_component(
         hass,
@@ -45,43 +68,47 @@ async def test_snips_bad_config(hass, mqtt_mock):
     assert not result
 
 
-async def test_snips_config_feedback_on(hass, mqtt_mock):
+async def test_snips_config_feedback_on(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test Snips Config."""
-    calls = async_mock_service(hass, "mqtt", "publish", MQTT_PUBLISH_SCHEMA)
     result = await async_setup_component(
         hass, "snips", {"snips": {"feedback_sounds": True}}
     )
     assert result
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    topic = calls[0].data["topic"]
+    assert mqtt_mock.async_publish.call_count == 2
+    topic = mqtt_mock.async_publish.call_args_list[0][0][0]
     assert topic == "hermes/feedback/sound/toggleOn"
-    topic = calls[1].data["topic"]
+    topic = mqtt_mock.async_publish.call_args_list[1][0][0]
     assert topic == "hermes/feedback/sound/toggleOn"
-    assert calls[1].data["qos"] == 1
-    assert calls[1].data["retain"]
+    assert mqtt_mock.async_publish.call_args_list[1][0][2] == 1
+    assert mqtt_mock.async_publish.call_args_list[1][0][3]
 
 
-async def test_snips_config_feedback_off(hass, mqtt_mock):
+async def test_snips_config_feedback_off(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test Snips Config."""
-    calls = async_mock_service(hass, "mqtt", "publish", MQTT_PUBLISH_SCHEMA)
     result = await async_setup_component(
         hass, "snips", {"snips": {"feedback_sounds": False}}
     )
     assert result
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    topic = calls[0].data["topic"]
+    assert mqtt_mock.async_publish.call_count == 2
+    topic = mqtt_mock.async_publish.call_args_list[0][0][0]
     assert topic == "hermes/feedback/sound/toggleOn"
-    topic = calls[1].data["topic"]
+    topic = mqtt_mock.async_publish.call_args_list[1][0][0]
     assert topic == "hermes/feedback/sound/toggleOff"
-    assert calls[1].data["qos"] == 0
-    assert not calls[1].data["retain"]
+    assert mqtt_mock.async_publish.call_args_list[1][0][2] == 0
+    assert not mqtt_mock.async_publish.call_args_list[1][0][3]
 
 
-async def test_snips_config_no_feedback(hass, mqtt_mock):
+async def test_snips_config_no_feedback(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test Snips Config."""
     calls = async_mock_service(hass, "snips", "say")
     result = await async_setup_component(hass, "snips", {"snips": {}})
@@ -90,7 +117,7 @@ async def test_snips_config_no_feedback(hass, mqtt_mock):
     assert len(calls) == 0
 
 
-async def test_snips_intent(hass, mqtt_mock):
+async def test_snips_intent(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test intent via Snips."""
     result = await async_setup_component(hass, "snips", {"snips": {}})
     assert result
@@ -135,7 +162,9 @@ async def test_snips_intent(hass, mqtt_mock):
     assert intent.text_input == "turn the lights green"
 
 
-async def test_snips_service_intent(hass, mqtt_mock):
+async def test_snips_service_intent(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test ServiceIntentHandler via Snips."""
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, "light", "turn_on")
@@ -177,7 +206,9 @@ async def test_snips_service_intent(hass, mqtt_mock):
     assert "site_id" not in calls[0].data
 
 
-async def test_snips_intent_with_duration(hass, mqtt_mock):
+async def test_snips_intent_with_duration(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intent with Snips duration."""
     result = await async_setup_component(hass, "snips", {"snips": {}})
     assert result
@@ -230,9 +261,10 @@ async def test_snips_intent_with_duration(hass, mqtt_mock):
     }
 
 
-async def test_intent_speech_response(hass, mqtt_mock):
+async def test_intent_speech_response(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intent speech response via Snips."""
-    calls = async_mock_service(hass, "mqtt", "publish", MQTT_PUBLISH_SCHEMA)
     result = await async_setup_component(hass, "snips", {"snips": {}})
     assert result
     result = await async_setup_component(
@@ -261,15 +293,17 @@ async def test_intent_speech_response(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "hermes/intent/spokenIntent", payload)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    payload = json.loads(calls[0].data["payload"])
-    topic = calls[0].data["topic"]
+    assert mqtt_mock.async_publish.call_count == 1
+    payload = json.loads(mqtt_mock.async_publish.call_args[0][1])
+    topic = mqtt_mock.async_publish.call_args[0][0]
     assert payload["sessionId"] == "abcdef0123456789"
     assert payload["text"] == "I am speaking to you"
     assert topic == "hermes/dialogueManager/endSession"
 
 
-async def test_unknown_intent(hass, caplog, mqtt_mock):
+async def test_unknown_intent(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test unknown intent."""
     caplog.set_level(logging.WARNING)
     result = await async_setup_component(hass, "snips", {"snips": {}})
@@ -290,7 +324,9 @@ async def test_unknown_intent(hass, caplog, mqtt_mock):
     assert "Received unknown intent unknownIntent" in caplog.text
 
 
-async def test_snips_intent_user(hass, mqtt_mock):
+async def test_snips_intent_user(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intentName format user_XXX__intentName."""
     result = await async_setup_component(hass, "snips", {"snips": {}})
     assert result
@@ -314,7 +350,9 @@ async def test_snips_intent_user(hass, mqtt_mock):
     assert intent.intent_type == "Lights"
 
 
-async def test_snips_intent_username(hass, mqtt_mock):
+async def test_snips_intent_username(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intentName format username:intentName."""
     result = await async_setup_component(hass, "snips", {"snips": {}})
     assert result
@@ -338,7 +376,9 @@ async def test_snips_intent_username(hass, mqtt_mock):
     assert intent.intent_type == "Lights"
 
 
-async def test_snips_low_probability(hass, caplog, mqtt_mock):
+async def test_snips_low_probability(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intent via Snips."""
     caplog.set_level(logging.WARNING)
     result = await async_setup_component(
@@ -362,7 +402,9 @@ async def test_snips_low_probability(hass, caplog, mqtt_mock):
     assert "Intent below probaility threshold 0.49 < 0.5" in caplog.text
 
 
-async def test_intent_special_slots(hass, mqtt_mock):
+async def test_intent_special_slots(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test intent special slot values via Snips."""
     calls = async_mock_service(hass, "light", "turn_on")
     result = await async_setup_component(hass, "snips", {"snips": {}})
@@ -406,7 +448,7 @@ async def test_intent_special_slots(hass, mqtt_mock):
     assert calls[0].data["site_id"] == "default"
 
 
-async def test_snips_say(hass):
+async def test_snips_say(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(hass, "snips", "say", snips.SERVICE_SCHEMA_SAY)
     data = {"text": "Hello"}
@@ -419,7 +461,7 @@ async def test_snips_say(hass):
     assert calls[0].data["text"] == "Hello"
 
 
-async def test_snips_say_action(hass):
+async def test_snips_say_action(hass: HomeAssistant) -> None:
     """Test snips say_action with invalid config."""
     calls = async_mock_service(
         hass, "snips", "say_action", snips.SERVICE_SCHEMA_SAY_ACTION
@@ -436,7 +478,7 @@ async def test_snips_say_action(hass):
     assert calls[0].data["intent_filter"] == ["myIntent"]
 
 
-async def test_snips_say_invalid_config(hass):
+async def test_snips_say_invalid_config(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(hass, "snips", "say", snips.SERVICE_SCHEMA_SAY)
 
@@ -448,7 +490,7 @@ async def test_snips_say_invalid_config(hass):
     assert len(calls) == 0
 
 
-async def test_snips_say_action_invalid(hass):
+async def test_snips_say_action_invalid(hass: HomeAssistant) -> None:
     """Test snips say_action with invalid config."""
     calls = async_mock_service(
         hass, "snips", "say_action", snips.SERVICE_SCHEMA_SAY_ACTION
@@ -463,7 +505,7 @@ async def test_snips_say_action_invalid(hass):
     assert len(calls) == 0
 
 
-async def test_snips_feedback_on(hass):
+async def test_snips_feedback_on(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_on", snips.SERVICE_SCHEMA_FEEDBACK
@@ -479,7 +521,7 @@ async def test_snips_feedback_on(hass):
     assert calls[0].data["site_id"] == "remote"
 
 
-async def test_snips_feedback_off(hass):
+async def test_snips_feedback_off(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_off", snips.SERVICE_SCHEMA_FEEDBACK
@@ -495,7 +537,7 @@ async def test_snips_feedback_off(hass):
     assert calls[0].data["site_id"] == "remote"
 
 
-async def test_snips_feedback_config(hass):
+async def test_snips_feedback_config(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_on", snips.SERVICE_SCHEMA_FEEDBACK

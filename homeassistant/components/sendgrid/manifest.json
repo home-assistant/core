@@ -1,8 +1,9 @@
 {
   "domain": "sendgrid",
   "name": "SendGrid",
-  "documentation": "https://www.home-assistant.io/integrations/sendgrid",
-  "requirements": ["sendgrid==6.7.0"],
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "documentation": "https://www.home-assistant.io/integrations/sendgrid",
+  "iot_class": "cloud_push",
+  "loggers": ["sendgrid"],
+  "requirements": ["sendgrid==6.8.2"]
 }

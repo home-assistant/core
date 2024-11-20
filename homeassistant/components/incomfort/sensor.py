@@ -1,102 +1,103 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
+from incomfortclient import Heater as InComfortHeater
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.util import slugify
+from homeassistant.const import UnitOfPressure, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import DOMAIN, IncomfortChild
-
-INCOMFORT_HEATER_TEMP = "CV Temp"
-INCOMFORT_PRESSURE = "CV Pressure"
-INCOMFORT_TAP_TEMP = "Tap Temp"
-
-INCOMFORT_MAP_ATTRS = {
-    INCOMFORT_HEATER_TEMP: ["heater_temp", "is_pumping"],
-    INCOMFORT_PRESSURE: ["pressure", None],
-    INCOMFORT_TAP_TEMP: ["tap_temp", "is_tapping"],
-}
+from . import InComfortConfigEntry
+from .coordinator import InComfortDataCoordinator
+from .entity import IncomfortBoilerEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an InComfort/InTouch sensor device."""
-    if discovery_info is None:
-        return
+@dataclass(frozen=True, kw_only=True)
+class IncomfortSensorEntityDescription(SensorEntityDescription):
+    """Describes Incomfort sensor entity."""
 
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
+    value_key: str
+    extra_key: str | None = None
 
+
+SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
+    IncomfortSensorEntityDescription(
+        key="cv_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        value_key="pressure",
+    ),
+    IncomfortSensorEntityDescription(
+        key="cv_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        extra_key="is_pumping",
+        value_key="heater_temp",
+    ),
+    IncomfortSensorEntityDescription(
+        key="tap_temp",
+        translation_key="tap_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        extra_key="is_tapping",
+        value_key="tap_temp",
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: InComfortConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up InComfort/InTouch sensor entities."""
+    incomfort_coordinator = entry.runtime_data
+    heaters = incomfort_coordinator.data.heaters
     async_add_entities(
-        [IncomfortPressure(client, h, INCOMFORT_PRESSURE) for h in heaters]
-        + [IncomfortTemperature(client, h, INCOMFORT_HEATER_TEMP) for h in heaters]
-        + [IncomfortTemperature(client, h, INCOMFORT_TAP_TEMP) for h in heaters]
+        IncomfortSensor(incomfort_coordinator, heater, description)
+        for heater in heaters
+        for description in SENSOR_TYPES
     )
 
 
-class IncomfortSensor(IncomfortChild, SensorEntity):
+class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
-    def __init__(self, client, heater, name) -> None:
+    entity_description: IncomfortSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: InComfortDataCoordinator,
+        heater: InComfortHeater,
+        description: IncomfortSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__()
-
-        self._client = client
-        self._heater = heater
-
-        self._unique_id = f"{heater.serial_no}_{slugify(name)}"
-        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{slugify(name)}"
-        self._name = f"Boiler {name}"
-
-        self._device_class = None
-        self._state_attr = INCOMFORT_MAP_ATTRS[name][0]
-        self._unit_of_measurement = None
+        super().__init__(coordinator, heater)
+        self.entity_description = description
+        self._attr_unique_id = f"{heater.serial_no}_{description.key}"
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._heater.status[self._state_attr]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
-
-
-class IncomfortPressure(IncomfortSensor):
-    """Representation of an InTouch CV Pressure sensor."""
-
-    def __init__(self, client, heater, name) -> None:
-        """Initialize the sensor."""
-        super().__init__(client, heater, name)
-
-        self._device_class = DEVICE_CLASS_PRESSURE
-        self._unit_of_measurement = PRESSURE_BAR
-
-
-class IncomfortTemperature(IncomfortSensor):
-    """Representation of an InTouch Temperature sensor."""
-
-    def __init__(self, client, heater, name) -> None:
-        """Initialize the signal strength sensor."""
-        super().__init__(client, heater, name)
-
-        self._attr = INCOMFORT_MAP_ATTRS[name][1]
-        self._device_class = DEVICE_CLASS_TEMPERATURE
-        self._unit_of_measurement = TEMP_CELSIUS
+        return self._heater.status[self.entity_description.value_key]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        return {self._attr: self._heater.status[self._attr]}
+        if (extra_key := self.entity_description.extra_key) is None:
+            return None
+        return {extra_key: self._heater.status[extra_key]}

@@ -1,4 +1,5 @@
 """The tests for the uk_transport platform."""
+
 import re
 from unittest.mock import patch
 
@@ -16,6 +17,7 @@ from homeassistant.components.uk_transport.sensor import (
     CONF_API_APP_KEY,
     UkTransportSensor,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
@@ -43,11 +45,11 @@ VALID_CONFIG = {
 }
 
 
-async def test_bus(hass):
+async def test_bus(hass: HomeAssistant) -> None:
     """Test for operational uk_transport sensor with proper attributes."""
     with requests_mock.Mocker() as mock_req:
         uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + "*")
-        mock_req.get(uri, text=load_fixture("uk_transport_bus.json"))
+        mock_req.get(uri, text=load_fixture("uk_transport/bus.json"))
         assert await async_setup_component(hass, "sensor", VALID_CONFIG)
         await hass.async_block_till_done()
 
@@ -65,13 +67,14 @@ async def test_bus(hass):
         assert None is not direction_re.search(bus["direction"])
 
 
-async def test_train(hass):
+async def test_train(hass: HomeAssistant) -> None:
     """Test for operational uk_transport sensor with proper attributes."""
-    with requests_mock.Mocker() as mock_req, patch(
-        "homeassistant.util.dt.now", return_value=now().replace(hour=13)
+    with (
+        requests_mock.Mocker() as mock_req,
+        patch("homeassistant.util.dt.now", return_value=now().replace(hour=13)),
     ):
         uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + "*")
-        mock_req.get(uri, text=load_fixture("uk_transport_train.json"))
+        mock_req.get(uri, text=load_fixture("uk_transport/train.json"))
         assert await async_setup_component(hass, "sensor", VALID_CONFIG)
         await hass.async_block_till_done()
 

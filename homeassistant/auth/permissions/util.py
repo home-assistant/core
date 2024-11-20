@@ -1,15 +1,17 @@
 """Helpers to deal with permissions."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, Dict, Optional, cast
+from typing import cast
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
-LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], Optional[ValueType]]
-SubCatLookupType = Dict[str, LookupFunc]
+type LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
+type SubCatLookupType = dict[str, LookupFunc]
 
 
 def lookup_all(
@@ -72,8 +74,7 @@ def compile_policy(
     def apply_policy_funcs(object_id: str, key: str) -> bool:
         """Apply several policy functions."""
         for func in funcs:
-            result = func(object_id, key)
-            if result is not None:
+            if (result := func(object_id, key)) is not None:
                 return result
         return False
 
@@ -109,4 +110,4 @@ def test_all(policy: CategoryType, key: str) -> bool:
     if not isinstance(all_policy, dict):
         return bool(all_policy)
 
-    return all_policy.get(key, False)
+    return all_policy.get(key, False)  # type: ignore[no-any-return]

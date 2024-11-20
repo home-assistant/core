@@ -1,0 +1,124 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "compressor_state": {
+        "default": "mdi:hvac",
+        "state": {
+          "off": "mdi:hvac-off"
+        }
+      },
+      "cooling_enabled": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "cooling_state": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "dhw_state": {
+        "default": "mdi:water-pump",
+        "state": {
+          "off": "mdi:water-pump-off"
+        }
+      },
+      "flame_state": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      },
+      "heating_state": {
+        "default": "mdi:radiator",
+        "state": {
+          "off": "mdi:radiator-off"
+        }
+      },
+      "plugwise_notification": {
+        "default": "mdi:mailbox-up-outline",
+        "state": {
+          "off": "mdi:mailbox-outline"
+        }
+      },
+      "slave_boiler_state": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:circle-off-outline"
+        }
+      }
+    },
+    "climate": {
+      "plugwise": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "asleep": "mdi:weather-night",
+              "away": "mdi:account-arrow-right",
+              "home": "mdi:home",
+              "no_frost": "mdi:snowflake-melt",
+              "vacation": "mdi:beach"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "dhw_mode": {
+        "default": "mdi:shower",
+        "state": {
+          "comfort": "mdi:sofa",
+          "eco": "mdi:leaf",
+          "off": "mdi:circle-off-outline",
+          "boost": "mdi:rocket-launch",
+          "auto": "mdi:auto-mode"
+        }
+      },
+      "gateway_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "away": "mdi:pause",
+          "full": "mdi:home",
+          "vacation": "mdi:beach"
+        }
+      },
+      "regulation_mode": {
+        "default": "mdi:hvac",
+        "state": {
+          "bleeding_hot": "mdi:fire-circle",
+          "bleeding_cold": "mdi:water-circle",
+          "off": "mdi:circle-off-outline",
+          "heating": "mdi:radiator",
+          "cooling": "mdi:snowflake"
+        }
+      },
+      "select_schedule": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:circle-off-outline"
+        }
+      }
+    },
+    "sensor": {
+      "gas_consumed_interval": {
+        "default": "mdi:meter-gas"
+      },
+      "modulation_level": {
+        "default": "mdi:percent"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
+      }
+    },
+    "switch": {
+      "cooling_ena_switch": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "dhw_cm_switch": {
+        "default": "mdi:water-plus"
+      },
+      "lock": {
+        "default": "mdi:lock"
+      }
+    }
+  }
+}

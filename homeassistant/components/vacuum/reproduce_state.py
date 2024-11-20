@@ -1,4 +1,5 @@
 """Reproduce an Vacuum state."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,8 +38,8 @@ VALID_STATES_STATE = {
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_IDLE,
-    STATE_RETURNING,
     STATE_PAUSED,
+    STATE_RETURNING,
 }
 
 
@@ -50,9 +51,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 

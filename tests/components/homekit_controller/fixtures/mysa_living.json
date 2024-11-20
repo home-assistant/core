@@ -1,0 +1,198 @@
+[
+  {
+    "aid": 1,
+    "primary": true,
+    "services": [
+      {
+        "type": "0000004A-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "iid": 20,
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Thermostat",
+            "perms": ["pr"],
+            "iid": 24
+          },
+          {
+            "type": "00000010-0000-1000-8000-0026BB765291",
+            "format": "float",
+            "minValue": 0,
+            "maxValue": 100,
+            "stepValue": 1,
+            "value": 40,
+            "iid": 27,
+            "unit": "percentage",
+            "perms": ["pr", "ev"]
+          },
+          {
+            "type": "0000000F-0000-1000-8000-0026BB765291",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 2,
+            "stepValue": 1,
+            "format": "uint8",
+            "perms": ["pr", "ev"],
+            "iid": 21
+          },
+          {
+            "type": "00000033-0000-1000-8000-0026BB765291",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3,
+            "stepValue": 1,
+            "format": "uint8",
+            "perms": ["pr", "pw", "ev"],
+            "iid": 22
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "value": 24.1,
+            "minValue": 0,
+            "maxValue": 100,
+            "stepValue": 0.1,
+            "unit": "celsius",
+            "format": "float",
+            "perms": ["pr", "ev"],
+            "iid": 25
+          },
+          {
+            "type": "00000035-0000-1000-8000-0026BB765291",
+            "value": 22,
+            "minValue": 5,
+            "maxValue": 30,
+            "stepValue": 0.1,
+            "unit": "celsius",
+            "format": "float",
+            "perms": ["pr", "pw", "ev"],
+            "iid": 23
+          },
+          {
+            "type": "00000036-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "minValue": 0,
+            "maxValue": 1,
+            "stepValue": 1,
+            "value": 0,
+            "iid": 26,
+            "perms": ["pr", "pw", "ev"]
+          }
+        ]
+      },
+      {
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "iid": 1,
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "perms": ["pw"],
+            "iid": 2,
+            "format": "bool"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Empowered Homes Inc.",
+            "perms": ["pr"],
+            "iid": 3
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "v1",
+            "perms": ["pr"],
+            "iid": 4
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Mysa-85dda9",
+            "perms": ["pr"],
+            "iid": 5
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "AAAAAAA000",
+            "perms": ["pr"],
+            "iid": 6
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "2.8.1",
+            "perms": ["pr"],
+            "iid": 7
+          },
+          {
+            "hidden": true,
+            "type": "22280E2C-9B79-43BD-8370-5A8F67777B29",
+            "format": "string",
+            "value": "b4e62d85dda9",
+            "perms": ["pr"],
+            "iid": 8
+          }
+        ]
+      },
+      {
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "iid": 10,
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "iid": 11
+          }
+        ]
+      },
+      {
+        "type": "00000043-0000-1000-8000-0026BB765291",
+        "iid": 40,
+        "characteristics": [
+          {
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "iid": 42
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Display",
+            "perms": ["pr"],
+            "iid": 41
+          },
+          {
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "format": "int",
+            "minValue": 0,
+            "maxValue": 100,
+            "stepValue": 1,
+            "value": 0,
+            "iid": 43,
+            "unit": "percentage",
+            "perms": ["pr", "pw", "ev"]
+          }
+        ]
+      },
+      {
+        "type": "3354EC82-AF38-4755-B4A4-4DB8E418F555",
+        "iid": 50,
+        "characteristics": [
+          {
+            "hidden": true,
+            "type": "E71D8348-BB33-4C34-8C50-A64B1136EDD2",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "pw"],
+            "iid": 51
+          }
+        ]
+      }
+    ]
+  }
+]

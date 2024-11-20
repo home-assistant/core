@@ -1,0 +1,14 @@
+# Black
+4de97abc3aa83188666336ce0a015a5bab75bc8f
+
+# Switch formatting from black to ruff-format (#102893)
+706add4a57120a93d7b7fe40e722b00d634c76c2
+
+# Prettify json (component test fixtures) (#68892)
+053c4428a933c3c04c22642f93c93fccba3e8bfd
+
+# Prettify json (tests) (#68888)
+496d90bf00429d9d924caeb0155edc0bf54e86b9
+
+# Bump ruff to 0.3.4 (#112690)
+6bb4e7d62c60389608acf4a7d7dacd8f029307dd

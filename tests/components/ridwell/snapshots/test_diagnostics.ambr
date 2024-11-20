@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': list([
+      dict({
+        '_async_request': None,
+        'event_id': 'event_123',
+        'pickup_date': dict({
+          '__type': "<class 'datetime.date'>",
+          'isoformat': '2022-01-24',
+        }),
+        'pickups': list([
+          dict({
+            'category': dict({
+              '__type': "<enum 'PickupCategory'>",
+              'repr': "<PickupCategory.STANDARD: 'standard'>",
+            }),
+            'name': 'Plastic Film',
+            'offer_id': 'offer_123',
+            'priority': 1,
+            'product_id': 'product_123',
+            'quantity': 1,
+          }),
+        ]),
+        'state': dict({
+          '__type': "<enum 'EventState'>",
+          'repr': "<EventState.INITIALIZED: 'initialized'>",
+        }),
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'ridwell',
+      'entry_id': '11554ec901379b9cc8f5a6c1d11ce978',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+  })
+# ---

@@ -1,5 +1,7 @@
 """Service calls related dependencies for LCN component."""
 
+from enum import StrEnum, auto
+
 import pypck
 import voluptuous as vol
 
@@ -9,7 +11,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
-    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -195,7 +196,7 @@ class VarAbs(LcnServiceCall):
             vol.Required(CONF_VARIABLE): vol.All(
                 vol.Upper, vol.In(VARIABLES + SETPOINTS)
             ),
-            vol.Optional(CONF_VALUE, default=0): cv.positive_int,
+            vol.Optional(CONF_VALUE, default=0): vol.Coerce(float),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
                 vol.Upper, vol.In(VAR_UNITS)
             ),
@@ -235,7 +236,7 @@ class VarRel(LcnServiceCall):
             vol.Required(CONF_VARIABLE): vol.All(
                 vol.Upper, vol.In(VARIABLES + SETPOINTS + THRESHOLDS)
             ),
-            vol.Optional(CONF_VALUE, default=0): int,
+            vol.Optional(CONF_VALUE, default=0): vol.Coerce(float),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
                 vol.Upper, vol.In(VAR_UNITS)
             ),
@@ -288,7 +289,7 @@ class SendKeys(LcnServiceCall):
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
             vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -300,15 +301,16 @@ class SendKeys(LcnServiceCall):
 
         keys = [[False] * 8 for i in range(4)]
 
-        key_strings = zip(service.data[CONF_KEYS][::2], service.data[CONF_KEYS][1::2])
+        key_strings = zip(
+            service.data[CONF_KEYS][::2], service.data[CONF_KEYS][1::2], strict=False
+        )
 
         for table, key in key_strings:
             table_id = ord(table) - 65
             key_id = int(key) - 1
             keys[table_id][key_id] = True
 
-        delay_time = service.data[CONF_TIME]
-        if delay_time != 0:
+        if (delay_time := service.data[CONF_TIME]) != 0:
             hit = pypck.lcn_defs.SendKeyCommand.HIT
             if pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]] != hit:
                 raise ValueError(
@@ -331,7 +333,7 @@ class LockKeys(LcnServiceCall):
             ),
             vol.Required(CONF_STATE): is_states_string,
             vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -347,8 +349,7 @@ class LockKeys(LcnServiceCall):
         ]
         table_id = ord(service.data[CONF_TABLE]) - 65
 
-        delay_time = service.data[CONF_TIME]
-        if delay_time != 0:
+        if (delay_time := service.data[CONF_TIME]) != 0:
             if table_id != 0:
                 raise ValueError(
                     "Only table A is allowed when locking keys for a specific time."
@@ -395,18 +396,44 @@ class Pck(LcnServiceCall):
         await device_connection.pck(pck)
 
 
+class LcnService(StrEnum):
+    """LCN service names."""
+
+    OUTPUT_ABS = auto()
+    OUTPUT_REL = auto()
+    OUTPUT_TOGGLE = auto()
+    RELAYS = auto()
+    VAR_ABS = auto()
+    VAR_RESET = auto()
+    VAR_REL = auto()
+    LOCK_REGULATOR = auto()
+    LED = auto()
+    SEND_KEYS = auto()
+    LOCK_KEYS = auto()
+    DYN_TEXT = auto()
+    PCK = auto()
+
+
 SERVICES = (
-    ("output_abs", OutputAbs),
-    ("output_rel", OutputRel),
-    ("output_toggle", OutputToggle),
-    ("relays", Relays),
-    ("var_abs", VarAbs),
-    ("var_reset", VarReset),
-    ("var_rel", VarRel),
-    ("lock_regulator", LockRegulator),
-    ("led", Led),
-    ("send_keys", SendKeys),
-    ("lock_keys", LockKeys),
-    ("dyn_text", DynText),
-    ("pck", Pck),
+    (LcnService.OUTPUT_ABS, OutputAbs),
+    (LcnService.OUTPUT_REL, OutputRel),
+    (LcnService.OUTPUT_TOGGLE, OutputToggle),
+    (LcnService.RELAYS, Relays),
+    (LcnService.VAR_ABS, VarAbs),
+    (LcnService.VAR_RESET, VarReset),
+    (LcnService.VAR_REL, VarRel),
+    (LcnService.LOCK_REGULATOR, LockRegulator),
+    (LcnService.LED, Led),
+    (LcnService.SEND_KEYS, SendKeys),
+    (LcnService.LOCK_KEYS, LockKeys),
+    (LcnService.DYN_TEXT, DynText),
+    (LcnService.PCK, Pck),
 )
+
+
+async def register_services(hass: HomeAssistant) -> None:
+    """Register services for LCN."""
+    for service_name, service in SERVICES:
+        hass.services.async_register(
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
+        )

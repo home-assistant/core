@@ -1,19 +1,21 @@
 """Constants for the System Bridge integration."""
-import asyncio
 
-from aiohttp.client_exceptions import (
-    ClientConnectionError,
-    ClientConnectorError,
-    ClientResponseError,
-)
-from systembridge.exceptions import BridgeException
+from typing import Final
+
+from systembridgemodels.modules import Module
 
 DOMAIN = "system_bridge"
 
-BRIDGE_CONNECTION_ERRORS = (
-    asyncio.TimeoutError,
-    BridgeException,
-    ClientConnectionError,
-    ClientConnectorError,
-    ClientResponseError,
-)
+MODULES: Final[list[Module]] = [
+    Module.BATTERY,
+    Module.CPU,
+    Module.DISKS,
+    Module.DISPLAYS,
+    Module.GPUS,
+    Module.MEDIA,
+    Module.MEMORY,
+    Module.PROCESSES,
+    Module.SYSTEM,
+]
+
+DATA_WAIT_TIMEOUT: Final[int] = 10

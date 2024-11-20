@@ -1,27 +1,21 @@
 """Support for NuHeat thermostats."""
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import nuheat
 import requests
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 def _get_thermostat(api, serial_number):
@@ -49,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTP_BAD_REQUEST
-            and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+            ex.response.status_code > HTTPStatus.BAD_REQUEST
+            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.error("Failed to login to nuheat: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 
@@ -66,6 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"nuheat {serial_number}",
         update_method=_async_update_data,
         update_interval=timedelta(minutes=5),
@@ -74,12 +69,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

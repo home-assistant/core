@@ -1,23 +1,21 @@
 """Helpers for mobile_app."""
+
 from __future__ import annotations
 
-import json
+from collections.abc import Callable, Mapping
+from http import HTTPStatus
 import logging
-from typing import Callable
+from typing import Any
 
 from aiohttp.web import Response, json_response
-from nacl.encoding import Base64Encoder
+from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONTENT_TYPE_JSON,
-    HTTP_BAD_REQUEST,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.json import json_bytes
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import (
     ATTR_APP_DATA,
@@ -27,6 +25,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
     CONF_SECRET,
@@ -38,36 +37,49 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_decrypt() -> tuple[int, Callable]:
+def setup_decrypt(
+    key_encoder: type[RawEncoder | HexEncoder],
+) -> Callable[[bytes, bytes], bytes]:
     """Return decryption function and length of key.
 
     Async friendly.
     """
 
-    def decrypt(ciphertext, key):
+    def decrypt(ciphertext: bytes, key: bytes) -> bytes:
         """Decrypt ciphertext using key."""
-        return SecretBox(key).decrypt(ciphertext, encoder=Base64Encoder)
+        return SecretBox(key, encoder=key_encoder).decrypt(
+            ciphertext, encoder=Base64Encoder
+        )
 
-    return (SecretBox.KEY_SIZE, decrypt)
+    return decrypt
 
 
-def setup_encrypt() -> tuple[int, Callable]:
+def setup_encrypt(
+    key_encoder: type[RawEncoder | HexEncoder],
+) -> Callable[[bytes, bytes], bytes]:
     """Return encryption function and length of key.
 
     Async friendly.
     """
 
-    def encrypt(ciphertext, key):
+    def encrypt(ciphertext: bytes, key: bytes) -> bytes:
         """Encrypt ciphertext using key."""
-        return SecretBox(key).encrypt(ciphertext, encoder=Base64Encoder)
+        return SecretBox(key, encoder=key_encoder).encrypt(
+            ciphertext, encoder=Base64Encoder
+        )
 
-    return (SecretBox.KEY_SIZE, encrypt)
+    return encrypt
 
 
-def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
+def _decrypt_payload_helper(
+    key: str | bytes,
+    ciphertext: bytes,
+    key_bytes: bytes,
+    key_encoder: type[RawEncoder | HexEncoder],
+) -> JsonValueType | None:
     """Decrypt encrypted payload."""
     try:
-        keylen, decrypt = setup_decrypt()
+        decrypt = setup_decrypt(key_encoder)
     except OSError:
         _LOGGER.warning("Ignoring encrypted payload because libsodium not installed")
         return None
@@ -76,26 +88,40 @@ def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
         _LOGGER.warning("Ignoring encrypted payload because no decryption key known")
         return None
 
-    key = key.encode("utf-8")
-    key = key[:keylen]
-    key = key.ljust(keylen, b"\0")
-
-    try:
-        message = decrypt(ciphertext, key)
-        message = json.loads(message.decode("utf-8"))
-        _LOGGER.debug("Successfully decrypted mobile_app payload")
-        return message
-    except ValueError:
-        _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
-        return None
+    msg_bytes = decrypt(ciphertext, key_bytes)
+    message = json_loads(msg_bytes)
+    _LOGGER.debug("Successfully decrypted mobile_app payload")
+    return message
 
 
-def registration_context(registration: dict) -> Context:
+def decrypt_payload(key: str, ciphertext: bytes) -> JsonValueType | None:
+    """Decrypt encrypted payload."""
+    return _decrypt_payload_helper(key, ciphertext, key.encode("utf-8"), HexEncoder)
+
+
+def _convert_legacy_encryption_key(key: str) -> bytes:
+    """Convert legacy encryption key."""
+    keylen = SecretBox.KEY_SIZE
+    key_bytes = key.encode("utf-8")
+    key_bytes = key_bytes[:keylen]
+    return key_bytes.ljust(keylen, b"\0")
+
+
+def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:
+    """Decrypt encrypted payload."""
+    return _decrypt_payload_helper(
+        key, ciphertext, _convert_legacy_encryption_key(key), RawEncoder
+    )
+
+
+def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: dict = None, status: int = HTTP_OK) -> Response:
+def empty_okay_response(
+    headers: dict | None = None, status: HTTPStatus = HTTPStatus.OK
+) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
         text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
@@ -103,7 +129,10 @@ def empty_okay_response(headers: dict = None, status: int = HTTP_OK) -> Response
 
 
 def error_response(
-    code: str, message: str, status: int = HTTP_BAD_REQUEST, headers: dict = None
+    code: str,
+    message: str,
+    status: HTTPStatus = HTTPStatus.BAD_REQUEST,
+    headers: dict | None = None,
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -111,16 +140,6 @@ def error_response(
         status=status,
         headers=headers,
     )
-
-
-def supports_encryption() -> bool:
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
-
-        return True
-    except OSError:
-        return False
 
 
 def safe_registration(registration: dict) -> dict:
@@ -147,32 +166,39 @@ def savable_state(hass: HomeAssistant) -> dict:
 
 
 def webhook_response(
-    data, *, registration: dict, status: int = HTTP_OK, headers: dict = None
+    data: Any,
+    *,
+    registration: Mapping[str, Any],
+    status: HTTPStatus = HTTPStatus.OK,
+    headers: Mapping[str, str] | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
-    data = json.dumps(data, cls=JSONEncoder)
+    json_data = json_bytes(data)
 
     if registration[ATTR_SUPPORTS_ENCRYPTION]:
-        keylen, encrypt = setup_encrypt()
+        encrypt = setup_encrypt(
+            HexEncoder if ATTR_NO_LEGACY_ENCRYPTION in registration else RawEncoder
+        )
 
-        key = registration[CONF_SECRET].encode("utf-8")
-        key = key[:keylen]
-        key = key.ljust(keylen, b"\0")
+        if ATTR_NO_LEGACY_ENCRYPTION in registration:
+            key: bytes = registration[CONF_SECRET]
+        else:
+            key = _convert_legacy_encryption_key(registration[CONF_SECRET])
 
-        enc_data = encrypt(data.encode("utf-8"), key).decode("utf-8")
-        data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
+        enc_data = encrypt(json_data, key).decode("utf-8")
+        json_data = json_bytes({"encrypted": True, "encrypted_data": enc_data})
 
     return Response(
-        text=data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
+        body=json_data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 
 def device_info(registration: dict) -> DeviceInfo:
     """Return the device info for this registration."""
-    return {
-        "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},
-        "manufacturer": registration[ATTR_MANUFACTURER],
-        "model": registration[ATTR_MODEL],
-        "name": registration[ATTR_DEVICE_NAME],
-        "sw_version": registration[ATTR_OS_VERSION],
-    }
+    return DeviceInfo(
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
+    )

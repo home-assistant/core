@@ -1,15 +1,20 @@
 """PlaatoEntity class."""
+
+from typing import Any
+
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     DEVICE,
     DEVICE_ID,
     DEVICE_NAME,
-    DEVICE_STATE_ATTRIBUTES,
     DEVICE_TYPE,
     DOMAIN,
+    EXTRA_STATE_ATTRIBUTES,
     SENSOR_DATA,
     SENSOR_SIGNAL,
 )
@@ -17,6 +22,8 @@ from .const import (
 
 class PlaatoEntity(entity.Entity):
     """Representation of a Plaato Entity."""
+
+    _attr_should_poll = False
 
     def __init__(self, data, sensor_type, coordinator=None):
         """Initialize the sensor."""
@@ -26,7 +33,18 @@ class PlaatoEntity(entity.Entity):
         self._device_id = data[DEVICE][DEVICE_ID]
         self._device_type = data[DEVICE][DEVICE_TYPE]
         self._device_name = data[DEVICE][DEVICE_NAME]
-        self._state = 0
+        self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
+        self._attr_name = f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}".title()
+        sw_version = None
+        if firmware := self._sensor_data.firmware_version:
+            sw_version = firmware
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Plaato",
+            model=self._device_type,
+            name=self._device_name,
+            sw_version=sw_version,
+        )
 
     @property
     def _attributes(self) -> dict:
@@ -43,40 +61,16 @@ class PlaatoEntity(entity.Entity):
         return self._entry_data[SENSOR_DATA]
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}".title()
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device_id}_{self._sensor_type}"
-
-    @property
-    def device_info(self):
-        """Get device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "Plaato",
-            "model": self._device_type,
-        }
-
-        if self._sensor_data.firmware_version != "":
-            device_info["sw_version"] = self._sensor_data.firmware_version
-
-        return device_info
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the monitored installation."""
         if self._attributes:
             return {
                 attr_key: self._attributes[plaato_key]
-                for attr_key, plaato_key in DEVICE_STATE_ATTRIBUTES.items()
+                for attr_key, plaato_key in EXTRA_STATE_ATTRIBUTES.items()
                 if plaato_key in self._attributes
                 and self._attributes[plaato_key] is not None
             }
+        return None
 
     @property
     def available(self):
@@ -84,11 +78,6 @@ class PlaatoEntity(entity.Entity):
         if self._coordinator is not None:
             return self._coordinator.last_update_success
         return True
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
@@ -98,7 +87,8 @@ class PlaatoEntity(entity.Entity):
             )
         else:
             self.async_on_remove(
-                self.hass.helpers.dispatcher.async_dispatcher_connect(
+                async_dispatcher_connect(
+                    self.hass,
                     SENSOR_SIGNAL % (self._device_id, self._sensor_type),
                     self.async_write_ha_state,
                 )

@@ -1,4 +1,5 @@
 """The sentry integration."""
+
 from __future__ import annotations
 
 import re
@@ -15,9 +16,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     __version__ as current_version,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.core import HomeAssistant, get_release_channel
+from homeassistant.helpers import entity_platform, instance_id
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import Integration, async_get_custom_components
+from homeassistant.setup import SetupPhases, async_pause_setup
 
 from .const import (
     CONF_DSN,
@@ -32,12 +36,8 @@ from .const import (
     DEFAULT_LOGGING_EVENT_LEVEL,
     DEFAULT_LOGGING_LEVEL,
     DEFAULT_TRACING_SAMPLE_RATE,
-    DOMAIN,
     ENTITY_COMPONENTS,
 )
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
-
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
 
@@ -65,9 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Additional/extra data collection
-    channel = get_channel(current_version)
-    huuid = await hass.helpers.instance_id.async_get()
-    system_info = await hass.helpers.system_info.async_get_system_info()
+    channel = get_release_channel()
+    huuid = await instance_id.async_get(hass)
+    system_info = await async_get_system_info(hass)
     custom_components = await async_get_custom_components(hass)
 
     tracing = {}
@@ -78,45 +78,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
-    sentry_sdk.init(
-        dsn=entry.data[CONF_DSN],
-        environment=entry.options.get(CONF_ENVIRONMENT),
-        integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
-        release=current_version,
-        before_send=lambda event, hint: process_before_send(
-            hass,
-            entry.options,
-            channel,
-            huuid,
-            system_info,
-            custom_components,
-            event,
-            hint,
-        ),
-        **tracing,
-    )
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # sentry_sdk.init imports modules based on the selected integrations
+        def _init_sdk():
+            """Initialize the Sentry SDK."""
+            sentry_sdk.init(
+                dsn=entry.data[CONF_DSN],
+                environment=entry.options.get(CONF_ENVIRONMENT),
+                integrations=[
+                    sentry_logging,
+                    AioHttpIntegration(),
+                    SqlalchemyIntegration(),
+                ],
+                release=current_version,
+                before_send=lambda event, hint: process_before_send(
+                    hass,
+                    entry.options,
+                    channel,
+                    huuid,
+                    system_info,
+                    custom_components,
+                    event,
+                    hint,
+                ),
+                **tracing,
+            )
+
+        await hass.async_add_import_executor_job(_init_sdk)
 
     async def update_system_info(now):
         nonlocal system_info
-        system_info = await hass.helpers.system_info.async_get_system_info()
+        system_info = await async_get_system_info(hass)
 
         # Update system info every hour
-        hass.helpers.event.async_call_later(3600, update_system_info)
+        async_call_later(hass, 3600, update_system_info)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 
     return True
-
-
-def get_channel(version: str) -> str:
-    """Find channel based on version number."""
-    if "dev0" in version:
-        return "dev"
-    if "dev" in version:
-        return "nightly"
-    if "b" in version:
-        return "beta"
-    return "stable"
 
 
 def process_before_send(
@@ -154,8 +153,7 @@ def process_before_send(
     ]
 
     # Add additional tags based on what caused the event.
-    platform = entity_platform.current_platform.get()
-    if platform is not None:
+    if (platform := entity_platform.current_platform.get()) is not None:
         # This event happened in a platform
         additional_tags["custom_component"] = "no"
         additional_tags["integration"] = platform.platform_name
@@ -205,7 +203,7 @@ def process_before_send(
                 "channel": channel,
                 "custom_components": "\n".join(sorted(custom_components)),
                 "integrations": "\n".join(sorted(integrations)),
-                **system_info,  # type: ignore[arg-type]
+                **system_info,
             },
         }
     )

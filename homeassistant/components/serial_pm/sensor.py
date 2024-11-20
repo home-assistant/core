@@ -1,19 +1,28 @@
 """Support for particulate matter sensors connected to a serial port."""
+
+from __future__ import annotations
+
 import logging
 
 from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRAND = "brand"
 CONF_SERIAL_DEVICE = "serial_device"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BRAND): cv.string,
         vol.Required(CONF_SERIAL_DEVICE): cv.string,
@@ -22,7 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available PM sensors."""
     try:
         coll = pm.PMDataCollector(
@@ -58,12 +72,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
-    def __init__(self, pmDataCollector, name, pmname):
+    def __init__(self, pm_data_collector, name, pmname):
         """Initialize a new PM sensor."""
         self._name = name
         self._pmname = pmname
         self._state = None
-        self._collector = pmDataCollector
+        self._collector = pm_data_collector
 
     @property
     def name(self):
@@ -80,7 +94,7 @@ class ParticulateMatterSensor(SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
-    def update(self):
+    def update(self) -> None:
         """Read from sensor and update the state."""
         _LOGGER.debug("Reading data from PM sensor")
         try:

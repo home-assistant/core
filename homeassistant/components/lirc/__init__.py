@@ -1,5 +1,5 @@
 """Support for LIRC devices."""
-# pylint: disable=import-error
+
 import logging
 import threading
 import time
@@ -7,6 +7,9 @@ import time
 import lirc
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +21,10 @@ EVENT_IR_COMMAND_RECEIVED = "ir_command_received"
 
 ICON = "mdi:remote"
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-def setup(hass, config):
+
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIRC capability."""
     # blocking=True gives unexpected behavior (multiple responses for 1 press)
     # also by not blocking, we allow hass to shut down the thread gracefully
@@ -40,8 +45,7 @@ def setup(hass, config):
 
 
 class LircInterface(threading.Thread):
-    """
-    This interfaces with the lirc daemon to read IR commands.
+    """Interfaces with the lirc daemon to read IR commands.
 
     When using lirc in blocking mode, sometimes repeated commands get produced
     in the next read of a command so we use a thread here to just wait
@@ -58,7 +62,7 @@ class LircInterface(threading.Thread):
     def run(self):
         """Run the loop of the LIRC interface thread."""
         _LOGGER.debug("LIRC interface thread started")
-        while not self.stopped.isSet():
+        while not self.stopped.is_set():
             try:
                 code = lirc.nextcode()  # list; empty if no buttons pressed
             except lirc.NextCodeError:
@@ -67,7 +71,7 @@ class LircInterface(threading.Thread):
             # interpret result from python-lirc
             if code:
                 code = code[0]
-                _LOGGER.info("Got new LIRC code %s", code)
+                _LOGGER.debug("Got new LIRC code %s", code)
                 self.hass.bus.fire(EVENT_IR_COMMAND_RECEIVED, {BUTTON_NAME: code})
             else:
                 time.sleep(0.2)

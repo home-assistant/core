@@ -1,4 +1,5 @@
 """Support for the IBM Watson IoT Platform."""
+
 import logging
 import queue
 import threading
@@ -21,9 +22,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Watson IoT Platform component."""
 
     conf = config[DOMAIN]
@@ -98,12 +100,12 @@ def setup(hass, config):
             or state.entity_id in exclude_e
             or state.domain in exclude_d
         ):
-            return
+            return None
 
         if (include_e and state.entity_id not in include_e) or (
             include_d and state.domain not in include_d
         ):
-            return
+            return None
 
         try:
             _state_as_value = float(state.state)
@@ -130,7 +132,7 @@ def setup(hass, config):
                 if key in out_event["fields"]:
                     key = f"{key}_"
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string
                 try:
                     out_event["fields"][key] = float(value)
@@ -177,9 +179,7 @@ class WatsonIOTThread(threading.Thread):
         events = []
 
         try:
-            item = self.queue.get()
-
-            if item is None:
+            if (item := self.queue.get()) is None:
                 self.shutdown = True
             else:
                 event_json = self.event_to_json(item[1])
@@ -219,8 +219,7 @@ class WatsonIOTThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            event = self.get_events_json()
-            if event:
+            if event := self.get_events_json():
                 self.write_to_watson(event)
             self.queue.task_done()
 

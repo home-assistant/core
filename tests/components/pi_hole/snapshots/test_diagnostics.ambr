@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'ads_blocked_today': 0,
+      'ads_percentage_today': 0,
+      'clients_ever_seen': 0,
+      'dns_queries_today': 0,
+      'domains_being_blocked': 0,
+      'queries_cached': 0,
+      'queries_forwarded': 0,
+      'status': 'disabled',
+      'unique_clients': 0,
+      'unique_domains': 0,
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'host': '1.2.3.4:80',
+        'location': 'admin',
+        'name': 'Pi-Hole',
+        'ssl': False,
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'pi_hole',
+      'entry_id': 'pi_hole_mock_entry',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'versions': dict({
+      'FTL_current': 'v5.10',
+      'FTL_latest': 'v5.11',
+      'FTL_update': True,
+      'core_current': 'v5.5',
+      'core_latest': 'v5.6',
+      'core_update': True,
+      'web_current': 'v5.7',
+      'web_latest': 'v5.8',
+      'web_update': True,
+    }),
+  })
+# ---

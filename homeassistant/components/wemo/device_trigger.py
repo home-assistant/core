@@ -1,13 +1,19 @@
 """Triggers for WeMo devices."""
+
+from __future__ import annotations
+
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .wemo_device import async_get_device
+from .coordinator import async_get_coordinator
 
 TRIGGER_TYPES = {EVENT_TYPE_LONG_PRESS}
 
@@ -18,7 +24,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """Return a list of triggers."""
 
     wemo_trigger = {
@@ -28,11 +36,11 @@ async def async_get_triggers(hass, device_id):
         CONF_DEVICE_ID: device_id,
     }
 
-    device = async_get_device(hass, device_id)
+    coordinator = async_get_coordinator(hass, device_id)
     triggers = []
 
     # Check for long press support.
-    if device.supports_long_press:
+    if coordinator.supports_long_press:
         triggers.append(
             {
                 # Required fields of TRIGGER_SCHEMA
@@ -44,7 +52,12 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
@@ -57,5 +70,5 @@ async def async_attach_trigger(hass, config, action, automation_info):
         }
     )
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )

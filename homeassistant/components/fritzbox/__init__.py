@@ -1,96 +1,35 @@
 """Support for AVM FRITZ!SmartHome devices."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-
-from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-import requests
-
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
-)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
-from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
-from .model import EntityInfo
+from .const import DOMAIN, LOGGER, PLATFORMS
+from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Set up the AVM FRITZ!SmartHome platforms."""
-    fritz = Fritzhome(
-        host=entry.data[CONF_HOST],
-        user=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-    )
-
-    try:
-        await hass.async_add_executor_job(fritz.login)
-    except LoginError as err:
-        raise ConfigEntryAuthFailed from err
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_CONNECTIONS: fritz,
-    }
-
-    def _update_fritz_devices() -> dict[str, FritzhomeDevice]:
-        """Update all fritzbox device data."""
-        try:
-            devices = fritz.get_devices()
-        except requests.exceptions.HTTPError:
-            # If the device rebooted, login again
-            try:
-                fritz.login()
-            except requests.exceptions.HTTPError as ex:
-                raise ConfigEntryAuthFailed from ex
-            devices = fritz.get_devices()
-
-        data = {}
-        for device in devices:
-            device.update()
-            data[device.ain] = device
-        return data
-
-    async def async_update_coordinator() -> dict[str, FritzhomeDevice]:
-        """Fetch all device data."""
-        return await hass.async_add_executor_job(_update_fritz_devices)
-
-    hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ] = coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{entry.entry_id}",
-        update_method=async_update_coordinator,
-        update_interval=timedelta(seconds=30),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
 
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
         if (
-            entry.unit_of_measurement == TEMP_CELSIUS
+            entry.unit_of_measurement == UnitOfTemperature.CELSIUS
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"
-            LOGGER.info(
+            LOGGER.debug(
+                "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
+            )
+            return {"new_unique_id": new_unique_id}
+
+        if entry.domain == BINARY_SENSOR_DOMAIN and "_" not in entry.unique_id:
+            new_unique_id = f"{entry.unique_id}_alarm"
+            LOGGER.debug(
                 "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
             )
             return {"new_unique_id": new_unique_id}
@@ -98,11 +37,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry.entry_id)
+    await coordinator.async_setup()
+
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def logout_fritzbox(event: Event) -> None:
         """Close connections to this fritzbox."""
-        fritz.logout()
+        coordinator.fritz.logout()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzbox)
@@ -111,68 +55,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Unloading the AVM FRITZ!SmartHome platforms."""
-    fritz = hass.data[DOMAIN][entry.entry_id][CONF_CONNECTIONS]
-    await hass.async_add_executor_job(fritz.logout)
+    await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class FritzBoxEntity(CoordinatorEntity):
-    """Basis FritzBox entity."""
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: FritzboxConfigEntry, device: DeviceEntry
+) -> bool:
+    """Remove Fritzbox config entry from a device."""
+    coordinator = entry.runtime_data
 
-    def __init__(
-        self,
-        entity_info: EntityInfo,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
-        ain: str,
-    ) -> None:
-        """Initialize the FritzBox entity."""
-        super().__init__(coordinator)
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN and (
+            identifier[1] in coordinator.data.devices
+            or identifier[1] in coordinator.data.templates
+        ):
+            return False
 
-        self.ain = ain
-        self._name = entity_info[ATTR_NAME]
-        self._unique_id = entity_info[ATTR_ENTITY_ID]
-        self._device_class = entity_info[ATTR_DEVICE_CLASS]
-        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.device.present
-
-    @property
-    def device(self) -> FritzhomeDevice:
-        """Return device object from coordinator."""
-        return self.coordinator.data[self.ain]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return {
-            "name": self.device.name,
-            "identifiers": {(DOMAIN, self.ain)},
-            "manufacturer": self.device.manufacturer,
-            "model": self.device.productname,
-            "sw_version": self.device.fw_version,
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the device."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class."""
-        return self._device_class
+    return True

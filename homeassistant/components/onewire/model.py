@@ -1,21 +1,19 @@
 """Type definitions for 1-Wire integration."""
+
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
+
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
-class DeviceComponentDescription(TypedDict, total=False):
-    """Device component description class."""
+@dataclass
+class OWDeviceDescription:
+    """1-Wire device description class."""
 
-    path: str
-    name: str
-    type: str
-    default_disabled: bool
+    device_info: DeviceInfo
 
-
-class OWServerDeviceDescription(TypedDict):
-    """OWServer device description class."""
-
-    path: str
     family: str
-    type: str
+    id: str
+    path: str
+    type: str | None

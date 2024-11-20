@@ -1,4 +1,5 @@
 """Support for Xeoma Cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -6,9 +7,15 @@ import logging
 from pyxeoma.xeoma import Xeoma, XeomaError
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +35,7 @@ CAMERAS_SCHEMA = vol.Schema(
     required=False,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_CAMERAS): vol.Schema(
@@ -41,7 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Discover and setup Xeoma Cameras."""
 
     host = config[CONF_HOST]

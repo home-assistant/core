@@ -1,11 +1,39 @@
 """Collection of test helpers."""
+
 from fractions import Fraction
+import functools
+from functools import partial
 import io
 
 import av
 import numpy as np
 
+from homeassistant.components.camera import DynamicStreamSettings
+from homeassistant.components.stream.core import Orientation, Segment
+from homeassistant.components.stream.fmp4utils import (
+    TRANSFORM_MATRIX_TOP,
+    XYW_ROW,
+    find_box,
+)
+from homeassistant.util import dt as dt_util
+
+FAKE_TIME = dt_util.utcnow()
+
+# Segment with defaults filled in for use in tests
+DefaultSegment = partial(
+    Segment,
+    init=None,
+    stream_id=0,
+    start_time=FAKE_TIME,
+    _stream_outputs=[],
+)
+
 AUDIO_SAMPLE_RATE = 8000
+
+
+def stream_teardown():
+    """Perform test teardown."""
+    frame_image_data.cache_clear()
 
 
 def generate_audio_frame(pcm_mulaw=False):
@@ -22,14 +50,24 @@ def generate_audio_frame(pcm_mulaw=False):
     return audio_frame
 
 
-def generate_h264_video(container_format="mp4"):
-    """
-    Generate a test video.
+@functools.lru_cache(maxsize=1024)
+def frame_image_data(frame_i, total_frames):
+    """Generate image content for a frame of a video."""
+    img = np.empty((480, 320, 3))
+    img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
+    img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
+    img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
+
+    img = np.round(255 * img).astype(np.uint8)
+    return np.clip(img, 0, 255)
+
+
+def generate_video(encoder, container_format, duration):
+    """Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
 
-    duration = 5
     fps = 24
     total_frames = duration * fps
 
@@ -37,22 +75,14 @@ def generate_h264_video(container_format="mp4"):
     output.name = "test.mov" if container_format == "mov" else "test.mp4"
     container = av.open(output, mode="w", format=container_format)
 
-    stream = container.add_stream("libx264", rate=fps)
+    stream = container.add_stream(encoder, rate=fps)
     stream.width = 480
     stream.height = 320
     stream.pix_fmt = "yuv420p"
     stream.options.update({"g": str(fps), "keyint_min": str(fps)})
 
     for frame_i in range(total_frames):
-
-        img = np.empty((480, 320, 3))
-        img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
-        img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
-        img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
-
-        img = np.round(255 * img).astype(np.uint8)
-        img = np.clip(img, 0, 255)
-
+        img = frame_image_data(frame_i, total_frames)
         frame = av.VideoFrame.from_ndarray(img, format="rgb24")
         for packet in stream.encode(frame):
             container.mux(packet)
@@ -66,6 +96,16 @@ def generate_h264_video(container_format="mp4"):
     output.seek(0)
 
     return output
+
+
+def generate_h264_video(container_format="mp4", duration=5):
+    """Generate a test video with libx264."""
+    return generate_video("libx264", container_format, duration)
+
+
+def generate_h265_video(container_format="mp4", duration=5):
+    """Generate a test video with libx265."""
+    return generate_video("libx265", container_format, duration)
 
 
 def remux_with_audio(source, container_format, audio_codec):
@@ -115,3 +155,23 @@ def remux_with_audio(source, container_format, audio_codec):
     output.seek(0)
 
     return output
+
+
+def assert_mp4_has_transform_matrix(mp4: bytes, orientation: Orientation):
+    """Assert that the mp4 (or init) has the proper transformation matrix."""
+    # Find moov
+    moov_location = next(find_box(mp4, b"moov"))
+    mvhd_location = next(find_box(mp4, b"trak", moov_location))
+    tkhd_location = next(find_box(mp4, b"tkhd", mvhd_location))
+    tkhd_length = int.from_bytes(
+        mp4[tkhd_location : tkhd_location + 4], byteorder="big"
+    )
+    assert (
+        mp4[tkhd_location + tkhd_length - 44 : tkhd_location + tkhd_length - 8]
+        == TRANSFORM_MATRIX_TOP[orientation] + XYW_ROW
+    )
+
+
+def dynamic_stream_settings():
+    """Create new dynamic stream settings."""
+    return DynamicStreamSettings()

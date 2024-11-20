@@ -1,0 +1,147 @@
+# serializer version: 1
+# name: test_audio_codec_resolve[aac]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=aac'
+# ---
+# name: test_audio_codec_resolve[mp3]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=mp3'
+# ---
+# name: test_audio_codec_resolve[vorbis]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=vorbis'
+# ---
+# name: test_audio_codec_resolve[wma]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=wma'
+# ---
+# name: test_movie_library
+  dict({
+    'can_expand': False,
+    'can_play': True,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'MOVIE-UUID',
+    'media_class': <MediaClass.MOVIE: 'movie'>,
+    'media_content_id': 'media-source://jellyfin/MOVIE-UUID',
+    'media_content_type': 'video/mp4',
+    'not_shown': 0,
+    'thumbnail': 'http://localhost/Items/MOVIE-UUID/Images/Primary.jpg',
+    'title': 'MOVIE',
+  })
+# ---
+# name: test_music_library
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'ALBUM-UUID',
+    'media_class': <MediaClass.ARTIST: 'artist'>,
+    'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'ALBUM',
+  })
+# ---
+# name: test_music_library.1
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'ALBUM-UUID',
+    'media_class': <MediaClass.ALBUM: 'album'>,
+    'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'ALBUM',
+  })
+# ---
+# name: test_music_library.2
+  dict({
+    'can_expand': False,
+    'can_play': True,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'TRACK-UUID',
+    'media_class': <MediaClass.TRACK: 'track'>,
+    'media_content_id': 'media-source://jellyfin/TRACK-UUID',
+    'media_content_type': 'audio/flac',
+    'not_shown': 0,
+    'thumbnail': 'http://localhost/Items/TRACK-UUID/Images/Primary.jpg',
+    'title': 'TRACK',
+  })
+# ---
+# name: test_resolve
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000'
+# ---
+# name: test_resolve.1
+  'http://localhost/Videos/MOVIE-UUID/stream?static=true,DeviceId=TEST-UUID,api_key=TEST-API-KEY'
+# ---
+# name: test_root
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'COLLECTION-FOLDER-UUID',
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_id': 'media-source://jellyfin/COLLECTION-FOLDER-UUID',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'COLLECTION FOLDER',
+  })
+# ---
+# name: test_tv_library
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'SERIES-UUID',
+    'media_class': <MediaClass.TV_SHOW: 'tv_show'>,
+    'media_content_id': 'media-source://jellyfin/SERIES-UUID',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'SERIES',
+  })
+# ---
+# name: test_tv_library.1
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'SEASON-UUID',
+    'media_class': <MediaClass.TV_SHOW: 'tv_show'>,
+    'media_content_id': 'media-source://jellyfin/SEASON-UUID',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'SEASON',
+  })
+# ---
+# name: test_tv_library.2
+  dict({
+    'can_expand': False,
+    'can_play': True,
+    'children': None,
+    'children_media_class': None,
+    'domain': 'jellyfin',
+    'identifier': 'EPISODE-UUID',
+    'media_class': <MediaClass.EPISODE: 'episode'>,
+    'media_content_id': 'media-source://jellyfin/EPISODE-UUID',
+    'media_content_type': 'video/mp4',
+    'not_shown': 0,
+    'thumbnail': 'http://localhost/Items/EPISODE-UUID/Images/Primary.jpg',
+    'title': 'EPISODE',
+  })
+# ---

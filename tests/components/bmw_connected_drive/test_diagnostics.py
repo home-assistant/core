@@ -1,0 +1,92 @@
+"""Test BMW diagnostics."""
+
+import datetime
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.bmw_connected_drive.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from . import setup_mocked_integration
+
+from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from tests.typing import ClientSessionGenerator
+
+
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_config_entry_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+
+    mock_config_entry = await setup_mocked_integration(hass)
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert diagnostics == snapshot
+
+
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device diagnostics."""
+
+    mock_config_entry = await setup_mocked_integration(hass)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "WBY00000000REXI01")},
+    )
+    assert reg_device is not None
+
+    diagnostics = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, reg_device
+    )
+
+    assert diagnostics == snapshot
+
+
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_diagnostics_vehicle_not_found(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device diagnostics when the vehicle cannot be found."""
+
+    mock_config_entry = await setup_mocked_integration(hass)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "WBY00000000REXI01")},
+    )
+    assert reg_device is not None
+
+    # Change vehicle identifier so that vehicle will not be found
+    device_registry.async_update_device(
+        reg_device.id, new_identifiers={(DOMAIN, "WBY00000000REXI99")}
+    )
+
+    diagnostics = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, reg_device
+    )
+
+    assert diagnostics == snapshot

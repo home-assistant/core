@@ -1,7 +1,9 @@
 """Tests for OpenERZ component."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 MOCK_CONFIG = {
@@ -14,7 +16,7 @@ MOCK_CONFIG = {
 }
 
 
-async def test_sensor_state(hass):
+async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test whether default waste type set properly."""
     with patch(
         "homeassistant.components.openerz.sensor.OpenERZConnector"

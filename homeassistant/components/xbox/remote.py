@@ -1,4 +1,5 @@
 """Xbox Remote support."""
+
 from __future__ import annotations
 
 import asyncio
@@ -20,13 +21,19 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConsoleData, XboxUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ConsoleData, XboxUpdateCoordinator
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Xbox media_player from a config entry."""
     client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
     consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
@@ -39,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class XboxRemote(CoordinatorEntity, RemoteEntity):
+class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
     """Representation of an Xbox remote."""
 
     def __init__(
@@ -98,18 +105,17 @@ class XboxRemote(CoordinatorEntity, RemoteEntity):
                 await asyncio.sleep(delay)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         # Turns "XboxOneX" into "Xbox One X" for display
         matches = re.finditer(
             ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
             self._console.console_type,
         )
-        model = " ".join([m.group(0) for m in matches])
 
-        return {
-            "identifiers": {(DOMAIN, self._console.id)},
-            "name": self._console.name,
-            "manufacturer": "Microsoft",
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._console.id)},
+            manufacturer="Microsoft",
+            model=" ".join([m.group(0) for m in matches]),
+            name=self._console.name,
+        )

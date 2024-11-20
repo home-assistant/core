@@ -1,15 +1,13 @@
 """The gogogate2 component."""
 
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 
 from .common import get_data_update_coordinator
 from .const import DEVICE_TYPE_GOGOGATE2
 
-PLATFORMS = [COVER, SENSOR]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -20,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_DEVICE not in entry.data:
         config_updates = {
             **entry.data,
-            **{CONF_DEVICE: DEVICE_TYPE_GOGOGATE2},
+            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
         }
 
     if config_updates:
@@ -29,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_update_coordinator = get_data_update_coordinator(hass, entry)
     await data_update_coordinator.async_config_entry_first_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

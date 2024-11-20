@@ -1,5 +1,4 @@
 """Constants for Google Travel Time."""
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 
 DOMAIN = "google_travel_time"
 
@@ -9,7 +8,6 @@ CONF_DESTINATION = "destination"
 CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
 CONF_TRAVEL_MODE = "travel_mode"
-CONF_LANGUAGE = "language"
 CONF_AVOID = "avoid"
 CONF_UNITS = "units"
 CONF_ARRIVAL_TIME = "arrival_time"
@@ -25,8 +23,6 @@ DEPARTURE_TIME = "Departure Time"
 TIME_TYPES = [ARRIVAL_TIME, DEPARTURE_TIME]
 
 DEFAULT_NAME = "Google Travel Time"
-
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
 
 ALL_LANGUAGES = [
     "ar",
@@ -71,7 +67,7 @@ ALL_LANGUAGES = [
     "sr",
     "sv",
     "ta",
-    "te",
+    "te",  # codespell:ignore te
     "th",
     "tl",
     "tr",
@@ -81,9 +77,13 @@ ALL_LANGUAGES = [
     "zh-TW",
 ]
 
-AVOID = ["tolls", "highways", "ferries", "indoor"]
+AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSPORT_TYPE = ["bus", "subway", "train", "tram", "rail"]
-TRAVEL_MODE = ["driving", "walking", "bicycling", "transit"]
-TRAVEL_MODEL = ["best_guess", "pessimistic", "optimistic"]
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
+TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
+TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
+
+# googlemaps library uses "metric" or "imperial" terminology in distance_matrix
+UNITS_METRIC = "metric"
+UNITS_IMPERIAL = "imperial"
+UNITS = [UNITS_METRIC, UNITS_IMPERIAL]

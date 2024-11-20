@@ -1,4 +1,5 @@
 """Config flow for Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,12 +8,10 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp, zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_UID, DOMAIN, LOGGER
 
@@ -53,7 +52,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elexa Guardian."""
 
     VERSION = 1
@@ -69,12 +68,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
             )
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
+            )
         else:
             self._abort_if_unique_id_configured()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle configuration via the UI."""
         if user_input is None:
             return self.async_show_form(
@@ -98,40 +100,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info[IP_ADDRESS],
+            CONF_IP_ADDRESS: discovery_info.ip,
             CONF_PORT: DEFAULT_PORT,
         }
-        return await self._async_handle_discovery()
+        await self._async_set_unique_id(
+            async_get_pin_from_uid(discovery_info.macaddress.replace(":", "").upper())
+        )
+        return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info["host"],
-            CONF_PORT: discovery_info["port"],
+            CONF_IP_ADDRESS: discovery_info.host,
+            CONF_PORT: discovery_info.port,
         }
-        pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
+        pin = async_get_pin_from_discovery_hostname(discovery_info.hostname)
         await self._async_set_unique_id(pin)
-        return await self._async_handle_discovery()
-
-    async def _async_handle_discovery(self) -> FlowResult:
-        """Handle any discovery."""
-        self.context[CONF_IP_ADDRESS] = self.discovery_info[CONF_IP_ADDRESS]
-        if any(
-            self.context[CONF_IP_ADDRESS] == flow["context"][CONF_IP_ADDRESS]
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
-
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish the configuration via any discovery."""
         if user_input is None:
             self._set_confirm_only()

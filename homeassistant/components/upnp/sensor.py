@@ -1,248 +1,194 @@
 """Support for UPnP/IGD Sensors."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, Mapping
+from dataclasses import dataclass
+from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import UpnpConfigEntry
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-    CONFIG_ENTRY_SCAN_INTERVAL,
-    CONFIG_ENTRY_UDN,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    DOMAIN_DEVICES,
-    KIBIBYTE,
-    LOGGER as _LOGGER,
+    KIBIBYTES_PER_SEC_RECEIVED,
+    KIBIBYTES_PER_SEC_SENT,
+    LOGGER,
+    PACKETS_PER_SEC_RECEIVED,
+    PACKETS_PER_SEC_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
-    TIMESTAMP,
+    PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
+    ROUTER_IP,
+    ROUTER_UPTIME,
+    WAN_STATUS,
 )
-from .device import Device
-
-SENSOR_TYPES = {
-    BYTES_RECEIVED: {
-        "device_value_key": BYTES_RECEIVED,
-        "name": f"{DATA_BYTES} received",
-        "unit": DATA_BYTES,
-        "unique_id": BYTES_RECEIVED,
-        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
-        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
-        "derived_unique_id": "KiB/sec_received",
-    },
-    BYTES_SENT: {
-        "device_value_key": BYTES_SENT,
-        "name": f"{DATA_BYTES} sent",
-        "unit": DATA_BYTES,
-        "unique_id": BYTES_SENT,
-        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
-        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
-        "derived_unique_id": "KiB/sec_sent",
-    },
-    PACKETS_RECEIVED: {
-        "device_value_key": PACKETS_RECEIVED,
-        "name": f"{DATA_PACKETS} received",
-        "unit": DATA_PACKETS,
-        "unique_id": PACKETS_RECEIVED,
-        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} received",
-        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
-        "derived_unique_id": "packets/sec_received",
-    },
-    PACKETS_SENT: {
-        "device_value_key": PACKETS_SENT,
-        "name": f"{DATA_PACKETS} sent",
-        "unit": DATA_PACKETS,
-        "unique_id": PACKETS_SENT,
-        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} sent",
-        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
-        "derived_unique_id": "packets/sec_sent",
-    },
-}
+from .entity import UpnpEntity, UpnpEntityDescription
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config, async_add_entities, discovery_info=None
-) -> None:
-    """Old way of setting up UPnP/IGD sensors."""
-    _LOGGER.debug(
-        "async_setup_platform: config: %s, discovery: %s", config, discovery_info
-    )
+@dataclass(frozen=True)
+class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription):
+    """A class that describes a sensor UPnP entities."""
+
+
+SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
+    UpnpSensorEntityDescription(
+        key=BYTES_RECEIVED,
+        translation_key="data_received",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_SENT,
+        translation_key="data_sent",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_RECEIVED,
+        translation_key="packets_received",
+        native_unit_of_measurement=DATA_PACKETS,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_SENT,
+        translation_key="packets_sent",
+        native_unit_of_measurement=DATA_PACKETS,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_IP,
+        translation_key="external_ip",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_UPTIME,
+        translation_key="uptime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=WAN_STATUS,
+        translation_key="wan_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    UpnpSensorEntityDescription(
+        key=PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
+        translation_key="port_mapping_number_of_entries_ipv4",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_RECEIVED,
+        translation_key="download_speed",
+        value_key=KIBIBYTES_PER_SEC_RECEIVED,
+        unique_id="KiB/sec_received",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_SENT,
+        translation_key="upload_speed",
+        value_key=KIBIBYTES_PER_SEC_SENT,
+        unique_id="KiB/sec_sent",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_RECEIVED,
+        translation_key="packet_download_speed",
+        value_key=PACKETS_PER_SEC_RECEIVED,
+        unique_id="packets/sec_received",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_SENT,
+        translation_key="packet_upload_speed",
+        value_key=PACKETS_PER_SEC_SENT,
+        unique_id="packets/sec_sent",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UpnpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    udn = config_entry.data[CONFIG_ENTRY_UDN]
-    device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+    coordinator = config_entry.runtime_data
 
-    update_interval_sec = config_entry.options.get(
-        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    update_interval = timedelta(seconds=update_interval_sec)
-    _LOGGER.debug("update_interval: %s", update_interval)
-    _LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
-        hass,
-        _LOGGER,
-        name=device.name,
-        update_method=device.async_get_traffic_data,
-        update_interval=update_interval,
-    )
-    device.coordinator = coordinator
-
-    await coordinator.async_refresh()
-
-    sensors = [
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
+    entities: list[UpnpSensor] = [
+        UpnpSensor(
+            coordinator=coordinator,
+            entity_description=entity_description,
+        )
+        for entity_description in SENSOR_DESCRIPTIONS
+        if coordinator.data.get(entity_description.key) is not None
     ]
-    async_add_entities(sensors, True)
+
+    async_add_entities(entities)
+    LOGGER.debug("Added sensor entities: %s", entities)
 
 
-class UpnpSensor(CoordinatorEntity, SensorEntity):
+class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
-        device: Device,
-        sensor_type: Mapping[str, str],
-    ) -> None:
-        """Initialize the base sensor."""
-        super().__init__(coordinator)
-        self._device = device
-        self._sensor_type = sensor_type
+    entity_description: UpnpSensorEntityDescription
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        device_value_key = self._sensor_type["device_value_key"]
-        return (
-            self.coordinator.last_update_success
-            and device_value_key in self.coordinator.data
-        )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self._sensor_type['name']}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._sensor_type['unique_id']}"
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._sensor_type["unit"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get device info."""
-        return {
-            "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "name": self._device.name,
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_name,
-        }
-
-
-class RawUpnpSensor(UpnpSensor):
-    """Representation of a UPnP/IGD sensor."""
-
-    @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | int | float | None:
         """Return the state of the device."""
-        device_value_key = self._sensor_type["device_value_key"]
-        value = self.coordinator.data[device_value_key]
-        if value is None:
+        if (key := self.entity_description.value_key) is None:
             return None
-        return format(value, "d")
+        return self.coordinator.data[key]
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
 
-class DerivedUpnpSensor(UpnpSensor):
-    """Representation of a UNIT Sent/Received per second sensor."""
-
-    def __init__(self, coordinator, device, sensor_type) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, device, sensor_type)
-        self._last_value = None
-        self._last_timestamp = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self._sensor_type['derived_name']}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._sensor_type['derived_unique_id']}"
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._sensor_type["derived_unit"]
-
-    def _has_overflowed(self, current_value) -> bool:
-        """Check if value has overflowed."""
-        return current_value < self._last_value
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the device."""
-        # Can't calculate any derivative if we have only one value.
-        device_value_key = self._sensor_type["device_value_key"]
-        current_value = self.coordinator.data[device_value_key]
-        if current_value is None:
-            return None
-        current_timestamp = self.coordinator.data[TIMESTAMP]
-        if self._last_value is None or self._has_overflowed(current_value):
-            self._last_value = current_value
-            self._last_timestamp = current_timestamp
-            return None
-
-        # Calculate derivative.
-        delta_value = current_value - self._last_value
-        if self._sensor_type["unit"] == DATA_BYTES:
-            delta_value /= KIBIBYTE
-        delta_time = current_timestamp - self._last_timestamp
-        if delta_time.total_seconds() == 0:
-            # Prevent division by 0.
-            return None
-        derived = delta_value / delta_time.total_seconds()
-
-        # Store current values for future use.
-        self._last_value = current_value
-        self._last_timestamp = current_timestamp
-
-        return format(derived, ".1f")
+        # Register self at coordinator.
+        key = self.entity_description.key
+        entity_id = self.entity_id
+        unregister = self.coordinator.register_entity(key, entity_id)
+        self.async_on_remove(unregister)

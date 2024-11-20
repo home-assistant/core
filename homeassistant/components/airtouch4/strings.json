@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_units": "Could not find any AirTouch 4 Groups."
+    },
+    "step": {
+      "user": {
+        "title": "Set up your AirTouch 4 connection details.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your AirTouch controller."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Helper to test significant sensor state changes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,11 +7,27 @@ from typing import Any
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.significant_change import (
+    check_absolute_change,
+    check_percentage_change,
+    check_valid_float,
+)
 
-from . import DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
+from . import SensorDeviceClass
+
+
+def _absolute_and_relative_change(
+    old_state: float | None,
+    new_state: float | None,
+    absolute_change: float,
+    percentage_change: float,
+) -> bool:
+    return check_absolute_change(
+        old_state, new_state, absolute_change
+    ) and check_percentage_change(old_state, new_state, percentage_change)
 
 
 @callback
@@ -23,25 +40,45 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    device_class = new_attrs.get(ATTR_DEVICE_CLASS)
-
-    if device_class is None:
+    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
         return None
 
-    if device_class == DEVICE_CLASS_TEMPERATURE:
-        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-            change: float | int = 1
+    absolute_change: float | None = None
+    percentage_change: float | None = None
+    if device_class == SensorDeviceClass.TEMPERATURE:
+        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
+            absolute_change = 1.0
         else:
-            change = 0.5
+            absolute_change = 0.5
 
-        old_value = float(old_state)
-        new_value = float(new_state)
-        return abs(old_value - new_value) >= change
+    if device_class in (SensorDeviceClass.BATTERY, SensorDeviceClass.HUMIDITY):
+        absolute_change = 1.0
 
-    if device_class in (DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY):
-        old_value = float(old_state)
-        new_value = float(new_state)
+    if device_class in (
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    ):
+        absolute_change = 1.0
+        percentage_change = 2.0
 
-        return abs(old_value - new_value) >= 1
+    if not check_valid_float(new_state):
+        # New state is invalid, don't report it
+        return False
 
+    if not check_valid_float(old_state):
+        # Old state was invalid, we should report again
+        return True
+
+    if absolute_change is not None and percentage_change is not None:
+        return _absolute_and_relative_change(
+            float(old_state), float(new_state), absolute_change, percentage_change
+        )
+    if absolute_change is not None:
+        return check_absolute_change(
+            float(old_state), float(new_state), absolute_change
+        )
     return None

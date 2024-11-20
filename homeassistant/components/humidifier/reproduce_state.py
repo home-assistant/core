@@ -1,4 +1,5 @@
 """Module that groups code required to handle state restore for component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,16 +29,13 @@ async def _async_reproduce_states(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    async def call_service(service: str, keys: Iterable, data=None):
+    async def call_service(service: str, keys: Iterable[str]) -> None:
         """Call service with set of attributes given."""
-        data = data or {}
-        data["entity_id"] = state.entity_id
+        data = {"entity_id": state.entity_id}
         for key in keys:
             if key in state.attributes:
                 data[key] = state.attributes[key]
@@ -64,7 +62,9 @@ async def _async_reproduce_states(
     if cur_state.state != STATE_ON:
         await call_service(SERVICE_TURN_ON, [])
         # refetch the state as turning on might allow us to see some more values
-        cur_state = hass.states.get(state.entity_id)
+        if (cur_state := hass.states.get(state.entity_id)) is None:
+            _LOGGER.warning("Unable to find entity %s", state.entity_id)
+            return
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity

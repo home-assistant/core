@@ -1,0 +1,63 @@
+{
+  "title": "Integral sensor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Riemann sum integral sensor",
+        "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
+        "data": {
+          "method": "Integration method",
+          "name": "[%key:common::config_flow::data::name%]",
+          "round": "Precision",
+          "source": "Input sensor",
+          "unit_prefix": "Metric prefix",
+          "unit_time": "Time unit",
+          "max_sub_interval": "Max sub-interval"
+        },
+        "data_description": {
+          "round": "Controls the number of decimal digits in the output.",
+          "unit_prefix": "The output will be scaled according to the selected metric prefix.",
+          "unit_time": "The output will be scaled according to the selected time unit.",
+          "max_sub_interval": "Applies time based integration if the source did not change for this duration. Use 0 for no time based updates."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "method": "[%key:component::integration::config::step::user::data::method%]",
+          "round": "[%key:component::integration::config::step::user::data::round%]",
+          "source": "[%key:component::integration::config::step::user::data::source%]",
+          "unit_prefix": "[%key:component::integration::config::step::user::data::unit_prefix%]",
+          "unit_time": "[%key:component::integration::config::step::user::data::unit_time%]",
+          "max_sub_interval": "[%key:component::integration::config::step::user::data::max_sub_interval%]"
+        },
+        "data_description": {
+          "round": "[%key:component::integration::config::step::user::data_description::round%]",
+          "unit_prefix": "[%key:component::integration::config::step::user::data_description::unit_prefix%]",
+          "unit_time": "[%key:component::integration::config::step::user::data_description::unit_time%]",
+          "max_sub_interval": "[%key:component::integration::config::step::user::data_description::max_sub_interval%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "method": {
+      "options": {
+        "trapezoidal": "Trapezoidal rule",
+        "left": "Left Riemann sum",
+        "right": "Right Riemann sum"
+      }
+    },
+    "unit_time": {
+      "options": {
+        "s": "Seconds",
+        "min": "Minutes",
+        "h": "Hours",
+        "d": "Days"
+      }
+    }
+  }
+}

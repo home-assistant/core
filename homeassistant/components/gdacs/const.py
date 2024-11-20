@@ -1,11 +1,14 @@
 """Define constants for the GDACS integration."""
+
 from datetime import timedelta
 
 from aio_georss_gdacs.consts import EVENT_TYPE_MAP
 
+from homeassistant.const import Platform
+
 DOMAIN = "gdacs"
 
-PLATFORMS = ("sensor", "geo_location")
+PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
 
 FEED = "feed"
 

@@ -1,7 +1,8 @@
 """Tests for the AdGuard Home config flow."""
+
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -14,6 +15,8 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -34,7 +37,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -43,9 +46,11 @@ async def test_connection_error(
 ) -> None:
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         exc=aiohttp.ClientError,
     )
 
@@ -54,7 +59,7 @@ async def test_connection_error(
     )
 
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -64,9 +69,11 @@ async def test_full_flow_implementation(
 ) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         json={"version": "v0.99.0"},
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
@@ -77,14 +84,14 @@ async def test_full_flow_implementation(
 
     assert result
     assert result.get("flow_id")
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
     assert result2
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == FIXTURE_USER_INPUT[CONF_HOST]
 
     data = result2.get("data")
@@ -109,7 +116,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
     )
     assert result
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -121,11 +128,20 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": "3000",
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -137,11 +153,20 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": "3000",
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -157,18 +182,27 @@ async def test_hassio_confirm(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": 3000,
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "AdGuard Home Addon"}
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "AdGuard Home Addon"
 
     data = result2.get("data")
@@ -191,13 +225,22 @@ async def test_hassio_connection_error(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": 3000,
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("errors") == {"base": "cannot_connect"}

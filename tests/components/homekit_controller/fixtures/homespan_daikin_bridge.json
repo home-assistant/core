@@ -1,0 +1,161 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr", "ev"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garzola Marco",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Daikin-fwec3a-esp32-homekit-bridge",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Air Conditioner",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "00000001",
+            "description": "Serial Number",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 9,
+        "type": "000000BC-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Active"
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 11,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 27.9,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 99,
+            "minStep": 0.5
+          },
+          {
+            "type": "000000B1-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 3,
+            "description": "Current Heater Cooler State"
+          },
+          {
+            "type": "000000B2-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Target Heater Cooler State"
+          },
+          {
+            "type": "0000000D-0000-1000-8000-0026BB765291",
+            "iid": 14,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 24.5,
+            "description": "Cooling Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 18,
+            "maxValue": 32,
+            "minStep": 0.5
+          },
+          {
+            "type": "00000012-0000-1000-8000-0026BB765291",
+            "iid": 15,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 24.5,
+            "description": "Heating Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 13,
+            "maxValue": 27,
+            "minStep": 0.5
+          },
+          {
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "iid": 16,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 100,
+            "description": "Rotation Speed",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "SlaveID 1",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  }
+]

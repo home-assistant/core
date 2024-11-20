@@ -1,0 +1,3 @@
+this is not a slug but it should be one:
+  switch:
+    - platform: template

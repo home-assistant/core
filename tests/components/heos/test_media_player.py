@@ -1,7 +1,11 @@
 """Tests for the Heos Media Player platform."""
+
 import asyncio
+from typing import Any
 
 from pyheos import CommandFailedError, const
+from pyheos.error import HeosError
+import pytest
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -9,7 +13,8 @@ from homeassistant.components.heos.const import (
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -25,17 +30,13 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_URL,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
+    SERVICE_UNJOIN,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,18 +54,26 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 
-async def setup_platform(hass, config_entry, config):
+
+async def setup_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry, config: dict[str, Any]
+) -> None:
     """Set up the media player platform for testing."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
 
-async def test_state_attributes(hass, config_entry, config, controller):
+async def test_state_attributes(
+    hass: HomeAssistant, config_entry, config, controller
+) -> None:
     """Tests the state attributes."""
     await setup_platform(hass, config_entry, config)
     state = hass.states.get("media_player.test_player")
@@ -72,7 +81,7 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.25
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "1"
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert ATTR_MEDIA_DURATION not in state.attributes
     assert ATTR_MEDIA_POSITION not in state.attributes
     assert state.attributes[ATTR_MEDIA_TITLE] == "Song"
@@ -87,11 +96,11 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_PLAY
-        | SUPPORT_PAUSE
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
+        == MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | media_player.BASE_SUPPORTED_FEATURES
     )
     assert ATTR_INPUT_SOURCE not in state.attributes
@@ -101,7 +110,9 @@ async def test_state_attributes(hass, config_entry, config, controller):
     )
 
 
-async def test_updates_from_signals(hass, config_entry, config, controller, favorites):
+async def test_updates_from_signals(
+    hass: HomeAssistant, config_entry, config, controller, favorites
+) -> None:
     """Tests dispatched signals update player."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -141,8 +152,12 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
 
 
 async def test_updates_from_connection_event(
-    hass, config_entry, config, controller, caplog
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Tests player updates from connection event after connection failure."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -151,7 +166,7 @@ async def test_updates_from_connection_event(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     # Connected
     player.available = True
@@ -187,8 +202,8 @@ async def test_updates_from_connection_event(
 
 
 async def test_updates_from_sources_updated(
-    hass, config_entry, config, controller, input_sources
-):
+    hass: HomeAssistant, config_entry, config, controller, input_sources
+) -> None:
     """Tests player updates from changes in sources list."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -197,7 +212,7 @@ async def test_updates_from_sources_updated(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     input_sources.clear()
     player.heos.dispatcher.send(
@@ -211,8 +226,13 @@ async def test_updates_from_sources_updated(
 
 
 async def test_updates_from_players_changed(
-    hass, config_entry, config, controller, change_data, caplog
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    change_data,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -221,7 +241,7 @@ async def test_updates_from_players_changed(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     assert hass.states.get("media_player.test_player").state == STATE_IDLE
     player.state = const.PLAY_STATE_PLAY
@@ -234,17 +254,22 @@ async def test_updates_from_players_changed(
 
 
 async def test_updates_from_players_changed_new_ids(
-    hass, config_entry, config, controller, change_data_mapped_ids, caplog
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry,
+    config,
+    controller,
+    change_data_mapped_ids,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device({(DOMAIN, 1)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 1)})
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -255,7 +280,7 @@ async def test_updates_from_players_changed_new_ids(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT,
         const.EVENT_PLAYERS_CHANGED,
@@ -264,17 +289,19 @@ async def test_updates_from_players_changed_new_ids(
     await event.wait()
 
     # Assert device registry identifiers were updated
-    assert len(device_registry.devices) == 1
-    assert device_registry.async_get_device({(DOMAIN, 101)})
+    assert len(device_registry.devices) == 2
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 101)})
     # Assert entity registry unique id was updated
-    assert len(entity_registry.entities) == 1
+    assert len(entity_registry.entities) == 2
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
         == "media_player.test_player"
     )
 
 
-async def test_updates_from_user_changed(hass, config_entry, config, controller):
+async def test_updates_from_user_changed(
+    hass: HomeAssistant, config_entry, config, controller
+) -> None:
     """Tests player updates from changes in user."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -283,7 +310,7 @@ async def test_updates_from_user_changed(hass, config_entry, config, controller)
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     controller.is_signed_in = False
     controller.signed_in_username = None
@@ -297,7 +324,13 @@ async def test_updates_from_user_changed(hass, config_entry, config, controller)
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
 
 
-async def test_clear_playlist(hass, config_entry, config, controller, caplog):
+async def test_clear_playlist(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the clear playlist service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -315,7 +348,13 @@ async def test_clear_playlist(hass, config_entry, config, controller, caplog):
     assert "Unable to clear playlist: Failure (1)" in caplog.text
 
 
-async def test_pause(hass, config_entry, config, controller, caplog):
+async def test_pause(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the pause service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -333,7 +372,13 @@ async def test_pause(hass, config_entry, config, controller, caplog):
     assert "Unable to pause: Failure (1)" in caplog.text
 
 
-async def test_play(hass, config_entry, config, controller, caplog):
+async def test_play(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the play service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -351,7 +396,13 @@ async def test_play(hass, config_entry, config, controller, caplog):
     assert "Unable to play: Failure (1)" in caplog.text
 
 
-async def test_previous_track(hass, config_entry, config, controller, caplog):
+async def test_previous_track(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the previous track service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -369,7 +420,13 @@ async def test_previous_track(hass, config_entry, config, controller, caplog):
     assert "Unable to move to previous track: Failure (1)" in caplog.text
 
 
-async def test_next_track(hass, config_entry, config, controller, caplog):
+async def test_next_track(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the next track service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -387,7 +444,13 @@ async def test_next_track(hass, config_entry, config, controller, caplog):
     assert "Unable to move to next track: Failure (1)" in caplog.text
 
 
-async def test_stop(hass, config_entry, config, controller, caplog):
+async def test_stop(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the stop service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -405,7 +468,13 @@ async def test_stop(hass, config_entry, config, controller, caplog):
     assert "Unable to stop: Failure (1)" in caplog.text
 
 
-async def test_volume_mute(hass, config_entry, config, controller, caplog):
+async def test_volume_mute(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the volume mute service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -423,7 +492,13 @@ async def test_volume_mute(hass, config_entry, config, controller, caplog):
     assert "Unable to set mute: Failure (1)" in caplog.text
 
 
-async def test_shuffle_set(hass, config_entry, config, controller, caplog):
+async def test_shuffle_set(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the shuffle set service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -441,7 +516,13 @@ async def test_shuffle_set(hass, config_entry, config, controller, caplog):
     assert "Unable to set shuffle: Failure (1)" in caplog.text
 
 
-async def test_volume_set(hass, config_entry, config, controller, caplog):
+async def test_volume_set(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the volume set service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -459,7 +540,9 @@ async def test_volume_set(hass, config_entry, config, controller, caplog):
     assert "Unable to set volume level: Failure (1)" in caplog.text
 
 
-async def test_select_favorite(hass, config_entry, config, controller, favorites):
+async def test_select_favorite(
+    hass: HomeAssistant, config_entry, config, controller, favorites
+) -> None:
     """Tests selecting a music service favorite and state."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -482,7 +565,9 @@ async def test_select_favorite(hass, config_entry, config, controller, favorites
     assert state.attributes[ATTR_INPUT_SOURCE] == favorite.name
 
 
-async def test_select_radio_favorite(hass, config_entry, config, controller, favorites):
+async def test_select_radio_favorite(
+    hass: HomeAssistant, config_entry, config, controller, favorites
+) -> None:
     """Tests selecting a radio favorite and state."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -507,8 +592,13 @@ async def test_select_radio_favorite(hass, config_entry, config, controller, fav
 
 
 async def test_select_radio_favorite_command_error(
-    hass, config_entry, config, controller, favorites, caplog
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    favorites,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Tests command error logged when playing favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -526,8 +616,8 @@ async def test_select_radio_favorite_command_error(
 
 
 async def test_select_input_source(
-    hass, config_entry, config, controller, input_sources
-):
+    hass: HomeAssistant, config_entry, config, controller, input_sources
+) -> None:
     """Tests selecting input source and state."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -554,7 +644,13 @@ async def test_select_input_source(
     assert state.attributes[ATTR_INPUT_SOURCE] == input_source.name
 
 
-async def test_select_input_unknown(hass, config_entry, config, controller, caplog):
+async def test_select_input_unknown(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Tests selecting an unknown input."""
     await setup_platform(hass, config_entry, config)
     await hass.services.async_call(
@@ -567,8 +663,13 @@ async def test_select_input_unknown(hass, config_entry, config, controller, capl
 
 
 async def test_select_input_command_error(
-    hass, config_entry, config, controller, caplog, input_sources
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+    input_sources,
+) -> None:
     """Tests selecting an unknown input."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -587,14 +688,22 @@ async def test_select_input_command_error(
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
-async def test_unload_config_entry(hass, config_entry, config, controller):
+async def test_unload_config_entry(
+    hass: HomeAssistant, config_entry, config, controller
+) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 
-async def test_play_media_url(hass, config_entry, config, controller, caplog):
+async def test_play_media_url(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the play media service with type url."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -606,7 +715,7 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -617,7 +726,13 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
     assert "Unable to play media: Failure (1)" in caplog.text
 
 
-async def test_play_media_music(hass, config_entry, config, controller, caplog):
+async def test_play_media_music(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the play media service with type music."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -629,7 +744,7 @@ async def test_play_media_music(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -641,8 +756,13 @@ async def test_play_media_music(hass, config_entry, config, controller, caplog):
 
 
 async def test_play_media_quick_select(
-    hass, config_entry, config, controller, caplog, quick_selects
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+    quick_selects,
+) -> None:
     """Test the play media service with type quick_select."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -691,8 +811,13 @@ async def test_play_media_quick_select(
 
 
 async def test_play_media_playlist(
-    hass, config_entry, config, controller, caplog, playlists
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+    playlists,
+) -> None:
     """Test the play media service with type playlist."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -703,7 +828,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
         },
         blocking=True,
@@ -718,7 +843,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
             ATTR_MEDIA_ENQUEUE: True,
         },
@@ -732,7 +857,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: "Invalid",
         },
         blocking=True,
@@ -742,8 +867,13 @@ async def test_play_media_playlist(
 
 
 async def test_play_media_favorite(
-    hass, config_entry, config, controller, caplog, favorites
-):
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+    favorites,
+) -> None:
     """Test the play media service with type favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -791,7 +921,13 @@ async def test_play_media_favorite(
     assert "Unable to play media: Invalid favorite 'Invalid'" in caplog.text
 
 
-async def test_play_media_invalid_type(hass, config_entry, config, controller, caplog):
+async def test_play_media_invalid_type(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the play media service with an invalid type."""
     await setup_platform(hass, config_entry, config)
     await hass.services.async_call(
@@ -805,3 +941,117 @@ async def test_play_media_invalid_type(hass, config_entry, config, controller, c
         blocking=True,
     )
     assert "Unable to play media: Unsupported media type 'Other'" in caplog.text
+
+
+async def test_media_player_join_group(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    controller.create_group.assert_called_once_with(
+        1,
+        [
+            2,
+        ],
+    )
+    assert "Failed to group media_player.test_player with" not in caplog.text
+
+    controller.create_group.side_effect = HeosError("error")
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    assert "Failed to group media_player.test_player with" in caplog.text
+
+
+async def test_media_player_group_members(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test group_members attribute."""
+    await setup_platform(hass, config_entry, config)
+    await hass.async_block_till_done()
+    player_entity = hass.states.get("media_player.test_player")
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == [
+        "media_player.test_player",
+        "media_player.test_player_2",
+    ]
+    controller.get_groups.assert_called_once()
+    assert "Unable to get HEOS group info" not in caplog.text
+
+
+async def test_media_player_group_members_error(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error in HEOS API."""
+    controller.get_groups.side_effect = HeosError("error")
+    await setup_platform(hass, config_entry, config)
+    await hass.async_block_till_done()
+    assert "Unable to get HEOS group info" in caplog.text
+    player_entity = hass.states.get("media_player.test_player")
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
+
+
+async def test_media_player_unjoin_group(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ungrouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+
+    player.heos.dispatcher.send(
+        const.SIGNAL_PLAYER_EVENT,
+        player.player_id,
+        const.EVENT_PLAYER_STATE_CHANGED,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+    )
+    controller.create_group.assert_called_once_with(1, [])
+    assert "Failed to ungroup media_player.test_player" not in caplog.text
+
+    controller.create_group.side_effect = HeosError("error")
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+    )
+    assert "Failed to ungroup media_player.test_player" in caplog.text

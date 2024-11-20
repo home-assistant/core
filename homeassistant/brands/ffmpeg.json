@@ -1,0 +1,5 @@
+{
+  "domain": "ffmpeg",
+  "name": "FFmpeg",
+  "integrations": ["ffmpeg", "ffmpeg_motion", "ffmpeg_noise"]
+}

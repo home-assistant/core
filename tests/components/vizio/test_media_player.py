@@ -1,13 +1,15 @@
 """Tests for Vizio config flow."""
+
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
+from freezegun import freeze_time
 import pytest
-from pytest import raises
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
     APPS,
@@ -21,13 +23,14 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -37,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.vizio import validate_apps
 from homeassistant.components.vizio.const import (
@@ -102,8 +106,8 @@ def _get_ha_power_state(vizio_power_state: bool | None) -> str:
 
 def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
     """Assert source list, source, and volume level based on attr dict and device class."""
-    assert attr["source_list"] == INPUT_LIST
-    assert attr["source"] == CURRENT_INPUT
+    assert attr[ATTR_INPUT_SOURCE_LIST] == INPUT_LIST
+    assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
     assert (
         attr["volume_level"]
         == float(int(MAX_VOLUME[vizio_device_class] / 2))
@@ -126,17 +130,21 @@ def _get_attr_and_assert_base_attr(
 @asynccontextmanager
 async def _cm_for_test_setup_without_apps(
     all_settings: dict[str, Any], vizio_power_state: bool | None
-) -> None:
+) -> AsyncIterator[None]:
     """Context manager to setup test for Vizio devices without including app specific patches."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
-        return_value=all_settings,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
-        return_value=EQ_LIST,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=vizio_power_state,
+    with (
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+            return_value=all_settings,
+        ),
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+            return_value=EQ_LIST,
+        ),
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            return_value=vizio_power_state,
+        ),
     ):
         yield
 
@@ -157,7 +165,9 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
     ):
         await _add_config_entry_to_hass(hass, config_entry)
 
-        attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, ha_power_state)
+        attr = _get_attr_and_assert_base_attr(
+            hass, MediaPlayerDeviceClass.TV, ha_power_state
+        )
         if ha_power_state == STATE_ON:
             _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
             assert "sound_mode" not in attr
@@ -191,7 +201,7 @@ async def _test_setup_speaker(
             await _add_config_entry_to_hass(hass, config_entry)
 
             attr = _get_attr_and_assert_base_attr(
-                hass, DEVICE_CLASS_SPEAKER, ha_power_state
+                hass, MediaPlayerDeviceClass.SPEAKER, ha_power_state
             )
             if ha_power_state == STATE_ON:
                 _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
@@ -202,7 +212,7 @@ async def _test_setup_speaker(
 @asynccontextmanager
 async def _cm_for_test_setup_tv_with_apps(
     hass: HomeAssistant, device_config: dict[str, Any], app_config: dict[str, Any]
-) -> None:
+) -> AsyncIterator[None]:
     """Context manager to setup test for Vizio TV with support for apps."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=vol.Schema(VIZIO_SCHEMA)(device_config), unique_id=UNIQUE_ID
@@ -218,7 +228,9 @@ async def _cm_for_test_setup_tv_with_apps(
         ):
             await _add_config_entry_to_hass(hass, config_entry)
 
-            attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
+            attr = _get_attr_and_assert_base_attr(
+                hass, MediaPlayerDeviceClass.TV, STATE_ON
+            )
             assert (
                 attr["volume_level"]
                 == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
@@ -236,7 +248,7 @@ def _assert_source_list_with_apps(
         if app_to_remove in list_to_test:
             list_to_test.remove(app_to_remove)
 
-    assert attr["source_list"] == list_to_test
+    assert attr[ATTR_INPUT_SOURCE_LIST] == list_to_test
 
 
 async def _test_service(
@@ -269,63 +281,46 @@ async def _test_service(
             assert service_call.call_args == call(*args, **kwargs)
 
 
-async def test_speaker_on(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_on(hass: HomeAssistant) -> None:
     """Test Vizio Speaker entity setup when on."""
     await _test_setup_speaker(hass, True)
 
 
-async def test_speaker_off(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_off(hass: HomeAssistant) -> None:
     """Test Vizio Speaker entity setup when off."""
     await _test_setup_speaker(hass, False)
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_speaker_unavailable(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio Speaker entity setup when unavailable."""
     await _test_setup_speaker(hass, None)
 
 
-async def test_init_tv_on(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_init_tv_on(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when on."""
     await _test_setup_tv(hass, True)
 
 
-async def test_init_tv_off(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_init_tv_off(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when off."""
     await _test_setup_tv(hass, False)
 
 
-async def test_init_tv_unavailable(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_init_tv_unavailable(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when unavailable."""
     await _test_setup_tv(hass, None)
 
 
-async def test_setup_unavailable_speaker(
-    hass: HomeAssistant, vizio_cant_connect: pytest.fixture
-) -> None:
+@pytest.mark.usefixtures("vizio_cant_connect")
+async def test_setup_unavailable_speaker(hass: HomeAssistant) -> None:
     """Test speaker entity sets up as unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
@@ -335,9 +330,8 @@ async def test_setup_unavailable_speaker(
     assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
-async def test_setup_unavailable_tv(
-    hass: HomeAssistant, vizio_cant_connect: pytest.fixture
-) -> None:
+@pytest.mark.usefixtures("vizio_cant_connect")
+async def test_setup_unavailable_tv(hass: HomeAssistant) -> None:
     """Test TV entity sets up as unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
@@ -347,11 +341,8 @@ async def test_setup_unavailable_tv(
     assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
-async def test_services(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_services(hass: HomeAssistant) -> None:
     """Test all Vizio media player entity services."""
     await _test_setup_tv(hass, True)
 
@@ -434,13 +425,12 @@ async def test_services(
         "eq",
         "Music",
     )
+    await _test_service(hass, MP_DOMAIN, "play", SERVICE_MEDIA_PLAY, None)
+    await _test_service(hass, MP_DOMAIN, "pause", SERVICE_MEDIA_PAUSE, None)
 
 
-async def test_options_update(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_options_update(hass: HomeAssistant) -> None:
     """Test when config entry update event fires."""
     await _test_setup_speaker(hass, True)
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -453,6 +443,7 @@ async def test_options_update(
         options=new_options,
     )
     assert config_entry.options == updated_options
+    await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )
@@ -462,13 +453,13 @@ async def _test_update_availability_switch(
     hass: HomeAssistant,
     initial_power_state: bool | None,
     final_power_state: bool | None,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     now = dt_util.utcnow()
     future_interval = timedelta(minutes=1)
 
     # Setup device as if time is right now
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         await _test_setup_speaker(hass, initial_power_state)
 
     # Clear captured logs so that only availability state changes are captured for
@@ -478,11 +469,12 @@ async def _test_update_availability_switch(
     # Fast forward time to future twice to trigger update and assert vizio log message
     for i in range(1, 3):
         future = now + (future_interval * i)
-        with patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-            return_value=final_power_state,
-        ), patch("homeassistant.util.dt.utcnow", return_value=future), patch(
-            "homeassistant.util.utcnow", return_value=future
+        with (
+            patch(
+                "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+                return_value=final_power_state,
+            ),
+            freeze_time(future),
         ):
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -501,31 +493,28 @@ async def _test_update_availability_switch(
     assert len(vizio_log_list) == 1
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_update_unavailable_to_available(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device becomes available after being unavailable."""
     await _test_update_availability_switch(hass, None, True, caplog)
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_update_available_to_unavailable(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device becomes unavailable after being available."""
     await _test_update_availability_switch(hass, True, None, caplog)
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_apps(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -533,8 +522,8 @@ async def test_setup_with_apps(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
@@ -549,47 +538,44 @@ async def test_setup_with_apps(
     )
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_apps_include(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["include"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
         hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_apps_exclude(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["exclude"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
         hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_apps_additional_apps_config(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["additional_configs"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -598,7 +584,7 @@ async def test_setup_with_apps_additional_apps_config(
         ADDITIONAL_APP_CONFIG["config"],
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        assert attr["source_list"].count(CURRENT_APP) == 1
+        assert attr[ATTR_INPUT_SOURCE_LIST].count(CURRENT_APP) == 1
         _assert_source_list_with_apps(
             list(
                 INPUT_LIST_WITH_APPS
@@ -613,8 +599,8 @@ async def test_setup_with_apps_additional_apps_config(
             ),
             attr,
         )
-        assert ADDITIONAL_APP_CONFIG["name"] in attr["source_list"]
-        assert attr["source"] == ADDITIONAL_APP_CONFIG["name"]
+        assert ADDITIONAL_APP_CONFIG["name"] in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == ADDITIONAL_APP_CONFIG["name"]
         assert attr["app_name"] == ADDITIONAL_APP_CONFIG["name"]
         assert "app_id" not in attr
 
@@ -637,11 +623,14 @@ async def test_setup_with_apps_additional_apps_config(
     )
 
     # Test that invalid app does nothing
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
-    ) as service_call1, patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
-    ) as service_call2:
+    with (
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
+        ) as service_call1,
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
+        ) as service_call2,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -652,20 +641,19 @@ async def test_setup_with_apps_additional_apps_config(
         assert not service_call2.called
 
 
-def test_invalid_apps_config(hass: HomeAssistant):
+def test_invalid_apps_config(hass: HomeAssistant) -> None:
     """Test that schema validation fails on certain conditions."""
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_TV_APPS_FAILURE)
 
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_SPEAKER_APPS_FAILURE)
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_unknown_app_config(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where app config returned is unknown."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -673,16 +661,15 @@ async def test_setup_with_unknown_app_config(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert attr["source"] == UNKNOWN_APP
+        assert attr[ATTR_INPUT_SOURCE] == UNKNOWN_APP
         assert attr["app_name"] == UNKNOWN_APP
         assert attr["app_id"] == UNKNOWN_APP_CONFIG
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_setup_with_no_running_app(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where no app is running."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -690,16 +677,13 @@ async def test_setup_with_no_running_app(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert attr["source"] == "CAST"
+        assert attr[ATTR_INPUT_SOURCE] == "CAST"
         assert "app_id" not in attr
         assert "app_name" not in attr
 
 
-async def test_setup_tv_without_mute(
-    hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-) -> None:
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_setup_tv_without_mute(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when mute property isn't returned by Vizio API."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -713,21 +697,20 @@ async def test_setup_tv_without_mute(
     ):
         await _add_config_entry_to_hass(hass, config_entry)
 
-        attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
+        attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
         _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
         assert "sound_mode" not in attr
         assert "is_volume_muted" not in attr
 
 
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
 async def test_apps_update(
     hass: HomeAssistant,
-    vizio_connect: pytest.fixture,
-    vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where no app is running."""
     with patch(
-        "homeassistant.components.vizio.gen_apps_list_from_url",
+        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=None,
     ):
         async with _cm_for_test_setup_tv_with_apps(
@@ -735,18 +718,34 @@ async def test_apps_update(
         ):
             # Check source list, remove TV inputs, and verify that the integration is
             # using the default APPS list
-            sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+            sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
             apps = list(set(sources) - set(INPUT_LIST))
             assert len(apps) == len(APPS)
 
             with patch(
-                "homeassistant.components.vizio.gen_apps_list_from_url",
+                "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is
                 # now using the APP_LIST list
-                sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+                sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
                 apps = list(set(sources) - set(INPUT_LIST))
                 assert len(apps) == len(APP_LIST)
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps_on_input")
+async def test_vizio_update_with_apps_on_input(hass: HomeAssistant) -> None:
+    """Test a vizio TV with apps that is on a TV input."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        unique_id=UNIQUE_ID,
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
+    # app ID should not be in the attributes
+    assert "app_id" not in attr

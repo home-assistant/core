@@ -1,0 +1,143 @@
+{
+  "firmware_picker": {
+    "options": {
+      "step": {
+        "pick_firmware": {
+          "title": "Pick your firmware",
+          "description": "Let's get started with setting up your {model}. Do you want to use it to set up a Zigbee or Thread network?",
+          "menu_options": {
+            "pick_firmware_zigbee": "Zigbee",
+            "pick_firmware_thread": "Thread"
+          }
+        },
+        "install_zigbee_flasher_addon": {
+          "title": "Installing flasher",
+          "description": "Installing the Silicon Labs Flasher add-on."
+        },
+        "run_zigbee_flasher_addon": {
+          "title": "Installing Zigbee firmware",
+          "description": "Installing Zigbee firmware. This will take about a minute."
+        },
+        "uninstall_zigbee_flasher_addon": {
+          "title": "Removing flasher",
+          "description": "Removing the Silicon Labs Flasher add-on."
+        },
+        "zigbee_flasher_failed": {
+          "title": "Zigbee installation failed",
+          "description": "The Zigbee firmware installation process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
+        },
+        "confirm_zigbee": {
+          "title": "Zigbee setup complete",
+          "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
+        },
+        "install_otbr_addon": {
+          "title": "Installing OpenThread Border Router add-on",
+          "description": "The OpenThread Border Router (OTBR) add-on is being installed."
+        },
+        "start_otbr_addon": {
+          "title": "Starting OpenThread Border Router add-on",
+          "description": "The OpenThread Border Router (OTBR) add-on is now starting."
+        },
+        "otbr_failed": {
+          "title": "Failed to setup OpenThread Border Router",
+          "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
+        },
+        "confirm_otbr": {
+          "title": "OpenThread Border Router setup complete",
+          "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration once you exit."
+        }
+      },
+      "abort": {
+        "not_hassio_thread": "The OpenThread Border Router addon can only be installed with Home Assistant OS. If you would like to use the {model} as an Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
+        "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
+        "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
+        "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
+        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or addon is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
+      },
+      "progress": {
+        "install_zigbee_flasher_addon": "The Silicon Labs Flasher addon is installed, this may take a few minutes.",
+        "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
+        "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher addon is being removed."
+      }
+    }
+  },
+  "silabs_multiprotocol_hardware": {
+    "options": {
+      "step": {
+        "addon_not_installed": {
+          "title": "Enable multiprotocol support on the IEEE 802.15.4 radio",
+          "description": "When multiprotocol support is enabled, the {hardware_name}'s IEEE 802.15.4 radio can be used for both Zigbee and Thread (used by Matter) at the same time. If the radio is already used by the ZHA Zigbee integration, ZHA will be reconfigured to use the multiprotocol firmware.\n\nNote: This is an experimental feature.",
+          "data": {
+            "enable_multi_pan": "Enable multiprotocol support"
+          }
+        },
+        "addon_installed_other_device": {
+          "title": "Multiprotocol support is already enabled for another device"
+        },
+        "addon_menu": {
+          "menu_options": {
+            "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+            "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
+          }
+        },
+        "change_channel": {
+          "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+          "data": {
+            "channel": "Channel"
+          },
+          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this is an advanced operation and can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you have selected **Submit**, the channel change starts quietly in the background and will finish after a few minutes."
+        },
+        "install_addon": {
+          "title": "The Silicon Labs Multiprotocol add-on installation has started"
+        },
+        "notify_channel_change": {
+          "title": "Channel change initiated",
+          "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes."
+        },
+        "notify_unknown_multipan_user": {
+          "title": "Manual configuration may be needed",
+          "description": "Home Assistant can automatically change the channels for otbr and zha. If you have configured another integration to use the radio, for example Zigbee2MQTT, you will have to reconfigure the channel in that integration after completing this guide."
+        },
+        "reconfigure_addon": {
+          "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support"
+        },
+        "start_addon": {
+          "title": "The Silicon Labs Multiprotocol add-on is starting."
+        },
+        "uninstall_addon": {
+          "title": "Remove IEEE 802.15.4 radio multiprotocol support",
+          "description": "Disabling multiprotocol support will revert your {hardware_name}'s radio back to Zigbee-only firmware and will disable Thread support provided by the {hardware_name}. Your Thread devices will continue working only if you have another Thread border router nearby.\n\nIt will take a few minutes to install the Zigbee firmware and restoring a backup.",
+          "data": {
+            "disable_multi_pan": "Disable multiprotocol support"
+          }
+        },
+        "install_flasher_addon": {
+          "title": "The Silicon Labs Flasher add-on installation has started"
+        },
+        "configure_flasher_addon": {
+          "title": "The Silicon Labs Flasher add-on installation has started"
+        },
+        "start_flasher_addon": {
+          "title": "Installing firmware",
+          "description": "Zigbee firmware is now being installed. This will take a few minutes."
+        }
+      },
+      "error": {
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "addon_info_failed": "Failed to get {addon_name} add-on info.",
+        "addon_install_failed": "Failed to install the {addon_name} add-on.",
+        "addon_already_running": "Failed to start the {addon_name} add-on because it is already running.",
+        "addon_set_config_failed": "Failed to set {addon_name} configuration.",
+        "addon_start_failed": "Failed to start the {addon_name} add-on.",
+        "not_hassio": "The hardware options can only be configured on HassOS installations.",
+        "zha_migration_failed": "The ZHA migration did not succeed."
+      },
+      "progress": {
+        "install_addon": "Please wait while the {addon_name} add-on installation finishes. This can take several minutes.",
+        "start_addon": "Please wait while the {addon_name} add-on start completes. This may take some seconds."
+      }
+    }
+  }
+}

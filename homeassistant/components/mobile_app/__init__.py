@@ -1,18 +1,36 @@
 """Integrates Native Apps to Home Assistant."""
+
 from contextlib import suppress
+from functools import partial
+from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components import cloud, notify as hass_notify, websocket_api
+from homeassistant.auth import EVENT_USER_REMOVED
+from homeassistant.components import cloud, intent, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
+# Pre-import the platforms so they get loaded when the integration
+# is imported as they are almost always going to be loaded and its
+# cheaper to import them all at once.
+from . import (  # noqa: F401
+    binary_sensor as binary_sensor_pre_import,
+    device_tracker as device_tracker_pre_import,
+    notify as notify_pre_import,
+    sensor as sensor_pre_import,
+    websocket_api,
+)
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
@@ -31,16 +49,21 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
+from .timers import async_handle_timer_event
+from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
 
-PLATFORMS = "sensor", "binary_sensor", "device_tracker"
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    app_config = await store.async_load()
-    if app_config is None:
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    if (app_config := await store.async_load()) is None or not isinstance(
+        app_config, dict
+    ):
         app_config = {
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
@@ -63,15 +86,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             )
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config),
+        eager_start=True,
     )
 
-    websocket_api.async_register_command(hass, handle_push_notification_channel)
+    websocket_api.async_setup_commands(hass)
+
+    async def _handle_user_removed(event: Event) -> None:
+        """Remove an entry when the user is removed."""
+        user_id = event.data["user_id"]
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_USER_ID] == user_id:
+                await hass.config_entries.async_remove(entry.entry_id)
+
+    hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -79,7 +112,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -95,14 +128,43 @@ async def async_setup_entry(hass, entry):
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        if (
+            state is cloud.CloudConnectionState.CLOUD_CONNECTED
+            and CONF_CLOUDHOOK_URL not in entry.data
+        ):
+            await async_create_cloud_hook(hass, webhook_id, entry)
+
+    if cloud.async_is_logged_in(hass):
+        if (
+            CONF_CLOUDHOOK_URL not in entry.data
+            and cloud.async_active_subscription(hass)
+            and cloud.async_is_connected(hass)
+        ):
+            await async_create_cloud_hook(hass, webhook_id, entry)
+    elif CONF_CLOUDHOOK_URL in entry.data:
+        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        data = dict(entry.data)
+        data.pop(CONF_CLOUDHOOK_URL)
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if supports_push(hass, webhook_id):
+        entry.async_on_unload(
+            intent.async_register_timer_handler(
+                hass, device.id, partial(async_handle_timer_event, hass, entry)
+            )
+        )
 
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a mobile app entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
@@ -118,61 +180,12 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
     hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
-        with suppress(cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable, ValueError):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
-
-
-@callback
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "mobile_app/push_notification_channel",
-        vol.Required("webhook_id"): str,
-    }
-)
-def handle_push_notification_channel(hass, connection, msg):
-    """Set up a direct push notification channel."""
-    webhook_id = msg["webhook_id"]
-
-    # Validate that the webhook ID is registered to the user of the websocket connection
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(webhook_id)
-
-    if config_entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Webhook ID not found"
-        )
-        return
-
-    if config_entry.data[CONF_USER_ID] != connection.user.id:
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_UNAUTHORIZED,
-            "User not linked to this webhook ID",
-        )
-        return
-
-    registered_channels = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
-
-    if webhook_id in registered_channels:
-        registered_channels.pop(webhook_id)
-
-    @callback
-    def forward_push_notification(data):
-        """Forward events to websocket."""
-        connection.send_message(websocket_api.messages.event_message(msg["id"], data))
-
-    @callback
-    def unsub():
-        # pylint: disable=comparison-with-callable
-        if registered_channels.get(webhook_id) == forward_push_notification:
-            registered_channels.pop(webhook_id)
-
-    registered_channels[webhook_id] = forward_push_notification
-    connection.subscriptions[msg["id"]] = unsub
-    connection.send_result(msg["id"])

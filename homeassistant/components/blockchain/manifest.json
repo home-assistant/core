@@ -1,8 +1,9 @@
 {
   "domain": "blockchain",
   "name": "Blockchain.com",
-  "documentation": "https://www.home-assistant.io/integrations/blockchain",
-  "requirements": ["python-blockchain-api==0.0.2"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/blockchain",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyblockchain"],
+  "requirements": ["python-blockchain-api==0.0.2"]
 }

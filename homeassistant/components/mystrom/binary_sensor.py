@@ -1,19 +1,30 @@
 """Support for the myStrom buttons."""
+
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up myStrom Binary Sensor."""
     hass.http.register_view(MyStromView(async_add_entities))
-
-    return True
 
 
 class MyStromView(HomeAssistantView):
@@ -30,8 +41,7 @@ class MyStromView(HomeAssistantView):
 
     async def get(self, request):
         """Handle the GET request received from a myStrom button."""
-        res = await self._handle(request.app["hass"], request.query)
-        return res
+        return await self._handle(request.app[KEY_HASS], request.query)
 
     async def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
@@ -42,12 +52,15 @@ class MyStromView(HomeAssistantView):
 
         if button_action is None:
             _LOGGER.error("Received unidentified message from myStrom button: %s", data)
-            return (f"Received unidentified message: {data}", HTTP_UNPROCESSABLE_ENTITY)
+            return (
+                f"Received unidentified message: {data}",
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         button_id = data[button_action]
-        entity_id = f"{DOMAIN}.{button_id}_{button_action}"
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.{button_id}_{button_action}"
         if entity_id not in self.buttons:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "New myStrom button/action detected: %s/%s", button_id, button_action
             )
             self.buttons[entity_id] = MyStromBinarySensor(
@@ -57,10 +70,13 @@ class MyStromView(HomeAssistantView):
         else:
             new_state = self.buttons[entity_id].state == "off"
             self.buttons[entity_id].async_on_update(new_state)
+        return None
 
 
 class MyStromBinarySensor(BinarySensorEntity):
     """Representation of a myStrom button."""
+
+    _attr_should_poll = False
 
     def __init__(self, button_id):
         """Initialize the myStrom Binary sensor."""
@@ -71,11 +87,6 @@ class MyStromBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._button_id
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):

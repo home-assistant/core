@@ -1,8 +1,17 @@
 """Tests for the numato binary_sensor platform."""
+
+import logging
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from .common import NUMATO_CFG, mockup_raise
+from .numato_mock import NumatoGpioError, NumatoModuleMock
 
 MOCKUP_ENTITY_IDS = {
     "binary_sensor.numato_binary_sensor_mock_port2",
@@ -11,7 +20,9 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
+async def test_failing_setups_no_entities(
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -20,24 +31,30 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
-async def test_setup_callbacks(hass, numato_fixture, monkeypatch):
+async def test_setup_callbacks(hass: HomeAssistant, numato_fixture) -> None:
     """During setup a callback shall be registered."""
 
-    numato_fixture.discover()
+    with patch.object(
+        NumatoModuleMock.NumatoDeviceMock, "add_event_detect"
+    ) as mock_add_event_detect:
+        numato_fixture.discover()
+        assert await async_setup_component(hass, "numato", NUMATO_CFG)
+        await hass.async_block_till_done()  # wait until services are registered
 
-    def mock_add_event_detect(self, port, callback, direction):
-        assert self == numato_fixture.devices[0]
-        assert port == 1
-        assert callback is callable
-        assert direction == numato_fixture.BOTH
-
-    monkeypatch.setattr(
-        numato_fixture.devices[0], "add_event_detect", mock_add_event_detect
+    mock_add_event_detect.assert_called()
+    assert {call.args[0] for call in mock_add_event_detect.mock_calls} == {
+        int(port)
+        for port in NUMATO_CFG["numato"]["devices"][0]["binary_sensors"]["ports"]
+    }
+    assert all(callable(call.args[1]) for call in mock_add_event_detect.mock_calls)
+    assert all(
+        call.args[2] == numato_fixture.BOTH for call in mock_add_event_detect.mock_calls
     )
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
 
 
-async def test_hass_binary_sensor_notification(hass, numato_fixture):
+async def test_hass_binary_sensor_notification(
+    hass: HomeAssistant, numato_fixture
+) -> None:
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
@@ -51,12 +68,43 @@ async def test_hass_binary_sensor_notification(hass, numato_fixture):
     )
 
 
-async def test_binary_sensor_setup_without_discovery_info(hass, config, numato_fixture):
+async def test_binary_sensor_setup_without_discovery_info(
+    hass: HomeAssistant, config, numato_fixture
+) -> None:
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
-    await discovery.async_load_platform(hass, "binary_sensor", "numato", None, config)
+    await discovery.async_load_platform(
+        hass, Platform.BINARY_SENSOR, "numato", None, config
+    )
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id not in hass.states.async_entity_ids()
     await hass.async_block_till_done()  # wait for numato platform to be loaded
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id in hass.states.async_entity_ids()
+
+
+async def test_binary_sensor_setup_no_notify(
+    hass: HomeAssistant,
+    numato_fixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Setup of a device without notification capability shall print an info message."""
+    caplog.set_level(logging.INFO)
+
+    def raise_notification_error(self, port, callback, direction):
+        raise NumatoGpioError(f"{self!r} Mockup device doesn't support notifications.")
+
+    with patch.object(
+        NumatoModuleMock.NumatoDeviceMock,
+        "add_event_detect",
+        raise_notification_error,
+    ):
+        numato_fixture.discover()
+        assert await async_setup_component(hass, "numato", NUMATO_CFG)
+        await hass.async_block_till_done()  # wait until services are registered
+
+    assert all(
+        f"updates on binary sensor numato_binary_sensor_mock_port{port} only in polling mode"
+        in caplog.text
+        for port in NUMATO_CFG["numato"]["devices"][0]["binary_sensors"]["ports"]
+    )

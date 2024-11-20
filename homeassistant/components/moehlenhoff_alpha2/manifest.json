@@ -1,0 +1,9 @@
+{
+  "domain": "moehlenhoff_alpha2",
+  "name": "M\u00f6hlenhoff Alpha 2",
+  "codeowners": ["@j-a-n"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/moehlenhoff_alpha2",
+  "iot_class": "local_push",
+  "requirements": ["moehlenhoff-alpha2==1.3.1"]
+}

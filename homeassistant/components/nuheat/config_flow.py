@@ -1,17 +1,17 @@
 """Config flow for NuHeat integration."""
+
+from http import HTTPStatus
 import logging
+from typing import Any
 
 import nuheat
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
@@ -26,7 +26,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -39,8 +39,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTP_BAD_REQUEST
-            and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+            ex.response.status_code > HTTPStatus.BAD_REQUEST
+            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             raise InvalidAuth from ex
         raise CannotConnect from ex
@@ -60,12 +60,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": thermostat.room, "serial_number": thermostat.serial_number}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NuHeatConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NuHeat."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -77,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except InvalidThermostat:
                 errors["base"] = "invalid_thermostat"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -91,13 +93,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class InvalidThermostat(exceptions.HomeAssistantError):
+class InvalidThermostat(HomeAssistantError):
     """Error to indicate there is invalid thermostat."""

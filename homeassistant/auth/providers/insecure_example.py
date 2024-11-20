@@ -1,7 +1,7 @@
 """Example auth provider."""
+
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Mapping
 import hmac
 from typing import cast
@@ -9,11 +9,10 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
-from ..models import Credentials, UserMeta
 
 USER_SCHEMA = vol.Schema(
     {
@@ -37,7 +36,7 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
         """Return a flow to login."""
         return ExampleLoginFlow(self)
 
@@ -99,9 +98,9 @@ class ExampleLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
-        errors = {}
+        errors = None
 
         if user_input is not None:
             try:
@@ -109,16 +108,19 @@ class ExampleLoginFlow(LoginFlow):
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuthError:
-                errors["base"] = "invalid_auth"
+                errors = {"base": "invalid_auth"}
 
             if not errors:
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

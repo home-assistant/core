@@ -1,0 +1,7 @@
+homeassistant:
+  packages:
+    this is not a slug but it should be one:
+      switch:
+        - platform: template
+    this_works:
+      iot_domain: [{ "some": "yay" }]

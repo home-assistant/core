@@ -1,0 +1,168 @@
+# serializer version: 1
+# name: test_dimmable_light_props[light.kitchen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.kitchen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'deako',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uuid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_dimmable_light_props[light.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 127,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'kitchen',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_light_initial_props[light.kitchen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.kitchen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'deako',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uuid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_initial_props[light.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'kitchen',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_light_setup_with_device[light.some_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.some_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'deako',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'some_device',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_setup_with_device[light.some_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 1,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'some device',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.some_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

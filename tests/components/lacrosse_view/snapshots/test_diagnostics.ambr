@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'coordinator_data': list([
+      dict({
+        '__type': "<class 'lacrosse_view.Sensor'>",
+        'repr': "Sensor(name='Test', device_id='1', type='Test', sensor_id='2', sensor_field_names=['Temperature'], location=Location(id='1', name='Test'), permissions={'read': True}, model='Test', data={'Temperature': {'values': [{'s': '2'}], 'unit': 'degrees_celsius'}})",
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'id': '1',
+        'name': 'Test',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'lacrosse_view',
+      'entry_id': 'lacrosse_view_test_entry_id',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

@@ -1,0 +1,518 @@
+# serializer version: 1
+# name: test_binary_sensors[event0][binary_sensor.home_daynight_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_daynight_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
+    'original_icon': None,
+    'original_name': 'DayNight 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tns1:VideoSource/tnsaxis:DayNightVision-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event0][binary_sensor.home_daynight_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'light',
+      'friendly_name': 'home DayNight 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_daynight_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event10][binary_sensor.home_object_analytics_device1scenario8-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_object_analytics_device1scenario8',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Object Analytics Device1Scenario8',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8-Device1Scenario8',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event10][binary_sensor.home_object_analytics_device1scenario8-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home Object Analytics Device1Scenario8',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_object_analytics_device1scenario8',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event1][binary_sensor.home_sound_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_sound_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
+    'original_icon': None,
+    'original_name': 'Sound 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tns1:AudioSource/tnsaxis:TriggerLevel-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event1][binary_sensor.home_sound_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'sound',
+      'friendly_name': 'home Sound 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_sound_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[event2][binary_sensor.home_pir_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_pir_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'PIR sensor',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:IO/Port-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event2][binary_sensor.home_pir_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'home PIR sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_pir_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[event3][binary_sensor.home_pir_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_pir_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'PIR 0',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:Sensor/PIR-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event3][binary_sensor.home_pir_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home PIR 0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_pir_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[event4][binary_sensor.home_fence_guard_profile_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_fence_guard_profile_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Fence Guard Profile 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/FenceGuard/Camera1Profile1-Camera1Profile1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event4][binary_sensor.home_fence_guard_profile_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home Fence Guard Profile 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_fence_guard_profile_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event5][binary_sensor.home_motion_guard_profile_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_motion_guard_profile_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion Guard Profile 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1-Camera1Profile1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event5][binary_sensor.home_motion_guard_profile_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home Motion Guard Profile 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_motion_guard_profile_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event6][binary_sensor.home_loitering_guard_profile_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_loitering_guard_profile_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Loitering Guard Profile 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1-Camera1Profile1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event6][binary_sensor.home_loitering_guard_profile_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home Loitering Guard Profile 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_loitering_guard_profile_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event7][binary_sensor.home_vmd4_profile_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_vmd4_profile_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'VMD4 Profile 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1-Camera1Profile1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event7][binary_sensor.home_vmd4_profile_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home VMD4 Profile 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_vmd4_profile_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event8][binary_sensor.home_object_analytics_scenario_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_object_analytics_scenario_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Object Analytics Scenario 1',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1-Device1Scenario1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event8][binary_sensor.home_object_analytics_scenario_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home Object Analytics Scenario 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_object_analytics_scenario_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[event9][binary_sensor.home_vmd4_camera1profile9-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_vmd4_camera1profile9',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'VMD4 Camera1Profile9',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9-Camera1Profile9',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[event9][binary_sensor.home_vmd4_camera1profile9-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'home VMD4 Camera1Profile9',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_vmd4_camera1profile9',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

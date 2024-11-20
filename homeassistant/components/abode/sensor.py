@@ -1,78 +1,102 @@
 """Support for Abode Security System sensors."""
+
 from __future__ import annotations
 
-import abodepy.helpers.constants as CONST
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
+from jaraco.abode.devices.sensor import Sensor
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeDevice
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=CONST.TEMP_STATUS_KEY,
-        name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+ABODE_TEMPERATURE_UNIT_HA_UNIT = {
+    "°F": UnitOfTemperature.FAHRENHEIT,
+    "°C": UnitOfTemperature.CELSIUS,
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class AbodeSensorDescription(SensorEntityDescription):
+    """Class describing Abode sensor entities."""
+
+    value_fn: Callable[[Sensor], float]
+    native_unit_of_measurement_fn: Callable[[Sensor], str]
+
+
+SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
+    AbodeSensorDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement_fn=lambda device: ABODE_TEMPERATURE_UNIT_HA_UNIT[
+            device.temp_unit
+        ],
+        value_fn=lambda device: cast(float, device.temp),
     ),
-    SensorEntityDescription(
-        key=CONST.HUMI_STATUS_KEY,
-        name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+    AbodeSensorDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement_fn=lambda _: PERCENTAGE,
+        value_fn=lambda device: cast(float, device.humidity),
     ),
-    SensorEntityDescription(
-        key=CONST.LUX_STATUS_KEY,
-        name="Lux",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+    AbodeSensorDescription(
+        key="lux",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement_fn=lambda _: LIGHT_LUX,
+        value_fn=lambda device: cast(float, device.lux),
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Abode sensor devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        conditions = device.get_value(CONST.STATUSES_KEY)
-        entities.extend(
-            [
-                AbodeSensor(data, device, description)
-                for description in SENSOR_TYPES
-                if description.key in conditions
-            ]
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeSensor(data, device, description)
+        for description in SENSOR_TYPES
+        for device in data.abode.get_devices(generic_type="sensor")
+        if description.key in device.get_value("statuses")
+    )
 
 
 class AbodeSensor(AbodeDevice, SensorEntity):
     """A sensor implementation for Abode devices."""
 
-    def __init__(self, data, device, description: SensorEntityDescription):
+    entity_description: AbodeSensorDescription
+    _device: Sensor
+
+    def __init__(
+        self,
+        data: AbodeSystem,
+        device: Sensor,
+        description: AbodeSensorDescription,
+    ) -> None:
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self.entity_description = description
-        self._attr_name = f"{device.name} {description.name}"
-        self._attr_unique_id = f"{device.device_uuid}-{description.key}"
-        if description.key == CONST.TEMP_STATUS_KEY:
-            self._attr_native_unit_of_measurement = device.temp_unit
-        elif description.key == CONST.HUMI_STATUS_KEY:
-            self._attr_native_unit_of_measurement = device.humidity_unit
-        elif description.key == CONST.LUX_STATUS_KEY:
-            self._attr_native_unit_of_measurement = device.lux_unit
+        self._attr_unique_id = f"{device.uuid}-{description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        if self.entity_description.key == CONST.TEMP_STATUS_KEY:
-            return self._device.temp
-        if self.entity_description.key == CONST.HUMI_STATUS_KEY:
-            return self._device.humidity
-        if self.entity_description.key == CONST.LUX_STATUS_KEY:
-            return self._device.lux
+        return self.entity_description.value_fn(self._device)
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the native unit of measurement."""
+        return self.entity_description.native_unit_of_measurement_fn(self._device)

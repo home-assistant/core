@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_entry_diagnostics[EF.111111111113]
+  dict({
+    'devices': list([
+      dict({
+        'device_info': dict({
+          'identifiers': list([
+            list([
+              'onewire',
+              'EF.111111111113',
+            ]),
+          ]),
+          'manufacturer': 'Hobby Boards',
+          'model': 'HB_HUB',
+          'name': 'EF.111111111113',
+        }),
+        'family': 'EF',
+        'id': 'EF.111111111113',
+        'path': '/EF.111111111113/',
+        'type': 'HB_HUB',
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 1234,
+      }),
+      'options': dict({
+        'device_options': dict({
+          '28.222222222222': dict({
+            'precision': 'temperature9',
+          }),
+          '28.222222222223': dict({
+            'precision': 'temperature5',
+          }),
+        }),
+      }),
+      'title': 'Mock Title',
+    }),
+  })
+# ---

@@ -1,0 +1,6 @@
+{
+  "domain": "bge",
+  "name": "Baltimore Gas and Electric (BGE)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

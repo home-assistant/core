@@ -1,4 +1,5 @@
 """Config flow to configure the RainMachine component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,15 +9,25 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
+from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_USE_APP_RUN_TIMES,
+    DEFAULT_PORT,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 
 @callback
@@ -32,17 +43,17 @@ async def async_get_controller(
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
     try:
-        await client.load_local(ip_address, password, port=port, ssl=ssl)
+        await client.load_local(ip_address, password, port=port, use_ssl=ssl)
     except RainMachineError:
         return None
-    else:
-        return get_client_controller(client)
+
+    return get_client_controller(client)
 
 
-class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     discovered_ip_address: str | None = None
 
@@ -52,17 +63,25 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return RainMachineOptionsFlowHandler(config_entry)
+        return RainMachineOptionsFlowHandler()
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
-        return await self.async_step_zeroconf(discovery_info)
+        return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via zeroconf."""
-        ip_address = discovery_info["host"]
+        return await self.async_step_homekit_zeroconf(discovery_info)
+
+    async def async_step_homekit_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via zeroconf."""
+        ip_address = discovery_info.host
 
         self._async_abort_entries_match({CONF_IP_ADDRESS: ip_address})
         # Handle IP change
@@ -77,7 +96,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_IP_ADDRESS: ip_address}
+                    updates={CONF_IP_ADDRESS: ip_address}, reload_on_update=False
                 )
 
         # A new rain machine: We will change out the unique id
@@ -102,7 +121,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
         if user_input:
@@ -124,14 +143,14 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # access token without using the IP address and password, so we have to
                 # store it:
                 return self.async_create_entry(
-                    title=controller.name,
+                    title=controller.name.capitalize(),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_SSL: user_input.get(CONF_SSL, True),
-                        CONF_ZONE_RUN_TIME: user_input.get(
-                            CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
+                        CONF_DEFAULT_ZONE_RUN_TIME: user_input.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
                         ),
                     },
                 )
@@ -146,28 +165,36 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
+class RainMachineOptionsFlowHandler(OptionsFlow):
     """Handle a RainMachine options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ZONE_RUN_TIME,
-                        default=self.config_entry.options.get(CONF_ZONE_RUN_TIME),
-                    ): cv.positive_int
+                        CONF_DEFAULT_ZONE_RUN_TIME,
+                        default=self.config_entry.options.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_USE_APP_RUN_TIMES,
+                        default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_INACTIVE_ZONES_TO_RUN
+                        ),
+                    ): bool,
                 }
             ),
         )

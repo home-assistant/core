@@ -1,4 +1,7 @@
 """Lannouncer platform for notify component."""
+
+from __future__ import annotations
+
 import logging
 import socket
 from urllib.parse import urlencode
@@ -7,11 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_METHOD = "method"
 ATTR_METHOD_DEFAULT = "speak"
@@ -19,7 +24,7 @@ ATTR_METHOD_ALLOWED = ["speak", "alarm"]
 
 DEFAULT_PORT = 1035
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -29,7 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> LannouncerNotificationService:
     """Get the Lannouncer notification service."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

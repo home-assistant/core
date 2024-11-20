@@ -1,0 +1,116 @@
+# serializer version: 1
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.suez_mock_device_water_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Water price',
+    'platform': 'suez_water',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_price',
+    'unique_id': 'test-counter_water_price',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by toutsurmoneau.fr',
+      'device_class': 'monetary',
+      'friendly_name': 'Suez mock device Water price',
+      'unit_of_measurement': '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.suez_mock_device_water_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.74',
+  })
+# ---
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water usage yesterday',
+    'platform': 'suez_water',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_usage_yesterday',
+    'unique_id': 'test-counter_water_usage_yesterday',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by toutsurmoneau.fr',
+      'device_class': 'water',
+      'friendly_name': 'Suez mock device Water usage yesterday',
+      'highest_monthly_consumption': 2558,
+      'history': dict({
+        '2024-01-01': 130,
+        '2024-01-02': 145,
+        '2024-12-01': 154,
+        '2024-12-02': 166,
+      }),
+      'last_year_overall': 1000,
+      'previous_month_consumption': dict({
+        '2024-12-01': 154,
+        '2024-12-02': 166,
+      }),
+      'this_month_consumption': dict({
+        '2024-01-01': 130,
+        '2024-01-02': 145,
+      }),
+      'this_year_overall': 1500,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '160',
+  })
+# ---

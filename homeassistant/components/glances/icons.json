@@ -1,0 +1,72 @@
+{
+  "entity": {
+    "sensor": {
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "disk_used": {
+        "default": "mdi:harddisk"
+      },
+      "disk_free": {
+        "default": "mdi:harddisk"
+      },
+      "diskio_read": {
+        "default": "mdi:harddisk"
+      },
+      "diskio_write": {
+        "default": "mdi:harddisk"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_use": {
+        "default": "mdi:memory"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "swap_usage": {
+        "default": "mdi:memory"
+      },
+      "swap_use": {
+        "default": "mdi:memory"
+      },
+      "swap_free": {
+        "default": "mdi:memory"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "container_active": {
+        "default": "mdi:docker"
+      },
+      "container_cpu_usage": {
+        "default": "mdi:docker"
+      },
+      "container_memory_used": {
+        "default": "mdi:docker"
+      },
+      "raid_available": {
+        "default": "mdi:harddisk"
+      },
+      "raid_used": {
+        "default": "mdi:harddisk"
+      },
+      "uptime": {
+        "default": "mdi:clock-time-eight-outline"
+      },
+      "gpu_processor_usage": {
+        "default": "mdi:expansion-card"
+      },
+      "gpu_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "network_rx": {
+        "default": "mdi:transmission-tower"
+      },
+      "network_tx": {
+        "default": "mdi:transmission-tower"
+      }
+    }
+  }
+}

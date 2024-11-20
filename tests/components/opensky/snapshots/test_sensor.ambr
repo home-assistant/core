@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
+      'friendly_name': 'OpenSky',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'flights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.opensky',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_altitude
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
+      'friendly_name': 'OpenSky',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'flights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.opensky',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor_updating
+  list([
+    <Event opensky_exit[L]: callsign=DLH459, altitude=0, sensor=OpenSky, longitude=None, latitude=None, icao24=None>,
+  ])
+# ---
+# name: test_sensor_updating.1
+  list([
+    <Event opensky_exit[L]: callsign=DLH459, altitude=0, sensor=OpenSky, longitude=None, latitude=None, icao24=None>,
+    <Event opensky_entry[L]: callsign=DLH459, altitude=12496.8, sensor=OpenSky, longitude=5.4445, latitude=52.2991, icao24=3c6708>,
+  ])
+# ---

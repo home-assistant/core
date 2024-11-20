@@ -1,36 +1,52 @@
 """Support for exposing Home Assistant via Zeroconf."""
+
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Coroutine
+import contextlib
 from contextlib import suppress
-import fnmatch
-import ipaddress
+from dataclasses import dataclass
+from fnmatch import translate
+from functools import lru_cache
+from ipaddress import IPv4Address, IPv6Address
 import logging
-import socket
-from typing import Any, TypedDict, cast
+import re
+import sys
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
-from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
-from zeroconf.asyncio import AsyncServiceInfo
+from zeroconf import (
+    BadTypeInNameException,
+    InterfaceChoice,
+    IPVersion,
+    ServiceStateChange,
+)
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import (
+    HomeKitDiscoveredIntegration,
+    ZeroconfMatcher,
+    async_get_homekit,
+    async_get_zeroconf,
+    bind_hass,
+)
+from homeassistant.setup import async_when_setup_or_start
 
-from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
+from .models import HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +59,8 @@ HOMEKIT_TYPES = [
     # Thread based devices
     "_hap._udp.local.",
 ]
+_HOMEKIT_MODEL_SPLITS = (None, " ", "-")
+
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
@@ -50,9 +68,8 @@ DEFAULT_DEFAULT_INTERFACE = True
 DEFAULT_IPV6 = True
 
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
-HOMEKIT_MODEL = "md"
-
-MDNS_TARGET_IP = "224.0.0.251"
+HOMEKIT_MODEL_LOWER = "md"
+HOMEKIT_MODEL_UPPER = "MD"
 
 # Property key=value has a max length of 255
 # so we use 230 to leave space for key=
@@ -60,6 +77,13 @@ MAX_PROPERTY_VALUE_LEN = 230
 
 # Dns label max length
 MAX_NAME_LEN = 63
+
+ATTR_DOMAIN: Final = "domain"
+ATTR_NAME: Final = "name"
+ATTR_PROPERTIES: Final = "properties"
+
+# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
+ATTR_PROPERTIES_ID: Final = "id"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -78,23 +102,44 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class HaServiceInfo(TypedDict):
-    """Prepared info from mDNS entries."""
+@dataclass(slots=True)
+class ZeroconfServiceInfo(BaseServiceInfo):
+    """Prepared info from mDNS entries.
 
-    host: str
+    The ip_address is the most recently updated address
+    that is not a link local or unspecified address.
+
+    The ip_addresses are all addresses in order of most
+    recently updated to least recently updated.
+
+    The host is the string representation of the ip_address.
+
+    The addresses are the string representations of the
+    ip_addresses.
+
+    It is recommended to use the ip_address to determine
+    the address to connect to as it will be the most
+    recently updated address that is not a link local
+    or unspecified address.
+    """
+
+    ip_address: IPv4Address | IPv6Address
+    ip_addresses: list[IPv4Address | IPv6Address]
     port: int | None
     hostname: str
     type: str
     name: str
     properties: dict[str, Any]
 
+    @property
+    def host(self) -> str:
+        """Return the host."""
+        return str(self.ip_address)
 
-class ZeroconfFlow(TypedDict):
-    """A queued zeroconf discovery flow."""
-
-    domain: str
-    context: dict[str, Any]
-    data: HaServiceInfo
+    @property
+    def addresses(self) -> list[str]:
+        """Return the addresses."""
+        return [str(ip_address) for ip_address in self.ip_addresses]
 
 
 @bind_hass
@@ -124,110 +169,125 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
         """Stop Zeroconf."""
         await aio_zc.ha_async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    # Wait to the close event to shutdown zeroconf to give
+    # integrations time to send a good bye message
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
 
 
-def _async_use_default_interface(adapters: list[Adapter]) -> bool:
-    for adapter in adapters:
-        if adapter["enabled"] and not adapter["default"]:
-            return False
-    return True
+@callback
+def _async_zc_has_functional_dual_stack() -> bool:
+    """Return true for platforms not supporting IP_ADD_MEMBERSHIP on an AF_INET6 socket.
+
+    Zeroconf only supports a single listen socket at this time.
+    """
+    return not sys.platform.startswith("freebsd") and not sys.platform.startswith(
+        "darwin"
+    )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {}
+    zc_args: dict = {"ip_version": IPVersion.V4Only}
 
     adapters = await network.async_get_adapters(hass)
 
-    ipv6 = True
-    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
-        ipv6 = False
-        zc_args["ip_version"] = IPVersion.V4Only
-    else:
-        zc_args["ip_version"] = IPVersion.All
+    ipv6 = False
+    if _async_zc_has_functional_dual_stack():
+        if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+            ipv6 = True
+            zc_args["ip_version"] = IPVersion.All
+    elif not any(adapter["enabled"] and adapter["ipv4"] for adapter in adapters):
+        zc_args["ip_version"] = IPVersion.V6Only
+        ipv6 = True
 
-    if not ipv6 and _async_use_default_interface(adapters):
+    if not ipv6 and network.async_only_default_interface_enabled(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
     else:
-        interfaces = zc_args["interfaces"] = []
-        for adapter in adapters:
-            if not adapter["enabled"]:
-                continue
-            if ipv4s := adapter["ipv4"]:
-                interfaces.extend(
-                    ipv4["address"]
-                    for ipv4 in ipv4s
-                    if not ipaddress.ip_address(ipv4["address"]).is_loopback
-                )
-            if adapter["ipv6"] and adapter["index"] not in interfaces:
-                interfaces.append(adapter["index"])
+        zc_args["interfaces"] = [
+            str(source_ip)
+            for source_ip in await network.async_get_enabled_source_ips(hass)
+            if not source_ip.is_loopback
+            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            and not (
+                isinstance(source_ip, IPv6Address)
+                and zc_args["ip_version"] == IPVersion.V4Only
+            )
+            and not (
+                isinstance(source_ip, IPv4Address)
+                and zc_args["ip_version"] == IPVersion.V6Only
+            )
+        ]
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
-    zeroconf_types, homekit_models = await asyncio.gather(
-        async_get_zeroconf(hass), async_get_homekit(hass)
+    zeroconf_types = await async_get_zeroconf(hass)
+    homekit_models = await async_get_homekit(hass)
+    homekit_model_lookup, homekit_model_matchers = _build_homekit_model_lookups(
+        homekit_models
     )
-    discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
+    discovery = ZeroconfDiscovery(
+        hass,
+        zeroconf,
+        zeroconf_types,
+        homekit_model_lookup,
+        homekit_model_matchers,
+    )
     await discovery.async_setup()
 
-    async def _async_zeroconf_hass_start(_event: Event) -> None:
+    async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(hass)
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
-
-    @callback
-    def _async_start_discovery(_event: Event) -> None:
-        """Start processing flows."""
-        discovery.async_start()
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_start_discovery)
+    async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True
 
 
-def _get_announced_addresses(
-    adapters: list[Adapter],
-    first_ip: bytes | None = None,
-) -> list[bytes]:
-    """Return a list of IP addresses to announce via zeroconf.
+def _build_homekit_model_lookups(
+    homekit_models: dict[str, HomeKitDiscoveredIntegration],
+) -> tuple[
+    dict[str, HomeKitDiscoveredIntegration],
+    dict[re.Pattern, HomeKitDiscoveredIntegration],
+]:
+    """Build lookups for homekit models."""
+    homekit_model_lookup: dict[str, HomeKitDiscoveredIntegration] = {}
+    homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration] = {}
 
-    If first_ip is not None, it will be the first address in the list.
+    for model, discovery in homekit_models.items():
+        if "*" in model or "?" in model or "[" in model:
+            homekit_model_matchers[_compile_fnmatch(model)] = discovery
+        else:
+            homekit_model_lookup[model] = discovery
+
+    return homekit_model_lookup, homekit_model_matchers
+
+
+def _filter_disallowed_characters(name: str) -> str:
+    """Filter disallowed characters from a string.
+
+    . is a reversed character for zeroconf.
     """
-    addresses = {
-        addr.packed
-        for addr in [
-            ipaddress.ip_address(ip["address"])
-            for adapter in adapters
-            if adapter["enabled"]
-            for ip in cast(list, adapter["ipv6"]) + cast(list, adapter["ipv4"])
-        ]
-        if not (addr.is_unspecified or addr.is_loopback)
-    }
-    if first_ip:
-        address_list = [first_ip]
-        address_list.extend(addresses - set({first_ip}))
-    else:
-        address_list = list(addresses)
-    return address_list
+    return name.replace(".", " ")
 
 
 async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
-    valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
+    valid_location_name = _truncate_location_name_to_valid(
+        _filter_disallowed_characters(hass.config.location_name or "Home")
+    )
 
     params = {
         "location_name": valid_location_name,
@@ -251,23 +311,13 @@ async def _async_register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    adapters = await network.async_get_adapters(hass)
-
-    # Puts the default IPv4 address first in the list to preserve compatibility,
-    # because some mDNS implementations ignores anything but the first announced address.
-    host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
-    host_ip_pton = None
-    if host_ip:
-        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    address_list = _get_announced_addresses(adapters, host_ip_pton)
-
     _suppress_invalid_properties(params)
 
     info = AsyncServiceInfo(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        addresses=address_list,
+        parsed_addresses=await network.async_get_announce_addresses(hass),
         port=hass.http.server_port,
         properties=params,
     )
@@ -276,38 +326,24 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-class FlowDispatcher:
-    """Dispatch discovery flows."""
+def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
+    """Check a matcher to ensure all values in props."""
+    for key, value in matcher.items():
+        prop_val = props.get(key)
+        if prop_val is None or not _memorized_fnmatch(prop_val.lower(), value):
+            return False
+    return True
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the discovery dispatcher."""
-        self.hass = hass
-        self.pending_flows: list[ZeroconfFlow] = []
-        self.started = False
 
-    @callback
-    def async_start(self) -> None:
-        """Start processing pending flows."""
-        self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
-
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
-        self.pending_flows = []
-
-    def async_create(self, flow: ZeroconfFlow) -> None:
-        """Create and add or queue a flow."""
-        if self.started:
-            self.hass.async_create_task(self._init_flow(flow))
-        else:
-            self.pending_flows.append(flow)
-
-    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[None, None, FlowResult]:
-        """Create a flow."""
-        return self.hass.config_entries.flow.async_init(
-            flow["domain"], context=flow["context"], data=flow["data"]
-        )
+def is_homekit_paired(props: dict[str, Any]) -> bool:
+    """Check properties to see if a device is homekit paired."""
+    if HOMEKIT_PAIRED_STATUS_FLAG not in props:
+        return False
+    with contextlib.suppress(ValueError):
+        # 0 means paired and not discoverable by iOS clients)
+        return int(props[HOMEKIT_PAIRED_STATUS_FLAG]) == 0
+    # If we cannot tell, we assume its not paired
+    return False
 
 
 class ZeroconfDiscovery:
@@ -317,33 +353,38 @@ class ZeroconfDiscovery:
         self,
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
-        zeroconf_types: dict[str, list[dict[str, str]]],
-        homekit_models: dict[str, str],
-        ipv6: bool,
+        zeroconf_types: dict[str, list[ZeroconfMatcher]],
+        homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
+        homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
     ) -> None:
         """Init discovery."""
         self.hass = hass
         self.zeroconf = zeroconf
         self.zeroconf_types = zeroconf_types
-        self.homekit_models = homekit_models
-        self.ipv6 = ipv6
-
-        self.flow_dispatcher: FlowDispatcher | None = None
-        self.async_service_browser: HaAsyncServiceBrowser | None = None
+        self.homekit_model_lookups = homekit_model_lookups
+        self.homekit_model_matchers = homekit_model_matchers
+        self.async_service_browser: AsyncServiceBrowser | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
-        self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
         # so we always browse for ZEROCONF_TYPE
-        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
-            if hk_type not in self.zeroconf_types:
-                types.append(hk_type)
+        types.extend(
+            hk_type
+            for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES)
+            if hk_type not in self.zeroconf_types
+        )
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
-        self.async_service_browser = HaAsyncServiceBrowser(
-            self.ipv6, self.zeroconf, types, handlers=[self.async_service_update]
+        self.async_service_browser = AsyncServiceBrowser(
+            self.zeroconf, types, handlers=[self.async_service_update]
+        )
+
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
         )
 
     async def async_stop(self) -> None:
@@ -352,10 +393,26 @@ class ZeroconfDiscovery:
             await self.async_service_browser.async_cancel()
 
     @callback
-    def async_start(self) -> None:
-        """Start processing discovery flows."""
-        assert self.flow_dispatcher is not None
-        self.flow_dispatcher.async_start()
+    def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1:
+                continue
+            _type = discovery_key.key[0]
+            name = discovery_key.key[1]
+            _LOGGER.debug("Rediscover service %s.%s", _type, name)
+            self._async_service_update(self.zeroconf, _type, name)
+
+    def _async_dismiss_discoveries(self, name: str) -> None:
+        """Dismiss all discoveries for the given name."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            ZeroconfServiceInfo,
+            lambda service_info: bool(service_info.name == name),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
     def async_service_update(
@@ -373,31 +430,82 @@ class ZeroconfDiscovery:
             state_change,
         )
 
-        if state_change == ServiceStateChange.Removed:
+        if state_change is ServiceStateChange.Removed:
+            self._async_dismiss_discoveries(name)
             return
 
-        asyncio.create_task(self._process_service_update(zeroconf, service_type, name))
+        self._async_service_update(zeroconf, service_type, name)
 
-    async def _process_service_update(
-        self, zeroconf: HaZeroconf, service_type: str, name: str
+    @callback
+    def _async_service_update(
+        self,
+        zeroconf: HaZeroconf,
+        service_type: str,
+        name: str,
+    ) -> None:
+        """Service state added or changed."""
+        try:
+            async_service_info = AsyncServiceInfo(service_type, name)
+        except BadTypeInNameException as ex:
+            # Some devices broadcast a name that is not a valid DNS name
+            # This is a bug in the device firmware and we should ignore it
+            _LOGGER.debug("Bad name in zeroconf record: %s: %s", name, ex)
+            return
+
+        if async_service_info.load_from_cache(zeroconf):
+            self._async_process_service_update(async_service_info, service_type, name)
+        else:
+            self.hass.async_create_background_task(
+                self._async_lookup_and_process_service_update(
+                    zeroconf, async_service_info, service_type, name
+                ),
+                name=f"zeroconf lookup {name}.{service_type}",
+            )
+
+    async def _async_lookup_and_process_service_update(
+        self,
+        zeroconf: HaZeroconf,
+        async_service_info: AsyncServiceInfo,
+        service_type: str,
+        name: str,
+    ) -> None:
+        """Update and process a zeroconf update."""
+        await async_service_info.async_request(zeroconf, 3000)
+        self._async_process_service_update(async_service_info, service_type, name)
+
+    @callback
+    def _async_process_service_update(
+        self, async_service_info: AsyncServiceInfo, service_type: str, name: str
     ) -> None:
         """Process a zeroconf update."""
-        async_service_info = AsyncServiceInfo(service_type, name)
-        await async_service_info.async_request(zeroconf, 3000)
-
         info = info_from_service(async_service_info)
         if not info:
             # Prevent the browser thread from collapsing
             _LOGGER.debug("Failed to get addresses for device %s", name)
             return
-
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        assert self.flow_dispatcher is not None
+        props: dict[str, str | None] = info.properties
+        discovery_key = DiscoveryKey(
+            domain=DOMAIN,
+            key=(info.type, info.name),
+            version=1,
+        )
+        domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type in HOMEKIT_TYPES:
-            if pending_flow := handle_homekit(self.hass, self.homekit_models, info):
-                self.flow_dispatcher.async_create(pending_flow)
+        if service_type in HOMEKIT_TYPES and (
+            homekit_discovery := async_get_homekit_discovery(
+                self.homekit_model_lookups, self.homekit_model_matchers, props
+            )
+        ):
+            domain = homekit_discovery.domain
+            discovery_flow.async_create_flow(
+                self.hass,
+                homekit_discovery.domain,
+                {"source": config_entries.SOURCE_HOMEKIT},
+                info,
+                discovery_key=discovery_key,
+            )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -405,133 +513,110 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if pending_flow and HOMEKIT_PAIRED_STATUS_FLAG in info["properties"]:
-                try:
-                    # 0 means paired and not discoverable by iOS clients)
-                    if int(info["properties"][HOMEKIT_PAIRED_STATUS_FLAG]):
-                        return
-                except ValueError:
-                    # HomeKit pairing status unknown
-                    # likely bad homekit data
-                    return
+            if not is_homekit_paired(props) and not homekit_discovery.always_discover:
+                # If the device is paired with HomeKit we must send on
+                # the update to homekit_controller so it can see when
+                # the 'c#' field is updated. This is used to detect
+                # when the device has been reset or updated.
+                #
+                # If the device is not paired and we should not always
+                # discover it, we can stop here.
+                return
 
-        if "name" in info:
-            lowercase_name: str | None = info["name"].lower()
-        else:
-            lowercase_name = None
-
-        if "macaddress" in info["properties"]:
-            uppercase_mac: str | None = info["properties"]["macaddress"].upper()
-        else:
-            uppercase_mac = None
-
-        if "manufacturer" in info["properties"]:
-            lowercase_manufacturer: str | None = info["properties"][
-                "manufacturer"
-            ].lower()
-        else:
-            lowercase_manufacturer = None
+        if not (matchers := self.zeroconf_types.get(service_type)):
+            return
 
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
-        for matcher in self.zeroconf_types.get(service_type, []):
+        for matcher in matchers:
             if len(matcher) > 1:
-                if "macaddress" in matcher and (
-                    uppercase_mac is None
-                    or not fnmatch.fnmatch(uppercase_mac, matcher["macaddress"])
+                if ATTR_NAME in matcher and not _memorized_fnmatch(
+                    info.name.lower(), matcher[ATTR_NAME]
                 ):
                     continue
-                if "name" in matcher and (
-                    lowercase_name is None
-                    or not fnmatch.fnmatch(lowercase_name, matcher["name"])
-                ):
-                    continue
-                if "manufacturer" in matcher and (
-                    lowercase_manufacturer is None
-                    or not fnmatch.fnmatch(
-                        lowercase_manufacturer, matcher["manufacturer"]
-                    )
+                if ATTR_PROPERTIES in matcher and not _match_against_props(
+                    matcher[ATTR_PROPERTIES], props
                 ):
                     continue
 
-            flow: ZeroconfFlow = {
-                "domain": matcher["domain"],
-                "context": {"source": config_entries.SOURCE_ZEROCONF},
-                "data": info,
+            matcher_domain = matcher[ATTR_DOMAIN]
+            # Create a type annotated regular dict since this is a hot path and creating
+            # a regular dict is slightly cheaper than calling ConfigFlowContext
+            context: config_entries.ConfigFlowContext = {
+                "source": config_entries.SOURCE_ZEROCONF,
             }
-            self.flow_dispatcher.async_create(flow)
+            if domain:
+                # Domain of integration that offers alternative API to handle
+                # this device.
+                context["alternative_domain"] = domain
+
+            discovery_flow.async_create_flow(
+                self.hass,
+                matcher_domain,
+                context,
+                info,
+                discovery_key=discovery_key,
+            )
 
 
-def handle_homekit(
-    hass: HomeAssistant, homekit_models: dict[str, str], info: HaServiceInfo
-) -> ZeroconfFlow | None:
+def async_get_homekit_discovery(
+    homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
+    homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
+    props: dict[str, Any],
+) -> HomeKitDiscoveredIntegration | None:
     """Handle a HomeKit discovery.
 
-    Return if discovery was forwarded.
+    Return the domain to forward the discovery data to
     """
-    model = None
-    props = info["properties"]
-
-    for key in props:
-        if key.lower() == HOMEKIT_MODEL:
-            model = props[key]
-            break
-
-    if model is None:
+    if not (
+        model := props.get(HOMEKIT_MODEL_LOWER) or props.get(HOMEKIT_MODEL_UPPER)
+    ) or not isinstance(model, str):
         return None
 
-    for test_model in homekit_models:
-        if (
-            model != test_model
-            and not model.startswith((f"{test_model} ", f"{test_model}-"))
-            and not fnmatch.fnmatch(model, test_model)
-        ):
-            continue
+    for split_str in _HOMEKIT_MODEL_SPLITS:
+        key = (model.split(split_str))[0] if split_str else model
+        if discovery := homekit_model_lookups.get(key):
+            return discovery
 
-        return {
-            "domain": homekit_models[test_model],
-            "context": {"source": config_entries.SOURCE_HOMEKIT},
-            "data": info,
-        }
+    for pattern, discovery in homekit_model_matchers.items():
+        if pattern.match(model):
+            return discovery
 
     return None
 
 
-def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
+def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
-    properties: dict[str, Any] = {"_raw": {}}
-
-    for key, value in service.properties.items():
-        # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
-        # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
-        # for property keys and values
-        try:
-            key = key.decode("ascii")
-        except UnicodeDecodeError:
-            _LOGGER.debug(
-                "Ignoring invalid key provided by [%s]: %s", service.name, key
-            )
-            continue
-
-        properties["_raw"][key] = value
-
-        with suppress(UnicodeDecodeError):
-            if isinstance(value, bytes):
-                properties[key] = value.decode("utf-8")
-
-    if not service.addresses:
+    # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
+    # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
+    # for property keys and values
+    if not (maybe_ip_addresses := service.ip_addresses_by_version(IPVersion.All)):
+        return None
+    if TYPE_CHECKING:
+        ip_addresses = cast(list[IPv4Address | IPv6Address], maybe_ip_addresses)
+    else:
+        ip_addresses = maybe_ip_addresses
+    ip_address: IPv4Address | IPv6Address | None = None
+    for ip_addr in ip_addresses:
+        if not ip_addr.is_link_local and not ip_addr.is_unspecified:
+            ip_address = ip_addr
+            break
+    if not ip_address:
         return None
 
-    address = service.addresses[0]
-
-    return {
-        "host": str(ipaddress.ip_address(address)),
-        "port": service.port,
-        "hostname": service.server,
-        "type": service.type,
-        "name": service.name,
-        "properties": properties,
-    }
+    if TYPE_CHECKING:
+        assert (
+            service.server is not None
+        ), "server cannot be none if there are addresses"
+    return ZeroconfServiceInfo(
+        ip_address=ip_address,
+        ip_addresses=ip_addresses,
+        port=service.port,
+        hostname=service.server,
+        type=service.type,
+        name=service.name,
+        properties=service.decoded_properties,
+    )
 
 
 def _suppress_invalid_properties(properties: dict) -> None:
@@ -543,7 +628,10 @@ def _suppress_invalid_properties(properties: dict) -> None:
 
         if len(prop_value.encode("utf-8")) > MAX_PROPERTY_VALUE_LEN:
             _LOGGER.error(
-                "The property '%s' was suppressed because it is longer than the maximum length of %d bytes: %s",
+                (
+                    "The property '%s' was suppressed because it is longer than the"
+                    " maximum length of %d bytes: %s"
+                ),
                 prop,
                 MAX_PROPERTY_VALUE_LEN,
                 prop_value,
@@ -557,8 +645,32 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
         return location_name
 
     _LOGGER.warning(
-        "The location name was truncated because it is longer than the maximum length of %d bytes: %s",
+        (
+            "The location name was truncated because it is longer than the maximum"
+            " length of %d bytes: %s"
+        ),
         MAX_NAME_LEN,
         location_name,
     )
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(pattern))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+
+    Zeroconf has its own memorized fnmatch with its own lru_cache
+    since the data is going to be relatively the same
+    since the devices will not change frequently
+    """
+    return bool(_compile_fnmatch(pattern).match(name))

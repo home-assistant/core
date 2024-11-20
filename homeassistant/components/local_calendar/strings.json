@@ -1,0 +1,31 @@
+{
+  "title": "Local Calendar",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please choose a name for your new calendar",
+        "data": {
+          "calendar_name": "Calendar Name",
+          "import": "Starting Data"
+        }
+      },
+      "import": {
+        "description": "You can import events in iCal format (.ics file)."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_ics_file": "Invalid .ics file"
+    }
+  },
+  "selector": {
+    "import": {
+      "options": {
+        "create_empty": "Create an empty calendar",
+        "import_ics_file": "Upload an iCalendar file (.ics)"
+      }
+    }
+  }
+}

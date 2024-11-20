@@ -1,23 +1,23 @@
 """Support for LIFX Cloud scenes."""
+
+from __future__ import annotations
+
 import asyncio
+from http import HTTPStatus
 import logging
 from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import (
-    CONF_PLATFORM,
-    CONF_TIMEOUT,
-    CONF_TOKEN,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,36 +32,40 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the scenes stored in the LIFX Cloud."""
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: f"Bearer {token}"}
+    headers: dict[str, str] = {AUTHORIZATION: f"Bearer {token}"}
 
     url = "https://api.lifx.com/v1/scenes"
 
     try:
         httpsession = async_get_clientsession(hass)
-        with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", url)
-        return False
+        return
 
     status = scenes_resp.status
-    if status == HTTP_OK:
+    if status == HTTPStatus.OK:
         data = await scenes_resp.json()
         devices = [LifxCloudScene(hass, headers, timeout, scene) for scene in data]
         async_add_entities(devices)
-        return True
-    if status == HTTP_UNAUTHORIZED:
+        return
+    if status == HTTPStatus.UNAUTHORIZED:
         _LOGGER.error("Unauthorized (bad token?) on %s", url)
-        return False
+        return
 
     _LOGGER.error("HTTP error %d on %s", scenes_resp.status, url)
-    return False
 
 
 class LifxCloudScene(Scene):
@@ -86,8 +90,8 @@ class LifxCloudScene(Scene):
 
         try:
             httpsession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(self._timeout):
+            async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error on %s", url)

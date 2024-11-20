@@ -1,0 +1,15 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "lockStatus": "locked",
+      "doorStatusRearLeft": "closed",
+      "doorStatusRearRight": "closed",
+      "doorStatusDriver": "closed",
+      "doorStatusPassenger": "closed",
+      "hatchStatus": "closed",
+      "lastUpdateTime": "2022-02-02T13:51:13Z"
+    }
+  }
+}

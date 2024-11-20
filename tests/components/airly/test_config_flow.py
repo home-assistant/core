@@ -1,21 +1,19 @@
 """Define tests for the Airly config flow."""
+
+from http import HTTPStatus
+
 from airly.exceptions import AirlyError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONFIG = {
     CONF_NAME: "Home",
@@ -25,22 +23,24 @@ CONFIG = {
 }
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
 
-async def test_invalid_api_key(hass, aioclient_mock):
+async def test_invalid_api_key(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that errors are shown when API key is invalid."""
     aioclient_mock.get(
         API_POINT_URL,
         exc=AirlyError(
-            HTTP_UNAUTHORIZED, {"message": "Invalid authentication credentials"}
+            HTTPStatus.UNAUTHORIZED, {"message": "Invalid authentication credentials"}
         ),
     )
 
@@ -51,13 +51,15 @@ async def test_invalid_api_key(hass, aioclient_mock):
     assert result["errors"] == {"base": "invalid_api_key"}
 
 
-async def test_invalid_location(hass, aioclient_mock):
+async def test_invalid_location(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that errors are shown when location is invalid."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
 
     aioclient_mock.get(
         API_NEAREST_URL,
-        exc=AirlyError(HTTP_NOT_FOUND, {"message": "Installation was not found"}),
+        exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -67,29 +69,51 @@ async def test_invalid_location(hass, aioclient_mock):
     assert result["errors"] == {"base": "wrong_location"}
 
 
-async def test_duplicate_error(hass, aioclient_mock):
-    """Test that errors are shown when duplicates are added."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
-    MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
+async def test_invalid_location_for_point_and_nearest(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test an abort when the location is wrong for the point and nearest methods."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-    )
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_create_entry(hass, aioclient_mock):
-    """Test that the user step works."""
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("no_station.json", "airly"))
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_location"
+
+
+async def test_duplicate_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that errors are shown when duplicates are added."""
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+    MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_create_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that the user step works."""
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[CONF_NAME]
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
@@ -97,19 +121,23 @@ async def test_create_entry(hass, aioclient_mock):
     assert result["data"][CONF_USE_NEAREST] is False
 
 
-async def test_create_entry_with_nearest_method(hass, aioclient_mock):
+async def test_create_entry_with_nearest_method(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the user step works with nearest method."""
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
 
-    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(
+        API_NEAREST_URL, text=load_fixture("valid_station.json", "airly")
+    )
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[CONF_NAME]
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]

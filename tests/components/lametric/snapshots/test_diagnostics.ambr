@@ -1,0 +1,48 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'audio': dict({
+      'volume': 100,
+      'volume_limit': dict({
+        'range_max': 100,
+        'range_min': 0,
+      }),
+      'volume_range': dict({
+        'range_max': 100,
+        'range_min': 0,
+      }),
+    }),
+    'bluetooth': dict({
+      'active': False,
+      'address': 'AA:BB:CC:DD:EE:FF',
+      'available': True,
+      'discoverable': True,
+      'name': '**REDACTED**',
+      'pairable': True,
+    }),
+    'device_id': '**REDACTED**',
+    'display': dict({
+      'brightness': 100,
+      'brightness_mode': 'auto',
+      'display_type': 'mixed',
+      'height': 8,
+      'width': 37,
+    }),
+    'mode': 'auto',
+    'model': 'LM 37X8',
+    'name': '**REDACTED**',
+    'os_version': '2.2.2',
+    'serial_number': '**REDACTED**',
+    'wifi': dict({
+      'active': True,
+      'available': True,
+      'encryption': 'WPA',
+      'ip': '127.0.0.1',
+      'mac': 'AA:BB:CC:DD:EE:FF',
+      'mode': 'dhcp',
+      'netmask': '255.255.255.0',
+      'rssi': 21,
+      'ssid': '**REDACTED**',
+    }),
+  })
+# ---

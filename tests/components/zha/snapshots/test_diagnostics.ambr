@@ -1,0 +1,294 @@
+# serializer version: 1
+# name: test_diagnostics_for_config_entry
+  dict({
+    'application_state': dict({
+      'broadcast_counters': dict({
+      }),
+      'counters': dict({
+        'ezsp_counters': dict({
+          'counter_1': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_1', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+          'counter_2': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_2', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+          'counter_3': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_3', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+        }),
+      }),
+      'device_counters': dict({
+      }),
+      'group_counters': dict({
+      }),
+      'network_info': dict({
+        'channel': 15,
+        'channel_mask': 0,
+        'children': list([
+        ]),
+        'extended_pan_id': '**REDACTED**',
+        'key_table': list([
+        ]),
+        'metadata': dict({
+        }),
+        'network_key': '**REDACTED**',
+        'nwk_addresses': dict({
+        }),
+        'nwk_manager_id': 0,
+        'nwk_update_id': 0,
+        'pan_id': 4660,
+        'security_level': 0,
+        'source': None,
+        'stack_specific': dict({
+        }),
+        'tc_link_key': dict({
+          'key': list([
+            90,
+            105,
+            103,
+            66,
+            101,
+            101,
+            65,
+            108,
+            108,
+            105,
+            97,
+            110,
+            99,
+            101,
+            48,
+            57,
+          ]),
+          'partner_ieee': '**REDACTED**',
+          'rx_counter': 0,
+          'seq': 0,
+          'tx_counter': 0,
+        }),
+      }),
+      'node_info': dict({
+        'ieee': '**REDACTED**',
+        'logical_type': 2,
+        'manufacturer': 'Coordinator Manufacturer',
+        'model': 'Coordinator Model',
+        'nwk': 0,
+        'version': None,
+      }),
+    }),
+    'config': dict({
+      'device_config': dict({
+      }),
+      'enable_quirks': False,
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'device': dict({
+          'baudrate': 115200,
+          'flow_control': 'hardware',
+          'path': '/dev/ttyUSB0',
+        }),
+        'radio_type': 'ezsp',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'zha',
+      'minor_version': 1,
+      'options': dict({
+        'custom_configuration': dict({
+          'zha_alarm_options': dict({
+            'alarm_arm_requires_code': False,
+            'alarm_failed_tries': 2,
+            'alarm_master_code': '**REDACTED**',
+          }),
+          'zha_options': dict({
+            'enhanced_light_transition': True,
+            'group_members_assume_state': False,
+          }),
+        }),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 4,
+    }),
+    'devices': list([
+      dict({
+        'logical_type': 'Coordinator',
+        'manufacturer': 'Coordinator Manufacturer',
+        'model': 'Coordinator Model',
+      }),
+      dict({
+        'logical_type': 'EndDevice',
+        'manufacturer': 'FakeManufacturer',
+        'model': 'FakeModel',
+      }),
+    ]),
+    'energy_scan': dict({
+      '11': 4.313725490196078,
+      '12': 4.705882352941177,
+      '13': 5.098039215686274,
+      '14': 5.490196078431373,
+      '15': 5.882352941176471,
+      '16': 6.2745098039215685,
+      '17': 6.666666666666667,
+      '18': 7.0588235294117645,
+      '19': 7.450980392156863,
+      '20': 7.8431372549019605,
+      '21': 8.235294117647058,
+      '22': 8.627450980392156,
+      '23': 9.019607843137255,
+      '24': 9.411764705882353,
+      '25': 9.803921568627452,
+      '26': 10.196078431372548,
+    }),
+  })
+# ---
+# name: test_diagnostics_for_device
+  dict({
+    'active_coordinator': False,
+    'area_id': None,
+    'available': True,
+    'cluster_details': dict({
+      '1': dict({
+        'device_type': dict({
+          'id': 1025,
+          'name': 'IAS_ANCILLARY_CONTROL',
+        }),
+        'in_clusters': dict({
+          '0x0500': dict({
+            'attributes': dict({
+              '0x0000': dict({
+                'attribute': "ZCLAttributeDef(id=0x0000, name='zone_state', type=<enum 'ZoneState'>, zcl_type=<DataTypeId.enum8: 48>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0x0001': dict({
+                'attribute': "ZCLAttributeDef(id=0x0001, name='zone_type', type=<enum 'ZoneType'>, zcl_type=<DataTypeId.uint16: 33>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0x0002': dict({
+                'attribute': "ZCLAttributeDef(id=0x0002, name='zone_status', type=<flag 'ZoneStatus'>, zcl_type=<DataTypeId.map16: 25>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0x0010': dict({
+                'attribute': "ZCLAttributeDef(id=0x0010, name='cie_addr', type=<class 'zigpy.types.named.EUI64'>, zcl_type=<DataTypeId.EUI64: 240>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=True, is_manufacturer_specific=False)",
+                'value': list([
+                  50,
+                  79,
+                  50,
+                  2,
+                  0,
+                  141,
+                  21,
+                  0,
+                ]),
+              }),
+              '0x0011': dict({
+                'attribute': "ZCLAttributeDef(id=0x0011, name='zone_id', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0x0012': dict({
+                'attribute': "ZCLAttributeDef(id=0x0012, name='num_zone_sensitivity_levels_supported', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0x0013': dict({
+                'attribute': "ZCLAttributeDef(id=0x0013, name='current_zone_sensitivity_level', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=False, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+            }),
+            'endpoint_attribute': 'ias_zone',
+            'unsupported_attributes': list([
+              18,
+              'current_zone_sensitivity_level',
+            ]),
+          }),
+          '0x0501': dict({
+            'attributes': dict({
+              '0xfffd': dict({
+                'attribute': "ZCLAttributeDef(id=0xFFFD, name='cluster_revision', type=<class 'zigpy.types.basic.uint16_t'>, zcl_type=<DataTypeId.uint16: 33>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+              '0xfffe': dict({
+                'attribute': "ZCLAttributeDef(id=0xFFFE, name='reporting_status', type=<enum 'AttributeReportingStatus'>, zcl_type=<DataTypeId.enum8: 48>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
+                'value': None,
+              }),
+            }),
+            'endpoint_attribute': 'ias_ace',
+            'unsupported_attributes': list([
+              4096,
+              'unknown_attribute_name',
+            ]),
+          }),
+        }),
+        'out_clusters': dict({
+        }),
+        'profile_id': 260,
+      }),
+    }),
+    'device_type': 'EndDevice',
+    'endpoint_names': list([
+      dict({
+        'name': 'IAS_ANCILLARY_CONTROL',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'entity_id': 'alarm_control_panel.fakemanufacturer_fakemodel_alarm_control_panel',
+        'name': 'FakeManufacturer FakeModel',
+      }),
+    ]),
+    'ieee': '**REDACTED**',
+    'lqi': None,
+    'manufacturer': 'FakeManufacturer',
+    'manufacturer_code': 4098,
+    'model': 'FakeModel',
+    'name': 'FakeManufacturer FakeModel',
+    'neighbors': list([
+    ]),
+    'nwk': 47004,
+    'power_source': 'Mains',
+    'quirk_applied': False,
+    'quirk_class': 'zigpy.device.Device',
+    'quirk_id': None,
+    'routes': list([
+    ]),
+    'rssi': None,
+    'signature': dict({
+      'endpoints': dict({
+        '1': dict({
+          'device_type': '0x0401',
+          'input_clusters': list([
+            '0x0500',
+            '0x0501',
+          ]),
+          'output_clusters': list([
+          ]),
+          'profile_id': '0x0104',
+        }),
+      }),
+      'manufacturer': 'FakeManufacturer',
+      'model': 'FakeModel',
+      'node_descriptor': dict({
+        'aps_flags': 0,
+        'complex_descriptor_available': 0,
+        'descriptor_capability_field': 0,
+        'frequency_band': 8,
+        'logical_type': 2,
+        'mac_capability_flags': 140,
+        'manufacturer_code': 4098,
+        'maximum_buffer_size': 82,
+        'maximum_incoming_transfer_size': 82,
+        'maximum_outgoing_transfer_size': 82,
+        'reserved': 0,
+        'server_mask': 0,
+        'user_descriptor_available': 0,
+      }),
+    }),
+    'user_given_name': None,
+  })
+# ---

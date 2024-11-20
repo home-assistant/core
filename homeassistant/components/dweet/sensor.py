@@ -1,4 +1,7 @@
 """Support for showing values from Dweet.io."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
@@ -6,14 +9,20 @@ import logging
 import dweepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +30,7 @@ DEFAULT_NAME = "Dweet.io Sensor"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE): cv.string,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -31,14 +40,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dweet sensor."""
     name = config.get(CONF_NAME)
     device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    if value_template is not None:
-        value_template.hass = hass
 
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]["content"])
@@ -46,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Device/thing %s could not be found", device)
         return
 
-    if value_template.render_with_possible_json_value(content) == "":
+    if value_template and value_template.render_with_possible_json_value(content) == "":
         _LOGGER.error("%s was not found", value_template)
         return
 
@@ -82,7 +94,7 @@ class DweetSensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from REST API."""
         self.dweet.update()
 

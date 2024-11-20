@@ -1,185 +1,95 @@
-"""Support for the Rainforest Eagle-200 energy monitor."""
+"""Support for the Rainforest Eagle energy monitor."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-import logging
-
-from eagle200_reader import EagleReader
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-from uEagle import Eagle as LegacyReader
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, dt
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-CONF_CLOUD_ID = "cloud_id"
-CONF_INSTALL_CODE = "install_code"
-POWER_KILO_WATT = "kW"
+from .const import DOMAIN
+from .coordinator import EagleDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-MIN_SCAN_INTERVAL = timedelta(seconds=30)
-
-
-@dataclass
-class SensorType:
-    """Rainforest sensor type."""
-
-    name: str
-    unit_of_measurement: str
-    device_class: str | None = None
-    state_class: str | None = None
-    last_reset: datetime | None = None
-
-
-SENSORS = {
-    "instantanous_demand": SensorType(
-        name="Eagle-200 Meter Power Demand",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
+SENSORS = (
+    SensorEntityDescription(
+        key="zigbee:InstantaneousDemand",
+        translation_key="power_demand",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    "summation_delivered": SensorType(
-        name="Eagle-200 Total Meter Energy Delivered",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+    SensorEntityDescription(
+        key="zigbee:CurrentSummationDelivered",
+        translation_key="total_energy_delivered",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "summation_received": SensorType(
-        name="Eagle-200 Total Meter Energy Received",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+    SensorEntityDescription(
+        key="zigbee:CurrentSummationReceived",
+        translation_key="total_energy_received",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "summation_total": SensorType(
-        name="Eagle-200 Net Meter Energy (Delivered minus Received)",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_CLOUD_ID): cv.string,
-        vol.Required(CONF_INSTALL_CODE): cv.string,
-    }
 )
 
 
-def hwtest(cloud_id, install_code, ip_address):
-    """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
-    reader = LeagleReader(cloud_id, install_code, ip_address)
-    response = reader.get_network_info()
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = [EagleSensor(coordinator, description) for description in SENSORS]
 
-    # Branch to test if target is Legacy Model
-    if (
-        "NetworkInfo" in response
-        and response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE"
-    ):
-        return reader
+    if coordinator.data.get("zigbee:Price") not in (None, "invalid"):
+        entities.append(
+            EagleSensor(
+                coordinator,
+                SensorEntityDescription(
+                    key="zigbee:Price",
+                    translation_key="meter_price",
+                    native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{UnitOfEnergy.KILO_WATT_HOUR}",
+                    state_class=SensorStateClass.MEASUREMENT,
+                ),
+            )
+        )
 
-    # Branch to test if target is Eagle-200 Model
-    if (
-        "Response" in response
-        and response["Response"].get("Command", None) == "get_network_info"
-    ):
-        return EagleReader(ip_address, cloud_id, install_code)
-
-    # Catch-all if hardware ID tests fail
-    raise ValueError("Couldn't determine device model.")
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the Eagle-200 sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
-    cloud_id = config[CONF_CLOUD_ID]
-    install_code = config[CONF_INSTALL_CODE]
-
-    try:
-        eagle_reader = hwtest(cloud_id, install_code, ip_address)
-    except (ConnectError, HTTPError, Timeout, ValueError) as error:
-        _LOGGER.error("Failed to connect during setup: %s", error)
-        return
-
-    eagle_data = EagleData(eagle_reader)
-    eagle_data.update()
-
-    add_entities(EagleSensor(eagle_data, condition) for condition in SENSORS)
+    async_add_entities(entities)
 
 
-class EagleSensor(SensorEntity):
-    """Implementation of the Rainforest Eagle-200 sensor."""
+class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
+    """Implementation of the Rainforest Eagle sensor."""
 
-    def __init__(self, eagle_data, sensor_type):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""
-        self.eagle_data = eagle_data
-        self._type = sensor_type
-        sensor_info = SENSORS[sensor_type]
-        self._attr_name = sensor_info.name
-        self._attr_native_unit_of_measurement = sensor_info.unit_of_measurement
-        self._attr_device_class = sensor_info.device_class
-        self._attr_state_class = sensor_info.state_class
-        self._attr_last_reset = sensor_info.last_reset
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.cloud_id}-${coordinator.hardware_address}-{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.cloud_id)},
+            manufacturer="Rainforest Automation",
+            model=coordinator.model,
+            name=coordinator.model,
+        )
 
-    def update(self):
-        """Get the energy information from the Rainforest Eagle."""
-        self.eagle_data.update()
-        self._attr_native_value = self.eagle_data.get_state(self._type)
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.is_connected
 
-
-class EagleData:
-    """Get the latest data from the Eagle-200 device."""
-
-    def __init__(self, eagle_reader):
-        """Initialize the data object."""
-        self._eagle_reader = eagle_reader
-        self.data = {}
-
-    @Throttle(MIN_SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from the Eagle-200 device."""
-        try:
-            self.data = self._eagle_reader.update()
-            _LOGGER.debug("API data: %s", self.data)
-        except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect during update: %s", error)
-            self.data = {}
-
-    def get_state(self, sensor_type):
-        """Get the sensor value from the dictionary."""
-        state = self.data.get(sensor_type)
-        _LOGGER.debug("Updating: %s - %s", sensor_type, state)
-        return state
-
-
-class LeagleReader(LegacyReader, SensorEntity):
-    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
-
-    def update(self):
-        """Fetch and return the four sensor values in a dict."""
-        out = {}
-
-        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
-        out["instantanous_demand"] = resp["Demand"]
-
-        resp = self.get_current_summation()["CurrentSummation"]
-        out["summation_delivered"] = resp["SummationDelivered"]
-        out["summation_received"] = resp["SummationReceived"]
-        out["summation_total"] = out["summation_delivered"] - out["summation_received"]
-
-        return out
+    @property
+    def native_value(self) -> StateType:
+        """Return native value of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)

@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import asyncio
 import logging
 
@@ -25,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 
 from .const import (
@@ -121,7 +123,7 @@ class AlarmPanel:
             self.api_version = KONN_API_VERSIONS.get(
                 self.status.get("model", KONN_MODEL), KONN_API_VERSIONS[KONN_MODEL]
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Connected to new %s device", self.status.get("model", "Konnected")
             )
             _LOGGER.debug(self.status)
@@ -136,22 +138,24 @@ class AlarmPanel:
 
             # retry in a bit, never more than ~3 min
             self.connect_attempts += 1
-            self.cancel_connect_retry = self.hass.helpers.event.async_call_later(
-                2 ** min(self.connect_attempts, 5) * 5, self.async_connect
+            self.cancel_connect_retry = async_call_later(
+                self.hass, 2 ** min(self.connect_attempts, 5) * 5, self.async_connect
             )
             return
 
         self.connect_attempts = 0
         self.connected = True
-        _LOGGER.info(
-            "Set up Konnected device %s. Open http://%s:%s in a "
-            "web browser to view device status",
+        _LOGGER.debug(
+            (
+                "Set up Konnected device %s. Open http://%s:%s in a "
+                "web browser to view device status"
+            ),
             self.device_id,
             self.host,
             self.port,
         )
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
@@ -304,7 +308,9 @@ class AlarmPanel:
     def async_ds18b20_sensor_configuration(self):
         """Return the configuration map for syncing DS18B20 sensors."""
         return [
-            self.format_zone(sensor[CONF_ZONE])
+            self.format_zone(
+                sensor[CONF_ZONE], {CONF_POLL_INTERVAL: sensor[CONF_POLL_INTERVAL]}
+            )
             for sensor in self.stored_configuration[CONF_SENSORS]
             if sensor[CONF_TYPE] == "ds18b20"
         ]
@@ -347,9 +353,7 @@ class AlarmPanel:
     @callback
     def async_current_settings_payload(self):
         """Return a dict of configuration currently stored on the device."""
-        settings = self.status["settings"]
-        if not settings:
-            settings = {}
+        settings = self.status["settings"] or {}
 
         return {
             "sensors": [
@@ -376,7 +380,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("Pushing settings to device %s", self.device_id)
+            _LOGGER.debug("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 

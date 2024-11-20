@@ -1,4 +1,5 @@
 """The Schluter DITRA-HEAT integration."""
+
 import logging
 
 from requests import RequestException, Session
@@ -6,9 +7,11 @@ from schluter.api import Api
 from schluter.authenticator import AuthenticationState, Authenticator
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -31,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Schluter component."""
     _LOGGER.debug("Starting setup of schluter")
 
@@ -51,7 +54,7 @@ def setup(hass, config):
         authentication = authenticator.authenticate()
     except RequestException as ex:
         _LOGGER.error("Unable to connect to Schluter service: %s", ex)
-        return
+        return False
 
     state = authentication.state
 
@@ -60,7 +63,7 @@ def setup(hass, config):
             DATA_SCHLUTER_API: api,
             DATA_SCHLUTER_SESSION: authentication.session_id,
         }
-        discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+        discovery.load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
         return True
     if state == AuthenticationState.BAD_PASSWORD:
         _LOGGER.error("Invalid password provided")

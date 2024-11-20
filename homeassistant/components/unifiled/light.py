@@ -1,22 +1,29 @@
 """Support for Unifi Led lights."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from unifiled import unifiled
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -26,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Unifi LED platform."""
 
     # Assign configuration variables.
@@ -49,64 +61,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UnifiLedLight(LightEntity):
     """Representation of an unifiled Light."""
 
-    def __init__(self, light, api):
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    def __init__(self, light: dict[str, Any], api: unifiled) -> None:
         """Init Unifi LED Light."""
 
         self._api = api
         self._light = light
-        self._name = light["name"]
-        self._unique_id = light["id"]
-        self._state = light["status"]["output"]
-        self._available = light["isOnline"]
-        self._brightness = self._api.convertfrom100to255(light["status"]["led"])
-        self._features = SUPPORT_BRIGHTNESS
+        self._attr_name = light["name"]
+        self._light_id = light["id"]
+        self._attr_unique_id = light["id"]
+        self._attr_is_on = light["status"]["output"]
+        self._attr_available = light["isOnline"]
+        self._attr_brightness = self._api.convertfrom100to255(light["status"]["led"])
 
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return the available state of this light."""
-        return self._available
-
-    @property
-    def brightness(self):
-        """Return the brightness name of this light."""
-        return self._brightness
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this light."""
-        return self._unique_id
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def supported_features(self):
-        """Return the supported features of this light."""
-        return self._features
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._api.setdevicebrightness(
-            self._unique_id,
+            self._light_id,
             str(self._api.convertfrom255to100(kwargs.get(ATTR_BRIGHTNESS, 255))),
         )
-        self._api.setdeviceoutput(self._unique_id, 1)
+        self._api.setdeviceoutput(self._light_id, 1)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        self._api.setdeviceoutput(self._unique_id, 0)
+        self._api.setdeviceoutput(self._light_id, 0)
 
-    def update(self):
+    def update(self) -> None:
         """Update the light states."""
-        self._state = self._api.getlightstate(self._unique_id)
-        self._brightness = self._api.convertfrom100to255(
-            self._api.getlightbrightness(self._unique_id)
+        self._attr_is_on = self._api.getlightstate(self._light_id)
+        self._attr_brightness = self._api.convertfrom100to255(
+            self._api.getlightbrightness(self._light_id)
         )
-        self._available = self._api.getlightavailable(self._unique_id)
+        self._attr_available = self._api.getlightavailable(self._light_id)

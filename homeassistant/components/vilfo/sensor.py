@@ -1,94 +1,91 @@
 """Support for Vilfo Router sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_ICON
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_API_DATA_FIELD,
-    ATTR_DEVICE_CLASS,
-    ATTR_LABEL,
-    ATTR_UNIT,
+    ATTR_API_DATA_FIELD_BOOT_TIME,
+    ATTR_API_DATA_FIELD_LOAD,
+    ATTR_BOOT_TIME,
+    ATTR_LOAD,
     DOMAIN,
     ROUTER_DEFAULT_MODEL,
     ROUTER_DEFAULT_NAME,
     ROUTER_MANUFACTURER,
-    SENSOR_TYPES,
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+@dataclass(frozen=True, kw_only=True)
+class VilfoSensorEntityDescription(SensorEntityDescription):
+    """Describes Vilfo sensor entity."""
+
+    api_key: str
+
+
+SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
+    VilfoSensorEntityDescription(
+        key=ATTR_LOAD,
+        translation_key=ATTR_LOAD,
+        native_unit_of_measurement=PERCENTAGE,
+        api_key=ATTR_API_DATA_FIELD_LOAD,
+    ),
+    VilfoSensorEntityDescription(
+        key=ATTR_BOOT_TIME,
+        translation_key=ATTR_BOOT_TIME,
+        api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add Vilfo Router entities from a config_entry."""
     vilfo = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors = []
+    entities = [VilfoRouterSensor(vilfo, description) for description in SENSOR_TYPES]
 
-    for sensor_type in SENSOR_TYPES:
-        sensors.append(VilfoRouterSensor(sensor_type, vilfo))
-
-    async_add_entities(sensors, True)
+    async_add_entities(entities, True)
 
 
 class VilfoRouterSensor(SensorEntity):
     """Define a Vilfo Router Sensor."""
 
-    def __init__(self, sensor_type, api):
+    entity_description: VilfoSensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(self, api, description: VilfoSensorEntityDescription) -> None:
         """Initialize."""
+        self.entity_description = description
         self.api = api
-        self.sensor_type = sensor_type
-        self._device_info = {
-            "identifiers": {(DOMAIN, api.host, api.mac_address)},
-            "name": ROUTER_DEFAULT_NAME,
-            "manufacturer": ROUTER_MANUFACTURER,
-            "model": ROUTER_DEFAULT_MODEL,
-            "sw_version": api.firmware_version,
-        }
-        self._unique_id = f"{self.api.unique_id}_{self.sensor_type}"
-        self._state = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, api.host, api.mac_address)},  # type: ignore[arg-type]
+            name=ROUTER_DEFAULT_NAME,
+            manufacturer=ROUTER_MANUFACTURER,
+            model=ROUTER_DEFAULT_MODEL,
+            sw_version=api.firmware_version,
+        )
+        self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the sensor is available or not."""
         return self.api.available
 
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SENSOR_TYPES[self.sensor_type].get(ATTR_DEVICE_CLASS)
-
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        return SENSOR_TYPES[self.sensor_type][ATTR_ICON]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        parent_device_name = self._device_info["name"]
-        sensor_name = SENSOR_TYPES[self.sensor_type][ATTR_LABEL]
-        return f"{parent_device_name} {sensor_name}"
-
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return SENSOR_TYPES[self.sensor_type].get(ATTR_UNIT)
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the router data."""
         await self.api.async_update()
-        self._state = self.api.data.get(
-            SENSOR_TYPES[self.sensor_type][ATTR_API_DATA_FIELD]
-        )
+        self._attr_native_value = self.api.data.get(self.entity_description.api_key)

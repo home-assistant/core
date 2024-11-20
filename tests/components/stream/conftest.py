@@ -9,19 +9,23 @@ nothing for the test to verify. The solution is the WorkerSync class that
 allows the tests to pause the worker thread before finalizing the stream
 so that it can inspect the output.
 """
+
 from __future__ import annotations
 
 import asyncio
-from collections import deque
+from collections.abc import Generator
 import logging
 import threading
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import Mock, patch
 
-import async_timeout
+from aiohttp import web
 import pytest
 
-from homeassistant.components.stream import Stream
-from homeassistant.components.stream.core import Segment
+from homeassistant.components.stream.core import StreamOutput
+from homeassistant.components.stream.worker import StreamState
+
+from .common import generate_h264_video, stream_teardown
 
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
@@ -29,10 +33,10 @@ TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 class WorkerSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WorkerSync."""
         self._event = None
-        self._original = Stream._worker_finished
+        self._original = StreamState.discontinuity
 
     def pause(self):
         """Pause the worker before it finalizes the stream."""
@@ -43,7 +47,7 @@ class WorkerSync:
         logging.debug("waking blocked worker")
         self._event.set()
 
-    def blocking_finish(self, stream: Stream):
+    def blocking_discontinuity(self, stream_state: StreamState):
         """Intercept call to pause stream worker."""
         # Worker is ending the stream, which clears all output buffers.
         # Block the worker thread until the test has a chance to verify
@@ -53,70 +57,141 @@ class WorkerSync:
             self._event.wait()
 
         # Forward to actual implementation
-        self._original(stream)
+        self._original(stream_state)
 
 
-@pytest.fixture()
-def stream_worker_sync(hass):
+@pytest.fixture
+def stream_worker_sync() -> Generator[WorkerSync]:
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
     with patch(
-        "homeassistant.components.stream.Stream._worker_finished",
-        side_effect=sync.blocking_finish,
+        "homeassistant.components.stream.worker.StreamState.discontinuity",
+        side_effect=sync.blocking_discontinuity,
         autospec=True,
     ):
         yield sync
 
 
-class SaveRecordWorkerSync:
-    """
-    Test fixture to manage RecordOutput thread for recorder_save_worker.
+class HLSSync:
+    """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    This is used to assert that the worker is started and stopped cleanly
-    to avoid thread leaks in tests.
-    """
+    def __init__(self) -> None:
+        """Initialize HLSSync."""
+        self._request_event = asyncio.Event()
+        self._original_recv = StreamOutput.recv
+        self._original_part_recv = StreamOutput.part_recv
+        self._original_bad_request = web.HTTPBadRequest
+        self._original_not_found = web.HTTPNotFound
+        self._original_response = web.Response
+        self._num_requests = 0
+        self._num_recvs = 0
+        self._num_finished = 0
 
-    def __init__(self):
-        """Initialize SaveRecordWorkerSync."""
-        self._save_event = None
-        self._segments = None
-        self._save_thread = None
-        self.reset()
+        def on_resp():
+            self._num_finished += 1
+            self.check_requests_ready()
 
-    def recorder_save_worker(self, file_out: str, segments: deque[Segment]):
-        """Mock method for patch."""
-        logging.debug("recorder_save_worker thread started")
-        assert self._save_thread is None
-        self._segments = segments
-        self._save_thread = threading.current_thread()
-        self._save_event.set()
+        class SyncResponse(web.Response):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                on_resp()
 
-    async def get_segments(self):
-        """Return the recorded video segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        return self._segments
+        self.response = SyncResponse
 
-    async def join(self):
-        """Verify save worker was invoked and block on shutdown."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        self._save_thread.join(timeout=TEST_TIMEOUT)
-        assert not self._save_thread.is_alive()
+    def reset_request_pool(self, num_requests: int, reset_finished=True):
+        """Use to reset the request counter between segments."""
+        self._num_recvs = 0
+        if reset_finished:
+            self._num_finished = 0
+        self._num_requests = num_requests
 
-    def reset(self):
-        """Reset callback state for reuse in tests."""
-        self._save_thread = None
-        self._save_event = asyncio.Event()
+    async def wait_for_handler(self):
+        """Set up HLSSync to block calls to put until requests are set up."""
+        if not self.check_requests_ready():
+            await self._request_event.wait()
+        self.reset_request_pool(num_requests=self._num_requests, reset_finished=False)
+
+    def check_requests_ready(self):
+        """Unblock the pending put call if the requests are all finished or blocking."""
+        if self._num_recvs + self._num_finished == self._num_requests:
+            self._request_event.set()
+            self._request_event.clear()
+            return True
+        return False
+
+    def bad_request(self):
+        """Intercept the HTTPBadRequest call so we know when the web handler is finished."""
+        self._num_finished += 1
+        self.check_requests_ready()
+        return self._original_bad_request()
+
+    def not_found(self):
+        """Intercept the HTTPNotFound call so we know when the web handler is finished."""
+        self._num_finished += 1
+        self.check_requests_ready()
+        return self._original_not_found()
+
+    async def recv(self, output: StreamOutput, **kw):
+        """Intercept the recv call so we know when the response is blocking on recv."""
+        self._num_recvs += 1
+        self.check_requests_ready()
+        return await self._original_recv(output)
+
+    async def part_recv(self, output: StreamOutput, **kw):
+        """Intercept the recv call so we know when the response is blocking on recv."""
+        self._num_recvs += 1
+        self.check_requests_ready()
+        return await self._original_part_recv(output)
 
 
-@pytest.fixture()
-def record_worker_sync(hass):
-    """Patch recorder_save_worker for clean thread shutdown for test."""
-    sync = SaveRecordWorkerSync()
+@pytest.fixture
+def hls_sync():
+    """Patch HLSOutput to allow test to synchronize playlist requests and responses."""
+    sync = HLSSync()
+    with (
+        patch(
+            "homeassistant.components.stream.core.StreamOutput.recv",
+            side_effect=sync.recv,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.stream.core.StreamOutput.part_recv",
+            side_effect=sync.part_recv,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.HTTPBadRequest",
+            side_effect=sync.bad_request,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.HTTPNotFound",
+            side_effect=sync.not_found,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.Response",
+            new=sync.response,
+        ),
+    ):
+        yield sync
+
+
+@pytest.fixture(autouse=True)
+def should_retry() -> Generator[Mock]:
+    """Fixture to disable stream worker retries in tests by default."""
     with patch(
-        "homeassistant.components.stream.recorder.recorder_save_worker",
-        side_effect=sync.recorder_save_worker,
-        autospec=True,
-    ):
-        yield sync
+        "homeassistant.components.stream._should_retry", return_value=False
+    ) as mock_should_retry:
+        yield mock_should_retry
+
+
+@pytest.fixture(scope="package")
+def h264_video():
+    """Generate a video, shared across tests."""
+    return generate_h264_video()
+
+
+@pytest.fixture(scope="package", autouse=True)
+def fixture_teardown():
+    """Destroy package level test state."""
+    yield
+    stream_teardown()

@@ -1,19 +1,22 @@
 """Tests for the Freedompro binary sensor."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
+from .conftest import get_states_response_for_uid
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "binary_sensor.doorway_motion_sensor",
@@ -42,14 +45,18 @@ from tests.components.freedompro.const import DEVICES_STATE
     ],
 )
 async def test_binary_sensor_get_state(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test states of the binary_sensor."""
-    init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -60,17 +67,16 @@ async def test_binary_sensor_get_state(
     assert state
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=[],
     ):
-
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 
@@ -78,28 +84,25 @@ async def test_binary_sensor_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
         assert state.state == STATE_OFF
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            if state_response["type"] == "smokeSensor":
-                state_response["state"]["smokeDetected"] = True
-            if state_response["type"] == "occupancySensor":
-                state_response["state"]["occupancyDetected"] = True
-            if state_response["type"] == "motionSensor":
-                state_response["state"]["motionDetected"] = True
-            if state_response["type"] == "contactSensor":
-                state_response["state"]["contactSensorState"] = True
+    states_response = get_states_response_for_uid(uid)
+    if states_response[0]["type"] == "smokeSensor":
+        states_response[0]["state"]["smokeDetected"] = True
+    elif states_response[0]["type"] == "occupancySensor":
+        states_response[0]["state"]["occupancyDetected"] = True
+    elif states_response[0]["type"] == "motionSensor":
+        states_response[0]["state"]["motionDetected"] = True
+    elif states_response[0]["type"] == "contactSensor":
+        states_response[0]["state"]["contactSensorState"] = True
     with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        "homeassistant.components.freedompro.coordinator.get_states",
+        return_value=states_response,
     ):
-
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 
@@ -107,7 +110,7 @@ async def test_binary_sensor_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 

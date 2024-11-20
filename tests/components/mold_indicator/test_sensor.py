@@ -1,35 +1,39 @@
 """The tests for the MoldIndicator sensor."""
+
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.mold_indicator.sensor import (
     ATTR_CRITICAL_TEMP,
     ATTR_DEWPOINT,
 )
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def init_sensors_fixture(hass):
+def init_sensors_fixture(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     hass.states.async_set(
-        "test.indoortemp", "20", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "20", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
     )
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the mold indicator sensor setup."""
     assert await async_setup_component(
         hass,
@@ -50,13 +54,23 @@ async def test_setup(hass):
     assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
-async def test_invalidcalib(hass):
+async def test_setup_from_config_entry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the mold indicator sensor setup from a config entry."""
+
+    moldind = hass.states.get("sensor.mold_indicator")
+    assert moldind
+    assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
+
+
+async def test_invalidcalib(hass: HomeAssistant) -> None:
     """Test invalid sensor values."""
     hass.states.async_set(
-        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
@@ -85,13 +99,13 @@ async def test_invalidcalib(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
 
-async def test_invalidhum(hass):
+async def test_invalidhum(hass: HomeAssistant) -> None:
     """Test invalid sensor values."""
     hass.states.async_set(
-        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
@@ -131,7 +145,9 @@ async def test_invalidhum(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.indoorhumidity", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoorhumidity",
+        "10",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -141,7 +157,7 @@ async def test_invalidhum(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
 
-async def test_calculation(hass):
+async def test_calculation(hass: HomeAssistant) -> None:
     """Test the mold indicator internal calculations."""
     assert await async_setup_component(
         hass,
@@ -180,7 +196,7 @@ async def test_calculation(hass):
     assert state == "68"
 
 
-async def test_unknown_sensor(hass):
+async def test_unknown_sensor(hass: HomeAssistant) -> None:
     """Test the sensor_changed function."""
     assert await async_setup_component(
         hass,
@@ -199,7 +215,9 @@ async def test_unknown_sensor(hass):
     await hass.async_start()
 
     hass.states.async_set(
-        "test.indoortemp", STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp",
+        STATE_UNKNOWN,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -209,10 +227,12 @@ async def test_unknown_sensor(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp",
+        STATE_UNKNOWN,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -222,7 +242,7 @@ async def test_unknown_sensor(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity",
@@ -254,7 +274,7 @@ async def test_unknown_sensor(hass):
     assert esttemp == 27.5
 
 
-async def test_sensor_changed(hass):
+async def test_sensor_changed(hass: HomeAssistant) -> None:
     """Test the sensor_changed function."""
     assert await async_setup_component(
         hass,
@@ -273,13 +293,13 @@ async def test_sensor_changed(hass):
     await hass.async_start()
 
     hass.states.async_set(
-        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mold_indicator").state == "90"
 
     hass.states.async_set(
-        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mold_indicator").state == "57"

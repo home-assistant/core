@@ -1,8 +1,10 @@
 """Support for Tasmota binary sensors."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from hatasmota import switch as tasmota_switch
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -18,7 +20,7 @@ import homeassistant.helpers.event as evt
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 
 async def async_setup_entry(
@@ -41,12 +43,12 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(binary_sensor.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(binary_sensor.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(binary_sensor.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(binary_sensor.DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -57,16 +59,17 @@ class TasmotaBinarySensor(
 ):
     """Representation a Tasmota binary sensor."""
 
+    _delay_listener: Callable | None = None
+    _on_off_state: bool | None = None
     _tasmota_entity: tasmota_switch.TasmotaSwitch
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the Tasmota binary sensor."""
-        self._delay_listener: Callable | None = None
-        self._on_off_state: bool | None = None
-
         super().__init__(
             **kwds,
         )
+        if self._tasmota_entity.off_delay is not None:
+            self._attr_force_update = True
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -96,11 +99,6 @@ class TasmotaBinarySensor(
             )
 
         self.async_write_ha_state()
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return True
 
     @property
     def is_on(self) -> bool | None:

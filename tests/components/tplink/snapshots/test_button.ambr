@@ -1,0 +1,162 @@
+# serializer version: 1
+# name: test_states[button.my_device_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.my_device_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reboot',
+    'unique_id': '123456789ABCDEFGH_reboot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[button.my_device_stop_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_device_stop_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop alarm',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop_alarm',
+    'unique_id': '123456789ABCDEFGH_stop_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[button.my_device_stop_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Stop alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_device_stop_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[button.my_device_test_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_device_test_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test alarm',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'test_alarm',
+    'unique_id': '123456789ABCDEFGH_test_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[button.my_device_test_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Test alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_device_test_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[my_device-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tplink',
+        '123456789ABCDEFGH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'HS100',
+    'model_id': None,
+    'name': 'my_device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---

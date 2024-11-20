@@ -1,0 +1,4045 @@
+{
+  "nodeId": 68,
+  "index": 0,
+  "installerIcon": 4608,
+  "userIcon": 4608,
+  "status": 4,
+  "ready": true,
+  "isListening": false,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 400,
+  "productId": 1,
+  "productType": 6,
+  "firmwareVersion": "1.44",
+  "zwavePlusVersion": 1,
+  "name": "ADC-T3000",
+  "deviceConfig": {
+    "filename": "/data/store/config/adc-t3000.json",
+    "isEmbedded": false,
+    "manufacturer": "Building 36 Technologies",
+    "manufacturerId": 400,
+    "label": "ADC-T 3000",
+    "description": "Alarm.com Smart Thermostat",
+    "devices": [
+      {
+        "productType": 6,
+        "productId": 1
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "ADC-T 3000",
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 68,
+      "index": 0,
+      "installerIcon": 4608,
+      "userIcon": 4608,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 8,
+          "label": "Thermostat"
+        },
+        "specific": {
+          "key": 6,
+          "label": "General Thermostat V2"
+        },
+        "mandatorySupportedCCs": [32, 114, 64, 67, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 11,
+          "isSecure": true
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 66,
+          "name": "Thermostat Operating State",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 68,
+          "name": "Thermostat Fan Mode",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 69,
+          "name": "Thermostat Fan State",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 100,
+          "name": "Humidity Control Setpoint",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 109,
+          "name": "Humidity Control Mode",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 110,
+          "name": "Humidity Control Operating State",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 7,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 129,
+          "name": "Clock",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 1
+        },
+        "unit": "\u00b0F"
+      },
+      "value": 72,
+      "nodeId": 68
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Humidity",
+      "propertyName": "Humidity",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Humidity",
+        "ccSpecific": {
+          "sensorType": 5,
+          "scale": 0
+        },
+        "unit": "%"
+      },
+      "value": 34,
+      "nodeId": 68
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Voltage",
+      "propertyName": "Voltage",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Voltage",
+        "ccSpecific": {
+          "sensorType": 15,
+          "scale": 0
+        },
+        "unit": "V"
+      },
+      "value": 3.034
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 64,
+      "commandClassName": "Thermostat Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Thermostat mode",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off",
+          "1": "Heat",
+          "2": "Cool",
+          "3": "Auto"
+        }
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 64,
+      "commandClassName": "Thermostat Mode",
+      "property": "manufacturerData",
+      "propertyName": "manufacturerData",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 66,
+      "commandClassName": "Thermostat Operating State",
+      "property": "state",
+      "propertyName": "state",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Operating state",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Idle",
+          "1": "Heating",
+          "2": "Cooling",
+          "3": "Fan Only",
+          "4": "Pending Heat",
+          "5": "Pending Cool",
+          "6": "Vent/Economizer",
+          "7": "Aux Heating",
+          "8": "2nd Stage Heating",
+          "9": "2nd Stage Cooling",
+          "10": "2nd Stage Aux Heat",
+          "11": "3rd Stage Aux Heat"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 67,
+      "commandClassName": "Thermostat Setpoint",
+      "property": "setpoint",
+      "propertyKey": 1,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Heating",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 1
+        },
+        "min": 35,
+        "max": 95,
+        "unit": "\u00b0F"
+      },
+      "value": 60.8
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 67,
+      "commandClassName": "Thermostat Setpoint",
+      "property": "setpoint",
+      "propertyKey": 2,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Cooling",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 2
+        },
+        "min": 50,
+        "max": 95,
+        "unit": "\u00b0F"
+      },
+      "value": 80
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 68,
+      "commandClassName": "Thermostat Fan Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Thermostat fan mode",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Auto low",
+          "1": "Low",
+          "6": "Circulation"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 68,
+      "commandClassName": "Thermostat Fan Mode",
+      "property": "off",
+      "propertyName": "off",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Thermostat fan turned off"
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 69,
+      "commandClassName": "Thermostat Fan State",
+      "property": "state",
+      "propertyName": "state",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Thermostat fan state",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Idle / off",
+          "1": "Running / running low",
+          "2": "Running high",
+          "3": "Running medium",
+          "4": "Circulation mode",
+          "5": "Humidity circulation mode",
+          "6": "Right - left circulation mode",
+          "7": "Up - down circulation mode",
+          "8": "Quiet circulation mode"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 100,
+      "commandClassName": "Humidity Control Setpoint",
+      "property": "setpoint",
+      "propertyKey": 1,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Humidifier",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 1
+        },
+        "min": 10,
+        "max": 70,
+        "unit": "%"
+      },
+      "value": 35
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 100,
+      "commandClassName": "Humidity Control Setpoint",
+      "property": "setpointScale",
+      "propertyKey": 1,
+      "propertyName": "setpointScale",
+      "propertyKeyName": "1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "%"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 100,
+      "commandClassName": "Humidity Control Setpoint",
+      "property": "setpoint",
+      "propertyKey": 2,
+      "propertyName": "setpoint",
+      "propertyKeyName": "De-humidifier",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 2
+        },
+        "min": 30,
+        "max": 90,
+        "unit": "%"
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 100,
+      "commandClassName": "Humidity Control Setpoint",
+      "property": "setpointScale",
+      "propertyKey": 2,
+      "propertyName": "setpointScale",
+      "propertyKeyName": "2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "%"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 109,
+      "commandClassName": "Humidity Control Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Humidity control mode",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off",
+          "1": "Humidify",
+          "2": "De-humidify",
+          "3": "Auto"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 110,
+      "commandClassName": "Humidity Control Operating State",
+      "property": "state",
+      "propertyName": "state",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Humidity control operating state",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Idle",
+          "1": "Humidifying",
+          "2": "De-humidifying"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "HVAC System Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Configures the type of heating system used.",
+        "label": "HVAC System Type",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Normal",
+          "1": "Heat Pump"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Number of Heat Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Heat Stages 0-3 Default is 2.",
+        "label": "Number of Heat Stages",
+        "default": 2,
+        "min": 0,
+        "max": 3,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Number of Cool Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Cool Stages 0-2 Default is 2.",
+        "label": "Number of Cool Stages",
+        "default": 2,
+        "min": 0,
+        "max": 2,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Heat Fuel Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Choose type of fuel. Reality - whether unit is boiler vs forced air.",
+        "label": "Heat Fuel Type",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Fossil Fuel",
+          "1": "Electric"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyKey": 16776960,
+      "propertyName": "Calibration Temperature",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: -10 to 10 in 1 \u00b0F increments.",
+        "label": "Calibration Temperature",
+        "default": 0,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyKey": 16776960,
+      "propertyName": "Swing",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 3 in 0.5 \u00b0F increments.",
+        "label": "Swing",
+        "default": 50,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyKey": 16776960,
+      "propertyName": "Overshoot",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 3 in 0.5 \u00b0F increments.",
+        "label": "Overshoot",
+        "default": 0,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyName": "Heat Staging Delay",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Heat Staging Delay",
+        "default": 30,
+        "min": 1,
+        "max": 60,
+        "unit": "minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 9,
+      "propertyName": "Cool Staging Delay",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Cool Staging Delay",
+        "default": 30,
+        "min": 1,
+        "max": 60,
+        "unit": "minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 10,
+      "propertyKey": 16776960,
+      "propertyName": "Balance Setpoint",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 95 in 1 \u00b0F increments.",
+        "label": "Balance Setpoint",
+        "default": 300,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 300
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 12,
+      "propertyName": "Fan Circulation Period",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Fan Circulation Period",
+        "default": 60,
+        "min": 10,
+        "max": 1440,
+        "unit": "minutes",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 13,
+      "propertyName": "Fan Circulation Duty Cycle",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Fan Circulation Duty Cycle",
+        "default": 25,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 25
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 14,
+      "propertyName": "Fan Purge Time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Fan Purge Time",
+        "default": 60,
+        "min": 1,
+        "max": 3600,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 15,
+      "propertyKey": 16776960,
+      "propertyName": "Maximum Heat Setpoint",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 35 to 95 in 1 \u00b0F increments.",
+        "label": "Maximum Heat Setpoint",
+        "default": 950,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 950
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyKey": 16776960,
+      "propertyName": "Minimum Heat Setpoint",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 35 to 95 in 1 \u00b0F increments.",
+        "label": "Minimum Heat Setpoint",
+        "default": 350,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 350
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyKey": 16776960,
+      "propertyName": "Maximum Cool Setpoint",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 50 to 95 in 1 \u00b0F increments.",
+        "label": "Maximum Cool Setpoint",
+        "default": 950,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 950
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyKey": 16776960,
+      "propertyName": "Minimum Cool Setpoint",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 50 to 95 in 1 \u00b0F increments.",
+        "label": "Minimum Cool Setpoint",
+        "default": 500,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 500
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyName": "Thermostat Lock",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Lock out physical thermostat controls.",
+        "label": "Thermostat Lock",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Disabled",
+          "1": "Full Lock",
+          "2": "Partial Lock"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyName": "Compressor Delay",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Compressor Delay",
+        "default": 5,
+        "min": 0,
+        "max": 60,
+        "unit": "minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 23,
+      "propertyName": "Temperature Display Units",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Celsius or Farenheit for temperature display.",
+        "label": "Temperature Display Units",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Farenheit"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 24,
+      "propertyName": "HVAC Modes Enabled",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which heating/cooling modes are available.",
+        "label": "HVAC Modes Enabled",
+        "default": 15,
+        "min": 3,
+        "max": 31,
+        "states": {
+          "3": "Off, Heat",
+          "5": "Off, Cool",
+          "7": "Off, Heat, Cool",
+          "15": "Off, Heat, Cool, Auto",
+          "19": "Off, Heat, Emergency Heat",
+          "23": "Off, Heat, Cool, Emergency Heat",
+          "31": "Off, Heat, Cool, Auto, Emergency Heat"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 15
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 25,
+      "propertyKey": 255,
+      "propertyName": "Configurable Terminal Setting Z2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Changes control of configurable terminal",
+        "label": "Configurable Terminal Setting Z2",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "None",
+          "1": "W3, 3rd Stage Auxiliary Heat",
+          "2": "H, Humidifier",
+          "3": "DH, Dehumidifier",
+          "4": "External Air Baffle or Vent"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 25,
+      "propertyKey": 65280,
+      "propertyName": "Configurable Terminal Setting Z1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Changes control of configurable terminal",
+        "label": "Configurable Terminal Setting Z1",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "None",
+          "1": "W3, 3rd Stage Auxiliary Heat",
+          "2": "H, Humidifier",
+          "3": "DH, Dehumidifier",
+          "4": "External Air Baffle or Vent"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 26,
+      "propertyName": "Power Source",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Which source of power is utilized.",
+        "label": "Power Source",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Battery",
+          "1": "C-Wire"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 27,
+      "propertyName": "Battery Alert Threshold Low",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Battery Alert Range",
+        "label": "Battery Alert Threshold Low",
+        "default": 30,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 28,
+      "propertyName": "Battery Alert Threshold Very Low",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Very Low Battery Alert Range (percentage)",
+        "label": "Battery Alert Threshold Very Low",
+        "default": 15,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 15
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 2147483648,
+      "propertyName": "Current Relay State: Z1 Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Z1 Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 1073741824,
+      "propertyName": "Current Relay State: Y2 Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Y2 Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 536870912,
+      "propertyName": "Current Relay State: Y Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Y Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 268435456,
+      "propertyName": "Current Relay State: W2 Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: W2 Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 134217728,
+      "propertyName": "Current Relay State: W Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: W Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 67108864,
+      "propertyName": "Current Relay State: G Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: G Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 33554432,
+      "propertyName": "Current Relay State: O Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: O Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 8388608,
+      "propertyName": "Current Relay State: Override Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Override Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 1048576,
+      "propertyName": "Current Relay State: C Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: C Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 524288,
+      "propertyName": "Current Relay State: RC Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: RC Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 262144,
+      "propertyName": "Current Relay State: RH Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: RH Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 131072,
+      "propertyName": "Current Relay State: Z2 Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Z2 Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 65536,
+      "propertyName": "Current Relay State: B Terminal Load",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: B Terminal Load",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "No Load",
+          "1": "Load"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 32768,
+      "propertyName": "Current Relay State: Z1 Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Z1 Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 16384,
+      "propertyName": "Current Relay State: Y2 Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Y2 Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 8192,
+      "propertyName": "Current Relay State: Y Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Y Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 4096,
+      "propertyName": "Current Relay State: W2 Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: W2 Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 2048,
+      "propertyName": "Current Relay State: W Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: W Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 1024,
+      "propertyName": "Current Relay State: G Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: G Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 512,
+      "propertyName": "Current Relay State: O Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: O Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 8,
+      "propertyName": "Current Relay State: RC Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: RC Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 4,
+      "propertyName": "Current Relay State: RH Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: RH Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 2,
+      "propertyName": "Current Relay State: Z2 Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: Z2 Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 29,
+      "propertyKey": 1,
+      "propertyName": "Current Relay State: B Relay State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Relay State: B Relay State",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not closed",
+          "1": "Closed"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 255,
+      "propertyName": "Remote Temperature Enable",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Enables remote temperature sensor instead of built-in.",
+        "label": "Remote Temperature Enable",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 65280,
+      "propertyName": "Remote Temperature Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Status of the remote temperature sensor.",
+        "label": "Remote Temperature Status",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Remote temperature disabled",
+          "1": "Active and functioning properly",
+          "2": "Inactive, timeout reached (see parameter 39)",
+          "3": "Inactive, temperature differential reached (see parameter 40)",
+          "4": "Inactive, 3 successive communication attempts failed"
+        },
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 16776960,
+      "propertyName": "Heat Differential",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 1 to 10 in 0.5 \u00b0F increments.",
+        "label": "Heat Differential",
+        "default": 30,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 16776960,
+      "propertyName": "Cool Differential",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 1 to 10 in 0.5 \u00b0F increments.",
+        "label": "Cool Differential",
+        "default": 30,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 16776960,
+      "propertyName": "Temperature Reporting Threshold",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0.5 to 2 in 0.5 \u00b0F increments.",
+        "label": "Temperature Reporting Threshold",
+        "default": 10,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 35,
+      "propertyName": "Z-Wave Echo Association Reports",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Enable/Disabled Echo Assoc. Reports.",
+        "label": "Z-Wave Echo Association Reports",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyKey": 16776960,
+      "propertyName": "C-Wire Power Thermistor Offset",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: -10 to 10 in 0.1 \u00b0F increments.",
+        "label": "C-Wire Power Thermistor Offset",
+        "default": -20,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": -10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyName": "Run Fan With Auxiliary Heat",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Run Fan With Auxiliary Heat",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 1,
+      "propertyName": "Z-Wave Association Report: Thermostat Mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Thermostat Mode",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 8,
+      "propertyName": "Z-Wave Association Report: Thermostat Operating State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Thermostat Operating State",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 16,
+      "propertyName": "Z-Wave Association Report: Thermostat Fan Mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Thermostat Fan Mode",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 32,
+      "propertyName": "Z-Wave Association Report: Thermostat Fan State",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Thermostat Fan State",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 64,
+      "propertyName": "Z-Wave Association Report: Ambiant Temperature",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Ambiant Temperature",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 128,
+      "propertyName": "Z-Wave Association Report: Relative Humidity",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Relative Humidity",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 512,
+      "propertyName": "Z-Wave Association Report: Battery Low Notification",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Battery Low Notification",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 1024,
+      "propertyName": "Z-Wave Association Report: Battery Very Low Notification",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Battery Very Low Notification",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 2048,
+      "propertyName": "Z-Wave Association Report: Thermostat Supported Modes",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Thermostat Supported Modes",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 4096,
+      "propertyName": "Z-Wave Association Report: Remote Enable Report",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Remote Enable Report",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 8192,
+      "propertyName": "Z-Wave Association Report: Humidity Control Operating State Report",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Humidity Control Operating State Report",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 16384,
+      "propertyName": "Z-Wave Association Report: HVAC Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: HVAC Type",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 32768,
+      "propertyName": "Z-Wave Association Report: Number of Cool/Pump Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Number of Cool/Pump Stages",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 65536,
+      "propertyName": "Z-Wave Association Report: Number of Heat/Aux Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Number of Heat/Aux Stages",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 131072,
+      "propertyName": "Z-Wave Association Report: Relay Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Relay Status",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 262144,
+      "propertyName": "Z-Wave Association Report: Power Source",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Power Source",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 524288,
+      "propertyName": "Z-Wave Association Report: Notification Report Power Applied",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report Power Applied",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 1048576,
+      "propertyName": "Z-Wave Association Report: Notification Report Mains Disconnected",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report Mains Disconnected",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 2097152,
+      "propertyName": "Z-Wave Association Report: Notification Report Mains Reconnected",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report Mains Reconnected",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 4194304,
+      "propertyName": "Z-Wave Association Report: Notification Report Replace Battery Soon",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report Replace Battery Soon",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 8388608,
+      "propertyName": "Z-Wave Association Report: Notification Report Replace Battery Now",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report Replace Battery Now",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 16777216,
+      "propertyName": "Z-Wave Association Report: Notification Report System Hardware Failure",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report System Hardware Failure",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 33554432,
+      "propertyName": "Z-Wave Association Report: Notification Report System Software Failure",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report System Software Failure",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 67108864,
+      "propertyName": "Z-Wave Association Report: Notification Report System Hardware Failure with Code",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report System Hardware Failure with Code",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 134217728,
+      "propertyName": "Z-Wave Association Report: Notification Report System Software Failure with Code",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Notification Report System Software Failure with Code",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 268435456,
+      "propertyName": "Z-Wave Association Report: Display Units",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Display Units",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 536870912,
+      "propertyName": "Z-Wave Association Report: Heat Fuel Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Heat Fuel Type",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 1073741824,
+      "propertyName": "Z-Wave Association Report: Humidity Control Mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Humidity Control Mode",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 2147483648,
+      "propertyName": "Z-Wave Association Report: Humidity Control Setpoints",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Bitmask to selectively enable non-required Z-wave association reports.",
+        "label": "Z-Wave Association Report: Humidity Control Setpoints",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Remote Temperature Timeout",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Remote Temperature Timeout",
+        "default": 130,
+        "min": 0,
+        "max": 32767,
+        "unit": "minutes",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 130
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 16776960,
+      "propertyName": "Remote Temperature Differential",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 99 in 1 \u00b0F increments.",
+        "label": "Remote Temperature Differential",
+        "default": 250,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 250
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyName": "Remote Temperature ACK Failure Limit",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Remote Temperature ACK Failure Limit",
+        "default": 3,
+        "min": 0,
+        "max": 127,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyName": "Remote Temperature Display Enable",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Remote Temperature Display Enable",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyName": "Outdoor Temperature Timeout",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Outdoor Temperature Timeout",
+        "default": 1440,
+        "min": 0,
+        "max": 32767,
+        "unit": "minutes",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1440
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 45,
+      "propertyName": "Heat Pump Expire",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Heat Pump Expire",
+        "default": 0,
+        "min": 0,
+        "max": 2880,
+        "unit": "minutes",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 46,
+      "propertyKey": 16776960,
+      "propertyName": "Dehumidify by AC Offset",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 10 in 1 \u00b0F increments.",
+        "label": "Dehumidify by AC Offset",
+        "default": 30,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 48,
+      "propertyName": "PIR Enable",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "PIR Enable",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 49,
+      "propertyName": "Humidity Display",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Humidity Display",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 2147483648,
+      "propertyName": "System configuration: Aux Fan",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Aux Fan",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disabled",
+          "1": "Enabled"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 1610612736,
+      "propertyName": "System configuration: Cool Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Cool Stages",
+        "min": 0,
+        "max": 3,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 402653184,
+      "propertyName": "System configuration: Heat Stages",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Heat Stages",
+        "min": 0,
+        "max": 3,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 67108864,
+      "propertyName": "System configuration: Fuel",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Fuel",
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Fuel",
+          "1": "Electric"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 50331648,
+      "propertyName": "System configuration: HVAC Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: HVAC Type",
+        "min": 0,
+        "max": 3,
+        "states": {
+          "0": "Normal",
+          "1": "Heat Pump"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 15728640,
+      "propertyName": "System configuration: Z2 Configuration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Z2 Configuration",
+        "min": 0,
+        "max": 15,
+        "states": {
+          "0": "None",
+          "1": "W3, 3rd Stage Auxiliary Heat",
+          "2": "H, Humidifier",
+          "3": "DH, Dehumidifier",
+          "4": "External Air Baffle or Vent"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 983040,
+      "propertyName": "System configuration: Z1 Configuration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Z1 Configuration",
+        "min": 0,
+        "max": 15,
+        "states": {
+          "0": "None",
+          "1": "W3, 3rd Stage Auxiliary Heat",
+          "2": "H, Humidifier",
+          "3": "DH, Dehumidifier",
+          "4": "External Air Baffle or Vent"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyKey": 256,
+      "propertyName": "System configuration: Override",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Summarized report of system configuration",
+        "label": "System configuration: Override",
+        "min": 0,
+        "max": 1,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 52,
+      "propertyName": "Vent Options",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Vent Options",
+        "default": 4,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disabled",
+          "1": "Always activate regardless of thermostat operating state",
+          "2": "Only activate when heating",
+          "3": "Only activate when cooling",
+          "4": "Only activate when heating or cooling"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 53,
+      "propertyName": "Vent Circulation Period",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Vent Circulation Period",
+        "default": 60,
+        "min": 10,
+        "max": 1440,
+        "unit": "minutes",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 54,
+      "propertyName": "Vent Circulation Duty Cycle",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Vent Circulation Duty Cycle",
+        "default": 25,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 25
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 55,
+      "propertyKey": 16776960,
+      "propertyName": "Vent Maximum Outdoor Temperature",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 99 in 1 \u00b0F increments.",
+        "label": "Vent Maximum Outdoor Temperature",
+        "default": -32768,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": -1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 56,
+      "propertyKey": 16776960,
+      "propertyName": "Vent Minimum Outdoor Temperature",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0 to 99 in 1 \u00b0F increments.",
+        "label": "Vent Minimum Outdoor Temperature",
+        "default": -32768,
+        "min": -32768,
+        "max": 32767,
+        "states": {
+          "-1": "Disabled"
+        },
+        "unit": "0.1\u00b0F",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": -1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 57,
+      "propertyName": "Relay Harvest Level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Relay Harvest Level",
+        "default": 12,
+        "min": 0,
+        "max": 12,
+        "states": {
+          "0": "Off",
+          "9": "8 pulses",
+          "10": "16 pulses",
+          "11": "32 pulses",
+          "12": "64 pulses"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 11
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 58,
+      "propertyName": "Relay Harvest Interval",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Relay Harvest Interval",
+        "default": 4,
+        "min": 0,
+        "max": 5,
+        "states": {
+          "0": "Off",
+          "2": "4 Milliseconds",
+          "3": "8 Milliseconds",
+          "4": "16 Milliseconds",
+          "5": "32 Milliseconds"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 59,
+      "propertyName": "Minimum Battery Reporting Interval",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Minimum number of hours between battery reports",
+        "label": "Minimum Battery Reporting Interval",
+        "default": 60,
+        "min": 0,
+        "max": 127,
+        "unit": "hours",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 60,
+      "propertyName": "Humidity Control Swing",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Percent value the thermostat will add (for de-humidify) to or remove (for humidify) from the relevant humidity control setpoint.",
+        "label": "Humidity Control Swing",
+        "default": 5,
+        "min": 1,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 61,
+      "propertyName": "Humidity Reporting Threshold",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The minimum percent the relative humidity must change between reported humidity values.",
+        "label": "Humidity Reporting Threshold",
+        "default": 5,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 62,
+      "propertyName": "Z-Wave Send Fail Limit",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Z-Wave Send Fail Limit",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 64,
+      "propertyName": "Vent Override Lockout",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Activate the vent if it has not been active in the specified period.",
+        "label": "Vent Override Lockout",
+        "default": 12,
+        "min": 0,
+        "max": 127,
+        "unit": "hours",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 12
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 65,
+      "propertyName": "Humidify Options",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Humidify Options",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Always humidify regardless of thermostat operating state",
+          "1": "Only humidify when the thermostat operating state is heating, when in heat mode or when heating in auto mode. When in any other thermostat mode, the thermostat will humidify whenever it is necessary."
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 51,
+      "propertyName": "Thermostat Reset",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "description": "Must write the magic value 2870 to take effect.",
+        "label": "Thermostat Reset",
+        "default": 0,
+        "min": 0,
+        "max": 2870,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Power status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Power status",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Power status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Power has been applied"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery maintenance status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery maintenance status",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery maintenance status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "10": "Replace battery soon",
+          "11": "Replace battery now"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Hardware status",
+      "propertyName": "System",
+      "propertyKeyName": "Hardware status",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Hardware status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "System hardware failure",
+          "3": "System hardware failure (with failure code)"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Software status",
+      "propertyName": "System",
+      "propertyKeyName": "Software status",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Software status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "2": "System software failure",
+          "4": "System software failure (with failure code)"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Mains status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Mains status",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Mains status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "2": "AC mains disconnected",
+          "3": "AC mains re-connected"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 400
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "6.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.44", "1.40", "1.30"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      },
+      "value": 8
+    }
+  ],
+  "isFrequentListening": "1000ms",
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 7,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 8,
+      "label": "Thermostat"
+    },
+    "specific": {
+      "key": 6,
+      "label": "General Thermostat V2"
+    },
+    "mandatorySupportedCCs": [32, 114, 64, 67, 134],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0190:0x0006:0x0001:1.44",
+  "statistics": {
+    "commandsTX": 6,
+    "commandsRX": 6124,
+    "commandsDroppedRX": 40,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false
+}
