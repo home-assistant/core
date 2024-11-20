@@ -22,7 +22,7 @@ from tests.common import MockPlatform, mock_platform
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
-TEST_BASE_BACKUP_ABC123 = AgentBackup(
+TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     date="1970-01-01T00:00:00.000Z",
     name="Test",
@@ -31,7 +31,7 @@ TEST_BASE_BACKUP_ABC123 = AgentBackup(
 )
 TEST_BACKUP_PATH_ABC123 = Path("abc123.tar")
 
-TEST_BASE_BACKUP_DEF456 = AgentBackup(
+TEST_BACKUP_DEF456 = AgentBackup(
     backup_id="def456",
     date="1980-01-01T00:00:00.000Z",
     name="Test 2",
