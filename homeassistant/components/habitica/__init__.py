@@ -68,7 +68,7 @@ async def async_setup_entry(
         hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
     )
 
-    # habitipy is still needed for the already deprecated api_call action
+    # habitipy is still needed for the deprecated api_call action
     # but it will be removed in 2025.6.0
     habitipy = await hass.async_add_executor_job(
         HAHabitipyAsync,

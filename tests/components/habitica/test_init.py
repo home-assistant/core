@@ -3,6 +3,7 @@
 import datetime
 from http import HTTPStatus
 import logging
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -19,6 +20,8 @@ from homeassistant.components.habitica.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Event, HomeAssistant
+
+from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED, ERROR_TOO_MANY_REQUESTS
 
 from tests.common import (
     MockConfigEntry,
@@ -38,7 +41,7 @@ def capture_api_call_success(hass: HomeAssistant) -> list[Event]:
     return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("mock_habitica", "habitica")
 async def test_entry_setup_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -94,21 +97,23 @@ async def test_service_call(
 
 
 @pytest.mark.parametrize(
-    ("status"), [HTTPStatus.NOT_FOUND, HTTPStatus.TOO_MANY_REQUESTS]
+    ("exception"),
+    [
+        ERROR_BAD_REQUEST,
+        ERROR_TOO_MANY_REQUESTS,
+        ERROR_NOT_AUTHORIZED,
+    ],
+    ids=["BadRequestError", "TooManyRequestsError", "NotAuthorizedError"],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    status: HTTPStatus,
+    habitica: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test config entry not ready."""
 
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        status=status,
-    )
-
+    habitica.get_user.side_effect = exception
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
