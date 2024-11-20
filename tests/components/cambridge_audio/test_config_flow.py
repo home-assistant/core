@@ -192,3 +192,57 @@ async def test_zeroconf_duplicate(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        {CONF_HOST: "192.168.20.219"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry
+    assert entry.data == {
+        CONF_HOST: "192.168.20.219",
+    }
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure reconfigure flow aborts when the bride changes."""
+    mock_stream_magic_client.info.unit_id = "different_udn"
+
+    mock_config_entry.add_to_hass(hass)
+
+    reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        {CONF_HOST: "192.168.20.219"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
