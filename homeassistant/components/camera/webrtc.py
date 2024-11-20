@@ -328,6 +328,33 @@ async def ws_get_client_config(
     )
 
 
+def _parse_webrtc_candidate_init(msg_value: dict) -> RTCIceCandidateInit:
+    """Validate and parse a WebRTCCandidateInit dict."""
+    if (candidate := msg_value.get("candidate")) is None:
+        raise ValueError("candidate value missing")
+    if not isinstance(candidate, str):
+        raise TypeError("candidate must be str")
+
+    sdp_mid = msg_value.get("sdpMid")
+    if not isinstance(sdp_mid, str | None):
+        raise TypeError("sdpMid must be str | None")
+
+    sdp_m_line_index = msg_value.get("sdpMLineIndex")
+    if not isinstance(sdp_m_line_index, int | None):
+        raise TypeError("sdpMLineIndex must be int | None")
+
+    user_fragment = msg_value.get("userFragment")
+    if not isinstance(user_fragment, str | None):
+        raise TypeError("userFragment must be str | None")
+
+    return RTCIceCandidateInit(
+        candidate=candidate,
+        sdp_mid=msg_value.get("sdpMid"),
+        sdp_m_line_index=msg_value.get("sdpMLineIndex"),
+        user_fragment=msg_value.get("userFragment"),
+    )
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/webrtc/candidate",
@@ -343,8 +370,8 @@ async def ws_candidate(
 ) -> None:
     """Handle WebRTC candidate websocket command."""
     try:
-        candidate_init = RTCIceCandidateInit.from_dict(msg["candidate"])
-    except Exception as ex:  # noqa: BLE001
+        candidate_init = _parse_webrtc_candidate_init(msg["candidate"])
+    except (ValueError, TypeError) as ex:
         connection.send_error(
             msg["id"],
             "webrtc_candidate_failed",
