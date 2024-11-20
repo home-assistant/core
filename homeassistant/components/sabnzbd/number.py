@@ -34,7 +34,6 @@ NUMBER_DESCRIPTIONS: tuple[SabnzbdNumberEntityDescription, ...] = (
     SabnzbdNumberEntityDescription(
         key="speedlimit",
         translation_key="speedlimit",
-        icon="mdi:speedometer",
         mode=NumberMode.BOX,
         native_max_value=100,
         native_min_value=0,
