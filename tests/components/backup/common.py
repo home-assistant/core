@@ -129,10 +129,12 @@ async def setup_backup_integration(
 
         result = await async_setup_component(hass, DOMAIN, configuration or {})
         await hass.async_block_till_done()
-        if with_hassio or not backups:
+        if not backups:
             return result
 
         for agent_id, agent_backups in backups.items():
+            if with_hassio and agent_id == LOCAL_AGENT_ID:
+                continue
             agent = hass.data[DATA_MANAGER].backup_agents[agent_id]
             agent._backups = {backups.backup_id: backups for backups in agent_backups}
             if agent_id == LOCAL_AGENT_ID:
