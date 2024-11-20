@@ -67,9 +67,14 @@ async def test_agents_list_backups(
     assert response["success"]
     assert response["result"] == [
         {
+            "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
             "agent_id": "kitchen_sink.syncer",
             "backup_id": "abc123",
+            "database_included": False,
             "date": "1970-01-01T00:00:00Z",
+            "folders": ["media", "share"],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
             "name": "Kitchen sink syncer",
             "protected": False,
             "size": 1234,
