@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -34,11 +35,20 @@ async def test_sensors(
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}
+        mock_config_entry, data={CONF_FILE_PATH: testfile}
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with (
+        patch(
+            "os.stat_result.st_mtime",
+            1732126764.780758,
+        ),
+        patch(
+            "os.stat_result.st_ctime",
+            1732126744.780758,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

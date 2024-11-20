@@ -43,7 +43,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-20T18:19:53+00:00',
+    'state': '2024-11-20T18:19:04+00:00',
   })
 # ---
 # name: test_sensors[load_platforms0][sensor.file_txt_last_updated-entry]
@@ -90,7 +90,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-20T18:19:53+00:00',
+    'state': '2024-11-20T18:19:24+00:00',
   })
 # ---
 # name: test_sensors[load_platforms0][sensor.file_txt_size-entry]

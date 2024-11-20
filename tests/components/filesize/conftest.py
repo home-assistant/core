@@ -31,6 +31,7 @@ def mock_config_entry(
     return MockConfigEntry(
         title=TEST_FILE_NAME,
         domain=DOMAIN,
+        entry_id="01JD5CTQMH9FKEFQKZJ8MMBQ3X",
         data={CONF_FILE_PATH: test_file},
         unique_id=test_file,
     )
