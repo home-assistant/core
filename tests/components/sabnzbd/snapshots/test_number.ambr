@@ -27,7 +27,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speedometer',
+    'original_icon': None,
     'original_name': 'Speedlimit',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
@@ -41,7 +41,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sabnzbd Speedlimit',
-      'icon': 'mdi:speedometer',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
