@@ -6,7 +6,6 @@ from io import StringIO
 import os
 from unittest.mock import AsyncMock, patch
 
-# from aiohasupervisor import backups as supervisor_backups
 from aiohasupervisor.models import backups as supervisor_backups
 import pytest
 
@@ -46,7 +45,7 @@ def fixture_supervisor_environ() -> Generator[None]:
 async def setup_integration(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> AsyncGenerator[None]:
-    """Set up Kitchen Sink integration."""
+    """Set up Backup integration."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=True),
         patch("homeassistant.components.backup.backup.is_hassio", return_value=True),
@@ -174,7 +173,7 @@ async def test_agent_delete_backup(
 
     await client.send_json_auto_id(
         {
-            "type": "backup/remove",
+            "type": "backup/delete",
             "backup_id": backup_id,
         }
     )
@@ -223,7 +222,7 @@ async def test_reader_writer_restore(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test generating a backup."""
+    """Test restoring a backup."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
 
