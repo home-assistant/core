@@ -51,7 +51,7 @@ async def async_setup_platform(
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
             )
-            if result.get("type") == FlowResultType.ABORT:
+            if result.get("type") == FlowResultType.ABORT and result.get("reason") != "already_configured":
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
