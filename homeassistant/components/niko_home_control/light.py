@@ -39,55 +39,49 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.stri
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    hass_config: ConfigType,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform."""
 
-    if hass_config.get("platform") == DOMAIN:
-        await _async_import(hass, hass_config)
-
-
-# delete after 2025.6.0
-async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
-    """Set up the nhc environment."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        # Start import flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        if result.get("type") == FlowResultType.ABORT:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
-                breaks_in_ha_version="2025.5.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "niko_home_control",
-                },
+    if config.get("platform") == DOMAIN:
+        if not hass.config_entries.async_entries(DOMAIN):
+            # Start import flow
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
             )
-            return
+            if result.get("type") == FlowResultType.ABORT:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
+                    breaks_in_ha_version="2025.5.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "niko_home_control",
+                    },
+                )
+                return
 
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.5.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "niko_home_control",
-        },
-    )
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "niko_home_control",
+            },
+        )
 
 
 async def async_setup_entry(

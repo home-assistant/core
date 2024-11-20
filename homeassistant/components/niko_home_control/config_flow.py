@@ -7,8 +7,7 @@ from typing import Any
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
