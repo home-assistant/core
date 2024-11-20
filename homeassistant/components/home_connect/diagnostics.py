@@ -22,7 +22,9 @@ def _generate_appliance_diagnostics(appliance: HomeConnectAppliance) -> dict[str
     }
 
 
-def _generate_entry_diagnostics(devices: list[HomeConnectDevice]):
+def _generate_entry_diagnostics(
+    devices: list[HomeConnectDevice],
+) -> dict[str, dict[str, Any]]:
     return {
         device.appliance.haId: _generate_appliance_diagnostics(device.appliance)
         for device in devices
