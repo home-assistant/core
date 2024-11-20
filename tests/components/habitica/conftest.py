@@ -133,6 +133,10 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             load_fixture("user.json", DOMAIN)
         )
 
+        client.cast_skill.return_value = HabiticaUserResponse.from_json(
+            load_fixture("user.json", DOMAIN)
+        )
+
         yield client
 
 
