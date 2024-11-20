@@ -10,7 +10,7 @@ from eheimdigital.hub import EheimDigitalHub
 from eheimdigital.types import EheimDeviceType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
@@ -26,7 +26,7 @@ class EheimDigitalUpdateCoordinator(
 ):
     """The EHEIM Digital data update coordinator."""
 
-    platform_callbacks: dict[Platform, AsyncSetupDeviceEntitiesCallback]
+    platform_callbacks: set[AsyncSetupDeviceEntitiesCallback]
     config_entry: ConfigEntry
     hub: EheimDigitalHub
     known_devices: set[str]
@@ -44,16 +44,14 @@ class EheimDigitalUpdateCoordinator(
             device_found_callback=self._async_device_found,
         )
         self.known_devices = set()
-        self.platform_callbacks = {}
+        self.platform_callbacks = set()
 
     def add_platform_callback(
         self,
-        platform: Platform,
         async_setup_device_entities: AsyncSetupDeviceEntitiesCallback,
     ) -> None:
         """Add the setup callbacks from a specific platform."""
-        if platform not in self.platform_callbacks:
-            self.platform_callbacks[platform] = async_setup_device_entities
+        self.platform_callbacks.add(async_setup_device_entities)
 
     async def _async_device_found(
         self, device_address: str, device_type: EheimDeviceType
@@ -64,7 +62,7 @@ class EheimDigitalUpdateCoordinator(
         """
 
         if device_address not in self.known_devices:
-            for platform_callback in self.platform_callbacks.values():
+            for platform_callback in self.platform_callbacks:
                 await platform_callback(device_address)
 
     async def _async_receive_callback(self) -> None:

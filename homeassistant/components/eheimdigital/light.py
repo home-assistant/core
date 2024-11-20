@@ -13,7 +13,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
@@ -48,7 +47,10 @@ async def async_setup_entry(
                     coordinator.known_devices.add(device.mac_address)
         async_add_entities(entities)
 
-    coordinator.add_platform_callback(Platform.LIGHT, async_setup_device_entities)
+    coordinator.add_platform_callback(async_setup_device_entities)
+
+    for device_address in entry.runtime_data.hub.devices:
+        await async_setup_device_entities(device_address)
 
 
 class EheimDigitalClassicLEDControlLight(

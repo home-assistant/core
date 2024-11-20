@@ -53,7 +53,8 @@ async def test_setup_classic_led_ctrl(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await mock_config_entry.runtime_data._async_device_found(
+
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
@@ -143,7 +144,7 @@ async def test_turn_on_brightness(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await mock_config_entry.runtime_data._async_device_found(
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
@@ -180,7 +181,7 @@ async def test_turn_on_effect(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await mock_config_entry.runtime_data._async_device_found(
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
@@ -216,7 +217,7 @@ async def test_state_update(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await mock_config_entry.runtime_data._async_device_found(
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
