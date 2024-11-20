@@ -1,0 +1,89 @@
+rules:
+  config_flow: 
+    status: done
+    comment: >
+      data_description, ConfigEntry.data & options
+  test_before_configure: done
+  unique_config_entry: done
+  config_flow_test_coverage: done
+  runtime_data: done
+  test_before_setup: done
+  appropriate_polling: done
+  entity_unique_id: done
+  has_entity_name: done
+  entity_event_setup: done
+  dependency_transparency: done
+  action_setup: 
+    status: exempted
+    comment: >
+      No custom actions
+  common_modules: done
+  docs_high_level_description: done
+  docs_installation_instructions: done
+  docs_removal_instructions: done
+  docs_actions: 
+    status: exempted
+    comment: >
+      No custom actions
+  brands: done
+  config_entry_unloading: done
+  log_when_unavailable: 
+    status: todo
+    comment: >
+      Handled by coordinator
+  entity_unavailable: done
+  action_exceptions: 
+    status: exempted
+    comment: >
+      No custom actions
+  reauthentication_flow: done
+  parallel_updates: 
+    status: done
+    comment: >
+      Handled by coordinator
+  test_coverage: 
+    status: done
+    comment: >
+      100% test coverage
+  integration_owner: done
+  docs_installation_parameters: done
+  docs_configuration_parameters: done
+  entity_translations: done
+  entity_device_class: done
+  devices: done
+  entity_category: done
+  entity_disabled_by_default: 
+    status: done
+    comment: >
+      For certain number entities
+  discovery: 
+    status: done
+    comment: >
+      DHCP and Bluetooth
+  stale_devices: 
+    status: exempted
+    comment: >
+      Device type integration
+  diagnostics: done
+  exception_translations: done
+  icon_translations: done
+  reconfiguration_flow: done
+  dynamic_devices: 
+    status: exempted
+    comment: >
+      Device type integration
+  discovery_update_info: todo
+  repair_issues: done
+  docs_use_cases: done
+  docs_supported_devices: done
+  docs_supported_functions: done
+  docs_data_update: done
+  docs_known_limitations: done
+  docs_troubleshooting: done
+  docs_examples: done
+  async_dependency: done
+  inject_websession: 
+    status: done
+    comment: >
+      httpx injected
+  strict_typing: done
