@@ -204,7 +204,7 @@
       "fields": {
         "device_id": {
           "name": "Chime",
-          "description": "The chimes to link to the doorbells to."
+          "description": "The chimes to link to the doorbells."
         },
         "doorbells": {
           "name": "Doorbells",

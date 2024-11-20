@@ -447,7 +447,7 @@ airtouch5py==0.2.10
 alpha-vantage==2.3.1
 
 # homeassistant.components.amberelectric
-amberelectric==1.1.1
+amberelectric==2.0.12
 
 # homeassistant.components.amcrest
 amcrest==1.9.8
@@ -931,7 +931,7 @@ fnv-hash-fast==1.0.2
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==3.1.0
+forecast-solar==4.0.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1622,7 +1622,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.5.1
+plugwise==1.5.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
