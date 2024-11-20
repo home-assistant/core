@@ -88,8 +88,8 @@ jobs:
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
 
       integrations_glob: (backup|cloud|hassio|kitchen_sink|demo)
-      test_groups: ["backup", "cloud", "hassio", "kitchen_sink", "demo"]
-      tests: ["backup", "cloud", "hassio", "kitchen_sink", "demo"]
+      test_groups: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
+      tests: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
       tests_glob: (backup|cloud|hassio|kitchen_sink|demo)
     runs-on: ubuntu-24.04
     steps:
