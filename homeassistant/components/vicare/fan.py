@@ -149,7 +149,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def update(self) -> None:
         """Update state of fan."""
-
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
