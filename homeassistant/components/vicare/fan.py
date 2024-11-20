@@ -29,6 +29,7 @@ from homeassistant.util.percentage import (
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice
 from .utils import get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +91,17 @@ ORDERED_NAMED_FAN_SPEEDS = [
 ]
 
 
+def _build_entities(
+    device_list: list[ViCareDevice],
+) -> list[ViCareFan]:
+    """Create ViCare climate entities for a device."""
+    return [
+        ViCareFan(get_device_serial(device.api), device.config, device.api)
+        for device in device_list
+        if isinstance(device.api, PyViCareVentilationDevice)
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -100,12 +112,10 @@ async def async_setup_entry(
     device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
-        [
-            ViCareFan(get_device_serial(device.api), device.config, device.api)
-            for device in device_list
-            if isinstance(device.api, PyViCareVentilationDevice)
-        ],
-        True,
+        await hass.async_add_executor_job(
+            _build_entities,
+            device_list,
+        )
     )
 
 
@@ -128,15 +138,14 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_translation_key, device_serial, device_config, device
         )
         # init presets
-        if self._attr_preset_modes is None:
-            supported_modes = list[str](self._api.getAvailableModes())
-            self._attr_preset_modes = [
-                mode
-                for mode in VentilationMode
-                if VentilationMode.to_vicare_mode(mode) in supported_modes
-            ]
-            if len(self._attr_preset_modes) > 0:
-                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+        supported_modes = list[str](self._api.getAvailableModes())
+        self._attr_preset_modes = [
+            mode
+            for mode in VentilationMode
+            if VentilationMode.to_vicare_mode(mode) in supported_modes
+        ]
+        if len(self._attr_preset_modes) > 0:
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
     def update(self) -> None:
         """Update state of fan."""
