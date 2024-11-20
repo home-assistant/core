@@ -48,7 +48,7 @@ async def test_number_set(
     called_function: str,
     expected_state: str,
 ) -> None:
-    """Test the sabnzbd button presses."""
+    """Test the sabnzbd number set."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -75,7 +75,7 @@ async def test_number_exception(
     input_number: float,
     called_function: str,
 ) -> None:
-    """Test the button handles errors."""
+    """Test the number entity handles errors."""
     function = getattr(sabnzbd, called_function)
     function.side_effect = SabnzbdApiException("Boom")
 
