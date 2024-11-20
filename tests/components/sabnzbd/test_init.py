@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sabnzbd import (
+from homeassistant.components.sabnzbd.const import (
     ATTR_API_KEY,
     DEFAULT_NAME,
     DOMAIN,
-    OLD_SENSOR_KEYS,
     SERVICE_PAUSE,
     SERVICE_RESUME,
 )
+from homeassistant.components.sabnzbd.sensor import OLD_SENSOR_KEYS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
