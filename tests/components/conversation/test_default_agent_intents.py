@@ -3,6 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import (
@@ -445,36 +446,36 @@ async def test_todo_add_item_fr(
         assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"
 
 
+@freeze_time(
+    datetime(
+        year=2013,
+        month=9,
+        day=17,
+        hour=1,
+        minute=2,
+        tzinfo=dt_util.UTC,
+    )
+)
 async def test_date_time(
     hass: HomeAssistant,
     init_components,
 ) -> None:
     """Test the date and time intents."""
-    with patch(
-        "homeassistant.components.intent.dt_util.now",
-        return_value=datetime(
-            year=2013,
-            month=9,
-            day=17,
-            hour=1,
-            minute=2,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass, "what is the date", None, Context(), None
-        )
-        await hass.async_block_till_done()
+    await hass.config.async_set_time_zone("UTC")
+    result = await conversation.async_converse(
+        hass, "what is the date", None, Context(), None
+    )
+    await hass.async_block_till_done()
 
-        response = result.response
-        assert response.response_type == intent.IntentResponseType.ACTION_DONE
-        assert response.speech["plain"]["speech"] == "September 17th, 2013"
+    response = result.response
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.speech["plain"]["speech"] == "September 17th, 2013"
 
-        result = await conversation.async_converse(
-            hass, "what time is it", None, Context(), None
-        )
-        await hass.async_block_till_done()
+    result = await conversation.async_converse(
+        hass, "what time is it", None, Context(), None
+    )
+    await hass.async_block_till_done()
 
-        response = result.response
-        assert response.response_type == intent.IntentResponseType.ACTION_DONE
-        assert response.speech["plain"]["speech"] == "1:02 AM"
+    response = result.response
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.speech["plain"]["speech"] == "1:02 AM"
