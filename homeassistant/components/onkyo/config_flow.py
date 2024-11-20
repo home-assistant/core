@@ -2,9 +2,11 @@
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -164,6 +166,50 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 {vol.Required(CONF_DEVICE): vol.In(discovered_names)}
             ),
         )
+
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle flow initialized by SSDP discovery."""
+        _LOGGER.debug("Config flow start ssdp auto discovery: %s", discovery_info)
+
+        udn = discovery_info.ssdp_udn
+        if udn:
+            udn_parts = udn.split(":")
+            if len(udn_parts) == 2:
+                uuid = udn_parts[1]
+                last_uuid_section = uuid.split("-")[-1].upper()
+                await self.async_set_unique_id(last_uuid_section)
+                self._abort_if_unique_id_configured()
+
+        host = urlparse(discovery_info.ssdp_location).hostname
+
+        if not host:
+            _LOGGER.error("SSDP host is None")
+            return self.async_abort(reason="unknown")
+
+        try:
+            info = await async_interview(str(host))
+        except Exception:
+            _LOGGER.exception("Unexpected exception interviewing host %s", host)
+            return self.async_abort(reason="cannot_connect")
+
+        if info is None:
+            _LOGGER.debug("SSDP info is none: %s", host)
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(info.identifier)
+        self._abort_if_unique_id_configured()
+
+        self._receiver_info = info
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "name": discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, host)
+                }
+            }
+        )
+        return await self.async_step_configure_receiver()
 
     async def async_step_configure_receiver(
         self, user_input: dict[str, Any] | None = None

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.components.onkyo import InputSource
 from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
@@ -492,3 +493,55 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
             "12": "television",
         },
     }
+
+
+async def test_ssdp_discovery_success(hass: HomeAssistant) -> None:
+    """Test SSDP discovery with valid host."""
+    discovery_info = ssdp.SsdpServiceInfo(
+        ssdp_location="http://192.168.1.100:8080",
+        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        ssdp_usn="uuid:mock_usn",
+        ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
+        ssdp_st="mock_st",
+    )
+
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+    mock_info.host = "192.168.1.100"
+    mock_info.model_name = "mock_model"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery_info,
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "configure_receiver"
+
+
+async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
+    """Test SSDP discovery with host info error."""
+    discovery_info = ssdp.SsdpServiceInfo(
+        ssdp_location="http://192.168.1.100:8080",
+        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        ssdp_usn="uuid:mock_usn",
+        ssdp_st="mock_st",
+    )
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        side_effect=Exception(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery_info,
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

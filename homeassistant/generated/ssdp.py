@@ -224,6 +224,44 @@ SSDP = {
             "manufacturer": "The OctoPrint Project",
         },
     ],
+    "onkyo": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "PIONEER CORPORATION",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "PIONEER CORPORATION",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "PIONEER CORPORATION",
+        },
+    ],
     "openhome": [
         {
             "st": "urn:av-openhome-org:service:Product:1",
