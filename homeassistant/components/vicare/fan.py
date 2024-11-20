@@ -127,10 +127,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         super().__init__(
             self._attr_translation_key, device_serial, device_config, device
         )
-
-    def update(self) -> None:
-        """Update state of fan."""
-
         # init presets
         if self._attr_preset_modes is None:
             supported_modes = list[str](self._api.getAvailableModes())
@@ -141,6 +137,9 @@ class ViCareFan(ViCareEntity, FanEntity):
             ]
             if len(self._attr_preset_modes) > 0:
                 self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+
+    def update(self) -> None:
+        """Update state of fan."""
 
         try:
             with suppress(PyViCareNotSupportedFeatureError):
