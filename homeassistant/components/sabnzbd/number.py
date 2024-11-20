@@ -12,12 +12,12 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SabnzbdConfigEntry
 from .const import DOMAIN
 from .coordinator import SabnzbdUpdateCoordinator
 from .entity import SabnzbdEntity
@@ -48,11 +48,11 @@ NUMBER_DESCRIPTIONS: tuple[SabnzbdNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SabnzbdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SABnzbd number entity."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         SabnzbdNumber(coordinator, description) for description in NUMBER_DESCRIPTIONS
