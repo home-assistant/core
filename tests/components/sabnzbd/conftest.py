@@ -35,9 +35,9 @@ def mock_sabnzbd() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="config_entry")
-async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+async def mock_config_entry(hass: HomeAssistant, sabnzbd: AsyncMock) -> MockConfigEntry:
     """Return a MockConfigEntry for testing."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Sabnzbd",
         entry_id="01JD2YVVPBC62D620DGYNG2R8H",
@@ -47,6 +47,9 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_URL: "http://localhost:8080",
         },
     )
+    config_entry.add_to_hass(hass)
+
+    return config_entry
 
 
 @pytest.fixture(name="setup_integration")
@@ -54,7 +57,5 @@ async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry, sabnzbd: AsyncMock
 ) -> None:
     """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
-
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
