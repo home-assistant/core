@@ -9,7 +9,7 @@ from typing import Any, cast
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
-from uiprotect.exceptions import ClientError
+from uiprotect.exceptions import BadRequest, ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -181,7 +181,10 @@ async def ptz_camera_goto_preset(hass: HomeAssistant, call: ServiceCall) -> None
     """Go to preset for PTZ camera."""
     slot: int = call.data[ATTR_PTZ_SLOT]
     camera = _async_get_ufp_camera(hass, call)
-    await camera.goto_ptz_slot(slot=slot)
+    try:
+        await camera.goto_ptz_slot(slot=slot)
+    except BadRequest as err:
+        raise HomeAssistantError(str(err)) from err
 
 
 @callback
