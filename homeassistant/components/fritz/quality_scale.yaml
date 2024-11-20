@@ -45,7 +45,7 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: we are at 88% coverage at the moment
+    comment: we are close to the goal of 95%
 
   # Gold
   devices: deno
