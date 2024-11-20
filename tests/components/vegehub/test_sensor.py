@@ -3,14 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from vegehub import vh400_transform
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.vegehub.const import DOMAIN, OPTION_DATA_TYPE_CHOICES
-from homeassistant.components.vegehub.sensor import (
-    VegeHubSensor,
-    VH400_transform,
-    async_setup_entry,
-)
+from homeassistant.components.vegehub.sensor import VegeHubSensor, async_setup_entry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 
@@ -52,20 +49,11 @@ async def test_async_setup_entry(hass: HomeAssistant, config_entry) -> None:
     added_sensors = async_add_entities.call_args[0][0]
 
     assert len(added_sensors) == 3  # 2 sensors + 1 battery
-    assert added_sensors[0].name == "VegeHub Sensor 1"
-    assert added_sensors[1].name == "VegeHub Sensor 2"
-    assert added_sensors[2].name == "Battery"
-
-    # Check that the sensors are stored in hass.data
-    assert added_sensors[0].unique_id in hass.data[DOMAIN]
-    assert added_sensors[1].unique_id in hass.data[DOMAIN]
-    assert added_sensors[2].unique_id in hass.data[DOMAIN]
 
 
 def test_vegehub_sensor_properties() -> None:
     """Test VegeHubSensor properties."""
     sensor = VegeHubSensor(
-        name="Test Sensor",
         mac_address="1234567890AB",
         slot=1,
         ip_addr="192.168.1.10",
@@ -74,27 +62,14 @@ def test_vegehub_sensor_properties() -> None:
         chan_type="sensor",
     )
 
-    assert sensor.name == "Test Sensor"
     assert sensor.device_class == SensorDeviceClass.MOISTURE
     assert sensor.native_unit_of_measurement == PERCENTAGE
     assert sensor.unique_id == "vegehub_1234567890ab_1"
 
 
-def test_vh400_transform() -> None:
-    """Test VH400_transform function."""
-    # Check different ranges of the piecewise function
-    assert VH400_transform(0.5) == pytest.approx(4.5454, 0.02)
-    assert VH400_transform(1.2) == pytest.approx(12.5, 0.02)
-    assert VH400_transform(1.6) == pytest.approx(30.77, 0.05)
-    assert VH400_transform(2.0) == pytest.approx(45.45, 0.02)
-    assert VH400_transform(2.6) == pytest.approx(75.00, 0.02)
-    assert VH400_transform(3.5) == 100.0  # Above max range
-
-
 def test_native_value() -> None:
     """Test the native_value property for VegeHubSensor."""
     sensor = VegeHubSensor(
-        name="Test Sensor",
         mac_address="1234567890AB",
         slot=1,
         ip_addr="192.168.1.10",
@@ -115,14 +90,13 @@ def test_native_value() -> None:
     # Test with percentage conversion
     sensor._data_type = OPTION_DATA_TYPE_CHOICES[1]
     sensor._attr_native_value = 1.5
-    assert sensor.native_value == VH400_transform(1.5)
+    assert sensor.native_value == vh400_transform(1.5)
 
 
 @pytest.mark.asyncio
 async def test_async_update_sensor() -> None:
     """Test async_update_sensor method."""
     sensor = VegeHubSensor(
-        name="Test Sensor",
         mac_address="1234567890AB",
         slot=1,
         ip_addr="192.168.1.10",
