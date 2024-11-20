@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.51.0
+PySwitchbot==0.53.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==3.0.0
+accuweather==4.0.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -164,7 +164,7 @@ aio-georss-gdacs==0.10
 aioacaia==0.1.6
 
 # homeassistant.components.airq
-aioairq==0.3.2
+aioairq==0.4.3
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.6.10
@@ -369,7 +369,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.8.5
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.4.0
+aioswitcher==5.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -541,7 +541,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.20.0
+bluetooth-adapters==0.20.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -931,7 +931,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.84.0
 
 # homeassistant.components.conversation
-hassil==2.0.1
+hassil==2.0.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -953,7 +953,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.60
+holidays==0.61
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241106.2
@@ -1139,7 +1139,7 @@ mficlient==0.5.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.3.2
+microBeesPy==0.3.3
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -1329,7 +1329,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.5.0
+plugwise==1.5.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1742,7 +1742,7 @@ pyoverkiz==1.14.1
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.12
+pypalazzetti==0.1.13
 
 # homeassistant.components.lcn
 pypck==0.7.24
@@ -1947,7 +1947,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.8
+pytouchlinesl==0.1.9
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.5.0
+uiprotect==6.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
