@@ -76,10 +76,7 @@ async def _async_migrate_unique_ids(
             hass, entry.entry_id, _async_migrator_mac_detected
         )
     elif entry.unique_id == "":
-        mac_empty_updates: dict[str, Any] = {
-            "unique_id": None,
-        }
-        hass.config_entries.async_update_entry(entry, **mac_empty_updates)
+        hass.config_entries.async_update_entry(entry, unique_id=None)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
