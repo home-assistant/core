@@ -117,7 +117,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser sensor."""
-    coordinator: FullyKioskDataUpdateCoordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities(
         FullySensor(coordinator, description)
         for description in SENSORS

@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser image entities."""
-    coordinator: FullyKioskDataUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         FullyImageEntity(coordinator, description) for description in IMAGES
     )

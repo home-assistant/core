@@ -87,7 +87,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser switch."""
-    coordinator: FullyKioskDataUpdateCoordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         FullySwitchEntity(coordinator, description) for description in SWITCHES

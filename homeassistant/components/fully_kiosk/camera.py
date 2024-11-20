@@ -20,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the cameras."""
-    coordinator: FullyKioskDataUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.coordinator
     async_add_entities([FullyCameraEntity(coordinator)])
 
 
