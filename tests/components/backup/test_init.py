@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from .common import setup_backup_integration
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_setup_with_hassio(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
