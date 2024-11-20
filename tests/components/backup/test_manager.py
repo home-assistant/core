@@ -97,8 +97,13 @@ async def _mock_backup_generation(
     }
     assert isinstance(backup, AgentBackup)
     assert backup == AgentBackup(
+        addons=[],
         backup_id=ANY,
+        database_included=database_included,
         date=ANY,
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2025.1.0",
         name=name,
         protected=bool(password),
         size=ANY,
