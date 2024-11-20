@@ -80,7 +80,7 @@ rules:
     comment: no known use cases for repair issues or flows, yet
   stale-devices:
     status: todo
-    comment: implement async_remove_config_entry_device in addition to the cleanup service
+    comment: automate the current cleanup process and deprecate the corresponding button
 
   # Platinum
   async-dependency:
