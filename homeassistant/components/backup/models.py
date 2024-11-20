@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 
 
 @dataclass()
-class BaseBackup:
+class AgentBackup:
     """Base backup class."""
 
     backup_id: str

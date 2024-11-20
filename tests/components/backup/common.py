@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
     DOMAIN,
+    AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
-    BaseBackup,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import Backup
@@ -22,7 +22,7 @@ from tests.common import MockPlatform, mock_platform
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
-TEST_BASE_BACKUP_ABC123 = BaseBackup(
+TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     date="1970-01-01T00:00:00.000Z",
     name="Test",
@@ -31,7 +31,7 @@ TEST_BASE_BACKUP_ABC123 = BaseBackup(
 )
 TEST_BACKUP_PATH_ABC123 = Path("abc123.tar")
 
-TEST_BASE_BACKUP_DEF456 = BaseBackup(
+TEST_BACKUP_DEF456 = AgentBackup(
     backup_id="def456",
     date="1980-01-01T00:00:00.000Z",
     name="Test 2",
@@ -45,12 +45,12 @@ TEST_DOMAIN = "test"
 class BackupAgentTest(BackupAgent):
     """Test backup agent."""
 
-    def __init__(self, name: str, backups: list[BaseBackup] | None = None) -> None:
+    def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
         if backups is None:
             backups = [
-                BaseBackup(
+                AgentBackup(
                     backup_id="abc123",
                     date="1970-01-01T00:00:00Z",
                     name="Test",
@@ -74,14 +74,14 @@ class BackupAgentTest(BackupAgent):
         self,
         *,
         path: Path,
-        backup: BaseBackup,
+        backup: AgentBackup,
         homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         self._backups[backup.backup_id] = backup
 
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list(self._backups.values())
 
@@ -89,7 +89,7 @@ class BackupAgentTest(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
         return self._backups.get(backup_id)
 

@@ -9,7 +9,7 @@ from typing import Any, Protocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .models import BaseBackup
+from .models import AgentBackup
 
 
 class BackupAgentError(HomeAssistantError):
@@ -47,7 +47,7 @@ class BackupAgent(abc.ABC):
         *,
         path: Path,
         homeassistant_version: str,
-        backup: BaseBackup,
+        backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -69,7 +69,7 @@ class BackupAgent(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
 
     @abc.abstractmethod
@@ -77,7 +77,7 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
 
 
