@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
@@ -35,6 +37,9 @@ from .const import (
 from .coordinator import OpenUvCoordinator
 from .entity import OpenUvEntity
 
+# Set up a logger for your component
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_MAX_UV_TIME = "time"
 
 EXPOSURE_TYPE_MAP = {
@@ -45,6 +50,8 @@ EXPOSURE_TYPE_MAP = {
     TYPE_SAFE_EXPOSURE_TIME_5: "st5",
     TYPE_SAFE_EXPOSURE_TIME_6: "st6",
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,6 +176,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
+
+    # Convert entry.data to a mutable dict
+    entry_data = dict(entry.data)
+
+    # Add the Skin Type sensor to Home Assistant and associate it with the device
+    async_add_entities([SkinTypeSensor(entry_data, entry=entry)])
+
     coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -197,3 +211,48 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     def native_value(self) -> int | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class SkinTypeSensor(SensorEntity):
+    """Define a sensor that reflects the user's selected skin type."""
+
+    def __init__(self, entry_data: dict, entry: ConfigEntry) -> None:
+        """Initialize the Skin Type sensor."""
+        self._attr_name = "Skin Type"
+        self._attr_unique_id = f"skin_type_{entry_data['latitude']}_{entry_data['longitude']}"  # Access entry_data directly
+        self._entry_data = dict(entry_data)  # Ensure it's mutable
+        self.entry = entry
+
+        # Setting the device information for the sensor
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{entry_data['latitude']}_{entry_data['longitude']}")
+            },
+            name="OpenUV",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> str:
+        """Return the current state of the skin type sensor."""
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is None:
+            skin_type = self._entry_data.get("skin_type", "None")
+        return str(skin_type)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return extra state attributes."""
+        return {
+            "skin_type": self._entry_data.get("skin_type", "None"),
+        }
+
+    async def async_update(self) -> None:
+        """Update the sensor state from the configuration."""
+        # Fetch the skin type from the options
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is not None:
+            self._entry_data["skin_type"] = skin_type  # Persist the updated value
+
+        # Notify Home Assistant to update the state
+        self.async_write_ha_state()

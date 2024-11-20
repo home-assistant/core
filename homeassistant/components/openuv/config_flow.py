@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from pyopenuv import Client
@@ -32,11 +33,23 @@ from .const import (
     DOMAIN,
 )
 
+# Set up a logger for your component
+_LOGGER = logging.getLogger(__name__)
+
 STEP_REAUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
     }
 )
+FITZPATRICK_TYPES = {
+    "None": "Choose/Change your Skin Type",
+    "Skin Type I": "Type I: Pale, always burns, never tans",
+    "Skin Type II": "Type II: Fair, usually burns, tans minimally",
+    "Skin Type III": "Type III: Medium, burns moderately, tans gradually",
+    "Skin Type IV": "Type IV: Olive, rarely burns, tans easily",
+    "Skin Type V": "Type V: Brown, very rarely burns, tans very easily",
+    "Skin Type VI": "Type VI: Dark Brown/Black, never burns, deeply pigmented",
+}
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -46,6 +59,9 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
         ): vol.Coerce(float),
+        vol.Optional("skin_type", default="None"): vol.In(
+            FITZPATRICK_TYPES
+        ),  # Add skin_type as an optional field
     }
 )
 
@@ -170,20 +186,29 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the start of the config flow."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="user", data_schema=self.step_user_schema
-            )
-
-        data = OpenUvData(
-            user_input[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
-            user_input[CONF_ELEVATION],
+        """Handle the user step of the config flow."""
+        # Define the schema for the form
+        step_user_schema = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude): float,
+                vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude): float,
+                vol.Optional(CONF_ELEVATION, default=0): int,  # Add elevation if needed
+                vol.Optional("skin_type", default="None"): vol.In(FITZPATRICK_TYPES),
+            }
         )
 
-        await self.async_set_unique_id(data.unique_id)
-        self._abort_if_unique_id_configured()
+        if not user_input:
+            # Display the form if no input is provided
+            return self.async_show_form(step_id="user", data_schema=step_user_schema)
 
-        return await self._async_verify(data, "user", self.step_user_schema)
+        # Process the provided user input
+        # Ensure that the skin type is included in the user input
+        user_input["skin_type"] = user_input.get("skin_type", "None")
+
+        # Create a new config entry, including the skin_type
+        # Save the provided user input as part of the config entry data
+        return self.async_create_entry(
+            title="OpenUV",
+            data=user_input,  # Make sure skin_type is part of the data
+        )
