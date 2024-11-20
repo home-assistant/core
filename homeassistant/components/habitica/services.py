@@ -10,6 +10,7 @@ from uuid import UUID
 
 from aiohttp import ClientError, ClientResponseError
 from habiticalib import (
+    Direction,
     HabiticaException,
     NotAuthorizedError,
     NotFoundError,
@@ -279,6 +280,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         """Score a task action."""
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
+
+        direction = (
+            Direction.DOWN if call.data.get(ATTR_DIRECTION) == "down" else Direction.UP
+        )
         try:
             task_id, task_value = next(
                 (task["id"], task.get("value"))
@@ -294,18 +299,14 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             ) from e
 
         try:
-            response: dict[str, Any] = (
-                await coordinator.api.tasks[task_id]
-                .score[call.data.get(ATTR_DIRECTION, "up")]
-                .post()
-            )
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            if e.status == HTTPStatus.UNAUTHORIZED and task_value is not None:
+            response = await coordinator.habitica.update_score(UUID(task_id), direction)
+        except TooManyRequestsError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except NotAuthorizedError as e:
+            if task_value is not None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="not_enough_gold",
@@ -318,9 +319,14 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
+        except (HabiticaException, ClientError) as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
         else:
             await coordinator.async_request_refresh()
-            return response
+            return asdict(response.data)
 
     async def transformation(call: ServiceCall) -> ServiceResponse:
         """User a transformation item on a player character."""
