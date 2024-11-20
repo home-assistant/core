@@ -42,7 +42,7 @@ from .coordinator import SabnzbdUpdateCoordinator
 from .sab import get_client
 from .sensor import OLD_SENSOR_KEYS
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 SERVICES = (
@@ -235,6 +235,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_set_queue_speed(
         call: ServiceCall, coordinator: SabnzbdUpdateCoordinator
     ) -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "set_speed_action_deprecated",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            breaks_in_ha_version="2025.6",
+            translation_key="set_speed_action_deprecated",
+        )
         speed = call.data.get(ATTR_SPEED)
         await coordinator.sab_api.set_speed_limit(speed)
 

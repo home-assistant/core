@@ -11,6 +11,7 @@ from homeassistant.components.sabnzbd import (
     OLD_SENSOR_KEYS,
     SERVICE_PAUSE,
     SERVICE_RESUME,
+    SERVICE_SET_SPEED,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
@@ -95,6 +96,7 @@ async def test_unique_id_migrate(
     [
         (SERVICE_RESUME, "resume_action_deprecated"),
         (SERVICE_PAUSE, "pause_action_deprecated"),
+        (SERVICE_SET_SPEED, "set_speed_action_deprecated"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
