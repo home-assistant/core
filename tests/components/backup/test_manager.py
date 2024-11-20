@@ -169,7 +169,7 @@ async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) ->
             return_value=MagicMock(st_size=TEST_BACKUP_ABC123.size),
         ),
     ):
-        await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
+        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
     backups, agent_errors = await manager.async_get_backups()
     assert backups == snapshot
     assert agent_errors == {}
@@ -189,7 +189,7 @@ async def test_load_backups_with_exception(
         patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
         patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
-        await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
+        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
     backups, agent_errors = await manager.async_get_backups()
     assert (
         f"Unable to read backup {TEST_BACKUP_PATH_ABC123}: Test exception"
