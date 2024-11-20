@@ -9,7 +9,11 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor.models import backups as supervisor_backups
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AddonInfo,
+    AgentBackup,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -89,9 +93,14 @@ async def test_agent_list_backups(
     assert response["success"]
     assert response["result"] == [
         {
+            "addons": [],
             "agent_id": "hassio.local",
             "backup_id": "abc123",
+            "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
+            "folders": ["share"],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
             "name": "Test",
             "protected": False,
             "size": 1048576,
@@ -133,8 +142,13 @@ async def test_agent_upload(
     client = await hass_client()
     backup_id = "test-backup"
     test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
+        database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        folders=["media", "share"],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
         size=0.0,

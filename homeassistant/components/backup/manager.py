@@ -234,7 +234,6 @@ class BackupManager:
                     self.backup_agents[agent_id].async_upload_backup(
                         path=path,
                         backup=backup,
-                        homeassistant_version=HAVERSION,
                     )
                     for agent_id in agent_ids
                 ),
@@ -273,8 +272,13 @@ class BackupManager:
                 if agent_backup.backup_id not in backups:
                     backups[agent_backup.backup_id] = Backup(
                         agent_ids=[],
+                        addons=agent_backup.addons,
                         backup_id=agent_backup.backup_id,
                         date=agent_backup.date,
+                        database_included=agent_backup.database_included,
+                        folders=agent_backup.folders,
+                        homeassistant_included=agent_backup.homeassistant_included,
+                        homeassistant_version=agent_backup.homeassistant_version,
                         name=agent_backup.name,
                         protected=agent_backup.protected,
                         size=agent_backup.size,
@@ -309,8 +313,13 @@ class BackupManager:
             if backup is None:
                 backup = Backup(
                     agent_ids=[],
+                    addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
+                    database_included=result.database_included,
+                    folders=result.folders,
+                    homeassistant_included=result.homeassistant_included,
+                    homeassistant_version=result.homeassistant_version,
                     name=result.name,
                     protected=result.protected,
                     size=result.size,
@@ -611,8 +620,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 suggested_tar_file_path,
             )
             backup = AgentBackup(
+                addons=[],
                 backup_id=backup_id,
+                database_included=database_included,
                 date=date_str,
+                folders=[],
+                homeassistant_included=True,
+                homeassistant_version=HAVERSION,
                 name=backup_name,
                 protected=password is not None,
                 size=size_in_bytes,

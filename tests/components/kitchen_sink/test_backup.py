@@ -6,7 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AddonInfo,
+    AgentBackup,
+)
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -67,9 +71,14 @@ async def test_agents_list_backups(
     assert response["success"]
     assert response["result"] == [
         {
+            "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
             "agent_id": "kitchen_sink.syncer",
             "backup_id": "abc123",
+            "database_included": False,
             "date": "1970-01-01T00:00:00Z",
+            "folders": ["media", "share"],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
             "name": "Kitchen sink syncer",
             "protected": False,
             "size": 1234,
@@ -112,8 +121,13 @@ async def test_agents_upload(
     client = await hass_client()
     backup_id = "test-backup"
     test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
+        database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        folders=["media", "share"],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
         size=0.0,
@@ -145,11 +159,16 @@ async def test_agents_upload(
     backup_list = response["result"]
     assert len(backup_list) == 2
     assert backup_list[1] == {
+        "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
         "agent_id": "kitchen_sink.syncer",
-        "backup_id": backup_id,
-        "date": test_backup.date,
-        "name": test_backup.name,
-        "protected": test_backup.protected,
+        "backup_id": "test-backup",
+        "database_included": True,
+        "date": "1970-01-01T00:00:00.000Z",
+        "folders": ["media", "share"],
+        "homeassistant_included": True,
+        "homeassistant_version": "2024.12.0",
+        "name": "Test",
+        "protected": False,
         "size": 0.0,
     }
 

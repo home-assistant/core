@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import Backup
+from homeassistant.components.backup.models import AddonInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -23,8 +24,13 @@ from tests.common import MockPlatform, mock_platform
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
 TEST_BACKUP_ABC123 = AgentBackup(
+    addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
     backup_id="abc123",
+    database_included=True,
     date="1970-01-01T00:00:00.000Z",
+    folders=["media", "share"],
+    homeassistant_included=True,
+    homeassistant_version="2024.12.0",
     name="Test",
     protected=False,
     size=0.0,
@@ -32,8 +38,13 @@ TEST_BACKUP_ABC123 = AgentBackup(
 TEST_BACKUP_PATH_ABC123 = Path("abc123.tar")
 
 TEST_BACKUP_DEF456 = AgentBackup(
+    addons=[],
     backup_id="def456",
+    database_included=False,
     date="1980-01-01T00:00:00.000Z",
+    folders=["media", "share"],
+    homeassistant_included=True,
+    homeassistant_version="2024.12.0",
     name="Test 2",
     protected=False,
     size=1.0,
@@ -51,8 +62,13 @@ class BackupAgentTest(BackupAgent):
         if backups is None:
             backups = [
                 AgentBackup(
+                    addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
                     backup_id="abc123",
+                    database_included=True,
                     date="1970-01-01T00:00:00Z",
+                    folders=["media", "share"],
+                    homeassistant_included=True,
+                    homeassistant_version="2024.12.0",
                     name="Test",
                     protected=False,
                     size=13.37,
@@ -75,7 +91,6 @@ class BackupAgentTest(BackupAgent):
         *,
         path: Path,
         backup: AgentBackup,
-        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
