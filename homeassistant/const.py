@@ -822,6 +822,7 @@ _DEPRECATED_ELECTRIC_CURRENT_AMPERE: Final = DeprecatedConstantEnum(
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
+    MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
 

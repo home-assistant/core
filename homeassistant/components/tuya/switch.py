@@ -528,6 +528,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Hejhome whitelabel Fingerbot
+    "znjxs": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+        ),
+    ),
     # IoT Switch?
     # Note: Undocumented
     "tdq": (

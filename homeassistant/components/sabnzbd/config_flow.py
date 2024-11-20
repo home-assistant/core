@@ -8,14 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_URL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 
 from .const import DEFAULT_NAME, DOMAIN
 from .sab import get_client
@@ -64,11 +57,3 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=USER_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import sabnzbd config from configuration.yaml."""
-        protocol = "https://" if import_data[CONF_SSL] else "http://"
-        import_data[CONF_URL] = (
-            f"{protocol}{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
-        )
-        return await self.async_step_user(import_data)
