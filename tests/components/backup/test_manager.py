@@ -49,7 +49,7 @@ async def _mock_backup_generation(
     mocked_tarfile: Mock,
     *,
     agent_ids: list[str] | None = None,
-    database_included: bool = True,
+    include_database: bool = True,
     name: str | None = "Core 2025.1.0",
     password: str | None = None,
 ) -> AgentBackup:
@@ -64,10 +64,12 @@ async def _mock_backup_generation(
 
     assert manager.backup_task is None
     await manager.async_create_backup(
-        addons_included=[],
         agent_ids=agent_ids,
-        database_included=database_included,
-        folders_included=[],
+        include_addons=[],
+        include_all_addons=False,
+        include_database=include_database,
+        include_folders=[],
+        include_homeassistant=True,
         name=name,
         on_progress=on_progress,
         password=password,
@@ -87,7 +89,7 @@ async def _mock_backup_generation(
         "date": ANY,
         "folders": ["homeassistant"],
         "homeassistant": {
-            "exclude_database": not database_included,
+            "exclude_database": not include_database,
             "version": "2025.1.0",
         },
         "name": name,
@@ -117,7 +119,7 @@ async def _mock_backup_generation(
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
     expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
         call(file, arcname=f"data/{file}", recursive=False)
-        for file in _EXPECTED_FILES_WITH_DATABASE[database_included]
+        for file in _EXPECTED_FILES_WITH_DATABASE[include_database]
     ]
     assert core_tar.add.call_args_list == expected_files
 
@@ -262,10 +264,12 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     manager.backup_task = hass.async_create_task(event.wait())
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
         await manager.async_create_backup(
-            addons_included=[],
             agent_ids=[LOCAL_AGENT_ID],
-            database_included=True,
-            folders_included=[],
+            include_addons=[],
+            include_all_addons=False,
+            include_database=True,
+            include_folders=[],
+            include_homeassistant=True,
             name=None,
             on_progress=None,
             password=None,
@@ -287,10 +291,12 @@ async def test_async_create_backup_wrong_agent_id(
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     with pytest.raises(HomeAssistantError, match=expected_error):
         await manager.async_create_backup(
-            addons_included=[],
             agent_ids=agent_ids,
-            database_included=True,
-            folders_included=[],
+            include_addons=[],
+            include_all_addons=False,
+            include_database=True,
+            include_folders=[],
+            include_homeassistant=True,
             name=None,
             on_progress=None,
             password=None,
@@ -310,8 +316,8 @@ async def test_async_create_backup_wrong_agent_id(
     "params",
     [
         {},
-        {"database_included": True, "name": "abc123"},
-        {"database_included": False},
+        {"include_database": True, "name": "abc123"},
+        {"include_database": False},
         {"password": "abc123"},
     ],
 )
