@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
-from .errors import CannotConnect
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -21,18 +21,15 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> None:
-    """Validate the user input allows us to connect."""
-    host = data[CONF_HOST]
-    port = data[CONF_PORT]
-
+def test_connection(host: str, port: int) -> str | None:
+    """Test if we can connect to the Niko Home Control controller."""
     try:
-        controller = NikoHomeControlConnection(host, port)
-    except Exception as e:
-        raise CannotConnect("cannot_connect") from e
-
-    if not controller:
-        raise CannotConnect("cannot_connect")
+        if NikoHomeControlConnection(host, port):
+            return None
+    except Exception:  # noqa: BLE001
+        return "unknown"
+    else:
+        return "cannot_connect"
 
 
 class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,32 +41,32 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._import_info = import_info
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        DATA_SCHEMA.schema.update(self._import_info) if self._import_info else None
 
         if user_input is not None:
-            try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                if self._import_info is not None:
-                    return self.async_abort(reason="import_failed")
-                errors["base"] = "cannot_connect"
+            error = test_connection(user_input[CONF_HOST], user_input[CONF_PORT])
+            if not error:
+                return self.async_create_entry(
+                    title=DOMAIN,
+                    data=user_input,
+                )
+            errors["base"] = error
 
-            return self.async_create_entry(
-                title=DOMAIN,
-                data=user_input,
-            )
-
-        # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, import_info: dict[str, str]) -> ConfigFlowResult:
+    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        if import_info is not None:
-            self._import_info = import_info
+        error = test_connection(import_info[CONF_HOST], DEFAULT_PORT)
 
-        return await self.async_step_user(None)
+        if not error:
+            return self.async_create_entry(
+                title=DOMAIN,
+                data={CONF_HOST: import_info[CONF_HOST], CONF_PORT: DEFAULT_PORT},
+            )
+        return self.async_abort(reason=error)
