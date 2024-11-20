@@ -67,7 +67,7 @@ PyMetno==0.13.0
 PyMicroBot==0.0.17
 
 # homeassistant.components.nina
-PyNINA==0.3.3
+PyNINA==0.3.4
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
