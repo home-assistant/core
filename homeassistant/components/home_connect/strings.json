@@ -531,8 +531,8 @@
           "description": "Options for coffee makers."
         },
         "dish_washer_options": {
-          "name": "Dish washer options",
-          "description": "Options for dish washers."
+          "name": "Dishwasher options",
+          "description": "Options for dishwashers."
         },
         "dryer_options": {
           "name": "Dryer options",
