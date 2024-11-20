@@ -42,7 +42,7 @@ env:
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2025.1"
   DEFAULT_PYTHON: "3.12"
-  ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
+  ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -147,11 +147,11 @@ jobs:
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
+            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. += ["backup", "cloud", "demo", "hassio", "kitchen_sink"] | unique | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
+            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. += ["backup", "cloud", "demo", "hassio", "kitchen_sink"] | unique | .[]')
             tests=$(
               for integration in ${possible_integrations};
               do

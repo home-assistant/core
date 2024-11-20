@@ -61,7 +61,6 @@ components: &components
   - homeassistant/components/assist_pipeline/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
-  - homeassistant/components/backup/**
   - homeassistant/components/blueprint/**
   - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
