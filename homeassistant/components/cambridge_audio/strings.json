@@ -16,7 +16,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
+      "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
+      "wrong_device": "This Cambridge Audio device does not match the existing device id. Please make sure you entered the correct IP address."
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

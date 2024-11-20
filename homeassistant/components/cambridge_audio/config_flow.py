@@ -64,6 +64,35 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        if user_input:
+            client = StreamMagicClient(user_input[CONF_HOST])
+            try:
+                async with asyncio.timeout(CONNECT_TIMEOUT):
+                    await client.connect()
+            except STREAM_MAGIC_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(
+                    client.info.unit_id, raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+            finally:
+                await client.disconnect()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
