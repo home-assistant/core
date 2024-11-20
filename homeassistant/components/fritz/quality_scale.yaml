@@ -48,7 +48,7 @@ rules:
     comment: we are close to the goal of 95%
 
   # Gold
-  devices: deno
+  devices: done
   diagnostics: done
   discovery-update-info: todo
   discovery: done
