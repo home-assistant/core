@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from .common import setup_backup_integration
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_setup_with_hassio(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -23,10 +24,6 @@ async def test_setup_with_hassio(
     )
     manager = hass.data[DATA_MANAGER]
     assert not manager.backup_agents
-    assert (
-        "The backup integration is not supported on this installation method, please"
-        " remove it from your configuration"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize("service_data", [None, {}, {"password": "abc123"}])

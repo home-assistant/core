@@ -21,7 +21,6 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
         websocket_api.async_register_command(hass, handle_backup_start)
-        return
 
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)

@@ -8,24 +8,31 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
-from .agent import BackupAgent, BackupAgentPlatformProtocol
-from .const import DOMAIN, LOGGER
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
+from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
     Backup,
     BackupManager,
     BackupPlatformProtocol,
+    BackupProgress,
+    BackupReaderWriter,
     CoreBackupReaderWriter,
+    NewBackup,
 )
 from .models import AgentBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
+    "AgentBackup",
     "Backup",
     "BackupAgent",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
-    "AgentBackup",
+    "BackupProgress",
+    "BackupReaderWriter",
+    "LocalBackupAgent",
+    "NewBackup",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -35,22 +42,22 @@ SERVICE_CREATE_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Backup integration."""
-    hass.data[DOMAIN] = backup_manager = BackupManager(
-        hass, CoreBackupReaderWriter(hass)
-    )
-    await backup_manager.async_setup()
-
     with_hassio = is_hassio(hass)
 
-    async_register_websocket_handlers(hass, with_hassio)
+    reader_writer: BackupReaderWriter
+    if not with_hassio:
+        reader_writer = CoreBackupReaderWriter(hass)
+    else:
+        # pylint: disable-next=import-outside-toplevel, hass-component-root-import
+        from homeassistant.components.hassio.backup import SupervisorBackupReaderWriter
 
-    if with_hassio:
-        if DOMAIN in config:
-            LOGGER.error(
-                "The backup integration is not supported on this installation method, "
-                "please remove it from your configuration"
-            )
-        return True
+        reader_writer = SupervisorBackupReaderWriter(hass)
+
+    backup_manager = BackupManager(hass, reader_writer)
+    hass.data[DATA_MANAGER] = backup_manager
+    await backup_manager.async_setup()
+
+    async_register_websocket_handlers(hass, with_hassio)
 
     async def async_handle_create_service(call: ServiceCall) -> None:
         """Service handler for creating backups."""
