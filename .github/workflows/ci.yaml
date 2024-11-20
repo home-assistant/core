@@ -80,12 +80,12 @@ jobs:
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
-      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
-      postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
 
+      mariadb_groups: "[]"
+      postgresql_groups: "[]"
       test_full_suite: "false"
       integrations_glob: "{backup,cloud,hassio,kitchen_sink,demo}"
       test_groups: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
