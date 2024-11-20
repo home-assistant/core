@@ -32,7 +32,7 @@ def test_connection(host: str, port: int) -> str | None:
         return "cannot_connect"
 
 
-class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
     VERSION = 1
