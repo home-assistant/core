@@ -5,45 +5,23 @@ import {
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
 
-class OpenStreetMapPanel extends LitElement {
-  static get properties() {
-    return {
-      hass: { type: Object },
-      narrow: { type: Boolean },
-      route: { type: Object },
-      panel: { type: Object },
-    };
-  }
+class OpenStreetMapPanel extends HTMLElement {
+    set hass(hass) {
+        // Create the card container
+        if (!this.content) {
+            this.content = document.createElement("hui-osm-card");
+            this.appendChild(this.content);
+        }
 
-  render() {
-    return html`
-      <wired-card elevation="2">
-        <p>There are ${Object.keys(this.hass.states).length} entities.</p>
-        <p>The screen is${this.narrow ? "" : " not"} narrow.</p>
-        Configured panel config
-        <pre>${JSON.stringify(this.panel.config, undefined, 2)}</pre>
-        Current route
-        <pre>${JSON.stringify(this.route, undefined, 2)}</pre>
-      </wired-card>
-    `;
-  }
-
-  static get styles() {
-    return css`
-      :host {
-        background-color: #fafafa;
-        padding: 16px;
-        display: block;
-      }
-      wired-card {
-        background-color: white;
-        padding: 16px;
-        display: block;
-        font-size: 18px;
-        max-width: 600px;
-        margin: 0 auto;
-      }
-    `;
-  }
+        // Pass configuration to the OSM card
+        const config = {
+            type: "custom:osm",
+            auto_fit: true,
+            entities: ["zone.home"],
+        };
+        this.content.setConfig(config);
+        this.content.hass = hass;
+    }
 }
-customElements.define("openStreetMap-panel", OpenStreetMapPanel);
+
+customElements.define("openstreetmap-panel", OpenStreetMapPanel);
