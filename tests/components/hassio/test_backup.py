@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor.models import backups as supervisor_backups
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BaseBackup
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -132,7 +132,7 @@ async def test_agent_upload(
     """Test agent upload backup."""
     client = await hass_client()
     backup_id = "test-backup"
-    test_backup = BaseBackup(
+    test_backup = AgentBackup(
         backup_id=backup_id,
         date="1970-01-01T00:00:00.000Z",
         name="Test",

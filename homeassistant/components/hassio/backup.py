@@ -10,10 +10,10 @@ from typing import Any
 from aiohasupervisor import backups as supervisor_backups
 
 from homeassistant.components.backup import (
+    AgentBackup,
     BackupAgent,
     BackupProgress,
     BackupReaderWriter,
-    BaseBackup,
     LocalBackupAgent,
     NewBackup,
 )
@@ -56,17 +56,17 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         self,
         *,
         path: Path,
-        backup: BaseBackup,
+        backup: AgentBackup,
         homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         await self._client.backups.reload()
 
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return [
-            BaseBackup(
+            AgentBackup(
                 backup_id=backup.slug,
                 date=backup.date.isoformat(),
                 name=backup.name,
@@ -80,7 +80,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
         backups = await self.async_list_backups()
         for backup in backups:
@@ -117,7 +117,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[BaseBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""
         addons_included_set = set(addons_included) if addons_included else None
         folders_included_set = set(folders_included) if folders_included else None
@@ -145,7 +145,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
     async def _async_wait_for_backup(
         self, backup: supervisor_backups.NewBackup
-    ) -> tuple[BaseBackup, Path]:
+    ) -> tuple[AgentBackup, Path]:
         """Wait for a backup to complete."""
         raise NotImplementedError
 
