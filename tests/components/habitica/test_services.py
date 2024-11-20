@@ -3,8 +3,10 @@
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
+from habiticalib import Skill
 import pytest
 
 from homeassistant.components.habitica.const import (
@@ -31,7 +33,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .conftest import load_json_object_fixture, mock_called_with
+from .conftest import (
+    ERROR_BAD_REQUEST,
+    ERROR_NOT_AUTHORIZED,
+    ERROR_NOT_FOUND,
+    ERROR_TOO_MANY_REQUESTS,
+    load_json_object_fixture,
+    mock_called_with,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -55,6 +64,7 @@ async def load_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     services_only: Generator,
 ) -> None:
     """Load config entry."""
@@ -75,55 +85,70 @@ def uuid_mock() -> Generator[None]:
 
 
 @pytest.mark.parametrize(
-    ("service_data", "item", "target_id"),
+    (
+        "service_data",
+        "call_args",
+    ),
     [
         (
             {
                 ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
                 ATTR_SKILL: "pickpocket",
             },
-            "pickPocket",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.PICKPOCKET,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
         (
             {
                 ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
                 ATTR_SKILL: "backstab",
             },
-            "backStab",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.BACKSTAB,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
         (
             {
                 ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
                 ATTR_SKILL: "fireball",
             },
-            "fireball",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.BURST_OF_FLAMES,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
         (
             {
                 ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
                 ATTR_SKILL: "smash",
             },
-            "smash",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.BRUTAL_SMASH,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
         (
             {
                 ATTR_TASK: "Rechnungen bezahlen",
                 ATTR_SKILL: "smash",
             },
-            "smash",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.BRUTAL_SMASH,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
         (
             {
                 ATTR_TASK: "pay_bills",
                 ATTR_SKILL: "smash",
             },
-            "smash",
-            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            {
+                "skill": Skill.BRUTAL_SMASH,
+                "target_id": UUID("2f6fcabc-f670-4ec3-ba65-817e8deea490"),
+            },
         ),
     ],
     ids=[
@@ -135,20 +160,15 @@ def uuid_mock() -> Generator[None]:
         "select task_by_alias",
     ],
 )
+@pytest.mark.usefixtures("mock_habitica")
 async def test_cast_skill(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service_data: dict[str, Any],
-    item: str,
-    target_id: str,
+    call_args: dict[str, Any],
 ) -> None:
     """Test Habitica cast skill action."""
-
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/class/cast/{item}?targetId={target_id}",
-        json={"success": True, "data": {}},
-    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -160,18 +180,13 @@ async def test_cast_skill(
         return_response=True,
         blocking=True,
     )
-
-    assert mock_called_with(
-        mock_habitica,
-        "post",
-        f"{DEFAULT_URL}/api/v3/user/class/cast/{item}?targetId={target_id}",
-    )
+    habitica.cast_skill.assert_awaited_once_with(**call_args)
 
 
 @pytest.mark.parametrize(
     (
         "service_data",
-        "http_status",
+        "raise_exception",
         "expected_exception",
         "expected_exception_msg",
     ),
@@ -181,7 +196,7 @@ async def test_cast_skill(
                 ATTR_TASK: "task-not-found",
                 ATTR_SKILL: "smash",
             },
-            HTTPStatus.OK,
+            None,
             ServiceValidationError,
             "Unable to complete action, could not find the task 'task-not-found'",
         ),
@@ -190,7 +205,7 @@ async def test_cast_skill(
                 ATTR_TASK: "Rechnungen bezahlen",
                 ATTR_SKILL: "smash",
             },
-            HTTPStatus.TOO_MANY_REQUESTS,
+            ERROR_TOO_MANY_REQUESTS,
             ServiceValidationError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
@@ -199,7 +214,7 @@ async def test_cast_skill(
                 ATTR_TASK: "Rechnungen bezahlen",
                 ATTR_SKILL: "smash",
             },
-            HTTPStatus.NOT_FOUND,
+            ERROR_NOT_FOUND,
             ServiceValidationError,
             "Unable to cast skill, your character does not have the skill or spell smash",
         ),
@@ -208,7 +223,7 @@ async def test_cast_skill(
                 ATTR_TASK: "Rechnungen bezahlen",
                 ATTR_SKILL: "smash",
             },
-            HTTPStatus.UNAUTHORIZED,
+            ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
             "Unable to cast skill, not enough mana. Your character has 50 MP, but the skill costs 10 MP",
         ),
@@ -217,7 +232,7 @@ async def test_cast_skill(
                 ATTR_TASK: "Rechnungen bezahlen",
                 ATTR_SKILL: "smash",
             },
-            HTTPStatus.BAD_REQUEST,
+            ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
@@ -227,20 +242,15 @@ async def test_cast_skill(
 async def test_cast_skill_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service_data: dict[str, Any],
-    http_status: HTTPStatus,
+    raise_exception: Exception,
     expected_exception: Exception,
     expected_exception_msg: str,
 ) -> None:
     """Test Habitica cast skill action exceptions."""
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/class/cast/smash?targetId=2f6fcabc-f670-4ec3-ba65-817e8deea490",
-        json={"success": True, "data": {}},
-        status=http_status,
-    )
-
+    habitica.cast_skill.side_effect = raise_exception
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
