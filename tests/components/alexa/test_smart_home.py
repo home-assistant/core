@@ -4807,7 +4807,7 @@ async def test_cover_stop(
     cover_stop_calls: int,
     cover_stop_tilt_calls: int,
 ) -> None:
-    """Test cover an cover tilt can be stopped."""
+    """Test cover and cover tilt can be stopped."""
 
     base_features = (
         CoverEntityFeature.OPEN
