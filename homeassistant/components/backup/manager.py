@@ -43,7 +43,7 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import BackupUploadMetadata, BaseBackup
+from .models import BaseBackup
 from .util import read_backup
 
 
@@ -51,7 +51,7 @@ from .util import read_backup
 class NewBackup:
     """New backup class."""
 
-    backup_id: str
+    backup_job_id: str
 
 
 @dataclass(slots=True)
@@ -226,20 +226,15 @@ class BackupManager:
         path: Path,
     ) -> None:
         """Upload a backup to selected agents."""
+        LOGGER.warning("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
         self.syncing = True
         try:
             sync_backup_results = await asyncio.gather(
                 *(
                     self.backup_agents[agent_id].async_upload_backup(
                         path=path,
-                        metadata=BackupUploadMetadata(
-                            backup_id=backup.backup_id,
-                            date=backup.date,
-                            homeassistant=HAVERSION,
-                            name=backup.name,
-                            protected=backup.protected,
-                            size=backup.size,
-                        ),
+                        backup=backup,
+                        homeassistant_version=HAVERSION,
                     )
                     for agent_id in agent_ids
                 ),
@@ -320,7 +315,7 @@ class BackupManager:
                     protected=result.protected,
                     size=result.size,
                 )
-                backup.agent_ids.append(agent_ids[idx])
+            backup.agent_ids.append(agent_ids[idx])
 
         return (backup, agent_errors)
 
@@ -563,7 +558,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             eager_start=False,  # To ensure the task is not started before we return
         )
 
-        return (NewBackup(backup_id=backup_id), backup_task)
+        return (NewBackup(backup_job_id=backup_id), backup_task)
 
     async def _async_create_backup(
         self,

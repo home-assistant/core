@@ -20,7 +20,7 @@ from .manager import (
     CoreBackupReaderWriter,
     NewBackup,
 )
-from .models import BackupUploadMetadata, BaseBackup
+from .models import BaseBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -30,7 +30,6 @@ __all__ = [
     "BackupPlatformProtocol",
     "BackupProgress",
     "BackupReaderWriter",
-    "BackupUploadMetadata",
     "BaseBackup",
     "LocalBackupAgent",
     "NewBackup",

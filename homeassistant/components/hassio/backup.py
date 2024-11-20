@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupProgress,
     BackupReaderWriter,
-    BackupUploadMetadata,
     BaseBackup,
     LocalBackupAgent,
     NewBackup,
@@ -57,7 +56,8 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        backup: BaseBackup,
+        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -141,7 +141,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             eager_start=False,  # To ensure the task is not started before we return
         )
 
-        return (NewBackup(backup_id=backup.job_id), backup_task)
+        return (NewBackup(backup_job_id=backup.job_id), backup_task)
 
     async def _async_wait_for_backup(
         self, backup: supervisor_backups.NewBackup
