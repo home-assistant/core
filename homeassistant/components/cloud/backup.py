@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from asyncio import StreamReader
 import base64
 import hashlib
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Any
 
 from hass_nabucasa import Cloud
@@ -15,19 +13,19 @@ from hass_nabucasa.cloud_api import (
     async_files_list,
     async_files_upload_details,
 )
-import securetar
 
 from homeassistant.components.backup import (
-    BackupSyncAgent,
-    BackupSyncMetadata,
-    SyncedBackup,
+    BackupAgent,
+    BackupUploadMetadata,
+    BaseBackup,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.components.backup.agent import BackupAgentError
+from homeassistant.core import HomeAssistant, callback
 
 from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN
 
-BUF_SIZE = 2**20 * 4  # 4MB
+_STORAGE_BACKUP = "backup"
 
 
 def b64md5(path: Path) -> str:
@@ -39,136 +37,163 @@ def b64md5(path: Path) -> str:
     return base64.b64encode(file_hash.digest()).decode()
 
 
-async def async_get_backup_sync_agents(
+async def async_get_backup_agents(
     hass: HomeAssistant,
     **kwargs: Any,
-) -> list[BackupSyncAgent]:
-    """Register the backup sync agents."""
-    hass.data[DOMAIN] = "cloud"
-    return [CloudBackupSyncAgent(hass=hass, cloud=hass.data[DATA_CLOUD])]
+) -> list[BackupAgent]:
+    """Return the cloud backup agent."""
+    return [CloudBackupAgent(hass=hass, cloud=hass.data[DATA_CLOUD])]
 
 
-class CloudBackupSyncAgent(BackupSyncAgent):
-    """Cloud backup sync agent."""
+class CloudBackupAgent(BackupAgent):
+    """Cloud backup agent."""
+
+    name = DOMAIN
 
     def __init__(self, hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
         """Initialize the cloud backup sync agent."""
-        super().__init__(name=DOMAIN)
-        self.cloud = cloud
-        self.hass = hass
+        super().__init__()
+        self._cloud = cloud
+        self._hass = hass
+        self._backup: BaseBackup | None = None
+
+    @callback
+    def _get_backup_filename(self) -> str:
+        """Return the backup filename."""
+        return f"{self._cloud.client.prefs.instance_id}.tar"
 
     async def async_download_backup(
         self,
+        backup_id: str,
         *,
-        id: str,
         path: Path,
         **kwargs: Any,
     ) -> None:
         """Download a backup file.
 
-        The `id` parameter is the ID of the synced backup that was returned in async_list_backups.
-
-        The `path` parameter is the full file path to download the synced backup to.
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
+        :param path: The full file path to download the backup to.
         """
         details = await async_files_download_details(
-            self.cloud,
-            storage_type="backup",
-            id=id,
+            self._cloud,
+            storage_type=_STORAGE_BACKUP,
+            filename=self._get_backup_filename(),
         )
 
-        resp = await self.cloud.websession.get(
+        resp = await self._cloud.websession.get(
             details["url"],
             raise_for_status=True,
         )
 
-        def _extract_inner_tar(content: StreamReader):
-            """Extract the inner tar file."""
-            with TemporaryDirectory() as tempdir:
-                tempfile = Path(tempdir) / id
-                for chunk in content.iter_any():
-                    tempfile.write(chunk)
-                with securetar.SecureTarFile(
-                    tempfile,
-                    "w",
-                    gzip=True,
-                    bufsize=BUF_SIZE,
-                    key=self.cloud.client.prefs.backup_encryption_key,
-                ) as outer_tar:
-                    outer_tar.extract(id, path)
-
-        await self.hass.async_add_executor_job(_extract_inner_tar, resp.content)
+        file = await self._hass.async_add_executor_job(path.open, "wb")
+        async for chunk in resp.content.iter_any():
+            await self._hass.async_add_executor_job(file.write, chunk)
 
     async def async_upload_backup(
         self,
         *,
         path: Path,
-        metadata: BackupSyncMetadata,
+        metadata: BackupUploadMetadata,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
-        The `path` parameter is the full file path to the backup that should be synced.
-
-        The `metadata` parameter contains metadata about the backup that should be synced.
+        :param path: The full file path to the backup that should be uploaded.
+        :param metadata: Metadata about the backup that should be uploaded.
         """
+        if not metadata.protected:
+            raise BackupAgentError("Cloud backups must be protected")
+
         if (
-            not self.cloud.is_logged_in
-            or self.cloud.client.prefs.backup_sync is not True
-            or not self.cloud.client.prefs.backup_encryption_key
+            not self._cloud.is_logged_in
+            or self._cloud.client.prefs.backup_sync is not True
         ):
+            # todo raise error?
             return
 
-        def _create_outer_tar():
-            """Create the outer tar file."""
-            tarfilepath = Path()
-            with securetar.SecureTarFile(
-                tarfilepath,
-                "w",
-                gzip=True,
-                bufsize=BUF_SIZE,
-                key=self.cloud.client.prefs.backup_encryption_key,
-            ) as outer_tar:
-                outer_tar.add(path, arcname=path.name)
+        def _create_hash_and_get_size() -> tuple[str, int]:
+            """Create file hash and calculate size."""
+            return b64md5(path), path.stat().st_size
 
-            return tarfilepath, b64md5(tarfilepath), tarfilepath.stat().st_size
-
-        tarfilepath, base64md5hash, size = await self.hass.async_add_executor_job(
-            _create_outer_tar
+        base64md5hash, size = await self._hass.async_add_executor_job(
+            _create_hash_and_get_size
         )
 
         details = await async_files_upload_details(
-            self.cloud,
-            storage_type="backup",
-            name=f"{self.cloud.client.prefs.instance_id}.tar",
+            self._cloud,
+            storage_type=_STORAGE_BACKUP,
+            filename=self._get_backup_filename(),
             metadata={
-                "slug": metadata["slug"],
-                "homeassistant_version": metadata["homeassistant"],
-                "name": metadata["name"],
-                "date": metadata["date"],
-                "protected": metadata["protected"],
-                "content": {},
+                "backup_id": metadata.backup_id,
+                "date": metadata.date,
+                "homeassistant_version": metadata.homeassistant,
+                "name": metadata.name,
+                "protected": metadata.protected,
             },
             size=size,
             base64md5hash=base64md5hash,
         )
 
-        await self.cloud.websession.put(
+        await self._cloud.websession.put(
             details["url"],
-            data={"file": tarfilepath.open("rb")},
+            data={"file": path.open("rb")},
             headers=details["headers"],
         )
 
-        await self.hass.async_add_executor_job(tarfilepath.unlink)
+        self._backup = BaseBackup(
+            backup_id=metadata.backup_id,
+            date=metadata.date,
+            name=metadata.name,
+            protected=metadata.protected,
+            size=size,
+        )
 
-    async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
+    async def async_delete_backup(
+        self,
+        backup_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Delete a backup file.
+
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
+        """
+        # TODO: Implement this method
+        raise NotImplementedError
+
+    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
-        backups = await async_files_list(self.cloud)
-        return [
-            SyncedBackup(
-                id=backup.Key,
-                date=backup.LastModified,
-                slug=backup.Metadata["slug"],
-                name=backup.Metadata.get("name"),
+        backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+
+        if not backups:
+            return []
+
+        if len(backups) > 1:
+            # Cloud supports only one backup
+            raise BackupAgentError("Cloud supports only one backup")
+
+        resp = [
+            BaseBackup(
+                backup_id=backup["Key"],
+                date=backup["LastModified"],
+                name=backup["Metadata"]["name"],
+                size=backup["Size"],
+                protected=bool(backup["Metadata"]["protected"]),
             )
             for backup in backups
         ]
+        self._backup = resp[0]
+        return resp
+
+    async def async_get_backup(
+        self,
+        backup_id: str,
+        **kwargs: Any,
+    ) -> BaseBackup | None:
+        """Return a backup."""
+        if self._backup is None:
+            await self.async_list_backups()
+
+        if self._backup is None or self._backup.backup_id != backup_id:
+            return None
+
+        return self._backup
