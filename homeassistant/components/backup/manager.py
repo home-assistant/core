@@ -106,7 +106,6 @@ class BackupReaderWriter(abc.ABC):
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Restore a backup."""
 
@@ -181,7 +180,7 @@ class BackupManager:
         self._add_platform_pre_post_handler(integration_domain, platform)
         await self._async_add_platform_agents(integration_domain, platform)
 
-    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
+    async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
         pre_backup_results = await asyncio.gather(
             *(
@@ -194,7 +193,7 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def async_post_backup_actions(self, **kwargs: Any) -> None:
+    async def async_post_backup_actions(self) -> None:
         """Perform post backup actions."""
         post_backup_results = await asyncio.gather(
             *(
@@ -247,9 +246,7 @@ class BackupManager:
         finally:
             self.syncing = False
 
-    async def async_get_backups(
-        self, **kwargs: Any
-    ) -> tuple[dict[str, Backup], dict[str, Exception]]:
+    async def async_get_backups(self) -> tuple[dict[str, Backup], dict[str, Exception]]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their ID.
@@ -288,7 +285,7 @@ class BackupManager:
         return (backups, agent_errors)
 
     async def async_get_backup(
-        self, backup_id: str, **kwargs: Any
+        self, backup_id: str
     ) -> tuple[Backup | None, dict[str, Exception]]:
         """Get a backup."""
         backup: Backup | None = None
@@ -328,7 +325,7 @@ class BackupManager:
 
         return (backup, agent_errors)
 
-    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+    async def async_delete_backup(self, backup_id: str) -> None:
         """Delete a backup."""
         for agent in self.backup_agents.values():
             await agent.async_delete_backup(backup_id)
@@ -338,7 +335,6 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-        **kwargs: Any,
     ) -> None:
         """Receive and store a backup file from upload."""
         queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
@@ -428,7 +424,6 @@ class BackupManager:
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-        **kwargs: Any,
     ) -> NewBackup:
         """Initiate generating a backup.
 
@@ -498,7 +493,6 @@ class BackupManager:
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Initiate restoring a backup.
 
@@ -686,7 +680,6 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Restore a backup.
 
