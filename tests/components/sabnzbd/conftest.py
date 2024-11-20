@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.sabnzbd import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -42,7 +42,6 @@ async def mock_config_entry(hass: HomeAssistant, sabnzbd: AsyncMock) -> MockConf
         title="Sabnzbd",
         entry_id="01JD2YVVPBC62D620DGYNG2R8H",
         data={
-            CONF_NAME: "Sabnzbd",
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
             CONF_URL: "http://localhost:8080",
         },

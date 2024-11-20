@@ -8,12 +8,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.sabnzbd import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
-    CONF_NAME: "Sabnzbd",
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_URL: "http://localhost:8080",
 }
@@ -43,7 +42,6 @@ async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         assert result2["title"] == "edc3eee7330e"
         assert result2["data"] == {
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
-            CONF_NAME: "Sabnzbd",
             CONF_URL: "http://localhost:8080",
         }
         assert len(mock_setup_entry.mock_calls) == 1
