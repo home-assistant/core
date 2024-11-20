@@ -41,6 +41,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         super().__init__()
         self._hass = hass
         self._backup_dir = Path("/backups")
+        self._client = get_supervisor_client(hass)
 
     async def async_download_backup(
         self,
@@ -60,7 +61,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        await get_supervisor_client(self._hass).backups.reload()
+        await self._client.backups.reload()
 
     async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List backups."""
@@ -72,7 +73,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
                 protected=backup.protected,
                 size=backup.size,
             )
-            for backup in await get_supervisor_client(self._hass).backups.list()
+            for backup in await self._client.backups.list()
         ]
 
     async def async_get_backup(
@@ -104,6 +105,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup reader/writer."""
         self._hass = hass
+        self._client = get_supervisor_client(hass)
 
     async def async_create_backup(
         self,
@@ -120,8 +122,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         addons_included_set = set(addons_included) if addons_included else None
         folders_included_set = set(folders_included) if folders_included else None
 
-        client = get_supervisor_client(self._hass)
-        backup = await client.backups.partial_backup(
+        backup = await self._client.backups.partial_backup(
             supervisor_backups.PartialBackupOptions(
                 addons=addons_included_set,
                 folders=folders_included_set,  # type: ignore[arg-type]
@@ -157,8 +158,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         **kwargs: Any,
     ) -> None:
         """Restore a backup."""
-        client = get_supervisor_client(self._hass)
-        await client.backups.partial_restore(
+        await self._client.backups.partial_restore(
             backup_id,
             supervisor_backups.PartialRestoreOptions(
                 addons=None,
