@@ -76,7 +76,6 @@ jobs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
       core: ${{ steps.core.outputs.changes }}
-      integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
@@ -86,10 +85,12 @@ jobs:
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
-      test_groups: ${{ steps.info.outputs.test_groups }}
-      tests_glob: ${{ steps.info.outputs.tests_glob }}
-      tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
+
+      integrations_glob: (backup|cloud)
+      test_groups: ["backup", "cloud"]
+      tests: ["backup", "cloud"]
+      tests_glob: (backup|cloud)
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
