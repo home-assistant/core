@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
+from habiticalib import Habitica
 from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,7 +37,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, habitipy: HabitipyAsync) -> None:
+    def __init__(
+        self, hass: HomeAssistant, habitica: Habitica, habitipy: HabitipyAsync
+    ) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(
             hass,
@@ -51,6 +54,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             ),
         )
         self.api = habitipy
+        self.habitica = habitica
         self.content: dict[str, Any] = {}
 
     async def _async_update_data(self) -> HabiticaData:
