@@ -52,6 +52,9 @@
       "pellet_quantity": {
         "name": "Pellet quantity"
       },
+      "pellet_level": {
+        "name": "Pellet level"
+      },
       "air_outlet_temperature": {
         "name": "Air outlet temperature"
       },

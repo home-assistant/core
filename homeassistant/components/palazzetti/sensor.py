@@ -1,6 +1,5 @@
 """Support for Palazzetti sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
@@ -9,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfMass, UnitOfTemperature
+from homeassistant.const import UnitOfLength, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -20,29 +19,31 @@ from .entity import PalazzettiEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class CallableSensorEntityDescription(SensorEntityDescription):
-    """Describes a Palazzetti sensor entity that is read from a `Callable`."""
-
-    value_callable: Callable[[], int | float | str]
-    """The function that returns the state value for this sensor"""
-
-
-@dataclass(frozen=True, kw_only=True)
 class PropertySensorEntityDescription(SensorEntityDescription):
     """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
 
+    client_property: str
     presence_flag: None | str
-    """`None` if the sensor is always present, name of a `bool` property of the PalazzettiClient otherwise"""
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
     PropertySensorEntityDescription(
         key="pellet_quantity",
-        presence_flag=None,
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="pellet_quantity",
+        presence_flag=None,
+        client_property="pellet_quantity",
+    ),
+    PropertySensorEntityDescription(
+        key="pellet_level",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="pellet_level",
+        presence_flag="has_pellet_level",
+        client_property="pellet_level",
     ),
 ]
 
@@ -59,13 +60,14 @@ async def async_setup_entry(
     sensors = [
         PalazzettiSensor(
             coordinator,
-            CallableSensorEntityDescription(
+            PropertySensorEntityDescription(
                 key=sensor.description_key.value,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 state_class=SensorStateClass.MEASUREMENT,
                 translation_key=sensor.description_key.value,
-                value_callable=sensor.value,
+                presence_flag=None,
+                client_property=sensor.state_property,
             ),
         )
         for sensor in coordinator.client.list_temperatures()
@@ -102,7 +104,5 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
-        if isinstance(self.entity_description, CallableSensorEntityDescription):
-            return self.entity_description.value_callable()
 
         return getattr(self.coordinator.client, self.entity_description.key)

@@ -57,13 +57,16 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.has_fan_high = True
         mock_client.has_fan_auto = True
         mock_client.has_on_off_switch = True
+        mock_client.has_pellet_level = False
         mock_client.connected = True
         mock_client.is_heating = True
         mock_client.room_temperature = 18
         mock_client.target_temperature = 21
         mock_client.target_temperature_min = 5
         mock_client.target_temperature_max = 50
+        mock_client.wood_combustion_temperature = 181
         mock_client.pellet_quantity = 1248
+        mock_client.pellet_level = 0
         mock_client.fan_speed = 3
         mock_client.connect.return_value = True
         mock_client.update_state.return_value = True
@@ -76,7 +79,7 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.list_temperatures.return_value = [
             TemperatureDefinition(
                 description_key=TemperatureDescriptionKey.WOOD_COMBUSTION_TEMP,
-                state_function=lambda: 120.0,
+                state_property="wood_combustion_temperature",
             )
         ]
         yield mock_client
