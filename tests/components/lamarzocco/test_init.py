@@ -9,7 +9,13 @@ import pytest
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -102,9 +108,9 @@ async def test_v1_migration(
     await hass.async_block_till_done()
 
     assert entry_v1.version == 2
-    assert dict(entry_v1.data) == dict(mock_config_entry.data) | {
-        CONF_MAC: "aa:bb:cc:dd:ee:ff"
-    }
+    expected_data = dict(mock_config_entry.data) | {CONF_MAC: "aa:bb:cc:dd:ee:ff"}
+    del expected_data[CONF_ADDRESS]
+    assert dict(entry_v1.data) == expected_data
 
 
 async def test_migration_errors(

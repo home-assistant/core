@@ -97,6 +97,10 @@
     'config_entries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        '00:00:00:00:00:00',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,

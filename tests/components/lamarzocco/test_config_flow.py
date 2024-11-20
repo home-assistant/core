@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -474,12 +475,38 @@ async def test_dhcp_discovery(
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {
             **USER_INPUT,
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_HOST: "192.168.1.42",
             CONF_MACHINE: mock_lamarzocco.serial_number,
             CONF_MODEL: mock_device_info.model,
             CONF_NAME: mock_device_info.name,
             CONF_TOKEN: mock_device_info.communication_key,
         }
+
+
+async def test_dhcp_already_configured_and_update(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovered IP address change."""
+    old_ip = mock_config_entry.data[CONF_HOST]
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.42",
+            hostname=mock_lamarzocco.serial_number,
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] != old_ip
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.42"
 
 
 async def test_options_flow(

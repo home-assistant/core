@@ -11,7 +11,13 @@ from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import SERIAL_DICT, USER_INPUT, async_init_integration
@@ -31,6 +37,7 @@ def mock_config_entry(
         data=USER_INPUT
         | {
             CONF_MODEL: mock_lamarzocco.model,
+            CONF_ADDRESS: "00:00:00:00:00:00",
             CONF_HOST: "host",
             CONF_TOKEN: "token",
             CONF_NAME: "GS3",
