@@ -2,12 +2,8 @@
   "domain": "dormakaba_dkey",
   "name": "Dormakaba dKey",
   "bluetooth": [
-    {
-      "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897"
-    },
-    {
-      "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897"
-    }
+    { "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897" },
+    { "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897" }
   ],
   "codeowners": ["@emontnemery"],
   "config_flow": true,

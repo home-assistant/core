@@ -4,11 +4,7 @@
   "codeowners": ["@hunterjm"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
-  "dhcp": [
-    {
-      "registered_devices": true
-    }
-  ],
+  "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/onvif",
   "iot_class": "local_push",
   "loggers": ["onvif", "wsdiscovery", "zeep"],
