@@ -47,21 +47,21 @@ from .models import AgentBackup
 from .util import read_backup
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class NewBackup:
     """New backup class."""
 
     backup_job_id: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class Backup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class BackupProgress:
     """Backup progress class."""
 
