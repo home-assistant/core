@@ -37,7 +37,9 @@ class QbusEntity(Entity):
         self,
         mqtt_output: QbusMqttOutput,
         qbus_entry: QbusEntry,
-        id_suffix: str = "",
+        entity_id_format: str,
+        *,
+        id_suffix: str | None = None,
     ) -> None:
         """Initialize the Qbus entity."""
 
@@ -49,6 +51,9 @@ class QbusEntity(Entity):
         id_suffix = id_suffix or ""
         self._attr_unique_id = (
             f"ctd_{mqtt_output.device.serial_number}_{ref_id}{id_suffix}"
+        )
+        self.entity_id = entity_id_format.format(
+            f"qbus_{mqtt_output.device.serial_number}_{ref_id}{id_suffix}"
         )
 
         self._attr_device_info = DeviceInfo(

@@ -6,7 +6,11 @@ from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttOnOffState, StateType
 
 from homeassistant.components.mqtt import ReceiveMessage
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    ENTITY_ID_FORMAT,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +44,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
     ) -> None:
         """Initialize switch entity."""
 
-        super().__init__(mqtt_output, qbus_entry)
+        super().__init__(mqtt_output, qbus_entry, ENTITY_ID_FORMAT)
 
         self._is_on = False
 
