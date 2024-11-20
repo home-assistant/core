@@ -23,7 +23,7 @@ class PropertySensorEntityDescription(SensorEntityDescription):
     """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
 
     client_property: str
-    presence_flag: None | str
+    presence_flag: None | str = None
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
@@ -33,7 +33,6 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="pellet_quantity",
-        presence_flag=None,
         client_property="pellet_quantity",
     ),
     PropertySensorEntityDescription(
@@ -66,7 +65,6 @@ async def async_setup_entry(
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 state_class=SensorStateClass.MEASUREMENT,
                 translation_key=sensor.description_key.value,
-                presence_flag=None,
                 client_property=sensor.state_property,
             ),
         )
