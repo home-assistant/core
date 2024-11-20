@@ -1115,8 +1115,8 @@ async def test_async_forward_entry_setup_deprecated(
     assert (
         "Detected code that calls async_forward_entry_setup for integration, "
         f"original with title: Mock Title and entry_id: {entry_id}, "
-        "which is deprecated and will stop working in Home Assistant 2025.6, "
-        "await async_forward_entry_setups instead. Please report this issue."
+        "which is deprecated, await async_forward_entry_setups instead. "
+        "This will stop working in Home Assistant 2025.6, please report this issue"
     ) in caplog.text
 
 
@@ -4802,7 +4802,7 @@ async def test_reauth_reconfigure_missing_entry(
     with pytest.raises(
         RuntimeError,
         match=f"Detected code that initialises a {source} flow without a link "
-        "to the config entry. Please report this issue.",
+        "to the config entry. Please report this issue",
     ):
         await manager.flow.async_init("test", context={"source": source})
     await hass.async_block_till_done()
@@ -6244,7 +6244,7 @@ async def test_non_awaited_async_forward_entry_setups(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -6316,7 +6316,7 @@ async def test_non_awaited_async_forward_entry_setup(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setup, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -7560,8 +7560,10 @@ async def test_options_flow_deprecated_config_entry_setter(
 
     assert (
         "Detected that custom integration 'my_integration' sets option flow "
-        "config_entry explicitly, which is deprecated and will stop working "
-        "in 2025.12" in caplog.text
+        "config_entry explicitly, which is deprecated at "
+        "custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
+        "create a bug report at " in caplog.text
     )
 
 

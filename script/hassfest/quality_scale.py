@@ -73,8 +73,14 @@ SCHEMA = vol.Schema(
                     vol.In(["todo", "done"]),
                     vol.Schema(
                         {
-                            vol.Required("status"): vol.In(["todo", "done", "exempt"]),
+                            vol.Required("status"): vol.In(["todo", "done"]),
                             vol.Optional("comment"): str,
+                        }
+                    ),
+                    vol.Schema(
+                        {
+                            vol.Required("status"): "exempt",
+                            vol.Required("comment"): str,
                         }
                     ),
                 )
