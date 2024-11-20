@@ -159,6 +159,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         *,
         agent_id: str,
         password: str | None,
+        **kwargs: Any,
     ) -> None:
         """Restore a backup."""
         await self._client.backups.partial_restore(
