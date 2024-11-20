@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import BaseBackup
+from homeassistant.components.backup import AgentBackup
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import NewBackup
@@ -60,7 +60,7 @@ async def test_info(
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
     remote_agents: list[str],
-    remote_backups: dict[str, list[BaseBackup]],
+    remote_backups: dict[str, list[AgentBackup]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup info."""
@@ -129,7 +129,7 @@ async def test_details(
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
     remote_agents: list[str],
-    backups: dict[str, BaseBackup],
+    backups: dict[str, AgentBackup],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup info."""
@@ -203,7 +203,7 @@ async def test_delete(
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
     remote_agents: list[str],
-    backups: dict[str, BaseBackup],
+    backups: dict[str, AgentBackup],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test deleting a backup file."""
@@ -362,7 +362,7 @@ async def test_restore_local_agent(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
-    backups: dict[str, BaseBackup],
+    backups: dict[str, AgentBackup],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""
@@ -406,7 +406,7 @@ async def test_restore_remote_agent(
     hass_ws_client: WebSocketGenerator,
     with_hassio: bool,
     remote_agents: list[str],
-    backups: dict[str, BaseBackup],
+    backups: dict[str, AgentBackup],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""

@@ -12,10 +12,10 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN,
+    AgentBackup,
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
-    BaseBackup,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -52,7 +52,7 @@ async def _mock_backup_generation(
     database_included: bool = True,
     name: str | None = "Core 2025.1.0",
     password: str | None = None,
-) -> BaseBackup:
+) -> AgentBackup:
     """Mock backup generator."""
 
     agent_ids = agent_ids or [LOCAL_AGENT_ID]
@@ -95,8 +95,8 @@ async def _mock_backup_generation(
         "slug": ANY,
         "type": "partial",
     }
-    assert isinstance(backup, BaseBackup)
-    assert backup == BaseBackup(
+    assert isinstance(backup, AgentBackup)
+    assert backup == AgentBackup(
         backup_id=ANY,
         date=ANY,
         name=name,

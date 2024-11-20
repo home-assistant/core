@@ -12,7 +12,7 @@ from homeassistant.helpers.hassio import is_hassio
 
 from .agent import BackupAgent, LocalBackupAgent
 from .const import LOGGER
-from .models import BaseBackup
+from .models import AgentBackup
 from .util import read_backup
 
 
@@ -36,7 +36,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         super().__init__()
         self._hass = hass
         self._backup_dir = Path(hass.config.path("backups"))
-        self._backups: dict[str, BaseBackup] = {}
+        self._backups: dict[str, AgentBackup] = {}
         self._loaded_backups = False
 
     async def load_backups(self) -> None:
@@ -46,13 +46,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self._backups = backups
         self._loaded_backups = True
 
-    def _read_backups(self) -> dict[str, BaseBackup]:
+    def _read_backups(self) -> dict[str, AgentBackup]:
         """Read backups from disk."""
-        backups: dict[str, BaseBackup] = {}
+        backups: dict[str, AgentBackup] = {}
         for backup_path in self._backup_dir.glob("*.tar"):
             try:
                 base_backup = read_backup(backup_path)
-                backup = BaseBackup(
+                backup = AgentBackup(
                     backup_id=base_backup.backup_id,
                     name=base_backup.name,
                     date=base_backup.date,
@@ -78,13 +78,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         *,
         path: Path,
-        backup: BaseBackup,
+        backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         self._backups[backup.backup_id] = backup
 
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         if not self._loaded_backups:
             await self.load_backups()
@@ -94,7 +94,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
         if not self._loaded_backups:
             await self.load_backups()
