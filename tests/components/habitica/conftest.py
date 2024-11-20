@@ -115,10 +115,14 @@ async def set_tz(hass: HomeAssistant) -> None:
 async def mock_habiticalib() -> Generator[AsyncMock]:
     """Mock habiticalib."""
 
-    with patch(
-        "homeassistant.components.habitica.config_flow.Habitica",
-        autospec=True,
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.habitica.Habitica", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.habitica.config_flow.Habitica", new=mock_client
+        ),
+    ):
         client = mock_client.return_value
 
         client.login.return_value = HabiticaLoginResponse.from_json(
