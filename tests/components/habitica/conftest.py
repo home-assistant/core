@@ -34,7 +34,7 @@ def mock_called_with(
         (
             call
             for call in mock_client.mock_calls
-            if call[0] == method.upper() and call[1] == URL(url)
+            if call[0].upper() == method.upper() and call[1] == URL(url)
         ),
         None,
     )

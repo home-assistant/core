@@ -946,8 +946,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
             "hs_color": (26.812, 34.87),
-            "rgb_color": (255, 205, 166),
-            "xy_color": (0.421, 0.364),
+            "rgb_color": (255, 206, 166),
+            "xy_color": (0.42, 0.365),
         },
         nightlight_entity_properties={
             "supported_features": 0,
@@ -959,8 +959,8 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "hs_color": (28.401, 100.0),
-            "rgb_color": (255, 120, 0),
-            "xy_color": (0.621, 0.367),
+            "rgb_color": (255, 121, 0),
+            "xy_color": (0.62, 0.368),
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
@@ -1191,8 +1191,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (26.812, 34.87),
-            "rgb_color": (255, 205, 166),
-            "xy_color": (0.421, 0.364),
+            "rgb_color": (255, 206, 166),
+            "xy_color": (0.42, 0.365),
         },
         nightlight_entity_properties={
             "supported_features": 0,
@@ -1226,8 +1226,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (28.391, 65.659),
-            "rgb_color": (255, 166, 87),
-            "xy_color": (0.526, 0.387),
+            "rgb_color": (255, 167, 88),
+            "xy_color": (0.524, 0.388),
         },
     )
 
@@ -1263,8 +1263,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (26.812, 34.87),
-            "rgb_color": (255, 205, 166),
-            "xy_color": (0.421, 0.364),
+            "rgb_color": (255, 206, 166),
+            "xy_color": (0.42, 0.365),
         },
         nightlight_entity_properties={
             "supported_features": 0,
@@ -1301,8 +1301,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (28.391, 65.659),
-            "rgb_color": (255, 166, 87),
-            "xy_color": (0.526, 0.387),
+            "rgb_color": (255, 167, 88),
+            "xy_color": (0.524, 0.388),
         },
     )
     # Background light - color mode CT
@@ -1326,8 +1326,8 @@ async def test_device_types(
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
             "hs_color": (27.001, 19.243),
-            "rgb_color": (255, 228, 205),
-            "xy_color": (0.372, 0.35),
+            "rgb_color": (255, 228, 206),
+            "xy_color": (0.371, 0.349),
         },
         name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",

@@ -469,6 +469,116 @@ async def test_migrate_entity_ids(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+async def test_migrate_with_already_existing_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device ids that need to be migrated while the new ids already exist."""
+    original_dev_id = f"{TEST_MAC}_ch0"
+    new_dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return True
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    device_registry.async_get_or_create(
+        identifiers={(DOMAIN, new_dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    device_registry.async_get_or_create(
+        identifiers={(DOMAIN, original_dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+        is None
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+
+
+async def test_migrate_with_already_existing_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity ids that need to be migrated while the new ids already exist."""
+    original_id = f"{TEST_UID}_0_record_audio"
+    new_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return True
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=new_id,
+        config_entry=config_entry,
+        suggested_object_id=new_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:

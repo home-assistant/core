@@ -7501,6 +7501,7 @@ async def test_options_flow_config_entry(
     assert result["reason"] == "abort"
 
 
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
@@ -7509,13 +7510,15 @@ async def test_options_flow_deprecated_config_entry_setter(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setting config_entry explicitly still works."""
-    original_entry = MockConfigEntry(domain="hue", data={})
+    original_entry = MockConfigEntry(domain="my_integration", data={})
     original_entry.add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
 
-    mock_integration(hass, MockModule("hue", async_setup_entry=mock_setup_entry))
-    mock_platform(hass, "hue.config_flow", None)
+    mock_integration(
+        hass, MockModule("my_integration", async_setup_entry=mock_setup_entry)
+    )
+    mock_platform(hass, "my_integration.config_flow", None)
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -7549,15 +7552,16 @@ async def test_options_flow_deprecated_config_entry_setter(
 
             return _OptionsFlow(config_entry)
 
-    with mock_config_flow("hue", TestFlow):
+    with mock_config_flow("my_integration", TestFlow):
         result = await hass.config_entries.options.async_init(original_entry.entry_id)
 
     options_flow = hass.config_entries.options._progress.get(result["flow_id"])
     assert options_flow.config_entry is original_entry
 
     assert (
-        "Detected that integration 'hue' sets option flow config_entry explicitly, "
-        "which is deprecated and will stop working in 2025.12" in caplog.text
+        "Detected that custom integration 'my_integration' sets option flow "
+        "config_entry explicitly, which is deprecated and will stop working "
+        "in 2025.12" in caplog.text
     )
 
 
