@@ -54,7 +54,8 @@ async def async_setup_entry(
             chan_type=chan_type,
         )
 
-        hass.data[DOMAIN][sensor.unique_id] = sensor
+        # Store the entity by ID in runtime_data
+        config_entry.runtime_data.entities[sensor.unique_id] = sensor
 
         sensors.append(sensor)
 
