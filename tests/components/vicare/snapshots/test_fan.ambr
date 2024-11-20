@@ -43,9 +43,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Ventilation',
-      'percentage': 25,
+      'percentage': 0,
       'percentage_step': 25.0,
-      'preset_mode': <VentilationMode.PERMANENT: 'permanent'>,
+      'preset_mode': None,
       'preset_modes': list([
         <VentilationMode.PERMANENT: 'permanent'>,
         <VentilationMode.VENTILATION: 'ventilation'>,
