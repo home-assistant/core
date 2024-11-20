@@ -56,7 +56,6 @@ class KitchenSinkBackupAgent(BackupAgent):
         *,
         path: Path,
         backup: AgentBackup,
-        homeassistant_version: str,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
