@@ -26,6 +26,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 FIRMWARE_UPDATE_INTERVAL = 3600
 STATISTICS_UPDATE_INTERVAL = 300
 
+
 _LOGGER = logging.getLogger(__name__)
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
@@ -117,9 +118,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Current status: %s", str(self.device.config))
 
-    async def _async_handle_request[
-        **_P
-    ](
+    async def _async_handle_request[**_P](
         self,
         func: Callable[_P, Coroutine[None, None, None]],
         *args: _P.args,
