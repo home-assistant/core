@@ -11,7 +11,7 @@ class BaseBackup:
     date: str
     name: str
     protected: bool
-    size: float
+    size: int
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""

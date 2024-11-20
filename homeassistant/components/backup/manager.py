@@ -613,7 +613,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 date=date_str,
                 name=backup_name,
                 protected=password is not None,
-                size=round(size_in_bytes / 1_048_576, 2),
+                size=size_in_bytes,
             )
             success = True
             return (backup, tar_file_path)

@@ -24,5 +24,5 @@ def read_backup(backup_path: Path) -> BaseBackup:
             date=cast(str, data["date"]),
             name=cast(str, data["name"]),
             protected=cast(bool, data.get("protected", False)),
-            size=round(backup_path.stat().st_size / 1_048_576, 2),
+            size=backup_path.stat().st_size,
         )
