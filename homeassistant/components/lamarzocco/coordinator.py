@@ -117,9 +117,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Current status: %s", str(self.device.config))
 
-    async def _async_handle_request[
-        **_P
-    ](
+    async def _async_handle_request[**_P](
         self,
         func: Callable[_P, Coroutine[None, None, None]],
         *args: _P.args,
