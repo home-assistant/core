@@ -28,7 +28,7 @@ rules:
   brands: done
   config_entry_unloading: done
   log_when_unavailable: 
-    status: todo
+    status: done
     comment: >
       Handled by coordinator
   entity_unavailable: done
