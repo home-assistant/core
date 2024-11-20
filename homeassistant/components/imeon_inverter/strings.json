@@ -4,10 +4,10 @@
       "user": {
         "title": "Add Imeon Inverter",
         "data": {
-          "inverter": "Device name",
-          "address": "IP Address",
-          "username": "Username",
-          "password": "Password"
+          "inverter": "common.config_flow.data.device",
+          "address": "common.config_flow.data.ip",
+          "username": "common.config_flow.data.username",
+          "password": "common.config_flow.data.password"
         },
         "data_description": {
           "inverter": "The device name",

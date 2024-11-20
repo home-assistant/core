@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import InverterCoordinator
+from .coordinator import InverterConfigEntry, InverterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,17 +48,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "username": entry.data.get("username", ""),
             "password": entry.data.get("password", ""),
         }
-        IC = InverterCoordinator(hass, data, entry.entry_id, entry.title)
+        IC = InverterCoordinator(hass, entry, data)
 
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = IC
+        entry.runtime_data = IC
 
     # Return boolean to indicate that initialization was successfully
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> bool:
     """Handle the creation of a new config entry for the integration (asynchronous).
 
     This function creates the HUB corresponding to the data in the entry.
@@ -75,8 +72,8 @@ async def async_setup_entry(
         "username": entry.data.get("username", ""),
         "password": entry.data.get("password", ""),
     }  # NOTE UUID allows updates instead of creating new hubs
-    IC = InverterCoordinator(hass, data, entry.entry_id, entry.title)
+    IC = InverterCoordinator(hass, entry, data)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = IC
+    entry.runtime_data = IC
 
     return True

@@ -8,12 +8,15 @@ from typing import Any
 
 from imeon_inverter_api.inverter import Inverter
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import HUBNAME
 
 _LOGGER = logging.getLogger(__name__)
+
+type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 
 # HUB CREATION #
@@ -33,9 +36,8 @@ class InverterCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: InverterConfigEntry,
         user_input: dict[str, Any] | None = None,
-        uuid=0,
-        title=HUBNAME,
     ) -> None:
         """Initialize data update coordinator."""
         super().__init__(
@@ -46,6 +48,7 @@ class InverterCoordinator(DataUpdateCoordinator):
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=1),
             always_update=True,
+            config_entry=entry,
         )
 
         if user_input is None:
@@ -54,10 +57,10 @@ class InverterCoordinator(DataUpdateCoordinator):
         self.api = Inverter(user_input["address"])  # API calls
         self.username = user_input["username"]
         self.password = user_input["password"]
-        self.friendly_name = title
+        self.friendly_name = entry.title
 
         # unique ID
-        self.__id = uuid
+        self.__id = entry.entry_id
         InverterCoordinator._HUBs[str(self.__id)] = self
 
         # Store request data

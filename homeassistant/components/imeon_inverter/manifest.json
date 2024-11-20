@@ -2,7 +2,7 @@
   "domain": "imeon_inverter",
   "name": "Imeon Inverter",
   "after_dependencies": [],
-  "codeowners": ["@imeon-energy"],
+  "codeowners": ["@Imeon-Energy"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/imeon_inverter",
