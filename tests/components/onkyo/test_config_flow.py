@@ -582,4 +582,4 @@ async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "host_info_error"
+    assert result["reason"] == "cannot_connect"
