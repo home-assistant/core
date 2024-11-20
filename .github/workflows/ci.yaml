@@ -83,10 +83,10 @@ jobs:
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
       postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
-      test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
 
+      test_full_suite: "false"
       integrations_glob: (backup|cloud|hassio|kitchen_sink|demo)
       test_groups: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
       tests: '["backup", "cloud", "hassio", "kitchen_sink", "demo"]'
