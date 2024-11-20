@@ -38,7 +38,7 @@
     },
     "toggle": {
       "name": "[%key:common::action::toggle%]",
-      "description": "Sends the toggle command to a device to turn it on or off."
+      "description": "Sends the turn on or turn off command to toggle a device."
     },
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
