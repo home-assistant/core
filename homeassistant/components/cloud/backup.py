@@ -55,7 +55,7 @@ class CloudBackupAgent(BackupAgent):
         super().__init__()
         self._cloud = cloud
         self._hass = hass
-        self._backup: BaseBackup | None = None
+        self._backups: list[BaseBackup] = []
 
     @callback
     def _get_backup_filename(self) -> str:
@@ -104,12 +104,8 @@ class CloudBackupAgent(BackupAgent):
         if not metadata.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
-        if (
-            not self._cloud.is_logged_in
-            or self._cloud.client.prefs.backup_sync is not True
-        ):
-            # todo raise error?
-            return
+        if not self._cloud.is_logged_in:
+            raise BackupAgentError("Not logged in to cloud")
 
         def _create_hash_and_get_size() -> tuple[str, int]:
             """Create file hash and calculate size."""
@@ -140,13 +136,15 @@ class CloudBackupAgent(BackupAgent):
             headers=details["headers"],
         )
 
-        self._backup = BaseBackup(
-            backup_id=metadata.backup_id,
-            date=metadata.date,
-            name=metadata.name,
-            protected=metadata.protected,
-            size=size,
-        )
+        self._backups = [
+            BaseBackup(
+                backup_id=metadata.backup_id,
+                date=metadata.date,
+                name=metadata.name,
+                protected=metadata.protected,
+                size=size,
+            )
+        ]
 
     async def async_delete_backup(
         self,
@@ -164,14 +162,7 @@ class CloudBackupAgent(BackupAgent):
         """List backups."""
         backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
 
-        if not backups:
-            return []
-
-        if len(backups) > 1:
-            # Cloud supports only one backup
-            raise BackupAgentError("Cloud supports only one backup")
-
-        resp = [
+        self._backups = [
             BaseBackup(
                 backup_id=backup["Key"],
                 date=backup["LastModified"],
@@ -181,8 +172,7 @@ class CloudBackupAgent(BackupAgent):
             )
             for backup in backups
         ]
-        self._backup = resp[0]
-        return resp
+        return self._backups
 
     async def async_get_backup(
         self,
@@ -190,10 +180,11 @@ class CloudBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> BaseBackup | None:
         """Return a backup."""
-        if self._backup is None:
+        if not self._backups:
             await self.async_list_backups()
 
-        if self._backup is None or self._backup.backup_id != backup_id:
-            return None
+        for backup in self._backups:
+            if backup.backup_id == backup_id:
+                return backup
 
-        return self._backup
+        return None
