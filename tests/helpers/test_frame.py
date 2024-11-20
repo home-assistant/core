@@ -261,8 +261,8 @@ async def test_prevent_flooding(
 
     expected_message = (
         f"Detected that integration '{integration}' {what} at {filename}, line "
-        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}, "
-        f"please create a bug report at https://github.com/home-assistant/core/issues?"
+        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}. "
+        f"Please create a bug report at https://github.com/home-assistant/core/issues?"
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
@@ -277,6 +277,28 @@ async def test_prevent_flooding(
     assert expected_message not in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_breaks_in_ha_version(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test to ensure a report is only written once to the log."""
+
+    what = "accessed hi instead of hello"
+    integration = "hue"
+    filename = "homeassistant/components/hue/light.py"
+
+    expected_message = (
+        f"Detected that integration '{integration}' {what} at {filename}, line "
+        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}. "
+        f"This will stop working in Home Assistant 2024.11, please create a bug "
+        "report at https://github.com/home-assistant/core/issues?"
+        f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
+    )
+
+    frame.report_usage(what, breaks_in_ha_version="2024.11")
+    assert expected_message in caplog.text
 
 
 async def test_report_missing_integration_frame(
