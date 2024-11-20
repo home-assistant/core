@@ -8,31 +8,18 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SENSORS,
-    CONF_SSL,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 import homeassistant.helpers.issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_API_KEY,
     ATTR_SPEED,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_SPEED_LIMIT,
-    DEFAULT_SSL,
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RESUME,
@@ -40,7 +27,6 @@ from .const import (
 )
 from .coordinator import SabnzbdUpdateCoordinator
 from .sab import get_client
-from .sensor import OLD_SENSOR_KEYS
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -62,49 +48,6 @@ SERVICE_SPEED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
     }
 )
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                cv.deprecated(CONF_HOST),
-                cv.deprecated(CONF_PORT),
-                cv.deprecated(CONF_SENSORS),
-                cv.deprecated(CONF_SSL),
-                {
-                    vol.Required(CONF_API_KEY): str,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_SENSORS): vol.All(
-                        cv.ensure_list, [vol.In(OLD_SENSOR_KEYS)]
-                    ),
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                },
-            )
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the SABnzbd component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-
-    return True
 
 
 @callback
