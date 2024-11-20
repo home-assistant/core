@@ -1139,7 +1139,7 @@ mficlient==0.5.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.3.3
+microBeesPy==0.3.4
 
 # homeassistant.components.mill
 mill-local==0.3.0
