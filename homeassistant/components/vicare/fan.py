@@ -175,9 +175,14 @@ class ViCareFan(ViCareEntity, FanEntity):
                     self._api.getActiveMode()
                 )
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_percentage = ordered_list_item_to_percentage(
-                    ORDERED_NAMED_FAN_SPEEDS, self._api.getActiveProgram()
-                )
+                ventilation_level = self._api.getVentilationLevel()
+                if ventilation_level == "unknown":
+                    self._attr_percentage = 0
+                else:
+                    self._attr_percentage = ordered_list_item_to_percentage(
+                        ORDERED_NAMED_FAN_SPEEDS,
+                        ventilation_level,
+                    )
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
