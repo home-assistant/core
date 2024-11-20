@@ -139,7 +139,6 @@ class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
-    _attr_supported_features = FanEntityFeature.SET_SPEED
     _attr_translation_key = "ventilation"
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -153,21 +152,23 @@ class ViCareFan(ViCareEntity, FanEntity):
         super().__init__(
             self._attr_translation_key, device_serial, device_config, device
         )
+        # init preset_mode
+        supported_modes = list[str](self._api.getAvailableModes())
+        self._attr_preset_modes = [
+            mode
+            for mode in VentilationMode
+            if VentilationMode.to_vicare_mode(mode) in supported_modes
+        ]
+        if len(self._attr_preset_modes) > 0:
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+        # init set_speed
+        with suppress(PyViCareNotSupportedFeatureError):
+            supported_levels = device.api.getPermanentLevels()
+        if len(supported_levels) > 0:
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     def update(self) -> None:
         """Update state of fan."""
-
-        # init presets
-        if self._attr_preset_modes is None:
-            supported_modes = list[str](self._api.getAvailableModes())
-            self._attr_preset_modes = [
-                mode
-                for mode in VentilationMode
-                if VentilationMode.to_vicare_mode(mode) in supported_modes
-            ]
-            if len(self._attr_preset_modes) > 0:
-                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
@@ -186,11 +187,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the entity is on."""
-        # Viessmann ventilation unit cannot be turned off
-        return True
+    # @property
+    # def is_on(self) -> bool | None:
+    #     """Return true if the entity is on."""
+    #     # Viessmann ventilation unit cannot be turned off
+    #     return True
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
