@@ -124,7 +124,8 @@ async def validate_input(
 class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Train integration."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

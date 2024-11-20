@@ -52,13 +52,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) ->
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version > 2:
+    if entry.version > 1:
         # This means the user has downgraded from a future version
         return False
 
-    if entry.version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
         # Remove unique id
-        hass.config_entries.async_update_entry(entry, unique_id=None, version=2)
+        hass.config_entries.async_update_entry(entry, unique_id=None, minor_version=2)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",
