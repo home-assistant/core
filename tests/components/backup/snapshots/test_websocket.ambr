@@ -83,9 +83,23 @@
     'id': 1,
     'result': list([
       dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_id': 'domain.test',
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 13.37,
@@ -100,9 +114,23 @@
     'id': 1,
     'result': list([
       dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_id': 'domain.test',
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 13.37,
@@ -548,11 +576,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -594,11 +636,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -626,11 +682,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -650,11 +720,20 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'def456',
+          'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
           'protected': False,
           'size': 1.0,
@@ -682,11 +761,20 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'def456',
+          'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
           'protected': False,
           'size': 1.0,
@@ -706,12 +794,26 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'test.remote',
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -739,11 +841,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -828,11 +944,25 @@
       'agent_errors': dict({
       }),
       'backup': dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_ids': list([
           'backup.local',
         ]),
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 0.0,
@@ -849,11 +979,25 @@
       'agent_errors': dict({
       }),
       'backup': dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_ids': list([
           'test.remote',
         ]),
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 0.0,
@@ -882,12 +1026,26 @@
       'agent_errors': dict({
       }),
       'backup': dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_ids': list([
           'test.remote',
           'backup.local',
         ]),
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 0.0,
@@ -905,11 +1063,25 @@
         'domain.test': 'The backup agent is unreachable.',
       }),
       'backup': dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
         'agent_ids': list([
           'backup.local',
         ]),
         'backup_id': 'abc123',
+        'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
         'size': 0.0,
@@ -1099,11 +1271,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -1123,11 +1309,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -1147,12 +1347,26 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'test.remote',
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -1172,21 +1386,44 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+          ]),
           'agent_ids': list([
             'test.remote',
           ]),
           'backup_id': 'def456',
+          'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
           'protected': False,
           'size': 1.0,
         }),
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
@@ -1207,11 +1444,25 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
           'agent_ids': list([
             'backup.local',
           ]),
           'backup_id': 'abc123',
+          'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
           'size': 0.0,

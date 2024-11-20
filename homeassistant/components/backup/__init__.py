@@ -17,10 +17,11 @@ from .manager import (
     BackupPlatformProtocol,
     CoreBackupReaderWriter,
 )
-from .models import AgentBackup
+from .models import AddonInfo, AgentBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
+    "AddonInfo",
     "Backup",
     "BackupAgent",
     "BackupAgentPlatformProtocol",
