@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -404,6 +405,9 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
+        self._config_scheduler()
+
+    def _config_scheduler(self):
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
@@ -654,6 +658,15 @@ class UtilityMeterSensor(RestoreSensor):
             )
 
         self.async_on_remove(async_at_started(self.hass, async_source_tracking))
+
+        @callback
+        def async_track_time_zone(event):
+            """Reconfigure Scheduler after time zone changes."""
+            self._config_scheduler()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
