@@ -16,7 +16,6 @@ from hass_nabucasa.cloud_api import (
 
 from homeassistant.components.backup import (
     BackupAgent,
-    BackupUploadMetadata,
     BaseBackup,
 )
 from homeassistant.components.backup.agent import BackupAgentError
@@ -93,26 +92,24 @@ class CloudBackupAgent(BackupAgent):
         self,
         *,
         path: Path,
-        metadata: BackupUploadMetadata,
+        homeassistant_version: str,
+        backup: BaseBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
         :param path: The full file path to the backup that should be uploaded.
-        :param metadata: Metadata about the backup that should be uploaded.
+        :param backup: Metadata about the backup that should be uploaded.
+        :param homeassistant_version: The version of Home Assistant that created the backup
         """
-        if not metadata.protected:
+        if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
         if not self._cloud.is_logged_in:
             raise BackupAgentError("Not logged in to cloud")
 
-        def _create_hash_and_get_size() -> tuple[str, int]:
-            """Create file hash and calculate size."""
-            return b64md5(path), path.stat().st_size
-
-        base64md5hash, size = await self._hass.async_add_executor_job(
-            _create_hash_and_get_size
+        base64md5hash = await self._hass.async_add_executor_job(
+            b64md5, path
         )
 
         details = await async_files_upload_details(
@@ -120,13 +117,13 @@ class CloudBackupAgent(BackupAgent):
             storage_type=_STORAGE_BACKUP,
             filename=self._get_backup_filename(),
             metadata={
-                "backup_id": metadata.backup_id,
-                "date": metadata.date,
-                "homeassistant_version": metadata.homeassistant,
-                "name": metadata.name,
-                "protected": metadata.protected,
+                "backup_id": backup.backup_id,
+                "date": backup.date,
+                "homeassistant_version": homeassistant_version,
+                "name": backup.name,
+                "protected": backup.protected,
             },
-            size=size,
+            size=backup.size,
             base64md5hash=base64md5hash,
         )
 
@@ -136,15 +133,7 @@ class CloudBackupAgent(BackupAgent):
             headers=details["headers"],
         )
 
-        self._backups = [
-            BaseBackup(
-                backup_id=metadata.backup_id,
-                date=metadata.date,
-                name=metadata.name,
-                protected=metadata.protected,
-                size=size,
-            )
-        ]
+        self._backups = [backup]
 
     async def async_delete_backup(
         self,
