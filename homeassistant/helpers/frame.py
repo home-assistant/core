@@ -181,6 +181,7 @@ class ReportBehavior(enum.Enum):
 def report_usage(
     what: str,
     *,
+    breaks_in_ha_version: str | None = None,
     core_behavior: ReportBehavior = ReportBehavior.ERROR,
     core_integration_behavior: ReportBehavior = ReportBehavior.LOG,
     custom_integration_behavior: ReportBehavior = ReportBehavior.LOG,
@@ -189,17 +190,25 @@ def report_usage(
 ) -> None:
     """Report incorrect code usage.
 
-    Similar to `report` but allows more fine-grained reporting.
+    :param what: will be wrapped with "Detected that integration 'integration' {what}.
+    Please create a bug report at https://..."
+    :param breaks_in_ha_version: if set, the report will be adjusted to specify the
+    breaking version
     """
     try:
         integration_frame = get_integration_frame(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        msg = f"Detected code that {what}. Please report this issue."
+        msg = f"Detected code that {what}. Please report this issue"
         if core_behavior is ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
         if core_behavior is ReportBehavior.LOG:
+            if breaks_in_ha_version:
+                msg = (
+                    f"Detected code that {what}. This will stop working in Home "
+                    f"Assistant {breaks_in_ha_version}, please report this issue"
+                )
             _LOGGER.warning(msg, stack_info=True)
         return
 
@@ -209,12 +218,17 @@ def report_usage(
 
     if integration_behavior is not ReportBehavior.IGNORE:
         _report_integration(
-            what, integration_frame, level, integration_behavior is ReportBehavior.ERROR
+            what,
+            breaks_in_ha_version,
+            integration_frame,
+            level,
+            integration_behavior is ReportBehavior.ERROR,
         )
 
 
 def _report_integration(
     what: str,
+    breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
     error: bool = False,
@@ -237,13 +251,16 @@ def _report_integration(
     integration_type = "custom " if integration_frame.custom_integration else ""
     _LOGGER.log(
         level,
-        "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
+        "Detected that %sintegration '%s' %s at %s, line %s: %s. %s %s",
         integration_type,
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
+        else "Please",
         report_issue,
     )
     if not error:
@@ -253,7 +270,7 @@ def _report_integration(
         f"'{integration_frame.integration}' {what} at "
         f"{integration_frame.relative_filename}, line "
         f"{integration_frame.line_number}: {integration_frame.line}. "
-        f"Please {report_issue}."
+        f"Please {report_issue}"
     )
 
 
