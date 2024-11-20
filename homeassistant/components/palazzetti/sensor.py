@@ -87,12 +87,12 @@ async def async_setup_entry(
 class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     """Define a Palazzetti sensor."""
 
-    entity_description: SensorEntityDescription
+    entity_description: PropertySensorEntityDescription
 
     def __init__(
         self,
         coordinator: PalazzettiDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: PropertySensorEntityDescription,
     ) -> None:
         """Initialize Palazzetti sensor."""
         super().__init__(coordinator)
@@ -103,4 +103,4 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
 
-        return getattr(self.coordinator.client, self.entity_description.key)
+        return getattr(self.coordinator.client, self.entity_description.client_property)

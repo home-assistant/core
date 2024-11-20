@@ -64,7 +64,7 @@
       "room_temperature": {
         "name": "Room temperature"
       },
-      "return_wate_temperature": {
+      "return_water_temperature": {
         "name": "Return water temperature"
       },
       "tank_water_temperature": {
