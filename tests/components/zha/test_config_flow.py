@@ -252,29 +252,29 @@ async def test_zeroconf_discovery(
     hass: HomeAssistant,
 ) -> None:
     """Test zeroconf flow -- radio detected."""
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    assert result["step_id"] == "confirm"
+    assert result_init["step_id"] == "confirm"
 
     # Confirm port settings
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    result_confirm = await hass.config_entries.flow.async_configure(
+        result_init["flow_id"], user_input={}
     )
 
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "choose_formation_strategy"
+    assert result_confirm["type"] is FlowResultType.MENU
+    assert result_confirm["step_id"] == "choose_formation_strategy"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    result_form = await hass.config_entries.flow.async_configure(
+        result_confirm["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == entry_name
-    assert result["context"]["unique_id"] == unique_id
-    assert result["data"] == {
+    assert result_form["type"] is FlowResultType.CREATE_ENTRY
+    assert result_form["title"] == entry_name
+    assert result_form["context"]["unique_id"] == unique_id
+    assert result_form["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
             CONF_FLOW_CONTROL: None,
@@ -299,35 +299,35 @@ async def test_legacy_zeroconf_discovery_zigate(
         properties={},
         type="mock_type",
     )
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    assert result["step_id"] == "confirm"
+    assert result_init["step_id"] == "confirm"
 
     # Confirm the radio is deprecated
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    result_confirm_deprecated = await hass.config_entries.flow.async_configure(
+        result_init["flow_id"], user_input={}
     )
-    assert result["step_id"] == "verify_radio"
-    assert "ZiGate" in result["description_placeholders"]["name"]
+    assert result_confirm_deprecated["step_id"] == "verify_radio"
+    assert "ZiGate" in result_confirm_deprecated["description_placeholders"]["name"]
 
     # Confirm port settings
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    result_confirm = await hass.config_entries.flow.async_configure(
+        result_confirm_deprecated["flow_id"], user_input={}
     )
 
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "choose_formation_strategy"
+    assert result_confirm["type"] is FlowResultType.MENU
+    assert result_confirm["step_id"] == "choose_formation_strategy"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    result_form = await hass.config_entries.flow.async_configure(
+        result_confirm["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "some name"
-    assert result["data"] == {
+    assert result_form["type"] is FlowResultType.CREATE_ENTRY
+    assert result_form["title"] == "some name"
+    assert result_form["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
             CONF_BAUDRATE: 115200,
