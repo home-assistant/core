@@ -413,3 +413,56 @@
     }),
   })
 # ---
+# name: test_async_get_device_diagnostics
+  dict({
+    'programs': list([
+      'Dishcare.Dishwasher.Program.Auto1',
+      'Dishcare.Dishwasher.Program.Auto2',
+      'Dishcare.Dishwasher.Program.Auto3',
+      'Dishcare.Dishwasher.Program.Eco50',
+      'Dishcare.Dishwasher.Program.Quick45',
+    ]),
+    'status': dict({
+      'BSH.Common.Setting.AmbientLightBrightness': dict({
+        'type': 'Double',
+        'unit': '%',
+        'value': 70,
+      }),
+      'BSH.Common.Setting.AmbientLightColor': dict({
+        'type': 'BSH.Common.EnumType.AmbientLightColor',
+        'value': 'BSH.Common.EnumType.AmbientLightColor.Color43',
+      }),
+      'BSH.Common.Setting.AmbientLightCustomColor': dict({
+        'type': 'String',
+        'value': '#4a88f8',
+      }),
+      'BSH.Common.Setting.AmbientLightEnabled': dict({
+        'type': 'Boolean',
+        'value': True,
+      }),
+      'BSH.Common.Setting.ChildLock': dict({
+        'type': 'Boolean',
+        'value': False,
+      }),
+      'BSH.Common.Setting.PowerState': dict({
+        'type': 'BSH.Common.EnumType.PowerState',
+        'value': 'BSH.Common.EnumType.PowerState.On',
+      }),
+      'BSH.Common.Status.DoorState': dict({
+        'value': 'BSH.Common.EnumType.DoorState.Closed',
+      }),
+      'BSH.Common.Status.OperationState': dict({
+        'value': 'BSH.Common.EnumType.OperationState.Ready',
+      }),
+      'BSH.Common.Status.RemoteControlActive': dict({
+        'value': True,
+      }),
+      'BSH.Common.Status.RemoteControlStartAllowed': dict({
+        'value': True,
+      }),
+      'Refrigeration.Common.Status.Door.Refrigerator': dict({
+        'value': 'BSH.Common.EnumType.DoorState.Open',
+      }),
+    }),
+  })
+# ---
