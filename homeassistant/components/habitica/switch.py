@@ -42,8 +42,8 @@ SWTICH_DESCRIPTIONS: tuple[HabiticaSwitchEntityDescription, ...] = (
         key=HabiticaSwitchEntity.SLEEP,
         translation_key=HabiticaSwitchEntity.SLEEP,
         device_class=SwitchDeviceClass.SWITCH,
-        turn_on_fn=lambda coordinator: coordinator.api["user"]["sleep"].post(),
-        turn_off_fn=lambda coordinator: coordinator.api["user"]["sleep"].post(),
+        turn_on_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
+        turn_off_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
         is_on_fn=lambda data: data.user["preferences"]["sleep"],
     ),
 )

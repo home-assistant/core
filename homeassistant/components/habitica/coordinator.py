@@ -9,8 +9,8 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from aiohttp import ClientResponseError
-from habiticalib import Habitica
+from aiohttp import ClientError, ClientResponseError
+from habiticalib import Habitica, HabiticaException, TooManyRequestsError
 from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
@@ -81,12 +81,12 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
 
         try:
             await func(self)
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
+        except TooManyRequestsError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except (HabiticaException, ClientError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",

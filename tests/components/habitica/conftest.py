@@ -7,6 +7,7 @@ from habiticalib import (
     BadRequestError,
     HabiticaErrorResponse,
     HabiticaLoginResponse,
+    HabiticaSleepResponse,
     HabiticaUserResponse,
     NotAuthorizedError,
     NotFoundError,
@@ -135,6 +136,9 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
 
         client.cast_skill.return_value = HabiticaUserResponse.from_json(
             load_fixture("user.json", DOMAIN)
+        )
+        client.toggle_sleep.return_value = HabiticaSleepResponse(
+            success=True, data=True
         )
 
         yield client
