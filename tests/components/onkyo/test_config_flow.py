@@ -539,6 +539,7 @@ async def test_ssdp_discovery_success(hass: HomeAssistant) -> None:
         ssdp_location="http://192.168.1.100:8080",
         upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
+        ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
         ssdp_st="mock_st",
     )
 
