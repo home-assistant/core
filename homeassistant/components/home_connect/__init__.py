@@ -94,19 +94,18 @@ def _get_appliance_by_device_id(
 ) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Device with ID {device_id} not found")
+    device_entry = device_registry.async_get(device_id)
+    assert device_entry
 
-    try:
-        ha_id = [
+    ha_id = next(
+        (
             identifier[1]
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
-        ][0]
-    except IndexError as e:
-        raise ValueError(
-            f"Home Appliance ID for the device with id {device_id} could not be obtained"
-        ) from e
+        ),
+        None,
+    )
+    assert ha_id
 
     for hc_api in hass.data[DOMAIN].values():
         for device in hc_api.devices:
