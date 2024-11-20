@@ -45,7 +45,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 204
-    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 63, 255)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 64, 255)
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
     assert state.attributes.get(ATTR_DEVICE_ID) == "ZB:db5b1a"
     assert not state.attributes.get("battery_low")
