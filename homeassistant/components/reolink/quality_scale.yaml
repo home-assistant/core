@@ -67,4 +67,4 @@ rules:
   # Platinumasync_remove_config_entry_device.
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo
