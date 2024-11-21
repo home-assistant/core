@@ -32,10 +32,10 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
-        key="ring",
-        translation_key="ring",
+        key="doorbell",
+        translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:bell",
+        icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
         event_types=[EVENT_TYPE_DOORBELL_RING],
@@ -166,21 +166,16 @@ def _async_event_entities(
     entity_mapping: dict[str, type[ProtectDeviceEntity]] = {
         "nfc": ProtectDeviceNFCEventEntity,
         "fingerprint": ProtectDeviceFingerprintEventEntity,
-        "ring": ProtectDeviceRingEventEntity,
+        "doorbell": ProtectDeviceRingEventEntity,
     }
 
-    entities: list[ProtectDeviceEntity] = []
-
-    for device in data.get_cameras() if ufp_device is None else [ufp_device]:
-        for description in EVENT_DESCRIPTIONS:
-            if not description.has_required(device):
-                continue
-
-            entity_class = entity_mapping.get(description.key)
-            if entity_class:
-                entities.append(entity_class(data, device, description))
-
-    return entities
+    return [
+        entity_class(data, device, description)
+        for device in (data.get_cameras() if ufp_device is None else [ufp_device])
+        for description in EVENT_DESCRIPTIONS
+        if description.has_required(device)
+        if (entity_class := entity_mapping.get(description.key))
+    ]
 
 
 async def async_setup_entry(
