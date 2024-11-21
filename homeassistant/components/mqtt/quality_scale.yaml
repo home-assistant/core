@@ -114,7 +114,7 @@ rules:
       It is the responsibility of the maintainer or the service or device to
       correct the discovery messages. Extra options are allowed
       in MQTT messages to avoid breaking issues.
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
