@@ -19,7 +19,9 @@ rules:
     status: exempt
     comment: Entities of this integration does not explicitly subscribe to events.
   dependency-transparency: done
-  action-setup: unknown
+  action-setup:
+    status: todo
+    comment: service registered in climate async_setup_entry.
   common-modules:
     status: done
     comment: No coordinator is used, data update is centrally handled by the library.
