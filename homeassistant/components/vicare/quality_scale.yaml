@@ -1,13 +1,34 @@
 rules:
   # Bronze
-  brands: done
-  config-flow: done
-  has-entity-name: done
+  config-flow:
+    status: todo:
+    comment: data_description is missing.
   test-before-configure: done
+  unique-config-entry:
+    status: todo
+    comment: Uniqueness is not checked yet.
+  config-flow-test-coverage: done
+  runtime-data:
+    status: todo:
+    comment: runtime_data is not used yet.
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
   dependency-transparency: done
+  action-setup: unknown
   common-modules:
     status: done
     comment: No coordinator is used, data update is centrally handled by the library.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+  docs-actions: done
+  brands: done
   # Silver
   integration-owner: done
   reauthentication-flow: done
@@ -22,6 +43,5 @@ rules:
   entity-disabled-by-default: done
   repair-issues:
     status: exempt
-    comment: |
-      This integration does not raise any repairable issues.
+    comment: This integration does not raise any repairable issues.
   # Platin
