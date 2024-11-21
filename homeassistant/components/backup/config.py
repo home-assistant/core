@@ -19,8 +19,11 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from .manager import BackupManager
 
-CRON_PATTERN_DAILY = "0 2 * * *"
-CRON_PATTERN_WEEKLY = "0 2 * * {}"
+# The time of the automatic backup event should be compatible with
+# the time of the recorder's nightly job which run at 04:12.
+# Run the backup at 04:45.
+CRON_PATTERN_DAILY = "45 4 * * *"
+CRON_PATTERN_WEEKLY = "45 4 * * {}"
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1

@@ -277,7 +277,7 @@
         'folders_included': list([
           'test-folder',
         ]),
-        'last_automatic_backup': '2024-10-26T02:00:00+01:00',
+        'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'max_copies': 3,
         'name': 'test-name',
         'password': 'test-password',
@@ -329,7 +329,7 @@
         ]),
         'database_included': False,
         'folders_included': None,
-        'last_automatic_backup': '2024-10-26T02:00:00+01:00',
+        'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'max_copies': None,
         'name': None,
         'password': None,

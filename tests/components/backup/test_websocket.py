@@ -676,7 +676,7 @@ async def test_agents_download_unknown_agent(
             "database_included": True,
             "folders_included": ["test-folder"],
             "last_automatic_backup": datetime.fromisoformat(
-                "2024-10-26T02:00:00+01:00"
+                "2024-10-26T04:45:00+01:00"
             ),
             "max_copies": 3,
             "name": "test-name",
@@ -700,7 +700,7 @@ async def test_agents_download_unknown_agent(
             "database_included": False,
             "folders_included": None,
             "last_automatic_backup": datetime.fromisoformat(
-                "2024-10-26T02:00:00+01:00"
+                "2024-10-26T04:45:00+01:00"
             ),
             "max_copies": None,
             "name": None,
@@ -875,9 +875,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": True, "never": False},
             },
-            "2024-11-11T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
             1,
             BACKUP_CALL,
         ),
@@ -887,9 +887,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": False, "never": False, "weekday": "mon"},
             },
-            "2024-11-11T02:00:00+01:00",
-            "2024-11-18T02:00:00+01:00",
-            "2024-11-18T02:00:00+01:00",
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-18T04:45:00+01:00",
+            "2024-11-18T04:45:00+01:00",
             1,
             BACKUP_CALL,
         ),
@@ -899,9 +899,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": False, "never": True},
             },
-            "2024-11-11T02:00:00+01:00",
+            "2024-11-11T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
-            "2024-11-11T02:00:00+01:00",
+            "2024-11-11T04:45:00+01:00",
             0,
             None,
         ),
@@ -911,9 +911,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": True, "never": False},
             },
-            "2024-10-26T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",
+            "2024-10-26T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
             1,
             BACKUP_CALL,
         ),
@@ -923,9 +923,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": False, "never": False, "weekday": "mon"},
             },
-            "2024-10-26T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",
-            "2024-11-12T02:00:00+01:00",  # missed event uses daily schedule once
+            "2024-10-26T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
             1,
             BACKUP_CALL,
         ),
@@ -935,9 +935,9 @@ async def test_config_update_errors(
                 "agent_ids": ["test-agent"],
                 "schedule": {"daily": False, "never": True},
             },
-            "2024-10-26T02:00:00+01:00",
+            "2024-10-26T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
-            "2024-10-26T02:00:00+01:00",
+            "2024-10-26T04:45:00+01:00",
             0,
             None,
         ),
