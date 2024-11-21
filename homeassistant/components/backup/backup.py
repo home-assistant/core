@@ -39,7 +39,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self._backups: dict[str, AgentBackup] = {}
         self._loaded_backups = False
 
-    async def load_backups(self) -> None:
+    async def _load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self._hass.async_add_executor_job(self._read_backups)
         LOGGER.debug("Loaded %s local backups", len(backups))
@@ -51,14 +51,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         backups: dict[str, AgentBackup] = {}
         for backup_path in self._backup_dir.glob("*.tar"):
             try:
-                base_backup = read_backup(backup_path)
-                backup = AgentBackup(
-                    backup_id=base_backup.backup_id,
-                    name=base_backup.name,
-                    date=base_backup.date,
-                    size=backup_path.stat().st_size,
-                    protected=base_backup.protected,
-                )
+                backup = read_backup(backup_path)
                 backups[backup.backup_id] = backup
             except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
@@ -87,7 +80,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         if not self._loaded_backups:
-            await self.load_backups()
+            await self._load_backups()
         return list(self._backups.values())
 
     async def async_get_backup(
@@ -97,7 +90,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
     ) -> AgentBackup | None:
         """Return a backup."""
         if not self._loaded_backups:
-            await self.load_backups()
+            await self._load_backups()
 
         if not (backup := self._backups.get(backup_id)):
             return None

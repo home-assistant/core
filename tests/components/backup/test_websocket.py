@@ -294,7 +294,7 @@ async def test_generate_without_hassio(
 
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_create_backup",
-        return_value=NewBackup("abc123"),
+        return_value=NewBackup(backup_job_id="abc123"),
     ) as generate_backup:
         await client.send_json_auto_id({"type": "backup/generate"} | params)
         assert await client.receive_json() == snapshot
@@ -459,6 +459,7 @@ async def test_backup_start(
         Exception("Boom"),
     ],
 )
+@pytest.mark.usefixtures("supervisor_client")
 async def test_backup_end_exception(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -488,6 +489,7 @@ async def test_backup_end_exception(
         Exception("Boom"),
     ],
 )
+@pytest.mark.usefixtures("supervisor_client")
 async def test_backup_start_exception(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

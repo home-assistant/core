@@ -47,21 +47,21 @@ from .models import AgentBackup
 from .util import read_backup
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class NewBackup:
     """New backup class."""
 
     backup_job_id: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class Backup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class BackupProgress:
     """Backup progress class."""
 
@@ -108,7 +108,6 @@ class BackupReaderWriter(abc.ABC):
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Restore a backup."""
 
@@ -183,7 +182,7 @@ class BackupManager:
         self._add_platform_pre_post_handler(integration_domain, platform)
         await self._async_add_platform_agents(integration_domain, platform)
 
-    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
+    async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
         pre_backup_results = await asyncio.gather(
             *(
@@ -196,7 +195,7 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def async_post_backup_actions(self, **kwargs: Any) -> None:
+    async def async_post_backup_actions(self) -> None:
         """Perform post backup actions."""
         post_backup_results = await asyncio.gather(
             *(
@@ -236,7 +235,6 @@ class BackupManager:
                     self.backup_agents[agent_id].async_upload_backup(
                         path=path,
                         backup=backup,
-                        homeassistant_version=HAVERSION,
                     )
                     for agent_id in agent_ids
                 ),
@@ -250,9 +248,7 @@ class BackupManager:
         finally:
             self.syncing = False
 
-    async def async_get_backups(
-        self, **kwargs: Any
-    ) -> tuple[dict[str, Backup], dict[str, Exception]]:
+    async def async_get_backups(self) -> tuple[dict[str, Backup], dict[str, Exception]]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their ID.
@@ -275,8 +271,13 @@ class BackupManager:
                 if agent_backup.backup_id not in backups:
                     backups[agent_backup.backup_id] = Backup(
                         agent_ids=[],
+                        addons=agent_backup.addons,
                         backup_id=agent_backup.backup_id,
                         date=agent_backup.date,
+                        database_included=agent_backup.database_included,
+                        folders=agent_backup.folders,
+                        homeassistant_included=agent_backup.homeassistant_included,
+                        homeassistant_version=agent_backup.homeassistant_version,
                         name=agent_backup.name,
                         protected=agent_backup.protected,
                         size=agent_backup.size,
@@ -286,7 +287,7 @@ class BackupManager:
         return (backups, agent_errors)
 
     async def async_get_backup(
-        self, backup_id: str, **kwargs: Any
+        self, backup_id: str
     ) -> tuple[Backup | None, dict[str, Exception]]:
         """Get a backup."""
         backup: Backup | None = None
@@ -311,8 +312,13 @@ class BackupManager:
             if backup is None:
                 backup = Backup(
                     agent_ids=[],
+                    addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
+                    database_included=result.database_included,
+                    folders=result.folders,
+                    homeassistant_included=result.homeassistant_included,
+                    homeassistant_version=result.homeassistant_version,
                     name=result.name,
                     protected=result.protected,
                     size=result.size,
@@ -321,7 +327,7 @@ class BackupManager:
 
         return (backup, agent_errors)
 
-    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+    async def async_delete_backup(self, backup_id: str) -> None:
         """Delete a backup."""
         for agent in self.backup_agents.values():
             await agent.async_delete_backup(backup_id)
@@ -331,7 +337,6 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-        **kwargs: Any,
     ) -> None:
         """Receive and store a backup file from upload."""
         queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
@@ -423,7 +428,6 @@ class BackupManager:
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-        **kwargs: Any,
     ) -> NewBackup:
         """Initiate generating a backup.
 
@@ -499,7 +503,6 @@ class BackupManager:
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Initiate restoring a backup.
 
@@ -603,7 +606,6 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             backup_data = {
                 "compressed": True,
                 "date": date_str,
-                "folders": ["homeassistant"],
                 "homeassistant": {
                     "exclude_database": not include_database,
                     "version": HAVERSION,
@@ -612,6 +614,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 "protected": password is not None,
                 "slug": backup_id,
                 "type": "partial",
+                "version": 2,
             }
 
             tar_file_path, size_in_bytes = await self._hass.async_add_executor_job(
@@ -622,8 +625,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 suggested_tar_file_path,
             )
             backup = AgentBackup(
+                addons=[],
                 backup_id=backup_id,
+                database_included=database_included,
                 date=date_str,
+                folders=[],
+                homeassistant_included=True,
+                homeassistant_version=HAVERSION,
                 name=backup_name,
                 protected=password is not None,
                 size=size_in_bytes,
@@ -683,7 +691,6 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         *,
         agent_id: str,
         password: str | None,
-        **kwargs: Any,
     ) -> None:
         """Restore a backup.
 
