@@ -32,6 +32,7 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
 RESUME_AFTER_INSTALL = 15
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
