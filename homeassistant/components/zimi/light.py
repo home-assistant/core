@@ -112,12 +112,8 @@ class ZimiLight(LightEntity):
         """Receive notification from light device that state has changed."""
 
         _LOGGER.debug("Received notification() for %s", self.name)
+        self._attr_name = self._light.name.strip()
         self.schedule_update_ha_state(force_refresh=True)
 
     def update(self) -> None:
-        """Fetch new state data for this light.
-
-        (The only data that needs updating is the name that might be set from Zimi app).
-        """
-
-        self._attr_name = self._light.name.strip()
+        """Fetch new state data for this light."""
