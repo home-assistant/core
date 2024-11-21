@@ -221,8 +221,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -252,8 +255,11 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
-        'max_copies': 3,
         'schedule': dict({
           'state': 'daily',
         }),
@@ -279,8 +285,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': 3,
         'schedule': dict({
           'state': 'never',
         }),
@@ -306,8 +315,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -333,8 +345,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'mon',
         }),
@@ -360,8 +375,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'sat',
         }),
@@ -386,8 +404,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -413,8 +434,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'last_automatic_backup': None,
-        'max_copies': 5,
         'schedule': dict({
           'state': 'never',
         }),
@@ -438,8 +462,11 @@
         'name': None,
         'password': None,
       }),
+      'delete_after': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'last_automatic_backup': None,
-      'max_copies': 5,
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -462,8 +489,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -489,8 +519,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'daily',
         }),
@@ -514,8 +547,11 @@
         'name': None,
         'password': None,
       }),
+      'delete_after': dict({
+        'copies': None,
+        'days': None,
+      }),
       'last_automatic_backup': None,
-      'max_copies': None,
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -538,8 +574,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -565,8 +604,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'mon',
         }),
@@ -590,8 +632,11 @@
         'name': None,
         'password': None,
       }),
+      'delete_after': dict({
+        'copies': None,
+        'days': None,
+      }),
       'last_automatic_backup': None,
-      'max_copies': None,
       'schedule': 'mon',
     }),
     'key': 'backup',
@@ -614,8 +659,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -641,8 +689,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -666,8 +717,11 @@
         'name': None,
         'password': None,
       }),
+      'delete_after': dict({
+        'copies': None,
+        'days': None,
+      }),
       'last_automatic_backup': None,
-      'max_copies': None,
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -690,8 +744,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -721,8 +778,11 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'daily',
         }),
@@ -750,8 +810,11 @@
         'name': 'test-name',
         'password': 'test-password',
       }),
+      'delete_after': dict({
+        'copies': None,
+        'days': None,
+      }),
       'last_automatic_backup': None,
-      'max_copies': None,
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -774,8 +837,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -800,8 +866,11 @@
           'name': None,
           'password': None,
         }),
+        'delete_after_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'last_automatic_backup': None,
-        'max_copies': None,
         'schedule': dict({
           'state': 'never',
         }),

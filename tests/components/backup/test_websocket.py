@@ -711,10 +711,10 @@ async def test_agents_download_unknown_agent(
                 "name": "test-name",
                 "password": "test-password",
             },
+            "delete_after": {"copies": None, "days": 7},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
-            "max_copies": 3,
             "schedule": "daily",
         },
         {
@@ -727,8 +727,8 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
+            "delete_after": {"copies": None, "days": None},
             "last_automatic_backup": None,
-            "max_copies": 3,
             "schedule": "never",
         },
         {
@@ -741,10 +741,10 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
+            "delete_after": {"copies": None, "days": None},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
-            "max_copies": None,
             "schedule": "never",
         },
         {
@@ -757,8 +757,8 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
+            "delete_after": {"copies": None, "days": None},
             "last_automatic_backup": None,
-            "max_copies": None,
             "schedule": "mon",
         },
         {
@@ -771,8 +771,8 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
+            "delete_after": {"copies": None, "days": None},
             "last_automatic_backup": None,
-            "max_copies": None,
             "schedule": "sat",
         },
     ],
@@ -806,7 +806,7 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "max_copies": 5,
+            "delete_after": {"copies": None, "days": 7},
         },
         {
             "type": "backup/config/update",
@@ -1008,8 +1008,8 @@ async def test_config_update_schedule(
             "name": "test-name",
             "password": "test-password",
         },
+        "delete_after": {"copies": None, "days": 7},
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
-        "max_copies": 3,
         "schedule": "daily",
     }
     hass_storage[DOMAIN] = {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
@@ -15,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .models import Folder
 
 if TYPE_CHECKING:
@@ -35,8 +36,8 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
+    delete_after: StoredDeleteAfterConfig
     last_automatic_backup: datetime | None
-    max_copies: int | None
     schedule: ScheduleState
 
 
@@ -45,8 +46,8 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
+    delete_after_config: DeleteAfterConfig
     last_automatic_backup: datetime | None = None
-    max_copies: int | None = None
     schedule: BackupSchedule
 
     @classmethod
@@ -57,6 +58,8 @@ class BackupConfigData:
             include_folders = [Folder(folder) for folder in include_folders_data]
         else:
             include_folders = None
+        delete_after = data["delete_after"]
+
         return cls(
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
@@ -67,8 +70,11 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
+            delete_after_config=DeleteAfterConfig(
+                copies=delete_after["copies"],
+                days=delete_after["days"],
+            ),
             last_automatic_backup=data["last_automatic_backup"],
-            max_copies=data["max_copies"],
             schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
         )
 
@@ -76,8 +82,8 @@ class BackupConfigData:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
+            delete_after=self.delete_after_config.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
-            max_copies=self.max_copies,
             schedule=self.schedule.state,
         )
 
@@ -89,6 +95,7 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             create_backup=CreateBackupConfig(),
+            delete_after_config=DeleteAfterConfig(),
             schedule=BackupSchedule(),
         )
         self._manager = manager
@@ -118,14 +125,17 @@ class BackupConfig:
         self,
         *,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
-        max_copies: int | None | UndefinedType = UNDEFINED,
+        delete_after: DeleteAfterParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleState | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
-        if max_copies is not UNDEFINED:
-            self.data.max_copies = max_copies
+        if delete_after is not UNDEFINED:
+            delete_after_config = DeleteAfterConfig(**delete_after)
+            if delete_after_config != self.data.delete_after_config:
+                self.data.delete_after_config = delete_after_config
+                self.data.delete_after_config.apply(self._manager)
         if schedule is not UNDEFINED:
             new_schedule = BackupSchedule(state=schedule)
             if new_schedule != self.data.schedule:
@@ -133,6 +143,38 @@ class BackupConfig:
                 self.data.schedule.apply(self._manager)
 
         self.save()
+
+
+@dataclass(kw_only=True)
+class DeleteAfterConfig:
+    """Represent the delete after configuration."""
+
+    copies: int | None = None
+    days: int | None = None
+
+    def apply(self, manager: BackupManager) -> None:
+        """Apply delete after configuration."""
+
+    def to_dict(self) -> StoredDeleteAfterConfig:
+        """Convert delete after to a dict."""
+        return StoredDeleteAfterConfig(
+            copies=self.copies,
+            days=self.days,
+        )
+
+
+class StoredDeleteAfterConfig(TypedDict):
+    """Represent the stored delete after configuration."""
+
+    copies: int | None
+    days: int | None
+
+
+class DeleteAfterParametersDict(TypedDict, total=False):
+    """Represent the parameters for delete_after."""
+
+    copies: int | None
+    days: int | None
 
 
 class ScheduleState(StrEnum):
@@ -202,6 +244,8 @@ class BackupSchedule:
             config_data.last_automatic_backup = dt_util.now()
             manager.config.save()
             self._schedule_next(cron_pattern, manager)
+
+            # Create the backup
             await manager.async_create_backup(
                 agent_ids=config_data.create_backup.agent_ids,
                 include_addons=config_data.create_backup.include_addons,
@@ -212,6 +256,45 @@ class BackupSchedule:
                 name=config_data.create_backup.name,
                 password=config_data.create_backup.password,
             )
+
+            # Delete old backups
+            if config_data.delete_after_config.copies is None:
+                return
+            backups, get_agent_errors = await manager.async_get_backups()
+            if get_agent_errors:
+                LOGGER.error(
+                    "Aborting deleting old copies; Error getting backups: %s",
+                    get_agent_errors,
+                )
+                return
+            if len(backups) > (copies := config_data.delete_after_config.copies):
+                filtered_backups = dict(
+                    sorted(
+                        backups.items(),
+                        key=lambda backup_item: backup_item[1].date,
+                        reverse=True,
+                    )[:copies]
+                )
+
+                backup_ids = list(filtered_backups)
+                delete_agent_errors = await asyncio.gather(
+                    *(
+                        manager.async_delete_backup(backup_id)
+                        for backup_id in filtered_backups
+                    )
+                )
+                actual_agent_errors = {
+                    backup_id: error
+                    for backup_id, error in zip(
+                        backup_ids, delete_agent_errors, strict=True
+                    )
+                    if error
+                }
+                if actual_agent_errors:
+                    LOGGER.error(
+                        "Error deleting old copies: %s",
+                        actual_agent_errors,
+                    )
 
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
