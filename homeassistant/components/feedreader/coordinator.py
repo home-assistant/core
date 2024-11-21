@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from calendar import timegm
 from datetime import datetime
+import html
 from logging import getLogger
 from time import gmtime, struct_time
 from typing import TYPE_CHECKING
@@ -102,7 +103,8 @@ class FeedReaderCoordinator(
         """Set up the feed manager."""
         feed = await self._async_fetch_feed()
         self.logger.debug("Feed data fetched from %s : %s", self.url, feed["feed"])
-        self.feed_author = feed["feed"].get("author")
+        if feed_author := feed["feed"].get("author"):
+            self.feed_author = html.unescape(feed_author)
         self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
         self._feed = feed
 

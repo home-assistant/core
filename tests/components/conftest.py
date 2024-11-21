@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+import asyncio
+from collections.abc import AsyncGenerator, Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 import string
@@ -18,6 +19,7 @@ from aiohasupervisor.models import (
 )
 import pytest
 
+from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
@@ -32,6 +34,7 @@ from homeassistant.data_entry_flow import (
     FlowManager,
     FlowResultType,
 )
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
@@ -552,6 +555,7 @@ def _validate_translation_placeholders(
     full_key: str,
     translation: str,
     description_placeholders: dict[str, str] | None,
+    translation_errors: dict[str, str],
 ) -> str | None:
     """Raise if translation exists with missing placeholders."""
     tuples = list(string.Formatter().parse(translation))
@@ -562,14 +566,14 @@ def _validate_translation_placeholders(
             description_placeholders is None
             or placeholder not in description_placeholders
         ):
-            ignore_translations[full_key] = (
+            translation_errors[full_key] = (
                 f"Description not found for placeholder `{placeholder}` in {full_key}"
             )
 
 
 async def _validate_translation(
     hass: HomeAssistant,
-    ignore_translations: dict[str, StoreInfo],
+    translation_errors: dict[str, str],
     category: str,
     component: str,
     key: str,
@@ -582,18 +586,18 @@ async def _validate_translation(
     translations = await async_get_translations(hass, "en", category, [component])
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
-            full_key, translation, description_placeholders
+            full_key, translation, description_placeholders, translation_errors
         )
         return
 
     if not translation_required:
         return
 
-    if full_key in ignore_translations:
-        ignore_translations[full_key] = "used"
+    if full_key in translation_errors:
+        translation_errors[full_key] = "used"
         return
 
-    ignore_translations[full_key] = (
+    translation_errors[full_key] = (
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
@@ -613,14 +617,25 @@ async def _check_config_flow_result_translations(
     manager: FlowManager,
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
-    ignore_translations: dict[str, str],
+    translation_errors: dict[str, str],
 ) -> None:
+    if result["type"] is FlowResultType.CREATE_ENTRY:
+        # No need to check translations for a completed flow
+        return
+
+    key_prefix = ""
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
     elif isinstance(manager, OptionsFlowManager):
         category = "options"
         integration = flow.hass.config_entries.async_get_entry(flow.handler).domain
+    elif isinstance(manager, repairs.RepairsFlowManager):
+        category = "issues"
+        integration = flow.handler
+        issue_id = flow.issue_id
+        issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        key_prefix = f"{issue.translation_key}.fix_flow."
     else:
         return
 
@@ -636,10 +651,10 @@ async def _check_config_flow_result_translations(
             for header in ("title", "description"):
                 await _validate_translation(
                     flow.hass,
-                    ignore_translations,
+                    translation_errors,
                     category,
                     integration,
-                    f"step.{step_id}.{header}",
+                    f"{key_prefix}step.{step_id}.{header}",
                     result["description_placeholders"],
                     translation_required=False,
                 )
@@ -647,10 +662,10 @@ async def _check_config_flow_result_translations(
             for error in errors.values():
                 await _validate_translation(
                     flow.hass,
-                    ignore_translations,
+                    translation_errors,
                     category,
                     integration,
-                    f"error.{error}",
+                    f"{key_prefix}error.{error}",
                     result["description_placeholders"],
                 )
         return
@@ -662,28 +677,62 @@ async def _check_config_flow_result_translations(
             return
         await _validate_translation(
             flow.hass,
-            ignore_translations,
+            translation_errors,
             category,
             integration,
-            f"abort.{result["reason"]}",
+            f"{key_prefix}abort.{result["reason"]}",
             result["description_placeholders"],
         )
 
 
+async def _check_create_issue_translations(
+    issue_registry: ir.IssueRegistry,
+    issue: ir.IssueEntry,
+    translation_errors: dict[str, str],
+) -> None:
+    if issue.translation_key is None:
+        # `translation_key` is only None on dismissed issues
+        return
+    await _validate_translation(
+        issue_registry.hass,
+        translation_errors,
+        "issues",
+        issue.domain,
+        f"{issue.translation_key}.title",
+        issue.translation_placeholders,
+    )
+    if not issue.is_fixable:
+        # Description is required for non-fixable issues
+        await _validate_translation(
+            issue_registry.hass,
+            translation_errors,
+            "issues",
+            issue.domain,
+            f"{issue.translation_key}.description",
+            issue.translation_placeholders,
+        )
+
+
 @pytest.fixture(autouse=True)
-def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
+async def check_translations(
+    ignore_translations: str | list[str],
+) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
     Current checks:
-    - data entry flow results (ConfigFlow/OptionsFlow)
+    - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - issue registry entries
     """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
-    _ignore_translations = {k: "unused" for k in ignore_translations}
+    translation_errors = {k: "unused" for k in ignore_translations}
+
+    translation_coros = set()
 
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
+    _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -691,24 +740,43 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
         await _check_config_flow_result_translations(
-            self, flow, result, _ignore_translations
+            self, flow, result, translation_errors
+        )
+        return result
+
+    def _issue_registry_async_create_issue(
+        self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
+    ) -> None:
+        result = _original_issue_registry_async_create_issue(
+            self, domain, issue_id, *args, **kwargs
+        )
+        translation_coros.add(
+            _check_create_issue_translations(self, result, translation_errors)
         )
         return result
 
     # Use override functions
-    with patch(
-        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
-        _flow_manager_async_handle_step,
+    with (
+        patch(
+            "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+            _flow_manager_async_handle_step,
+        ),
+        patch(
+            "homeassistant.helpers.issue_registry.IssueRegistry.async_get_or_create",
+            _issue_registry_async_create_issue,
+        ),
     ):
         yield
 
+    await asyncio.gather(*translation_coros)
+
     # Run final checks
-    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
-    for description in _ignore_translations.values():
+    for description in translation_errors.values():
         if description not in {"used", "unused"}:
             pytest.fail(description)
