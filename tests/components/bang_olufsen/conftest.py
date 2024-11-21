@@ -35,13 +35,13 @@ from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
     TEST_FRIENDLY_NAME,
-    TEST_FRIENDLY_NAME_2,
     TEST_FRIENDLY_NAME_3,
-    TEST_HOST_2,
+    TEST_FRIENDLY_NAME_4,
     TEST_HOST_3,
+    TEST_HOST_4,
     TEST_JID_1,
-    TEST_JID_2,
     TEST_JID_3,
+    TEST_JID_4,
     TEST_NAME,
     TEST_NAME_2,
     TEST_SERIAL_NUMBER,
@@ -268,27 +268,27 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_beolink_peers = AsyncMock()
         client.get_beolink_peers.return_value = [
             BeolinkPeer(
-                friendly_name=TEST_FRIENDLY_NAME_2,
-                jid=TEST_JID_2,
-                ip_address=TEST_HOST_2,
-            ),
-            BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
             ),
         ]
         client.get_beolink_listeners = AsyncMock()
         client.get_beolink_listeners.return_value = [
             BeolinkPeer(
-                friendly_name=TEST_FRIENDLY_NAME_2,
-                jid=TEST_JID_2,
-                ip_address=TEST_HOST_2,
-            ),
-            BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
             ),
         ]
 

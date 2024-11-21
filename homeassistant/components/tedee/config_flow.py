@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pytedee_async import (
+from aiotedee import (
     TedeeAuthException,
     TedeeClient,
     TedeeClientException,

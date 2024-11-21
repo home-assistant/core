@@ -17,6 +17,8 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -46,7 +48,9 @@ from homeassistant.helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -115,6 +119,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
+    """
+
     ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
     """Atmospheric pressure.
 
@@ -125,6 +135,12 @@ class SensorDeviceClass(StrEnum):
     """Percentage of battery that is left.
 
     Unit of measurement: `%`
+    """
+
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
     """
 
     CO = "carbon_monoxide"
@@ -182,7 +198,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -191,7 +207,7 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -299,7 +315,7 @@ class SensorDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -383,7 +399,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`
+    Unit of measurement: `V`, `mV`, `µV`
     """
 
     VOLUME = "volume"
@@ -492,7 +508,9 @@ _DEPRECATED_STATE_CLASS_TOTAL_INCREASING: Final = DeprecatedConstantEnum(
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -522,8 +540,10 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
 DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
+    SensorDeviceClass.AREA: set(UnitOfArea),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
@@ -597,8 +617,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.AREA: set(SensorStateClass),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},

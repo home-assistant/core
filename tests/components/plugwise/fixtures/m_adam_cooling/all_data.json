@@ -63,10 +63,10 @@
         "Weekschema",
         "off"
       ],
+      "climate_mode": "cool",
       "control_state": "cooling",
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "mode": "cool",
       "model": "ThermoTouch",
       "model_id": "143.1",
       "name": "Anna",
@@ -125,12 +125,12 @@
       "binary_sensors": {
         "low_battery": true
       },
+      "climate_mode": "auto",
       "control_state": "preheating",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-10T02:00:00+02:00",
       "hardware": "255",
       "location": "f871b8c4d63549319221e294e4f88074",
-      "mode": "auto",
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Lisa Badkamer",

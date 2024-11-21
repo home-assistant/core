@@ -42,7 +42,7 @@ env:
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2024.12"
   DEFAULT_PYTHON: "3.12"
-  ALL_PYTHON_VERSIONS: "['3.12']"
+  ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -819,10 +819,6 @@ jobs:
     needs:
       - info
       - base
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -836,11 +832,11 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
@@ -858,7 +854,7 @@ jobs:
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: pytest_buckets-${{ matrix.python-version }}
+          name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
 
@@ -923,7 +919,7 @@ jobs:
       - name: Download pytest_buckets
         uses: actions/download-artifact@v4.1.8
         with:
-          name: pytest_buckets-${{ matrix.python-version }}
+          name: pytest_buckets
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -1252,12 +1248,11 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-24.04
@@ -1391,8 +1386,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0

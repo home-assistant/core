@@ -63,7 +63,7 @@ from .helpers.event import (
     RANDOM_MICROSECOND_MIN,
     async_call_later,
 )
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
@@ -1191,14 +1191,13 @@ class FlowCancelledError(Exception):
 
 def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
     """Report non awaited platform forwards."""
-    report(
+    report_usage(
         f"calls {what} for integration {entry.domain} with "
         f"title: {entry.title} and entry_id: {entry.entry_id}, "
         f"during setup without awaiting {what}, which can cause "
-        "the setup lock to be released before the setup is done. "
-        "This will stop working in Home Assistant 2025.1",
-        error_if_integration=False,
-        error_if_core=False,
+        "the setup lock to be released before the setup is done",
+        core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2025.1",
     )
 
 
@@ -1266,10 +1265,9 @@ class ConfigEntriesFlowManager(
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
             # Deprecated in 2024.12, should fail in 2025.12
-            report(
+            report_usage(
                 f"initialises a {source} flow without a link to the config entry",
-                error_if_integration=False,
-                error_if_core=True,
+                breaks_in_ha_version="2025.12",
             )
 
         flow_id = ulid_util.ulid_now()
@@ -1484,8 +1482,6 @@ class ConfigEntriesFlowManager(
             )
 
         # Unload the entry before setting up the new one.
-        # We will remove it only after the other one is set up,
-        # so that device customizations are not getting lost.
         if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
@@ -1507,10 +1503,16 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if existing_entry is not None:
+            # Unload and remove the existing entry, but don't clean up devices and
+            # entities until the new entry is added
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
-            await self.config_entries.async_remove(existing_entry.entry_id)
+            # Clean up devices and entities belonging to the existing entry
+            # which are not present in the new entry
+            self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
         return result
@@ -1900,7 +1902,21 @@ class ConfigEntries:
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
-        """Remove an entry."""
+        """Remove, unload and clean up after an entry."""
+        unload_success, entry = await self._async_remove(entry_id)
+        self._async_clean_up(entry)
+
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
+
+        return {"require_restart": not unload_success}
+
+    async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
+        """Remove and unload an entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1915,6 +1931,13 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
+
+        return (unload_success, entry)
+
+    @callback
+    def _async_clean_up(self, entry: ConfigEntry) -> None:
+        """Clean up after an entry."""
+        entry_id = entry.entry_id
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1934,13 +1957,6 @@ class ConfigEntries:
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
-        for discovery_domain in entry.discovery_keys:
-            async_dispatcher_send_internal(
-                self.hass,
-                signal_discovered_config_entry_removed(discovery_domain),
-                entry,
-            )
-        return {"require_restart": not unload_success}
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -2303,14 +2319,13 @@ class ConfigEntries:
         multiple platforms at once and is more efficient since it
         does not require a separate import executor job for each platform.
         """
-        report(
+        report_usage(
             "calls async_forward_entry_setup for "
             f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated and "
-            "will stop working in Home Assistant 2025.6, "
+            f"and entry_id: {entry.entry_id}, which is deprecated, "
             "await async_forward_entry_setups instead",
-            error_if_core=False,
-            error_if_integration=False,
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.6",
         )
         if not entry.setup_lock.locked():
             async with entry.setup_lock:
@@ -2872,18 +2887,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            report_issue = async_suggest_report_issue(
-                self.hass, integration_domain=self.handler
-            )
-            _LOGGER.warning(
-                (
-                    "Detected %s config flow creating a new entry, "
-                    "when it is expected to update an existing entry and abort. "
-                    "This will stop working in %s, please %s"
-                ),
-                self.source,
-                "2025.11",
-                report_issue,
+            report_usage(
+                f"creates a new entry in a '{self.source}' flow, "
+                "when it is expected to update an existing entry and abort",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.11",
+                integration_domain=self.handler,
             )
         result = super().async_create_entry(
             title=title,
@@ -2952,7 +2961,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
@@ -3140,27 +3149,32 @@ class OptionsFlow(ConfigEntryBaseFlow):
     @config_entry.setter
     def config_entry(self, value: ConfigEntry) -> None:
         """Set the config entry value."""
-        report(
-            "sets option flow config_entry explicitly, which is deprecated "
-            "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
+        report_usage(
+            "sets option flow config_entry explicitly, which is deprecated",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.12",
         )
         self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
-    """Base class for options flows with config entry and options."""
+    """Base class for options flows with config entry and options.
+
+    This class is being phased out, and should not be referenced in new code.
+    It is kept only for backward compatibility, and only for custom integrations.
+    """
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-        report(
-            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
-            "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
+        report_usage(
+            "inherits from OptionsFlowWithConfigEntry",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
         )
 
     @property

@@ -2,14 +2,55 @@
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
-from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import TEST_FILE_NAME, async_create_file
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an invalid path is caught."""
+    testfile = str(tmp_path.joinpath("file.txt"))
+    await async_create_file(hass, testfile)
+    hass.config.allowlist_external_dirs = {tmp_path}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={CONF_FILE_PATH: testfile}
+    )
+    with (
+        patch(
+            "os.stat_result.st_mtime",
+            1732126764.780758,
+        ),
+        patch(
+            "os.stat_result.st_ctime",
+            1732126744.780758,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_invalid_path(

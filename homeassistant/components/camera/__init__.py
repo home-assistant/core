@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceCandidate, RTCIceServer
+from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -421,8 +421,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
         return [
-            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
-            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+            RTCIceServer(
+                urls=[
+                    "stun:stun.home-assistant.io:80",
+                    "stun:stun.home-assistant.io:3478",
+                ]
+            ),
         ]
 
     async_register_ice_servers(hass, get_ice_servers)
@@ -861,7 +865,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return config
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
@@ -892,7 +896,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 frontend_stream_types.add(StreamType.HLS)
 
-                if self._webrtc_provider:
+                if self._webrtc_provider or self._legacy_webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
