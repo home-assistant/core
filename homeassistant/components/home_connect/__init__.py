@@ -92,7 +92,7 @@ PLATFORMS = [
 
 
 def _get_appliance_by_device_id(
-    hass: HomeAssistant, device_id: str
+    hass: HomeAssistant, device_id: str, entry: HomeConnectConfigEntry | None = None
 ) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
     device_registry = dr.async_get(hass)
@@ -109,15 +109,25 @@ def _get_appliance_by_device_id(
     )
     assert ha_id
 
-    for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            entry = cast(HomeConnectConfigEntry, entry)
-            for device in entry.runtime_data.devices:
-                appliance = device.appliance
-                if appliance.haId == ha_id:
+    def find_appliance(
+        entry: HomeConnectConfigEntry,
+    ) -> api.HomeConnectAppliance | None:
+        for device in entry.runtime_data.devices:
+            appliance = device.appliance
+            if appliance.haId == ha_id:
+                return appliance
+        return None
+
+    if entry is None:
+        for entry_id in device_entry.config_entries:
+            if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+                continue
+            if entry.domain == DOMAIN:
+                entry = cast(HomeConnectConfigEntry, entry)
+                if (appliance := find_appliance(entry)) is not None:
                     return appliance
+    elif (appliance := find_appliance(entry)) is not None:
+        return appliance
     raise ValueError(f"Appliance for device id {device_id} not found")
 
 

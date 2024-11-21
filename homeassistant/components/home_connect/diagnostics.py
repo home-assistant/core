@@ -43,5 +43,5 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    appliance = _get_appliance_by_device_id(hass, device.id)
+    appliance = _get_appliance_by_device_id(hass, device.id, entry)
     return await hass.async_add_executor_job(_generate_appliance_diagnostics, appliance)
