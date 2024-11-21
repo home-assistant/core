@@ -85,6 +85,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 self._fleet = await cloud_client.get_customer_fleet()
+                await cloud_client.async_logout()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"

@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
@@ -104,6 +104,7 @@ def mock_cloud_client(
         client.get_customer_fleet.return_value = {
             mock_device_info.serial_number: mock_device_info
         }
+        client.async_logout = AsyncMock()
         yield client
 
 
