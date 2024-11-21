@@ -16,7 +16,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
-          "password": "The Remote Admin Password set in the Fully Kiosk Browser app settings."
+          "password": "The Remote Admin Password from the Fully Kiosk Browser app settings."
         }
       }
     },
