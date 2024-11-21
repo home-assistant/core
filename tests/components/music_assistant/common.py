@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -15,12 +14,16 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
+
+MASS_DOMAIN = "music_assistant"
+MOCK_URL = "http://mock-music_assistant-server-url"
 
 
 def load_and_parse_fixture(fixture: str) -> dict[str, Any]:
     """Load and parse a fixture."""
-    return json.loads(load_fixture(f"music_assistant/{fixture}.json"))
+    data = load_json_object_fixture(f"music_assistant/{fixture}.json")
+    return data[fixture]
 
 
 async def setup_integration_from_fixtures(
@@ -35,7 +38,9 @@ async def setup_integration_from_fixtures(
         x.queue_id: x for x in player_queues
     }
     config_entry = MockConfigEntry(
-        domain="music_assistant", data={"url": "http://mock-music_assistant-server-url"}
+        domain=MASS_DOMAIN,
+        data={"url": MOCK_URL},
+        unique_id=music_assistant_client.server_info.server_id,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

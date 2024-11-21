@@ -12,7 +12,6 @@ import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.core import HomeAssistant
 
 from tests.common import AsyncMock, MockConfigEntry, load_fixture
 
@@ -71,18 +70,6 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
         client.get_media_item_image_url = MagicMock(return_value=None)
 
         yield client
-
-
-@pytest.fixture(name="integration")
-async def integration_fixture(
-    hass: HomeAssistant, music_assistant_client: MagicMock
-) -> MockConfigEntry:
-    """Set up the Music Assistant integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "http://localhost:8095"})
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return entry
 
 
 @pytest.fixture
