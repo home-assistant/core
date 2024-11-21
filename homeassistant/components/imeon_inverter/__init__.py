@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -76,4 +77,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> 
 
     entry.runtime_data = IC
 
+    # Call for HUB creation then each entity as a List
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+
     return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Handle entry unloading."""
+    return await hass.config_entries.async_unload_platforms(entry, ["sensor"])
