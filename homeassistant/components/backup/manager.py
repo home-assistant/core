@@ -290,7 +290,7 @@ class BackupManager:
         """Get a backup."""
         backup: Backup | None = None
         agent_errors: dict[str, Exception] = {}
-        agent_ids = list(self.backup_agents.keys())
+        agent_ids = list(self.backup_agents)
 
         get_backup_results = await asyncio.gather(
             *(
@@ -328,7 +328,7 @@ class BackupManager:
     async def async_delete_backup(self, backup_id: str) -> dict[str, Exception]:
         """Delete a backup."""
         agent_errors: dict[str, Exception] = {}
-        agent_ids = list(self.backup_agents.keys())
+        agent_ids = list(self.backup_agents)
 
         delete_backup_results = await asyncio.gather(
             *(
