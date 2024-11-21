@@ -44,7 +44,10 @@ rules:
     status: done
     comment: |
       Handled by coordinator.
-  parallel-updates: todo
+  parallel-updates:
+    status: exempt
+    comment: |
+      Input handled by coordinator, output handled by queue in library.
   reauthentication-flow:
     status: exempt
     comment: |
