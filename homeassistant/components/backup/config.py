@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Self, TypedDict
 
 from cronsim import CronSim
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -20,7 +21,7 @@ from .const import DOMAIN, LOGGER
 from .models import Folder
 
 if TYPE_CHECKING:
-    from .manager import BackupManager
+    from .manager import Backup, BackupManager
 
 # The time of the automatic backup event should be compatible with
 # the time of the recorder's nightly job which runs at 04:12.
@@ -154,13 +155,55 @@ class DeleteAfterConfig:
 
     def apply(self, manager: BackupManager) -> None:
         """Apply delete after configuration."""
+        if self.days is not None:
+            self._schedule_next(manager)
+        else:
+            self._unschedule_next(manager)
 
     def to_dict(self) -> StoredDeleteAfterConfig:
-        """Convert delete after to a dict."""
+        """Convert delete after configuration to a dict."""
         return StoredDeleteAfterConfig(
             copies=self.copies,
             days=self.days,
         )
+
+    @callback
+    def _schedule_next(
+        self,
+        manager: BackupManager,
+    ) -> None:
+        """Schedule the next delete after days."""
+        self._unschedule_next(manager)
+
+        async def _delete_backups(now: datetime) -> None:
+            """Delete backups older than days."""
+            self._schedule_next(manager)
+
+            def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
+                """Return backups older than days to delete."""
+                if self.days is None:
+                    return {}
+                now = dt_util.now()  # local time
+                return {
+                    backup_id: backup
+                    for backup_id, backup in backups.items()
+                    if dt_util.parse_datetime(backup.date, raise_on_error=True)
+                    + timedelta(days=self.days)
+                    < now
+                }
+
+            await _delete_filtered_backups(manager, _backups_filter)
+
+        manager.remove_next_delete_event = async_call_later(
+            manager.hass, timedelta(days=1), _delete_backups
+        )
+
+    @callback
+    def _unschedule_next(self, manager: BackupManager) -> None:
+        """Unschedule the next delete after days."""
+        if (remove_next_event := manager.remove_next_delete_event) is not None:
+            remove_next_event()
+            manager.remove_next_delete_event = None
 
 
 class StoredDeleteAfterConfig(TypedDict):
@@ -257,44 +300,25 @@ class BackupSchedule:
                 password=config_data.create_backup.password,
             )
 
-            # Delete old backups
+            # Delete old backups more numerous than copies
             if config_data.delete_after_config.copies is None:
                 return
-            backups, get_agent_errors = await manager.async_get_backups()
-            if get_agent_errors:
-                LOGGER.error(
-                    "Aborting deleting old copies; Error getting backups: %s",
-                    get_agent_errors,
-                )
-                return
-            if len(backups) > (copies := config_data.delete_after_config.copies):
-                filtered_backups = dict(
+
+            def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
+                """Return oldest backups more numerous than copies to delete."""
+                # we need an extra check here since we await before
+                # this filter is applied
+                if config_data.delete_after_config.copies is None:
+                    return {}
+                return dict(
                     sorted(
                         backups.items(),
                         key=lambda backup_item: backup_item[1].date,
                         reverse=True,
-                    )[:copies]
+                    )[config_data.delete_after_config.copies :]
                 )
 
-                backup_ids = list(filtered_backups)
-                delete_agent_errors = await asyncio.gather(
-                    *(
-                        manager.async_delete_backup(backup_id)
-                        for backup_id in filtered_backups
-                    )
-                )
-                actual_agent_errors = {
-                    backup_id: error
-                    for backup_id, error in zip(
-                        backup_ids, delete_agent_errors, strict=True
-                    )
-                    if error
-                }
-                if actual_agent_errors:
-                    LOGGER.error(
-                        "Error deleting old copies: %s",
-                        actual_agent_errors,
-                    )
+            await _delete_filtered_backups(manager, _backups_filter)
 
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
@@ -355,3 +379,41 @@ class CreateBackupParametersDict(TypedDict, total=False):
     include_folders: list[Folder] | None
     name: str | None
     password: str | None
+
+
+async def _delete_filtered_backups(
+    manager: BackupManager,
+    backup_filter: Callable[[dict[str, Backup]], dict[str, Backup]],
+) -> None:
+    """Delete a backups parsed with a filter.
+
+    :param manager: The backup manager.
+    :param backup_filter: A filter that should return the backups to delete.
+    """
+    backups, get_agent_errors = await manager.async_get_backups()
+    if get_agent_errors:
+        LOGGER.error(
+            "Aborting deleting old copies; Error getting backups: %s",
+            get_agent_errors,
+        )
+        return
+
+    filtered_backups = backup_filter(backups)
+
+    if not filtered_backups:
+        return
+
+    backup_ids = list(filtered_backups)
+    delete_agent_errors = await asyncio.gather(
+        *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)
+    )
+    actual_agent_errors = {
+        backup_id: error
+        for backup_id, error in zip(backup_ids, delete_agent_errors, strict=True)
+        if error
+    }
+    if actual_agent_errors:
+        LOGGER.error(
+            "Error deleting old copies: %s",
+            actual_agent_errors,
+        )
