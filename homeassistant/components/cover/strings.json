@@ -15,8 +15,8 @@
       "is_closed": "{entity_name} is closed",
       "is_opening": "{entity_name} is opening",
       "is_closing": "{entity_name} is closing",
-      "is_position": "Current {entity_name} position is",
-      "is_tilt_position": "Current {entity_name} tilt position is"
+      "is_position": "Current {entity_name} position",
+      "is_tilt_position": "Current {entity_name} tilt position"
     },
     "extra_fields": {
       "above": "[%key:common::device_automation::extra_fields::above%]",
