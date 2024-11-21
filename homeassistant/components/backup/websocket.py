@@ -97,8 +97,15 @@ async def handle_delete(
     msg: dict[str, Any],
 ) -> None:
     """Delete a backup."""
-    await hass.data[DATA_MANAGER].async_delete_backup(msg["backup_id"])
-    connection.send_result(msg["id"])
+    agent_errors = await hass.data[DATA_MANAGER].async_delete_backup(msg["backup_id"])
+    connection.send_result(
+        msg["id"],
+        {
+            "agent_errors": {
+                agent_id: str(err) for agent_id, err in agent_errors.items()
+            }
+        },
+    )
 
 
 @websocket_api.require_admin
