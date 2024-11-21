@@ -49,11 +49,7 @@ rules:
     status: exempt
     comment: |
       No authentication required.
-  test-coverage:
-    status: done
-    comment: |
-      100% test coverage.
-
+  test-coverage: done
   # Gold
   devices: done
   diagnostics:
