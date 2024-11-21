@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 CRON_PATTERN_DAILY = "0 2 * * *"
 CRON_PATTERN_WEEKLY = "0 2 * * {}"
-DELAY_SAVE = 30
+STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -127,7 +127,7 @@ class BackupConfig:
     @callback
     def save(self) -> None:
         """Save config."""
-        self._store.async_delay_save(self._data_to_save, DELAY_SAVE)
+        self._store.async_delay_save(self._data_to_save, STORE_DELAY_SAVE)
 
     @callback
     def _data_to_save(self) -> StoredBackupConfig:

@@ -54,7 +54,7 @@ def sync_access_token_proxy(
 @pytest.fixture(autouse=True)
 def mock_delay_save() -> Generator[None]:
     """Mock the delay save constant."""
-    with patch("homeassistant.components.backup.config.DELAY_SAVE", 0):
+    with patch("homeassistant.components.backup.config.STORE_DELAY_SAVE", 0):
         yield
 
 
