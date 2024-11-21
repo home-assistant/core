@@ -8,9 +8,12 @@ from typing import Final
 
 from geocachingapi.models import GeocachingApiEnvironment
 
+from homeassistant.const import Platform
+
 from .models import GeocachingOAuthApiUrls
 
 DOMAIN: Final = "geocaching"
+PLATFORMS = [Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(hours=1)
 
