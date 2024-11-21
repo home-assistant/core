@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass
 
 
-@dataclass()
+@dataclass(frozen=True, kw_only=True)
 class AddonInfo:
     """Addon information."""
 
@@ -12,7 +12,7 @@ class AddonInfo:
     version: str
 
 
-@dataclass()
+@dataclass(frozen=True, kw_only=True)
 class AgentBackup:
     """Base backup class."""
 
