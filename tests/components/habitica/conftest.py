@@ -14,6 +14,7 @@ from habiticalib import (
     NotFoundError,
     TooManyRequestsError,
 )
+from habiticalib.types import HabiticaQuestResponse
 import pytest
 from yarl import URL
 
@@ -147,6 +148,17 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         client.get_group_members.return_value = HabiticaGroupMembersResponse.from_json(
             load_fixture("party_members.json", DOMAIN)
         )
+        for func in (
+            "leave_quest",
+            "reject_quest",
+            "cancel_quest",
+            "abort_quest",
+            "start_quest",
+            "accept_quest",
+        ):
+            getattr(client, func).return_value = HabiticaQuestResponse.from_json(
+                load_fixture("party_quest.json", DOMAIN)
+            )
         yield client
 
 
