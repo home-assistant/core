@@ -1482,8 +1482,6 @@ class ConfigEntriesFlowManager(
             )
 
         # Unload the entry before setting up the new one.
-        # We will remove it only after the other one is set up,
-        # so that device customizations are not getting lost.
         if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
@@ -1506,12 +1504,14 @@ class ConfigEntriesFlowManager(
         )
 
         if existing_entry is not None:
-            # Unload and remove the existing entry
+            # Unload and remove the existing entry, but don't clean up devices and
+            # entities until the new entry is added
             await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
             # Clean up devices and entities belonging to the existing entry
+            # which are not present in the new entry
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
