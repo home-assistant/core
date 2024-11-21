@@ -14,7 +14,7 @@ from pymodbus.client import (
     AsyncModbusUdpClient,
 )
 from pymodbus.exceptions import ModbusException
-from pymodbus.framer import FramerAscii, FramerRTU, FramerSocket
+from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
@@ -269,9 +269,9 @@ class ModbusHub:
         if self._config_type == SERIAL:
             # serial configuration
             if client_config[CONF_METHOD] == "ascii":
-                self._pb_params["framer"] = FramerAscii
+                self._pb_params["framer"] = FramerType.ASCII
             else:
-                self._pb_params["framer"] = FramerRTU
+                self._pb_params["framer"] = FramerType.RTU
             self._pb_params.update(
                 {
                     "baudrate": client_config[CONF_BAUDRATE],
@@ -284,9 +284,9 @@ class ModbusHub:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
-                self._pb_params["framer"] = FramerRTU
+                self._pb_params["framer"] = FramerType.RTU
             else:
-                self._pb_params["framer"] = FramerSocket
+                self._pb_params["framer"] = FramerType.SOCKET
 
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
