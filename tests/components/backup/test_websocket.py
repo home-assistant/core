@@ -550,22 +550,6 @@ async def test_agents_info(
     assert await client.receive_json() == snapshot
 
 
-async def test_agents_list_backups(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test backup agents list backups details."""
-    await setup_backup_integration(hass, with_hassio=False)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id({"type": "backup/agents/list_backups"})
-    assert await client.receive_json() == snapshot
-
-
 async def test_agents_download(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

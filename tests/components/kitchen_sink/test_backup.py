@@ -66,14 +66,14 @@ async def test_agents_list_backups(
     """Test agent list backups."""
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == [
+    assert response["result"]["backups"] == [
         {
             "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-            "agent_id": "kitchen_sink.syncer",
+            "agent_ids": ["kitchen_sink.syncer"],
             "backup_id": "abc123",
             "database_included": False,
             "date": "1970-01-01T00:00:00Z",
@@ -153,15 +153,15 @@ async def test_agents_upload(
     backup_name = f"{backup_id}.tar"
     assert f"Uploading backup {backup_name}" in caplog.text
 
-    await ws_client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    await ws_client.send_json_auto_id({"type": "backup/info"})
     response = await ws_client.receive_json()
 
     assert response["success"]
-    backup_list = response["result"]
+    backup_list = response["result"]["backups"]
     assert len(backup_list) == 2
     assert backup_list[1] == {
         "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-        "agent_id": "kitchen_sink.syncer",
+        "agent_ids": ["kitchen_sink.syncer"],
         "backup_id": "test-backup",
         "database_included": True,
         "date": "1970-01-01T00:00:00.000Z",
@@ -194,9 +194,9 @@ async def test_agent_delete_backup(
     assert response["success"]
     assert f"Deleted backup {backup_id}" in caplog.text
 
-    await client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
-    backup_list = response["result"]
+    backup_list = response["result"]["backups"]
     assert not backup_list
