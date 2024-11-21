@@ -698,7 +698,7 @@ class Config:
         report_usage(
             "sets the time zone using set_time_zone instead of async_set_time_zone",
             core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
+            custom_integration_behavior=ReportBehavior.ERROR,
             breaks_in_ha_version="2025.6",
         )
         if time_zone := dt_util.get_time_zone(time_zone_str):
