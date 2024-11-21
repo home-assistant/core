@@ -7,39 +7,33 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.BINARY_SENSOR]],
+)
 async def test_binary_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo binary sensor."""
 
-    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_connectivity")
-    state2 = hass.states.get("binary_sensor.hallway_motion_sensor_main_sensor")
-    state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
-    state4 = hass.states.get("binary_sensor.hallway_room_occupied")
-    state5 = hass.states.get(
-        "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
-    )
-    state6 = hass.states.get(
-        "binary_sensor.kitchen_pure_boost_linked_with_outdoor_air_quality"
-    )
-    assert state1.state == "on"
-    assert state2.state == "on"
-    assert state3.state == "on"
-    assert state4.state == "on"
-    assert state5.state == "on"
-    assert state6.state == "off"
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     monkeypatch.setattr(
         get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "alive", False
