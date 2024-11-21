@@ -14,11 +14,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfSpeed
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AdviceState
+from .const import DOMAIN, AdviceState
 from .coordinator import StookwijzerCoordinator
-from .entity import StookwijzerEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -70,18 +71,31 @@ async def async_setup_entry(
     )
 
 
-class StookwijzerSensor(StookwijzerEntity, SensorEntity):
+class StookwijzerSensor(CoordinatorEntity, SensorEntity):
     """Defines a Stookwijzer sensor."""
 
     entity_description: StookwijzerSensorDescription
+    _attr_attribution = "Data provided by atlasleefomgeving.nl"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         description: StookwijzerSensorDescription,
         entry: ConfigEntry,
     ) -> None:
-        """Initialize the entity."""
-        super().__init__(description, entry)
+        """Initialize the Sensor Entity."""
+        self.entity_description = description
+        self._coordinator = entry.runtime_data
+
+        super().__init__(self._coordinator)
+
+        self._attr_unique_id = f"{entry.entry_id}{DOMAIN}{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Atlas Leefomgeving",
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.atlasleefomgeving.nl/stookwijzer",
+        )
 
     @property
     def native_value(self) -> str | None:
