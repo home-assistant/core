@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
 from eheimdigital.types import EheimDeviceType
@@ -14,7 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
@@ -73,5 +74,8 @@ class EheimDigitalUpdateCoordinator(
         await self.hub.update()
 
     async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
-        await self.hub.update()
+        try:
+            await self.hub.update()
+        except ClientError as ex:
+            raise UpdateFailed from ex
         return self.data
