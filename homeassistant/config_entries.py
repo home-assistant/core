@@ -1486,9 +1486,8 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None:
+        if existing_entry is not None and self.handler != "mobile_app":
             # `mobile_app` does this on purpose
-            # if too many integrations are impacted, we may need to reconsider
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists, causing the old entry to be removed and replaced when it "
@@ -1496,7 +1495,7 @@ class ConfigEntriesFlowManager(
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.IGNORE,
-                exclude_integrations={"mobile_app"},
+                integration_domain=self.handler,
             )
 
         # Unload the entry before setting up the new one.
