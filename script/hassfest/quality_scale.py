@@ -381,7 +381,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "frontier_silicon",
     "fujitsu_fglair",
     "fujitsu_hvac",
-    "fully_kiosk",
     "futurenow",
     "fyta",
     "garadget",
