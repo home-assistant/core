@@ -27,6 +27,7 @@ rules:
   docs-installation-instructions: done
   docs-removal-instructions:
     status: todo
+    comment: removal instructions missing
   docs-actions: done
   brands: done
   # Silver
@@ -44,4 +45,3 @@ rules:
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
-  # Platinum
