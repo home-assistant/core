@@ -19,6 +19,8 @@ CONF_COLD_TOLERANCE = "cold_tolerance"
 CONF_HEATER = "heater"
 CONF_HOT_TOLERANCE = "hot_tolerance"
 CONF_MIN_DUR = "min_cycle_duration"
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
 CONF_PRESETS = {
     p: f"{p}_temp"
     for p in (
