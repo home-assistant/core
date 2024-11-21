@@ -29,39 +29,7 @@ from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
     """Describes UniFi Protect event entity."""
 
-
-EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
-    ProtectEventEntityDescription(
-        key="doorbell",
-        translation_key="doorbell",
-        device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:doorbell-video",
-        ufp_required_field="feature_flags.is_doorbell",
-        ufp_event_obj="last_ring_event",
-        event_types=[EVENT_TYPE_DOORBELL_RING],
-    ),
-    ProtectEventEntityDescription(
-        key="nfc",
-        translation_key="nfc",
-        device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:nfc",
-        ufp_required_field="feature_flags.support_nfc",
-        ufp_event_obj="last_nfc_card_scanned_event",
-        event_types=[EVENT_TYPE_NFC_SCANNED],
-    ),
-    ProtectEventEntityDescription(
-        key="fingerprint",
-        translation_key="fingerprint",
-        device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:fingerprint",
-        ufp_required_field="feature_flags.has_fingerprint_sensor",
-        ufp_event_obj="last_fingerprint_identified_event",
-        event_types=[
-            EVENT_TYPE_FINGERPRINT_IDENTIFIED,
-            EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
-        ],
-    ),
-)
+    entity_class: type[ProtectDeviceEntity]
 
 
 class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
@@ -157,24 +125,53 @@ class ProtectDeviceFingerprintEventEntity(
             self.async_write_ha_state()
 
 
+EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
+    ProtectEventEntityDescription(
+        key="doorbell",
+        translation_key="doorbell",
+        device_class=EventDeviceClass.DOORBELL,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_event_obj="last_ring_event",
+        event_types=[EVENT_TYPE_DOORBELL_RING],
+        entity_class=ProtectDeviceRingEventEntity,
+    ),
+    ProtectEventEntityDescription(
+        key="nfc",
+        translation_key="nfc",
+        device_class=EventDeviceClass.DOORBELL,
+        icon="mdi:nfc",
+        ufp_required_field="feature_flags.support_nfc",
+        ufp_event_obj="last_nfc_card_scanned_event",
+        event_types=[EVENT_TYPE_NFC_SCANNED],
+        entity_class=ProtectDeviceNFCEventEntity,
+    ),
+    ProtectEventEntityDescription(
+        key="fingerprint",
+        translation_key="fingerprint",
+        device_class=EventDeviceClass.DOORBELL,
+        icon="mdi:fingerprint",
+        ufp_required_field="feature_flags.has_fingerprint_sensor",
+        ufp_event_obj="last_fingerprint_identified_event",
+        event_types=[
+            EVENT_TYPE_FINGERPRINT_IDENTIFIED,
+            EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
+        ],
+        entity_class=ProtectDeviceFingerprintEventEntity,
+    ),
+)
+
+
 @callback
 def _async_event_entities(
     data: ProtectData,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
-    # Define a mapping between the description keys and corresponding entity classes
-    entity_mapping: dict[str, type[ProtectDeviceEntity]] = {
-        "nfc": ProtectDeviceNFCEventEntity,
-        "fingerprint": ProtectDeviceFingerprintEventEntity,
-        "doorbell": ProtectDeviceRingEventEntity,
-    }
-
     return [
-        entity_class(data, device, description)
+        description.entity_class(data, device, description)
         for device in (data.get_cameras() if ufp_device is None else [ufp_device])
         for description in EVENT_DESCRIPTIONS
         if description.has_required(device)
-        if (entity_class := entity_mapping.get(description.key))
     ]
 
 
