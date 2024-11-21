@@ -14,11 +14,9 @@ from hass_nabucasa.cloud_api import (
     async_files_upload_details,
 )
 
-from homeassistant.components.backup import (
-    BackupAgent,
-    BaseBackup,
-)
+from homeassistant.components.backup import BackupAgent, BaseBackup
 from homeassistant.components.backup.agent import BackupAgentError
+from homeassistant.components.backup.util import read_backup
 from homeassistant.core import HomeAssistant, callback
 
 from .client import CloudClient
@@ -54,7 +52,6 @@ class CloudBackupAgent(BackupAgent):
         super().__init__()
         self._cloud = cloud
         self._hass = hass
-        self._backups: list[BaseBackup] = []
 
     @callback
     def _get_backup_filename(self) -> str:
@@ -73,6 +70,12 @@ class CloudBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :param path: The full file path to download the backup to.
         """
+        if not self._cloud.is_logged_in:
+            raise BackupAgentError("Not logged in to cloud")
+
+        if not self.async_get_backup(backup_id):
+            raise BackupAgentError("Backup not found")
+
         details = await async_files_download_details(
             self._cloud,
             storage_type=_STORAGE_BACKUP,
@@ -87,6 +90,10 @@ class CloudBackupAgent(BackupAgent):
         file = await self._hass.async_add_executor_job(path.open, "wb")
         async for chunk in resp.content.iter_any():
             await self._hass.async_add_executor_job(file.write, chunk)
+
+        metadata = await self._hass.async_add_executor_job(read_backup, path)
+        if metadata.backup_id != backup_id:
+            raise BackupAgentError("Backup not found")
 
     async def async_upload_backup(
         self,
@@ -108,9 +115,7 @@ class CloudBackupAgent(BackupAgent):
         if not self._cloud.is_logged_in:
             raise BackupAgentError("Not logged in to cloud")
 
-        base64md5hash = await self._hass.async_add_executor_job(
-            b64md5, path
-        )
+        base64md5hash = await self._hass.async_add_executor_job(b64md5, path)
 
         details = await async_files_upload_details(
             self._cloud,
@@ -151,7 +156,7 @@ class CloudBackupAgent(BackupAgent):
         """List backups."""
         backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
 
-        self._backups = [
+        return [
             BaseBackup(
                 backup_id=backup["Key"],
                 date=backup["LastModified"],
@@ -161,7 +166,6 @@ class CloudBackupAgent(BackupAgent):
             )
             for backup in backups
         ]
-        return self._backups
 
     async def async_get_backup(
         self,
@@ -169,10 +173,9 @@ class CloudBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> BaseBackup | None:
         """Return a backup."""
-        if not self._backups:
-            await self.async_list_backups()
+        backups = await self.async_list_backups()
 
-        for backup in self._backups:
+        for backup in backups:
             if backup.backup_id == backup_id:
                 return backup
 
