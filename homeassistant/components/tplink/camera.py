@@ -10,7 +10,7 @@ from typing import Any
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from kasa import Device, Module
-from kasa.experimental.modules.camera import Camera as CameraModule
+from kasa.smartcamera.modules import Camera as CameraModule
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -90,9 +90,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     ) -> None:
         """Initialize a Ring Door Bell camera."""
         self._description = description
+        self._camera_module = camera_module
         super().__init__(device, coordinator, parent=parent)
         Camera.__init__(self)
-        self._camera_module = camera_module
         self._ffmpeg_manager = ffmpeg_manager
 
         self._video_url: str | None = None
