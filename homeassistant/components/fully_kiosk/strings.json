@@ -15,7 +15,8 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application."
+          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
+          "password": "The Remote Admin Password set in the Fully Kiosk Browser app settings."
         }
       }
     },
