@@ -44,4 +44,4 @@ rules:
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
-  # Platin
+  # Platinum
