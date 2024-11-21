@@ -4,7 +4,32 @@ from unittest.mock import MagicMock, call
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,32 +49,30 @@ async def test_media_player(
     )
 
 
-async def test_media_player_actions(
+async def test_media_player_basic_actions(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test media_player entity actions."""
+    """Test media_player entity basic actions (play/stop/pause etc.)."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_player_1"
     mass_player_id = "00:00:00:00:00:01"
     state = hass.states.get(entity_id)
     assert state
-
-    # test basic actions (play/stop/pause etc.)
     for action, cmd in (
-        ("media_play", "play"),
-        ("media_pause", "pause"),
-        ("media_stop", "stop"),
-        ("media_previous_track", "previous"),
-        ("media_next_track", "next"),
-        ("volume_up", "volume_up"),
-        ("volume_down", "volume_down"),
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_VOLUME_UP, "volume_up"),
+        (SERVICE_VOLUME_DOWN, "volume_down"),
     ):
         await hass.services.async_call(
-            "media_player",
+            MEDIA_PLAYER_DOMAIN,
             action,
             {
-                "entity_id": entity_id,
+                ATTR_ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -60,13 +83,23 @@ async def test_media_player_actions(
         )
         music_assistant_client.send_command.reset_mock()
 
-    # test seek action
+
+async def test_media_player_seek_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity seek action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
+        MEDIA_PLAYER_DOMAIN,
         "media_seek",
         {
-            "entity_id": entity_id,
-            "seek_position": 100,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_SEEK_POSITION: 100,
         },
         blocking=True,
     )
@@ -75,15 +108,24 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/seek", player_id=mass_player_id, position=100
     )
-    music_assistant_client.send_command.reset_mock()
 
-    # test volume action
+
+async def test_media_player_volume_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity volume action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
-        "volume_set",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
         {
-            "entity_id": entity_id,
-            "volume_level": 0.5,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -91,15 +133,24 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/volume_set", player_id=mass_player_id, volume_level=50
     )
-    music_assistant_client.send_command.reset_mock()
 
-    # test volume mute action
+
+async def test_media_player_volume_mute_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity volume_mute action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
-        "volume_mute",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
         {
-            "entity_id": entity_id,
-            "is_volume_muted": True,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
     )
@@ -107,18 +158,27 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/volume_mute", player_id=mass_player_id, muted=True
     )
-    music_assistant_client.send_command.reset_mock()
 
-    # test turn_on /turn_off action
+
+async def test_media_player_turn_on_off_actions(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity turn_on/turn_off actions."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     for action, pwr in (
-        ("turn_on", True),
-        ("turn_off", False),
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
     ):
         await hass.services.async_call(
-            "media_player",
+            MEDIA_PLAYER_DOMAIN,
             action,
             {
-                "entity_id": entity_id,
+                ATTR_ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -128,13 +188,23 @@ async def test_media_player_actions(
         )
         music_assistant_client.send_command.reset_mock()
 
-    # test shuffle action
+
+async def test_media_player_shuffle_set_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity shuffle_set action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
-        "shuffle_set",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SHUFFLE_SET,
         {
-            "entity_id": entity_id,
-            "shuffle": True,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_SHUFFLE: True,
         },
         blocking=True,
     )
@@ -142,15 +212,24 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/shuffle", queue_id=mass_player_id, shuffle_enabled=True
     )
-    music_assistant_client.send_command.reset_mock()
 
-    # test repeat action
+
+async def test_media_player_repeat_set_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity repeat_set action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
-        "repeat_set",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
         {
-            "entity_id": entity_id,
-            "repeat": "one",
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_REPEAT: "one",
         },
         blocking=True,
     )
@@ -158,14 +237,23 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/repeat", queue_id=mass_player_id, repeat_mode="one"
     )
-    music_assistant_client.send_command.reset_mock()
 
-    # test clear playlist action
+
+async def test_media_player_clear_playlist_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity clear_playlist action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
     await hass.services.async_call(
-        "media_player",
-        "clear_playlist",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_CLEAR_PLAYLIST,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -173,4 +261,3 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/clear", queue_id=mass_player_id
     )
-    music_assistant_client.send_command.reset_mock()
