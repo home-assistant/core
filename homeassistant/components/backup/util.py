@@ -9,7 +9,7 @@ from typing import cast
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE
-from .models import AddonInfo, AgentBackup
+from .models import AddonInfo, AgentBackup, Folder
 
 
 def read_backup(backup_path: Path) -> AgentBackup:
@@ -29,7 +29,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
         ]
 
         folders = [
-            folder
+            Folder(folder)
             for folder in cast(list[str], data.get("folders", []))
             if folder != "homeassistant"
         ]

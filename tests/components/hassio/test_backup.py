@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
+    Folder,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -146,7 +147,7 @@ async def test_agent_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
-        folders=["media", "share"],
+        folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
         name="Test",

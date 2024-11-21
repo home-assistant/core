@@ -43,7 +43,7 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import AgentBackup
+from .models import AgentBackup, Folder
 from .util import read_backup
 
 
@@ -94,7 +94,7 @@ class BackupReaderWriter(abc.ABC):
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
-        include_folders: list[str] | None,
+        include_folders: list[Folder] | None,
         include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
@@ -439,7 +439,7 @@ class BackupManager:
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
-        include_folders: list[str] | None,
+        include_folders: list[Folder] | None,
         include_homeassistant: bool,
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
@@ -566,7 +566,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
-        include_folders: list[str] | None,
+        include_folders: list[Folder] | None,
         include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,

@@ -8,13 +8,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
     DOMAIN,
+    AddonInfo,
     AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
+    Folder,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import Backup
-from homeassistant.components.backup.models import AddonInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -28,7 +29,7 @@ TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     database_included=True,
     date="1970-01-01T00:00:00.000Z",
-    folders=["media", "share"],
+    folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
     name="Test",
@@ -42,7 +43,7 @@ TEST_BACKUP_DEF456 = AgentBackup(
     backup_id="def456",
     database_included=False,
     date="1980-01-01T00:00:00.000Z",
-    folders=["media", "share"],
+    folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
     name="Test 2",
@@ -66,7 +67,7 @@ class BackupAgentTest(BackupAgent):
                     backup_id="abc123",
                     database_included=True,
                     date="1970-01-01T00:00:00Z",
-                    folders=["media", "share"],
+                    folders=[Folder.MEDIA, Folder.SHARE],
                     homeassistant_included=True,
                     homeassistant_version="2024.12.0",
                     name="Test",
