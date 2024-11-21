@@ -1051,10 +1051,8 @@ class PipelineRun:
                         conversation_id=user_input.conversation_id,
                     )
                 # Try local intents first, if preferred.
-                # Skip this step if the default agent is already used.
                 elif (
                     self.pipeline.prefer_local_intents
-                    and (user_input.agent_id != conversation.HOME_ASSISTANT_AGENT)
                     and (
                         intent_response := await conversation.async_handle_intents(
                             self.hass, user_input
