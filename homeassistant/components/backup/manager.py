@@ -595,7 +595,6 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             backup_data = {
                 "compressed": True,
                 "date": date_str,
-                "folders": ["homeassistant"],
                 "homeassistant": {
                     "exclude_database": not database_included,
                     "version": HAVERSION,
@@ -604,6 +603,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 "protected": password is not None,
                 "slug": backup_id,
                 "type": "partial",
+                "version": 2,
             }
 
             tar_file_path, size_in_bytes = await self._hass.async_add_executor_job(
