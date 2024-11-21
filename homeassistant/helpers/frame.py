@@ -262,7 +262,7 @@ def _report_integration_domain(
     Async friendly.
     """
     integration_behavior = core_integration_behavior
-    if integration.is_built_in:
+    if not integration.is_built_in:
         integration_behavior = custom_integration_behavior
 
     if integration_behavior is ReportBehavior.IGNORE:

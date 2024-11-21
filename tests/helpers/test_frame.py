@@ -449,21 +449,34 @@ async def test_report(
 
 
 @pytest.mark.parametrize(
-    ("integration_domain", "source"),
+    ("behavior", "integration_domain", "source", "logs_again"),
     [
         pytest.param(
+            "core_behavior",
             None,
             "code that",
+            True,
             id="core",
         ),
         pytest.param(
+            "core_behavior",
+            "unknown_integration",
+            "code that",
+            True,
+            id="unknown integration",
+        ),
+        pytest.param(
+            "core_integration_behavior",
             "sensor",
             "that integration 'sensor'",
+            False,
             id="core integration",
         ),
         pytest.param(
+            "custom_integration_behavior",
             "test_package",
             "that custom integration 'test_package'",
+            False,
             id="custom integration",
         ),
     ],
@@ -472,33 +485,50 @@ async def test_report(
 async def test_report_integration_domain(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    behavior: str,
     integration_domain: str | None,
     source: str,
+    logs_again: bool,
 ) -> None:
     """Test report."""
     await async_get_integration(hass, "sensor")
     await async_get_integration(hass, "test_package")
 
     what = "test_report_string"
+    lookup_text = f"Detected {source} {what}"
+
+    caplog.clear()
+    frame.report_usage(
+        what,
+        **{behavior: frame.ReportBehavior.IGNORE},
+        integration_domain=integration_domain,
+    )
+
+    assert lookup_text not in caplog.text
 
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
         frame.report_usage(
             what,
-            core_behavior=frame.ReportBehavior.IGNORE,
-            core_integration_behavior=frame.ReportBehavior.IGNORE,
-            custom_integration_behavior=frame.ReportBehavior.IGNORE,
+            **{behavior: frame.ReportBehavior.LOG},
             integration_domain=integration_domain,
         )
 
-    assert f"Detected {source} {what}" not in caplog.text
+        assert lookup_text in caplog.text
 
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        # Check that it does not log again
+        caplog.clear()
         frame.report_usage(
             what,
-            core_behavior=frame.ReportBehavior.LOG,
-            core_integration_behavior=frame.ReportBehavior.LOG,
-            custom_integration_behavior=frame.ReportBehavior.LOG,
+            **{behavior: frame.ReportBehavior.LOG},
             integration_domain=integration_domain,
         )
 
-    assert f"Detected {source} {what}" in caplog.text
+        assert (lookup_text in caplog.text) == logs_again
+
+    # Check that it raises
+    with pytest.raises(RuntimeError, match=lookup_text):
+        frame.report_usage(
+            what,
+            **{behavior: frame.ReportBehavior.ERROR},
+            integration_domain=integration_domain,
+        )
