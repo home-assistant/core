@@ -656,9 +656,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.WaterHeaterManagement.Attributes.TankVolume,
-        ),
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankVolume,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -668,9 +666,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.WaterHeaterManagement.Attributes.TankPercentage,
-        ),
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankPercentage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
