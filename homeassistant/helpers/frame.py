@@ -199,6 +199,8 @@ def report_usage(
     Please create a bug report at https://..."
     :param breaks_in_ha_version: if set, the report will be adjusted to specify the
     breaking version
+    :param exclude_integrations: skip specified integration when reviewing the stack.
+    If no integration is found, the core behavior will be applied
     :param integration_domain: fallback for identifying the integration if the
     frame is not found
     """
@@ -217,7 +219,6 @@ def report_usage(
                 integration,
                 core_integration_behavior,
                 custom_integration_behavior,
-                exclude_integrations,
                 level,
             )
             return
@@ -254,7 +255,6 @@ def _report_integration_domain(
     integration: Integration,
     core_integration_behavior: ReportBehavior,
     custom_integration_behavior: ReportBehavior,
-    exclude_integrations: set[str] | None,
     level: int,
 ) -> None:
     """Report incorrect usage in an integration (identified via domain).
@@ -265,9 +265,7 @@ def _report_integration_domain(
     if integration.is_built_in:
         integration_behavior = custom_integration_behavior
 
-    if integration_behavior is ReportBehavior.IGNORE or (
-        exclude_integrations and integration.domain in exclude_integrations
-    ):
+    if integration_behavior is ReportBehavior.IGNORE:
         return
 
     # Keep track of integrations already reported to prevent flooding

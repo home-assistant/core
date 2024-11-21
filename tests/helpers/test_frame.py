@@ -485,8 +485,9 @@ async def test_report_integration_domain(
         frame.report_usage(
             what,
             core_behavior=frame.ReportBehavior.IGNORE,
+            core_integration_behavior=frame.ReportBehavior.IGNORE,
+            custom_integration_behavior=frame.ReportBehavior.IGNORE,
             integration_domain=integration_domain,
-            exclude_integrations={"sensor", "test_package"},
         )
 
     assert f"Detected {source} {what}" not in caplog.text
@@ -495,6 +496,8 @@ async def test_report_integration_domain(
         frame.report_usage(
             what,
             core_behavior=frame.ReportBehavior.LOG,
+            core_integration_behavior=frame.ReportBehavior.LOG,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
             integration_domain=integration_domain,
         )
 
