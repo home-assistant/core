@@ -209,10 +209,9 @@ async def test_ssdp_discovery_success(hass: HomeAssistant) -> None:
         ssdp_st="mock_st",
     )
 
-    mock_info = create_receiver_info(1)
     with patch(
         "homeassistant.components.onkyo.config_flow.async_interview",
-        return_value=mock_info,
+        return_value=create_receiver_info(1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
