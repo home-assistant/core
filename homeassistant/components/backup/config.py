@@ -32,10 +32,11 @@ STORAGE_VERSION = 1
 class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
-    addons_included: list[str] | None
     agent_ids: list[str]
-    database_included: bool
-    folders_included: list[str] | None
+    include_addons: list[str] | None
+    include_all_addons: bool
+    include_database: bool
+    include_folders: list[str] | None
     last_automatic_backup: datetime | None
     max_copies: int | None
     name: str | None
@@ -55,10 +56,11 @@ class StoredBackupSchedule(TypedDict):
 class BackupConfigData:
     """Represent loaded backup config data."""
 
-    addons_included: list[str] | None = None
     agent_ids: list[str] = field(default_factory=list)
-    database_included: bool = True
-    folders_included: list[str] | None = None
+    include_addons: list[str] | None = None
+    include_all_addons: bool = False
+    include_database: bool = True
+    include_folders: list[str] | None = None
     last_automatic_backup: datetime | None = None
     max_copies: int | None = None
     name: str | None = None
@@ -75,10 +77,11 @@ class BackupConfigData:
             weekday=schedule_data["weekday"],
         )
         return cls(
-            addons_included=data["addons_included"],
             agent_ids=data["agent_ids"],
-            database_included=data["database_included"],
-            folders_included=data["folders_included"],
+            include_addons=data["include_addons"],
+            include_all_addons=data["include_all_addons"],
+            include_database=data["include_database"],
+            include_folders=data["include_folders"],
             last_automatic_backup=data["last_automatic_backup"],
             max_copies=data["max_copies"],
             name=data["name"],
@@ -94,10 +97,11 @@ class BackupConfigData:
             weekday=self.schedule.weekday,
         )
         return StoredBackupConfig(
-            addons_included=self.addons_included,
             agent_ids=self.agent_ids,
-            database_included=self.database_included,
-            folders_included=self.folders_included,
+            include_addons=self.include_addons,
+            include_all_addons=self.include_all_addons,
+            include_database=self.include_database,
+            include_folders=self.include_folders,
             last_automatic_backup=self.last_automatic_backup,
             max_copies=self.max_copies,
             name=self.name,
@@ -140,10 +144,11 @@ class BackupConfig:
     async def update(
         self,
         *,
-        addons_included: list[str] | None | UndefinedType = UNDEFINED,
         agent_ids: list[str] | UndefinedType = UNDEFINED,
-        database_included: bool | UndefinedType = UNDEFINED,
-        folders_included: list[str] | None | UndefinedType = UNDEFINED,
+        include_addons: list[str] | None | UndefinedType = UNDEFINED,
+        include_all_addons: bool | UndefinedType = UNDEFINED,
+        include_database: bool | UndefinedType = UNDEFINED,
+        include_folders: list[str] | None | UndefinedType = UNDEFINED,
         max_copies: int | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         password: str | None | UndefinedType = UNDEFINED,
@@ -157,10 +162,11 @@ class BackupConfig:
                 self.data.schedule.apply(self._manager)
 
         for param_name, param_value in {
-            "addons_included": addons_included,
             "agent_ids": agent_ids,
-            "database_included": database_included,
-            "folders_included": folders_included,
+            "include_addons": include_addons,
+            "include_all_addons": include_all_addons,
+            "include_database": include_database,
+            "include_folders": include_folders,
             "max_copies": max_copies,
             "name": name,
             "password": password,
@@ -245,10 +251,12 @@ class BackupSchedule:
             manager.config.save()
             self._schedule_next(cron_pattern, manager)
             await manager.async_create_backup(
-                addons_included=config_data.addons_included,
                 agent_ids=config_data.agent_ids,
-                database_included=config_data.database_included,
-                folders_included=config_data.folders_included,
+                include_addons=config_data.include_addons,
+                include_all_addons=config_data.include_all_addons,
+                include_database=config_data.include_database,
+                include_folders=config_data.include_folders,
+                include_homeassistant=True,  # always include HA
                 name=config_data.name,
                 on_progress=None,
                 password=config_data.password,

@@ -29,10 +29,12 @@ from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
-    addons_included=["test-addon"],
     agent_ids=["test-agent"],
-    database_included=True,
-    folders_included=["test-folder"],
+    include_addons=["test-addon"],
+    include_all_addons=False,
+    include_database=True,
+    include_folders=["test-folder"],
+    include_homeassistant=True,
     name="test-name",
     on_progress=None,
     password="test-password",
@@ -671,10 +673,11 @@ async def test_agents_download_unknown_agent(
     [
         {},
         {
-            "addons_included": ["test-addon"],
             "agent_ids": ["test-agent"],
-            "database_included": True,
-            "folders_included": ["test-folder"],
+            "include_addons": ["test-addon"],
+            "include_all_addons": True,
+            "include_database": True,
+            "include_folders": ["test-folder"],
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -684,10 +687,11 @@ async def test_agents_download_unknown_agent(
             "schedule": {"daily": True, "never": False, "weekday": None},
         },
         {
-            "addons_included": None,
             "agent_ids": ["test-agent"],
-            "database_included": False,
-            "folders_included": None,
+            "include_addons": None,
+            "include_all_addons": False,
+            "include_database": False,
+            "include_folders": None,
             "last_automatic_backup": None,
             "max_copies": 3,
             "name": None,
@@ -695,10 +699,11 @@ async def test_agents_download_unknown_agent(
             "schedule": {"daily": False, "never": True, "weekday": None},
         },
         {
-            "addons_included": None,
             "agent_ids": ["test-agent"],
-            "database_included": False,
-            "folders_included": None,
+            "include_addons": None,
+            "include_all_addons": False,
+            "include_database": False,
+            "include_folders": None,
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -708,10 +713,11 @@ async def test_agents_download_unknown_agent(
             "schedule": {"daily": False, "never": True, "weekday": None},
         },
         {
-            "addons_included": None,
             "agent_ids": ["test-agent"],
-            "database_included": False,
-            "folders_included": None,
+            "include_addons": None,
+            "include_all_addons": False,
+            "include_database": False,
+            "include_folders": None,
             "last_automatic_backup": None,
             "max_copies": None,
             "name": None,
@@ -719,10 +725,11 @@ async def test_agents_download_unknown_agent(
             "schedule": {"daily": False, "never": False, "weekday": "mon"},
         },
         {
-            "addons_included": None,
             "agent_ids": ["test-agent"],
-            "database_included": False,
-            "folders_included": None,
+            "include_addons": None,
+            "include_all_addons": False,
+            "include_database": False,
+            "include_folders": None,
             "last_automatic_backup": None,
             "max_copies": None,
             "name": None,
@@ -959,10 +966,11 @@ async def test_config_update_schedule(
     """Test updating the backup config schedule."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "addons_included": ["test-addon"],
         "agent_ids": ["test-agent"],
-        "database_included": True,
-        "folders_included": ["test-folder"],
+        "include_addons": ["test-addon"],
+        "include_all_addons": False,
+        "include_database": True,
+        "include_folders": ["test-folder"],
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
         "max_copies": 3,
         "name": "test-name",

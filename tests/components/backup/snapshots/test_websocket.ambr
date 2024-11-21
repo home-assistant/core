@@ -242,11 +242,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -267,14 +268,15 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': list([
-          'test-addon',
-        ]),
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': True,
-        'folders_included': list([
+        'include_addons': list([
+          'test-addon',
+        ]),
+        'include_all_addons': True,
+        'include_database': True,
+        'include_folders': list([
           'test-folder',
         ]),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
@@ -297,12 +299,13 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': False,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': False,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': 3,
         'name': None,
@@ -323,12 +326,13 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': False,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': False,
+        'include_folders': None,
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'max_copies': None,
         'name': None,
@@ -349,12 +353,13 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': False,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': False,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -375,12 +380,13 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': False,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': False,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -401,11 +407,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -426,12 +433,13 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': 5,
         'name': None,
@@ -450,12 +458,13 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
-      'addons_included': None,
       'agent_ids': list([
         'test-agent',
       ]),
-      'database_included': True,
-      'folders_included': None,
+      'include_addons': None,
+      'include_all_addons': False,
+      'include_database': True,
+      'include_folders': None,
       'last_automatic_backup': None,
       'max_copies': 5,
       'name': None,
@@ -476,11 +485,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -501,12 +511,13 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -525,12 +536,13 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
-      'addons_included': None,
       'agent_ids': list([
         'test-agent',
       ]),
-      'database_included': True,
-      'folders_included': None,
+      'include_addons': None,
+      'include_all_addons': False,
+      'include_database': True,
+      'include_folders': None,
       'last_automatic_backup': None,
       'max_copies': None,
       'name': None,
@@ -551,11 +563,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -576,12 +589,13 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -600,12 +614,13 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
-      'addons_included': None,
       'agent_ids': list([
         'test-agent',
       ]),
-      'database_included': True,
-      'folders_included': None,
+      'include_addons': None,
+      'include_all_addons': False,
+      'include_database': True,
+      'include_folders': None,
       'last_automatic_backup': None,
       'max_copies': None,
       'name': None,
@@ -626,11 +641,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -651,12 +667,13 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
           'test-agent',
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -675,12 +692,13 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
-      'addons_included': None,
       'agent_ids': list([
         'test-agent',
       ]),
-      'database_included': True,
-      'folders_included': None,
+      'include_addons': None,
+      'include_all_addons': False,
+      'include_database': True,
+      'include_folders': None,
       'last_automatic_backup': None,
       'max_copies': None,
       'name': None,
@@ -701,11 +719,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -726,11 +745,12 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -751,11 +771,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -776,11 +797,12 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -801,11 +823,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -826,11 +849,12 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -851,11 +875,12 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
@@ -876,11 +901,12 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'addons_included': None,
         'agent_ids': list([
         ]),
-        'database_included': True,
-        'folders_included': None,
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
         'last_automatic_backup': None,
         'max_copies': None,
         'name': None,
