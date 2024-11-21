@@ -27,10 +27,7 @@ class EheimDigitalUpdateCoordinator(
 ):
     """The EHEIM Digital data update coordinator."""
 
-    platform_callbacks: set[AsyncSetupDeviceEntitiesCallback]
     config_entry: ConfigEntry
-    hub: EheimDigitalHub
-    known_devices: set[str]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the EHEIM Digital data update coordinator."""
@@ -44,8 +41,8 @@ class EheimDigitalUpdateCoordinator(
             receive_callback=self._async_receive_callback,
             device_found_callback=self._async_device_found,
         )
-        self.known_devices = set()
-        self.platform_callbacks = set()
+        self.known_devices: set[str] = set()
+        self.platform_callbacks: set[AsyncSetupDeviceEntitiesCallback] = set()
 
     def add_platform_callback(
         self,
