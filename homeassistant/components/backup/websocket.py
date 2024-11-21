@@ -129,10 +129,12 @@ async def handle_restore(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/generate",
-        vol.Optional("addons_included"): [str],
         vol.Required("agent_ids"): [str],
-        vol.Optional("database_included", default=True): bool,
-        vol.Optional("folders_included"): [str],
+        vol.Optional("include_addons"): [str],
+        vol.Optional("include_all_addons", default=False): bool,
+        vol.Optional("include_database", default=True): bool,
+        vol.Optional("include_folders"): [str],
+        vol.Optional("include_homeassistant", default=True): bool,
         vol.Optional("name"): str,
         vol.Optional("password"): str,
     }
@@ -149,10 +151,12 @@ async def handle_create(
         connection.send_message(websocket_api.event_message(msg["id"], progress))
 
     backup = await hass.data[DATA_MANAGER].async_create_backup(
-        addons_included=msg.get("addons_included"),
         agent_ids=msg["agent_ids"],
-        database_included=msg["database_included"],
-        folders_included=msg.get("folders_included"),
+        include_addons=msg.get("include_addons"),
+        include_all_addons=msg["include_all_addons"],
+        include_database=msg["include_database"],
+        include_folders=msg.get("include_folders"),
+        include_homeassistant=msg["include_homeassistant"],
         name=msg.get("name"),
         on_progress=on_progress,
         password=msg.get("password"),
