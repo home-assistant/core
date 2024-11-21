@@ -457,6 +457,7 @@ async def test_backup_start(
         Exception("Boom"),
     ],
 )
+@pytest.mark.usefixtures("supervisor_client")
 async def test_backup_end_exception(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -486,6 +487,7 @@ async def test_backup_end_exception(
         Exception("Boom"),
     ],
 )
+@pytest.mark.usefixtures("supervisor_client")
 async def test_backup_start_exception(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
