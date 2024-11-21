@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from io import StringIO
 import os
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor.models import backups as supervisor_backups
@@ -258,3 +259,43 @@ async def test_reader_writer_restore(
             password=None,
         ),
     )
+
+
+@pytest.mark.parametrize(
+    ("parameters", "expected_error"),
+    [
+        (
+            {"restore_database": False},
+            "Cannot restore Home Assistant without database",
+        ),
+        (
+            {"restore_homeassistant": False},
+            "Cannot restore database without Home Assistant",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client")
+async def test_reader_writer_restore_wrong_parameters(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    parameters: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test trigger restore."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+
+    default_parameters = {
+        "type": "backup/restore",
+        "agent_id": "hassio.local",
+        "backup_id": "abc123",
+    }
+
+    await client.send_json_auto_id(default_parameters | parameters)
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": expected_error,
+    }

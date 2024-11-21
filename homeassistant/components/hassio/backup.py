@@ -19,6 +19,7 @@ from homeassistant.components.backup import (
     NewBackup,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .handler import get_supervisor_client
 
@@ -166,14 +167,29 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         *,
         agent_id: str,
         password: str | None,
+        restore_addons: list[str] | None,
+        restore_database: bool,
+        restore_folders: list[Folder] | None,
+        restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
+        if restore_homeassistant and not restore_database:
+            raise HomeAssistantError("Cannot restore Home Assistant without database")
+        if not restore_homeassistant and restore_database:
+            raise HomeAssistantError("Cannot restore database without Home Assistant")
+        restore_addons_set = set(restore_addons) if restore_addons else None
+        restore_folders_set = (
+            {supervisor_backups.Folder(folder) for folder in restore_folders}
+            if restore_folders
+            else None
+        )
+
         await self._client.backups.partial_restore(
             backup_id,
             supervisor_backups.PartialRestoreOptions(
-                addons=None,
-                folders=None,
-                homeassistant=True,
+                addons=restore_addons_set,
+                folders=restore_folders_set,
+                homeassistant=restore_homeassistant,
                 password=password,
                 background=True,
             ),

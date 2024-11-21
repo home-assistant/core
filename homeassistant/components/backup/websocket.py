@@ -116,6 +116,10 @@ async def handle_delete(
         vol.Required("backup_id"): str,
         vol.Required("agent_id"): str,
         vol.Optional("password"): str,
+        vol.Optional("restore_addons"): [str],
+        vol.Optional("restore_database", default=True): bool,
+        vol.Optional("restore_folders"): [vol.Coerce(Folder)],
+        vol.Optional("restore_homeassistant", default=True): bool,
     }
 )
 @websocket_api.async_response
@@ -129,6 +133,10 @@ async def handle_restore(
         msg["backup_id"],
         agent_id=msg["agent_id"],
         password=msg.get("password"),
+        restore_addons=msg.get("restore_addons"),
+        restore_database=msg["restore_database"],
+        restore_folders=msg.get("restore_folders"),
+        restore_homeassistant=msg["restore_homeassistant"],
     )
     connection.send_result(msg["id"])
 

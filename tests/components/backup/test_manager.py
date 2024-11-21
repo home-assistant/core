@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
+    Folder,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -31,6 +32,7 @@ from homeassistant.setup import async_setup_component
 from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
+    TEST_BACKUP_DEF456,
     TEST_BACKUP_PATH_ABC123,
     BackupAgentTest,
 )
@@ -561,7 +563,13 @@ async def test_async_trigger_restore(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
+            TEST_BACKUP_ABC123.backup_id,
+            agent_id=LOCAL_AGENT_ID,
+            password=None,
+            restore_addons=None,
+            restore_database=True,
+            restore_folders=None,
+            restore_homeassistant=True,
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -594,6 +602,10 @@ async def test_async_trigger_restore_with_password(
             TEST_BACKUP_ABC123.backup_id,
             agent_id=LOCAL_AGENT_ID,
             password="abc123",
+            restore_addons=None,
+            restore_database=True,
+            restore_folders=None,
+            restore_homeassistant=True,
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -602,7 +614,34 @@ async def test_async_trigger_restore_with_password(
         assert mocked_service_call.called
 
 
-async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("parameters", "expected_error"),
+    [
+        (
+            {"backup_id": TEST_BACKUP_DEF456.backup_id},
+            "Backup def456 not found",
+        ),
+        (
+            {"restore_addons": ["blah"]},
+            "Addons and folders are not supported in core restore",
+        ),
+        (
+            {"restore_folders": [Folder.ADDONS]},
+            "Addons and folders are not supported in core restore",
+        ),
+        (
+            {"restore_database": False},
+            "Home Assistant and database must be included in restore",
+        ),
+        (
+            {"restore_homeassistant": False},
+            "Home Assistant and database must be included in restore",
+        ),
+    ],
+)
+async def test_async_trigger_restore_wrong_parameters(
+    hass: HomeAssistant, parameters: dict[str, Any], expected_error: str
+) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
@@ -610,9 +649,21 @@ async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
     local_agent._loaded_backups = True
 
-    with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
-        await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
-        )
+    default_parameters = {
+        "agent_id": LOCAL_AGENT_ID,
+        "backup_id": TEST_BACKUP_ABC123.backup_id,
+        "password": None,
+        "restore_addons": None,
+        "restore_database": True,
+        "restore_folders": None,
+        "restore_homeassistant": True,
+    }
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        pytest.raises(HomeAssistantError, match=expected_error),
+    ):
+        await manager.async_restore_backup(**(default_parameters | parameters))
