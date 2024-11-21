@@ -176,18 +176,19 @@ class HistoryStats:
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
-        previous_state_matches = (
-            self._history_current_period
-            and self._history_current_period[0].state in self._entity_states
-        )
-        last_state_change_timestamp = start_timestamp
+        previous_state_matches = False
+        last_state_change_timestamp = 0.0
         elapsed = 0.0
-        match_count = 1 if previous_state_matches else 0
+        match_count = 0
 
         # Make calculations
         for history_state in self._history_current_period:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
+
+            if state_change_timestamp > now_timestamp:
+                # Shouldn't count states that are in the future
+                continue
 
             if previous_state_matches:
                 elapsed += state_change_timestamp - last_state_change_timestamp
@@ -195,7 +196,7 @@ class HistoryStats:
                 match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = state_change_timestamp
+            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
