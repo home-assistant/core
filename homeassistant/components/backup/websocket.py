@@ -307,7 +307,6 @@ async def handle_config_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
-        vol.Optional("max_copies"): int,
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All(list[str], vol.Length(min=1)),
@@ -319,6 +318,7 @@ async def handle_config_info(
                 vol.Optional("password"): vol.Any(str, None),
             },
         ),
+        vol.Optional("max_copies"): int,
         vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
     }
 )
