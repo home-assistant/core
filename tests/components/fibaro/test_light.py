@@ -1,4 +1,4 @@
-"""Test the Fibaro cover platform."""
+"""Test the Fibaro light platform."""
 
 from unittest.mock import Mock, patch
 
@@ -42,7 +42,7 @@ async def test_light_brightness(
     mock_light: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test that the cover dimm value is reported."""
+    """Test that the light brightness value is translated."""
 
     # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
