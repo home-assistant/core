@@ -44,10 +44,7 @@ rules:
       Handled by coordinator.
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage:
-    status: done
-    comment: |
-      100% test coverage.
+  test-coverage: done
 
   # Gold
   devices: done
