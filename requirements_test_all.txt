@@ -1632,7 +1632,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.3
+pylamarzocco==1.2.5
 
 # homeassistant.components.lastfm
 pylast==5.1.0
