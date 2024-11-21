@@ -50,7 +50,8 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
     """Return the Reolink host from the config entry id."""
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry is not None
-    return config_entry.runtime_data.host
+    host: ReolinkHost = config_entry.runtime_data.host
+    return host
 
 
 class ReolinkVODMediaSource(MediaSource):
