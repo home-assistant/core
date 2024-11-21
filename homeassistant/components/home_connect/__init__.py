@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeconnect.api import HomeConnectAppliance
 from requests import HTTPError
 import voluptuous as vol
 
@@ -91,7 +92,7 @@ PLATFORMS = [
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice:
+) -> HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
         for device in hc_api.devices:

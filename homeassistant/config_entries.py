@@ -1195,9 +1195,9 @@ def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None
         f"calls {what} for integration {entry.domain} with "
         f"title: {entry.title} and entry_id: {entry.entry_id}, "
         f"during setup without awaiting {what}, which can cause "
-        "the setup lock to be released before the setup is done. "
-        "This will stop working in Home Assistant 2025.1",
+        "the setup lock to be released before the setup is done",
         core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2025.1",
     )
 
 
@@ -1267,6 +1267,7 @@ class ConfigEntriesFlowManager(
             # Deprecated in 2024.12, should fail in 2025.12
             report_usage(
                 f"initialises a {source} flow without a link to the config entry",
+                breaks_in_ha_version="2025.12",
             )
 
         flow_id = ulid_util.ulid_now()
@@ -2321,10 +2322,10 @@ class ConfigEntries:
         report_usage(
             "calls async_forward_entry_setup for "
             f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated and "
-            "will stop working in Home Assistant 2025.6, "
+            f"and entry_id: {entry.entry_id}, which is deprecated, "
             "await async_forward_entry_setups instead",
             core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.6",
         )
         if not entry.setup_lock.locked():
             async with entry.setup_lock:
@@ -3155,11 +3156,11 @@ class OptionsFlow(ConfigEntryBaseFlow):
     def config_entry(self, value: ConfigEntry) -> None:
         """Set the config entry value."""
         report_usage(
-            "sets option flow config_entry explicitly, which is deprecated "
-            "and will stop working in 2025.12",
+            "sets option flow config_entry explicitly, which is deprecated",
             core_behavior=ReportBehavior.ERROR,
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.12",
         )
         self._config_entry = value
 
