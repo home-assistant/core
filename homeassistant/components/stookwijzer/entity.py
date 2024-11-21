@@ -29,7 +29,6 @@ class StookwijzerEntity(CoordinatorEntity, Entity):
         super().__init__(self._coordinator)
 
         self._attr_unique_id = f"{entry.entry_id}{DOMAIN}{description.key}"
-        self._attr_name = description.key.title()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Atlas Leefomgeving",
