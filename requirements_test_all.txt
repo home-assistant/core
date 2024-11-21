@@ -1653,7 +1653,7 @@ pylitejet==0.6.3
 pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.21.1
+pylutron-caseta==0.22.0
 
 # homeassistant.components.lutron
 pylutron==0.2.16
@@ -2095,7 +2095,7 @@ sanix==1.0.6
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2024.2.1
+securetar==2024.11.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2259,7 +2259,7 @@ thermobeacon-ble==0.7.0
 thermopro-ble==0.10.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.0
+thinqconnect==1.0.1
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.0
+uiprotect==6.6.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

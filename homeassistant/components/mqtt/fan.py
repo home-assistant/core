@@ -57,6 +57,8 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
+PARALLEL_UPDATES = 0
+
 CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
 CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
 CONF_DIRECTION_VALUE_TEMPLATE = "direction_value_template"

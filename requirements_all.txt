@@ -2048,7 +2048,7 @@ pylitejet==0.6.3
 pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.21.1
+pylutron-caseta==0.22.0
 
 # homeassistant.components.lutron
 pylutron==0.2.16
@@ -2625,7 +2625,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2024.2.1
+securetar==2024.11.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
@@ -2837,7 +2837,7 @@ thermopro-ble==0.10.0
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.0
+thinqconnect==1.0.1
 
 # homeassistant.components.tikteck
 tikteck==0.4
@@ -2897,7 +2897,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.0
+uiprotect==6.6.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
