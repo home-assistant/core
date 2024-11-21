@@ -328,10 +328,28 @@ class BackupManager:
 
         return (backup, agent_errors)
 
-    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+    async def async_delete_backup(
+        self, backup_id: str, **kwargs: Any
+    ) -> dict[str, Exception]:
         """Delete a backup."""
-        for agent in self.backup_agents.values():
-            await agent.async_delete_backup(backup_id)
+        agent_errors: dict[str, Exception] = {}
+        agent_ids = list(self.backup_agents.keys())
+
+        delete_backup_results = await asyncio.gather(
+            *(
+                agent.async_delete_backup(backup_id)
+                for agent in self.backup_agents.values()
+            ),
+            return_exceptions=True,
+        )
+        for idx, result in enumerate(delete_backup_results):
+            if isinstance(result, BackupAgentError):
+                agent_errors[agent_ids[idx]] = result
+                continue
+            if isinstance(result, BaseException):
+                raise result
+
+        return agent_errors
 
     async def async_receive_backup(
         self,

@@ -200,6 +200,29 @@ async def test_delete(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.parametrize(
+    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+)
+async def test_delete_with_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test deleting a backup with one unavailable agent."""
+    await setup_backup_integration(
+        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    )
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch.object(BackupAgentTest, "async_delete_backup", side_effect=side_effect):
+        await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
+        assert await client.receive_json() == snapshot
+
+
 async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
