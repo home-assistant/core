@@ -18,7 +18,7 @@ rules:
     comment: |
       The integration can be removed by removing the config entry.
   entity-event-setup:
-    status: exempt
+    status: done
     comment: >
       Entities are updated through dispatchers, and these are
       cleaned up when the integration unloads.
@@ -127,5 +127,5 @@ rules:
   inject-websession:
     status: exempt
     comment: |
-      This integration dos not use web sessions.
+      This integration does not use web sessions.
   strict-typing: done
