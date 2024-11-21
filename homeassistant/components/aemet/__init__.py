@@ -10,6 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_STATION_UPDATES, PLATFORMS
 from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
@@ -29,6 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
 
     options = ConnectionOptions(api_key, update_features)
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
+    aemet.set_api_data_dir(hass.config.path(STORAGE_DIR, "aemet"))
+
     try:
         await aemet.select_coordinates(latitude, longitude)
     except TownNotFound as err:
