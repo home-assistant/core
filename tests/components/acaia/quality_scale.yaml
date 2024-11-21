@@ -25,9 +25,11 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      Device is expected to be offline most of the time, but needs to connect quickly once available.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
