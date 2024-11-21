@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, TypedDict
+from typing import TYPE_CHECKING, Self, TypedDict, Unpack
 
 from cronsim import CronSim
 
@@ -144,35 +144,21 @@ class BackupConfig:
     async def update(
         self,
         *,
-        agent_ids: list[str] | UndefinedType = UNDEFINED,
-        include_addons: list[str] | None | UndefinedType = UNDEFINED,
-        include_all_addons: bool | UndefinedType = UNDEFINED,
-        include_database: bool | UndefinedType = UNDEFINED,
-        include_folders: list[str] | None | UndefinedType = UNDEFINED,
         max_copies: int | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        password: str | None | UndefinedType = UNDEFINED,
         schedule: ScheduleParameterDict | UndefinedType = UNDEFINED,
+        **kwargs: Unpack[CreateBackupParametersDict],
     ) -> None:
         """Update config."""
+        if max_copies is not UNDEFINED:
+            self.data.max_copies = max_copies
         if schedule is not UNDEFINED:
             new_schedule = replace(self.data.schedule, **schedule)
             if new_schedule != self.data.schedule:
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
 
-        for param_name, param_value in {
-            "agent_ids": agent_ids,
-            "include_addons": include_addons,
-            "include_all_addons": include_all_addons,
-            "include_database": include_database,
-            "include_folders": include_folders,
-            "max_copies": max_copies,
-            "name": name,
-            "password": password,
-        }.items():
-            if param_value is not UNDEFINED:
-                setattr(self.data, param_name, param_value)
+        for param_name, param_value in kwargs.items():
+            setattr(self.data, param_name, param_value)
 
         self.save()
 
@@ -280,3 +266,15 @@ class ScheduleParameterDict(TypedDict, total=False):
     daily: bool
     never: bool
     weekday: str
+
+
+class CreateBackupParametersDict(TypedDict, total=False):
+    """Represent the parameters for async_create_backup."""
+
+    agent_ids: list[str]
+    include_addons: list[str] | None
+    include_all_addons: bool
+    include_database: bool
+    include_folders: list[str] | None
+    name: str | None
+    password: str | None
