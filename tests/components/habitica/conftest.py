@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from habiticalib import (
     BadRequestError,
     HabiticaErrorResponse,
+    HabiticaGroupMembersResponse,
     HabiticaLoginResponse,
     HabiticaSleepResponse,
     HabiticaUserResponse,
@@ -142,6 +143,9 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         )
         client.update_score.return_value = HabiticaUserResponse.from_json(
             load_fixture("score_with_drop.json", DOMAIN)
+        )
+        client.get_group_members.return_value = HabiticaGroupMembersResponse.from_json(
+            load_fixture("party_members.json", DOMAIN)
         )
         yield client
 

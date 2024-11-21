@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from http import HTTPStatus
 import logging
-from typing import Any
 from uuid import UUID
 
 from aiohttp import ClientError, ClientResponseError
@@ -334,46 +333,43 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         ITEMID_MAP = {
-            "snowball": {"itemId": "snowball"},
-            "spooky_sparkles": {"itemId": "spookySparkles"},
-            "seafoam": {"itemId": "seafoam"},
-            "shiny_seed": {"itemId": "shinySeed"},
+            "snowball": Skill.SNOWBALL,
+            "spooky_sparkles": Skill.SPOOKY_SPARKLES,
+            "seafoam": Skill.SEAFOAM,
+            "shiny_seed": Skill.SHINY_SEED,
         }
+        item = ITEMID_MAP[call.data[ATTR_ITEM]]
         # check if target is self
         if call.data[ATTR_TARGET] in (
             coordinator.data.user["id"],
             coordinator.data.user["profile"]["name"],
             coordinator.data.user["auth"]["local"]["username"],
         ):
-            target_id = coordinator.data.user["id"]
+            target_id = UUID(coordinator.data.user["id"])
         else:
             # check if target is a party member
             try:
-                party = await coordinator.api.groups.party.members.get()
-            except ClientResponseError as e:
-                if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="setup_rate_limit_exception",
-                    ) from e
-                if e.status == HTTPStatus.NOT_FOUND:
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="party_not_found",
-                    ) from e
+                party = await coordinator.habitica.get_group_members(public_fields=True)
+            except NotFoundError as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="party_not_found",
+                ) from e
+            except (ClientError, HabiticaException) as e:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="service_call_exception",
                 ) from e
             try:
                 target_id = next(
-                    member["id"]
-                    for member in party
-                    if call.data[ATTR_TARGET].lower()
+                    member.id
+                    for member in party.data
+                    if member.id
+                    and call.data[ATTR_TARGET].lower()
                     in (
-                        member["id"],
-                        member["auth"]["local"]["username"].lower(),
-                        member["profile"]["name"].lower(),
+                        str(member.id),
+                        str(member.auth.local.username).lower(),
+                        str(member.profile.name).lower(),
                     )
                 )
             except StopIteration as e:
@@ -383,27 +379,25 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     translation_placeholders={"target": f"'{call.data[ATTR_TARGET]}'"},
                 ) from e
         try:
-            response: dict[str, Any] = await coordinator.api.user.class_.cast[
-                ITEMID_MAP[call.data[ATTR_ITEM]]["itemId"]
-            ].post(targetId=target_id)
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="item_not_found",
-                    translation_placeholders={"item": call.data[ATTR_ITEM]},
-                ) from e
+            response = await coordinator.habitica.cast_skill(item, target_id)
+        except TooManyRequestsError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except NotAuthorizedError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"item": call.data[ATTR_ITEM]},
+            ) from e
+        except (HabiticaException, ClientError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
         else:
-            return response
+            return asdict(response.data)
 
     hass.services.async_register(
         DOMAIN,

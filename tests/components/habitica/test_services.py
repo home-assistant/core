@@ -38,7 +38,6 @@ from .conftest import (
     ERROR_NOT_AUTHORIZED,
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
-    load_json_object_fixture,
     mock_called_with,
 )
 
@@ -566,100 +565,119 @@ async def test_score_task_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "item", "target_id"),
+    ("service_data", "call_args"),
     [
         (
             {
                 ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
                 ATTR_ITEM: "shiny_seed",
             },
-            "shinySeed",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SHINY_SEED,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
                 ATTR_ITEM: "seafoam",
             },
-            "seafoam",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SEAFOAM,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
                 ATTR_ITEM: "snowball",
             },
-            "snowball",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SNOWBALL,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "test-user",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "test-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("a380546a-94be-4b8e-8a0b-23e0d5c03303"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("ffce870c-3ff3-4fa4-bad1-87612e52b8e7"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("ffce870c-3ff3-4fa4-bad1-87612e52b8e7"),
+            },
         ),
         (
             {
                 ATTR_TARGET: "test-partymember-displayname",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            "spookySparkles",
-            "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+            {
+                "skill": Skill.SPOOKY_SPARKLES,
+                "target_id": UUID("ffce870c-3ff3-4fa4-bad1-87612e52b8e7"),
+            },
         ),
     ],
-    ids=[],
+    ids=[
+        "use spooky sparkles/select self by id",
+        "use shiny seed",
+        "use seafoam",
+        "use snowball",
+        "select self by displayname",
+        "select self by username",
+        "select partymember by id",
+        "select partymember by username",
+        "select partymember by displayname",
+    ],
 )
 async def test_transformation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service_data: dict[str, Any],
-    item: str,
-    target_id: str,
+    call_args: dict[str, Any],
 ) -> None:
-    """Test Habitica user transformation item action."""
-    mock_habitica.get(
-        f"{DEFAULT_URL}/api/v3/groups/party/members",
-        json=load_json_object_fixture("party_members.json", DOMAIN),
-    )
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/class/cast/{item}?targetId={target_id}",
-        json={"success": True, "data": {}},
-    )
+    """Test Habitica use transformation item action."""
 
     await hass.services.async_call(
         DOMAIN,
@@ -672,18 +690,14 @@ async def test_transformation(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica,
-        "post",
-        f"{DEFAULT_URL}/api/v3/user/class/cast/{item}?targetId={target_id}",
-    )
+    habitica.cast_skill.assert_awaited_once_with(**call_args)
 
 
 @pytest.mark.parametrize(
     (
         "service_data",
-        "http_status_members",
-        "http_status_cast",
+        "raise_exception_members",
+        "raise_exception_cast",
         "expected_exception",
         "expected_exception_msg",
     ),
@@ -693,8 +707,8 @@ async def test_transformation(
                 ATTR_TARGET: "user-not-found",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.OK,
-            HTTPStatus.OK,
+            None,
+            None,
             ServiceValidationError,
             "Unable to find target 'user-not-found' in your party",
         ),
@@ -703,18 +717,8 @@ async def test_transformation(
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.TOO_MANY_REQUESTS,
-            HTTPStatus.OK,
-            ServiceValidationError,
-            RATE_LIMIT_EXCEPTION_MSG,
-        ),
-        (
-            {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
-            },
-            HTTPStatus.NOT_FOUND,
-            HTTPStatus.OK,
+            ERROR_NOT_FOUND,
+            None,
             ServiceValidationError,
             "Unable to find target, you are currently not in a party. You can only target yourself",
         ),
@@ -723,8 +727,8 @@ async def test_transformation(
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.BAD_REQUEST,
-            HTTPStatus.OK,
+            ERROR_BAD_REQUEST,
+            None,
             HomeAssistantError,
             "Unable to connect to Habitica, try again later",
         ),
@@ -733,8 +737,8 @@ async def test_transformation(
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.OK,
-            HTTPStatus.TOO_MANY_REQUESTS,
+            None,
+            ERROR_TOO_MANY_REQUESTS,
             ServiceValidationError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
@@ -743,8 +747,8 @@ async def test_transformation(
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.OK,
-            HTTPStatus.UNAUTHORIZED,
+            None,
+            ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
             "Unable to use spooky_sparkles, you don't own this item",
         ),
@@ -753,8 +757,8 @@ async def test_transformation(
                 ATTR_TARGET: "test-partymember-username",
                 ATTR_ITEM: "spooky_sparkles",
             },
-            HTTPStatus.OK,
-            HTTPStatus.BAD_REQUEST,
+            None,
+            ERROR_BAD_REQUEST,
             HomeAssistantError,
             "Unable to connect to Habitica, try again later",
         ),
@@ -764,25 +768,27 @@ async def test_transformation(
 async def test_transformation_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    # mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service_data: dict[str, Any],
-    http_status_members: HTTPStatus,
-    http_status_cast: HTTPStatus,
+    raise_exception_members: Exception,
+    raise_exception_cast: Exception,
     expected_exception: Exception,
     expected_exception_msg: str,
 ) -> None:
     """Test Habitica transformation action exceptions."""
-    mock_habitica.get(
-        f"{DEFAULT_URL}/api/v3/groups/party/members",
-        json=load_json_object_fixture("party_members.json", DOMAIN),
-        status=http_status_members,
-    )
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/class/cast/spookySparkles?targetId=ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
-        json={"success": True, "data": {}},
-        status=http_status_cast,
-    )
-
+    # mock_habitica.get(
+    #     f"{DEFAULT_URL}/api/v3/groups/party/members",
+    #     json=load_json_object_fixture("party_members.json", DOMAIN),
+    #     status=http_status_members,
+    # )
+    # mock_habitica.post(
+    #     f"{DEFAULT_URL}/api/v3/user/class/cast/spookySparkles?targetId=ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+    #     json={"success": True, "data": {}},
+    #     status=http_status_cast,
+    # )
+    habitica.cast_skill.side_effect = raise_exception_cast
+    habitica.get_group_members.side_effect = raise_exception_members
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
