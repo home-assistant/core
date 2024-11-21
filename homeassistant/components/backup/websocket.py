@@ -313,7 +313,7 @@ async def handle_config_info(
                 vol.Optional("include_addons"): vol.Any(list[str], None),
                 vol.Optional("include_all_addons"): bool,
                 vol.Optional("include_database"): bool,
-                vol.Optional("include_folders"): vol.Any(list[str], None),
+                vol.Optional("include_folders"): vol.Any([vol.Coerce(Folder)], None),
                 vol.Optional("name"): vol.Any(str, None),
                 vol.Optional("password"): vol.Any(str, None),
             },

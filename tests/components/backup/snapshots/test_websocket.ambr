@@ -278,7 +278,7 @@
           'include_all_addons': True,
           'include_database': True,
           'include_folders': list([
-            'test-folder',
+            'media',
           ]),
           'name': 'test-name',
           'password': 'test-password',

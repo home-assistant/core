@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .models import Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager
@@ -228,7 +229,7 @@ class CreateBackupConfig:
     include_addons: list[str] | None = None
     include_all_addons: bool = False
     include_database: bool = True
-    include_folders: list[str] | None = None
+    include_folders: list[Folder] | None = None
     name: str | None = None
     password: str | None = None
 
@@ -252,7 +253,7 @@ class StoredCreateBackupConfig(TypedDict):
     include_addons: list[str] | None
     include_all_addons: bool
     include_database: bool
-    include_folders: list[str] | None
+    include_folders: list[Folder] | None
     name: str | None
     password: str | None
 
@@ -264,6 +265,6 @@ class CreateBackupParametersDict(TypedDict, total=False):
     include_addons: list[str] | None
     include_all_addons: bool
     include_database: bool
-    include_folders: list[str] | None
+    include_folders: list[Folder] | None
     name: str | None
     password: str | None
