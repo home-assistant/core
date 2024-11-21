@@ -1527,7 +1527,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.22.0
+pyenphase==1.23.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1947,7 +1947,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.9
+pytouchlinesl==0.2.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
