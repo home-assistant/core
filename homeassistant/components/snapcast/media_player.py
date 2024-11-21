@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -193,6 +192,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         self._device = device
         self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
+        _LOGGER.debug("New entity ID: %s", self._attr_unique_id)
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -366,20 +366,24 @@ class SnapcastClientDevice(SnapcastBaseDevice):
 
     async def async_join(self, master) -> None:
         """Join the group of the master player."""
-        component: EntityComponent[MediaPlayerEntity] = self.hass.data[
-            MEDIA_PLAYER_DOMAIN
-        ]
-        master_entity = component.get_entity(master)
+        entity_registry = er.async_get(self.hass)
+        master_entity = entity_registry.async_get(master)
+        if master_entity is None:
+            raise ServiceValidationError(f"Master entity '{master}' not found.")
 
-        if not isinstance(master_entity, SnapcastClientDevice):
+        # Validate master entity is a client
+        unique_id = master_entity.unique_id
+        if not unique_id.startswith(CLIENT_PREFIX):
             raise ServiceValidationError(
                 "Master is not a client device. Can only join clients."
             )
 
+        # Extract the client ID and locate it's group
+        identifier = unique_id.split("_")[-1]
         master_group = next(
             group
             for group in self._device.groups_available()
-            if master_entity.identifier in group.clients
+            if identifier in group.clients
         )
         await master_group.add_client(self._device.identifier)
         self.async_write_ha_state()
