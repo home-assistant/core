@@ -794,6 +794,17 @@ async def test_config_info(
             "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "never",
         },
+        {
+            "type": "backup/config/update",
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "schedule": "daily",
+        },
     ],
 )
 async def test_config_update(

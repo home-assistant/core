@@ -52,13 +52,18 @@ class BackupConfigData:
     @classmethod
     def from_dict(cls, data: StoredBackupConfig) -> Self:
         """Initialize backup config data from a dict."""
+        include_folders_data = data["create_backup"]["include_folders"]
+        if include_folders_data:
+            include_folders = [Folder(folder) for folder in include_folders_data]
+        else:
+            include_folders = None
         return cls(
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
                 include_addons=data["create_backup"]["include_addons"],
                 include_all_addons=data["create_backup"]["include_all_addons"],
                 include_database=data["create_backup"]["include_database"],
-                include_folders=data["create_backup"]["include_folders"],
+                include_folders=include_folders,
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
