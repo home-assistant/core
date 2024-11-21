@@ -43,6 +43,8 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
