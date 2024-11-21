@@ -1280,11 +1280,9 @@ def async_register_entity_service(
         from .frame import ReportBehavior, report_usage
 
         report_usage(
-            (
-                "registers an entity service with a non entity service schema "
-                "which will stop working in HA Core 2025.9"
-            ),
+            "registers an entity service with a non entity service schema",
             core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.9",
         )
 
     service_func: str | HassJob[..., Any]

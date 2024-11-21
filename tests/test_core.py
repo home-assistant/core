@@ -3040,10 +3040,9 @@ async def test_async_run_job_deprecated(
 
     hass.async_run_job(_test)
     assert (
-        "Detected code that calls `async_run_job`, which is deprecated "
-        "and will be removed in Home Assistant 2025.4; Please review "
+        "Detected code that calls `async_run_job`, which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
-        " for replacement options"
+        " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
 
@@ -3057,10 +3056,9 @@ async def test_async_add_job_deprecated(
 
     hass.async_add_job(_test)
     assert (
-        "Detected code that calls `async_add_job`, which is deprecated "
-        "and will be removed in Home Assistant 2025.4; Please review "
+        "Detected code that calls `async_add_job`, which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
-        " for replacement options"
+        " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
 
@@ -3074,10 +3072,9 @@ async def test_async_add_hass_job_deprecated(
 
     hass.async_add_hass_job(HassJob(_test))
     assert (
-        "Detected code that calls `async_add_hass_job`, which is deprecated "
-        "and will be removed in Home Assistant 2025.5; Please review "
+        "Detected code that calls `async_add_hass_job`, which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
-        " for replacement options"
+        " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
 
@@ -3245,8 +3242,8 @@ async def test_async_listen_with_run_immediately_deprecated(
     func = getattr(hass.bus, method)
     func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
     assert (
-        f"Detected code that calls `{method}` with run_immediately, which is "
-        "deprecated and will be removed in Home Assistant 2025.5."
+        f"Detected code that calls `{method}` with run_immediately. "
+        "This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
 
