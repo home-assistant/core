@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import IturanDataUpdateCoordinator
+from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.DEVICE_TRACKER,
 ]
-
-type IturanConfigEntry = ConfigEntry[IturanDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IturanConfigEntry) -> bool:
