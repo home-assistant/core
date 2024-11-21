@@ -45,15 +45,15 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if user_input[CONF_HOST] == "":
                     try:
                         description = await ControlPointDiscoveryService().discover()
-                        data[CONF_HOST] = description.host
-                        data[CONF_PORT] = description.port
                     except ControlPointError as _:
                         errors["base"] = "discovery_failure"
+                    data[CONF_HOST] = description.host
+                    data[CONF_PORT] = description.port
                 else:
+                    hostbyname = None
                     data[CONF_HOST] = user_input[CONF_HOST]
                     data[CONF_PORT] = user_input[CONF_PORT]
                     try:
-                        hostbyname = None
                         hostbyname = socket.gethostbyname(data[CONF_HOST])
                     except socket.gaierror as _:
                         errors["base"] = "invalid_host"
@@ -97,6 +97,10 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during configuration steps")
                 errors["base"] = "unknown"
 
+            if await self.async_set_unique_id(data[CONF_MAC]):
+                errors["base"] = "duplicate_entry"
+                description_placeholders["error_detail"] = data[CONF_MAC]
+
             if errors:
                 return self.async_show_form(
                     step_id="user",
@@ -105,7 +109,6 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     description_placeholders=description_placeholders,
                 )
 
-            await self.async_set_unique_id(data[CONF_MAC])
             return self.async_create_entry(title=data["title"], data=data)
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
