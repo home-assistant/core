@@ -99,7 +99,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             await update_fn()
         except TedeeLocalAuthException as ex:
             raise ConfigEntryAuthFailed(
-                "Authentication failed. Local access token is invalid"
+                translation_domain=DOMAIN,
+                translation_key="authentification_failed",
             ) from ex
 
         except TedeeDataUpdateException as ex:
