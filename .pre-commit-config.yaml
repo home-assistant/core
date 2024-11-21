@@ -37,6 +37,14 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.4
+    hooks:
+      - id: check-jsonschema
+        alias: check-jsonschema-manifest
+        name: Validate manifest.json with jsonschema
+        files: ^homeassistant/components/.*/manifest.json$
+        args: ["--schemafile", "script/json_schemas/manifest_schema.json"]
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:

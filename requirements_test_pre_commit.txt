@@ -1,5 +1,6 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
+check-jsonschema==0.29.4
 codespell==2.3.0
 ruff==0.7.4
 yamllint==1.35.1

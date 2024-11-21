@@ -429,6 +429,14 @@ jobs:
           . venv/bin/activate
           pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
+      - name: Register check-jsonschema problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-jsonschema.json"
+      - name: Run check-jsonschema
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual check-jsonschema-manifest --all-files
+
   lint-hadolint:
     name: Check ${{ matrix.file }}
     runs-on: ubuntu-24.04
