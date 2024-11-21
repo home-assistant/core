@@ -108,13 +108,15 @@ class EsphomeMediaPlayer(
 
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
+        bypass_proxy = kwargs.get("extra", {}).get("bypass_proxy")
 
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
             self._entry_data.media_player_formats.get(self._static_info.unique_id)
         )
 
         if (
-            supported_formats
+            not bypass_proxy
+            and supported_formats
             and _is_url(media_id)
             and (
                 proxy_url := self._get_proxy_url(
