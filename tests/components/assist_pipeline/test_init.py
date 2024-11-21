@@ -941,7 +941,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
-    """Test that sentence triggers are checked before the conversation agent."""
+    """Test that sentence triggers are checked before a non-default conversation agent."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -975,9 +975,16 @@ async def test_sentence_trigger_overrides_conversation_agent(
             start_stage=assist_pipeline.PipelineStage.INTENT,
             end_stage=assist_pipeline.PipelineStage.INTENT,
             event_callback=events.append,
+            intent_agent="test-agent",  # not the default agent
         ),
     )
-    await pipeline_input.validate()
+
+    # Ensure prepare succeeds
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(id="test-agent", name="Test Agent"),
+    ):
+        await pipeline_input.validate()
 
     with patch(
         "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse"
