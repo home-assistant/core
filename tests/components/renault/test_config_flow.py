@@ -256,3 +256,6 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+    assert config_entry.data[CONF_USERNAME] == "email@test.com"
+    assert config_entry.data[CONF_PASSWORD] == "any"
