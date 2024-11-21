@@ -182,13 +182,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(last_uuid_section)
                 self._abort_if_unique_id_configured()
 
-        if not discovery_info.ssdp_location:
+        if discovery_info.ssdp_location is None:
             _LOGGER.error("SSDP location is None")
             return self.async_abort(reason="unknown")
 
         host = urlparse(discovery_info.ssdp_location).hostname
 
-        if not host:
+        if host is None:
             _LOGGER.error("SSDP host is None")
             return self.async_abort(reason="unknown")
 
@@ -207,9 +207,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._receiver_info = info
 
-        title_string = (
-            f"{discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "")} ({host})"
-        )
+        title_string = f"{info.model_name} ({info.host})"
         self.context.update({"title_placeholders": {"name": title_string}})
         return await self.async_step_configure_receiver()
 
