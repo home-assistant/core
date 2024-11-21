@@ -107,6 +107,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert zimi_device is not None
 
-    device_registry.async_remove_device(device_id=zimi_device.id)
-
-    return False
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
