@@ -1,4 +1,5 @@
 {
+  "title": "DWD Weather Warnings",
   "config": {
     "step": {
       "user": {
