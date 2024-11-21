@@ -743,6 +743,18 @@ _CONVERTED_VALUE: dict[
             7.48051948,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         ),
+        (
+            9,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            2500,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            50,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
     ],
 }
 
