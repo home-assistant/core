@@ -113,7 +113,7 @@ def mock_cloud_client(
         client.get_customer_fleet.return_value = {
             mock_device_info.serial_number: mock_device_info
         }
-        client.async_logout = AsyncMock()
+
         yield client
 
 
