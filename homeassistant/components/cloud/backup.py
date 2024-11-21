@@ -14,9 +14,12 @@ from hass_nabucasa.cloud_api import (
     async_files_upload_details,
 )
 
-from homeassistant.components.backup import BackupAgent, BaseBackup
-from homeassistant.components.backup.agent import BackupAgentError
-from homeassistant.components.backup.util import read_backup
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    read_backup,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from .client import CloudClient
@@ -99,15 +102,13 @@ class CloudBackupAgent(BackupAgent):
         self,
         *,
         path: Path,
-        homeassistant_version: str,
-        backup: BaseBackup,
+        backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
         :param path: The full file path to the backup that should be uploaded.
         :param backup: Metadata about the backup that should be uploaded.
-        :param homeassistant_version: The version of Home Assistant that created the backup
         """
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
@@ -121,13 +122,7 @@ class CloudBackupAgent(BackupAgent):
             self._cloud,
             storage_type=_STORAGE_BACKUP,
             filename=self._get_backup_filename(),
-            metadata={
-                "backup_id": backup.backup_id,
-                "date": backup.date,
-                "homeassistant_version": homeassistant_version,
-                "name": backup.name,
-                "protected": backup.protected,
-            },
+            metadata=backup.as_dict(),
             size=backup.size,
             base64md5hash=base64md5hash,
         )
@@ -137,8 +132,6 @@ class CloudBackupAgent(BackupAgent):
             data={"file": path.open("rb")},
             headers=details["headers"],
         )
-
-        self._backups = [backup]
 
     async def async_delete_backup(
         self,
@@ -152,26 +145,17 @@ class CloudBackupAgent(BackupAgent):
         # TODO: Implement this method
         raise NotImplementedError
 
-    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
 
-        return [
-            BaseBackup(
-                backup_id=backup["Key"],
-                date=backup["LastModified"],
-                name=backup["Metadata"]["name"],
-                size=backup["Size"],
-                protected=bool(backup["Metadata"]["protected"]),
-            )
-            for backup in backups
-        ]
+        return [AgentBackup.from_dict(backup["Metadata"]) for backup in backups]
 
     async def async_get_backup(
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BaseBackup | None:
+    ) -> AgentBackup | None:
         """Return a backup."""
         backups = await self.async_list_backups()
 

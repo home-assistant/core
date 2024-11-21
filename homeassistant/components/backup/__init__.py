@@ -26,6 +26,7 @@ from .manager import (
     NewBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
+from .util import read_backup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -41,6 +42,7 @@ __all__ = [
     "Folder",
     "LocalBackupAgent",
     "NewBackup",
+    "read_backup",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
