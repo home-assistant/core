@@ -192,7 +192,6 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         self._device = device
         self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
-        _LOGGER.debug("New entity ID: %s", self._attr_unique_id)
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
