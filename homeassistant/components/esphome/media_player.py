@@ -20,6 +20,7 @@ from aioesphomeapi import (
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -49,6 +50,8 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
         EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
     }
 )
+
+ATTR_BYPASS_PROXY = "bypass_proxy"
 
 
 class EsphomeMediaPlayer(
@@ -108,7 +111,7 @@ class EsphomeMediaPlayer(
 
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
-        bypass_proxy = kwargs.get("extra", {}).get("bypass_proxy")
+        bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
 
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
             self._entry_data.media_player_formats.get(self._static_info.unique_id)
