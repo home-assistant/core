@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Self, TypedDict, Unpack
+from typing import TYPE_CHECKING, Self, TypedDict
 
 from cronsim import CronSim
 
@@ -33,15 +33,9 @@ STORAGE_VERSION = 1
 class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
-    agent_ids: list[str]
-    include_addons: list[str] | None
-    include_all_addons: bool
-    include_database: bool
-    include_folders: list[str] | None
+    create_backup: StoredCreateBackupConfig
     last_automatic_backup: datetime | None
     max_copies: int | None
-    name: str | None
-    password: str | None
     schedule: ScheduleState
 
 
@@ -49,45 +43,35 @@ class StoredBackupConfig(TypedDict):
 class BackupConfigData:
     """Represent loaded backup config data."""
 
-    agent_ids: list[str] = field(default_factory=list)
-    include_addons: list[str] | None = None
-    include_all_addons: bool = False
-    include_database: bool = True
-    include_folders: list[str] | None = None
+    create_backup: CreateBackupConfig
     last_automatic_backup: datetime | None = None
     max_copies: int | None = None
-    name: str | None = None
-    password: str | None = None
     schedule: BackupSchedule
 
     @classmethod
     def from_dict(cls, data: StoredBackupConfig) -> Self:
         """Initialize backup config data from a dict."""
         return cls(
-            agent_ids=data["agent_ids"],
-            include_addons=data["include_addons"],
-            include_all_addons=data["include_all_addons"],
-            include_database=data["include_database"],
-            include_folders=data["include_folders"],
+            create_backup=CreateBackupConfig(
+                agent_ids=data["create_backup"]["agent_ids"],
+                include_addons=data["create_backup"]["include_addons"],
+                include_all_addons=data["create_backup"]["include_all_addons"],
+                include_database=data["create_backup"]["include_database"],
+                include_folders=data["create_backup"]["include_folders"],
+                name=data["create_backup"]["name"],
+                password=data["create_backup"]["password"],
+            ),
             last_automatic_backup=data["last_automatic_backup"],
             max_copies=data["max_copies"],
-            name=data["name"],
-            password=data["password"],
             schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
         )
 
     def to_dict(self) -> StoredBackupConfig:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
-            agent_ids=self.agent_ids,
-            include_addons=self.include_addons,
-            include_all_addons=self.include_all_addons,
-            include_database=self.include_database,
-            include_folders=self.include_folders,
+            create_backup=self.create_backup.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
             max_copies=self.max_copies,
-            name=self.name,
-            password=self.password,
             schedule=self.schedule.state,
         )
 
@@ -97,7 +81,10 @@ class BackupConfig:
 
     def __init__(self, hass: HomeAssistant, manager: BackupManager) -> None:
         """Initialize backup config."""
-        self.data = BackupConfigData(schedule=BackupSchedule())
+        self.data = BackupConfigData(
+            create_backup=CreateBackupConfig(),
+            schedule=BackupSchedule(),
+        )
         self._manager = manager
         self._store: Store[StoredBackupConfig] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
@@ -124,11 +111,13 @@ class BackupConfig:
     async def update(
         self,
         *,
+        create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         max_copies: int | None | UndefinedType = UNDEFINED,
         schedule: ScheduleState | UndefinedType = UNDEFINED,
-        **kwargs: Unpack[CreateBackupParametersDict],
     ) -> None:
         """Update config."""
+        if create_backup is not UNDEFINED:
+            self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if max_copies is not UNDEFINED:
             self.data.max_copies = max_copies
         if schedule is not UNDEFINED:
@@ -136,9 +125,6 @@ class BackupConfig:
             if new_schedule != self.data.schedule:
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
-
-        for param_name, param_value in kwargs.items():
-            setattr(self.data, param_name, param_value)
 
         self.save()
 
@@ -211,15 +197,15 @@ class BackupSchedule:
             manager.config.save()
             self._schedule_next(cron_pattern, manager)
             await manager.async_create_backup(
-                agent_ids=config_data.agent_ids,
-                include_addons=config_data.include_addons,
-                include_all_addons=config_data.include_all_addons,
-                include_database=config_data.include_database,
-                include_folders=config_data.include_folders,
+                agent_ids=config_data.create_backup.agent_ids,
+                include_addons=config_data.create_backup.include_addons,
+                include_all_addons=config_data.create_backup.include_all_addons,
+                include_database=config_data.create_backup.include_database,
+                include_folders=config_data.create_backup.include_folders,
                 include_homeassistant=True,  # always include HA
-                name=config_data.name,
+                name=config_data.create_backup.name,
                 on_progress=None,
-                password=config_data.password,
+                password=config_data.create_backup.password,
             )
 
         manager.remove_next_backup_event = async_track_point_in_time(
@@ -232,6 +218,43 @@ class BackupSchedule:
         if (remove_next_event := manager.remove_next_backup_event) is not None:
             remove_next_event()
             manager.remove_next_backup_event = None
+
+
+@dataclass(kw_only=True)
+class CreateBackupConfig:
+    """Represent the config for async_create_backup."""
+
+    agent_ids: list[str] = field(default_factory=list)
+    include_addons: list[str] | None = None
+    include_all_addons: bool = False
+    include_database: bool = True
+    include_folders: list[str] | None = None
+    name: str | None = None
+    password: str | None = None
+
+    def to_dict(self) -> StoredCreateBackupConfig:
+        """Convert create backup config to a dict."""
+        return {
+            "agent_ids": self.agent_ids,
+            "include_addons": self.include_addons,
+            "include_all_addons": self.include_all_addons,
+            "include_database": self.include_database,
+            "include_folders": self.include_folders,
+            "name": self.name,
+            "password": self.password,
+        }
+
+
+class StoredCreateBackupConfig(TypedDict):
+    """Represent the stored config for async_create_backup."""
+
+    agent_ids: list[str]
+    include_addons: list[str] | None
+    include_all_addons: bool
+    include_database: bool
+    include_folders: list[str] | None
+    name: str | None
+    password: str | None
 
 
 class CreateBackupParametersDict(TypedDict, total=False):

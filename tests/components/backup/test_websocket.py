@@ -673,67 +673,77 @@ async def test_agents_download_unknown_agent(
     [
         {},
         {
-            "agent_ids": ["test-agent"],
-            "include_addons": ["test-addon"],
-            "include_all_addons": True,
-            "include_database": True,
-            "include_folders": ["test-folder"],
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": True,
+                "include_database": True,
+                "include_folders": ["test-folder"],
+                "name": "test-name",
+                "password": "test-password",
+            },
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
             "max_copies": 3,
-            "name": "test-name",
-            "password": "test-password",
             "schedule": "daily",
         },
         {
-            "agent_ids": ["test-agent"],
-            "include_addons": None,
-            "include_all_addons": False,
-            "include_database": False,
-            "include_folders": None,
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
             "last_automatic_backup": None,
             "max_copies": 3,
-            "name": None,
-            "password": None,
             "schedule": "never",
         },
         {
-            "agent_ids": ["test-agent"],
-            "include_addons": None,
-            "include_all_addons": False,
-            "include_database": False,
-            "include_folders": None,
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
             "max_copies": None,
-            "name": None,
-            "password": None,
             "schedule": "never",
         },
         {
-            "agent_ids": ["test-agent"],
-            "include_addons": None,
-            "include_all_addons": False,
-            "include_database": False,
-            "include_folders": None,
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
             "last_automatic_backup": None,
             "max_copies": None,
-            "name": None,
-            "password": None,
             "schedule": "mon",
         },
         {
-            "agent_ids": ["test-agent"],
-            "include_addons": None,
-            "include_all_addons": False,
-            "include_database": False,
-            "include_folders": None,
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
             "last_automatic_backup": None,
             "max_copies": None,
-            "name": None,
-            "password": None,
             "schedule": "sat",
         },
     ],
@@ -766,22 +776,22 @@ async def test_config_info(
     [
         {
             "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
+            "create_backup": {"agent_ids": ["test-agent"]},
             "max_copies": 5,
         },
         {
             "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
+            "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
+            "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "mon",
         },
         {
             "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
+            "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "never",
         },
     ],
@@ -819,7 +829,7 @@ async def test_config_update(
     [
         {
             "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
+            "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "someday",
         },
     ],
@@ -862,7 +872,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "daily",
             },
             "2024-11-11T04:45:00+01:00",
@@ -874,7 +884,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "mon",
             },
             "2024-11-11T04:45:00+01:00",
@@ -886,7 +896,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "never",
             },
             "2024-11-11T04:45:00+01:00",
@@ -898,7 +908,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "daily",
             },
             "2024-10-26T04:45:00+01:00",
@@ -910,7 +920,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "mon",
             },
             "2024-10-26T04:45:00+01:00",
@@ -922,7 +932,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "agent_ids": ["test-agent"],
+                "create_backup": {"agent_ids": ["test-agent"]},
                 "schedule": "never",
             },
             "2024-10-26T04:45:00+01:00",
@@ -949,15 +959,17 @@ async def test_config_update_schedule(
     """Test updating the backup config schedule."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "agent_ids": ["test-agent"],
-        "include_addons": ["test-addon"],
-        "include_all_addons": False,
-        "include_database": True,
-        "include_folders": ["test-folder"],
+        "create_backup": {
+            "agent_ids": ["test-agent"],
+            "include_addons": ["test-addon"],
+            "include_all_addons": False,
+            "include_database": True,
+            "include_folders": ["test-folder"],
+            "name": "test-name",
+            "password": "test-password",
+        },
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
         "max_copies": 3,
-        "name": "test-name",
-        "password": "test-password",
         "schedule": "daily",
     }
     hass_storage[DOMAIN] = {

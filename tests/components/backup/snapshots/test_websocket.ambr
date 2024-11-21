@@ -242,16 +242,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -266,21 +268,23 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': list([
-          'test-addon',
-        ]),
-        'include_all_addons': True,
-        'include_database': True,
-        'include_folders': list([
-          'test-folder',
-        ]),
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': list([
+            'test-addon',
+          ]),
+          'include_all_addons': True,
+          'include_database': True,
+          'include_folders': list([
+            'test-folder',
+          ]),
+          'name': 'test-name',
+          'password': 'test-password',
+        }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'max_copies': 3,
-        'name': 'test-name',
-        'password': 'test-password',
         'schedule': dict({
           'state': 'daily',
         }),
@@ -295,17 +299,19 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': False,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': 3,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -320,17 +326,19 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': False,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -345,17 +353,19 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': False,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'mon',
         }),
@@ -370,17 +380,19 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': False,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'sat',
         }),
@@ -395,16 +407,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -419,17 +433,19 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': 5,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -442,17 +458,19 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
-      'agent_ids': list([
-        'test-agent',
-      ]),
-      'include_addons': None,
-      'include_all_addons': False,
-      'include_database': True,
-      'include_folders': None,
+      'create_backup': dict({
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
       'last_automatic_backup': None,
       'max_copies': 5,
-      'name': None,
-      'password': None,
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -465,16 +483,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -489,17 +509,19 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'daily',
         }),
@@ -512,17 +534,19 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
-      'agent_ids': list([
-        'test-agent',
-      ]),
-      'include_addons': None,
-      'include_all_addons': False,
-      'include_database': True,
-      'include_folders': None,
+      'create_backup': dict({
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
       'last_automatic_backup': None,
       'max_copies': None,
-      'name': None,
-      'password': None,
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -535,16 +559,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -559,17 +585,19 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'mon',
         }),
@@ -582,17 +610,19 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
-      'agent_ids': list([
-        'test-agent',
-      ]),
-      'include_addons': None,
-      'include_all_addons': False,
-      'include_database': True,
-      'include_folders': None,
+      'create_backup': dict({
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
       'last_automatic_backup': None,
       'max_copies': None,
-      'name': None,
-      'password': None,
       'schedule': 'mon',
     }),
     'key': 'backup',
@@ -605,16 +635,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -629,17 +661,19 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-          'test-agent',
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -652,17 +686,19 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
-      'agent_ids': list([
-        'test-agent',
-      ]),
-      'include_addons': None,
-      'include_all_addons': False,
-      'include_database': True,
-      'include_folders': None,
+      'create_backup': dict({
+        'agent_ids': list([
+          'test-agent',
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
       'last_automatic_backup': None,
       'max_copies': None,
-      'name': None,
-      'password': None,
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -675,16 +711,18 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
@@ -699,16 +737,18 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'agent_ids': list([
-        ]),
-        'include_addons': None,
-        'include_all_addons': False,
-        'include_database': True,
-        'include_folders': None,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
         'last_automatic_backup': None,
         'max_copies': None,
-        'name': None,
-        'password': None,
         'schedule': dict({
           'state': 'never',
         }),
