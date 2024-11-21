@@ -171,7 +171,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ssdp.SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle flow initialized by SSDP discovery."""
-        _LOGGER.debug("Config flow start ssdp auto discovery: %s", discovery_info)
+        _LOGGER.debug("Config flow start ssdp: %s", discovery_info)
 
         udn = discovery_info.ssdp_udn
         if udn:
@@ -182,6 +182,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(last_uuid_section)
                 self._abort_if_unique_id_configured()
 
+        if not discovery_info.ssdp_location:
+            _LOGGER.error("SSDP location is None")
+            return self.async_abort(reason="unknown")
+
         host = urlparse(discovery_info.ssdp_location).hostname
 
         if not host:
@@ -189,26 +193,24 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         try:
-            info = await async_interview(str(host))
+            info = await async_interview(host)
         except Exception:
             _LOGGER.exception("Unexpected exception interviewing host %s", host)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="unknown")
 
         if info is None:
-            _LOGGER.debug("SSDP info is none: %s", host)
+            _LOGGER.debug("SSDP eiscp is None: %s", host)
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(info.identifier)
         self._abort_if_unique_id_configured()
 
         self._receiver_info = info
-        self.context.update(
-            {
-                "title_placeholders": {
-                    "name": discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, host)
-                }
-            }
+
+        title_string = (
+            f"{discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "")} ({host})"
         )
+        self.context.update({"title_placeholders": {"name": title_string}})
         return await self.async_step_configure_receiver()
 
     async def async_step_configure_receiver(
