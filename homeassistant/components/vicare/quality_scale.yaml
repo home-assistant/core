@@ -1,7 +1,7 @@
 rules:
   # Bronze
   config-flow:
-    status: todo:
+    status: todo
     comment: data_description is missing.
   test-before-configure: done
   unique-config-entry:
@@ -9,7 +9,7 @@ rules:
     comment: Uniqueness is not checked yet.
   config-flow-test-coverage: done
   runtime-data:
-    status: todo:
+    status: todo
     comment: runtime_data is not used yet.
   test-before-setup: done
   appropriate-polling: done
