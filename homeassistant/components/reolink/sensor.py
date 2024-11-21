@@ -71,6 +71,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_percent",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -81,6 +82,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_temperature",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         translation_key="battery_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -93,6 +95,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="battery_state",
+        cmd_id=252,
         cmd_key="GetBatteryInfo",
         translation_key="battery_state",
         device_class=SensorDeviceClass.ENUM,
