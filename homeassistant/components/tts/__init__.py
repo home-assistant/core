@@ -542,7 +542,8 @@ class SpeechManager:
         self.mem_cache: dict[str, TTSCache] = {}
 
         # filename <-> token
-        self.filename_token: dict[str, str] = {}
+        self.filename_to_token: dict[str, str] = {}
+        self.token_to_filename: dict[str, str] = {}
 
     def _init_cache(self) -> dict[str, str]:
         """Init cache folder and fetch files."""
@@ -661,14 +662,14 @@ class SpeechManager:
             )
 
         # Use a randomly generated token instead of exposing the filename
-        token = self.filename_token.get(filename)
+        token = self.filename_to_token.get(filename)
         if not token:
             # Keep extension (.mp3, etc.)
             token = secrets.token_urlsafe(16) + os.path.splitext(filename)[1]
 
             # Map token <-> filename
-            self.filename_token[filename] = token
-            self.filename_token[token] = filename
+            self.filename_to_token[filename] = token
+            self.token_to_filename[token] = filename
 
         return f"/api/tts_proxy/{token}"
 
@@ -929,7 +930,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        filename = self.filename_token.get(token)
+        filename = self.token_to_filename.get(token)
         if not filename:
             raise HomeAssistantError(f"{token} was not recognized!")
 
