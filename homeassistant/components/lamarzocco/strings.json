@@ -196,6 +196,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
     "auto_on_off_error": {
       "message": "Error while setting auto on/off to {state} for {id}"
     },
