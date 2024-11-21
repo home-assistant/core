@@ -96,8 +96,18 @@ def _get_appliance_by_device_id(
 ) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Device with ID {device_id} not found")
+    device_entry = device_registry.async_get(device_id)
+    assert device_entry
+
+    ha_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    assert ha_id
 
     for entry_id in device_entry.config_entries:
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
@@ -105,8 +115,9 @@ def _get_appliance_by_device_id(
         if entry.domain == DOMAIN:
             entry = cast(HomeConnectConfigEntry, entry)
             for device in entry.runtime_data.devices:
-                if device.device_id == device_id:
-                    return device.appliance
+                appliance = device.appliance
+                if appliance.haId == ha_id:
+                    return appliance
     raise ValueError(f"Appliance for device id {device_id} not found")
 
 
@@ -264,20 +275,9 @@ async def update_all_devices(
     """Update all the devices."""
     hc_api = entry.runtime_data
 
-    device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
         for device in hc_api.devices:
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device.appliance.haId)},
-                name=device.appliance.name,
-                manufacturer=device.appliance.brand,
-                model=device.appliance.vib,
-            )
-
-            device.device_id = device_entry.id
-
             await hass.async_add_executor_job(device.initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)

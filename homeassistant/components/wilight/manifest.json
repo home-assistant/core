@@ -6,7 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/wilight",
   "iot_class": "local_polling",
   "loggers": ["pywilight"],
-  "quality_scale": "silver",
   "requirements": ["pywilight==0.0.74"],
   "ssdp": [
     {
