@@ -12,7 +12,6 @@ from thinqconnect.integration import ExtendedProperty
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    FAN_OFF,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -150,7 +149,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # Update fan, hvac and preset mode.
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
-                self._attr_fan_mode = self.data.fan_mode
+            self._attr_fan_mode = self.data.fan_mode
         if self.data.is_on:
             hvac_mode = self._requested_hvac_mode or self.data.hvac_mode
             if hvac_mode in STR_TO_HVAC:
