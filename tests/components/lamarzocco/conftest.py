@@ -20,6 +20,15 @@ from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
@@ -109,7 +118,9 @@ def mock_cloud_client(
 
 
 @pytest.fixture
-def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
+def mock_lamarzocco(
+    device_fixture: MachineModel, mock_cloud_client: Generator[MagicMock]
+) -> Generator[MagicMock]:
     """Return a mocked LM client."""
     model = device_fixture
 
@@ -145,6 +156,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
         lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
+        lamarzocco._cloud_client = mock_cloud_client
 
         yield lamarzocco
 

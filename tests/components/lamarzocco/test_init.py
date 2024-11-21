@@ -24,9 +24,7 @@ async def test_load_unload_config_entry(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -34,6 +32,17 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_unload_on_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test loading and unloading the integration."""
+    mock_cloud_client.async_logout.side_effect = RequestNotSuccessful()
+    await test_load_unload_config_entry(hass, mock_config_entry, mock_lamarzocco)
 
 
 async def test_config_entry_not_ready(
