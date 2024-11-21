@@ -66,7 +66,14 @@ def test_all() -> None:
         "DEVICE_CLASS_",
     )
     + _create_tuples(const.UnitOfApparentPower, "POWER_")
-    + _create_tuples(const.UnitOfPower, "POWER_")
+    + _create_tuples(
+        [
+            const.UnitOfPower.WATT,
+            const.UnitOfPower.KILO_WATT,
+            const.UnitOfPower.BTU_PER_HOUR,
+        ],
+        "POWER_",
+    )
     + _create_tuples(
         [
             const.UnitOfEnergy.KILO_WATT_HOUR,
@@ -76,7 +83,13 @@ def test_all() -> None:
         "ENERGY_",
     )
     + _create_tuples(const.UnitOfElectricCurrent, "ELECTRIC_CURRENT_")
-    + _create_tuples(const.UnitOfElectricPotential, "ELECTRIC_POTENTIAL_")
+    + _create_tuples(
+        [
+            const.UnitOfElectricPotential.MILLIVOLT,
+            const.UnitOfElectricPotential.VOLT,
+        ],
+        "ELECTRIC_POTENTIAL_",
+    )
     + _create_tuples(const.UnitOfTemperature, "TEMP_")
     + _create_tuples(const.UnitOfTime, "TIME_")
     + _create_tuples(

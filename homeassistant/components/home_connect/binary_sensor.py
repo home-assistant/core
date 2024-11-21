@@ -3,14 +3,22 @@
 from dataclasses import dataclass
 import logging
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .api import HomeConnectDevice
 from .const import (
@@ -181,3 +189,52 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
         )
         self._attr_unique_id = f"{device.appliance.haId}-Door"
         self._attr_name = f"{device.appliance.name} Door"
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        items = automations + scripts
+        if not items:
+            return
+
+        entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        entity_automations = [
+            automation_entity
+            for automation_id in automations
+            if (automation_entity := entity_reg.async_get(automation_id))
+        ]
+        entity_scripts = [
+            script_entity
+            for script_id in scripts
+            if (script_entity := entity_reg.async_get(script_id))
+        ]
+
+        items_list = [
+            f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
+            for item in entity_automations
+        ] + [
+            f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
+            for item in entity_scripts
+        ]
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_binary_common_door_sensor_{self.entity_id}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_binary_common_door_sensor",
+            translation_placeholders={
+                "entity": self.entity_id,
+                "items": "\n".join(items_list),
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_common_door_sensor_{self.entity_id}"
+        )

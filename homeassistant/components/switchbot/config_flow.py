@@ -80,7 +80,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SwitchbotOptionsFlowHandler(config_entry)
+        return SwitchbotOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -345,10 +345,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class SwitchbotOptionsFlowHandler(OptionsFlow):
     """Handle Switchbot options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

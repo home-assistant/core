@@ -515,18 +515,18 @@ class Template:
         will be non optional in Home Assistant Core 2025.10.
         """
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
         if not hass:
-            report(
+            report_usage(
                 (
                     "creates a template object without passing hass, "
                     "which will stop working in HA Core 2025.10"
                 ),
-                error_if_core=False,
+                core_behavior=ReportBehavior.LOG,
             )
 
         self.template: str = template.strip()
@@ -1281,7 +1281,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are falsy
     """
     if template_result is None:
         return False

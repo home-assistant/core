@@ -8,6 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
+from .manager import BackupProgress
 
 
 @callback
@@ -22,6 +23,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
     websocket_api.async_register_command(hass, handle_remove)
+    websocket_api.async_register_command(hass, handle_restore)
 
 
 @websocket_api.require_admin
@@ -39,7 +41,7 @@ async def handle_info(
         msg["id"],
         {
             "backups": list(backups.values()),
-            "backing_up": manager.backing_up,
+            "backing_up": manager.backup_task is not None,
         },
     )
 
@@ -86,6 +88,24 @@ async def handle_remove(
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/restore",
+        vol.Required("slug"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_restore(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Restore a backup."""
+    await hass.data[DATA_MANAGER].async_restore_backup(msg["slug"])
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "backup/generate"})
 @websocket_api.async_response
 async def handle_create(
@@ -94,7 +114,11 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_MANAGER].async_create_backup()
+
+    def on_progress(progress: BackupProgress) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], progress))
+
+    backup = await hass.data[DATA_MANAGER].async_create_backup(on_progress=on_progress)
     connection.send_result(msg["id"], backup)
 
 
@@ -108,7 +132,6 @@ async def handle_backup_start(
 ) -> None:
     """Backup start notification."""
     manager = hass.data[DATA_MANAGER]
-    manager.backing_up = True
     LOGGER.debug("Backup start notification")
 
     try:
@@ -130,7 +153,6 @@ async def handle_backup_end(
 ) -> None:
     """Backup end notification."""
     manager = hass.data[DATA_MANAGER]
-    manager.backing_up = False
     LOGGER.debug("Backup end notification")
 
     try:

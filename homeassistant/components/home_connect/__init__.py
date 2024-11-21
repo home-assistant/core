@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeconnect.api import HomeConnectAppliance
 from requests import HTTPError
 import voluptuous as vol
 
@@ -79,12 +80,19 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice:
+) -> HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
         for device in hc_api.devices:
@@ -296,3 +304,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True
+
+
+def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any]:
+    """Return a dict from a Home Connect error."""
+    return (
+        err.args[0]
+        if len(err.args) > 0 and isinstance(err.args[0], dict)
+        else {"description": err.args[0]}
+        if len(err.args) > 0 and isinstance(err.args[0], str)
+        else {}
+    )

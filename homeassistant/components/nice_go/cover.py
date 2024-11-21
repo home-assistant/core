@@ -18,6 +18,10 @@ from . import NiceGOConfigEntry
 from .const import DOMAIN
 from .entity import NiceGOEntity
 
+DEVICE_CLASSES = {
+    "WallStation": CoverDeviceClass.GARAGE,
+    "Mms100": CoverDeviceClass.GATE,
+}
 PARALLEL_UPDATES = 1
 
 
@@ -40,7 +44,11 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
-    _attr_device_class = CoverDeviceClass.GARAGE
+
+    @property
+    def device_class(self) -> CoverDeviceClass:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASSES.get(self.data.type, CoverDeviceClass.GARAGE)
 
     @property
     def is_closed(self) -> bool:

@@ -8,23 +8,28 @@ import logging
 import pypck
 from pypck.connection import PchkConnectionManager
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_ENTITIES,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
+    CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
+    CONF_TRANSITION,
     CONNECTION,
     DOMAIN,
     PLATFORMS,
@@ -34,40 +39,29 @@ from .helpers import (
     InputType,
     async_update_config_entry,
     generate_unique_id,
-    import_lcn_config,
     register_lcn_address_devices,
     register_lcn_host_device,
 )
-from .schemas import CONFIG_SCHEMA  # noqa: F401
-from .services import SERVICES
+from .services import register_services
 from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
-    if DOMAIN not in config:
-        return True
+    hass.data.setdefault(DOMAIN, {})
 
-    # initialize a config_flow for all LCN configurations read from
-    # configuration.yaml
-    config_entries_data = import_lcn_config(config[DOMAIN])
+    await register_services(hass)
+    await register_panel_and_ws_api(hass)
 
-    for config_entry_data in config_entries_data:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config_entry_data,
-            )
-        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
 
@@ -127,15 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     lcn_connection.register_for_inputs(input_received)
 
-    # register service calls
-    for service_name, service in SERVICES:
-        if not hass.services.has_service(DOMAIN, service_name):
-            hass.services.async_register(
-                DOMAIN, service_name, service(hass).async_call_service, service.schema
-            )
-
-    await register_panel_and_ws_api(hass)
-
     return True
 
 
@@ -147,15 +132,25 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    if config_entry.version == 1:
-        new_data = {**config_entry.data}
+    new_data = {**config_entry.data}
 
+    if config_entry.version == 1:
+        # update to 1.2  (add acknowledge flag)
         if config_entry.minor_version < 2:
             new_data[CONF_ACKNOWLEDGE] = False
 
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, minor_version=2, version=1
-        )
+        # update to 2.1  (fix transitions for lights and switches)
+        new_entities_data = [*new_data[CONF_ENTITIES]]
+        for entity in new_entities_data:
+            if entity[CONF_DOMAIN] in [Platform.LIGHT, Platform.SCENE]:
+                if entity[CONF_DOMAIN_DATA][CONF_TRANSITION] is None:
+                    entity[CONF_DOMAIN_DATA][CONF_TRANSITION] = 0
+                entity[CONF_DOMAIN_DATA][CONF_TRANSITION] /= 1000.0
+        new_data[CONF_ENTITIES] = new_entities_data
+
+    hass.config_entries.async_update_entry(
+        config_entry, data=new_data, minor_version=1, version=2
+    )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
@@ -175,11 +170,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         host = hass.data[DOMAIN].pop(config_entry.entry_id)
         await host[CONNECTION].async_close()
-
-    # unregister service calls
-    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
-        for service_name, _ in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 

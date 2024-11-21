@@ -2,16 +2,15 @@
 
 from typing import Any
 
-from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
+from aiotedee import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
 from .const import DOMAIN
-from .coordinator import TedeeApiCoordinator
+from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 from .entity import TedeeEntity
 
 

@@ -54,7 +54,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -77,6 +76,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -4066,6 +4066,93 @@ async def test_sensorstate(
     assert (
         trait.SensorStateTrait.supported(
             sensor.DOMAIN, None, sensor.SensorDeviceClass.MONETARY, None
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    ("state", "identifier"),
+    [
+        (STATE_ON, 0),
+        (STATE_OFF, 1),
+        (STATE_UNKNOWN, 2),
+    ],
+)
+@pytest.mark.parametrize(
+    ("device_class", "name", "states"),
+    [
+        (
+            binary_sensor.BinarySensorDeviceClass.CO,
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.SMOKE,
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.MOISTURE,
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    ],
+)
+async def test_binary_sensorstate(
+    hass: HomeAssistant,
+    state: str,
+    identifier: int,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+    name: str,
+    states: list[str],
+) -> None:
+    """Test SensorState trait support for binary sensor domain."""
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert trait.SensorStateTrait.supported(
+        binary_sensor.DOMAIN, None, device_class, None
+    )
+
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "binary_sensor.test",
+            state,
+            {
+                "device_class": device_class,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "sensorStatesSupported": [
+            {
+                "name": name,
+                "descriptiveCapabilities": {
+                    "availableStates": states,
+                },
+            }
+        ]
+    }
+    assert trt.query_attributes() == {
+        "currentSensorStateData": [
+            {
+                "name": name,
+                "currentSensorState": states[identifier],
+                "rawValue": None,
+            },
+        ]
+    }
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert (
+        trait.SensorStateTrait.supported(
+            binary_sensor.DOMAIN,
+            None,
+            binary_sensor.BinarySensorDeviceClass.TAMPER,
+            None,
         )
         is False
     )

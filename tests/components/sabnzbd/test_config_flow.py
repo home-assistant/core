@@ -7,15 +7,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.sabnzbd import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_URL,
-)
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,14 +16,6 @@ VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_URL: "http://localhost:8080",
-}
-
-VALID_CONFIG_OLD = {
-    CONF_NAME: "Sabnzbd",
-    CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
-    CONF_HOST: "localhost",
-    CONF_PORT: 8080,
-    CONF_SSL: False,
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -77,24 +62,3 @@ async def test_auth_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test the import configuration flow."""
-    with patch(
-        "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=VALID_CONFIG_OLD,
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "edc3eee7330e"
-        assert result["data"][CONF_NAME] == "Sabnzbd"
-        assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"
-        assert result["data"][CONF_HOST] == "localhost"
-        assert result["data"][CONF_PORT] == 8080
-        assert result["data"][CONF_SSL] is False

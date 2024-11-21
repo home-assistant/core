@@ -24,14 +24,14 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2025.2"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -725,6 +725,9 @@ class UnitOfPower(StrEnum):
 
     WATT = "W"
     KILO_WATT = "kW"
+    MEGA_WATT = "MW"
+    GIGA_WATT = "GW"
+    TERA_WATT = "TW"
     BTU_PER_HOUR = "BTU/h"
 
 
@@ -770,6 +773,8 @@ class UnitOfEnergy(StrEnum):
     WATT_HOUR = "Wh"
     KILO_WATT_HOUR = "kWh"
     MEGA_WATT_HOUR = "MWh"
+    GIGA_WATT_HOUR = "GWh"
+    TERA_WATT_HOUR = "TWh"
     CALORIE = "cal"
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
@@ -817,6 +822,7 @@ _DEPRECATED_ELECTRIC_CURRENT_AMPERE: Final = DeprecatedConstantEnum(
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
+    MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
 
@@ -1226,9 +1232,9 @@ class UnitOfConductivity(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
     },
 ):
     """Conductivity units."""
@@ -1351,6 +1357,13 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+
+
+class UnitOfBloodGlucoseConcentration(StrEnum):
+    """Blood glucose concentration units."""
+
+    MILLIGRAMS_PER_DECILITER = "mg/dL"
+    MILLIMOLE_PER_LITER = "mmol/L"
 
 
 # Speed units
