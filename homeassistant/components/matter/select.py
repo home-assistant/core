@@ -29,6 +29,7 @@ type SelectCluster = (
     | clusters.DishwasherMode
     | clusters.EnergyEvseMode
     | clusters.DeviceEnergyManagementMode
+    | clusters.WaterHeaterMode
 )
 
 
@@ -208,6 +209,18 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.DeviceEnergyManagementMode.Attributes.CurrentMode,
             clusters.DeviceEnergyManagementMode.Attributes.SupportedModes,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="MatterWaterHeaterMode",
+            translation_key="mode",
+        ),
+        entity_class=MatterModeSelectEntity,
+        required_attributes=(
+            clusters.WaterHeaterMode.Attributes.CurrentMode,
+            clusters.WaterHeaterMode.Attributes.SupportedModes,
         ),
     ),
     MatterDiscoverySchema(
