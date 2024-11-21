@@ -2,7 +2,10 @@
 # name: test_agent_delete_backup
   dict({
     'id': 1,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -329,7 +332,10 @@
 # name: test_delete[remote_agents0-backups0].1
   dict({
     'id': 2,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -389,7 +395,10 @@
 # name: test_delete[remote_agents1-backups1].1
   dict({
     'id': 2,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -449,7 +458,10 @@
 # name: test_delete[remote_agents2-backups2].1
   dict({
     'id': 2,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -528,7 +540,10 @@
 # name: test_delete[remote_agents3-backups3].1
   dict({
     'id': 2,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -608,7 +623,10 @@
 # name: test_delete[remote_agents4-backups4].1
   dict({
     'id': 2,
-    'result': None,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
     'success': True,
     'type': 'result',
   })
@@ -648,6 +666,29 @@
       ]),
     }),
     'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[BackupAgentUnreachableError]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+        'domain.test': 'The backup agent is unreachable.',
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect0]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Boom!',
+    }),
+    'id': 1,
+    'success': False,
     'type': 'result',
   })
 # ---
