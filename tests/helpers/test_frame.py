@@ -484,8 +484,17 @@ async def test_report_integration_domain(
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
         frame.report_usage(
             what,
+            core_behavior=frame.ReportBehavior.IGNORE,
+            integration_domain=integration_domain,
+            exclude_integrations={"sensor", "test_package"},
+        )
+
+    assert f"Detected {source} {what}" not in caplog.text
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        frame.report_usage(
+            what,
             core_behavior=frame.ReportBehavior.LOG,
-            exclude_integrations={"mobile_app"},
             integration_domain=integration_domain,
         )
 
