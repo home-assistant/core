@@ -32,6 +32,7 @@ from homeassistant.setup import async_setup_component
 from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
+    TEST_BACKUP_DEF456,
     TEST_BACKUP_PATH_ABC123,
     BackupAgentTest,
 )
@@ -616,7 +617,10 @@ async def test_async_trigger_restore_with_password(
 @pytest.mark.parametrize(
     ("parameters", "expected_error"),
     [
-        ({}, "Backup abc123 not found"),
+        (
+            {"backup_id": TEST_BACKUP_DEF456.backup_id},
+            "Backup def456 not found",
+        ),
         (
             {"restore_addons": ["blah"]},
             "Addons and folders are not supported in core restore",
@@ -645,10 +649,12 @@ async def test_async_trigger_restore_wrong_parameters(
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
     local_agent._loaded_backups = True
 
     default_parameters = {
         "agent_id": LOCAL_AGENT_ID,
+        "backup_id": TEST_BACKUP_ABC123.backup_id,
         "password": None,
         "restore_addons": None,
         "restore_database": True,
@@ -656,7 +662,8 @@ async def test_async_trigger_restore_wrong_parameters(
         "restore_homeassistant": True,
     }
 
-    with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
-        await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id, **(default_parameters | parameters)
-        )
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        pytest.raises(HomeAssistantError, match=expected_error),
+    ):
+        await manager.async_restore_backup(**(default_parameters | parameters))
