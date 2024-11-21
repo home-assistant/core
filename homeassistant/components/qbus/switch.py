@@ -48,6 +48,15 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
         self._is_on = False
 
+    @classmethod
+    def create(
+        cls,
+        mqtt_output: QbusMqttOutput,
+        qbus_entry: QbusEntry,
+    ) -> "QbusSwitch":
+        """Create an instance."""
+        return QbusSwitch(mqtt_output, qbus_entry)
+
     @property
     def is_on(self) -> bool:
         """Return if the switch is on."""

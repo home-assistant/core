@@ -1,5 +1,6 @@
 """Base class for Qbus entities."""
 
+from abc import ABC, abstractmethod
 import re
 
 from qbusmqttapi.discovery import QbusMqttOutput
@@ -27,7 +28,7 @@ def format_ref_id(ref_id: str) -> str | None:
     return None
 
 
-class QbusEntity(Entity):
+class QbusEntity(Entity, ABC):
     """Representation of a Qbus entity."""
 
     _attr_has_entity_name = True
@@ -77,6 +78,15 @@ class QbusEntity(Entity):
             mqtt_output.device.id, mqtt_output.id
         )
 
+    @classmethod
+    def create(
+        cls,
+        mqtt_output: QbusMqttOutput,
+        qbus_entry: QbusEntry,
+    ) -> "QbusEntity":
+        """Create an instance."""
+        raise NotImplementedError("Must be implemented by derived class.")
+
     @property
     def name(self):
         """Return the name of the entity."""
@@ -93,6 +103,7 @@ class QbusEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
 
+    @abstractmethod
     async def _state_received(self, msg: ReceiveMessage) -> None:
         pass
 

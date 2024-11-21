@@ -179,7 +179,7 @@ class QbusDataCoordinator:
             self._registered_entity_ids.append(output.id)
 
             entity_class = self._platform_register[qbusType][0]
-            entity = entity_class(output, self._entry)
+            entity = entity_class.create(output, self._entry)
             items.setdefault(qbusType, []).append(entity)
 
         # Add entities to HA
