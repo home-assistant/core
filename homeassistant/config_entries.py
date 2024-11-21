@@ -1489,6 +1489,7 @@ class ConfigEntriesFlowManager(
         if existing_entry is not None and flow.handler != "mobile_app":
             # This causes the old entry to be removed and replaced when it
             # should most likely update the previous entry and abort the flow
+            # see https://developers.home-assistant.io/blog/2024/11/22/config-flow-unique-id/
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
