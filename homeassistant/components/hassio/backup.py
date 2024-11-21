@@ -114,28 +114,30 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
     async def async_create_backup(
         self,
         *,
-        addons_included: list[str] | None,
         agent_ids: list[str],
-        database_included: bool,
         backup_name: str,
-        folders_included: list[str] | None,
+        include_addons: list[str] | None,
+        include_all_addons: bool,
+        include_database: bool,
+        include_folders: list[str] | None,
+        include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""
-        addons_included_set = set(addons_included) if addons_included else None
-        folders_included_set = set(folders_included) if folders_included else None
+        include_addons_set = set(include_addons) if include_addons else None
+        include_folders_set = set(include_folders) if include_folders else None
 
         backup = await self._client.backups.partial_backup(
             supervisor_backups.PartialBackupOptions(
-                addons=addons_included_set,
-                folders=folders_included_set,  # type: ignore[arg-type]
-                homeassistant=True,
+                addons=include_addons_set,
+                folders=include_folders_set,  # type: ignore[arg-type]
+                homeassistant=include_homeassistant,
                 name=backup_name,
                 password=password,
                 compressed=True,
                 location=None,
-                homeassistant_exclude_database=not database_included,
+                homeassistant_exclude_database=not include_database,
                 background=True,
             )
         )

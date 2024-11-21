@@ -261,17 +261,17 @@ async def test_generate(
         ({"agent_ids": ["backup.local"]}, {"agent_ids": ["backup.local"]}),
         (
             {
-                "addons_included": ["ssl"],
                 "agent_ids": ["backup.local"],
-                "database_included": False,
-                "folders_included": ["media"],
+                "include_addons": ["ssl"],
+                "include_database": False,
+                "include_folders": ["media"],
                 "name": "abc123",
             },
             {
-                "addons_included": ["ssl"],
                 "agent_ids": ["backup.local"],
-                "database_included": False,
-                "folders_included": ["media"],
+                "include_addons": ["ssl"],
+                "include_database": False,
+                "include_folders": ["media"],
                 "name": "abc123",
             },
         ),
@@ -300,9 +300,11 @@ async def test_generate_without_hassio(
         assert await client.receive_json() == snapshot
         generate_backup.assert_called_once_with(
             **{
-                "addons_included": None,
-                "database_included": True,
-                "folders_included": None,
+                "include_all_addons": False,
+                "include_homeassistant": True,
+                "include_addons": None,
+                "include_database": True,
+                "include_folders": None,
                 "name": None,
                 "on_progress": ANY,
                 "password": None,

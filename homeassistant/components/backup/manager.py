@@ -89,11 +89,13 @@ class BackupReaderWriter(abc.ABC):
     async def async_create_backup(
         self,
         *,
-        addons_included: list[str] | None,
         agent_ids: list[str],
-        database_included: bool,
         backup_name: str,
-        folders_included: list[str] | None,
+        include_addons: list[str] | None,
+        include_all_addons: bool,
+        include_database: bool,
+        include_folders: list[str] | None,
+        include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
@@ -417,10 +419,12 @@ class BackupManager:
     async def async_create_backup(
         self,
         *,
-        addons_included: list[str] | None,
         agent_ids: list[str],
-        database_included: bool,
-        folders_included: list[str] | None,
+        include_addons: list[str] | None,
+        include_all_addons: bool,
+        include_database: bool,
+        include_folders: list[str] | None,
+        include_homeassistant: bool,
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
@@ -436,13 +440,19 @@ class BackupManager:
             raise HomeAssistantError("At least one agent must be selected")
         if any(agent_id not in self.backup_agents for agent_id in agent_ids):
             raise HomeAssistantError("Invalid agent selected")
+        if include_all_addons and include_addons:
+            raise HomeAssistantError(
+                "Cannot include all addons and specify specific addons"
+            )
         backup_name = name or f"Core {HAVERSION}"
         new_backup, self.backup_task = await self._reader_writer.async_create_backup(
-            addons_included=addons_included,
             agent_ids=agent_ids,
             backup_name=backup_name,
-            database_included=database_included,
-            folders_included=folders_included,
+            include_addons=include_addons,
+            include_all_addons=include_all_addons,
+            include_database=include_database,
+            include_folders=include_folders,
+            include_homeassistant=include_homeassistant,
             on_progress=on_progress,
             password=password,
         )
@@ -535,11 +545,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     async def async_create_backup(
         self,
         *,
-        addons_included: list[str] | None,
         agent_ids: list[str],
-        database_included: bool,
         backup_name: str,
-        folders_included: list[str] | None,
+        include_addons: list[str] | None,
+        include_all_addons: bool,
+        include_database: bool,
+        include_folders: list[str] | None,
+        include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
@@ -547,15 +559,16 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         date_str = dt_util.now().isoformat()
         backup_id = _generate_backup_id(date_str, backup_name)
 
+        if not include_homeassistant:
+            raise HomeAssistantError("Home Assistant must be included in backup")
+
         backup_task = self._hass.async_create_task(
             self._async_create_backup(
-                addons_included=addons_included,
                 agent_ids=agent_ids,
                 backup_id=backup_id,
                 backup_name=backup_name,
-                database_included=database_included,
+                include_database=include_database,
                 date_str=date_str,
-                folders_included=folders_included,
                 on_progress=on_progress,
                 password=password,
             ),
@@ -568,13 +581,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     async def _async_create_backup(
         self,
         *,
-        addons_included: list[str] | None,
         agent_ids: list[str],
         backup_id: str,
-        database_included: bool,
         backup_name: str,
         date_str: str,
-        folders_included: list[str] | None,
+        include_database: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> tuple[AgentBackup, Path]:
@@ -596,7 +607,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 "compressed": True,
                 "date": date_str,
                 "homeassistant": {
-                    "exclude_database": not database_included,
+                    "exclude_database": not include_database,
                     "version": HAVERSION,
                 },
                 "name": backup_name,
@@ -609,14 +620,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             tar_file_path, size_in_bytes = await self._hass.async_add_executor_job(
                 self._mkdir_and_generate_backup_contents,
                 backup_data,
-                database_included,
+                include_database,
                 password,
                 suggested_tar_file_path,
             )
             backup = AgentBackup(
                 addons=[],
                 backup_id=backup_id,
-                database_included=database_included,
+                database_included=include_database,
                 date=date_str,
                 folders=[],
                 homeassistant_included=True,
