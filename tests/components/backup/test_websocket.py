@@ -1,8 +1,10 @@
 """Tests for the Backup integration."""
 
+from collections.abc import Generator
+from datetime import datetime
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -23,8 +25,20 @@ from .common import (
     setup_backup_integration,
 )
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
+
+BACKUP_CALL = call(
+    agent_ids=["test-agent"],
+    include_addons=["test-addon"],
+    include_all_addons=False,
+    include_database=True,
+    include_folders=["media"],
+    include_homeassistant=True,
+    name="test-name",
+    on_progress=None,
+    password="test-password",
+)
 
 
 @pytest.fixture
@@ -37,6 +51,22 @@ def sync_access_token_proxy(
     Workaround for https://github.com/pytest-dev/pytest-asyncio/issues/112
     """
     return request.getfixturevalue(access_token_fixture_name)
+
+
+@pytest.fixture(autouse=True)
+def mock_delay_save() -> Generator[None]:
+    """Mock the delay save constant."""
+    with patch("homeassistant.components.backup.config.STORE_DELAY_SAVE", 0):
+        yield
+
+
+@pytest.fixture(name="create_backup")
+def mock_create_backup() -> Generator[AsyncMock]:
+    """Mock manager create backup."""
+    with patch(
+        "homeassistant.components.backup.BackupManager.async_create_backup"
+    ) as mock_create_backup:
+        yield mock_create_backup
 
 
 @pytest.mark.parametrize(
@@ -305,8 +335,8 @@ async def test_generate_without_hassio(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    params: dict,
-    expected_extra_call_params: tuple,
+    params: dict[str, Any],
+    expected_extra_call_params: dict[str, Any],
 ) -> None:
     """Test generating a backup."""
     await setup_backup_integration(hass, with_hassio=False)
@@ -626,9 +656,80 @@ async def test_agents_download_unknown_agent(
     "storage_data",
     [
         {},
-        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": 3},
-        {"last_automatic_backup": None, "max_copies": 3},
-        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": None},
+        {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": True,
+                "include_database": True,
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "last_automatic_backup": datetime.fromisoformat(
+                "2024-10-26T04:45:00+01:00"
+            ),
+            "max_copies": 3,
+            "schedule": "daily",
+        },
+        {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            "last_automatic_backup": None,
+            "max_copies": 3,
+            "schedule": "never",
+        },
+        {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            "last_automatic_backup": datetime.fromisoformat(
+                "2024-10-26T04:45:00+01:00"
+            ),
+            "max_copies": None,
+            "schedule": "never",
+        },
+        {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            "last_automatic_backup": None,
+            "max_copies": None,
+            "schedule": "mon",
+        },
+        {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            "last_automatic_backup": None,
+            "max_copies": None,
+            "schedule": "sat",
+        },
     ],
 )
 async def test_config_info(
@@ -654,10 +755,48 @@ async def test_config_info(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "max_copies": 5,
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": "mon",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": "never",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "schedule": "daily",
+        },
+    ],
+)
 async def test_config_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
+    command: dict[str, Any],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test updating the backup config."""
     await setup_backup_integration(hass)
@@ -668,10 +807,187 @@ async def test_config_update(
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
 
-    await client.send_json_auto_id({"type": "backup/config/update", "max_copies": 5})
+    await client.send_json_auto_id(command)
     result = await client.receive_json()
 
     assert result["success"]
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN] == snapshot
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": "someday",
+        },
+    ],
+)
+async def test_config_update_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    command: dict[str, Any],
+) -> None:
+    """Test errors when updating the backup config."""
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/config/info"})
+    assert await client.receive_json() == snapshot
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert not result["success"]
+
+    await client.send_json_auto_id({"type": "backup/config/info"})
+    assert await client.receive_json() == snapshot
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "last_automatic_backup",
+        "move_to_time",
+        "backup_time",
+        "backup_calls",
+        "call_args",
+    ),
+    [
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "daily",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "mon",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-18T04:45:00+01:00",
+            "2024-11-18T04:45:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "never",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2024-11-11T04:45:00+01:00",
+            0,
+            None,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "daily",
+            },
+            "2024-10-26T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "mon",
+            },
+            "2024-10-26T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
+            1,
+            BACKUP_CALL,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "never",
+            },
+            "2024-10-26T04:45:00+01:00",
+            "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2024-10-26T04:45:00+01:00",
+            0,
+            None,
+        ),
+    ],
+)
+async def test_config_update_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    command: dict[str, Any],
+    last_automatic_backup: str,
+    move_to_time: str,
+    backup_time: str,
+    backup_calls: int,
+    call_args: Any,
+) -> None:
+    """Test updating the backup config schedule."""
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "create_backup": {
+            "agent_ids": ["test-agent"],
+            "include_addons": ["test-addon"],
+            "include_all_addons": False,
+            "include_database": True,
+            "include_folders": ["media"],
+            "name": "test-name",
+            "password": "test-password",
+        },
+        "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
+        "max_copies": 3,
+        "schedule": "daily",
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-11 12:00:00+01:00")
+
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert result["success"]
+
+    freezer.move_to(move_to_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == backup_calls
+    assert create_backup.call_args == call_args
+    async_fire_time_changed(hass, fire_all=True)  # flush out storage save
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
