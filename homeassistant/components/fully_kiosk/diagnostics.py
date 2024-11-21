@@ -59,7 +59,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: FullyKioskConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return device diagnostics."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     data = coordinator.data
     data["settings"] = async_redact_data(data["settings"], SETTINGS_TO_REDACT)
     return async_redact_data(data, DEVICE_INFO_TO_REDACT)

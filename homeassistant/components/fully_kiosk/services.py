@@ -53,7 +53,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for config_entry in config_entries:
             if config_entry.state != ConfigEntryState.LOADED:
                 raise HomeAssistantError(f"{config_entry.title} is not loaded")
-            coordinators.append(config_entry.runtime_data.coordinator)
+            coordinators.append(config_entry.runtime_data)
         return coordinators
 
     async def async_load_url(call: ServiceCall) -> None:

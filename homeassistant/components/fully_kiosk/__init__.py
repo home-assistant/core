@@ -1,7 +1,5 @@
 """The Fully Kiosk Browser integration."""
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,7 +10,7 @@ from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .services import async_setup_services
 
-type FullyKioskConfigEntry = ConfigEntry[FullyKioskData]
+type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -29,13 +27,6 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-@dataclass
-class FullyKioskData:
-    """Fully Kiosk Browser data."""
-
-    coordinator: FullyKioskDataUpdateCoordinator
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Fully Kiosk Browser."""
 
@@ -50,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -
     coordinator = FullyKioskDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = FullyKioskData(coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     coordinator.async_update_listeners()
