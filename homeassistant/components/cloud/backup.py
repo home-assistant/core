@@ -110,8 +110,9 @@ class CloudBackupAgent(BackupAgent):
         :param path: The full file path to the backup that should be uploaded.
         :param backup: Metadata about the backup that should be uploaded.
         """
-        if not backup.protected:
-            raise BackupAgentError("Cloud backups must be protected")
+        # TODO: Enable it when frontend supports it
+        # if not backup.protected:
+        #     raise BackupAgentError("Cloud backups must be protected")
 
         if not self._cloud.is_logged_in:
             raise BackupAgentError("Not logged in to cloud")
