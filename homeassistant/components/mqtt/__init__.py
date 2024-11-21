@@ -238,7 +238,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if not mqtt_config_entry_enabled(hass):
             raise ServiceValidationError(
-                f"Cannot publish to topic '{msg_topic}', MQTT is not enabled",
                 translation_key="mqtt_not_setup_cannot_publish",
                 translation_domain=DOMAIN,
                 translation_placeholders={

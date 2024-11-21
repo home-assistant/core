@@ -260,7 +260,10 @@ async def test_service_call_mqtt_entry_does_not_publish(
 ) -> None:
     """Test the service call if topic is missing."""
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match='Cannot publish to topic "test_topic", make sure MQTT is set up correctly',
+    ):
         await hass.services.async_call(
             mqtt.DOMAIN,
             mqtt.SERVICE_PUBLISH,
