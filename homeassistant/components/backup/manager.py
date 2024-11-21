@@ -576,6 +576,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         date_str = dt_util.now().isoformat()
         backup_id = _generate_backup_id(date_str, backup_name)
 
+        if include_addons or include_all_addons or include_folders:
+            raise HomeAssistantError(
+                "Addons and folders are not supported by core backup"
+            )
         if not include_homeassistant:
             raise HomeAssistantError("Home Assistant must be included in backup")
 
