@@ -14,7 +14,7 @@ rules:
       The data_descriptions are missing.
   dependency-transparency: done
   docs-actions:
-    status: todo
+    status: exempt
     comment: |
       The integration does not provide any additional actions.
   docs-high-level-description: done
