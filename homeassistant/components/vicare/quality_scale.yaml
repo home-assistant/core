@@ -1,0 +1,27 @@
+rules:
+  # Bronze
+  brands: done
+  config-flow: done
+  has-entity-name: done
+  test-before-configure: done
+  dependency-transparency: done
+  common-modules:
+    status: done
+    comment: No coordinator is used, data update is centrally handled by the library.
+  # Silver
+  integration-owner: done
+  reauthentication-flow: done
+  config-entry-unloading: done
+  # Gold
+  devices: done
+  diagnostics: done
+  entity-category: done
+  dynamic-devices: done
+  entity-device-class: done
+  entity-translations: done
+  entity-disabled-by-default: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not raise any repairable issues.
+  # Platin
