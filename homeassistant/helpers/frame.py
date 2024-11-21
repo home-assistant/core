@@ -257,6 +257,10 @@ def _report_integration_domain(
     exclude_integrations: set[str] | None,
     level: int,
 ) -> None:
+    """Report incorrect usage in an integration (identified via domain).
+
+    Async friendly.
+    """
     integration_behavior = core_integration_behavior
     if integration.is_built_in:
         integration_behavior = custom_integration_behavior
@@ -303,7 +307,7 @@ def _report_integration_frame(
     level: int = logging.WARNING,
     error: bool = False,
 ) -> None:
-    """Report incorrect usage in an integration.
+    """Report incorrect usage in an integration (identified via frame).
 
     Async friendly.
     """
