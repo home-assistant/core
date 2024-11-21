@@ -1,9 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      Service actions are set up in `async_setup_entry` and are only set up if the MQTT broker was set up correctly.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -13,10 +10,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: done
-    comment: |
-      The integration can be removed by removing the config entry.
+  docs-removal-instructions: done
   entity-event-setup:
     status: done
     comment: >
@@ -47,10 +41,7 @@ rules:
       Only supported for entities the user has assigned a unique_id.
   action-exceptions: done
   reauthentication-flow: done
-  parallel-updates:
-    status: done
-    comment: |
-      No data coordinator is used. Parallel updates are supported through dispatchers.
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
