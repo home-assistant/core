@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from .manager import BackupManager
 
 # The time of the automatic backup event should be compatible with
-# the time of the recorder's nightly job which run at 04:12.
+# the time of the recorder's nightly job which runs at 04:12.
 # Run the backup at 04:45.
 CRON_PATTERN_DAILY = "45 4 * * *"
 CRON_PATTERN_WEEKLY = "45 4 * * {}"
