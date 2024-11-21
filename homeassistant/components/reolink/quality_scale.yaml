@@ -31,9 +31,10 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
-    status: todo
+    status: done
     comment: |
       Coordinators are used and asyncio mutex locks ensure safe operation in the upstream lib
+      Parallel_update=0 set on all platforms
   reauthentication-flow: done
   test-coverage: done
   # Gold
