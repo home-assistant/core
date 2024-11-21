@@ -684,7 +684,7 @@ async def test_agents_download_unknown_agent(
             "max_copies": 3,
             "name": "test-name",
             "password": "test-password",
-            "schedule": {"daily": True, "never": False, "weekday": None},
+            "schedule": "daily",
         },
         {
             "agent_ids": ["test-agent"],
@@ -696,7 +696,7 @@ async def test_agents_download_unknown_agent(
             "max_copies": 3,
             "name": None,
             "password": None,
-            "schedule": {"daily": False, "never": True, "weekday": None},
+            "schedule": "never",
         },
         {
             "agent_ids": ["test-agent"],
@@ -710,7 +710,7 @@ async def test_agents_download_unknown_agent(
             "max_copies": None,
             "name": None,
             "password": None,
-            "schedule": {"daily": False, "never": True, "weekday": None},
+            "schedule": "never",
         },
         {
             "agent_ids": ["test-agent"],
@@ -722,7 +722,7 @@ async def test_agents_download_unknown_agent(
             "max_copies": None,
             "name": None,
             "password": None,
-            "schedule": {"daily": False, "never": False, "weekday": "mon"},
+            "schedule": "mon",
         },
         {
             "agent_ids": ["test-agent"],
@@ -734,7 +734,7 @@ async def test_agents_download_unknown_agent(
             "max_copies": None,
             "name": None,
             "password": None,
-            "schedule": {"daily": False, "never": False, "weekday": "sat"},
+            "schedule": "sat",
         },
     ],
 )
@@ -772,17 +772,17 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "agent_ids": ["test-agent"],
-            "schedule": {"daily": True, "never": False},
+            "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "agent_ids": ["test-agent"],
-            "schedule": {"daily": False, "never": False, "weekday": "mon"},
+            "schedule": "mon",
         },
         {
             "type": "backup/config/update",
             "agent_ids": ["test-agent"],
-            "schedule": {"never": True},
+            "schedule": "never",
         },
     ],
 )
@@ -820,22 +820,7 @@ async def test_config_update(
         {
             "type": "backup/config/update",
             "agent_ids": ["test-agent"],
-            "schedule": {"daily": False, "never": False, "weekday": None},
-        },
-        {
-            "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
-            "schedule": {"daily": True, "never": True, "weekday": "mon"},
-        },
-        {
-            "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
-            "schedule": {"daily": True, "never": True},
-        },
-        {
-            "type": "backup/config/update",
-            "agent_ids": ["test-agent"],
-            "schedule": {"daily": True, "weekday": "mon"},
+            "schedule": "someday",
         },
     ],
 )
@@ -844,7 +829,6 @@ async def test_config_update_errors(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     command: dict[str, Any],
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test errors when updating the backup config."""
     await setup_backup_integration(hass)
@@ -859,7 +843,6 @@ async def test_config_update_errors(
     result = await client.receive_json()
 
     assert not result["success"]
-    assert "ValueError: Invalid schedule" in caplog.text
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
@@ -880,7 +863,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": True, "never": False},
+                "schedule": "daily",
             },
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
@@ -892,7 +875,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": False, "never": False, "weekday": "mon"},
+                "schedule": "mon",
             },
             "2024-11-11T04:45:00+01:00",
             "2024-11-18T04:45:00+01:00",
@@ -904,7 +887,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": False, "never": True},
+                "schedule": "never",
             },
             "2024-11-11T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
@@ -916,7 +899,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": True, "never": False},
+                "schedule": "daily",
             },
             "2024-10-26T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
@@ -928,7 +911,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": False, "never": False, "weekday": "mon"},
+                "schedule": "mon",
             },
             "2024-10-26T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
@@ -940,7 +923,7 @@ async def test_config_update_errors(
             {
                 "type": "backup/config/update",
                 "agent_ids": ["test-agent"],
-                "schedule": {"daily": False, "never": True},
+                "schedule": "never",
             },
             "2024-10-26T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
@@ -975,7 +958,7 @@ async def test_config_update_schedule(
         "max_copies": 3,
         "name": "test-name",
         "password": "test-password",
-        "schedule": {"daily": True, "never": False, "weekday": None},
+        "schedule": "daily",
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING, Self, TypedDict, Unpack
 
 from cronsim import CronSim
@@ -41,15 +42,7 @@ class StoredBackupConfig(TypedDict):
     max_copies: int | None
     name: str | None
     password: str | None
-    schedule: StoredBackupSchedule
-
-
-class StoredBackupSchedule(TypedDict):
-    """Represent the stored backup schedule."""
-
-    daily: bool
-    never: bool
-    weekday: str | None
+    schedule: ScheduleState
 
 
 @dataclass(kw_only=True)
@@ -70,12 +63,6 @@ class BackupConfigData:
     @classmethod
     def from_dict(cls, data: StoredBackupConfig) -> Self:
         """Initialize backup config data from a dict."""
-        schedule_data = data["schedule"]
-        schedule = BackupSchedule(
-            daily=schedule_data["daily"],
-            never=schedule_data["never"],
-            weekday=schedule_data["weekday"],
-        )
         return cls(
             agent_ids=data["agent_ids"],
             include_addons=data["include_addons"],
@@ -86,16 +73,11 @@ class BackupConfigData:
             max_copies=data["max_copies"],
             name=data["name"],
             password=data["password"],
-            schedule=schedule,
+            schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
         )
 
     def to_dict(self) -> StoredBackupConfig:
         """Convert backup config data to a dict."""
-        schedule = StoredBackupSchedule(
-            daily=self.schedule.daily,
-            never=self.schedule.never,
-            weekday=self.schedule.weekday,
-        )
         return StoredBackupConfig(
             agent_ids=self.agent_ids,
             include_addons=self.include_addons,
@@ -106,7 +88,7 @@ class BackupConfigData:
             max_copies=self.max_copies,
             name=self.name,
             password=self.password,
-            schedule=schedule,
+            schedule=self.schedule.state,
         )
 
 
@@ -115,9 +97,7 @@ class BackupConfig:
 
     def __init__(self, hass: HomeAssistant, manager: BackupManager) -> None:
         """Initialize backup config."""
-        self.data = BackupConfigData(
-            schedule=BackupSchedule(daily=False, never=True, weekday=None)
-        )
+        self.data = BackupConfigData(schedule=BackupSchedule())
         self._manager = manager
         self._store: Store[StoredBackupConfig] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
@@ -145,14 +125,14 @@ class BackupConfig:
         self,
         *,
         max_copies: int | None | UndefinedType = UNDEFINED,
-        schedule: ScheduleParameterDict | UndefinedType = UNDEFINED,
+        schedule: ScheduleState | UndefinedType = UNDEFINED,
         **kwargs: Unpack[CreateBackupParametersDict],
     ) -> None:
         """Update config."""
         if max_copies is not UNDEFINED:
             self.data.max_copies = max_copies
         if schedule is not UNDEFINED:
-            new_schedule = replace(self.data.schedule, **schedule)
+            new_schedule = BackupSchedule(state=schedule)
             if new_schedule != self.data.schedule:
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
@@ -163,31 +143,25 @@ class BackupConfig:
         self.save()
 
 
+class ScheduleState(StrEnum):
+    """Represent the schedule state."""
+
+    NEVER = "never"
+    DAILY = "daily"
+    MONDAY = "mon"
+    TUESDAY = "tue"
+    WEDNESDAY = "wed"
+    THURSDAY = "thu"
+    FRIDAY = "fri"
+    SATURDAY = "sat"
+    SUNDAY = "sun"
+
+
 @dataclass(kw_only=True)
 class BackupSchedule:
     """Represent the backup schedule."""
 
-    daily: bool
-    never: bool
-    weekday: str | None
-
-    def __post_init__(self) -> None:
-        """Validate the schedule."""
-        if (
-            not self.never
-            and self.daily
-            and self.weekday
-            or not self.never
-            and not self.daily
-            and not self.weekday
-            or self.never
-            and (self.daily or self.weekday)
-        ):
-            raise ValueError(
-                "Invalid schedule: "
-                "Only three states are allowed: never, daily, or weekly, "
-                "and at least one must be truthy."
-            )
+    state: ScheduleState = ScheduleState.NEVER
 
     @callback
     def apply(
@@ -196,17 +170,17 @@ class BackupSchedule:
     ) -> None:
         """Apply a new schedule.
 
-        There are only three possible states: never, daily, or weekly.
+        There are only three possible state types: never, daily, or weekly.
         """
-        if self.never:
+        if self.state is ScheduleState.NEVER:
             self._unschedule_next(manager)
             return
 
-        if self.daily:
+        if self.state is ScheduleState.DAILY:
             self._schedule_next(CRON_PATTERN_DAILY, manager)
-        elif (weekday := self.weekday) is not None:
+        else:
             self._schedule_next(
-                CRON_PATTERN_WEEKLY.format(weekday),
+                CRON_PATTERN_WEEKLY.format(self.state.value),
                 manager,
             )
 
@@ -258,14 +232,6 @@ class BackupSchedule:
         if (remove_next_event := manager.remove_next_backup_event) is not None:
             remove_next_event()
             manager.remove_next_backup_event = None
-
-
-class ScheduleParameterDict(TypedDict, total=False):
-    """Represent the schedule parameter dict."""
-
-    daily: bool
-    never: bool
-    weekday: str
 
 
 class CreateBackupParametersDict(TypedDict, total=False):
