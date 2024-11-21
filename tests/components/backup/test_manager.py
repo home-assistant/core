@@ -561,7 +561,13 @@ async def test_async_trigger_restore(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
+            TEST_BACKUP_ABC123.backup_id,
+            agent_id=LOCAL_AGENT_ID,
+            password=None,
+            restore_addons=None,
+            restore_database=True,
+            restore_folders=None,
+            restore_homeassistant=True,
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -594,6 +600,10 @@ async def test_async_trigger_restore_with_password(
             TEST_BACKUP_ABC123.backup_id,
             agent_id=LOCAL_AGENT_ID,
             password="abc123",
+            restore_addons=None,
+            restore_database=True,
+            restore_folders=None,
+            restore_homeassistant=True,
         )
         assert (
             mocked_write_text.call_args[0][0]
@@ -614,5 +624,11 @@ async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None
 
     with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
         await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id, agent_id=LOCAL_AGENT_ID, password=None
+            TEST_BACKUP_ABC123.backup_id,
+            agent_id=LOCAL_AGENT_ID,
+            password=None,
+            restore_addons=None,
+            restore_database=True,
+            restore_folders=None,
+            restore_homeassistant=True,
         )
