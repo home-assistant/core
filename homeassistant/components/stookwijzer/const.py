@@ -8,8 +8,8 @@ DOMAIN: Final = "stookwijzer"
 LOGGER = logging.getLogger(__package__)
 
 
-class StookwijzerState(StrEnum):
-    """Stookwijzer states for sensor entity."""
+class AdviceState(StrEnum):
+    """Stookwijzer advice states for sensor entity."""
 
     CODE_YELLOW = "code_yellow"
     CODE_ORANGE = "code_orange"

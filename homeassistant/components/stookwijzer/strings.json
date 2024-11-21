@@ -17,7 +17,8 @@
       "air_quality_index": {
         "name": "Air Quality Index"
       },
-      "stookwijzer": {
+      "advice": {
+        "name": "Advice",
         "state": {
           "code_yellow": "Code yellow",
           "code_orange": "Code orange",

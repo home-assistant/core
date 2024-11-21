@@ -16,7 +16,7 @@ from homeassistant.const import UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import StookwijzerState
+from .const import AdviceState
 from .coordinator import StookwijzerCoordinator
 from .entity import StookwijzerEntity
 
@@ -47,13 +47,13 @@ STOOKWIJZER_SENSORS = [
         value_fn=lambda StookwijzerCoordinator: StookwijzerCoordinator.client.lki,
     ),
     StookwijzerSensorDescription(
-        key="stookwijzer",
-        translation_key="stookwijzer",
+        key="advice",
+        translation_key="advice",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda StookwijzerCoordinator: StookwijzerState(
+        value_fn=lambda StookwijzerCoordinator: AdviceState(
             StookwijzerCoordinator.client.advice
         ).value,
-        options=[cls.value for cls in StookwijzerState],
+        options=[cls.value for cls in AdviceState],
     ),
 ]
 
