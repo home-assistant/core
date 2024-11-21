@@ -108,6 +108,10 @@ class BackupReaderWriter(abc.ABC):
         *,
         agent_id: str,
         password: str | None,
+        restore_addons: list[str] | None,
+        restore_database: bool,
+        restore_folders: list[Folder] | None,
+        restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
 
@@ -520,6 +524,10 @@ class BackupManager:
         *,
         agent_id: str,
         password: str | None,
+        restore_addons: list[str] | None,
+        restore_database: bool,
+        restore_folders: list[Folder] | None,
+        restore_homeassistant: bool,
     ) -> None:
         """Initiate restoring a backup.
 
@@ -548,6 +556,10 @@ class BackupManager:
             backup_id=backup_id,
             agent_id=agent_id,
             password=password,
+            restore_addons=restore_addons,
+            restore_database=restore_database,
+            restore_folders=restore_folders,
+            restore_homeassistant=restore_homeassistant,
         )
 
 
@@ -712,12 +724,25 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         *,
         agent_id: str,
         password: str | None,
+        restore_addons: list[str] | None,
+        restore_database: bool,
+        restore_folders: list[Folder] | None,
+        restore_homeassistant: bool,
     ) -> None:
         """Restore a backup.
 
         This will write the restore information to .HA_RESTORE which
         will be handled during startup by the restore_backup module.
         """
+
+        if restore_addons or restore_folders:
+            raise HomeAssistantError(
+                "Addons and folders are not supported in core restore"
+            )
+        if not restore_homeassistant or not restore_database:
+            raise HomeAssistantError(
+                "Home Assistant and database must be included in restore"
+            )
 
         manager = self._hass.data[DATA_MANAGER]
         if agent_id in manager.local_backup_agents:
