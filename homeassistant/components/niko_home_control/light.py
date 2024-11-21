@@ -44,7 +44,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform."""
-
     if config.get("platform") == DOMAIN:
         if not hass.config_entries.async_entries(DOMAIN):
             # Start import flow
@@ -63,7 +62,7 @@ async def async_setup_platform(
                     translation_key=f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
                     translation_placeholders={
                         "domain": DOMAIN,
-                        "integration_title": "niko_home_control",
+                        "integration_title": "Niko Home Control",
                     },
                 )
                 return

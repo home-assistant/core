@@ -19,8 +19,6 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
-IDENTIFIER = f"${DOMAIN}.controller"  # only one controller is supported
-
 
 def test_connection(host: str, port: int) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
@@ -49,10 +47,9 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             error = test_connection(user_input[CONF_HOST], user_input[CONF_PORT])
             if not error:
-                await self.async_set_unique_id(IDENTIFIER)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=DOMAIN,
                     data=user_input,
