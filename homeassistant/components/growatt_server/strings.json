@@ -478,12 +478,6 @@
       "total_maximum_output": {
         "name": "Maximum power"
       },
-      "chargePower": {
-        "name": "Battery Charging Power"
-      },
-      "dischargePower": {
-        "name": "Battery Discharging Power"
-      },
       "tlx_pac_to_local_load": {
         "name": "Local load Power"
       },
@@ -501,6 +495,25 @@
       },
       "tlx_p_self": {
         "name": "Self Power"
+      }
+    },
+    "number": {
+      "tlx_charge_power": {
+        "name": "Charging Power Rate"
+      },
+      "tlx_charge_stop_soc": {
+        "name": "Charge Stop SOC"
+      },
+      "tlx_discharge_power": {
+        "name": "Discharging Power Rate"
+      },
+      "tlx_discharge_stop_soc": {
+        "name": "Discharge Stop SOC"
+      }
+    },
+    "switch": {
+      "tlx_ac_charge": {
+        "name": "Charge from Grid"
       }
     }
   }

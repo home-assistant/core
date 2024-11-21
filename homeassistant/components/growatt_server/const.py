@@ -26,6 +26,6 @@ DEFAULT_URL = SERVER_URLS[0]
 
 DOMAIN = "growatt_server"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 LOGIN_INVALID_AUTH_CODE = "502"
