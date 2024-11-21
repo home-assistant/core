@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from http import HTTPStatus
 import logging
 from uuid import UUID
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from habiticalib import (
     Direction,
     HabiticaException,
@@ -229,35 +228,38 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
 
-        COMMAND_MAP = {
-            SERVICE_ABORT_QUEST: "abort",
-            SERVICE_ACCEPT_QUEST: "accept",
-            SERVICE_CANCEL_QUEST: "cancel",
-            SERVICE_LEAVE_QUEST: "leave",
-            SERVICE_REJECT_QUEST: "reject",
-            SERVICE_START_QUEST: "force-start",
+        FUNC_MAP = {
+            SERVICE_ABORT_QUEST: coordinator.habitica.abort_quest,
+            SERVICE_ACCEPT_QUEST: coordinator.habitica.accept_quest,
+            SERVICE_CANCEL_QUEST: coordinator.habitica.cancel_quest,
+            SERVICE_LEAVE_QUEST: coordinator.habitica.leave_quest,
+            SERVICE_REJECT_QUEST: coordinator.habitica.reject_quest,
+            SERVICE_START_QUEST: coordinator.habitica.start_quest,
         }
+
+        func = FUNC_MAP[call.service]
+
         try:
-            return await coordinator.api.groups.party.quests[
-                COMMAND_MAP[call.service]
-            ].post()
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_rate_limit_exception",
-                ) from e
-            if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="quest_action_unallowed"
-                ) from e
-            if e.status == HTTPStatus.NOT_FOUND:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="quest_not_found"
-                ) from e
+            response = await func()
+        except TooManyRequestsError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except NotAuthorizedError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="quest_action_unallowed"
+            ) from e
+        except NotFoundError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="quest_not_found"
+            ) from e
+        except (HabiticaException, ClientError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="service_call_exception"
             ) from e
+        else:
+            return asdict(response.data)
 
     for service in (
         SERVICE_ABORT_QUEST,

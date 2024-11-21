@@ -1,7 +1,6 @@
 """Test Habitica actions."""
 
 from collections.abc import Generator
-from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
@@ -16,7 +15,6 @@ from homeassistant.components.habitica.const import (
     ATTR_SKILL,
     ATTR_TARGET,
     ATTR_TASK,
-    DEFAULT_URL,
     DOMAIN,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
@@ -38,7 +36,6 @@ from .conftest import (
     ERROR_NOT_AUTHORIZED,
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
-    mock_called_with,
 )
 
 from tests.common import MockConfigEntry
@@ -307,30 +304,23 @@ async def test_get_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("service", "command"),
+    "service",
     [
-        (SERVICE_ABORT_QUEST, "abort"),
-        (SERVICE_ACCEPT_QUEST, "accept"),
-        (SERVICE_CANCEL_QUEST, "cancel"),
-        (SERVICE_LEAVE_QUEST, "leave"),
-        (SERVICE_REJECT_QUEST, "reject"),
-        (SERVICE_START_QUEST, "force-start"),
+        SERVICE_ABORT_QUEST,
+        SERVICE_ACCEPT_QUEST,
+        SERVICE_CANCEL_QUEST,
+        SERVICE_LEAVE_QUEST,
+        SERVICE_REJECT_QUEST,
+        SERVICE_START_QUEST,
     ],
-    ids=[],
 )
 async def test_handle_quests(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     service: str,
-    command: str,
 ) -> None:
     """Test Habitica actions for quest handling."""
-
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/groups/party/quests/{command}",
-        json={"success": True, "data": {}},
-    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -340,62 +330,65 @@ async def test_handle_quests(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica,
-        "post",
-        f"{DEFAULT_URL}/api/v3/groups/party/quests/{command}",
-    )
+    getattr(habitica, service).assert_awaited_once()
 
 
 @pytest.mark.parametrize(
     (
-        "http_status",
+        "raise_exception",
         "expected_exception",
         "expected_exception_msg",
     ),
     [
         (
-            HTTPStatus.TOO_MANY_REQUESTS,
+            ERROR_TOO_MANY_REQUESTS,
             ServiceValidationError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
-            HTTPStatus.NOT_FOUND,
+            ERROR_NOT_FOUND,
             ServiceValidationError,
             "Unable to complete action, quest or group not found",
         ),
         (
-            HTTPStatus.UNAUTHORIZED,
+            ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
             "Action not allowed, only quest leader or group leader can perform this action",
         ),
         (
-            HTTPStatus.BAD_REQUEST,
+            ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_ACCEPT_QUEST,
+        SERVICE_ABORT_QUEST,
+        SERVICE_CANCEL_QUEST,
+        SERVICE_LEAVE_QUEST,
+        SERVICE_REJECT_QUEST,
+        SERVICE_START_QUEST,
+    ],
+)
 async def test_handle_quests_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
-    http_status: HTTPStatus,
+    habitica: AsyncMock,
+    raise_exception: Exception,
+    service: str,
     expected_exception: Exception,
     expected_exception_msg: str,
 ) -> None:
     """Test Habitica handle quests action exceptions."""
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/groups/party/quests/accept",
-        json={"success": True, "data": {}},
-        status=http_status,
-    )
-
+    getattr(habitica, service).side_effect = raise_exception
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACCEPT_QUEST,
+            service,
             service_data={ATTR_CONFIG_ENTRY: config_entry.entry_id},
             return_response=True,
             blocking=True,
