@@ -1428,26 +1428,6 @@
     'type': 'event',
   })
 # ---
-# name: test_generate_without_hassio[params0-expected_extra_call_params0]
-  dict({
-    'id': 1,
-    'result': dict({
-      'backup_job_id': 'abc123',
-    }),
-    'success': True,
-    'type': 'result',
-  })
-# ---
-# name: test_generate_without_hassio[params1-expected_extra_call_params1]
-  dict({
-    'id': 1,
-    'result': dict({
-      'backup_job_id': 'abc123',
-    }),
-    'success': True,
-    'type': 'result',
-  })
-# ---
 # name: test_info[remote_agents0-remote_backups0]
   dict({
     'id': 1,
