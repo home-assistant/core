@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import IntEnum, StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -28,16 +28,29 @@ DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 
-class QualityScale(IntEnum):
+class ScaledQualityScaleTiers(IntEnum):
     """Supported manifest quality scales."""
 
-    INTERNAL = -1
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
 
 
-SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
+class NonScaledQualityScaleTiers(StrEnum):
+    """Supported manifest quality scales."""
+
+    CUSTOM = auto()
+    NO_SCORE = auto()
+    INTERNAL = auto()
+    LEGACY = auto()
+
+
+SUPPORTED_QUALITY_SCALES = [
+    value.name.lower()
+    for enum in [ScaledQualityScaleTiers, NonScaledQualityScaleTiers]
+    for value in enum
+]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -346,9 +359,12 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) and QualityScale[
-        quality_scale.upper()
-    ] > QualityScale.SILVER:
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and quality_scale.upper() in ScaledQualityScaleTiers
+        and ScaledQualityScaleTiers[quality_scale.upper()]
+        >= ScaledQualityScaleTiers.SILVER
+    ):
         if not integration.manifest.get("codeowners"):
             integration.add_error(
                 "manifest",

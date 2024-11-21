@@ -103,6 +103,7 @@ BINARY_PUSH_SENSORS = (
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="sleep",
+        cmd_id=145,
         cmd_key="GetChannelstatus",
         translation_key="sleep",
         entity_category=EntityCategory.DIAGNOSTIC,
