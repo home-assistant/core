@@ -627,7 +627,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             backup = AgentBackup(
                 addons=[],
                 backup_id=backup_id,
-                database_included=database_included,
+                database_included=include_database,
                 date=date_str,
                 folders=[],
                 homeassistant_included=True,
