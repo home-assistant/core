@@ -51,7 +51,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=COMPANY,
-            model=coordinator.api.device.model_name,
+            model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
             name=coordinator.device_name,
         )
         self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
@@ -106,7 +106,9 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             if on_fail_method:
                 on_fail_method()
             raise ServiceValidationError(
-                exc.message, translation_domain=DOMAIN, translation_key=exc.code
+                exc.message,
+                translation_domain=DOMAIN,
+                translation_key=exc.error_name.lower(),
             ) from exc
         except ValueError as exc:
             if on_fail_method:
