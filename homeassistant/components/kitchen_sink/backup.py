@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent
+from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class KitchenSinkBackupAgent(BackupAgent):
                 backup_id="abc123",
                 database_included=False,
                 date="1970-01-01T00:00:00Z",
-                folders=["media", "share"],
+                folders=[Folder.MEDIA, Folder.SHARE],
                 homeassistant_included=True,
                 homeassistant_version="2024.12.0",
                 name="Kitchen sink syncer",

@@ -1,6 +1,9 @@
 """Models for the backup integration."""
 
+from __future__ import annotations
+
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -12,6 +15,15 @@ class AddonInfo:
     version: str
 
 
+class Folder(StrEnum):
+    """Folder type."""
+
+    SHARE = "share"
+    ADDONS = "addons/local"
+    SSL = "ssl"
+    MEDIA = "media"
+
+
 @dataclass(frozen=True, kw_only=True)
 class AgentBackup:
     """Base backup class."""
@@ -20,7 +32,7 @@ class AgentBackup:
     backup_id: str
     date: str
     database_included: bool
-    folders: list[str]
+    folders: list[Folder]
     homeassistant_included: bool
     homeassistant_version: str | None  # None if homeassistant_included is False
     name: str

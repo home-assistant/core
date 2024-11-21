@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
 from .manager import BackupProgress
+from .models import Folder
 
 
 @callback
@@ -140,7 +141,7 @@ async def handle_restore(
         vol.Optional("include_addons"): [str],
         vol.Optional("include_all_addons", default=False): bool,
         vol.Optional("include_database", default=True): bool,
-        vol.Optional("include_folders"): [str],
+        vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
         vol.Optional("name"): str,
         vol.Optional("password"): str,

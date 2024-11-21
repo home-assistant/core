@@ -7,13 +7,14 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from aiohasupervisor import backups as supervisor_backups
+from aiohasupervisor.models import backups as supervisor_backups
 
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupProgress,
     BackupReaderWriter,
+    Folder,
     LocalBackupAgent,
     NewBackup,
 )
@@ -70,7 +71,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
                 backup_id=backup.slug,
                 database_included=True,
                 date=backup.date.isoformat(),
-                folders=backup.content.folders,
+                folders=[Folder(folder) for folder in backup.content.folders],
                 homeassistant_included=backup.content.homeassistant,
                 homeassistant_version="2024.12.0",
                 name=backup.name,
@@ -119,19 +120,23 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
-        include_folders: list[str] | None,
+        include_folders: list[Folder] | None,
         include_homeassistant: bool,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""
         include_addons_set = set(include_addons) if include_addons else None
-        include_folders_set = set(include_folders) if include_folders else None
+        include_folders_set = (
+            {supervisor_backups.Folder(folder) for folder in include_folders}
+            if include_folders
+            else None
+        )
 
         backup = await self._client.backups.partial_backup(
             supervisor_backups.PartialBackupOptions(
                 addons=include_addons_set,
-                folders=include_folders_set,  # type: ignore[arg-type]
+                folders=include_folders_set,
                 homeassistant=include_homeassistant,
                 name=backup_name,
                 password=password,
