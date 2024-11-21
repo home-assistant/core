@@ -34,7 +34,7 @@ rules:
     comment: |
       No custom actions are defined.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
