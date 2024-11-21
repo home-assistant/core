@@ -7174,8 +7174,8 @@ async def test_create_entry_reauth_reconfigure(
     assert (
         f"Detected that integration 'test' creates a new entry in a '{source}' flow, "
         "when it is expected to update an existing entry and abort. This will stop "
-        "working in 2025.11, please create a bug report at https://github.com/home"
-        "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+        "working in Home Assistant 2025.11, please create a bug report at "
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
         "label%3A%22integration%3A+test%22"
     ) in caplog.text
 
