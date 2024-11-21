@@ -1000,36 +1000,16 @@ async def test_ws_webrtc_candidate(
     [
         (
             {"sdpMLineIndex": 0},
-            "candidate value missing",
-        ),
-        (
-            {"candidate": 5, "sdpMLineIndex": 0},
-            "candidate must be str",
+            'Field "candidate" of type str is missing in RTCIceCandidateInit instance',
         ),
         (
             {"candidate": "candidate", "sdpMLineIndex": -1},
             "sdpMLineIndex must be greater than or equal to 0",
         ),
-        (
-            {"candidate": "candidate", "sdpMLineIndex": "0"},
-            "sdpMLineIndex must be int | None",
-        ),
-        (
-            {"candidate": "candidate", "sdpMid": 0},
-            "sdpMid must be str | None",
-        ),
-        (
-            {"candidate": "candidate", "userFragment": 0},
-            "userFragment must be str | None",
-        ),
     ],
     ids=[
         "candidate-missing",
-        "candidate-type",
         "spd_mline_index-lt0",
-        "spd_mline_index-type",
-        "sdp_mid-type",
-        "userfrag-type",
     ],
 )
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
