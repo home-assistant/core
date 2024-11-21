@@ -4,11 +4,11 @@ from unittest.mock import MagicMock
 
 from eheimdigital.types import EheimDeviceType
 
-from homeassistant.components.eheimdigital import async_remove_config_entry_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_remove_device(
@@ -16,6 +16,7 @@ async def test_remove_device(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a device."""
     mock_config_entry.add_to_hass(hass)
@@ -35,10 +36,18 @@ async def test_remove_device(
     )
     assert device_entry is not None
 
-    assert not await async_remove_config_entry_device(
-        hass, mock_config_entry, device_entry
+    hass_client = await hass_ws_client(hass)
+
+    # Do not allow to delete a connected device
+    response = await hass_client.remove_device(
+        device_entry.id, mock_config_entry.entry_id
     )
+    assert not response["success"]
 
     eheimdigital_hub_mock.return_value.devices = {}
 
-    assert await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
+    # Allow to delete a not connected device
+    response = await hass_client.remove_device(
+        device_entry.id, mock_config_entry.entry_id
+    )
+    assert response["success"]

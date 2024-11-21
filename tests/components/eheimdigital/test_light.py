@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientError
 from eheimdigital.types import EheimDeviceType, LightMode
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -24,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -225,6 +225,7 @@ async def test_update_failed(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an failed update."""
     mock_config_entry.add_to_hass(hass)
@@ -238,8 +239,8 @@ async def test_update_failed(
 
     eheimdigital_hub_mock.return_value.update.side_effect = ClientError
 
-    next_update = dt_util.utcnow() + timedelta(seconds=30)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
