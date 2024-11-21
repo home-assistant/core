@@ -1487,11 +1487,11 @@ class ConfigEntriesFlowManager(
             )
 
         if existing_entry is not None and flow.handler != "mobile_app":
-            # `mobile_app` does this on purpose
+            # This causes the old entry to be removed and replaced when it
+            # should most likely update the previous entry and abort the flow
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
-                "exists, causing the old entry to be removed and replaced when it "
-                "should most likely update the previous entry and abort the flow",
+                "exists",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.IGNORE,
