@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 import aiohttp
@@ -278,29 +279,40 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("agent_ids", "expected_error"),
+    ("parameters", "expected_error"),
     [
-        ([], "At least one agent must be selected"),
-        (["non_existing"], "Invalid agent selected"),
+        ({"agent_ids": []}, "At least one agent must be selected"),
+        ({"agent_ids": ["non_existing"]}, "Invalid agent selected"),
+        (
+            {"include_addons": ["ssl"], "include_all_addons": True},
+            "Cannot include all addons and specify specific addons",
+        ),
+        ({"include_homeassistant": False}, "Home Assistant must be included in backup"),
     ],
 )
-async def test_async_create_backup_wrong_agent_id(
-    hass: HomeAssistant, agent_ids: list[str], expected_error: str
+async def test_async_create_backup_wrong_parameters(
+    hass: HomeAssistant, parameters: dict[str, Any], expected_error: str
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    default_parameters = {
+        "agent_ids": [LOCAL_AGENT_ID],
+        "include_addons": [],
+        "include_all_addons": False,
+        "include_database": True,
+        "include_folders": [],
+        "include_homeassistant": True,
+        "name": None,
+        "on_progress": None,
+        "password": None,
+    }
+
     with pytest.raises(HomeAssistantError, match=expected_error):
-        await manager.async_create_backup(
-            agent_ids=agent_ids,
-            include_addons=[],
-            include_all_addons=False,
-            include_database=True,
-            include_folders=[],
-            include_homeassistant=True,
-            name=None,
-            on_progress=None,
-            password=None,
-        )
+        await manager.async_create_backup(**(default_parameters | parameters))
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
