@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_STATION_UPDATES, PLATFORMS
+from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, PLATFORMS
 from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     update_features: int = UpdateFeature.FORECAST
+    if entry.options.get(CONF_RADAR_UPDATES, False):
+        update_features |= UpdateFeature.RADAR
     if entry.options.get(CONF_STATION_UPDATES, True):
         update_features |= UpdateFeature.STATION
 
