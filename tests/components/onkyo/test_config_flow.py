@@ -234,7 +234,7 @@ async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.onkyo.config_flow.async_interview",
-        side_effect=Exception(),
+        side_effect=OSError(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

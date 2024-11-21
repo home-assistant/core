@@ -194,7 +194,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await async_interview(host)
-        except Exception:
+        except OSError:
             _LOGGER.exception("Unexpected exception interviewing host %s", host)
             return self.async_abort(reason="unknown")
 
