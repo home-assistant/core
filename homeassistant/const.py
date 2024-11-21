@@ -1166,6 +1166,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_MINUTE = "L/min"
     GALLONS_PER_MINUTE = "gal/min"
+    MILLILITERS_PER_SECOND = "mL/s"
 
 
 _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = DeprecatedConstantEnum(
