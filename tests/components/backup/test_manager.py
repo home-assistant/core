@@ -102,7 +102,7 @@ async def _mock_backup_generation(
     assert backup == AgentBackup(
         addons=[],
         backup_id=ANY,
-        database_included=database_included,
+        database_included=include_database,
         date=ANY,
         folders=[],
         homeassistant_included=True,
