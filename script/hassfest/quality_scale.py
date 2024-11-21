@@ -261,7 +261,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "directv",
     "discogs",
     "discord",
-    "discovergy",
     "dlib_face_detect",
     "dlib_face_identify",
     "dlink",
