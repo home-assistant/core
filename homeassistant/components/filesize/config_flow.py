@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -45,7 +44,7 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             full_path, errors = await self.hass.async_add_executor_job(
@@ -69,7 +68,7 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow initialized by the user."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             reconfigure_entry = self._get_reconfigure_entry()
@@ -84,18 +83,10 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     title=name,
-                    unique_id=self.context["unique_id"],
+                    unique_id=self.unique_id,
                     data_updates={CONF_FILE_PATH: user_input[CONF_FILE_PATH]},
                 )
 
         return self.async_show_form(
             step_id="reconfigure", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class NotValidError(HomeAssistantError):
-    """Path is not valid error."""
-
-
-class NotAllowedError(HomeAssistantError):
-    """Path is not allowed error."""
