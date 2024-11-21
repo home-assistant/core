@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
