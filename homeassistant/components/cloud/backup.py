@@ -27,7 +27,7 @@ _STORAGE_BACKUP = "backup"
 
 def b64md5(path: Path) -> str:
     """Calculate the MD5 hash of a file."""
-    with open("your_filename.txt", "rb") as f:
+    with open(path, "rb") as f:
         file_hash = hashlib.md5()
         while chunk := f.read(8192):
             file_hash.update(chunk)
