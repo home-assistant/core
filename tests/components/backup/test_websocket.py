@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import AgentBackup
+from homeassistant.components.backup import AgentBackup, Folder
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import NewBackup
@@ -307,6 +307,49 @@ async def test_generate(
         assert await client.receive_json() == snapshot
 
 
+@pytest.mark.parametrize(
+    ("parameters", "expected_error"),
+    [
+        (
+            {"include_homeassistant": False},
+            "Home Assistant must be included in backup",
+        ),
+        (
+            {"include_addons": ["blah"]},
+            "Addons and folders are not supported by core backup",
+        ),
+        (
+            {"include_all_addons": True},
+            "Addons and folders are not supported by core backup",
+        ),
+        (
+            {"include_folders": ["ssl"]},
+            "Addons and folders are not supported by core backup",
+        ),
+    ],
+)
+async def test_generate_wrong_parameters(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    parameters: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test generating a backup."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+
+    default_parameters = {"type": "backup/generate", "agent_ids": ["backup.local"]}
+
+    await client.send_json_auto_id(default_parameters | parameters)
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": expected_error,
+    }
+
+
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("params", "expected_extra_call_params"),
@@ -324,13 +367,13 @@ async def test_generate(
                 "agent_ids": ["backup.local"],
                 "include_addons": ["ssl"],
                 "include_database": False,
-                "include_folders": ["media"],
+                "include_folders": [Folder.MEDIA],
                 "name": "abc123",
             },
         ),
     ],
 )
-async def test_generate_without_hassio(
+async def test_generate_calls_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -338,7 +381,7 @@ async def test_generate_without_hassio(
     params: dict[str, Any],
     expected_extra_call_params: dict[str, Any],
 ) -> None:
-    """Test generating a backup."""
+    """Test translation of WS parameter to backup/generate to async_create_backup."""
     await setup_backup_integration(hass, with_hassio=False)
 
     client = await hass_ws_client(hass)
@@ -350,7 +393,9 @@ async def test_generate_without_hassio(
         return_value=NewBackup(backup_job_id="abc123"),
     ) as generate_backup:
         await client.send_json_auto_id({"type": "backup/generate"} | params)
-        assert await client.receive_json() == snapshot
+        result = await client.receive_json()
+        assert result["success"]
+        assert result["result"] == {"backup_job_id": "abc123"}
         generate_backup.assert_called_once_with(
             **{
                 "include_all_addons": False,
