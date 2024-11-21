@@ -52,10 +52,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      Does not make sense for this integration - no extra state compared to entities.
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: |
