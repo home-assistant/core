@@ -88,14 +88,14 @@ async def test_agent_list_backups(
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
 
-    await client.send_json_auto_id({"type": "backup/agents/list_backups"})
+    await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == [
+    assert response["result"]["backups"] == [
         {
             "addons": [],
-            "agent_id": "hassio.local",
+            "agent_ids": ["hassio.local"],
             "backup_id": "abc123",
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",

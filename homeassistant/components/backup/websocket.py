@@ -17,7 +17,6 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     """Register websocket commands."""
     websocket_api.async_register_command(hass, backup_agents_download)
     websocket_api.async_register_command(hass, backup_agents_info)
-    websocket_api.async_register_command(hass, backup_agents_list_backups)
 
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
@@ -231,23 +230,6 @@ async def backup_agents_info(
             "syncing": manager.syncing,
         },
     )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/agents/list_backups"})
-@websocket_api.async_response
-async def backup_agents_list_backups(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Return a list of uploaded backups."""
-    manager = hass.data[DATA_MANAGER]
-    backups: list[dict[str, Any]] = []
-    for agent_id, agent in manager.backup_agents.items():
-        _listed_backups = await agent.async_list_backups()
-        backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
-    connection.send_result(msg["id"], backups)
 
 
 @websocket_api.require_admin
