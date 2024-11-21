@@ -39,7 +39,7 @@ class IturanBaseEntity(CoordinatorEntity[IturanDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if vehicle is still included in the account."""
-        return self._license_plate in self.coordinator.data
+        return super().available and self._license_plate in self.coordinator.data
 
     @property
     def vehicle(self) -> Vehicle:

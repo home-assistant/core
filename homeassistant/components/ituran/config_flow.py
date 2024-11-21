@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -26,13 +25,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID_OR_PASSPORT): str,
         vol.Required(CONF_PHONE_NUMBER): str,
-        vol.Optional(CONF_MOBILE_ID): str,
     }
 )
 
 STEP_OTP_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OTP, description="OTP"): str,
+        vol.Required(CONF_OTP): str,
     }
 )
 
@@ -48,17 +46,15 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the inial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if self.unique_id is None:
-                await self.async_set_unique_id(user_input[CONF_ID_OR_PASSPORT])
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(user_input[CONF_ID_OR_PASSPORT])
+            self._abort_if_unique_id_configured()
 
+            ituran = Ituran(
+                user_input[CONF_ID_OR_PASSPORT],
+                user_input[CONF_PHONE_NUMBER],
+            )
+            user_input[CONF_MOBILE_ID] = ituran.mobile_id
             try:
-                ituran = Ituran(
-                    user_input[CONF_ID_OR_PASSPORT],
-                    user_input[CONF_PHONE_NUMBER],
-                    user_input.get(CONF_MOBILE_ID),
-                )
-                user_input[CONF_MOBILE_ID] = ituran.mobile_id
                 authenticated = await ituran.is_authenticated()
                 if not authenticated:
                     await ituran.request_otp()
@@ -82,24 +78,18 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle configuration by re-auth."""
-        return await self.async_step_user()
-
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the inial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            ituran = Ituran(
+                self._user_info[CONF_ID_OR_PASSPORT],
+                self._user_info[CONF_PHONE_NUMBER],
+                self._user_info[CONF_MOBILE_ID],
+            )
             try:
-                ituran = Ituran(
-                    self._user_info[CONF_ID_OR_PASSPORT],
-                    self._user_info[CONF_PHONE_NUMBER],
-                    self._user_info[CONF_MOBILE_ID],
-                )
                 await ituran.authenticate(user_input[CONF_OTP])
             except IturanApiError:
                 errors["base"] = "cannot_connect"

@@ -1,24 +1,13 @@
 """Tests for the Ituran integration."""
 
-from typing import Any
+from homeassistant.core import HomeAssistant
 
-from homeassistant.components.ituran.const import (
-    CONF_ID_OR_PASSPORT,
-    CONF_MOBILE_ID,
-    CONF_PHONE_NUMBER,
-    DOMAIN,
-)
+from tests.common import MockConfigEntry
 
-MOCK_CONFIG_DATA: dict[str, str] = {
-    CONF_ID_OR_PASSPORT: "12345678",
-    CONF_PHONE_NUMBER: "0501234567",
-    CONF_MOBILE_ID: "0123456789abcdef",
-}
 
-MOCK_CONFIG_ENTRY: dict[str, Any] = {
-    "domain": DOMAIN,
-    "entry_id": "1",
-    "source": "user",
-    "title": MOCK_CONFIG_DATA[CONF_ID_OR_PASSPORT],
-    "data": MOCK_CONFIG_DATA,
-}
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
