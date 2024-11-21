@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
+    Folder,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -612,7 +613,31 @@ async def test_async_trigger_restore_with_password(
         assert mocked_service_call.called
 
 
-async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("parameters", "expected_error"),
+    [
+        ({}, "Backup abc123 not found"),
+        (
+            {"restore_addons": ["blah"]},
+            "Addons and folders are not supported in core restore",
+        ),
+        (
+            {"restore_folders": [Folder.ADDONS]},
+            "Addons and folders are not supported in core restore",
+        ),
+        (
+            {"restore_database": False},
+            "Home Assistant and database must be included in restore",
+        ),
+        (
+            {"restore_homeassistant": False},
+            "Home Assistant and database must be included in restore",
+        ),
+    ],
+)
+async def test_async_trigger_restore_wrong_parameters(
+    hass: HomeAssistant, parameters: dict[str, Any], expected_error: str
+) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
@@ -622,13 +647,16 @@ async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
     local_agent._loaded_backups = True
 
+    default_parameters = {
+        "agent_id": LOCAL_AGENT_ID,
+        "password": None,
+        "restore_addons": None,
+        "restore_database": True,
+        "restore_folders": None,
+        "restore_homeassistant": True,
+    }
+
     with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
         await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id,
-            agent_id=LOCAL_AGENT_ID,
-            password=None,
-            restore_addons=None,
-            restore_database=True,
-            restore_folders=None,
-            restore_homeassistant=True,
+            TEST_BACKUP_ABC123.backup_id, **(default_parameters | parameters)
         )
