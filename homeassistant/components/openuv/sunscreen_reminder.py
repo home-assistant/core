@@ -4,16 +4,18 @@ from datetime import datetime, timedelta
 import logging
 from zoneinfo import ZoneInfo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+
+from .const import SUNSCREEN_DOMAIN
 
 # Constants
 LOCAL_TIMEZONE = "Europe/Stockholm"
 UV_SENSOR = "sensor.openuv_current_uv_index"
-UV_THRESHOLD = 3  # In real life should be 3 (For demo lower values)
-NOTIFICATION_INTERVAL_HOURS = 0.0833  # Equal to 5min (In real life set it to 2(hours))
-CHECK_INTERVAL_MINUTES = 1  # Frequency to check the UV index
+UV_THRESHOLD = 0  # In real life should be 3 (For demo lower values)
+NOTIFICATION_INTERVAL_HOURS = 0.0166  # Equal to 1 min (For demo lower values)
+CHECK_INTERVAL_MINUTES = 0.5  # Frequency to check the UV index
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,15 +31,24 @@ class SunscreenReminder:
 
     async def async_initialize(self):
         """Asynchronously initialize the Sunscreen Reminder."""
-        _LOGGER.debug("Initializing SunscreenReminder")
+        if self.periodic_task:
+            _LOGGER.debug("Periodic task already running, skipping initialization")
+            return
 
-        # Set up periodic UV index checks
+        _LOGGER.debug("Initializing SunscreenReminder")
         self.periodic_task = async_track_time_interval(
             self.hass, self._periodic_check, timedelta(minutes=CHECK_INTERVAL_MINUTES)
         )
 
     async def _periodic_check(self, now):
+        """Periodic check triggered by time interval."""
         _LOGGER.debug("Periodic check triggered at %s", now)
+
+        # Check the state of the switch entity
+        switch_state = self.hass.states.get("switch.sunscreen_reminder")
+        if not switch_state or switch_state.state != "on":
+            _LOGGER.debug("Sunscreen reminder is disabled, skipping check")
+            return
 
         state = self.hass.states.get(UV_SENSOR)
         if not state:
@@ -59,15 +70,11 @@ class SunscreenReminder:
         now = datetime.now()
         _LOGGER.debug("Handling UV index: %s", uv_index)
         if uv_index >= UV_THRESHOLD:
-            _LOGGER.debug(
-                "UV index %s meets or exceeds threshold %s", uv_index, UV_THRESHOLD
-            )
             if (
                 self.last_notification_time is None
                 or now - self.last_notification_time
                 >= timedelta(hours=NOTIFICATION_INTERVAL_HOURS)
             ):
-                _LOGGER.debug("Time since last notification allows sending a new one")
                 self.last_notification_time = now
                 self.hass.async_create_task(self._send_notification())
             else:
@@ -88,7 +95,6 @@ class SunscreenReminder:
             service="create",
             service_data={"message": message, "title": "Sunscreen Reminder"},
         )
-
         _LOGGER.info("Sunscreen reminder notification sent")
 
     async def async_cleanup(self):
@@ -96,12 +102,23 @@ class SunscreenReminder:
         if self.periodic_task:
             self.periodic_task()
             self.periodic_task = None
+            _LOGGER.debug("Periodic task stopped")
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Sunscreen Reminder integration."""
     _LOGGER.debug("Setting up Sunscreen Reminder")
-    reminder = SunscreenReminder(hass)
-    await reminder.async_initialize()
-    hass.data.setdefault("sunscreen_reminder", reminder)
+
+    # Ensure the reminder instance is created and initialized
+    if SUNSCREEN_DOMAIN not in hass.data:
+        hass.data[SUNSCREEN_DOMAIN] = SunscreenReminder(hass)
+    else:
+        _LOGGER.warning("SunscreenReminder already exists in hass.data")
+
+    # Initialize the reminder (start periodic tasks)
+    await hass.data[SUNSCREEN_DOMAIN].async_initialize()
+
+    # Load the switch platform
+    hass.helpers.discovery.async_load_platform("switch", SUNSCREEN_DOMAIN, {}, config)
+
     return True

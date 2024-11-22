@@ -29,11 +29,12 @@ from .const import (
     DEFAULT_TO_WINDOW,
     DOMAIN,
     LOGGER,
+    SUNSCREEN_DOMAIN,
 )
 from .coordinator import OpenUvCoordinator
 from .sunscreen_reminder import SunscreenReminder
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -78,10 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    # Initialize SunscreenReminder module
+    # Initialize the SunscreenReminder module separately
     reminder = SunscreenReminder(hass)
     await reminder.async_initialize()
-    hass.data["sunscreen_reminder"] = reminder
+
+    # Store the SunscreenReminder instance in a separate key
+    hass.data[SUNSCREEN_DOMAIN] = reminder
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
