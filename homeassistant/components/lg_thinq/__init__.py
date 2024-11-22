@@ -95,6 +95,7 @@ async def async_setup_coordinators(
         raise ConfigEntryNotReady(exc.message) from exc
 
     if not bridge_list:
+        _LOGGER.warning("No devices registered with the correct profile")
         return
 
     # Setup coordinator per device.
