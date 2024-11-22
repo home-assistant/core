@@ -1015,7 +1015,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tcp",
     "technove",
     "ted5000",
-    "tedee",
     "telegram",
     "telegram_bot",
     "tellduslive",
