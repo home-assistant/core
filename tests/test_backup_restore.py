@@ -168,7 +168,7 @@ def test_aborting_for_older_versions() -> None:
                 "home-assistant_v2.db",
                 "home-assistant_v2.db-wal",
             ),
-            ("www",),
+            ("tmp_backups", "www"),
             (),
             ("data",),
         ),
@@ -180,7 +180,7 @@ def test_aborting_for_older_versions() -> None:
                 restore_homeassistant=True,
             ),
             (".HA_RESTORE", ".HA_VERSION"),
-            ("www",),
+            ("tmp_backups", "www"),
             (),
             ("data",),
         ),
@@ -214,6 +214,7 @@ def test_removal_of_current_configuration_when_restoring(
         {"path": Path(config_dir, "home-assistant_v2.db"), "is_file": True},
         {"path": Path(config_dir, "home-assistant_v2.db-wal"), "is_file": True},
         {"path": Path(config_dir, "backups"), "is_file": False},
+        {"path": Path(config_dir, "tmp_backups"), "is_file": False},
         {"path": Path(config_dir, "www"), "is_file": False},
     ]
 
