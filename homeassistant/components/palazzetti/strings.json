@@ -27,7 +27,7 @@
     "invalid_fan_mode": {
       "message": "Fan mode {value} is invalid."
     },
-    "invalid_target_temperatures": {
+    "invalid_target_temperature": {
       "message": "Target temperature {value} is invalid."
     },
     "cannot_connect": {
