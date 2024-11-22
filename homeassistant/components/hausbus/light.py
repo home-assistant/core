@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import colorsys
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
@@ -114,56 +114,11 @@ class HausbusLight(HausbusEntity, LightEntity):
         params = {ATTR_ON_STATE: False}
         self.async_update_callback(**params)
 
-    @staticmethod
-    def handle_light_event(data: Any, channel: HausbusEntity) -> None:
+    def handle_light_event(self, data: Any) -> None:
         """Handle light events from Haus-Bus."""
-        if not isinstance(channel, HausbusLight):
-            return
-        # dimmer event handling
-        if isinstance(data, DimmerEvOn):
-            event = cast(DimmerEvOn, data)
-            channel.set_light_brightness(event.getBrightness())
-        if isinstance(data, DimmerStatus):
-            event = cast(DimmerStatus, data)
-            if event.getBrightness() > 0:
-                channel.set_light_brightness(event.getBrightness())
-            else:
-                channel.light_turn_off()
-        # rgb dimmmer event handling
-        if isinstance(data, rgbDimmerEvOn):
-            event = cast(rgbDimmerEvOn, data)
-            channel.set_light_color(
-                event.getBrightnessRed(),
-                event.getBrightnessGreen(),
-                event.getBrightnessBlue(),
-            )
-        if isinstance(data, rgbDimmerStatus):
-            event = cast(rgbDimmerStatus, data)
-            if (
-                event.getBrightnessBlue() > 0
-                or event.getBrightnessGreen() > 0
-                or event.getBrightnessRed() > 0
-            ):
-                channel.set_light_color(
-                    event.getBrightnessRed(),
-                    event.getBrightnessGreen(),
-                    event.getBrightnessBlue(),
-                )
-            else:
-                channel.light_turn_off()
-        # led event handling
-        if isinstance(data, ledEvOn):
-            event = cast(ledEvOn, data)
-            channel.set_light_brightness(event.getBrightness())
-        if isinstance(data, ledStatus):
-            event = cast(ledStatus, data)
-            if event.getBrightness() > 0:
-                channel.set_light_brightness(event.getBrightness())
-            else:
-                channel.light_turn_off()
         # light off events
         if isinstance(data, (DimmerEvOff, ledEvOff, rgbDimmerEvOff)):
-            channel.light_turn_off()
+            self.light_turn_off()
 
     @callback
     def async_update_callback(self, **kwargs: Any) -> None:
@@ -218,6 +173,18 @@ class HausbusDimmerLight(HausbusLight):
         brightness = round(brightness * 100 // 255)
         self._channel.setBrightness(brightness, 0)
 
+    def handle_light_event(self, data: Any) -> None:
+        """Handle dimmer events from HausBus."""
+        super().handle_light_event(data)
+        # dimmer event handling
+        if isinstance(data, DimmerEvOn):
+            self.set_light_brightness(data.getBrightness())
+        if isinstance(data, DimmerStatus):
+            if data.getBrightness() > 0:
+                self.set_light_brightness(data.getBrightness())
+            else:
+                self.light_turn_off()
+
 
 class HausbusRGBDimmerLight(HausbusLight):
     """Representation of a Haus-Bus RGB dimmer."""
@@ -252,6 +219,30 @@ class HausbusRGBDimmerLight(HausbusLight):
         red, green, blue = tuple(round(x * 100) for x in rgb)
         self._channel.setColor(red, green, blue, 0)
 
+    def handle_light_event(self, data: Any) -> None:
+        """Handle RGB dimmer events from HausBus."""
+        super().handle_light_event(data)
+        # rgb dimmmer event handling
+        if isinstance(data, rgbDimmerEvOn):
+            self.set_light_color(
+                data.getBrightnessRed(),
+                data.getBrightnessGreen(),
+                data.getBrightnessBlue(),
+            )
+        if isinstance(data, rgbDimmerStatus):
+            if (
+                data.getBrightnessBlue() > 0
+                or data.getBrightnessGreen() > 0
+                or data.getBrightnessRed() > 0
+            ):
+                self.set_light_color(
+                    data.getBrightnessRed(),
+                    data.getBrightnessGreen(),
+                    data.getBrightnessBlue(),
+                )
+            else:
+                self.light_turn_off()
+
 
 class HausbusLedLight(HausbusLight):
     """Representation of a Haus-Bus LED."""
@@ -282,3 +273,15 @@ class HausbusLedLight(HausbusLight):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
         brightness = round(brightness * 100 // 255)
         self._channel.on(brightness, 0, 0)
+
+    def handle_light_event(self, data: Any) -> None:
+        """Handle led events from HausBus."""
+        super().handle_light_event(data)
+        # led event handling
+        if isinstance(data, ledEvOn):
+            self.set_light_brightness(data.getBrightness())
+        if isinstance(data, ledStatus):
+            if data.getBrightness() > 0:
+                self.set_light_brightness(data.getBrightness())
+            else:
+                self.light_turn_off()

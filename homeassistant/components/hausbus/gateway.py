@@ -173,7 +173,8 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         # light event handling
         channel = self.get_channel(object_id)
         if channel is not None:
-            HausbusLight.handle_light_event(data, channel)
+            if isinstance(channel, HausbusLight):
+                channel.handle_light_event(data)
 
     def register_platform_add_channel_callback(
         self,
