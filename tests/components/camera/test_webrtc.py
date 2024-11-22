@@ -399,7 +399,7 @@ async def test_ws_get_client_config_custom_config(
     }
 
 
-@pytest.mark.usefixtures("mock_camera_hls")
+@pytest.mark.usefixtures("mock_camera")
 async def test_ws_get_client_config_no_rtc_camera(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

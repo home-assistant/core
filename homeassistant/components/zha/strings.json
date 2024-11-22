@@ -76,7 +76,8 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a zha device",
       "usb_probe_failed": "Failed to probe the usb device",
-      "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this."
+      "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
+      "invalid_zeroconf_data": "The coordinator has invalid zeroconf service info and cannot be identified by ZHA"
     }
   },
   "options": {
