@@ -130,7 +130,7 @@ class CloudBackupAgent(BackupAgent):
 
         await self._cloud.websession.put(
             details["url"],
-            data={"file": path.open("rb")},
+            data={"file": await self._hass.async_add_executor_job(path.open, "rb")},
             headers=details["headers"],
         )
 
