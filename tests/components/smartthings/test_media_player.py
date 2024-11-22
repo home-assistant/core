@@ -159,6 +159,37 @@ async def test_mute_volume(hass: HomeAssistant, device_factory) -> None:
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
 
 
+async def test_unmute(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player unmutes volume successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.audio_mute,
+            Capability.switch,
+        ],
+        {
+            Attribute.mute: True,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {
+            ATTR_ENTITY_ID: "media_player.media_player_1",
+            ATTR_MEDIA_VOLUME_MUTED: False,
+        },
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
+
+
 async def test_volume_set(hass: HomeAssistant, device_factory) -> None:
     """Test if the media_player sets volume successfully."""
     # Arrange
