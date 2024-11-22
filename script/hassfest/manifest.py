@@ -132,7 +132,7 @@ def core_documentation_url(value: str) -> str:
         return value
     if not value.startswith("https://www.home-assistant.io/integrations"):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation URL does not begin with www.home-assistant.io/integrations"
         )
 
     return value
