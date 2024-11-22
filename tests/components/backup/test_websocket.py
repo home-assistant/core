@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -66,6 +66,24 @@ def mock_create_backup() -> Generator[AsyncMock]:
         "homeassistant.components.backup.BackupManager.async_create_backup"
     ) as mock_create_backup:
         yield mock_create_backup
+
+
+@pytest.fixture(name="delete_backup")
+def mock_delete_backup() -> Generator[AsyncMock]:
+    """Mock manager delete backup."""
+    with patch(
+        "homeassistant.components.backup.BackupManager.async_delete_backup"
+    ) as mock_delete_backup:
+        yield mock_delete_backup
+
+
+@pytest.fixture(name="get_backups")
+def mock_get_backups() -> Generator[AsyncMock]:
+    """Mock manager get backups."""
+    with patch(
+        "homeassistant.components.backup.BackupManager.async_get_backups"
+    ) as mock_get_backups:
+        yield mock_get_backups
 
 
 @pytest.mark.parametrize(
@@ -697,6 +715,7 @@ async def test_agents_download_unknown_agent(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
 @pytest.mark.parametrize(
     "storage_data",
     [
@@ -800,6 +819,7 @@ async def test_config_info(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
 @pytest.mark.parametrize(
     "command",
     [
@@ -900,6 +920,7 @@ async def test_config_update(
     assert hass_storage[DOMAIN] == snapshot
 
 
+@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
 @pytest.mark.parametrize(
     "command",
     [
@@ -1019,7 +1040,7 @@ async def test_config_update_errors(
         ),
     ],
 )
-async def test_config_update_schedule(
+async def test_config_schedule_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1032,7 +1053,7 @@ async def test_config_update_schedule(
     backup_calls: int,
     call_args: Any,
 ) -> None:
-    """Test updating the backup config schedule."""
+    """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
         "create_backup": {
@@ -1044,7 +1065,7 @@ async def test_config_update_schedule(
             "name": "test-name",
             "password": "test-password",
         },
-        "delete_after": {"copies": None, "days": 7},
+        "delete_after": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
         "schedule": "daily",
     }
@@ -1072,6 +1093,93 @@ async def test_config_update_schedule(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "backups",
+        "agent_errors",
+        "last_backup_time",
+        "start_time",
+        "next_time",
+        "delete_calls",
+        "call_args",
+    ),
+    [
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 1},
+                "schedule": "never",
+            },
+            {"backup-1": MagicMock(date="2024-11-11T04:45:00+01:00")},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
+            call("backup-1"),
+        ),
+    ],
+)
+async def test_config_delete_after_logic(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    delete_backup: AsyncMock,
+    get_backups: AsyncMock,
+    command: dict[str, Any],
+    backups: dict[str, Any],
+    agent_errors: dict[str, Exception],
+    last_backup_time: str,
+    start_time: str,
+    next_time: str,
+    delete_calls: int,
+    call_args: Any,
+) -> None:
+    """Test config delete after logic."""
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "create_backup": {
+            "agent_ids": ["test-agent"],
+            "include_addons": ["test-addon"],
+            "include_all_addons": False,
+            "include_database": True,
+            "include_folders": ["media"],
+            "name": "test-name",
+            "password": "test-password",
+        },
+        "delete_after": {"copies": None, "days": None},
+        "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+        "schedule": "never",
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
+    get_backups.return_value = (backups, agent_errors)
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(start_time)
+
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert result["success"]
+
+    freezer.move_to(next_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert delete_backup.call_count == delete_calls
+    assert delete_backup.call_args == call_args
+    async_fire_time_changed(hass, fire_all=True)  # flush out storage save
+    await hass.async_block_till_done()
 
 
 async def test_subscribe_event(
