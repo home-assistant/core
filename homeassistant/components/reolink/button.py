@@ -33,6 +33,7 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
 ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
 SERVICE_PTZ_MOVE = "ptz_move"

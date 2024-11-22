@@ -50,7 +50,8 @@ async def load_integration_from_entry(
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     await setup_config_entry_with_mocked_data(config_entry.entry_id)
@@ -60,7 +61,8 @@ async def load_integration_from_entry(
         source=SOURCE_USER,
         data=ENTRY_CONFIG2,
         entry_id="2",
-        unique_id="stockholmc-uppsalac-1100-['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+        version=1,
+        minor_version=2,
     )
     config_entry2.add_to_hass(hass)
     await setup_config_entry_with_mocked_data(config_entry2.entry_id)

@@ -1,6 +1,7 @@
 """Test the La Marzocco config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylamarzocco.const import MachineModel
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
@@ -81,6 +82,7 @@ async def test_form(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -135,6 +137,7 @@ async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_device_info: LaMarzoccoDeviceInfo,
     mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test invalid auth error."""
 
@@ -162,6 +165,7 @@ async def test_form_invalid_host(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test invalid auth error."""
     result = await hass.config_entries.flow.async_init(
@@ -204,6 +208,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test cannot connect error."""
 
@@ -272,6 +277,7 @@ async def test_reconfigure_flow(
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Testing reconfgure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -327,6 +333,7 @@ async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test bluetooth discovery."""
     service_info = get_bluetooth_service_info(
@@ -378,6 +385,7 @@ async def test_bluetooth_discovery_errors(
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test bluetooth discovery errors."""
     service_info = get_bluetooth_service_info(
@@ -447,6 +455,7 @@ async def test_dhcp_discovery(
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test dhcp discovery."""
 
@@ -486,6 +495,7 @@ async def test_options_flow(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test options flow."""
     await async_init_integration(hass, mock_config_entry)

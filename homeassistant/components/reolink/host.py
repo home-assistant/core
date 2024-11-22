@@ -110,6 +110,7 @@ class ReolinkHost:
         self._cancel_onvif_check: CALLBACK_TYPE | None = None
         self._cancel_long_poll_check: CALLBACK_TYPE | None = None
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
+        self._fast_poll_error: bool = False
         self._long_poll_task: asyncio.Task | None = None
         self._lost_subscription: bool = False
 
@@ -699,14 +700,20 @@ class ReolinkHost:
             return
 
         try:
-            await self._api.get_motion_state_all_ch()
+            if self._api.session_active:
+                await self._api.get_motion_state_all_ch()
         except ReolinkError as err:
-            _LOGGER.error(
-                "Reolink error while polling motion state for host %s:%s: %s",
-                self._api.host,
-                self._api.port,
-                err,
-            )
+            if not self._fast_poll_error:
+                _LOGGER.error(
+                    "Reolink error while polling motion state for host %s:%s: %s",
+                    self._api.host,
+                    self._api.port,
+                    err,
+                )
+            self._fast_poll_error = True
+        else:
+            if self._api.session_active:
+                self._fast_poll_error = False
         finally:
             # schedule next poll
             if not self._hass.is_stopping:
