@@ -938,7 +938,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "snooz",
     "solaredge",
     "solaredge_local",
-    "solarlog",
     "solax",
     "soma",
     "somfy_mylink",
