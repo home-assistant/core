@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import AgentBackup, Folder
+from homeassistant.components.backup import AgentBackup, BackupAgentError, Folder
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import BackupEvent, NewBackup
@@ -1099,12 +1099,207 @@ async def test_config_schedule_logic(
     (
         "command",
         "backups",
-        "agent_errors",
+        "get_backups_agent_errors",
+        "delete_backup_agent_errors",
+        "last_backup_time",
+        "next_time",
+        "backup_time",
+        "backup_calls",
+        "get_backups_calls",
+        "delete_calls",
+        "delete_args_list",
+    ),
+    [
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            0,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 3, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 3, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-4": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            1,
+            [call("backup-1")],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 2, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {"test-agent": BackupAgentError("Boom!")},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 2, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {"test-agent": BackupAgentError("Boom!")},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            1,
+            [call("backup-1")],
+        ),
+    ],
+)
+async def test_config_delete_after_copies_logic(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    delete_backup: AsyncMock,
+    get_backups: AsyncMock,
+    command: dict[str, Any],
+    backups: dict[str, Any],
+    get_backups_agent_errors: dict[str, Exception],
+    delete_backup_agent_errors: dict[str, Exception],
+    last_backup_time: str,
+    next_time: str,
+    backup_time: str,
+    backup_calls: int,
+    get_backups_calls: int,
+    delete_calls: int,
+    delete_args_list: Any,
+) -> None:
+    """Test config delete after copies logic."""
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "create_backup": {
+            "agent_ids": ["test-agent"],
+            "include_addons": ["test-addon"],
+            "include_all_addons": False,
+            "include_database": True,
+            "include_folders": ["media"],
+            "name": "test-name",
+            "password": "test-password",
+        },
+        "delete_after": {"copies": None, "days": None},
+        "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+        "schedule": "daily",
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
+    get_backups.return_value = (backups, get_backups_agent_errors)
+    delete_backup.return_value = delete_backup_agent_errors
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-11 12:00:00+01:00")
+
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(command)
+    result = await client.receive_json()
+
+    assert result["success"]
+
+    freezer.move_to(next_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == backup_calls
+    assert get_backups.call_count == get_backups_calls
+    assert delete_backup.call_count == delete_calls
+    assert delete_backup.call_args_list == delete_args_list
+    async_fire_time_changed(hass, fire_all=True)  # flush out storage save
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "backups",
+        "get_backups_agent_errors",
+        "delete_backup_agent_errors",
         "last_backup_time",
         "start_time",
         "next_time",
         "delete_calls",
-        "call_args",
+        "delete_args_list",
     ),
     [
         (
@@ -1116,15 +1311,16 @@ async def test_config_schedule_logic(
             },
             {"backup-1": MagicMock(date="2024-11-11T04:45:00+01:00")},
             {},
+            {},
             "2024-11-11T04:45:00+01:00",
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            call("backup-1"),
+            [call("backup-1")],
         ),
     ],
 )
-async def test_config_delete_after_logic(
+async def test_config_delete_after_days_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1133,12 +1329,13 @@ async def test_config_delete_after_logic(
     get_backups: AsyncMock,
     command: dict[str, Any],
     backups: dict[str, Any],
-    agent_errors: dict[str, Exception],
+    get_backups_agent_errors: dict[str, Exception],
+    delete_backup_agent_errors: dict[str, Exception],
     last_backup_time: str,
     start_time: str,
     next_time: str,
     delete_calls: int,
-    call_args: Any,
+    delete_args_list: list[Any],
 ) -> None:
     """Test config delete after logic."""
     client = await hass_ws_client(hass)
@@ -1161,7 +1358,8 @@ async def test_config_delete_after_logic(
         "key": DOMAIN,
         "version": 1,
     }
-    get_backups.return_value = (backups, agent_errors)
+    get_backups.return_value = (backups, get_backups_agent_errors)
+    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to(start_time)
 
@@ -1177,7 +1375,7 @@ async def test_config_delete_after_logic(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args == call_args
+    assert delete_backup.call_args_list == delete_args_list
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
 
