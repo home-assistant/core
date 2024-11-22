@@ -82,7 +82,7 @@ class SunscreenReminder:
     async def _send_notification(self):
         """Asynchronously send a sunscreen reminder notification."""
         now = datetime.now(ZoneInfo(LOCAL_TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S %Z")
-        message = f"Don't forget to apply sunscreen!\n\n{now}"
+        message = f"Save your skin, apply sunscreen!\n\n{now}"
         await self.hass.services.async_call(
             domain="persistent_notification",
             service="create",
