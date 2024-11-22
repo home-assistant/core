@@ -314,8 +314,7 @@ class BackupSchedule:
                     sorted(
                         backups.items(),
                         key=lambda backup_item: backup_item[1].date,
-                        reverse=True,
-                    )[config_data.delete_after_config.copies :]
+                    )[: len(backups) - config_data.delete_after_config.copies]
                 )
 
             await _delete_filtered_backups(manager, _backups_filter)
