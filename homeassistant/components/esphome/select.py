@@ -8,7 +8,7 @@ from homeassistant.components.assist_pipeline.select import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
-from homeassistant.components.assist_satellite.select import WakeWordSelect
+from homeassistant.components.assist_satellite import select as assist_satellite_select
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,13 +93,17 @@ class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):
         VadSensitivitySelect.__init__(self, hass, self._device_info.mac_address)
 
 
-class EsphomeAssistSatelliteWakeWordSelect(EsphomeAssistEntity, WakeWordSelect):
+class EsphomeAssistSatelliteWakeWordSelect(
+    EsphomeAssistEntity, assist_satellite_select.WakeWordSelect
+):
     """Wake word selector for esphome devices."""
 
     def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
         """Initialize a wake word selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
-        WakeWordSelect.__init__(self, hass, self._device_info.mac_address)
+        assist_satellite_select.WakeWordSelect.__init__(
+            self, hass, self._device_info.mac_address
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
