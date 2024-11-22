@@ -2,8 +2,8 @@
   "domain": "yamaha",
   "name": "Yamaha Network Receivers",
   "codeowners": [],
-  "config_flow": true,  
-  "dependencies": ["ssdp"],  
+  "config_flow": true,
+  "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/yamaha",
   "iot_class": "local_polling",
   "loggers": ["rxv"],
@@ -15,5 +15,5 @@
     {
       "manufacturer": "Yamaha Corporation"
     }
-  ]  
+  ]
 }
