@@ -402,11 +402,6 @@ async def _delete_filtered_backups(
 
     filtered_backups = backup_filter(backups)
 
-    LOGGER.debug("Backups to delete: %s", filtered_backups)
-
-    if not filtered_backups:
-        return
-
     # always delete oldest backup first
     filtered_backups = dict(
         sorted(
@@ -414,6 +409,17 @@ async def _delete_filtered_backups(
             key=lambda backup_item: backup_item[1].date,
         )
     )
+
+    if len(filtered_backups) >= len(backups):
+        # Never delete the last backup.
+        last_backup = filtered_backups.popitem()
+        LOGGER.debug("Keeping the last backup: %s", last_backup)
+
+    LOGGER.debug("Backups to delete: %s", filtered_backups)
+
+    if not filtered_backups:
+        return
+
     backup_ids = list(filtered_backups)
     delete_agent_errors = await asyncio.gather(
         *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)

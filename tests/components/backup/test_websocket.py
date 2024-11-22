@@ -1244,6 +1244,29 @@ async def test_config_schedule_logic(
             1,
             [call("backup-1")],
         ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 0, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-4": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            3,
+            [call("backup-1"), call("backup-2"), call("backup-3")],
+        ),
     ],
 )
 async def test_config_delete_after_copies_logic(
@@ -1426,6 +1449,27 @@ async def test_config_delete_after_copies_logic(
             1,
             1,
             [call("backup-1")],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 0},
+                "schedule": "never",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
+            2,
+            [call("backup-1"), call("backup-2")],
         ),
     ],
 )
