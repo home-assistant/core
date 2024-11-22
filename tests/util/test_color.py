@@ -181,7 +181,7 @@ def test_color_hs_to_xy() -> None:
 
     assert color_util.color_hs_to_xy(350, 12.5) == (0.356, 0.321)
 
-    assert color_util.color_hs_to_xy(140, 50) == (0.229, 0.474)
+    assert color_util.color_hs_to_xy(140, 50) == (0.23, 0.474)
 
     assert color_util.color_hs_to_xy(0, 40) == (0.474, 0.317)
 

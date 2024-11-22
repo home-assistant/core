@@ -37,11 +37,8 @@
     "set_light_color": {
       "message": "Error while trying to set color of {entity_id}: {description}"
     },
-    "set_light_effect": {
-      "message": "Error while trying to set effect of {entity_id}: {description}"
-    },
     "set_setting": {
-      "message": "Error while trying to set \"{value}\" to \"{key}\" setting for {entity_id}: {description}"
+      "message": "Error while trying to assign the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
     },
     "turn_on": {
       "message": "Error while trying to turn on {entity_id} ({key}): {description}"

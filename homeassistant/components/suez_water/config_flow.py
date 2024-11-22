@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
+from pysuez import PySuezError, SuezClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -21,27 +20,33 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTER_ID): str,
+        vol.Optional(CONF_COUNTER_ID): str,
     }
 )
 
 
-def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
+        counter_id = data.get(CONF_COUNTER_ID)
         client = SuezClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
-            data[CONF_COUNTER_ID],
-            provider=None,
+            counter_id,
         )
-        if not client.check_credentials():
+        if not await client.check_credentials():
             raise InvalidAuth
     except PySuezError as ex:
         raise CannotConnect from ex
+
+    if counter_id is None:
+        try:
+            data[CONF_COUNTER_ID] = await client.find_counter()
+        except PySuezError as ex:
+            raise CounterNotFound from ex
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -58,11 +63,13 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
             try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
+                await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except CounterNotFound:
+                errors["base"] = "counter_not_found"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -82,3 +89,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class CounterNotFound(HomeAssistantError):
+    """Error to indicate we cannot automatically found the counter id."""

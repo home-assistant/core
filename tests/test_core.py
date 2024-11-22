@@ -48,6 +48,7 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
+from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -66,6 +67,7 @@ from .common import (
     async_capture_events,
     async_mock_service,
     help_test_all,
+    import_and_test_deprecated_alias,
     import_and_test_deprecated_constant_enum,
 )
 
@@ -2994,6 +2996,11 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
 
 
+def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated Config class."""
+    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
+
+
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     """Test one time listener repr."""
 
@@ -3303,7 +3310,7 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
             "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
-            ". Please report this issue.",
+            ". Please report this issue",
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")

@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -36,9 +36,9 @@ async def async_setup_entry(
     )
 
     tariff_select = TariffSelect(
-        name,
-        tariffs,
-        unique_id,
+        name=name,
+        tariffs=tariffs,
+        unique_id=unique_id,
         device_info=device_info,
     )
     async_add_entities([tariff_select])
@@ -62,13 +62,15 @@ async def async_setup_platform(
     conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
         CONF_UNIQUE_ID
     )
+    conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
 
     async_add_entities(
         [
             TariffSelect(
-                meter,
-                discovery_info[CONF_TARIFFS],
-                conf_meter_unique_id,
+                name=conf_meter_name,
+                tariffs=discovery_info[CONF_TARIFFS],
+                yaml_slug=meter,
+                unique_id=conf_meter_unique_id,
             )
         ]
     )
@@ -82,12 +84,16 @@ class TariffSelect(SelectEntity, RestoreEntity):
     def __init__(
         self,
         name,
-        tariffs,
-        unique_id,
+        tariffs: list[str],
+        *,
+        yaml_slug: str | None = None,
+        unique_id: str | None = None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize a tariff selector."""
         self._attr_name = name
+        if yaml_slug:  # Backwards compatibility with YAML configuration entries
+            self.entity_id = f"select.{yaml_slug}"
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._current_tariff: str | None = None

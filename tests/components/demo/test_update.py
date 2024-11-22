@@ -126,9 +126,18 @@ def test_setup_params(hass: HomeAssistant) -> None:
     )
 
 
-async def test_update_with_progress(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("entity_id", "steps"),
+    [
+        ("update.demo_update_with_progress", 10),
+        ("update.demo_update_with_decimal_progress", 1000),
+    ],
+)
+async def test_update_with_progress(
+    hass: HomeAssistant, entity_id: str, steps: int
+) -> None:
     """Test update with progress."""
-    state = hass.states.get("update.demo_update_with_progress")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
@@ -137,7 +146,7 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
     events = []
     async_track_state_change_event(
         hass,
-        "update.demo_update_with_progress",
+        entity_id,
         # pylint: disable-next=unnecessary-lambda
         callback(lambda event: events.append(event)),
     )
@@ -146,40 +155,35 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-    assert len(events) == 11
-    assert events[0].data["new_state"].state == STATE_ON
-    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 0
-    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 10
-    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[2].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 20
-    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[3].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 30
-    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[4].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 40
-    assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[5].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 50
-    assert events[6].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[6].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 60
-    assert events[7].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[7].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 70
-    assert events[8].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[8].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 80
-    assert events[9].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[9].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 90
-    assert events[10].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
-    assert events[10].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] is None
-    assert events[10].data["new_state"].state == STATE_OFF
+    assert len(events) == steps + 1
+    for i, event in enumerate(events[:steps]):
+        new_state = event.data["new_state"]
+        assert new_state.state == STATE_ON
+        assert new_state.attributes[ATTR_UPDATE_PERCENTAGE] == pytest.approx(
+            100 / steps * i
+        )
+    new_state = events[steps].data["new_state"]
+    assert new_state.attributes[ATTR_IN_PROGRESS] is False
+    assert new_state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert new_state.state == STATE_OFF
 
 
-async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("entity_id", "steps"),
+    [
+        ("update.demo_update_with_progress", 10),
+        ("update.demo_update_with_decimal_progress", 1000),
+    ],
+)
+async def test_update_with_progress_raising(
+    hass: HomeAssistant, entity_id: str, steps: int
+) -> None:
     """Test update with progress failing to install."""
-    state = hass.states.get("update.demo_update_with_progress")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
@@ -188,7 +192,7 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     events = []
     async_track_state_change_event(
         hass,
-        "update.demo_update_with_progress",
+        entity_id,
         # pylint: disable-next=unnecessary-lambda
         callback(lambda event: events.append(event)),
     )
@@ -203,24 +207,19 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
 
     assert fake_sleep.call_count == 5
     assert len(events) == 6
-    assert events[0].data["new_state"].state == STATE_ON
-    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 0
-    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 10
-    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[2].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 20
-    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[3].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 30
-    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
-    assert events[4].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 40
+    for i, event in enumerate(events[:5]):
+        new_state = event.data["new_state"]
+        assert new_state.state == STATE_ON
+        assert new_state.attributes[ATTR_UPDATE_PERCENTAGE] == pytest.approx(
+            100 / steps * i
+        )
     assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
     assert events[5].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert events[5].data["new_state"].state == STATE_ON

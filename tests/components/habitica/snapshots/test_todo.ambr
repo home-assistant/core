@@ -72,7 +72,7 @@
         }),
         dict({
           'description': 'Den Ausflug für das kommende Wochenende organisieren.',
-          'due': '2024-09-26',
+          'due': '2024-09-21',
           'status': 'needs_action',
           'summary': 'Wochenendausflug planen',
           'uid': '86ea2475-d1b5-4020-bdcc-c188c7996afa',

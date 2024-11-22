@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from spotifyaio.models import AudioFeatures
+from spotifyaio.models import AudioFeatures, Key
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,14 +25,28 @@ class SpotifyAudioFeaturesSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[AudioFeatures], float | str | None]
 
 
+KEYS: dict[Key, str] = {
+    Key.C: "C",
+    Key.C_SHARP_D_FLAT: "C♯/D♭",
+    Key.D: "D",
+    Key.D_SHARP_E_FLAT: "D♯/E♭",
+    Key.E: "E",
+    Key.F: "F",
+    Key.F_SHARP_G_FLAT: "F♯/G♭",
+    Key.G: "G",
+    Key.G_SHARP_A_FLAT: "G♯/A♭",
+    Key.A: "A",
+    Key.A_SHARP_B_FLAT: "A♯/B♭",
+    Key.B: "B",
+}
+
+KEY_OPTIONS = list(KEYS.values())
+
+
 def _get_key(audio_features: AudioFeatures) -> str | None:
     if audio_features.key is None:
         return None
-    key_name = audio_features.key.name
-    base = key_name[0]
-    if len(key_name) > 1:
-        base = f"{base}♯"
-    return base
+    return KEYS[audio_features.key]
 
 
 AUDIO_FEATURE_SENSORS: tuple[SpotifyAudioFeaturesSensorEntityDescription, ...] = (
@@ -119,7 +133,7 @@ AUDIO_FEATURE_SENSORS: tuple[SpotifyAudioFeaturesSensorEntityDescription, ...] =
         key="key",
         translation_key="key",
         device_class=SensorDeviceClass.ENUM,
-        options=["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
+        options=KEY_OPTIONS,
         value_fn=_get_key,
         entity_registry_enabled_default=False,
     ),

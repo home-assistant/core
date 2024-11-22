@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "La Marzocco Espresso {host}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -8,6 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "machine_not_found": "Discovered machine not found in given account",
       "no_machines": "No machines found in account",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
@@ -195,6 +195,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
     "auto_on_off_error": {
       "message": "Error while setting auto on/off to {state} for {id}"
     },

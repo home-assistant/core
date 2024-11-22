@@ -2,12 +2,12 @@
 
 import logging
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.const import BT_MODEL_PREFIXES, FirmwareType
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from packaging import version
+from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -40,8 +40,6 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
@@ -103,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinator = LaMarzoccoUpdateCoordinator(
         hass=hass,
+        entry=entry,
         local_client=local_client,
         cloud_client=cloud_client,
         bluetooth_client=bluetooth_client,

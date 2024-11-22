@@ -6,13 +6,16 @@ import logging
 from homeconnect.api import HomeConnectError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import bsh_key_to_translation_key, get_dict_from_home_connect_error
-from .api import ConfigEntryAuth, HomeConnectDevice
+from . import (
+    HomeConnectConfigEntry,
+    bsh_key_to_translation_key,
+    get_dict_from_home_connect_error,
+)
+from .api import HomeConnectDevice
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
     ATTR_VALUE,
@@ -191,7 +194,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect select entities."""
@@ -199,9 +202,8 @@ async def async_setup_entry(
     def get_entities() -> list[HomeConnectProgramSelectEntity]:
         """Get a list of entities."""
         entities: list[HomeConnectProgramSelectEntity] = []
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         programs_not_found = set()
-        for device in hc_api.devices:
+        for device in entry.runtime_data.devices:
             if device.appliance.type in APPLIANCES_WITH_PROGRAMS:
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()

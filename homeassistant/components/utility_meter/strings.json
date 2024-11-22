@@ -25,6 +25,9 @@
           "tariffs": "A list of supported tariffs, leave empty if only a single tariff is needed."
         }
       }
+    },
+    "error": {
+      "tariffs_not_unique": "Tariffs must be unique"
     }
   },
   "options": {

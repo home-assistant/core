@@ -171,6 +171,7 @@ async def async_setup_entry(
         coordinators[CONNECTED_PLC_DEVICES] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=CONNECTED_PLC_DEVICES,
             semaphore=semaphore,
             update_method=async_update_connected_plc_devices,
@@ -180,6 +181,7 @@ async def async_setup_entry(
         coordinators[SWITCH_LEDS] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=SWITCH_LEDS,
             semaphore=semaphore,
             update_method=async_update_led_status,
@@ -189,6 +191,7 @@ async def async_setup_entry(
         coordinators[LAST_RESTART] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=LAST_RESTART,
             semaphore=semaphore,
             update_method=async_update_last_restart,
@@ -198,6 +201,7 @@ async def async_setup_entry(
         coordinators[REGULAR_FIRMWARE] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=REGULAR_FIRMWARE,
             semaphore=semaphore,
             update_method=async_update_firmware_available,
@@ -207,6 +211,7 @@ async def async_setup_entry(
         coordinators[CONNECTED_WIFI_CLIENTS] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=CONNECTED_WIFI_CLIENTS,
             semaphore=semaphore,
             update_method=async_update_wifi_connected_station,
@@ -215,6 +220,7 @@ async def async_setup_entry(
         coordinators[NEIGHBORING_WIFI_NETWORKS] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=NEIGHBORING_WIFI_NETWORKS,
             semaphore=semaphore,
             update_method=async_update_wifi_neighbor_access_points,
@@ -223,6 +229,7 @@ async def async_setup_entry(
         coordinators[SWITCH_GUEST_WIFI] = DevoloDataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=SWITCH_GUEST_WIFI,
             semaphore=semaphore,
             update_method=async_update_guest_wifi_status,
