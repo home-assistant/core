@@ -1219,8 +1219,8 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            1,
+            [call("backup-1")],
         ),
         (
             {
@@ -1447,8 +1447,8 @@ async def test_config_delete_after_copies_logic(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            0,
-            [],
+            1,
+            [call("backup-1")],
         ),
         (
             {

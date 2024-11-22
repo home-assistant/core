@@ -391,11 +391,10 @@ async def _delete_filtered_backups(
     """
     backups, get_agent_errors = await manager.async_get_backups()
     if get_agent_errors:
-        LOGGER.error(
-            "Aborting deleting old copies; Error getting backups: %s",
+        LOGGER.debug(
+            "Error getting backups; continuing anyway: %s",
             get_agent_errors,
         )
-        return
 
     LOGGER.debug("Total backups: %s", backups)
 
