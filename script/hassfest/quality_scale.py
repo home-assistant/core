@@ -382,7 +382,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fujitsu_fglair",
     "fujitsu_hvac",
     "futurenow",
-    "fyta",
     "garadget",
     "garages_amsterdam",
     "gardena_bluetooth",
