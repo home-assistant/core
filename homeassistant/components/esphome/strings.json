@@ -84,6 +84,12 @@
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
         }
+      },
+      "wake_word": {
+        "name": "[%key:component::assist_satellite::entity::select::wake_word::name%]",
+        "state": {
+          "okay_nabu": "[%key:component::assist_satellite::entity::select::wake_word::state::okay_nabu%]"
+        }
       }
     },
     "climate": {

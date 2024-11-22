@@ -11,6 +11,16 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "wake_word": {
+        "name": "Wake Word",
+        "state": {
+          "okay_nabu": "Okay Nabu"
+        }
+      }
+    }
+  },
   "services": {
     "announce": {
       "name": "Announce",
