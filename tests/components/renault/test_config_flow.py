@@ -24,8 +24,22 @@ from tests.common import MockConfigEntry, load_fixture
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (Exception, "unknown"),
+        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (
+            InvalidCredentialsException(403042, "invalid loginID or password"),
+            "invalid_credentials",
+        ),
+    ],
+)
 async def test_config_flow_single_account(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception | type[Exception],
+    error: str,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -34,6 +48,24 @@ async def test_config_flow_single_account(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
+
+    # Raise error
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LOCALE: "fr_FR",
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
@@ -71,51 +103,6 @@ async def test_config_flow_single_account(
     assert result["data"][CONF_LOCALE] == "fr_FR"
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (Exception, "unknown"),
-        (aiohttp.ClientConnectionError, "cannot_connect"),
-        (
-            InvalidCredentialsException(403042, "invalid loginID or password"),
-            "invalid_credentials",
-        ),
-    ],
-)
-async def test_config_flow_errors(
-    hass: HomeAssistant,
-    exception: Exception | type[Exception],
-    error: str,
-) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert not result["errors"]
-
-    # Raise error
-    with patch(
-        "renault_api.renault_session.RenaultSession.login",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_LOCALE: "fr_FR",
-                CONF_USERNAME: "email@test.com",
-                CONF_PASSWORD: "test",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": error}
-
-    hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_config_flow_no_account(
