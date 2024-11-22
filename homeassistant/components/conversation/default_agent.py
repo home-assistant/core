@@ -16,11 +16,11 @@ from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
 from hassil.recognize import (
     MISSING_ENTITY,
-    MatchEntity,
     RecognizeResult,
-    UnmatchedTextEntity,
     recognize_all,
+    recognize_best,
 )
+from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.util import merge_dict
 from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
@@ -213,13 +213,10 @@ class DefaultAgent(ConversationEntity):
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]
 
-    async def async_recognize(
-        self, user_input: ConversationInput
-    ) -> RecognizeResult | SentenceTriggerResult | None:
+    async def async_recognize_intent(
+        self, user_input: ConversationInput, strict_intents_only: bool = False
+    ) -> RecognizeResult | None:
         """Recognize intent from user input."""
-        if trigger_result := await self._match_triggers(user_input.text):
-            return trigger_result
-
         language = user_input.language or self.hass.config.language
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -240,6 +237,7 @@ class DefaultAgent(ConversationEntity):
             slot_lists,
             intent_context,
             language,
+            strict_intents_only,
         )
 
         _LOGGER.debug(
@@ -251,55 +249,35 @@ class DefaultAgent(ConversationEntity):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        language = user_input.language or self.hass.config.language
-        conversation_id = None  # Not supported
-
-        result = await self.async_recognize(user_input)
 
         # Check if a trigger matched
-        if isinstance(result, SentenceTriggerResult):
-            # Gather callback responses in parallel
-            trigger_callbacks = [
-                self._trigger_sentences[trigger_id].callback(
-                    result.sentence, trigger_result, user_input.device_id
-                )
-                for trigger_id, trigger_result in result.matched_triggers.items()
-            ]
-
-            # Use first non-empty result as response.
-            #
-            # There may be multiple copies of a trigger running when editing in
-            # the UI, so it's critical that we filter out empty responses here.
-            response_text: str | None = None
-            response_set_by_trigger = False
-            for trigger_future in asyncio.as_completed(trigger_callbacks):
-                trigger_response = await trigger_future
-                if trigger_response is None:
-                    continue
-
-                response_text = trigger_response
-                response_set_by_trigger = True
-                break
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
+            # Process callbacks and get response
+            response_text = await self._handle_trigger_result(
+                trigger_result, user_input
+            )
 
             # Convert to conversation result
-            response = intent.IntentResponse(language=language)
+            response = intent.IntentResponse(
+                language=user_input.language or self.hass.config.language
+            )
             response.response_type = intent.IntentResponseType.ACTION_DONE
-
-            if response_set_by_trigger:
-                # Response was explicitly set to empty
-                response_text = response_text or ""
-            elif not response_text:
-                # Use translated acknowledgment for pipeline language
-                translations = await translation.async_get_translations(
-                    self.hass, language, DOMAIN, [DOMAIN]
-                )
-                response_text = translations.get(
-                    f"component.{DOMAIN}.conversation.agent.done", "Done"
-                )
-
             response.async_set_speech(response_text)
 
             return ConversationResult(response=response)
+
+        # Match intents
+        intent_result = await self.async_recognize_intent(user_input)
+        return await self._async_process_intent_result(intent_result, user_input)
+
+    async def _async_process_intent_result(
+        self,
+        result: RecognizeResult | None,
+        user_input: ConversationInput,
+    ) -> ConversationResult:
+        """Process user input with intents."""
+        language = user_input.language or self.hass.config.language
+        conversation_id = None  # Not supported
 
         # Intent match or failure
         lang_intents = await self.async_get_or_load_intents(language)
@@ -436,6 +414,7 @@ class DefaultAgent(ConversationEntity):
         slot_lists: dict[str, SlotList],
         intent_context: dict[str, Any] | None,
         language: str,
+        strict_intents_only: bool,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         strict_result = self._recognize_strict(
@@ -445,6 +424,9 @@ class DefaultAgent(ConversationEntity):
         if strict_result is not None:
             # Successful strict match
             return strict_result
+
+        if strict_intents_only:
+            return None
 
         # Try again with all entities (including unexposed)
         entity_registry = er.async_get(self.hass)
@@ -499,6 +481,7 @@ class DefaultAgent(ConversationEntity):
         maybe_result: RecognizeResult | None = None
         best_num_matched_entities = 0
         best_num_unmatched_entities = 0
+        best_num_unmatched_ranges = 0
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -517,10 +500,14 @@ class DefaultAgent(ConversationEntity):
                     num_matched_entities += 1
 
             num_unmatched_entities = 0
+            num_unmatched_ranges = 0
             for unmatched_entity in result.unmatched_entities_list:
                 if isinstance(unmatched_entity, UnmatchedTextEntity):
                     if unmatched_entity.text != MISSING_ENTITY:
                         num_unmatched_entities += 1
+                elif isinstance(unmatched_entity, UnmatchedRangeEntity):
+                    num_unmatched_ranges += 1
+                    num_unmatched_entities += 1
                 else:
                     num_unmatched_entities += 1
 
@@ -533,14 +520,23 @@ class DefaultAgent(ConversationEntity):
                     and (num_unmatched_entities < best_num_unmatched_entities)
                 )
                 or (
+                    # Prefer unmatched ranges
+                    (num_matched_entities == best_num_matched_entities)
+                    and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges > best_num_unmatched_ranges)
+                )
+                or (
                     # More literal text matched
                     (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (result.text_chunks_matched > maybe_result.text_chunks_matched)
                 )
                 or (
                     # Prefer match failures with entities
                     (result.text_chunks_matched == maybe_result.text_chunks_matched)
+                    and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (
                         ("name" in result.entities)
                         or ("name" in result.unmatched_entities)
@@ -550,6 +546,7 @@ class DefaultAgent(ConversationEntity):
                 maybe_result = result
                 best_num_matched_entities = num_matched_entities
                 best_num_unmatched_entities = num_unmatched_entities
+                best_num_unmatched_ranges = num_unmatched_ranges
 
         return maybe_result
 
@@ -562,76 +559,15 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a strict match to user input."""
-        custom_found = False
-        name_found = False
-        best_results: list[RecognizeResult] = []
-        best_name_quality: int | None = None
-        best_text_chunks_matched: int | None = None
-        for result in recognize_all(
+        return recognize_best(
             user_input.text,
             lang_intents.intents,
             slot_lists=slot_lists,
             intent_context=intent_context,
             language=language,
-        ):
-            # Prioritize user intents
-            is_custom = (
-                result.intent_metadata is not None
-                and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
-            )
-
-            if custom_found and not is_custom:
-                continue
-
-            if not custom_found and is_custom:
-                custom_found = True
-                # Clear builtin results
-                name_found = False
-                best_results = []
-                best_name_quality = None
-                best_text_chunks_matched = None
-
-            # Prioritize results with a "name" slot
-            name = result.entities.get("name")
-            is_name = name and not name.is_wildcard
-
-            if name_found and not is_name:
-                continue
-
-            if not name_found and is_name:
-                name_found = True
-                # Clear non-name results
-                best_results = []
-                best_text_chunks_matched = None
-
-            if is_name:
-                # Prioritize results with a better "name" slot
-                name_quality = len(cast(MatchEntity, name).value.split())
-                if (best_name_quality is None) or (name_quality > best_name_quality):
-                    best_name_quality = name_quality
-                    # Clear worse name results
-                    best_results = []
-                    best_text_chunks_matched = None
-                elif name_quality < best_name_quality:
-                    continue
-
-            # Prioritize results with more literal text
-            # This causes wildcards to match last.
-            if (best_text_chunks_matched is None) or (
-                result.text_chunks_matched > best_text_chunks_matched
-            ):
-                best_results = [result]
-                best_text_chunks_matched = result.text_chunks_matched
-            elif result.text_chunks_matched == best_text_chunks_matched:
-                # Accumulate results with the same number of literal text matched.
-                # We will resolve the ambiguity below.
-                best_results.append(result)
-
-        if best_results:
-            # Successful strict match
-            return best_results[0]
-
-        return None
+            best_metadata_key=METADATA_CUSTOM_SENTENCE,
+            best_slot_name="name",
+        )
 
     async def _build_speech(
         self,
@@ -1102,7 +1038,9 @@ class DefaultAgent(ConversationEntity):
         # Force rebuild on next use
         self._trigger_intents = None
 
-    async def _match_triggers(self, sentence: str) -> SentenceTriggerResult | None:
+    async def async_recognize_sentence_trigger(
+        self, user_input: ConversationInput
+    ) -> SentenceTriggerResult | None:
         """Try to match sentence against registered trigger sentences.
 
         Calls the registered callbacks if there's a match and returns a sentence
@@ -1120,7 +1058,7 @@ class DefaultAgent(ConversationEntity):
 
         matched_triggers: dict[int, RecognizeResult] = {}
         matched_template: str | None = None
-        for result in recognize_all(sentence, self._trigger_intents):
+        for result in recognize_all(user_input.text, self._trigger_intents):
             if result.intent_sentence is not None:
                 matched_template = result.intent_sentence.text
 
@@ -1137,12 +1075,88 @@ class DefaultAgent(ConversationEntity):
 
         _LOGGER.debug(
             "'%s' matched %s trigger(s): %s",
-            sentence,
+            user_input.text,
             len(matched_triggers),
             list(matched_triggers),
         )
 
-        return SentenceTriggerResult(sentence, matched_template, matched_triggers)
+        return SentenceTriggerResult(
+            user_input.text, matched_template, matched_triggers
+        )
+
+    async def _handle_trigger_result(
+        self, result: SentenceTriggerResult, user_input: ConversationInput
+    ) -> str:
+        """Run sentence trigger callbacks and return response text."""
+
+        # Gather callback responses in parallel
+        trigger_callbacks = [
+            self._trigger_sentences[trigger_id].callback(
+                user_input.text, trigger_result, user_input.device_id
+            )
+            for trigger_id, trigger_result in result.matched_triggers.items()
+        ]
+
+        # Use first non-empty result as response.
+        #
+        # There may be multiple copies of a trigger running when editing in
+        # the UI, so it's critical that we filter out empty responses here.
+        response_text = ""
+        response_set_by_trigger = False
+        for trigger_future in asyncio.as_completed(trigger_callbacks):
+            trigger_response = await trigger_future
+            if trigger_response is None:
+                continue
+
+            response_text = trigger_response
+            response_set_by_trigger = True
+            break
+
+        if response_set_by_trigger:
+            # Response was explicitly set to empty
+            response_text = response_text or ""
+        elif not response_text:
+            # Use translated acknowledgment for pipeline language
+            language = user_input.language or self.hass.config.language
+            translations = await translation.async_get_translations(
+                self.hass, language, DOMAIN, [DOMAIN]
+            )
+            response_text = translations.get(
+                f"component.{DOMAIN}.conversation.agent.done", "Done"
+            )
+
+        return response_text
+
+    async def async_handle_sentence_triggers(
+        self, user_input: ConversationInput
+    ) -> str | None:
+        """Try to input sentence against sentence triggers and return response text.
+
+        Returns None if no match occurred.
+        """
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
+            return await self._handle_trigger_result(trigger_result, user_input)
+
+        return None
+
+    async def async_handle_intents(
+        self,
+        user_input: ConversationInput,
+    ) -> intent.IntentResponse | None:
+        """Try to match sentence against registered intents and return response.
+
+        Only performs strict matching with exposed entities and exact wording.
+        Returns None if no match occurred.
+        """
+        result = await self.async_recognize_intent(user_input, strict_intents_only=True)
+        if not isinstance(result, RecognizeResult):
+            # No error message on failed match
+            return None
+
+        conversation_result = await self._async_process_intent_result(
+            result, user_input
+        )
+        return conversation_result.response
 
 
 def _make_error_result(
@@ -1154,7 +1168,6 @@ def _make_error_result(
     """Create conversation result with error code and text."""
     response = intent.IntentResponse(language=language)
     response.async_set_error(error_code, response_text)
-
     return ConversationResult(response, conversation_id)
 
 

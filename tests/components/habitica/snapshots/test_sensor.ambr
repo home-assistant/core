@@ -405,6 +405,7 @@
 # name: test_sensors[sensor.test_user_gems-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_gem.png',
       'friendly_name': 'test-user Gems',
       'unit_of_measurement': 'gems',
     }),
