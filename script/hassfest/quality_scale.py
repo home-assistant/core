@@ -663,7 +663,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "motioneye",
     "motionmount",
     "mpd",
-    "mqtt",
     "mqtt_eventstream",
     "mqtt_json",
     "mqtt_room",
