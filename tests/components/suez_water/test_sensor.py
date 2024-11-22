@@ -27,13 +27,7 @@ async def test_sensors_valid_state(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that suez_water sensor is loaded and in a valid state."""
-    with (
-        patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.suez_water.coordinator.SuezWaterCoordinator._update_statistics",
-            return_value=None,
-        ),
-    ):
+    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -56,32 +50,25 @@ async def test_sensors_failed_update(
     method: str,
 ) -> None:
     """Test that suez_water sensor reflect failure when api fails."""
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch(
-            "homeassistant.components.suez_water.coordinator.SuezWaterCoordinator._update_statistics",
-            return_value=None,
-        ),
-    ):
-        await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-        assert mock_config_entry.state is ConfigEntryState.LOADED
+    entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
+    assert len(entity_ids) == 2
 
-        entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
-        assert len(entity_ids) == 2
+    for entity in entity_ids:
+        state = hass.states.get(entity)
+        assert entity
+        assert state.state != STATE_UNAVAILABLE
 
-        for entity in entity_ids:
-            state = hass.states.get(entity)
-            assert entity
-            assert state.state != STATE_UNAVAILABLE
+    getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
 
-        getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
+    freezer.tick(DATA_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(True)
 
-        freezer.tick(DATA_REFRESH_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(True)
-
-        for entity in entity_ids:
-            state = hass.states.get(entity)
-            assert entity
-            assert state.state == STATE_UNAVAILABLE
+    for entity in entity_ids:
+        state = hass.states.get(entity)
+        assert entity
+        assert state.state == STATE_UNAVAILABLE
