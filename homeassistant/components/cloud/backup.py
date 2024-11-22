@@ -7,6 +7,7 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
+from aiohttp import ClientResponseError
 from hass_nabucasa import Cloud
 from hass_nabucasa.cloud_api import (
     async_files_download_details,
@@ -76,7 +77,7 @@ class CloudBackupAgent(BackupAgent):
         if not self._cloud.is_logged_in:
             raise BackupAgentError("Not logged in to cloud")
 
-        if not self.async_get_backup(backup_id):
+        if not await self.async_get_backup(backup_id):
             raise BackupAgentError("Backup not found")
 
         details = await async_files_download_details(
@@ -128,11 +129,17 @@ class CloudBackupAgent(BackupAgent):
             base64md5hash=base64md5hash,
         )
 
-        await self._cloud.websession.put(
-            details["url"],
-            data={"file": await self._hass.async_add_executor_job(path.open, "rb")},
-            headers=details["headers"],
-        )
+        try:
+            upload_status = await self._cloud.websession.put(
+                details["url"],
+                data=await self._hass.async_add_executor_job(path.open, "rb"),
+                headers=details["headers"],
+                raise_for_status=True,
+            )
+
+            upload_status.raise_for_status()
+        except ClientResponseError as err:
+            raise BackupAgentError("Failed to upload backup") from err
 
     async def async_delete_backup(
         self,
