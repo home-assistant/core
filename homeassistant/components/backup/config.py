@@ -398,7 +398,11 @@ async def _delete_filtered_backups(
         )
         return
 
+    LOGGER.debug("Total backups: %s", backups)
+
     filtered_backups = backup_filter(backups)
+
+    LOGGER.debug("Backups to delete: %s", filtered_backups)
 
     if not filtered_backups:
         return
