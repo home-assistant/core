@@ -24,6 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .host import ReolinkHost
+from .util import ReolinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +49,9 @@ def res_name(stream: str) -> str:
 
 def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
     """Return the Reolink host from the config entry id."""
-    config_entry = hass.config_entries.async_get_entry(config_entry_id)
+    config_entry: ReolinkConfigEntry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry is not None
-    host: ReolinkHost = config_entry.runtime_data.host
-    return host
+    return config_entry.runtime_data.host
 
 
 class ReolinkVODMediaSource(MediaSource):
