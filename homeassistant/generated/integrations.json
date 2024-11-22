@@ -9,7 +9,8 @@
       "name": "Abode",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "acaia": {
       "name": "Acaia",
