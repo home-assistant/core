@@ -151,11 +151,11 @@
     },
     "set_preset_mode": {
       "name": "Set preset mode",
-      "description": "Sets preset operation mode.",
+      "description": "Sets preset mode.",
       "fields": {
         "preset_mode": {
           "name": "Preset mode",
-          "description": "Preset operation mode."
+          "description": "Preset mode."
         }
       }
     },
