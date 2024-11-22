@@ -1,4 +1,8 @@
 {
+  "common": {
+    "jid_options_name": "JID options",
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity."
+  },
   "config": {
     "error": {
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
@@ -22,6 +26,68 @@
       "zeroconf_confirm": {
         "title": "Setup Bang & Olufsen device",
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+      }
+    }
+  },
+  "services": {
+    "beolink_allstandby": {
+      "name": "Beolink all standby",
+      "description": "Set all Connected Beolink devices to standby."
+    },
+    "beolink_expand": {
+      "name": "Beolink expand",
+      "description": "Expand current Beolink experience.",
+      "fields": {
+        "all_discovered": {
+          "name": "All discovered",
+          "description": "Expand Beolink experience to all discovered devices."
+        },
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will join current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Join a Beolink experience.",
+      "fields": {
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leave a Beolink experience."
+    },
+    "beolink_unexpand": {
+      "name": "Beolink unexpand",
+      "description": "Unexpand from current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     }
   },

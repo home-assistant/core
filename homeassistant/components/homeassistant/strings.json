@@ -57,6 +57,14 @@
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
     },
+    "config_entry_unique_id_collision": {
+      "title": "Multiple {domain} config entries with same unique ID",
+      "description": "There are multiple {domain} config entries with the same unique ID.\nThe config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates."
+    },
+    "config_entry_unique_id_collision_many": {
+      "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]",
+      "description": "There are multiple ({number_of_entries}) {domain} config entries with the same unique ID.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates."
+    },
     "integration_not_found": {
       "title": "Integration {domain} not found",
       "fix_flow": {

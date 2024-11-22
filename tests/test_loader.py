@@ -6,7 +6,7 @@ import pathlib
 import sys
 import threading
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
@@ -1295,26 +1295,29 @@ async def test_config_folder_not_in_path() -> None:
     import tests.testing_config.check_config_not_in_path  # noqa: F401
 
 
-async def test_hass_components_use_reported(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
-) -> None:
-    """Test that use of hass.components is reported."""
-    mock_integration_frame.filename = (
-        "/home/paulus/homeassistant/custom_components/demo/light.py"
-    )
-    integration_frame = frame.IntegrationFrame(
-        custom_integration=True,
-        frame=mock_integration_frame,
-        integration="test_integration_frame",
-        module="custom_components.test_integration_frame",
-        relative_filename="custom_components/test_integration_frame/__init__.py",
-    )
-
-    with (
-        patch(
-            "homeassistant.helpers.frame.get_integration_frame",
-            return_value=integration_frame,
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expected"),
+    [
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
         ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_hass_components_use_reported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    expected: bool,
+) -> None:
+    """Test whether use of hass.components is reported."""
+    with (
         patch(
             "homeassistant.components.http.start_http_server_and_save_config",
             return_value=None,
@@ -1322,10 +1325,11 @@ async def test_hass_components_use_reported(
     ):
         await hass.components.http.start_http_server_and_save_config(hass, [], None)
 
-        assert (
+        reported = (
             "Detected that custom integration 'test_integration_frame'"
             " accesses hass.components.http. This is deprecated"
         ) in caplog.text
+        assert reported == expected
 
 
 async def test_async_get_component_preloads_config_and_config_flow(
@@ -1987,24 +1991,29 @@ async def test_has_services(hass: HomeAssistant) -> None:
     assert integration.has_services is True
 
 
-async def test_hass_helpers_use_reported(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
-) -> None:
-    """Test that use of hass.components is reported."""
-    integration_frame = frame.IntegrationFrame(
-        custom_integration=True,
-        frame=mock_integration_frame,
-        integration="test_integration_frame",
-        module="custom_components.test_integration_frame",
-        relative_filename="custom_components/test_integration_frame/__init__.py",
-    )
-
-    with (
-        patch.object(frame, "_REPORTED_INTEGRATIONS", new=set()),
-        patch(
-            "homeassistant.helpers.frame.get_integration_frame",
-            return_value=integration_frame,
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expected"),
+    [
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
         ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_hass_helpers_use_reported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    expected: bool,
+) -> None:
+    """Test whether use of hass.helpers is reported."""
+    with (
         patch(
             "homeassistant.helpers.aiohttp_client.async_get_clientsession",
             return_value=None,
@@ -2012,10 +2021,11 @@ async def test_hass_helpers_use_reported(
     ):
         hass.helpers.aiohttp_client.async_get_clientsession()
 
-        assert (
+        reported = (
             "Detected that custom integration 'test_integration_frame' "
             "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
+        assert reported == expected
 
 
 async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:

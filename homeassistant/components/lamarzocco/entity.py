@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import FirmwareType
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

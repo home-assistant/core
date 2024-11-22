@@ -37,11 +37,8 @@
     "set_light_color": {
       "message": "Error while trying to set color of {entity_id}: {description}"
     },
-    "set_light_effect": {
-      "message": "Error while trying to set effect of {entity_id}: {description}"
-    },
     "set_setting": {
-      "message": "Error while trying to set \"{value}\" to \"{key}\" setting for {entity_id}: {description}"
+      "message": "Error while trying to assign the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
     },
     "turn_on": {
       "message": "Error while trying to turn on {entity_id} ({key}): {description}"
@@ -63,6 +60,15 @@
     },
     "turn_off_not_supported": {
       "message": "{appliance_name} does not support turning off or entering standby mode."
+    },
+    "unable_to_retrieve_turn_off": {
+      "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
+    }
+  },
+  "issues": {
+    "deprecated_binary_common_door_sensor": {
+      "title": "Deprecated binary door sensor detected in some automations or scripts",
+      "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
     }
   },
   "services": {

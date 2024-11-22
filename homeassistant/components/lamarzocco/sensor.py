@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import BoilerType, MachineModel, PhysicalKey
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.const import BoilerType, MachineModel, PhysicalKey
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 

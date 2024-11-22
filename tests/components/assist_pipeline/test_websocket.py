@@ -974,6 +974,7 @@ async def test_add_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": True,
         }
     )
     msg = await client.receive_json()
@@ -991,6 +992,7 @@ async def test_add_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": True,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1008,6 +1010,7 @@ async def test_add_pipeline(
         tts_voice="Arnold Schwarzenegger",
         wake_word_entity="wakeword_entity_1",
         wake_word_id="wakeword_id_1",
+        prefer_local_intents=True,
     )
 
     await client.send_json_auto_id(
@@ -1195,6 +1198,7 @@ async def test_get_pipeline(
         "tts_voice": "james_earl_jones",
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     # Get conversation agent as pipeline
@@ -1220,6 +1224,7 @@ async def test_get_pipeline(
         "tts_voice": "james_earl_jones",
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     await client.send_json_auto_id(
@@ -1249,6 +1254,7 @@ async def test_get_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": False,
         }
     )
     msg = await client.receive_json()
@@ -1277,6 +1283,7 @@ async def test_get_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": False,
     }
 
 
@@ -1304,6 +1311,7 @@ async def test_list_pipelines(
                 "tts_voice": "james_earl_jones",
                 "wake_word_entity": None,
                 "wake_word_id": None,
+                "prefer_local_intents": False,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1395,6 +1403,7 @@ async def test_update_pipeline(
         "tts_voice": "new_tts_voice",
         "wake_word_entity": "new_wakeword_entity",
         "wake_word_id": "new_wakeword_id",
+        "prefer_local_intents": False,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1446,6 +1455,7 @@ async def test_update_pipeline(
         "tts_voice": None,
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     pipeline = pipeline_store.data[pipeline_id]

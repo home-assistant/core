@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "init": {
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
+      },
+      "manual": {
+        "title": "Manually add Music Assistant Server",
+        "description": "Enter the URL to your already running Music Assistant Server. If you do not have the Music Assistant Server running, you should install it first.",
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add the Music Assistant Server `{url}` to Home Assistant?",
+        "title": "Discovered Music Assistant Server"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "The Music Assistant server is not the correct version",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Configuration flow is already in progress",
+      "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
+      "cannot_connect": "Failed to connect",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "issues": {
+    "invalid_server_version": {
+      "title": "The Music Assistant server is not the correct version",
+      "description": "Check if there are updates available for the Music Assistant Server and/or integration."
+    }
+  },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "play": "Play",
+        "next": "Play next",
+        "add": "Add to queue",
+        "replace": "Play now and clear queue",
+        "replace_next": "Play next and clear queue"
+      }
+    }
+  }
+}

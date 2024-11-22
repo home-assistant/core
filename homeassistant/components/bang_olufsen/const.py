@@ -17,46 +17,9 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(
-        name="Audio Streamer",
-        id="uriStreamer",
-        is_seekable=False,
-    )
-    BLUETOOTH: Final[Source] = Source(
-        name="Bluetooth",
-        id="bluetooth",
-        is_seekable=False,
-    )
-    CHROMECAST: Final[Source] = Source(
-        name="Chromecast built-in",
-        id="chromeCast",
-        is_seekable=False,
-    )
-    LINE_IN: Final[Source] = Source(
-        name="Line-In",
-        id="lineIn",
-        is_seekable=False,
-    )
-    SPDIF: Final[Source] = Source(
-        name="Optical",
-        id="spdif",
-        is_seekable=False,
-    )
-    NET_RADIO: Final[Source] = Source(
-        name="B&O Radio",
-        id="netRadio",
-        is_seekable=False,
-    )
-    DEEZER: Final[Source] = Source(
-        name="Deezer",
-        id="deezer",
-        is_seekable=True,
-    )
-    TIDAL: Final[Source] = Source(
-        name="Tidal",
-        id="tidal",
-        is_seekable=True,
-    )
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -170,20 +133,6 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     MediaType.CHANNEL,
 )
 
-# Sources on the device that should not be selectable by the user
-HIDDEN_SOURCE_IDS: Final[tuple] = (
-    "airPlay",
-    "bluetooth",
-    "chromeCast",
-    "generator",
-    "local",
-    "dlna",
-    "qplay",
-    "wpl",
-    "pl",
-    "beolink",
-    "usbIn",
-)
 
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
@@ -191,7 +140,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="uriStreamer",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
             is_seekable=False,
@@ -199,7 +148,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="bluetooth",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
             is_seekable=False,
@@ -207,7 +156,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="spotify",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
             is_seekable=True,

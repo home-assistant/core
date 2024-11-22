@@ -83,6 +83,7 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.deprecation import (
+    DeferredDeprecatedAlias,
     DeprecatedConstantEnum,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
@@ -182,6 +183,19 @@ _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
 )
 _DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
 _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
+
+
+def _deprecated_core_config() -> Any:
+    # pylint: disable-next=import-outside-toplevel
+    from . import core_config
+
+    return core_config.Config
+
+
+# The Config class was moved to core_config in Home Assistant 2024.11
+_DEPRECATED_Config = DeferredDeprecatedAlias(
+    _deprecated_core_config, "homeassistant.core_config.Config", "2025.11"
+)
 
 
 # How long to wait until things that run on startup have to finish.
@@ -642,12 +656,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
+        frame.report_usage(
             "calls `async_add_job`, which is deprecated and will be removed in Home "
             "Assistant 2025.4; Please review "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
         )
 
         if target is None:
@@ -698,12 +712,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
+        frame.report_usage(
             "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
             "Assistant 2025.5; Please review "
             "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
         )
 
         return self._async_add_hass_job(hassjob, *args, background=background)
@@ -972,12 +986,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
+        frame.report_usage(
             "calls `async_run_job`, which is deprecated and will be removed in Home "
             "Assistant 2025.4; Please review "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
         )
 
         if asyncio.iscoroutine(target):
@@ -1621,10 +1635,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
+            frame.report_usage(
                 "calls `async_listen` with run_immediately, which is"
                 " deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+                core_behavior=frame.ReportBehavior.LOG,
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1691,10 +1705,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
+            frame.report_usage(
                 "calls `async_listen_once` with run_immediately, which is "
                 "deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+                core_behavior=frame.ReportBehavior.LOG,
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(

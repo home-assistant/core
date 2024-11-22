@@ -13,7 +13,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["demetriek"],
-  "quality_scale": "platinum",
   "requirements": ["demetriek==0.4.0"],
   "ssdp": [
     {

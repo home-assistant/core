@@ -16,7 +16,7 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -120,14 +120,12 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
         translation_key=HabitipyButtonEntity.FROST,
-        press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["frost"].post(
-                targetId=coordinator.config_entry.unique_id
-            )
-        ),
+        press_fn=lambda coordinator: coordinator.api.user.class_.cast["frost"].post(),
+        # chilling frost can only be cast once per day (streaks buff is false)
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 40
+            and not data.user["stats"]["buffs"]["streaks"]
         ),
         class_needed=MAGE,
         entity_picture="shop_frost.png",
@@ -138,7 +136,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         press_fn=(
             lambda coordinator: coordinator.api.user.class_.cast[
                 "defensiveStance"
-            ].post(targetId=coordinator.config_entry.unique_id)
+            ].post()
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
@@ -153,7 +151,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         press_fn=(
             lambda coordinator: coordinator.api.user.class_.cast[
                 "valorousPresence"
-            ].post(targetId=coordinator.config_entry.unique_id)
+            ].post()
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
@@ -166,9 +164,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.INTIMIDATE,
         translation_key=HabitipyButtonEntity.INTIMIDATE,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["intimidate"].post(
-                targetId=coordinator.config_entry.unique_id
-            )
+            lambda coordinator: coordinator.api.user.class_.cast["intimidate"].post()
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
@@ -194,13 +190,23 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         key=HabitipyButtonEntity.STEALTH,
         translation_key=HabitipyButtonEntity.STEALTH,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["stealth"].post(
-                targetId=coordinator.config_entry.unique_id
-            )
+            lambda coordinator: coordinator.api.user.class_.cast["stealth"].post()
         ),
+        # Stealth buffs stack and it can only be cast if the amount of
+        # unfinished dailies is smaller than the amount of buffs
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 45
+            and data.user["stats"]["buffs"]["stealth"]
+            < len(
+                [
+                    r
+                    for r in data.tasks
+                    if r.get("type") == "daily"
+                    and r.get("isDue") is True
+                    and r.get("completed") is False
+                ]
+            )
         ),
         class_needed=ROGUE,
         entity_picture="shop_stealth.png",
@@ -208,24 +214,20 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
         translation_key=HabitipyButtonEntity.HEAL,
-        press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["heal"].post(
-                targetId=coordinator.config_entry.unique_id
-            )
-        ),
+        press_fn=lambda coordinator: coordinator.api.user.class_.cast["heal"].post(),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
             and data.user["stats"]["mp"] >= 15
+            and data.user["stats"]["hp"] < 50
         ),
         class_needed=HEALER,
+        entity_picture="shop_heal.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.BRIGHTNESS,
         translation_key=HabitipyButtonEntity.BRIGHTNESS,
         press_fn=(
-            lambda coordinator: coordinator.api.user.class_.cast["brightness"].post(
-                targetId=coordinator.config_entry.unique_id
-            )
+            lambda coordinator: coordinator.api.user.class_.cast["brightness"].post()
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
@@ -329,7 +331,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
                     translation_domain=DOMAIN,
                     translation_key="service_call_unallowed",
                 ) from e
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
