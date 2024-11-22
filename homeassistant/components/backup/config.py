@@ -210,7 +210,6 @@ class BackupSchedule:
                 include_folders=config_data.create_backup.include_folders,
                 include_homeassistant=True,  # always include HA
                 name=config_data.create_backup.name,
-                on_progress=None,
                 password=config_data.create_backup.password,
             )
 

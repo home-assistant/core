@@ -123,7 +123,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[BackupProgress], None] | None,
+        on_progress: Callable[[BackupProgress], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""

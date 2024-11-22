@@ -72,7 +72,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             include_folders=None,
             include_homeassistant=True,
             name=None,
-            on_progress=None,
             password=call.data.get(CONF_PASSWORD),
         )
         if backup_task := backup_manager.backup_task:

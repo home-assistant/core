@@ -23,6 +23,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    BackupEvent,
     BackupProgress,
     CoreBackupReaderWriter,
 )
@@ -70,11 +71,12 @@ async def _mock_backup_generation(
     agent_ids = agent_ids or [LOCAL_AGENT_ID]
     progress: list[BackupProgress] = []
 
-    def on_progress(_progress: BackupProgress) -> None:
+    def on_progress(_progress: BackupEvent) -> None:
         """Mock progress callback."""
         progress.append(_progress)
 
     assert manager.backup_task is None
+    manager.async_subscribe_events(on_progress)
     await manager.async_create_backup(
         agent_ids=agent_ids,
         include_addons=[],
@@ -83,7 +85,6 @@ async def _mock_backup_generation(
         include_folders=[],
         include_homeassistant=True,
         name=name,
-        on_progress=on_progress,
         password=password,
     )
     assert manager.backup_task is not None
@@ -288,7 +289,6 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
             include_folders=[],
             include_homeassistant=True,
             name=None,
-            on_progress=None,
             password=None,
         )
     event.set()
@@ -323,7 +323,6 @@ async def test_async_create_backup_wrong_parameters(
         "include_folders": [],
         "include_homeassistant": True,
         "name": None,
-        "on_progress": None,
         "password": None,
     }
 
