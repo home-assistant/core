@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.6
+aioacaia==0.1.8
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -495,7 +495,7 @@ av==13.1.0
 axis==63
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.3
+ayla-iot-unofficial==1.4.4
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -699,7 +699,7 @@ elgato==5.1.2
 elkm1-lib==2.2.10
 
 # homeassistant.components.elmax
-elmax-api==0.0.5
+elmax-api==0.0.6.1
 
 # homeassistant.components.elvia
 elvia==0.1.0
@@ -934,7 +934,7 @@ hass-nabucasa==0.84.0
 hassil==2.0.2
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.9
+hdate==0.11.1
 
 # homeassistant.components.here_travel_time
 here-routing==1.0.1
@@ -1527,7 +1527,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.22.0
+pyenphase==1.23.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1632,7 +1632,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.3
+pylamarzocco==1.2.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1947,7 +1947,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.9
+pytouchlinesl==0.2.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2047,7 +2047,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.11.1
+reolink-aio==0.11.2
 
 # homeassistant.components.rflink
 rflink==0.0.66

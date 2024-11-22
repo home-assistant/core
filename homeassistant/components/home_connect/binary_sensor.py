@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,6 +19,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from . import HomeConnectConfigEntry
 from .api import HomeConnectDevice
 from .const import (
     ATTR_VALUE,
@@ -118,15 +118,14 @@ BINARY_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect binary sensor."""
 
     def get_entities() -> list[BinarySensorEntity]:
         entities: list[BinarySensorEntity] = []
-        hc_api = hass.data[DOMAIN][config_entry.entry_id]
-        for device in hc_api.devices:
+        for device in entry.runtime_data.devices:
             entities.extend(
                 HomeConnectBinarySensor(device, description)
                 for description in BINARY_SENSORS
