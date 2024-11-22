@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from bsblan import BSBLAN, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
@@ -21,12 +23,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str
-    port: int
-    mac: str
-    passkey: str | None = None
-    username: str | None = None
-    password: str | None = None
+    def __init__(self) -> None:
+        """Initialize BSBLan flow."""
+        self.host: str | None = None
+        self.port: int = DEFAULT_PORT
+        self.mac: str | None = None
+        self.passkey: str | None = None
+        self.username: str | None = None
+        self.password: str | None = None
+        self._discovered_device: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -41,6 +46,54 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username = user_input.get(CONF_USERNAME)
         self.password = user_input.get(CONF_PASSWORD)
 
+        return await self._validate_and_create()
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle Zeroconf discovery."""
+
+        self.host = str(
+            getattr(discovery_info, "ip_address", None)
+            or getattr(discovery_info, "ip_addresses", [])[0]
+        )
+        self.port = discovery_info.port or DEFAULT_PORT
+
+        # Store discovery info for later use
+        self._discovered_device = {
+            CONF_HOST: self.host,
+            CONF_PORT: self.port,
+        }
+
+        # Proceed to get credentials
+        self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle getting credentials for discovered device."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="discovery_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(CONF_PASSKEY): str,
+                        vol.Optional(CONF_USERNAME): str,
+                        vol.Optional(CONF_PASSWORD): str,
+                    }
+                ),
+                description_placeholders={"host": str(self.host)},
+            )
+
+        self.passkey = user_input.get(CONF_PASSKEY)
+        self.username = user_input.get(CONF_USERNAME)
+        self.password = user_input.get(CONF_PASSWORD)
+
+        return await self._validate_and_create()
+
+    async def _validate_and_create(self) -> ConfigFlowResult:
+        """Validate device connection and create entry."""
         try:
             await self._get_bsblan_info()
         except BSBLANError:
@@ -67,6 +120,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry."""
         return self.async_create_entry(
             title=format_mac(self.mac),
             data={
@@ -79,7 +133,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
-        """Get device information from an BSBLAN device."""
+        """Get device information from a BSBLAN device."""
+        logging.debug("Getting device info from BSBLAN device")
         config = BSBLANConfig(
             host=self.host,
             passkey=self.passkey,
