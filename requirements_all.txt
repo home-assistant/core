@@ -173,7 +173,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.6
+aioacaia==0.1.8
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -325,7 +325,7 @@ aioopenexchangerates==0.6.8
 aiooui==0.1.7
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.10
+aiopegelonline==0.1.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.6
@@ -1090,7 +1090,7 @@ habitipy==0.3.3
 habluetooth==3.6.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.84.0
+hass-nabucasa==0.85.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1099,7 +1099,7 @@ hass-splunk==0.1.1
 hassil==2.0.2
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.9
+hdate==0.11.1
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.3
@@ -1370,7 +1370,7 @@ mficlient==0.5.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.3.3
+microBeesPy==0.3.5
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -1403,7 +1403,7 @@ motionblindsble==0.1.2
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==4.1.1.116.0
+mozart-api==4.1.1.116.3
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -2448,7 +2448,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==1.0.0
+pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
