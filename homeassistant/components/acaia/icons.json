@@ -19,6 +19,11 @@
       "start_stop": {
         "default": "mdi:timer-play"
       }
+    },
+    "sensor": {
+      "flow_rate": {
+        "default": "mdi:water"
+      }
     }
   }
 }

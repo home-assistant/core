@@ -50,6 +50,60 @@
     'state': '42',
   })
 # ---
+# name: test_sensors[sensor.lunar_ddeeff_flow_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lunar_ddeeff_flow_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Flow rate',
+    'platform': 'acaia',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow_rate',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_flow_rate',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
+  })
+# ---
+# name: test_sensors[sensor.lunar_ddeeff_flow_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'LUNAR-DDEEFF Flow rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lunar_ddeeff_flow_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='AcaiaScale().flow_rate' id='140508965563200'>",
+  })
+# ---
 # name: test_sensors[sensor.lunar_ddeeff_weight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
