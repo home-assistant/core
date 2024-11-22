@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
 
-from bsblan import BSBLAN, BSBLANConnectionError, Sensor, State
+from bsblan import BSBLAN, BSBLANConnectionError, HotWaterState, Sensor, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -20,6 +20,7 @@ class BSBLanCoordinatorData:
 
     state: State
     sensor: Sensor
+    dhw: HotWaterState
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
@@ -59,6 +60,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
 
             state = await self.client.state()
             sensor = await self.client.sensor()
+            dhw = await self.client.hot_water_state()
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST] if self.config_entry else "unknown"
             raise UpdateFailed(
@@ -66,4 +68,4 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
             ) from err
 
         self.update_interval = self._get_update_interval()
-        return BSBLanCoordinatorData(state=state, sensor=sensor)
+        return BSBLanCoordinatorData(state=state, sensor=sensor, dhw=dhw)
