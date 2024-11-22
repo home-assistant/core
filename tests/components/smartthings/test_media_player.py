@@ -1,4 +1,5 @@
-"""Support for media players through the SmartThings cloud API."""
+"""Test for the SmartThings media_player platform."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -13,12 +14,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     RepeatMode,
 )
+from homeassistant.components.smartthings.const import DATA_BROKERS, DOMAIN
+from homeassistant.components.smartthings.entity import SmartThingsEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from . import SmartThingsEntity
-from .const import DATA_BROKERS, DOMAIN
 
 VALUE_TO_STATE = {
     "buffering": MediaPlayerState.BUFFERING,
