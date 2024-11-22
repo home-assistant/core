@@ -1298,6 +1298,7 @@ async def test_config_delete_after_copies_logic(
         "last_backup_time",
         "start_time",
         "next_time",
+        "get_backups_calls",
         "delete_calls",
         "delete_args_list",
     ),
@@ -1306,15 +1307,100 @@ async def test_config_delete_after_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "delete_after": {"copies": None, "days": 1},
+                "delete_after": {"copies": None, "days": 2},
                 "schedule": "never",
             },
-            {"backup-1": MagicMock(date="2024-11-11T04:45:00+01:00")},
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
             {},
             {},
             "2024-11-11T04:45:00+01:00",
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
+            1,
+            1,
+            [call("backup-1")],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 3},
+                "schedule": "never",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 2},
+                "schedule": "never",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
+            2,
+            [call("backup-1"), call("backup-2")],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 2},
+                "schedule": "never",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
+            {"test-agent": BackupAgentError("Boom!")},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": None, "days": 2},
+                "schedule": "never",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
+                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+            },
+            {},
+            {"test-agent": BackupAgentError("Boom!")},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
+            "2024-11-12T12:00:00+01:00",
+            1,
             1,
             [call("backup-1")],
         ),
@@ -1334,6 +1420,7 @@ async def test_config_delete_after_days_logic(
     last_backup_time: str,
     start_time: str,
     next_time: str,
+    get_backups_calls: int,
     delete_calls: int,
     delete_args_list: list[Any],
 ) -> None:
@@ -1374,6 +1461,7 @@ async def test_config_delete_after_days_logic(
     freezer.move_to(next_time)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert get_backups.call_count == get_backups_calls
     assert delete_backup.call_count == delete_calls
     assert delete_backup.call_args_list == delete_args_list
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
