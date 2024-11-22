@@ -1,20 +1,35 @@
 rules:
   # Bronze
   config-flow: done
-  # test-before-configure:
-  # unique-config-entry:
-  # config-flow-test-coverage:
-  # runtime-data:
-  # test-before-setup:
-  # appropriate-polling:
-  # entity-unique-id:
-  # has-entity-name:
-  # entity-event-setup:
-  # dependency-transparency:
-  # action-setup:
-  # common-modules:
-  # docs-high-level-description:
-  # docs-installation-instructions:
-  # docs-removal-instructions:
-  # docs-actions:
-  # brands:
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: This integration only provides entity service actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: Nothing special has to be done, but I will look at it
+  docs-actions: done
+  brands: done
+  # Silver
+  config-entry-unloading: done
+  # log-when-unavailable:
+  # entity-unavailable:
+  # action-exceptions:
+  # reauthentication-flow:
+  # parallel-updates:
+  # test-coverage:
+  # integration-owner:
+  # docs-installation-parameters:
+  # docs-configuration-parameters:
