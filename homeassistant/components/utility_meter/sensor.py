@@ -569,6 +569,7 @@ class UtilityMeterSensor(RestoreSensor):
                     self._next_reset,
                 )
             )
+            self.async_write_ha_state()
 
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
@@ -659,10 +660,11 @@ class UtilityMeterSensor(RestoreSensor):
 
         self.async_on_remove(async_at_started(self.hass, async_source_tracking))
 
-        @callback
-        def async_track_time_zone(event):
+        async def async_track_time_zone(event):
             """Reconfigure Scheduler after time zone changes."""
             self._config_scheduler()
+
+            await self._program_reset()
 
         self.async_on_remove(
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
