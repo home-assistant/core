@@ -693,6 +693,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/imap/ @jbouwh
 /tests/components/imap/ @jbouwh
 /homeassistant/components/imeon_inverter/ @Imeon-Energy
+/tests/components/imeon_inverter/ @Imeon-Energy
 /homeassistant/components/imgw_pib/ @bieniu
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
