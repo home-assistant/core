@@ -161,7 +161,6 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         _attr_supported_features: camera.CameraEntityFeature = (
             camera.CameraEntityFeature.STREAM
         )
-        _attr_frontend_stream_type: camera.StreamType = camera.StreamType.WEB_RTC
 
         async def stream_source(self) -> str | None:
             return STREAM_SOURCE

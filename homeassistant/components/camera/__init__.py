@@ -60,6 +60,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -498,6 +499,16 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
         )
+        self._deprecate_attr_frontend_stream_type_logged = False
+        if type(self).frontend_stream_type != Camera.frontend_stream_type:
+            report_usage(
+                (
+                    f"is overwriting the 'frontend_stream_type' property in the {type(self).__name__} class,"
+                    " which is deprecated and will be removed in Home Assistant 2025.6, "
+                ),
+                core_integration_behavior=ReportBehavior.ERROR,
+                exclude_integrations={DOMAIN},
+            )
 
     @cached_property
     def entity_picture(self) -> str:
@@ -570,6 +581,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Deprecated in 2024.12. Remove in 2025.6
         # Use the camera_capabilities instead
         if hasattr(self, "_attr_frontend_stream_type"):
+            if not self._deprecate_attr_frontend_stream_type_logged:
+                report_usage(
+                    (
+                        f"is setting the '_attr_frontend_stream_type' attribute in the {type(self).__name__} class,"
+                        " which is deprecated and will be removed in Home Assistant 2025.6, "
+                    ),
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    exclude_integrations={DOMAIN},
+                )
+
+                self._deprecate_attr_frontend_stream_type_logged = True
             return self._attr_frontend_stream_type
         if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
