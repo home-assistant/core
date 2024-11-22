@@ -275,7 +275,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Check if arm code is required, raise if no code is given."""
         if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
             raise ServiceValidationError(
-                f"Arming requires a code but none was given for {self.entity_id}",
                 translation_domain=DOMAIN,
                 translation_key="code_arm_required",
                 translation_placeholders={

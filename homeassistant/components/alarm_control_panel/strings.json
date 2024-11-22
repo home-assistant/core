@@ -138,5 +138,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "code_arm_required": {
+      "message": "Arming requires a code but none was given for {entity_id}."
+    }
   }
 }
