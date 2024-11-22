@@ -97,11 +97,11 @@ def _get_appliance(
     device_entry: dr.DeviceEntry | None = None,
     entry: HomeConnectConfigEntry | None = None,
 ) -> api.HomeConnectAppliance:
-    """Return a Home Connect appliance instance given an device_id."""
+    """Return a Home Connect appliance instance given a device id or a device entry."""
     if device_id is not None and device_entry is None:
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device_id)
-    assert device_entry
+    assert device_entry, "Either a device id or a device entry must be provided"
 
     ha_id = next(
         (
