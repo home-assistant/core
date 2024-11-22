@@ -1051,12 +1051,9 @@ class PipelineRun:
                         conversation_id=user_input.conversation_id,
                     )
                 # Try local intents first, if preferred.
-                elif (
-                    self.pipeline.prefer_local_intents
-                    and (
-                        intent_response := await conversation.async_handle_intents(
-                            self.hass, user_input
-                        )
+                elif self.pipeline.prefer_local_intents and (
+                    intent_response := await conversation.async_handle_intents(
+                        self.hass, user_input
                     )
                 ):
                     # Local intent matched
