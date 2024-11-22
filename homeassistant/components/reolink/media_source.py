@@ -114,7 +114,6 @@ class ReolinkVODMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if not item.identifier:
-            _LOGGER.error(item.identifier)
             return await self._async_generate_root()
 
         identifier = item.identifier.split("|", 7)
