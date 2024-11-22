@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -13,7 +13,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.backup import AgentBackup, Folder
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
-from homeassistant.components.backup.manager import NewBackup
+from homeassistant.components.backup.manager import BackupEvent, NewBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -36,7 +36,6 @@ BACKUP_CALL = call(
     include_folders=["media"],
     include_homeassistant=True,
     name="test-name",
-    on_progress=None,
     password="test-password",
 )
 
@@ -300,6 +299,8 @@ async def test_generate(
     freezer.move_to("2024-11-13 12:01:00+01:00")
     await hass.async_block_till_done()
 
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    assert await client.receive_json() == snapshot
     await client.send_json_auto_id(
         {"type": "backup/generate", **{"agent_ids": ["backup.local"]} | (data or {})}
     )
@@ -404,7 +405,6 @@ async def test_generate_calls_create(
                 "include_database": True,
                 "include_folders": None,
                 "name": None,
-                "on_progress": ANY,
                 "password": None,
             }
             | expected_extra_call_params
@@ -1036,3 +1036,24 @@ async def test_config_update_schedule(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+
+
+async def test_subscribe_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test generating a backup."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    manager = hass.data[DATA_MANAGER]
+    manager.backup_event = BackupEvent(event_type="test")
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    assert await client.receive_json() == snapshot
+    assert await client.receive_json() == snapshot
+
+    manager.async_on_backup_event(BackupEvent(event_type="test2"))
+    assert await client.receive_json() == snapshot
