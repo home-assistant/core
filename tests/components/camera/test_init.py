@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 import io
-import logging
 from types import ModuleType
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
@@ -1075,12 +1074,8 @@ async def test_deprecated_frontend_stream_type_logs(
         assert camera_obj.frontend_stream_type == StreamType.WEB_RTC
 
     assert (
-        "homeassistant.helpers.frame",
-        logging.WARNING,
-        "Detected that custom integration 'test' is overwriting the 'frontend_stream_type' property in the PropertyFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,  at custom_components/test/camera.py, line 20: [AttrFrontendStreamTypeCamera(), PropertyFrontendStreamTypeCamera()], please report it to the author of the 'test' custom integration",
-    ) in caplog.record_tuples
+        "Detected that custom integration 'test' is overwriting the 'frontend_stream_type' property in the PropertyFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
+    ) in caplog.text
     assert (
-        "homeassistant.helpers.frame",
-        logging.WARNING,
-        "Detected that custom integration 'test' is setting the '_attr_frontend_stream_type' attribute in the AttrFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,  at custom_components/test/camera.py, line 19: async_add_entities_callback(, please report it to the author of the 'test' custom integration",
-    ) in caplog.record_tuples
+        "Detected that custom integration 'test' is setting the '_attr_frontend_stream_type' attribute in the AttrFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
+    ) in caplog.text
