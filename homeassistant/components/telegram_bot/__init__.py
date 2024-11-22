@@ -36,7 +36,13 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_loaded_integration
@@ -398,7 +404,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service: ServiceCall) -> None:
+    async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
 
         msgtype = service.service
@@ -406,8 +412,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            await notify_service.send_message(context=service.context, **kwargs)
-        elif msgtype in [
+            response = await notify_service.send_message(
+                context=service.context, **kwargs
+            )
+            return {
+                "chats": [
+                    {"chat_id": cid, "message_id": mid} for cid, mid in response.items()
+                ]
+            }
+        if msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
@@ -431,11 +444,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
             )
+        return None
 
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
+        supports_response = SupportsResponse.NONE
+        if service_notif == SERVICE_SEND_MESSAGE:
+            supports_response = SupportsResponse.OPTIONAL
+
         hass.services.async_register(
-            DOMAIN, service_notif, async_send_telegram_message, schema=schema
+            DOMAIN,
+            service_notif,
+            async_send_telegram_message,
+            schema=schema,
+            supports_response=supports_response,
         )
 
     return True
@@ -694,9 +716,10 @@ class TelegramNotificationService:
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
+        msg_ids = {}
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
-            await self._send_msg(
+            msg = await self._send_msg(
                 self.bot.send_message,
                 "Error sending message",
                 params[ATTR_MESSAGE_TAG],
@@ -711,6 +734,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
+            msg_ids[chat_id] = msg.id
+        return msg_ids
 
     async def delete_message(self, chat_id=None, context=None, **kwargs):
         """Delete a previously sent message."""
