@@ -55,7 +55,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.host = str(
             getattr(discovery_info, "ip_address", None)
-            or getattr(discovery_info, "ip_addresses", [])[0]
+            or (discovery_info.ip_addresses[0] if discovery_info.ip_addresses else None)
+            or discovery_info.hostname
         )
         self.port = discovery_info.port or DEFAULT_PORT
 
