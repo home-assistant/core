@@ -10,6 +10,7 @@ from typing import Any
 from aiohasupervisor.models import backups as supervisor_backups
 
 from homeassistant.components.backup import (
+    AddonInfo,
     AgentBackup,
     BackupAgent,
     BackupProgress,
@@ -66,21 +67,34 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        return [
-            AgentBackup(
-                addons=[],
-                backup_id=backup.slug,
-                database_included=True,
-                date=backup.date.isoformat(),
-                folders=[Folder(folder) for folder in backup.content.folders],
-                homeassistant_included=backup.content.homeassistant,
-                homeassistant_version="2024.12.0",
-                name=backup.name,
-                protected=backup.protected,
-                size=int(backup.size * 2**20),
+        backup_list = await self._client.backups.list()
+        result = []
+        for backup in backup_list:
+            details = await self._client.backups.backup_info(backup.slug)
+            homeassistant_included: bool = details.homeassistant is not None
+            if not homeassistant_included:
+                database_included = False
+            else:
+                database_included = details.homeassistant_exclude_database is False
+            addons = [
+                AddonInfo(name=addon.name, slug=addon.slug, version=addon.version)
+                for addon in details.addons
+            ]
+            result.append(
+                AgentBackup(
+                    addons=addons,
+                    backup_id=backup.slug,
+                    database_included=database_included,
+                    date=backup.date.isoformat(),
+                    folders=[Folder(folder) for folder in backup.content.folders],
+                    homeassistant_included=homeassistant_included,
+                    homeassistant_version=details.homeassistant,
+                    name=backup.name,
+                    protected=backup.protected,
+                    size=int(backup.size * 2**20),
+                )
             )
-            for backup in await self._client.backups.list()
-        ]
+        return result
 
     async def async_get_backup(
         self,
