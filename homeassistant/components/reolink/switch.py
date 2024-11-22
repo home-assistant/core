@@ -27,6 +27,8 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkSwitchEntityDescription(

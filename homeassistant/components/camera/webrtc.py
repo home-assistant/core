@@ -11,7 +11,12 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
-from webrtc_models import RTCConfiguration, RTCIceCandidate, RTCIceServer
+from webrtc_models import (
+    RTCConfiguration,
+    RTCIceCandidate,
+    RTCIceCandidateInit,
+    RTCIceServer,
+)
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -78,7 +83,7 @@ class WebRTCAnswer(WebRTCMessage):
 class WebRTCCandidate(WebRTCMessage):
     """WebRTC candidate."""
 
-    candidate: RTCIceCandidate
+    candidate: RTCIceCandidate | RTCIceCandidateInit
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the message."""
@@ -146,7 +151,7 @@ class CameraWebRTCProvider(ABC):
 
     @abstractmethod
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle the WebRTC candidate."""
 
@@ -230,13 +235,15 @@ def require_webrtc_support(
             """Validate that the camera supports WebRTC."""
             entity_id = msg["entity_id"]
             camera = get_camera_from_entity_id(hass, entity_id)
-            if camera.frontend_stream_type != StreamType.WEB_RTC:
+            if StreamType.WEB_RTC not in (
+                stream_types := camera.camera_capabilities.frontend_stream_types
+            ):
                 connection.send_error(
                     msg["id"],
                     error_code,
                     (
                         "Camera does not support WebRTC,"
-                        f" frontend_stream_type={camera.frontend_stream_type}"
+                        f" frontend_stream_types={stream_types}"
                     ),
                 )
                 return
@@ -336,7 +343,7 @@ async def ws_candidate(
 ) -> None:
     """Handle WebRTC candidate websocket command."""
     await camera.async_on_webrtc_candidate(
-        msg["session_id"], RTCIceCandidate(msg["candidate"])
+        msg["session_id"], RTCIceCandidateInit(msg["candidate"])
     )
     connection.send_message(websocket_api.result_message(msg["id"]))
 

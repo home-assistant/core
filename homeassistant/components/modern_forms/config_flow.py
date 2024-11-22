@@ -24,7 +24,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     host: str | None = None
     mac: str | None = None
-    name: str | None = None
+    name: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
