@@ -40,9 +40,17 @@ from .common import (
 
 from tests.common import MockPlatform, mock_platform
 
+_EXPECTED_FILES = [
+    "test.txt",
+    ".storage",
+    "backups",
+    "backups/not_backup",
+    "tmp_backups",
+    "tmp_backups/not_backup",
+]
 _EXPECTED_FILES_WITH_DATABASE = {
-    True: ["test.txt", ".storage", "home-assistant_v2.db"],
-    False: ["test.txt", ".storage"],
+    True: [*_EXPECTED_FILES, "home-assistant_v2.db"],
+    False: _EXPECTED_FILES,
 }
 
 
