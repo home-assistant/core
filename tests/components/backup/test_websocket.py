@@ -711,7 +711,7 @@ async def test_agents_download_unknown_agent(
                 "name": "test-name",
                 "password": "test-password",
             },
-            "delete_after": {"copies": None, "days": 7},
+            "delete_after": {"copies": 3, "days": 7},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -727,7 +727,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "delete_after": {"copies": None, "days": None},
+            "delete_after": {"copies": 3, "days": None},
             "last_automatic_backup": None,
             "schedule": "never",
         },
@@ -741,7 +741,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "delete_after": {"copies": None, "days": None},
+            "delete_after": {"copies": None, "days": 7},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -832,6 +832,42 @@ async def test_config_info(
                 "name": "test-name",
                 "password": "test-password",
             },
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"copies": 3, "days": 7},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"copies": None, "days": None},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"copies": 3, "days": None},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"copies": None, "days": 7},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"copies": 3},
+            "schedule": "daily",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "delete_after": {"days": 7},
             "schedule": "daily",
         },
     ],
