@@ -1,4 +1,5 @@
 """Test the Z-Wave JS fan platform."""
+
 import copy
 
 import pytest
@@ -536,13 +537,14 @@ async def test_inovelli_lzw36(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             "fan",
             "turn_on",
             {"entity_id": entity_id, "preset_mode": "wheeze"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(client.async_send_command.call_args_list) == 0
 
 
@@ -651,7 +653,12 @@ async def test_thermostat_fan(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
     assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.PRESET_MODE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Test setting preset mode
     await hass.services.async_call(
@@ -675,13 +682,14 @@ async def test_thermostat_fan(
     client.async_send_command.reset_mock()
 
     # Test setting unknown preset mode
-    with pytest.raises(ValueError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Turbo"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     client.async_send_command.reset_mock()
 

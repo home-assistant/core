@@ -1,4 +1,5 @@
 """Constants for the Goodwe component."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform

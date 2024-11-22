@@ -1,4 +1,5 @@
 """Support for Twente Milieu."""
+
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -22,6 +23,11 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
+type TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator[
+    dict[WasteType, list[date]]
+]
+type TwenteMilieuConfigEntry = ConfigEntry[TwenteMilieuDataUpdateCoordinator]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Twente Milieu from a config entry."""
@@ -33,24 +39,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    coordinator: DataUpdateCoordinator[
-        dict[WasteType, list[date]]
-    ] = DataUpdateCoordinator(
+    coordinator: TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_interval=SCAN_INTERVAL,
         update_method=twentemilieu.update,
     )
     await coordinator.async_config_entry_first_refresh()
 
-    # For backwards compat, set unique ID
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=str(entry.data[CONF_ID])
-        )
-
-    hass.data.setdefault(DOMAIN, {})[entry.data[CONF_ID]] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -58,7 +57,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.data[CONF_ID]]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

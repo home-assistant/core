@@ -24,7 +24,8 @@
         "title": "Configure RainMachine",
         "data": {
           "zone_run_time": "Default zone run time (in seconds)",
-          "use_app_run_times": "Use zone run times from RainMachine app"
+          "use_app_run_times": "Use zone run times from the RainMachine app",
+          "allow_inactive_zones_to_run": "Allow disabled zones to be run manually"
         }
       }
     }

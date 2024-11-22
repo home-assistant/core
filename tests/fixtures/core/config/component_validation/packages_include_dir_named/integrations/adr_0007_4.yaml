@@ -1,0 +1,4 @@
+# no_such_option does not exist
+adr_0007_4:
+  host: blah.com
+  no_such_option: foo

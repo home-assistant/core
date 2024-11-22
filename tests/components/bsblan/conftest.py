@@ -1,8 +1,9 @@
 """Fixtures for BSBLAN integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from bsblan import Device, Info, State
+from bsblan import Device, Info, Sensor, State, StaticState
 import pytest
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
@@ -30,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.bsblan.async_setup_entry", return_value=True
@@ -39,30 +40,25 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_bsblan_config_flow() -> Generator[None, MagicMock, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
-    with patch(
-        "homeassistant.components.bsblan.config_flow.BSBLAN", autospec=True
-    ) as bsblan_mock:
+    with (
+        patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
+        patch("homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock),
+    ):
         bsblan = bsblan_mock.return_value
-        bsblan.device.return_value = Device.parse_raw(
+        bsblan.info.return_value = Info.from_json(load_fixture("info.json", DOMAIN))
+        bsblan.device.return_value = Device.from_json(
             load_fixture("device.json", DOMAIN)
         )
-        bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
-        yield bsblan
-
-
-@pytest.fixture
-def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
-    """Return a mocked BSBLAN client."""
-
-    with patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock:
-        bsblan = bsblan_mock.return_value
-        bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
-        bsblan.device.return_value = Device.parse_raw(
-            load_fixture("device.json", DOMAIN)
+        bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
+        bsblan.static_values.return_value = StaticState.from_json(
+            load_fixture("static.json", DOMAIN)
         )
-        bsblan.state.return_value = State.parse_raw(load_fixture("state.json", DOMAIN))
+        bsblan.sensor.return_value = Sensor.from_json(
+            load_fixture("sensor.json", DOMAIN)
+        )
+
         yield bsblan
 
 

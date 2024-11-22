@@ -1,4 +1,5 @@
 """The test for the Trafikverket camera platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,7 +7,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket.models import CameraInfoModel
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.config_entries import ConfigEntry
@@ -23,10 +24,10 @@ async def test_camera(
     freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera sensor."""
-    state1 = hass.states.get("camera.test_location")
+    state1 = hass.states.get("camera.test_camera")
     assert state1.state == "idle"
     assert state1.attributes["description"] == "Test Camera for testing"
     assert state1.attributes["location"] == "Test location"
@@ -44,11 +45,11 @@ async def test_camera(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("camera.test_location")
+    state1 = hass.states.get("camera.test_camera")
     assert state1.state == "idle"
     assert state1.attributes != {}
 
-    assert await async_get_image(hass, "camera.test_location")
+    assert await async_get_image(hass, "camera.test_camera")
 
     monkeypatch.setattr(
         get_camera,
@@ -69,4 +70,4 @@ async def test_camera(
         await hass.async_block_till_done()
 
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, "camera.test_location")
+        await async_get_image(hass, "camera.test_camera")

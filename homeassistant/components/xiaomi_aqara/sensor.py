@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -21,8 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import XiaomiDevice
 from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

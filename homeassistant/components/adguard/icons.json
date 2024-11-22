@@ -1,0 +1,85 @@
+{
+  "entity": {
+    "sensor": {
+      "dns_queries": {
+        "default": "mdi:magnify"
+      },
+      "dns_queries_blocked": {
+        "default": "mdi:magnify-close"
+      },
+      "dns_queries_blocked_ratio": {
+        "default": "mdi:magnify-close"
+      },
+      "parental_control_blocked": {
+        "default": "mdi:human-male-girl"
+      },
+      "safe_browsing_blocked": {
+        "default": "mdi:shield-half-full"
+      },
+      "safe_searches_enforced": {
+        "default": "mdi:shield-search"
+      },
+      "average_processing_speed": {
+        "default": "mdi:speedometer"
+      },
+      "rules_count": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "protection": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "parental": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "safe_search": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "safe_browsing": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "filtering": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "query_log": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "add_url": {
+      "service": "mdi:link-plus"
+    },
+    "remove_url": {
+      "service": "mdi:link-off"
+    },
+    "enable_url": {
+      "service": "mdi:link-variant"
+    },
+    "disable_url": {
+      "service": "mdi:link-variant-off"
+    },
+    "refresh": {
+      "service": "mdi:refresh"
+    }
+  }
+}

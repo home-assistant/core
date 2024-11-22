@@ -16,7 +16,7 @@
         "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
         "title": "Add Azure DevOps Project"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "personal_access_token": "[%key:component::azure_devops::config::step::user::data::personal_access_token%]"
         },
@@ -27,6 +27,48 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "build_id": {
+        "name": "{definition_name} latest build id"
+      },
+      "finish_time": {
+        "name": "{definition_name} latest build finish time"
+      },
+      "latest_build": {
+        "name": "{definition_name} latest build"
+      },
+      "queue_time": {
+        "name": "{definition_name} latest build queue time"
+      },
+      "reason": {
+        "name": "{definition_name} latest build reason"
+      },
+      "result": {
+        "name": "{definition_name} latest build result"
+      },
+      "source_branch": {
+        "name": "{definition_name} latest build source branch"
+      },
+      "source_version": {
+        "name": "{definition_name} latest build source version"
+      },
+      "start_time": {
+        "name": "{definition_name} latest build start time"
+      },
+      "url": {
+        "name": "{definition_name} latest build url"
+      },
+      "work_item_count": {
+        "name": "{item_type} {item_state} work items"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Could not authorize with Azure DevOps for {title}. You will need to update your personal access token."
     }
   }
 }

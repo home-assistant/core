@@ -6,6 +6,70 @@
       "fingerprint": "Fingerprint code received",
       "codelock": "Code lock code received",
       "send_keys": "Send keys received"
+    },
+    "extra_fields": {
+      "action": "Action",
+      "code": "Code",
+      "key": "Key",
+      "level": "Level"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup LCN host",
+        "description": "Set up new connection to LCN host.",
+        "data": {
+          "host": "[%key:common::config_flow::data::name%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "Segment coupler scan attempts",
+          "dim_mode": "Dimming mode",
+          "acknowledge": "Request acknowledgement from modules"
+        },
+        "data_description": {
+          "dim_mode": "The number of steps used for dimming outputs.",
+          "acknowledge": "Retry sendig commands if no response is received (increases bus traffic)."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure LCN host",
+        "description": "Reconfigure connection to LCN host.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "[%key:component::lcn::config::step::user::data::sk_num_tries%]",
+          "dim_mode": "[%key:component::lcn::config::step::user::data::dim_mode%]",
+          "acknowledge": "[%key:component::lcn::config::step::user::data::acknowledge%]"
+        },
+        "data_description": {
+          "dim_mode": "[%key:component::lcn::config::step::user::data_description::dim_mode%]",
+          "acknowledge": "[%key:component::lcn::config::step::user::data_description::acknowledge%]"
+        }
+      }
+    },
+    "error": {
+      "authentication_error": "Authentication failed. Wrong username or password.",
+      "license_error": "Maximum number of connections was reached. An additional licence key is required.",
+      "connection_refused": "Unable to connect to PCHK. Check IP and port.",
+      "already_configured": "PCHK connection using the same ip address/port is already configured."
+    },
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "issues": {
+    "deprecated_regulatorlock_sensor": {
+      "title": "Deprecated LCN regulator lock binary sensor",
+      "description": "Your LCN regulator lock binary sensor entity `{entity}` is beeing used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+    },
+    "deprecated_keylock_sensor": {
+      "title": "Deprecated LCN key lock binary sensor",
+      "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {

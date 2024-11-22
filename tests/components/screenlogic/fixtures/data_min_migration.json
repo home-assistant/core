@@ -2,7 +2,9 @@
   "adapter": {
     "firmware": {
       "name": "Protocol Adapter Firmware",
-      "value": "POOL: 5.2 Build 736.0 Rel"
+      "value": "POOL: 5.2 Build 736.0 Rel",
+      "major": 5.2,
+      "minor": 736.0
     }
   },
   "controller": {

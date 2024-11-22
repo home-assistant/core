@@ -1,7 +1,9 @@
 """Tests for the Atag climate platform."""
+
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
+from homeassistant.components.atag import DOMAIN
+from homeassistant.components.atag.climate import PRESET_MAP
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -103,10 +105,10 @@ async def test_update_failed(
     entry = await init_integration(hass, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
     assert hass.states.get(CLIMATE_ID).state == HVACMode.HEAT
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
         await coordinator.async_refresh()
         await hass.async_block_till_done()
         updater.assert_called_once()
         assert not coordinator.last_update_success
-        assert coordinator.data.id == UID
+        assert coordinator.atag.id == UID

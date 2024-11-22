@@ -1,4 +1,5 @@
 """The tests for the  MQTT binary sensor platform."""
+
 import copy
 from datetime import datetime, timedelta
 import json
@@ -17,7 +18,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.typing import ConfigType
@@ -40,6 +40,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_icon_and_entity_picture,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_entity_name,
@@ -71,13 +72,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def binary_sensor_platform_only():
-    """Only setup the binary_sensor platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
-        yield
-
-
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -97,7 +91,6 @@ def binary_sensor_platform_only():
 async def test_setting_sensor_value_expires_availability_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the expiration of the value."""
     await mqtt_mock_entry()
@@ -766,10 +759,7 @@ async def test_setting_attribute_with_template(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -780,11 +770,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -795,26 +781,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -847,21 +823,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_binary_sensor(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered binary_sensor."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, binary_sensor.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, binary_sensor.DOMAIN, data)
 
 
 async def test_discovery_update_binary_sensor_topic_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -888,7 +858,6 @@ async def test_discovery_update_binary_sensor_topic_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         binary_sensor.DOMAIN,
         config1,
         config2,
@@ -898,9 +867,7 @@ async def test_discovery_update_binary_sensor_topic_template(
 
 
 async def test_discovery_update_binary_sensor_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -925,7 +892,6 @@ async def test_discovery_update_binary_sensor_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         binary_sensor.DOMAIN,
         config1,
         config2,
@@ -969,9 +935,7 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_discovery_update_unchanged_binary_sensor(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -982,31 +946,19 @@ async def test_discovery_update_unchanged_binary_sensor(
         "homeassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            binary_sensor.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, binary_sensor.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",  "off_delay": -1 }'
     data2 = '{ "name": "Milk",  "state_topic": "test_topic" }'
     await help_test_discovery_broken(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        data1,
-        data2,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, data1, data2
     )
 
 
@@ -1015,10 +967,7 @@ async def test_entity_device_info_with_connection(
 ) -> None:
     """Test MQTT binary sensor device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1027,10 +976,7 @@ async def test_entity_device_info_with_identifier(
 ) -> None:
     """Test MQTT binary sensor device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1039,10 +985,7 @@ async def test_entity_device_info_update(
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1051,10 +994,7 @@ async def test_entity_device_info_remove(
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1072,10 +1012,7 @@ async def test_entity_id_update_discovery_update(
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1084,17 +1021,12 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass,
-        mqtt_mock_entry,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
-        None,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = binary_sensor.DOMAIN
@@ -1142,10 +1074,10 @@ async def test_cleanup_triggers_and_restoring_state(
     tmp_path: Path,
     freezer: FrozenDateTimeFactory,
     hass_config: ConfigType,
-    payload1,
-    state1,
-    payload2,
-    state2,
+    payload1: str,
+    state1: str,
+    payload2: str,
+    state2: str,
 ) -> None:
     """Test cleanup old triggers at reloading and restoring the state."""
     freezer.move_to("2022-02-02 12:01:00+01:00")
@@ -1180,6 +1112,8 @@ async def test_cleanup_triggers_and_restoring_state(
     state = hass.states.get("binary_sensor.test2")
     assert state.state == state2
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 @pytest.mark.parametrize(
     "hass_config",
@@ -1200,7 +1134,7 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 
     freezer.move_to("2022-02-02 12:02:00+01:00")
     domain = binary_sensor.DOMAIN
-    config3 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
+    config3: ConfigType = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config3["name"] = "test3"
     config3["expire_after"] = 10
     config3["state_topic"] = "test-topic3"
@@ -1232,8 +1166,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = binary_sensor.DOMAIN
@@ -1258,6 +1191,18 @@ async def test_entity_name(
     config = DEFAULT_CONFIG
     await help_test_entity_name(
         hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
+    )
+
+
+async def test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the entity icon or picture setup."""
+    domain = binary_sensor.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_icon_and_entity_picture(
+        hass, mqtt_mock_entry, domain, config
     )
 
 
@@ -1294,3 +1239,31 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            binary_sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

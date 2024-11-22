@@ -1,4 +1,5 @@
 """The tests for WebOS TV automation triggers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -6,9 +7,9 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -18,13 +19,15 @@ from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_webostv_turn_on_trigger_device_id(
-    hass: HomeAssistant, calls, client
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    client,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
     await setup_webostv(hass)
 
-    device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     assert await async_setup_component(
         hass,
@@ -55,15 +58,14 @@ async def test_webostv_turn_on_trigger_device_id(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    calls.clear()
+    service_calls.clear()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -73,12 +75,11 @@ async def test_webostv_turn_on_trigger_device_id(
             blocking=True,
         )
 
-    await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_webostv_turn_on_trigger_entity_id(
-    hass: HomeAssistant, calls, client
+    hass: HomeAssistant, service_calls: list[ServiceCall], client
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_webostv(hass)
@@ -112,10 +113,9 @@ async def test_webostv_turn_on_trigger_entity_id(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == ENTITY_ID
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == ENTITY_ID
+    assert service_calls[1].data["id"] == 0
 
 
 async def test_wrong_trigger_platform_type(

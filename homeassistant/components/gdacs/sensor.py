@@ -1,17 +1,24 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime
 import logging
+from typing import Any
+
+from aio_georss_client.status_update import StatusUpdate
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_ICON, DOMAIN, FEED
+from . import GdacsFeedEntityManager
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +40,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the GDACS Feed platform."""
-    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
     sensor = GdacsSensor(entry, manager)
     async_add_entities([sensor])
 
@@ -42,24 +49,33 @@ class GdacsSensor(SensorEntity):
     """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
-    _attr_icon = DEFAULT_ICON
     _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "alerts"
 
-    def __init__(self, config_entry: ConfigEntry, manager) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, manager: GdacsFeedEntityManager
+    ) -> None:
         """Initialize entity."""
+        assert config_entry.unique_id
         self._config_entry_id = config_entry.entry_id
         self._attr_unique_id = config_entry.unique_id
-        self._attr_name = f"GDACS ({config_entry.title})"
         self._manager = manager
-        self._status = None
-        self._last_update = None
-        self._last_update_successful = None
-        self._last_timestamp = None
-        self._total = None
-        self._created = None
-        self._updated = None
-        self._removed = None
+        self._status: str | None = None
+        self._last_update: datetime | None = None
+        self._last_update_successful: datetime | None = None
+        self._last_timestamp: datetime | None = None
+        self._total: int | None = None
+        self._created: int | None = None
+        self._updated: int | None = None
+        self._removed: int | None = None
         self._remove_signal_status: Callable[[], None] | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="GDACS",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -78,7 +94,7 @@ class GdacsSensor(SensorEntity):
             self._remove_signal_status()
 
     @callback
-    def _update_status_callback(self):
+    def _update_status_callback(self) -> None:
         """Call status update method."""
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
@@ -91,7 +107,7 @@ class GdacsSensor(SensorEntity):
             if status_info:
                 self._update_from_status_info(status_info)
 
-    def _update_from_status_info(self, status_info):
+    def _update_from_status_info(self, status_info: StatusUpdate) -> None:
         """Update the internal state from the provided information."""
         self._status = status_info.status
         self._last_update = (
@@ -110,23 +126,23 @@ class GdacsSensor(SensorEntity):
         self._removed = status_info.removed
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._total
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_LAST_TIMESTAMP, self._last_timestamp),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_STATUS, self._status),
+                (ATTR_LAST_UPDATE, self._last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
+                (ATTR_LAST_TIMESTAMP, self._last_timestamp),
+                (ATTR_CREATED, self._created),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_REMOVED, self._removed),
+            )
+            if value or isinstance(value, bool)
+        }

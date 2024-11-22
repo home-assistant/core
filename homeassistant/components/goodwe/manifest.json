@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/goodwe",
   "iot_class": "local_polling",
   "loggers": ["goodwe"],
-  "requirements": ["goodwe==0.2.32"]
+  "requirements": ["goodwe==0.3.6"]
 }

@@ -111,6 +111,7 @@ class ElectraClimateEntity(ClimateEntity):
     _attr_hvac_modes = ELECTRA_MODES
     _attr_has_entity_name = True
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: ElectraAirConditioner, api: ElectraAPI) -> None:
         """Initialize Electra climate entity."""
@@ -121,6 +122,8 @@ class ElectraClimateEntity(ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         swing_modes: list = []
@@ -200,7 +203,7 @@ class ElectraClimateEntity(ClimateEntity):
                 return
 
             if not self._was_available:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
                     self.name,

@@ -19,14 +19,17 @@
     {
       "hostname": "axis-b8a44f*",
       "macaddress": "B8A44F*"
+    },
+    {
+      "hostname": "axis-e82725*",
+      "macaddress": "E82725*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/axis",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["axis"],
-  "quality_scale": "platinum",
-  "requirements": ["axis==48"],
+  "requirements": ["axis==63"],
   "ssdp": [
     {
       "manufacturer": "AXIS"
@@ -49,6 +52,12 @@
       "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "b8a44f*"
+      }
+    },
+    {
+      "type": "_axis-video._tcp.local.",
+      "properties": {
+        "macaddress": "e82725*"
       }
     }
   ]

@@ -1,4 +1,5 @@
 """Test shopping list component."""
+
 from http import HTTPStatus
 
 import pytest
@@ -14,7 +15,7 @@ from homeassistant.components.shopping_list.const import (
     SERVICE_REMOVE_ITEM,
     SERVICE_SORT,
 )
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
@@ -31,8 +32,10 @@ async def test_add_item(hass: HomeAssistant, sl_setup) -> None:
     """Test adding an item intent."""
 
     response = await intent.async_handle(
-        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": " beer "}}
     )
+    assert len(hass.data[DOMAIN].items) == 1
+    assert hass.data[DOMAIN].items[0]["name"] == "beer"  # name was trimmed
 
     # Response text is now handled by default conversation agent
     assert response.response_type == intent.IntentResponseType.ACTION_DONE

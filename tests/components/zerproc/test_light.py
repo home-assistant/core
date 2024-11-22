@@ -1,4 +1,5 @@
 """Test the zerproc lights."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,6 @@ from homeassistant.components.zerproc.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
@@ -35,13 +35,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_entry(hass):
+async def mock_entry() -> MockConfigEntry:
     """Create a mock light entity."""
     return MockConfigEntry(domain=DOMAIN)
 
 
 @pytest.fixture
-async def mock_light(hass, mock_entry):
+async def mock_light(hass: HomeAssistant, mock_entry: MockConfigEntry) -> MagicMock:
     """Create a mock light entity."""
 
     mock_entry.add_to_hass(hass)
@@ -53,11 +53,13 @@ async def mock_light(hass, mock_entry):
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[light],
-    ), patch.object(light, "connect"), patch.object(
-        light, "get_state", return_value=mock_state
+    with (
+        patch(
+            "homeassistant.components.zerproc.light.pyzerproc.discover",
+            return_value=[light],
+        ),
+        patch.object(light, "connect"),
+        patch.object(light, "get_state", return_value=mock_state),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -101,7 +103,6 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
         ATTR_COLOR_MODE: None,
         ATTR_BRIGHTNESS: None,
         ATTR_HS_COLOR: None,
@@ -115,7 +116,6 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
         ATTR_COLOR_MODE: ColorMode.HS,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
@@ -215,7 +215,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(19, 17, 25)
+        mock_set_color.assert_called_with(20, 17, 25)
 
         with patch.object(mock_light, "set_color") as mock_set_color:
             await hass.services.async_call(
@@ -226,7 +226,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(220, 201, 110)
+        mock_set_color.assert_called_with(220, 202, 110)
 
         with patch.object(
             mock_light,
@@ -246,7 +246,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(75, 68, 37)
+        mock_set_color.assert_called_with(75, 69, 38)
 
         with patch.object(mock_light, "set_color") as mock_set_color:
             await hass.services.async_call(
@@ -261,7 +261,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(162, 200, 50)
+        mock_set_color.assert_called_with(163, 200, 50)
 
 
 async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
@@ -287,7 +287,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_ICON: "mdi:string-lights",
         ATTR_COLOR_MODE: None,
         ATTR_BRIGHTNESS: None,
         ATTR_HS_COLOR: None,
@@ -311,7 +310,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -329,7 +327,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
             ATTR_COLOR_MODE: None,
             ATTR_BRIGHTNESS: None,
             ATTR_HS_COLOR: None,
@@ -352,10 +349,9 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
-            ATTR_ICON: "mdi:string-lights",
             ATTR_COLOR_MODE: ColorMode.HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
-            ATTR_RGB_COLOR: (202, 173, 255),
-            ATTR_XY_COLOR: (0.291, 0.232),
+            ATTR_RGB_COLOR: (203, 174, 255),
+            ATTR_XY_COLOR: (0.292, 0.234),
         }

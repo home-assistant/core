@@ -1,4 +1,5 @@
-"""The SwitchBot via API integration."""
+"""SwitchBot via API integration."""
+
 from asyncio import gather
 from dataclasses import dataclass, field
 from logging import getLogger
@@ -14,7 +15,13 @@ from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
 
 
 @dataclass
@@ -23,6 +30,9 @@ class SwitchbotDevices:
 
     climates: list[Remote] = field(default_factory=list)
     switches: list[Device | Remote] = field(default_factory=list)
+    sensors: list[Device] = field(default_factory=list)
+    vacuums: list[Device] = field(default_factory=list)
+    locks: list[Device] = field(default_factory=list)
 
 
 @dataclass
@@ -69,6 +79,31 @@ def make_device_data(
             or isinstance(device, Remote)
         ):
             devices_data.switches.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+        if isinstance(device, Device) and device.device_type in [
+            "Meter",
+            "MeterPlus",
+            "WoIOSensor",
+            "Hub 2",
+            "MeterPro",
+            "MeterPro(CO2)",
+        ]:
+            devices_data.sensors.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+        if isinstance(device, Device) and device.device_type in [
+            "K10+",
+            "K10+ Pro",
+            "Robot Vacuum Cleaner S1",
+            "Robot Vacuum Cleaner S1 Plus",
+        ]:
+            devices_data.vacuums.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+
+        if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+            devices_data.locks.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
     return devices_data

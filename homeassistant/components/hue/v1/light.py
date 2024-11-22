@@ -1,4 +1,5 @@
 """Support for the Philips Hue lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -304,6 +305,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 

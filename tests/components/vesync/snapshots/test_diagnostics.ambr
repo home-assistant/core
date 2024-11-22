@@ -38,13 +38,7 @@
             'setDisplay',
             'setLevel',
           ]),
-          'cid': 'abcdefghabcdefghabcdefghabcdefgh',
-          'config': dict({
-            'auto_target_humidity': 60,
-            'automatic_stop': True,
-            'display': True,
-          }),
-          'config_dict': dict({
+          '_config_dict': dict({
             'features': list([
               'warm_mist',
               'nightlight',
@@ -71,6 +65,7 @@
               'LUH-A602S-WEUR',
               'LUH-A602S-WEU',
               'LUH-A602S-WJP',
+              'LUH-A602S-WUSC',
             ]),
             'module': 'VeSyncHumid200300S',
             'warm_mist_levels': list([
@@ -79,6 +74,16 @@
               2,
               3,
             ]),
+          }),
+          '_features': list([
+            'warm_mist',
+            'nightlight',
+          ]),
+          'cid': 'abcdefghabcdefghabcdefghabcdefgh',
+          'config': dict({
+            'auto_target_humidity': 60,
+            'automatic_stop': True,
+            'display': True,
           }),
           'config_module': 'WFON_AHM_LUH-A602S-WUS_US',
           'connection_status': 'online',
@@ -105,10 +110,6 @@
           'device_type': 'LUH-A602S-WUS',
           'enabled': False,
           'extension': None,
-          'features': list([
-            'warm_mist',
-            'nightlight',
-          ]),
           'mac_id': '**REDACTED**',
           'manager': '**REDACTED**',
           'mist_levels': list([
@@ -203,10 +204,11 @@
                 'auto',
                 'sleep',
               ]),
-              'supported_features': 9,
+              'supported_features': 57,
             }),
             'entity_id': 'fan.fan',
             'last_changed': str,
+            'last_reported': str,
             'last_updated': str,
             'state': 'unavailable',
           }),
@@ -230,6 +232,7 @@
             }),
             'entity_id': 'sensor.fan_air_quality',
             'last_changed': str,
+            'last_reported': str,
             'last_updated': str,
             'state': 'unavailable',
           }),
@@ -255,6 +258,7 @@
             }),
             'entity_id': 'sensor.fan_filter_lifetime',
             'last_changed': str,
+            'last_reported': str,
             'last_updated': str,
             'state': 'unavailable',
           }),

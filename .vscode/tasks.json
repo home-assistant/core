@@ -76,6 +76,7 @@
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
       "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "dependsOn": ["Compile English translations"],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -103,7 +104,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_all.txt",
+      "command": "uv pip install -r requirements_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -117,7 +118,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_test_all.txt",
+      "command": "uv pip install -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -156,6 +157,20 @@
       "group": {
         "kind": "build",
         "isDefault": true
+      }
+    },
+    {
+      "label": "Install integration requirements",
+      "detail": "Install all requirements of a given integration.",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m script.install_integration_requirements ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
       }
     }
   ],

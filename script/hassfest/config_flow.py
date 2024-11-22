@@ -1,8 +1,8 @@
 """Generate config flow file."""
+
 from __future__ import annotations
 
 import json
-import pathlib
 from typing import Any
 
 from .brand import validate as validate_brands
@@ -191,6 +191,11 @@ def _generate_integrations(
                 if integration.iot_class:
                     metadata["iot_class"] = integration.iot_class
 
+                if single_config_entry := integration.manifest.get(
+                    "single_config_entry"
+                ):
+                    metadata["single_config_entry"] = single_config_entry
+
             if integration.integration_type == "helper":
                 result["helper"][domain] = metadata
             else:
@@ -210,36 +215,31 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    brands = Brand.load_dir(pathlib.Path(config.root / "homeassistant/brands"), config)
+    brands = Brand.load_dir(config.root / "homeassistant/brands", config)
     validate_brands(brands, integrations, config)
 
-    with open(str(config_flow_path)) as fp:
-        if fp.read() != content:
-            config.add_error(
-                "config_flow",
-                "File config_flows.py is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if config_flow_path.read_text() != content:
+        config.add_error(
+            "config_flow",
+            "File config_flows.py is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
     config.cache["integrations"] = content = _generate_integrations(
         brands, integrations, config
     )
-    with open(str(integrations_path)) as fp:
-        if fp.read() != content + "\n":
-            config.add_error(
-                "config_flow",
-                "File integrations.json is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if integrations_path.read_text() != content + "\n":
+        config.add_error(
+            "config_flow",
+            "File integrations.json is not up to date. "
+            "Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"
-    with open(str(config_flow_path), "w") as fp:
-        fp.write(f"{config.cache['config_flow']}")
-    with open(str(integrations_path), "w") as fp:
-        fp.write(f"{config.cache['integrations']}\n")
+    config_flow_path.write_text(f"{config.cache['config_flow']}")
+    integrations_path.write_text(f"{config.cache['integrations']}\n")

@@ -17,7 +17,7 @@
       'min_mireds': 143,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -25,13 +25,14 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -61,6 +62,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -97,10 +100,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
@@ -125,7 +132,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -134,13 +141,14 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -171,6 +179,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -207,10 +217,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
@@ -235,7 +249,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        239,
+        240,
         240,
       ),
       'supported_color_modes': list([
@@ -244,13 +258,14 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.34,
-        0.327,
+        0.339,
+        0.328,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -281,6 +296,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -317,10 +334,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',

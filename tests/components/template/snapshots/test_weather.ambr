@@ -1,47 +1,40 @@
 # serializer version: 1
-# name: test_forecasts[config0-1-weather]
+# name: test_forecasts[config0-1-weather-get_forecasts]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 14.2,
-      }),
-    ]),
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
   })
 # ---
-# name: test_forecasts[config0-1-weather].1
+# name: test_forecasts[config0-1-weather-get_forecasts].1
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 14.2,
-      }),
-    ]),
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
   })
 # ---
-# name: test_forecasts[config0-1-weather].2
+# name: test_forecasts[config0-1-weather-get_forecasts].2
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'fog',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'is_daytime': True,
-        'temperature': 14.2,
-      }),
-    ]),
+    'weather.forecast': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
   })
 # ---
-# name: test_forecasts[config0-1-weather].3
+# name: test_forecasts[config0-1-weather-get_forecasts].3
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 16.9,
-      }),
-    ]),
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
   })
 # ---
 # name: test_restore_weather_save_state
@@ -59,43 +52,49 @@
     'last_wind_speed': None,
   })
 # ---
-# name: test_trigger_weather_services[config0-1-template]
+# name: test_trigger_weather_services[config0-1-template-get_forecasts]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'sunny',
-        'datetime': '2023-10-19T06:50:05-07:00',
-        'precipitation': 20.0,
-        'temperature': 20.0,
-        'templow': 15.0,
-      }),
-    ]),
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
   })
 # ---
-# name: test_trigger_weather_services[config0-1-template].1
+# name: test_trigger_weather_services[config0-1-template-get_forecasts].1
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'sunny',
-        'datetime': '2023-10-19T06:50:05-07:00',
-        'precipitation': 20.0,
-        'temperature': 20.0,
-        'templow': 15.0,
-      }),
-    ]),
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
   })
 # ---
-# name: test_trigger_weather_services[config0-1-template].2
+# name: test_trigger_weather_services[config0-1-template-get_forecasts].2
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'sunny',
-        'datetime': '2023-10-19T06:50:05-07:00',
-        'is_daytime': True,
-        'precipitation': 20.0,
-        'temperature': 20.0,
-        'templow': 15.0,
-      }),
-    ]),
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'is_daytime': True,
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
   })
 # ---

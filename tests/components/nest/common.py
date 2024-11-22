@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
 import copy
-from dataclasses import dataclass, field
-import time
-from typing import Any, TypeVar
+from dataclasses import dataclass
+from typing import Any
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -19,9 +18,8 @@ from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
 
 # Typing helpers
-PlatformSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type PlatformSetup = Callable[[], Awaitable[None]]
+type YieldFixture[_T] = Generator[_T]
 
 WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
@@ -31,13 +29,13 @@ CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
 CLOUD_PROJECT_ID = "cloud-id-9876"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
+SUBSCRIPTION_NAME = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 
 
 @dataclass
 class NestTestConfig:
     """Holder for integration configuration."""
 
-    config: dict[str, Any] = field(default_factory=dict)
     config_entry_data: dict[str, Any] | None = None
     credential: ClientCredential | None = None
 
@@ -54,50 +52,34 @@ TEST_CONFIG_APP_CREDS = NestTestConfig(
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 TEST_CONFIGFLOW_APP_CREDS = NestTestConfig(
-    config=TEST_CONFIG_APP_CREDS.config,
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 
-TEST_CONFIG_LEGACY = NestTestConfig(
-    config={
-        "nest": {
-            "client_id": "some-client-id",
-            "client_secret": "some-client-secret",
-        },
-    },
+TEST_CONFIG_NEW_SUBSCRIPTION = NestTestConfig(
     config_entry_data={
-        "auth_implementation": "local",
-        "tokens": {
-            "expires_at": time.time() + 86400,
-            "access_token": {
-                "token": "some-token",
-            },
-        },
+        "sdm": {},
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "subscription_name": SUBSCRIPTION_NAME,
+        "auth_implementation": "imported-cred",
     },
-)
-TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
-    config_entry_data={
-        "auth_implementation": "local",
-        "tokens": {
-            "expires_at": time.time() + 86400,
-            "access_token": {
-                "token": "some-token",
-            },
-        },
-    },
+    credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 
 
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
 
-    def __init__(self):
+    stop_calls = 0
+
+    def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
+        self._subscriber_name = "fake-name"
 
-    def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
+    def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
-        self._device_manager.set_update_callback(callback)
+        self._device_manager.set_update_callback(target)
 
     async def create_subscription(self):
         """Create the subscription."""
@@ -122,7 +104,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     def stop_async(self):
         """No-op to stop the subscriber."""
-        return None
+        self.stop_calls += 1
 
     async def async_receive_event(self, event_message: EventMessage):
         """Simulate a received pubsub message, invoked by tests."""
@@ -148,7 +130,9 @@ class CreateDevice:
         self.data = {"traits": {}}
 
     def create(
-        self, raw_traits: dict[str, Any] = None, raw_data: dict[str, Any] = None
+        self,
+        raw_traits: dict[str, Any] | None = None,
+        raw_data: dict[str, Any] | None = None,
     ) -> None:
         """Create a new device with the specifeid traits."""
         data = copy.deepcopy(self.data)

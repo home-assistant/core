@@ -1,15 +1,21 @@
 """Config flow for Network UPS Tools (NUT) integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aionut import NUTError, NUTLoginError
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -20,28 +26,23 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from . import PyNUTData
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+AUTH_SCHEMA = {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
 
-def _base_schema(discovery_info: zeroconf.ZeroconfServiceInfo | None) -> vol.Schema:
+
+def _base_schema(nut_config: dict[str, Any]) -> vol.Schema:
     """Generate base schema."""
-    base_schema = {}
-    if not discovery_info:
-        base_schema.update(
-            {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
-    base_schema.update(
-        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
-    )
-
+    base_schema = {
+        vol.Optional(CONF_HOST, default=nut_config.get(CONF_HOST) or DEFAULT_HOST): str,
+        vol.Optional(CONF_PORT, default=nut_config.get(CONF_PORT) or DEFAULT_PORT): int,
+    }
+    base_schema.update(AUTH_SCHEMA)
     return vol.Schema(base_schema)
 
 
@@ -62,10 +63,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     username = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
 
-    nut_data = PyNUTData(host, port, alias, username, password)
-    await hass.async_add_executor_job(nut_data.update)
-    if not (status := nut_data.status):
-        raise CannotConnect
+    nut_data = PyNUTData(host, port, alias, username, password, persistent=False)
+    status = await nut_data.async_update()
+
+    if not alias and not nut_data.ups_list:
+        raise AbortFlow("no_ups_found")
 
     return {"ups_list": nut_data.ups_list, "available_resources": status}
 
@@ -88,71 +90,73 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the nut config flow."""
         self.nut_config: dict[str, Any] = {}
-        self.discovery_info: zeroconf.ZeroconfServiceInfo | None = None
         self.ups_list: dict[str, str] | None = None
         self.title: str | None = None
+        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered nut device."""
-        self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
-        self.context["title_placeholders"] = {
+        self.nut_config = {
+            CONF_HOST: discovery_info.host or DEFAULT_HOST,
             CONF_PORT: discovery_info.port or DEFAULT_PORT,
-            CONF_HOST: discovery_info.host,
         }
+        self.context["title_placeholders"] = self.nut_config.copy()
         return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user input."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        nut_config = self.nut_config
         if user_input is not None:
-            if self.discovery_info:
-                user_input.update(
-                    {
-                        CONF_HOST: self.discovery_info.host,
-                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
-                    }
-                )
-            info, errors = await self._async_validate_or_error(user_input)
+            nut_config.update(user_input)
+
+            info, errors, placeholders = await self._async_validate_or_error(nut_config)
 
             if not errors:
-                self.nut_config.update(user_input)
                 if len(info["ups_list"]) > 1:
                     self.ups_list = info["ups_list"]
                     return await self.async_step_ups()
 
-                if self._host_port_alias_already_configured(self.nut_config):
+                if self._host_port_alias_already_configured(nut_config):
                     return self.async_abort(reason="already_configured")
-                title = _format_host_port_alias(self.nut_config)
-                return self.async_create_entry(title=title, data=self.nut_config)
+                title = _format_host_port_alias(nut_config)
+                return self.async_create_entry(title=title, data=nut_config)
 
         return self.async_show_form(
-            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
+            step_id="user",
+            data_schema=_base_schema(nut_config),
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_ups(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the picking the ups."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        nut_config = self.nut_config
 
         if user_input is not None:
             self.nut_config.update(user_input)
-            if self._host_port_alias_already_configured(self.nut_config):
+            if self._host_port_alias_already_configured(nut_config):
                 return self.async_abort(reason="already_configured")
-            _, errors = await self._async_validate_or_error(self.nut_config)
+            _, errors, placeholders = await self._async_validate_or_error(nut_config)
             if not errors:
-                title = _format_host_port_alias(self.nut_config)
-                return self.async_create_entry(title=title, data=self.nut_config)
+                title = _format_host_port_alias(nut_config)
+                return self.async_create_entry(title=title, data=nut_config)
 
         return self.async_show_form(
             step_id="ups",
             data_schema=_ups_schema(self.ups_list or {}),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     def _host_port_alias_already_configured(self, user_input: dict[str, Any]) -> bool:
@@ -166,35 +170,80 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_or_error(
         self, config: dict[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, str]]:
-        errors = {}
-        info = {}
+    ) -> tuple[dict[str, Any], dict[str, str], dict[str, str]]:
+        errors: dict[str, str] = {}
+        info: dict[str, Any] = {}
+        description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, config)
-        except CannotConnect:
+        except NUTLoginError:
+            errors[CONF_PASSWORD] = "invalid_auth"
+        except NUTError as ex:
             errors[CONF_BASE] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+            description_placeholders["error"] = str(ex)
+        except AbortFlow:
+            raise
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors[CONF_BASE] = "unknown"
-        return info, errors
+        return info, errors, description_placeholders
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth."""
+        entry_id = self.context["entry_id"]
+        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth input."""
+        errors: dict[str, str] = {}
+        existing_entry = self.reauth_entry
+        assert existing_entry
+        existing_data = existing_entry.data
+        description_placeholders: dict[str, str] = {
+            CONF_HOST: existing_data[CONF_HOST],
+            CONF_PORT: existing_data[CONF_PORT],
+        }
+        if user_input is not None:
+            new_config = {
+                **existing_data,
+                # Username/password are optional and some servers
+                # use ip based authentication and will fail if
+                # username/password are provided
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+            _, errors, placeholders = await self._async_validate_or_error(new_config)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    existing_entry, data=new_config
+                )
+            description_placeholders.update(placeholders)
+
+        return self.async_show_form(
+            description_placeholders=description_placeholders,
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(AUTH_SCHEMA),
+            errors=errors,
+        )
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for nut."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -210,7 +259,3 @@ class OptionsFlowHandler(OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(base_schema))
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""

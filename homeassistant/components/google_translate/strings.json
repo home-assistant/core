@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "language": "Language",
+          "language": "[%key:common::config_flow::data::language%]",
           "tld": "TLD"
         }
       }

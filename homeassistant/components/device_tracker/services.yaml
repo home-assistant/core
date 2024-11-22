@@ -25,9 +25,9 @@ see:
     gps_accuracy:
       selector:
         number:
-          min: 1
-          max: 100
-          unit_of_measurement: "%"
+          min: 0
+          mode: box
+          unit_of_measurement: "m"
     battery:
       selector:
         number:

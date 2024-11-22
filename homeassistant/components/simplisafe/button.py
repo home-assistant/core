@@ -1,4 +1,5 @@
 """Buttons for the SimpliSafe integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -14,23 +15,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN
+from .entity import SimpliSafeEntity
 from .typing import SystemType
 
 
-@dataclass
-class SimpliSafeButtonDescriptionMixin:
-    """Define an entity description mixin for SimpliSafe buttons."""
+@dataclass(frozen=True, kw_only=True)
+class SimpliSafeButtonDescription(ButtonEntityDescription):
+    """Describe a SimpliSafe button entity."""
 
     push_action: Callable[[System], Awaitable]
-
-
-@dataclass
-class SimpliSafeButtonDescription(
-    ButtonEntityDescription, SimpliSafeButtonDescriptionMixin
-):
-    """Describe a SimpliSafe button entity."""
 
 
 BUTTON_KIND_CLEAR_NOTIFICATIONS = "clear_notifications"

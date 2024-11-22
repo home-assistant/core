@@ -1,10 +1,11 @@
 """Support for Aqualink temperature sensors."""
+
 from __future__ import annotations
 
 from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -12,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
 
@@ -24,10 +25,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkBinarySensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (
+            HassAqualinkBinarySensor(dev)
+            for dev in hass.data[AQUALINK_DOMAIN][BINARY_SENSOR_DOMAIN]
+        ),
+        True,
+    )
 
 
 class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):

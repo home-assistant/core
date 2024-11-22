@@ -7,6 +7,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your OpenGarage device."
         }
       }
     },

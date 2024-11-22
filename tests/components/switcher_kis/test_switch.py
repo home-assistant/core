@@ -1,4 +1,5 @@
 """Test the Switcher switch platform."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import Command, SwitcherBaseResponse
@@ -22,7 +23,9 @@ from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_switch(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
+async def test_switch(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the switch."""
     await init_integration(hass)
     assert mock_bridge
@@ -44,7 +47,7 @@ async def test_switch(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -
 
     # Test turning on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
     ) as mock_control_device:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -57,7 +60,7 @@ async def test_switch(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -
 
     # Test turning off
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device"
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -74,7 +77,7 @@ async def test_switch_control_fail(
     hass: HomeAssistant,
     mock_bridge,
     mock_api,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test switch control fail."""
@@ -94,7 +97,7 @@ async def test_switch_control_fail(
 
     # Test exception during turn on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         await hass.services.async_call(
@@ -118,7 +121,7 @@ async def test_switch_control_fail(
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         await hass.services.async_call(

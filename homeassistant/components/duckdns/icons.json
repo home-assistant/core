@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_txt": {
+      "service": "mdi:text-box-edit-outline"
+    }
+  }
+}

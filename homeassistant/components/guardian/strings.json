@@ -12,6 +12,9 @@
         "description": "Do you want to set up this Guardian device?"
       }
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -33,6 +36,18 @@
       }
     },
     "sensor": {
+      "current": {
+        "name": "Current"
+      },
+      "instantaneous_current": {
+        "name": "Instantaneous current"
+      },
+      "instantaneous_current_ddt": {
+        "name": "Instantaneous current (DDT)"
+      },
+      "travel_count": {
+        "name": "Travel count"
+      },
       "uptime": {
         "name": "Uptime"
       }
@@ -44,6 +59,11 @@
       "valve_controller": {
         "name": "Valve controller"
       }
+    },
+    "valve": {
+      "valve_controller": {
+        "name": "Valve controller"
+      }
     }
   },
   "services": {
@@ -52,7 +72,7 @@
       "description": "Adds a new paired sensor to the valve controller.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller to add the sensor to."
         },
         "uid": {
@@ -66,7 +86,7 @@
       "description": "Removes a paired sensor from the valve controller.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller to remove the sensor from."
         },
         "uid": {
@@ -80,7 +100,7 @@
       "description": "Upgrades the device firmware.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller whose firmware should be upgraded."
         },
         "url": {

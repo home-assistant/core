@@ -1,22 +1,34 @@
 {
+  "common": {
+    "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings."
+  },
   "config": {
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up {name} ({host})?",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]"
         }
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Cannot connect. Details: {error_detail}",
+      "unknown": "Unknown. Details: {error_detail}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -49,6 +61,19 @@
       },
       "load_start_url": {
         "name": "Load start URL"
+      }
+    },
+    "image": {
+      "screenshot": {
+        "name": "Screenshot"
+      }
+    },
+    "notify": {
+      "overlay_message": {
+        "name": "Overlay message"
+      },
+      "tts": {
+        "name": "Text to speech"
       }
     },
     "number": {

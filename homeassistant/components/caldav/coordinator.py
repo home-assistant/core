@@ -6,6 +6,9 @@ from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
+from typing import TYPE_CHECKING
+
+import caldav
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.core import HomeAssistant
@@ -13,6 +16,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import get_attr_value
+
+if TYPE_CHECKING:
+    from . import CalDavConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +29,20 @@ OFFSET = "!!"
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, hass, calendar, days, include_all_day, search):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: CalDavConfigEntry | None,
+        calendar: caldav.Calendar,
+        days: int,
+        include_all_day: bool,
+        search: str | None,
+    ) -> None:
         """Set up how we are going to search the WebDav calendar."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"CalDAV {calendar.name}",
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
@@ -35,7 +50,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self.days = days
         self.include_all_day = include_all_day
         self.search = search
-        self.offset = None
+        self.offset: timedelta | None = None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -109,7 +124,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.instance.vevent
+                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -196,7 +211,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Return a datetime."""
         if isinstance(obj, datetime):
             return CalDavUpdateCoordinator.to_local(obj)
-        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        return datetime.combine(obj, time.min).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        )
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:

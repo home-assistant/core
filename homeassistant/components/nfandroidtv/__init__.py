@@ -1,4 +1,5 @@
 """The NFAndroidTV integration."""
+
 from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +14,7 @@ from .const import DATA_HASS_CONFIG, DOMAIN
 
 PLATFORMS = [Platform.NOTIFY]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

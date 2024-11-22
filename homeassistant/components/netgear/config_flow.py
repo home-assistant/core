@@ -1,15 +1,21 @@
 """Config flow to configure the Netgear integration."""
+
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.network import is_ipv4_address
 
 from .const import (
@@ -55,14 +60,12 @@ def _ordered_shared_schema(schema_input):
     }
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Init object."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, int] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -81,7 +84,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 
-class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -99,12 +102,16 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    async def _show_setup_form(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if not user_input:
             user_input = {}
@@ -121,7 +128,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=self.placeholders,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Initialize flow from ssdp."""
         updated_data: dict[str, str | int | bool] = {}
 
@@ -168,7 +177,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

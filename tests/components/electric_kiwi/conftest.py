@@ -1,12 +1,12 @@
 """Define fixtures for electric kiwi tests."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
 from time import time
 from unittest.mock import AsyncMock, patch
-import zoneinfo
 
-from electrickiwi_api.model import Hop, HopIntervals
+from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -23,16 +23,13 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-TZ_NAME = "Pacific/Auckland"
-TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
-YieldFixture = Generator[AsyncMock, None, None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type YieldFixture = Generator[AsyncMock]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture
@@ -43,14 +40,18 @@ def component_setup(
 
     async def _setup_func() -> bool:
         assert await async_setup_component(hass, "application_credentials", {})
+        await hass.async_block_till_done()
         await async_import_client_credential(
             hass,
             DOMAIN,
             ClientCredential(CLIENT_ID, CLIENT_SECRET),
             DOMAIN,
         )
+        await hass.async_block_till_done()
         config_entry.add_to_hass(hass)
-        return await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        return result
 
     return _setup_func
 
@@ -58,7 +59,7 @@ def component_setup(
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="Electric Kiwi",
         domain=DOMAIN,
         data={
@@ -74,11 +75,10 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id=DOMAIN,
     )
-    return entry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.electric_kiwi.async_setup_entry", return_value=True
@@ -112,5 +112,10 @@ def ek_api() -> YieldFixture:
         )
         mock_ek_api.return_value.get_hop.return_value = Hop.from_dict(
             load_json_value_fixture("get_hop.json", DOMAIN)
+        )
+        mock_ek_api.return_value.get_account_balance.return_value = (
+            AccountBalance.from_dict(
+                load_json_value_fixture("account_balance.json", DOMAIN)
+            )
         )
         yield mock_ek_api

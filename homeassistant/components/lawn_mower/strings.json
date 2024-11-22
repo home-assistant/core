@@ -7,7 +7,8 @@
         "error": "Error",
         "paused": "[%key:common::state::paused%]",
         "mowing": "Mowing",
-        "docked": "Docked"
+        "docked": "Docked",
+        "returning": "Returning"
       }
     }
   },

@@ -1,58 +1,43 @@
 """Tradfri switch (recognised as sockets in the IKEA ecosystem) platform tests."""
-from __future__ import annotations
 
-import json
-from typing import Any
-from unittest.mock import MagicMock, Mock
+from __future__ import annotations
 
 import pytest
 from pytradfri.const import ATTR_REACHABLE_STATE
 from pytradfri.device import Device
-from pytradfri.device.socket import Socket
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 from tests.common import load_fixture
 
 
 @pytest.fixture(scope="module")
-def outlet() -> dict[str, Any]:
+def outlet() -> str:
     """Return an outlet response."""
-    return json.loads(load_fixture("outlet.json", DOMAIN))
+    return load_fixture("outlet.json", DOMAIN)
 
 
-@pytest.fixture
-def socket(outlet: dict[str, Any]) -> Socket:
-    """Return socket."""
-    device = Device(outlet)
-    socket_control = device.socket_control
-    assert socket_control
-    return socket_control.sockets[0]
-
-
+@pytest.mark.parametrize("device", ["outlet"], indirect=True)
 async def test_switch_available(
     hass: HomeAssistant,
-    mock_gateway: Mock,
-    mock_api_factory: MagicMock,
-    socket: Socket,
+    command_store: CommandStore,
+    device: Device,
 ) -> None:
     """Test switch available property."""
     entity_id = "switch.test"
-    device = socket.device
-    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
 
-    await trigger_observe_callback(
-        hass, mock_gateway, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)
@@ -60,6 +45,7 @@ async def test_switch_available(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("device", ["outlet"], indirect=True)
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
@@ -69,16 +55,13 @@ async def test_switch_available(
 )
 async def test_turn_on_off(
     hass: HomeAssistant,
-    mock_gateway: Mock,
-    mock_api_factory: MagicMock,
-    socket: Socket,
+    command_store: CommandStore,
+    device: Device,
     service: str,
     expected_state: str,
 ) -> None:
     """Test turning switch on/off."""
     entity_id = "switch.test"
-    device = socket.device
-    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
     state = hass.states.get(entity_id)
@@ -95,7 +78,7 @@ async def test_turn_on_off(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(hass, mock_gateway, device)
+    await command_store.trigger_observe_callback(hass, device)
 
     state = hass.states.get(entity_id)
     assert state

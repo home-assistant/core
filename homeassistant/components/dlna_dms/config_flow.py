@@ -1,18 +1,19 @@
 """Config flow for DLNA DMS."""
+
 from __future__ import annotations
 
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmsDevice
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
 from .util import generate_source_id
@@ -20,7 +21,7 @@ from .util import generate_source_id
 LOGGER = logging.getLogger(__name__)
 
 
-class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a DLNA DMS config flow.
 
     The Unique Service Name (USN) of the DMS device is used as the unique_id for
@@ -39,7 +40,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user by listing unconfigured devices."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
@@ -65,12 +66,17 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_parse_discovery(discovery_info)
+        if TYPE_CHECKING:
+            # _async_parse_discovery unconditionally sets self._name
+            assert self._name is not None
 
         # Abort if the device doesn't support all services required for a DmsDevice.
         # Use the discovery_info instead of DmsDevice.is_profile_device to avoid
@@ -101,7 +107,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self._create_entry()
@@ -109,7 +115,7 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
-    def _create_entry(self) -> FlowResult:
+    def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
         LOGGER.debug(
             "_create_entry: name: %s, location: %s, USN: %s",
@@ -176,8 +182,4 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.unique_id
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discoveries = [
-            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
-        ]
-
-        return discoveries
+        return [disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids]

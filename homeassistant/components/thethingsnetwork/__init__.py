@@ -1,41 +1,48 @@
 """Support for The Things network."""
-import voluptuous as vol
 
+import logging
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-CONF_ACCESS_KEY = "access_key"
-CONF_APP_ID = "app_id"
+from .const import DOMAIN, PLATFORMS, TTN_API_HOST
+from .coordinator import TTNCoordinator
 
-DATA_TTN = "data_thethingsnetwork"
-DOMAIN = "thethingsnetwork"
-
-TTN_ACCESS_KEY = "ttn_access_key"
-TTN_APP_ID = "ttn_app_id"
-TTN_DATA_STORAGE_URL = (
-    "https://{app_id}.data.thethingsnetwork.org/{endpoint}/{device_id}"
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_APP_ID): cv.string,
-                vol.Required(CONF_ACCESS_KEY): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Initialize of The Things Network component."""
-    conf = config[DOMAIN]
-    app_id = conf.get(CONF_APP_ID)
-    access_key = conf.get(CONF_ACCESS_KEY)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Establish connection with The Things Network."""
 
-    hass.data[DATA_TTN] = {TTN_ACCESS_KEY: access_key, TTN_APP_ID: app_id}
+    _LOGGER.debug(
+        "Set up %s at %s",
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_HOST, TTN_API_HOST),
+    )
 
+    coordinator = TTNCoordinator(hass, entry)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    _LOGGER.debug(
+        "Remove %s at %s",
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_HOST, TTN_API_HOST),
+    )
+
+    # Unload entities created for each supported platform
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
     return True

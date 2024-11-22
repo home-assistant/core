@@ -14,6 +14,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'elgato',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -23,8 +24,11 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -55,6 +59,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'elgato',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -64,8 +69,11 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -95,6 +103,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'elgato',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -104,8 +113,11 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

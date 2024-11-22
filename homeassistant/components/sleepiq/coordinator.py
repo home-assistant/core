@@ -1,4 +1,5 @@
 """Coordinator for SleepIQ."""
+
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta

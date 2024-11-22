@@ -1,23 +1,20 @@
 """Support for the Dynalite networks."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-# Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
 from .const import (
     ATTR_AREA,
     ATTR_CHANNEL,
     ATTR_HOST,
-    CONF_BRIDGES,
     DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -26,48 +23,22 @@ from .const import (
 )
 from .convert_config import convert_config
 from .panel import async_register_dynalite_frontend
-from .schema import BRIDGE_SCHEMA
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {vol.Optional(CONF_BRIDGES): vol.All(cv.ensure_list, [BRIDGE_SCHEMA])}
-            ),
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dynalite platform."""
-    conf = config.get(DOMAIN, {})
-    LOGGER.debug("Setting up dynalite component config = %s", conf)
     hass.data[DOMAIN] = {}
-
-    bridges = conf.get(CONF_BRIDGES, [])
-
-    for bridge_conf in bridges:
-        host = bridge_conf[CONF_HOST]
-        LOGGER.debug("Starting config entry flow host=%s conf=%s", host, bridge_conf)
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=bridge_conf,
-            )
-        )
 
     async def dynalite_service(service_call: ServiceCall) -> None:
         data = service_call.data
         host = data.get(ATTR_HOST, "")
-        bridges = []
-        for cur_bridge in hass.data[DOMAIN].values():
-            if not host or cur_bridge.host == host:
-                bridges.append(cur_bridge)
+        bridges = [
+            bridge
+            for bridge in hass.data[DOMAIN].values()
+            if not host or bridge.host == host
+        ]
         LOGGER.debug("Selected bridged for service call: %s", bridges)
         if service_call.service == SERVICE_REQUEST_AREA_PRESET:
             bridge_attr = "request_area_preset"
@@ -104,6 +75,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    await async_register_dynalite_frontend(hass)
+
     return True
 
 
@@ -129,9 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    await async_register_dynalite_frontend(hass)
-
     return True
 
 

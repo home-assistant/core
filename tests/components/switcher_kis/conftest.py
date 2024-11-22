@@ -1,15 +1,32 @@
 """Common fixtures and objects for the Switcher integration tests."""
-from unittest.mock import AsyncMock, Mock, patch
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 
 @pytest.fixture
-def mock_bridge(request):
-    """Return a mocked SwitcherBridge."""
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.switcher_kis.utils.SwitcherBridge", autospec=True
-    ) as bridge_mock:
+        "homeassistant.components.switcher_kis.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_bridge(request: pytest.FixtureRequest) -> Generator[MagicMock]:
+    """Return a mocked SwitcherBridge."""
+    with (
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherBridge", autospec=True
+        ) as bridge_mock,
+        patch(
+            "homeassistant.components.switcher_kis.utils.SwitcherBridge",
+            new=bridge_mock,
+        ),
+    ):
         bridge = bridge_mock.return_value
 
         bridge.devices = []
@@ -43,19 +60,19 @@ def mock_api():
 
     patchers = [
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherType1Api.connect",
+            "homeassistant.components.switcher_kis.switch.SwitcherApi.connect",
             new=api_mock,
         ),
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherType1Api.disconnect",
+            "homeassistant.components.switcher_kis.switch.SwitcherApi.disconnect",
             new=api_mock,
         ),
         patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherType2Api.connect",
+            "homeassistant.components.switcher_kis.climate.SwitcherApi.connect",
             new=api_mock,
         ),
         patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherType2Api.disconnect",
+            "homeassistant.components.switcher_kis.climate.SwitcherApi.disconnect",
             new=api_mock,
         ),
     ]

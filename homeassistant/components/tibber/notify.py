@@ -1,45 +1,48 @@
 """Support for Tibber notifications."""
+
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
-import logging
-from typing import Any
+from tibber import Tibber
 
 from homeassistant.components.notify import (
-    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as TIBBER_DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Tibber notification entity."""
+    async_add_entities([TibberNotificationEntity(entry.entry_id)])
 
 
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> TibberNotificationService:
-    """Get the Tibber notification service."""
-    tibber_connection = hass.data[TIBBER_DOMAIN]
-    return TibberNotificationService(tibber_connection.send_notification)
+class TibberNotificationEntity(NotifyEntity):
+    """Implement the notification entity service for Tibber."""
 
+    _attr_supported_features = NotifyEntityFeature.TITLE
+    _attr_name = TIBBER_DOMAIN
+    _attr_icon = "mdi:message-flash"
 
-class TibberNotificationService(BaseNotificationService):
-    """Implement the notification service for Tibber."""
+    def __init__(self, unique_id: str) -> None:
+        """Initialize Tibber notify entity."""
+        self._attr_unique_id = unique_id
 
-    def __init__(self, notify: Callable) -> None:
-        """Initialize the service."""
-        self._notify = notify
-
-    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        tibber_connection: Tibber = self.hass.data[TIBBER_DOMAIN]
         try:
-            await self._notify(title=title, message=message)
-        except asyncio.TimeoutError:
-            _LOGGER.error("Timeout sending message with Tibber")
+            await tibber_connection.send_notification(
+                title or ATTR_TITLE_DEFAULT, message
+            )
+        except TimeoutError as exc:
+            raise HomeAssistantError(
+                translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
+            ) from exc

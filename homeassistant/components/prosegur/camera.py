@@ -1,4 +1,5 @@
 """Support for Prosegur cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -30,7 +31,7 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_REQUEST_IMAGE,
-        {},
+        None,
         "async_request_image",
     )
 

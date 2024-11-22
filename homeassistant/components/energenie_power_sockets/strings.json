@@ -1,0 +1,27 @@
+{
+  "title": "Energenie Power Sockets Integration.",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Searching for Energenie-Power-Sockets Devices.",
+        "description": "Choose a discovered device.",
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        }
+      }
+    },
+    "abort": {
+      "usb_error": "Couldn't access USB devices!",
+      "no_device": "Unable to discover any (new) supported device.",
+      "device_not_found": "No device was found for the given id.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "socket": {
+        "name": "Socket {socket_id}"
+      }
+    }
+  }
+}

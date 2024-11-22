@@ -1,4 +1,5 @@
 """Support for Neato Connected Vacuums switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -31,12 +32,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Neato switch with config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
-
-    for robot in hass.data[NEATO_ROBOTS]:
-        for type_name in SWITCH_TYPES:
-            dev.append(NeatoConnectedSwitch(neato, robot, type_name))
+    dev = [
+        NeatoConnectedSwitch(neato, robot, type_name)
+        for robot in hass.data[NEATO_ROBOTS]
+        for type_name in SWITCH_TYPES
+    ]
 
     if not dev:
         return

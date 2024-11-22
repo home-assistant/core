@@ -10,6 +10,9 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Synology NAS."
         }
       },
       "2sa": {
@@ -170,7 +173,7 @@
   "services": {
     "reboot": {
       "name": "Reboot",
-      "description": "Reboots the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Reboots the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "Serial",
@@ -180,7 +183,7 @@
     },
     "shutdown": {
       "name": "Shutdown",
-      "description": "Shutdowns the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]",

@@ -1,4 +1,5 @@
 """Platform for the Garadget cover component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverDeviceClass,
     CoverEntity,
+    CoverState,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -19,8 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -37,16 +37,14 @@ ATTR_TIME_IN_STATE = "time_in_state"
 
 DEFAULT_NAME = "Garadget"
 
-STATE_CLOSING = "closing"
 STATE_OFFLINE = "offline"
-STATE_OPENING = "opening"
 STATE_STOPPED = "stopped"
 
 STATES_MAP = {
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
+    "open": CoverState.OPEN,
+    "opening": CoverState.OPENING,
+    "closed": CoverState.CLOSED,
+    "closing": CoverState.CLOSING,
     "stopped": STATE_STOPPED,
 }
 
@@ -60,7 +58,7 @@ COVER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
@@ -174,7 +172,7 @@ class GaradgetCover(CoverEntity):
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state == STATE_CLOSED
+        return self._state == CoverState.CLOSED
 
     def get_token(self):
         """Get new token for usage during this session."""
@@ -212,23 +210,20 @@ class GaradgetCover(CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
-            ret = self._put_command("setState", "close")
+            self._put_command("setState", "close")
             self._start_watcher("close")
-            return ret.get("return_value") == 1
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
-            ret = self._put_command("setState", "open")
+            self._put_command("setState", "open")
             self._start_watcher("open")
-            return ret.get("return_value") == 1
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
         if self._state not in ["stopped"]:
-            ret = self._put_command("setState", "stop")
+            self._put_command("setState", "stop")
             self._start_watcher("stop")
-            return ret["return_value"] == 1
 
     def update(self) -> None:
         """Get updated status from API."""
@@ -251,7 +246,7 @@ class GaradgetCover(CoverEntity):
             self._state = STATE_OFFLINE
 
         if (
-            self._state not in [STATE_CLOSING, STATE_OPENING]
+            self._state not in [CoverState.CLOSING, CoverState.OPENING]
             and self._unsub_listener_cover is not None
         ):
             self._unsub_listener_cover()

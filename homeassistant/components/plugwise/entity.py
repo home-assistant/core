@@ -1,4 +1,5 @@
 """Generic Plugwise Entity Class."""
+
 from __future__ import annotations
 
 from plugwise.constants import DeviceData
@@ -46,6 +47,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             connections=connections,
             manufacturer=data.get("vendor"),
             model=data.get("model"),
+            model_id=data.get("model_id"),
             name=coordinator.data.gateway["smile_name"],
             sw_version=data.get("firmware"),
             hw_version=data.get("hardware"),

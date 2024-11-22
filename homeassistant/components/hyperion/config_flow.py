@@ -1,4 +1,5 @@
 """Hyperion config flow."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,6 +17,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import (
@@ -27,7 +29,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import create_hyperion_client
@@ -110,6 +111,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    unique_id: str
+
     def __init__(self) -> None:
         """Instantiate config flow."""
         self._data: dict[str, Any] = {}
@@ -129,7 +132,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _advance_to_auth_step_if_necessary(
         self, hyperion_client: client.HyperionClient
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Determine if auth is required."""
         auth_resp = await hyperion_client.async_is_auth_required()
 
@@ -141,7 +144,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_auth()
         return await self.async_step_confirm()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthentication flow."""
         self._data = dict(entry_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
@@ -149,7 +154,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
         #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
@@ -221,7 +228,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:
@@ -292,7 +299,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_auth(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the auth step of a flow."""
         errors = {}
         if user_input:
@@ -321,7 +328,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_create_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Send a request for a new token."""
         if user_input is None:
             self._auth_id = client.generate_random_auth_id()
@@ -339,7 +346,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # UI to approve the request for a new token).
         assert self._auth_id is not None
         self._request_token_task = self.hass.async_create_task(
-            self._request_token_task_func(self._auth_id)
+            self._request_token_task_func(self._auth_id), eager_start=False
         )
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
@@ -347,7 +354,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_create_token_external(
         self, auth_resp: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle completion of the request for a new token."""
         if auth_resp is not None and client.ResponseOK(auth_resp):
             token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
@@ -360,7 +367,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_create_token_success(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry after successful token creation."""
         # Clean-up the request task.
         await self._cancel_request_token_task()
@@ -376,7 +383,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_create_token_fail(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show an error on the auth form."""
         # Clean-up the request task.
         await self._cancel_request_token_task()
@@ -384,7 +391,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Get final confirmation before entry creation."""
         if user_input is None and self._require_confirm:
             return self.async_show_form(
@@ -407,12 +414,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
         if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
-            self.hass.config_entries.async_update_entry(entry, data=self._data)
-            # Need to manually reload, as the listener won't have been installed because
-            # the initial load did not succeed (the reauth flow will not be initiated if
-            # the load succeeds)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(entry, data=self._data)
 
         self._abort_if_unique_id_configured()
 
@@ -422,29 +424,27 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> HyperionOptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
-        return HyperionOptionsFlow(config_entry)
+        return HyperionOptionsFlow()
 
 
 class HyperionOptionsFlow(OptionsFlow):
     """Hyperion options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize a Hyperion options flow."""
-        self._config_entry = config_entry
-
     def _create_client(self) -> client.HyperionClient:
         """Create and connect a client instance."""
         return create_hyperion_client(
-            self._config_entry.data[CONF_HOST],
-            self._config_entry.data[CONF_PORT],
-            token=self._config_entry.data.get(CONF_TOKEN),
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_PORT],
+            token=self.config_entry.data.get(CONF_TOKEN),
         )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
 
         effects = {}
@@ -468,8 +468,7 @@ class HyperionOptionsFlow(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         default_effect_show_list = list(
-            set(effects)
-            - set(self._config_entry.options.get(CONF_EFFECT_HIDE_LIST, []))
+            set(effects) - set(self.config_entry.options.get(CONF_EFFECT_HIDE_LIST, []))
         )
 
         return self.async_show_form(
@@ -478,7 +477,7 @@ class HyperionOptionsFlow(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_PRIORITY,
-                        default=self._config_entry.options.get(
+                        default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),

@@ -1,4 +1,5 @@
 """Configuration for overkiz tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -7,14 +8,10 @@ import pytest
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import load_setup_fixture
+from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
+
 from tests.common import MockConfigEntry
-from tests.components.overkiz import load_setup_fixture
-from tests.components.overkiz.test_config_flow import (
-    TEST_EMAIL,
-    TEST_GATEWAY_ID,
-    TEST_HUB,
-    TEST_PASSWORD,
-)
 
 MOCK_SETUP_RESPONSE = Mock(devices=[], gateways=[])
 
@@ -26,12 +23,12 @@ def mock_config_entry() -> MockConfigEntry:
         title="Somfy TaHoma Switch",
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
     )
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.overkiz.async_setup_entry", return_value=True

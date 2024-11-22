@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up a WeatherFlow Forecast Station",
+        "data": {
+          "api_token": "Personal api token"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Reauthenticate with WeatherFlow",
+        "data": {
+          "api_token": "[%key:component::weatherflow_cloud::config::step::user::data::api_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_density": {
+        "name": "Air density"
+      },
+      "barometric_pressure": {
+        "name": "Pressure barometric"
+      },
+      "sea_level_pressure": {
+        "name": "Pressure sea level"
+      },
+
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "lightning_strike_count": {
+        "name": "Lightning count"
+      },
+      "lightning_strike_count_last_1hr": {
+        "name": "Lightning count last 1 hr"
+      },
+      "lightning_strike_count_last_3hr": {
+        "name": "Lightning count last 3 hr"
+      },
+      "lightning_strike_last_distance": {
+        "name": "Lightning last distance"
+      },
+      "lightning_strike_last_epoch": {
+        "name": "Lightning last strike"
+      },
+
+      "wind_chill": {
+        "name": "Wind chill"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_cardinal": {
+        "name": "Wind direction (cardinal)"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_lull": {
+        "name": "Wind lull"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "heat_index": {
+        "name": "Heat index"
+      },
+      "wet_bulb_temperature": {
+        "name": "Wet bulb temperature"
+      },
+      "wet_bulb_globe_temperature": {
+        "name": "Wet bulb globe temperature"
+      }
+    }
+  }
+}

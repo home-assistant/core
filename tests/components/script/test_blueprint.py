@@ -1,4 +1,5 @@
 """Test script blueprints."""
+
 import asyncio
 from collections.abc import Iterator
 import contextlib
@@ -7,9 +8,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import script
-from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
+from homeassistant.components.blueprint import (
+    BLUEPRINT_SCHEMA,
+    Blueprint,
+    DomainBlueprints,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
@@ -32,7 +37,10 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
             return orig_load(self, path)
 
         return Blueprint(
-            yaml.load_yaml(data_path), expected_domain=self.domain, path=path
+            yaml.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=BLUEPRINT_SCHEMA,
         )
 
     with patch(
@@ -47,7 +55,7 @@ async def test_confirmable_notification(
 ) -> None:
     """Test confirmable notification blueprint."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     frodo = device_registry.async_get_or_create(
@@ -73,7 +81,7 @@ async def test_confirmable_notification(
                                 "message": "Throw ring in mountain?",
                                 "confirm_action": [
                                     {
-                                        "service": "homeassistant.turn_on",
+                                        "action": "homeassistant.turn_on",
                                         "target": {"entity_id": "mount.doom"},
                                     }
                                 ],
@@ -108,7 +116,6 @@ async def test_confirmable_notification(
     assert len(mock_call_action.mock_calls) == 1
     _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
 
-    template.attach(hass, config)
     rendered_config = template.render_complex(config, variables)
 
     assert rendered_config == {

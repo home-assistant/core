@@ -1,13 +1,12 @@
 """Support for OralB sensors."""
+
 from __future__ import annotations
 
 from oralb_ble import OralBSensor, SensorUpdate
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -26,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .const import DOMAIN
+from . import OralBConfigEntry
 from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
@@ -38,23 +37,31 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,
+        translation_key="sector",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
         key=OralBSensor.NUMBER_OF_SECTORS,
+        translation_key="number_of_sectors",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
+        translation_key="sector_timer",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
-        key=OralBSensor.TOOTHBRUSH_STATE
+        key=OralBSensor.TOOTHBRUSH_STATE,
+        name=None,
     ),
-    OralBSensor.PRESSURE: SensorEntityDescription(key=OralBSensor.PRESSURE),
+    OralBSensor.PRESSURE: SensorEntityDescription(
+        key=OralBSensor.PRESSURE,
+        translation_key="pressure",
+    ),
     OralBSensor.MODE: SensorEntityDescription(
         key=OralBSensor.MODE,
+        translation_key="mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
@@ -94,22 +101,17 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
+        entity_names={},
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: OralBConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the OralB BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
@@ -122,7 +124,9 @@ async def async_setup_entry(
 
 
 class OralBBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[str | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[str | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""

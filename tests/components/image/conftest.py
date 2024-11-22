@@ -1,4 +1,5 @@
 """Test helpers for image."""
+
 from collections.abc import Generator
 
 import pytest
@@ -51,6 +52,21 @@ class MockImageEntityInvalidContentType(image.ImageEntity):
         return b"Test"
 
 
+class MockImageEntityCapitalContentType(image.ImageEntity):
+    """Mock image entity with correct content type, but capitalized."""
+
+    _attr_name = "Test"
+
+    async def async_added_to_hass(self):
+        """Set the update time and assign and incorrect content type."""
+        self._attr_content_type = "Image/jpeg"
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return b"Test"
+
+
 class MockURLImageEntity(image.ImageEntity):
     """Mock image entity."""
 
@@ -70,6 +86,16 @@ class MockImageNoStateEntity(image.ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return b"Test"
+
+
+class MockImageNoDataEntity(image.ImageEntity):
+    """Mock image entity."""
+
+    _attr_name = "Test"
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return None
 
 
 class MockImageSyncEntity(image.ImageEntity):
@@ -124,7 +150,7 @@ class MockImagePlatform:
 
 
 @pytest.fixture(name="config_flow")
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
 
     class MockFlow(ConfigFlow):
@@ -146,14 +172,16 @@ async def mock_image_config_entry_fixture(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, image.DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [image.DOMAIN]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, image.DOMAIN)
+        await hass.config_entries.async_unload_platforms(config_entry, [image.DOMAIN])
         return True
 
     mock_integration(

@@ -9,8 +9,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
@@ -34,7 +35,6 @@ class ToloFlowInBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "water_in_valve"
     _attr_device_class = BinarySensorDeviceClass.OPENING
-    _attr_icon = "mdi:water-plus-outline"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -56,7 +56,6 @@ class ToloFlowOutBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "water_out_valve"
     _attr_device_class = BinarySensorDeviceClass.OPENING
-    _attr_icon = "mdi:water-minus-outline"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

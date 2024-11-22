@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -25,24 +25,24 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
     native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):
@@ -83,18 +83,36 @@ def entity_category_temperature(device: FritzhomeDevice) -> EntityCategory | Non
     return None
 
 
-def value_nextchange_preset(device: FritzhomeDevice) -> str:
+def value_nextchange_preset(device: FritzhomeDevice) -> str | None:
     """Return native value for next scheduled preset sensor."""
+    if not device.nextchange_endperiod:
+        return None
     if device.nextchange_temperature == device.eco_temperature:
         return PRESET_ECO
     return PRESET_COMFORT
 
 
-def value_scheduled_preset(device: FritzhomeDevice) -> str:
+def value_scheduled_preset(device: FritzhomeDevice) -> str | None:
     """Return native value for current scheduled preset sensor."""
+    if not device.nextchange_endperiod:
+        return None
     if device.nextchange_temperature == device.eco_temperature:
         return PRESET_COMFORT
     return PRESET_ECO
+
+
+def value_nextchange_temperature(device: FritzhomeDevice) -> float | None:
+    """Return native value for next scheduled temperature time sensor."""
+    if device.nextchange_endperiod and isinstance(device.nextchange_temperature, float):
+        return device.nextchange_temperature
+    return None
+
+
+def value_nextchange_time(device: FritzhomeDevice) -> datetime | None:
+    """Return native value for next scheduled changed time sensor."""
+    if device.nextchange_endperiod:
+        return utc_from_timestamp(device.nextchange_endperiod)
+    return None
 
 
 SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
@@ -181,7 +199,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_temperature,
-        native_value=lambda device: device.nextchange_temperature,
+        native_value=value_nextchange_temperature,
     ),
     FritzSensorEntityDescription(
         key="nextchange_time",
@@ -189,7 +207,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_time,
-        native_value=lambda device: utc_from_timestamp(device.nextchange_endperiod),
+        native_value=value_nextchange_time,
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
@@ -209,19 +227,30 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.devices.items()
+            for ain in devices
             for description in SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+            if description.suitable(coordinator.data.devices[ain])
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):

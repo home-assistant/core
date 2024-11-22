@@ -1,5 +1,5 @@
 """The tests for the REST sensor platform."""
-import asyncio
+
 from http import HTTPStatus
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -105,7 +105,7 @@ async def test_setup_fail_on_ssl_erros(
 @respx.mock
 async def test_setup_timeout(hass: HomeAssistant) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=TimeoutError())
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
@@ -162,11 +162,11 @@ async def test_setup_encoding(hass: HomeAssistant) -> None:
 @respx.mock
 @pytest.mark.parametrize(
     ("ssl_cipher_list", "ssl_cipher_list_expected"),
-    (
+    [
         ("python_default", SSLCipherList.PYTHON_DEFAULT),
         ("intermediate", SSLCipherList.INTERMEDIATE),
         ("modern", SSLCipherList.MODERN),
-    ),
+    ],
 )
 async def test_setup_ssl_ciphers(
     hass: HomeAssistant, ssl_cipher_list: str, ssl_cipher_list_expected: SSLCipherList
@@ -868,15 +868,25 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
 
 
 @respx.mock
+@pytest.mark.parametrize(
+    ("content", "error_message"),
+    [
+        ("", "Empty reply"),
+        ("<open></close>", "Erroneous JSON"),
+    ],
+)
 async def test_update_with_xml_convert_bad_xml(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    content: str,
+    error_message: str,
 ) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
 
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="",
+        content=content,
     )
     assert await async_setup_component(
         hass,
@@ -901,7 +911,7 @@ async def test_update_with_xml_convert_bad_xml(
 
     assert state.state == STATE_UNKNOWN
     assert "REST xml result could not be parsed" in caplog.text
-    assert "Empty reply" in caplog.text
+    assert error_message in caplog.text
 
 
 @respx.mock
@@ -982,7 +992,9 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity configuration."""
 
     config = {
@@ -1006,7 +1018,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.rest_sensor")

@@ -4,5 +4,5 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/hp_ilo",
   "iot_class": "local_polling",
-  "requirements": ["python-hpilo==4.3"]
+  "requirements": ["python-hpilo==4.4.3"]
 }

@@ -1,14 +1,20 @@
 """Numeric derivative of data coming from a source sensor over time."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -18,19 +24,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -64,12 +64,10 @@ UNIT_TIME = {
     UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
-ICON = "mdi:chart-line"
-
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,
@@ -94,27 +92,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
         # Before we had support for optional selectors, "none" was used for selecting nothing
@@ -157,9 +138,9 @@ async def async_setup_platform(
 
 
 class DerivativeSensor(RestoreSensor, SensorEntity):
-    """Representation of an derivative sensor."""
+    """Representation of a derivative sensor."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "derivative"
     _attr_should_poll = False
 
     def __init__(
@@ -180,7 +161,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state: float | int | Decimal = 0
+        self._attr_native_value = round(Decimal(0), round_digits)
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -208,12 +189,15 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 restored_data.native_unit_of_measurement
             )
             try:
-                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
+                self._attr_native_value = round(
+                    Decimal(restored_data.native_value),  # type: ignore[arg-type]
+                    self._round_digits,
+                )
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event: EventType[EventStateChangedData]) -> None:
+        def calc_derivative(event: Event[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
             if (
                 (old_state := event.data["old_state"]) is None
@@ -258,6 +242,16 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
+            # For total inreasing sensors, the value is expected to continuously increase.
+            # A negative derivative for a total increasing sensor likely indicates the
+            # sensor has been reset. To prevent inaccurate data, discard this sample.
+            if (
+                new_state.attributes.get(ATTR_STATE_CLASS)
+                == SensorStateClass.TOTAL_INCREASING
+                and new_derivative < 0
+            ):
+                return
+
             # add latest derivative to the window list
             self._state_list.append(
                 (old_state.last_updated, new_state.last_updated, new_derivative)
@@ -278,12 +272,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = Decimal(0)
+                derivative = Decimal(0.00)
                 for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
-
-            self._state = derivative
+            self._attr_native_value = round(derivative, self._round_digits)
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -291,11 +284,3 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 self.hass, self._sensor_source_id, calc_derivative
             )
         )
-
-    @property
-    def native_value(self) -> float | int | Decimal:
-        """Return the state of the sensor."""
-        value = round(self._state, self._round_digits)
-        if TYPE_CHECKING:
-            assert isinstance(value, (float, int, Decimal))
-        return value

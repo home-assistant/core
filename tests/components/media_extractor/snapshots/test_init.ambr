@@ -1,4 +1,24 @@
 # serializer version: 1
+# name: test_extract_media_service[https://soundcloud.com/bruttoband/brutto-11]
+  dict({
+    'url': 'https://cf-hls-opus-media.sndcdn.com/playlist/50remGX1OqRY.64.opus/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLWhscy1vcHVzLW1lZGlhLnNuZGNkbi5jb20vcGxheWxpc3QvNTByZW1HWDFPcVJZLjY0Lm9wdXMvcGxheWxpc3QubTN1OCoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE2OTU1MDM5NjR9fX1dfQ__&Signature=HqyeKoK4gx1Bd3jId5v1-9ltDY2SN7fzGp6M7tW3kWluv8Ns0SgANPKG3~Tzo8hUrQzAYVvwMbO2F75b6NBeBr4xx0SRCeKotZdArzBFT4Wtrz4HtEddLyPjp12vWYCDuOshd1sTjrvaBAd9TAFTZuwyal1OKpLMsqK0QN-KFH-5GsmLDZTPWcoVkMqC7XBmNWTq0G1mtVeP57TN~9T7qEYqRLFIDXdm2HKSPSR4BB2gjaZUK22pBUPSGVr-ziBSpNVHvNISy2QdObjS5zjuAe8bl-npQ3PlFatYECDI3Gc~wjCNIJPdTpCbHUsX36SSR4dnKlgW1nYGx~eED7dppA__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
+  })
+# ---
+# name: test_extract_media_service[https://test.com/abc]
+  dict({
+    'url': 'https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk4NTkzfX19XX0_&Signature=flALJvEBnzS0ZOOhf0-07Ap~NURw2Gn2OqkeKKTTMX5HRGJw9eXFay79tcC4GsMMXWUgWoCx-n3yelpyilE2MOEIufBNUbjqRfMSJaX5YhYxjQdoDYuiU~gqBzJyPw9pKzr6P8~5HNKL3Idr0CNhUzdV6FQLaUPKMMibq9ghV833mUmdyvdk1~GZBc8MOg9GrTdcigGgpPzd-vrIMICMvFzFnwBOeOotxX2Vfqf9~wVekBKGlvB9A~7TlZ71lv9Fl9u4m8rse9E-mByweVc1M784ehJV3~tRPjuF~FXXWKP8x0nGJmoq7RAnG7iFIt~fQFmsfOq2o~PG7dHMRPh7hw__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
+  })
+# ---
+# name: test_extract_media_service[https://www.youtube.com/playlist?list=PLZ4DbyIWUwCq4V8bIEa8jm2ozHZVuREJP]
+  dict({
+    'url': 'https://www.youtube.com/watch?v=q6EoRBvdVPQ',
+  })
+# ---
+# name: test_extract_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ]
+  dict({
+    'url': 'https://rr2---sn-5hnekn7k.googlevideo.com/videoplayback?expire=1695524274&ei=UlEPZeSINMKn6dsPt6mr8Ac&ip=45.93.75.130&id=o-AA7xSUDqvzXPAn6m_Jd8d0jhyk4er7c5zjbyZCHyREaQ&itag=22&source=youtube&requiressl=yes&mh=7c&mm=31%2C29&mn=sn-5hnekn7k%2Csn-5hne6nzy&ms=au%2Crdu&mv=m&mvi=2&pl=22&initcwndbps=1311250&spc=UWF9f6JvGMIlJJFOWUL6L4bH2pl28C4&vprv=1&svpuc=1&mime=video%2Fmp4&cnr=14&ratebypass=yes&dur=212.091&lmt=1694045086815467&mt=1695502401&fvip=3&fexp=24007246&beids=24350018&c=ANDROID&txp=4532434&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Ccnr%2Cratebypass%2Cdur%2Clmt&sig=AOq0QJ8wRAIgHVwajP0J2fiJ1ERoAonpxghXGzDmEXh3rvJ399UEMWECIFdBjiVUOk7QdiFBxQ4QqojJd8p_PfL25TV_8TBrp_Kb&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRgIhANJRDHqeYwWk4W8XXGlTNmYA3OOiuzK3PEWtVpK4NimlAiEAwK0nj8vGtcP0IJMZVBGh8SC5KRFzPfx_yJn41ZOUGyQ%3D',
+  })
+# ---
 # name: test_no_target_entity
   ReadOnlyDict({
     'device_id': list([
@@ -7,15 +27,6 @@
     'extra': dict({
     }),
     'media_content_id': 'https://rr2---sn-5hnekn7k.googlevideo.com/videoplayback?expire=1694805294&ei=zlgEZaLeHcrlgAeFhLrYBA&ip=45.93.75.130&id=o-AFIa6Sil61_wuEFkUVhjKkr-0pyzj2cHi52leur2vR1j&itag=22&source=youtube&requiressl=yes&mh=7c&mm=31%2C29&mn=sn-5hnekn7k%2Csn-5hne6nzy&ms=au%2Crdu&mv=m&mvi=2&pl=22&initcwndbps=2095000&spc=UWF9f2Ob7Uhbkv1q69SZBYEqtijLGjs&vprv=1&svpuc=1&mime=video%2Fmp4&cnr=14&ratebypass=yes&dur=212.091&lmt=1694045086815467&mt=1694783390&fvip=3&fexp=24007246%2C24362685&beids=24350018&c=ANDROID&txp=4532434&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Ccnr%2Cratebypass%2Cdur%2Clmt&sig=AOq0QJ8wRAIgUiMmQEGPqT5Hb00S74LeTwF4PCN31mwbC_fUNSejdsQCIF2D11o2OXBxoLlOX00vyB1wfYLIo6dBnodrfYc9gH6y&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRgIhAI4QpoB0iBj-oMiNFMMdN0RN-u3nLji437a3jqTbhncSAiEAlvsdhJjG0-VZ2jCjyUZBtidBcUzYFwnk6qG7mIiNjCA%3D',
-    'media_content_type': 'VIDEO',
-  })
-# ---
-# name: test_play_media_service
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1694794256/ei/sC0EZYCPHbuZx_AP3bGz0Ac/ip/84.31.234.146/id/750c38c3d5a05dc4/itag/616/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D99471214%3Bdur%3D212.040%3Bgir%3Dyes%3Bitag%3D356%3Blmt%3D1694043438471036/hls_chunk_host/rr2---sn-5hnekn7k.googlevideo.com/mh/7c/mm/31,29/mn/sn-5hnekn7k,sn-5hne6nzy/ms/au,rdu/mv/m/mvi/2/pl/14/initcwndbps/2267500/vprv/1/playlist_type/DVR/dover/13/txp/4532434/mt/1694772337/fvip/3/short_key/1/keepalive/yes/fexp/24007246,24362685/beids/24350018/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,vprv,playlist_type/sig/AOq0QJ8wRgIhAIC0iobMnRschmQ3QaYsytXg9eg7l9B_-UNvMciis4bmAiEAg-3jr6SwOfAGCCU-JyTyxcXmraug-hPcjjJzm__43ug%3D/lsparams/hls_chunk_host,mh,mm,mn,ms,mv,mvi,pl,initcwndbps/lsig/AG3C_xAwRQIhAOlqbgmuueNhIuGENYKCsdwiNAUPheXw-RMUqsiaB7YuAiANN43FxJl14Ve_H_c9K-aDoXG4sI7PDCqKDhov6Qro_g%3D%3D/playlist/index.m3u8',
     'media_content_type': 'VIDEO',
   })
 # ---
@@ -37,24 +48,6 @@
     'media_content_type': 'AUDIO',
   })
 # ---
-# name: test_play_media_service[https://soundcloud.com/bruttoband/brutto-11-VIDEO-audio_media_extractor_config]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk5MTc5fX19XX0_&Signature=JtF8BXxTCElhjCrhnSAq3W6z960VmdVXx7BPhQvI0MCxr~J43JFGO8CVw9-VBM2oEf14mqWo63-C0FO29DvUuBZnmLD3dhDfryVfWJsrix7voimoRDaNFE~3zntDbg7O2S8uWYyZK8OZC9anzwokvjH7jbmviWqK4~2IM9dwgejGgzrQU1aadV2Yro7NJZnF7SD~7tVjkM-hBg~X5zDYVxmGrdzN3tFoLwRmUch6RNDL~1DcWBk0AveBKQFAdBrFBjDDUeIyDz9Idhw2aG9~fjfckcf95KwqrVQxz1N5XEzfNDDo8xkUgDt0eb9dtXdwxLJ0swC6e5VLS8bsH91GMg__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
-    'media_content_type': 'VIDEO',
-  })
-# ---
-# name: test_play_media_service[https://soundcloud.com/bruttoband/brutto-11-VIDEO-empty_media_extractor_config]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk4NTkzfX19XX0_&Signature=flALJvEBnzS0ZOOhf0-07Ap~NURw2Gn2OqkeKKTTMX5HRGJw9eXFay79tcC4GsMMXWUgWoCx-n3yelpyilE2MOEIufBNUbjqRfMSJaX5YhYxjQdoDYuiU~gqBzJyPw9pKzr6P8~5HNKL3Idr0CNhUzdV6FQLaUPKMMibq9ghV833mUmdyvdk1~GZBc8MOg9GrTdcigGgpPzd-vrIMICMvFzFnwBOeOotxX2Vfqf9~wVekBKGlvB9A~7TlZ71lv9Fl9u4m8rse9E-mByweVc1M784ehJV3~tRPjuF~FXXWKP8x0nGJmoq7RAnG7iFIt~fQFmsfOq2o~PG7dHMRPh7hw__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
-    'media_content_type': 'VIDEO',
-  })
-# ---
 # name: test_play_media_service[https://test.com/abc-AUDIO-audio_media_extractor_config]
   ReadOnlyDict({
     'entity_id': 'media_player.bedroom',
@@ -73,30 +66,12 @@
     'media_content_type': 'AUDIO',
   })
 # ---
-# name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO-audio_media_extractor_config-]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1694805268/ei/tFgEZcu0DoOD-gaqg47wBA/ip/45.93.75.130/id/750c38c3d5a05dc4/itag/616/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D99471214%3Bdur%3D212.040%3Bgir%3Dyes%3Bitag%3D356%3Blmt%3D1694043438471036/hls_chunk_host/rr3---sn-5hne6nzy.googlevideo.com/mh/7c/mm/31,29/mn/sn-5hne6nzy,sn-5hnekn7k/ms/au,rdu/mv/m/mvi/3/pl/22/initcwndbps/1957500/vprv/1/playlist_type/DVR/dover/13/txp/4532434/mt/1694783146/fvip/2/short_key/1/keepalive/yes/fexp/24007246/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,vprv,playlist_type/sig/AOq0QJ8wRQIhALAASH0_ZDQQoMA82qWNCXSHPZ0bb9TQldIs7AAxktiiAiASA5bQy7IAa6NwdGIOpfye5OgcY_BNuo0WgSdh84tosw%3D%3D/lsparams/hls_chunk_host,mh,mm,mn,ms,mv,mvi,pl,initcwndbps/lsig/AG3C_xAwRgIhAIsDcLGH8KJpQpBgyJ5VWlDxfr75HyO8hMSVS9v7nRu4AiEA2xjtLZOzeNFoJlxwCsH3YqsUQt-BF_4gikhi_P4FbBc%3D/playlist/index.m3u8',
-    'media_content_type': 'VIDEO',
-  })
-# ---
 # name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO-audio_media_extractor_config]
   ReadOnlyDict({
     'entity_id': 'media_player.bedroom',
     'extra': dict({
     }),
     'media_content_id': 'https://rr3---sn-5hne6nzy.googlevideo.com/videoplayback?expire=1694805268&ei=tFgEZaHmFN2Px_AP2tSt2AQ&ip=45.93.75.130&id=o-AEj4DudORoGviGzjggo2mjXrQpjRh8L2BrOU-wekY859&itag=22&source=youtube&requiressl=yes&mh=7c&mm=31%2C29&mn=sn-5hne6nzy%2Csn-5hnekn7k&ms=au%2Crdu&mv=m&mvi=3&pl=22&initcwndbps=1957500&spc=UWF9f7_CV3gS4VV2VFq7hgxtUAyOlog&vprv=1&svpuc=1&mime=video%2Fmp4&cnr=14&ratebypass=yes&dur=212.091&lmt=1694045086815467&mt=1694783146&fvip=2&fexp=24007246&beids=24350018&c=ANDROID&txp=4532434&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Ccnr%2Cratebypass%2Cdur%2Clmt&sig=AOq0QJ8wRQIhAO2IJciEtkI3PvYyVC_zkyo61I70wYJQXuGOMueeacrKAiA-UAdaJSlqqkfaa6QtqVnC_BJJZn7BXs85gh_fdbGoSg%3D%3D&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRQIgRCGi20K-ZvdukYkBZOidcHpGPUpIBOkw-jZGEncsKQECIQC5h-rCfQhDTQFqocOTtQXcNZVA54oIqjweF0mN5GpzFA%3D%3D',
-    'media_content_type': 'VIDEO',
-  })
-# ---
-# name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO-empty_media_extractor_config-]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1694805294/ei/zlgEZcCPFpqOx_APj42f2Ao/ip/45.93.75.130/id/750c38c3d5a05dc4/itag/616/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/wft/1/sgovp/clen%3D99471214%3Bdur%3D212.040%3Bgir%3Dyes%3Bitag%3D356%3Blmt%3D1694043438471036/hls_chunk_host/rr3---sn-5hne6nzy.googlevideo.com/mh/7c/mm/31,26/mn/sn-5hne6nzy,sn-aigzrnld/ms/au,onr/mv/m/mvi/3/pl/22/initcwndbps/2095000/vprv/1/playlist_type/DVR/dover/13/txp/4532434/mt/1694783390/fvip/1/short_key/1/keepalive/yes/fexp/24007246,24362685/beids/24350017/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,wft,sgovp,vprv,playlist_type/sig/AOq0QJ8wRgIhANCPwWNfq6wBp1Xo1L8bRJpDrzOyv7kfH_J65cZ_PRZLAiEAwo-0wQgeIjPe7OgyAAvMCx_A9wd1h8Qyh7VntKwGJUs%3D/lsparams/hls_chunk_host,mh,mm,mn,ms,mv,mvi,pl,initcwndbps/lsig/AG3C_xAwRQIgIqS9Ub_6L9ScKXr0T9bkeu6TZsEsyNApYfF_MqeukqECIQCMSeJ1sSEw5QGMgHAW8Fhsir4TYHEK5KVg-PzJbrT6hw%3D%3D/playlist/index.m3u8',
     'media_content_type': 'VIDEO',
   })
 # ---

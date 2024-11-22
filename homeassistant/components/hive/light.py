@@ -1,4 +1,5 @@
 """Support for Hive light devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,8 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import ATTR_MODE, DOMAIN
+from .entity import HiveEntity
 
 if TYPE_CHECKING:
     from apyhiveapi import Hive
@@ -33,11 +35,9 @@ async def async_setup_entry(
 
     hive: Hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("light")
-    entities = []
-    if devices:
-        for dev in devices:
-            entities.append(HiveDeviceLight(hive, dev))
-    async_add_entities(entities, True)
+    if not devices:
+        return
+    async_add_entities((HiveDeviceLight(hive, dev) for dev in devices), True)
 
 
 class HiveDeviceLight(HiveEntity, LightEntity):
@@ -54,6 +54,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif self.device["hiveType"] == "colourtuneablelight":
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            self._attr_color_mode = ColorMode.UNKNOWN
 
         self._attr_min_mireds = 153
         self._attr_max_mireds = 370

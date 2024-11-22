@@ -40,6 +40,15 @@ def config_data():
 
 
 @pytest.fixture
+def another_config_data():
+    """Provide configuration data for tests."""
+    return {
+        CONF_USERNAME: "user2",
+        CONF_PASSWORD: "fake2",
+    }
+
+
+@pytest.fixture
 def config_options():
     """Provide configuratio options for test."""
     return {CONF_COOL_AWAY_TEMPERATURE: 12, CONF_HEAT_AWAY_TEMPERATURE: 22}
@@ -56,6 +65,16 @@ def config_entry(config_data, config_options):
 
 
 @pytest.fixture
+def config_entry2(another_config_data, config_options):
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=another_config_data,
+        options=config_options,
+    )
+
+
+@pytest.fixture
 def device():
     """Mock a somecomfort.Device."""
     mock_device = create_autospec(aiosomecomfort.device.Device, instance=True)
@@ -67,6 +86,7 @@ def device():
     mock_device.system_mode = "off"
     mock_device.name = "device1"
     mock_device.current_temperature = CURRENTTEMPERATURE
+    mock_device.temperature_unit = "C"
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None

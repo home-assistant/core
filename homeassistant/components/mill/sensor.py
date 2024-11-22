@@ -1,4 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
+
 from __future__ import annotations
 
 import mill
@@ -55,6 +56,19 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="current_power",
+        translation_key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="control_signal",
+        translation_key="control_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -117,6 +131,16 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+SOCKET_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    *HEATER_SENSOR_TYPES,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -144,7 +168,9 @@ async def async_setup_entry(
         )
         for mill_device in mill_data_coordinator.data.values()
         for entity_description in (
-            HEATER_SENSOR_TYPES
+            SOCKET_SENSOR_TYPES
+            if isinstance(mill_device, mill.Socket)
+            else HEATER_SENSOR_TYPES
             if isinstance(mill_device, mill.Heater)
             else SENSOR_TYPES
         )

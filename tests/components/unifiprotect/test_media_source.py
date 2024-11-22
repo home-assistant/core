@@ -5,15 +5,16 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Bootstrap,
     Camera,
     Event,
     EventType,
+    ModelType,
     Permission,
     SmartDetectObjectType,
 )
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.exceptions import NvrError
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem
@@ -72,6 +73,7 @@ async def test_resolve_media_thumbnail(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -103,6 +105,7 @@ async def test_resolve_media_event(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -172,6 +175,7 @@ async def test_browse_media_event_ongoing(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -216,6 +220,7 @@ async def test_browse_media_root_multiple_consoles(
     api2.api_path = "/api"
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
+    api2.get_bootstrap = AsyncMock(return_value=bootstrap2)
     api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
@@ -343,7 +348,11 @@ async def test_browse_media_root_single_console(
 
 
 async def test_browse_media_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    camera: Camera,
 ) -> None:
     """Test browsing camera selector level media."""
 
@@ -359,9 +368,9 @@ async def test_browse_media_camera(
         ),
     ]
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
-        "camera.test_camera_high", disabled_by=er.RegistryEntryDisabler("user")
+        "camera.test_camera_high_resolution_channel",
+        disabled_by=er.RegistryEntryDisabler("user"),
     )
     await hass.async_block_till_done()
 
@@ -420,15 +429,17 @@ async def test_browse_media_event_type(
 
     assert browse.title == "UnifiProtect > All Cameras"
     assert browse.identifier == "test_id:browse:all"
-    assert len(browse.children) == 4
+    assert len(browse.children) == 5
     assert browse.children[0].title == "All Events"
     assert browse.children[0].identifier == "test_id:browse:all:all"
     assert browse.children[1].title == "Ring Events"
     assert browse.children[1].identifier == "test_id:browse:all:ring"
     assert browse.children[2].title == "Motion Events"
     assert browse.children[2].identifier == "test_id:browse:all:motion"
-    assert browse.children[3].title == "Smart Detections"
+    assert browse.children[3].title == "Object Detections"
     assert browse.children[3].identifier == "test_id:browse:all:smart"
+    assert browse.children[4].title == "Audio Detections"
+    assert browse.children[4].identifier == "test_id:browse:all:audio"
 
 
 ONE_MONTH_SIMPLE = (
@@ -584,6 +595,7 @@ async def test_browse_media_recent(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -615,13 +627,13 @@ async def test_browse_media_recent_truncated(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
 ) -> None:
     """Test browsing event selector level media for recent days."""
-
-    ufp.entry.options = {"max_media": 1}
+    hass.config_entries.async_update_entry(ufp.entry, options={"max_media": 1})
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -649,24 +661,242 @@ async def test_browse_media_recent_truncated(
     assert browse.children[0].identifier == "test_id:event:test_event_id"
 
 
+@pytest.mark.parametrize(
+    ("event", "expected_title"),
+    [
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.RING,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=[],
+                smart_detect_event_ids=[],
+                camera_id="test",
+            ),
+            "Ring Event",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.MOTION,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=[],
+                smart_detect_event_ids=[],
+                camera_id="test",
+            ),
+            "Motion Event",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["person"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+                metadata={
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "person",
+                            "cropped_id": "event_id",
+                        }
+                    ],
+                },
+            ),
+            "Object Detection - Person",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle", "person"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+            ),
+            "Object Detection - Person, Vehicle",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle", "licensePlate"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+            ),
+            "Object Detection - License Plate, Vehicle",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle", "licensePlate"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+                metadata={
+                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "vehicle",
+                            "cropped_id": "event_id",
+                        }
+                    ],
+                },
+            ),
+            "Object Detection - Vehicle: ABC1234",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle", "licensePlate"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+                metadata={
+                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "vehicle",
+                            "cropped_id": "event_id",
+                            "attributes": {
+                                "vehicle_type": {
+                                    "val": "car",
+                                    "confidence": 95,
+                                }
+                            },
+                        }
+                    ],
+                },
+            ),
+            "Object Detection - Car: ABC1234",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle", "licensePlate"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+                metadata={
+                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "vehicle",
+                            "cropped_id": "event_id",
+                            "attributes": {
+                                "color": {
+                                    "val": "black",
+                                    "confidence": 95,
+                                }
+                            },
+                        },
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "person",
+                            "cropped_id": "event_id",
+                        },
+                    ],
+                },
+            ),
+            "Object Detection - Black Vehicle: ABC1234",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["vehicle"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+                metadata={
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
+                            "type": "vehicle",
+                            "cropped_id": "event_id",
+                            "attributes": {
+                                "color": {
+                                    "val": "black",
+                                    "confidence": 95,
+                                },
+                                "vehicle_type": {
+                                    "val": "car",
+                                    "confidence": 95,
+                                },
+                            },
+                        }
+                    ]
+                },
+            ),
+            "Object Detection - Black Car",
+        ),
+        (
+            Event(
+                model=ModelType.EVENT,
+                id="test_event_id",
+                type=EventType.SMART_AUDIO_DETECT,
+                start=datetime(2000, 1, 1, 0, 0, 0),
+                end=None,
+                score=100,
+                smart_detect_types=["alrmSpeak"],
+                smart_detect_event_ids=[],
+                camera_id="test",
+            ),
+            "Audio Detection - Speak",
+        ),
+    ],
+)
 async def test_browse_media_event(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    fixed_now: datetime,
+    event: Event,
+    expected_title: str,
 ) -> None:
     """Test browsing specific event."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    event = Event(
-        id="test_event_id",
-        type=EventType.RING,
-        start=fixed_now - timedelta(seconds=20),
-        end=fixed_now,
-        score=100,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-    )
+    event.start = fixed_now - timedelta(seconds=20)
+    event.end = fixed_now
+    event.camera_id = doorbell.id
     event._api = ufp.api
     ufp.api.get_event = AsyncMock(return_value=event)
 
@@ -674,10 +904,13 @@ async def test_browse_media_event(
     media_item = MediaSourceItem(hass, DOMAIN, "test_id:event:test_event_id", None)
 
     browse = await source.async_browse_media(media_item)
+    # chop off the datetime/duration
+    title = " ".join(browse.title.split(" ")[3:])
 
     assert browse.identifier == "test_id:event:test_event_id"
     assert browse.children is None
     assert browse.media_class == MediaClass.VIDEO
+    assert title == expected_title
 
 
 async def test_browse_media_eventthumb(
@@ -689,6 +922,7 @@ async def test_browse_media_eventthumb(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=20),
@@ -752,6 +986,7 @@ async def test_browse_media_browse_day(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -793,6 +1028,7 @@ async def test_browse_media_browse_whole_month(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -835,6 +1071,7 @@ async def test_browse_media_browse_whole_month_december(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event1 = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=3663),
@@ -846,6 +1083,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event1._api = ufp.api
     event2 = Event(
+        model=ModelType.EVENT,
         id="test_event_id2",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -857,6 +1095,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event2._api = ufp.api
     event3 = Event(
+        model=ModelType.EVENT,
         id="test_event_id3",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -868,6 +1107,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event3._api = ufp.api
     event4 = Event(
+        model=ModelType.EVENT,
         id="test_event_id4",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),

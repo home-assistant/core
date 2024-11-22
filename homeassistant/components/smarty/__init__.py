@@ -1,22 +1,20 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
-from datetime import timedelta
+
 import ipaddress
 import logging
 
-from pysmarty import Smarty
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "smarty"
-DATA_SMARTY = "smarty"
-SMARTY_NAME = "Smarty"
+from .const import DOMAIN
+from .coordinator import SmartyConfigEntry, SmartyCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,48 +23,84 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-                vol.Optional(CONF_NAME, default=SMARTY_NAME): cv.string,
+                vol.Optional(CONF_NAME, default="Smarty"): cv.string,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-RPM = "rpm"
-SIGNAL_UPDATE_SMARTY = "smarty_update"
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.FAN,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
+    """Create a smarty system."""
+    if config := hass_config.get(DOMAIN):
+        hass.async_create_task(_async_import(hass, config))
+    return True
+
+
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the smarty environment."""
 
-    conf = config[DOMAIN]
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        if result["type"] == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}",
+                breaks_in_ha_version="2025.5.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Smarty",
+                },
+            )
+            return
 
-    host = conf[CONF_HOST]
-    name = conf[CONF_NAME]
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.5.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Smarty",
+        },
+    )
 
-    _LOGGER.debug("Name: %s, host: %s", name, host)
 
-    smarty = Smarty(host=host)
+async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
+    """Set up the Smarty environment from a config entry."""
 
-    hass.data[DOMAIN] = {"api": smarty, "name": name}
+    coordinator = SmartyCoordinator(hass)
 
-    # Initial update
-    smarty.update()
+    await coordinator.async_config_entry_first_refresh()
 
-    # Load platforms
-    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+    entry.runtime_data = coordinator
 
-    def poll_device_update(event_time):
-        """Update Smarty device."""
-        _LOGGER.debug("Updating Smarty device")
-        if smarty.update():
-            _LOGGER.debug("Update success")
-            dispatcher_send(hass, SIGNAL_UPDATE_SMARTY)
-        else:
-            _LOGGER.debug("Update failed")
-
-    track_time_interval(hass, poll_device_update, timedelta(seconds=30))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

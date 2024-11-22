@@ -54,6 +54,18 @@
       },
       "doors": {
         "name": "Doors"
+      },
+      "handsfree": {
+        "name": "Handsfree"
+      },
+      "neutral": {
+        "name": "Programmable neutral"
+      },
+      "moving_ban": {
+        "name": "Moving ban"
+      },
+      "is_running": {
+        "name": "Running"
       }
     },
     "device_tracker": {
@@ -90,6 +102,9 @@
       },
       "mileage": {
         "name": "Mileage"
+      },
+      "gps_count": {
+        "name": "GPS satellites"
       }
     },
     "switch": {
@@ -102,6 +117,11 @@
       "additional_channel": {
         "name": "Additional channel"
       },
+      "service_mode": {
+        "name": "Service mode"
+      }
+    },
+    "button": {
       "horn": {
         "name": "Horn"
       }

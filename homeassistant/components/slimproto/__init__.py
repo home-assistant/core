@@ -1,4 +1,5 @@
 """SlimProto Player integration."""
+
 from __future__ import annotations
 
 from aioslimproto import SlimServer

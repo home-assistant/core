@@ -1,4 +1,5 @@
 """Support for GoodWe inverter via UDP."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,7 +20,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -75,16 +76,16 @@ _ICONS: dict[SensorKind, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[
-        [GoodweUpdateCoordinator, str], Any
-    ] = lambda coordinator, sensor: coordinator.sensor_value(sensor)
-    available: Callable[
-        [GoodweUpdateCoordinator], bool
-    ] = lambda coordinator: coordinator.last_update_success
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = (
+        lambda coordinator, sensor: coordinator.sensor_value(sensor)
+    )
+    available: Callable[[GoodweUpdateCoordinator], bool] = (
+        lambda coordinator: coordinator.last_update_success
+    )
 
 
 _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
@@ -125,7 +126,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         key="var",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_registry_enabled_default=False,
     ),
     "C": GoodweSensorEntityDescription(

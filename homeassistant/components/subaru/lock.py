@@ -1,4 +1,5 @@
 """Support for Subaru door locks."""
+
 import logging
 from typing import Any
 

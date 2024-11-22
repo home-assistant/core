@@ -18,7 +18,10 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'watttime',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

@@ -1,0 +1,352 @@
+# serializer version: 1
+# name: test_entity_description_as_dataclass
+  dict({
+    'device_class': 'test',
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'name': <UndefinedType._singleton: 0>,
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_description_as_dataclass.1
+  "EntityDescription(key='blah', device_class='test', entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name=<UndefinedType._singleton: 0>, translation_key=None, translation_placeholders=None, unit_of_measurement=None)"
+# ---
+# name: test_extending_entity_description
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.1
+  "test_extending_entity_description.<locals>.FrozenEntityDescription(key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.10
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.11
+  "test_extending_entity_description.<locals>.ComplexEntityDescription1C(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.12
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.13
+  "test_extending_entity_description.<locals>.ComplexEntityDescription1D(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.14
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.15
+  "test_extending_entity_description.<locals>.ComplexEntityDescription2A(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.16
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.17
+  "test_extending_entity_description.<locals>.ComplexEntityDescription2B(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.18
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.19
+  "test_extending_entity_description.<locals>.ComplexEntityDescription2C(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.2
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.20
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.21
+  "test_extending_entity_description.<locals>.ComplexEntityDescription2D(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.22
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.23
+  "test_extending_entity_description.<locals>.ComplexEntityDescription3A(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.24
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.25
+  "test_extending_entity_description.<locals>.ComplexEntityDescription3B(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.26
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.27
+  "test_extending_entity_description.<locals>.ComplexEntityDescription4A(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.28
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.29
+  "test_extending_entity_description.<locals>.ComplexEntityDescription4B(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.3
+  "test_extending_entity_description.<locals>.ThawedEntityDescription(key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.30
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.31
+  "test_extending_entity_description.<locals>.CustomInitEntityDescription(key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None)"
+# ---
+# name: test_extending_entity_description.4
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extension': 'ext',
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.5
+  "test_extending_entity_description.<locals>.MyExtendedEntityDescription(key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extension='ext', extra='foo')"
+# ---
+# name: test_extending_entity_description.6
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.7
+  "test_extending_entity_description.<locals>.ComplexEntityDescription1A(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---
+# name: test_extending_entity_description.8
+  dict({
+    'device_class': None,
+    'entity_category': None,
+    'entity_registry_enabled_default': True,
+    'entity_registry_visible_default': True,
+    'extra': 'foo',
+    'force_update': False,
+    'has_entity_name': False,
+    'icon': None,
+    'key': 'blah',
+    'mixin': 'mixin',
+    'name': 'name',
+    'translation_key': None,
+    'translation_placeholders': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_extending_entity_description.9
+  "test_extending_entity_description.<locals>.ComplexEntityDescription1B(mixin='mixin', key='blah', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name='name', translation_key=None, translation_placeholders=None, unit_of_measurement=None, extra='foo')"
+# ---

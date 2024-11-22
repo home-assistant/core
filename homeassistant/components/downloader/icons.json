@@ -1,0 +1,7 @@
+{
+  "services": {
+    "download_file": {
+      "service": "mdi:download"
+    }
+  }
+}

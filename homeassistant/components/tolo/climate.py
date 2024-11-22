@@ -1,9 +1,16 @@
 """TOLO Sauna climate controls (main sauna control)."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from tololib.const import Calefaction
+from tololib import (
+    TARGET_HUMIDITY_MAX,
+    TARGET_HUMIDITY_MIN,
+    TARGET_TEMPERATURE_MAX,
+    TARGET_TEMPERATURE_MIN,
+    Calefaction,
+)
 
 from homeassistant.components.climate import (
     FAN_OFF,
@@ -18,14 +25,9 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from .const import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
@@ -43,19 +45,22 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
 
     _attr_fan_modes = [FAN_ON, FAN_OFF]
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.DRY]
-    _attr_max_humidity = DEFAULT_MAX_HUMIDITY
-    _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_min_humidity = DEFAULT_MIN_HUMIDITY
-    _attr_min_temp = DEFAULT_MIN_TEMP
+    _attr_max_humidity = TARGET_HUMIDITY_MAX
+    _attr_max_temp = TARGET_TEMPERATURE_MAX
+    _attr_min_humidity = TARGET_HUMIDITY_MIN
+    _attr_min_temp = TARGET_TEMPERATURE_MIN
     _attr_name = None
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_HUMIDITY
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

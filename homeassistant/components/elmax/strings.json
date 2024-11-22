@@ -1,11 +1,40 @@
 {
   "config": {
     "step": {
-      "user": {
+      "choose_mode": {
+        "description": "Please choose the connection mode to Elmax panels.",
+        "menu_options": {
+          "cloud": "Connect to Elmax Panel via Elmax Cloud APIs",
+          "direct": "Connect to Elmax Panel via local/direct IP"
+        }
+      },
+      "cloud": {
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "zeroconf_setup": {
+        "description": "Configure discovered local Elmax panel",
+        "data": {
+          "panel_pin": "Panel PIN code",
+          "use_ssl": "Use SSL"
+        },
+        "data_description": {
+          "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to."
+        }
+      },
+      "direct": {
+        "description": "Specify the Elmax panel connection parameters below.",
+        "data": {
+          "panel_api_host": "Panel API Hostname or IP",
+          "panel_api_port": "Panel API port",
+          "use_ssl": "Use SSL",
+          "panel_pin": "Panel PIN code"
+        },
+        "data_description": {
+          "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to."
         }
       },
       "panels": {
@@ -30,12 +59,21 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "network_error": "A network error occurred",
       "invalid_pin": "The provided pin is invalid",
+      "invalid_mode": "Invalid or unsupported mode",
       "reauth_panel_disappeared": "The given panel is no longer associated to this user. Please log in using an account associated to this panel.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "exceptions": {
+    "alarm_operation_failed_generic": {
+      "message": "Failed to {operation} the alarm. An API error occurred."
+    },
+    "invalid_disarm_code": {
+      "message": "Invalid disarm code provided."
     }
   }
 }

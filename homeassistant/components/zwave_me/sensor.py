@@ -1,4 +1,5 @@
 """Representation of a sensorMultilevel."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,11 +28,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeController, ZWaveMeEntity
+from . import ZWaveMeController
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZWaveMeSensorEntityDescription(SensorEntityDescription):
     """Class describing ZWaveMeSensor sensor entities."""
 

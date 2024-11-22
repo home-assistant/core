@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Connect to your Autarco account to get information about your solar panels.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Autarco account.",
+          "password": "The password of your Autarco account."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "flow_now": {
+        "name": "Flow now"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "discharged_today": {
+        "name": "Discharged today"
+      },
+      "discharged_month": {
+        "name": "Discharged month"
+      },
+      "discharged_total": {
+        "name": "Discharged total"
+      },
+      "charged_today": {
+        "name": "Charged today"
+      },
+      "charged_month": {
+        "name": "Charged month"
+      },
+      "charged_total": {
+        "name": "Charged total"
+      },
+      "power_production": {
+        "name": "Power production"
+      },
+      "energy_production_today": {
+        "name": "Energy production today"
+      },
+      "energy_production_month": {
+        "name": "Energy production month"
+      },
+      "energy_production_total": {
+        "name": "Energy production total"
+      },
+      "out_ac_power": {
+        "name": "Power AC output"
+      },
+      "out_ac_energy_total": {
+        "name": "Energy AC output total"
+      }
+    }
+  }
+}

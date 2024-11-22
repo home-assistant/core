@@ -1,4 +1,5 @@
 """Provide tests for mysensors remote platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

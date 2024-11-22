@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/syncthing",
   "iot_class": "local_polling",
   "loggers": ["aiosyncthing"],
-  "quality_scale": "silver",
   "requirements": ["aiosyncthing==0.5.1"]
 }

@@ -1,4 +1,5 @@
 """Config flow for Tradfri."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,11 +10,10 @@ from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN
 
@@ -29,7 +29,7 @@ class AuthError(Exception):
         self.code = code
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -40,13 +40,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth()
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the authentication with a gateway."""
         errors: dict[str, str] = {}
 
@@ -60,10 +60,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._entry_from_data(auth)
 
             except AuthError as err:
-                if err.code == "invalid_security_code":
-                    errors[KEY_SECURITY_CODE] = err.code
-                else:
-                    errors["base"] = err.code
+                errors["base"] = err.code
         else:
             user_input = {}
 
@@ -82,7 +79,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(
             discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
@@ -107,7 +104,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = host
         return await self.async_step_auth()
 
-    async def _entry_from_data(self, data: dict[str, Any]) -> FlowResult:
+    async def _entry_from_data(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry from data."""
         host = data[CONF_HOST]
         gateway_id = data[CONF_GATEWAY_ID]
@@ -144,7 +141,7 @@ async def authenticate(
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()

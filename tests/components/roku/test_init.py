@@ -1,4 +1,5 @@
 """Tests for the Roku integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from rokuecp import RokuConnectionError
@@ -32,8 +33,8 @@ async def test_config_entry_no_unique_id(
     mock_roku: AsyncMock,
 ) -> None:
     """Test the Roku configuration entry with missing unique id."""
-    mock_config_entry.unique_id = None
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

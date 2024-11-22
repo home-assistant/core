@@ -1,4 +1,5 @@
 """The test for the sensibo switch platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,6 +7,7 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -15,12 +17,29 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SWITCH]],
+)
+async def test_switch(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Sensibo switch."""
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
 
 async def test_switch_timer(
@@ -36,12 +55,15 @@ async def test_switch_timer(
     assert state1.attributes["id"] is None
     assert state1.attributes["turn_on"] is None
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+            return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -70,12 +92,15 @@ async def test_switch_timer(
     assert state1.attributes["id"] == "SzTGE4oZ4D"
     assert state1.attributes["turn_on"] is False
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+            return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -114,12 +139,15 @@ async def test_switch_pure_boost(
     state1 = hass.states.get("switch.kitchen_pure_boost")
     assert state1.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -146,12 +174,15 @@ async def test_switch_pure_boost(
     state1 = hass.states.get("switch.kitchen_pure_boost")
     assert state1.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -189,14 +220,18 @@ async def test_switch_command_failure(
 
     state1 = hass.states.get("switch.hallway_timer")
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
-        return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+            return_value={"status": "failure"},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -207,14 +242,18 @@ async def test_switch_command_failure(
             blocking=True,
         )
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
-        return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+            return_value={"status": "failure"},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -237,12 +276,15 @@ async def test_switch_climate_react(
     state1 = hass.states.get("switch.hallway_climate_react")
     assert state1.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -268,12 +310,15 @@ async def test_switch_climate_react(
     state1 = hass.states.get("switch.hallway_climate_react")
     assert state1.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

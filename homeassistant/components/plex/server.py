@@ -1,6 +1,8 @@
 """Shared class to maintain Plex server instances."""
+
 from __future__ import annotations
 
+from copy import copy
 import logging
 import ssl
 import time
@@ -96,6 +98,7 @@ class PlexServer:
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
+            background=True,
         ).async_call
         self.thumbnail_cache = {}
 
@@ -481,9 +484,9 @@ class PlexServer:
                     continue
 
                 process_device("session", player)
-                available_clients[player.machineIdentifier][
-                    "session"
-                ] = self.active_sessions[unique_id]
+                available_clients[player.machineIdentifier]["session"] = (
+                    self.active_sessions[unique_id]
+                )
 
         for device in devices:
             process_device("PMS", device)
@@ -569,7 +572,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=protected-access
+        return self._plex_server._baseurl  # noqa: SLF001
 
     @property
     def option_ignore_new_shared_users(self):
@@ -662,3 +665,14 @@ class PlexServer:
     def sensor_attributes(self):
         """Return active session information for use in activity sensor."""
         return {x.sensor_user: x.sensor_title for x in self.active_sessions.values()}
+
+    def set_plex_server(self, plex_server: PlexServer) -> None:
+        """Set the PlexServer instance."""
+        self._plex_server = plex_server
+
+    def switch_user(self, username: str) -> PlexServer:
+        """Return a shallow copy of a PlexServer as the provided user."""
+        new_server = copy(self)
+        new_server.set_plex_server(self.plex_server.switchUser(username))
+
+        return new_server

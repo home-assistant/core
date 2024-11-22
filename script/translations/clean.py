@@ -1,4 +1,5 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
+
 import argparse
 
 from .const import CORE_PROJECT_ID, FRONTEND_DIR, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
@@ -99,7 +100,7 @@ def run():
         key_data = lokalise.keys_list({"filter_keys": ",".join(chunk), "limit": 1000})
         if len(key_data) != len(chunk):
             print(
-                f"Lookin up key in Lokalise returns {len(key_data)} results, expected {len(chunk)}"
+                f"Looking up key in Lokalise returns {len(key_data)} results, expected {len(chunk)}"
             )
 
         if not key_data:

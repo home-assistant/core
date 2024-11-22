@@ -1,4 +1,5 @@
 """Test the SoundTouch component."""
+
 from datetime import timedelta
 from typing import Any
 
@@ -664,7 +665,7 @@ async def test_zone_attributes(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_1_state = hass.states.get(DEVICE_1_ENTITY_ID)
     assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]

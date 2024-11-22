@@ -91,6 +91,35 @@
         "motor": "motor1"
       }
     ],
+    "climates": [
+      {
+        "name": "Climate1",
+        "address": "s0.m7",
+        "source": "var1",
+        "setpoint": "r1varsetpoint",
+        "lockable": true,
+        "min_temp": 0,
+        "max_temp": 40,
+        "unit_of_measurement": "°C"
+      }
+    ],
+    "scenes": [
+      {
+        "name": "Romantic",
+        "address": "s0.m7",
+        "register": 0,
+        "scene": 0,
+        "outputs": ["output1", "output2", "relay1"]
+      },
+      {
+        "name": "Romantic Transition",
+        "address": "s0.m7",
+        "register": 0,
+        "scene": 1,
+        "outputs": ["output1", "output2", "relay1"],
+        "transition": 10
+      }
+    ],
     "binary_sensors": [
       {
         "name": "Sensor_LockRegulator1",

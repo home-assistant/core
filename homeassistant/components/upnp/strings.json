@@ -21,7 +21,8 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Update interval (seconds, minimal 30)"
+          "scan_interval": "Update interval (seconds, minimal 30)",
+          "force_poll": "Force polling of all data"
         }
       }
     }
@@ -65,6 +66,9 @@
       },
       "wan_status": {
         "name": "WAN status"
+      },
+      "port_mapping_number_of_entries_ipv4": {
+        "name": "Number of port mapping entries (IPv4)"
       }
     }
   }

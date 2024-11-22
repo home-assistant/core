@@ -1,4 +1,5 @@
 """The Ecoforest integration."""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .coordinator import EcoforestCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

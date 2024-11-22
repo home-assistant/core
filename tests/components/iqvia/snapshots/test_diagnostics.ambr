@@ -348,8 +348,11 @@
         'zip_code': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'iqvia',
       'entry_id': '690ac4b7e99855fc5ee7b987a758d5cb',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

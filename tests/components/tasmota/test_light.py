@@ -1,6 +1,8 @@
 """The tests for the Tasmota light platform."""
+
 import copy
 import json
+from typing import Any
 from unittest.mock import patch
 
 from hatasmota.const import CONF_MAC
@@ -22,6 +24,8 @@ from .test_common import (
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
+    help_test_deep_sleep_availability,
+    help_test_deep_sleep_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -1475,7 +1479,13 @@ async def test_relay_as_light(
     assert state is not None
 
 
-async def _test_split_light(hass, mqtt_mock, config, num_lights, num_switches):
+async def _test_split_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_lights: int,
+    num_switches: int,
+) -> None:
     """Test multi-channel light split to single-channel dimmers."""
     mac = config["mac"]
 
@@ -1550,7 +1560,12 @@ async def test_split_light2(
     await _test_split_light(hass, mqtt_mock, config, 5, 2)
 
 
-async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
+async def _test_unlinked_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_switches: int,
+) -> None:
     """Test rgbww light split to rgb+ww."""
     mac = config["mac"]
     num_lights = 2
@@ -1669,6 +1684,21 @@ async def test_availability_when_connection_lost(
     )
 
 
+async def test_deep_sleep_availability_when_connection_lost(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
+    """Test availability after MQTT disconnection."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 2
+    config["lt_st"] = 1  # 1 channel light (Dimmer)
+    await help_test_deep_sleep_availability_when_connection_lost(
+        hass, mqtt_client_mock, mqtt_mock, Platform.LIGHT, config
+    )
+
+
 async def test_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -1677,6 +1707,16 @@ async def test_availability(
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
     await help_test_availability(hass, mqtt_mock, Platform.LIGHT, config)
+
+
+async def test_deep_sleep_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test availability."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 2
+    config["lt_st"] = 1  # 1 channel light (Dimmer)
+    await help_test_deep_sleep_availability(hass, mqtt_mock, Platform.LIGHT, config)
 
 
 async def test_availability_discovery_update(

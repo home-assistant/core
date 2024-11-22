@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
@@ -22,16 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
-
-_DeviceTypeT = TypeVar(
-    "_DeviceTypeT",
-    bound=(
-        SwitchBeeTimedSwitch
-        | SwitchBeeGroupSwitch
-        | SwitchBeeSwitch
-        | SwitchBeeTimerSwitch
-    ),
-)
 
 
 async def async_setup_entry(
@@ -55,7 +45,12 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
+class SwitchBeeSwitchEntity[
+    _DeviceTypeT: SwitchBeeTimedSwitch
+    | SwitchBeeGroupSwitch
+    | SwitchBeeSwitch
+    | SwitchBeeTimerSwitch
+](SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
     """Representation of a Switchbee switch."""
 
     def __init__(
@@ -102,7 +97,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             await self.coordinator.async_refresh()
             raise HomeAssistantError(
-                f"Failed to set {self._attr_name} state {state}, {str(exp)}"
+                f"Failed to set {self._attr_name} state {state}, {exp!s}"
             ) from exp
 
         await self.coordinator.async_refresh()

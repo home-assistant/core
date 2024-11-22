@@ -1,4 +1,5 @@
 """Support for the GIOS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosDataUpdateCoordinator
+from . import GiosConfigEntry
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
@@ -38,21 +38,16 @@ from .const import (
     MANUFACTURER,
     URL,
 )
+from .coordinator import GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class GiosSensorRequiredKeysMixin:
-    """Class for GIOS entity required keys."""
-
-    value: Callable[[GiosSensors], StateType]
-
-
-@dataclass
-class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class GiosSensorEntityDescription(SensorEntityDescription):
     """Class describing GIOS sensor entities."""
 
+    value: Callable[[GiosSensors], StateType]
     subkey: str | None = None
 
 
@@ -60,7 +55,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_AQI,
         value=lambda sensors: sensors.aqi.value if sensors.aqi else None,
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="aqi",
@@ -69,7 +63,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_C6H6,
         value=lambda sensors: sensors.c6h6.value if sensors.c6h6 else None,
         suggested_display_precision=0,
-        icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="c6h6",
@@ -78,7 +71,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_CO,
         value=lambda sensors: sensors.co.value if sensors.co else None,
         suggested_display_precision=0,
-        icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="co",
@@ -95,7 +87,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_NO2,
         subkey="index",
         value=lambda sensors: sensors.no2.index if sensors.no2 else None,
-        icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="no2_index",
@@ -112,7 +103,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_O3,
         subkey="index",
         value=lambda sensors: sensors.o3.index if sensors.o3 else None,
-        icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="o3_index",
@@ -129,7 +119,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_PM10,
         subkey="index",
         value=lambda sensors: sensors.pm10.index if sensors.pm10 else None,
-        icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="pm10_index",
@@ -146,7 +135,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_PM25,
         subkey="index",
         value=lambda sensors: sensors.pm25.index if sensors.pm25 else None,
-        icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="pm25_index",
@@ -163,7 +151,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_SO2,
         subkey="index",
         value=lambda sensors: sensors.so2.index if sensors.so2 else None,
-        icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="so2_index",
@@ -172,13 +159,12 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: GiosConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a GIOS entities from a config_entry."""
     name = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
+    coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)
@@ -243,11 +229,11 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        available = super().available
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)
+        available = super().available and bool(sensor_data)
 
         # Sometimes the API returns sensor data without indexes
-        if self.entity_description.subkey:
+        if self.entity_description.subkey and available:
             return available and bool(sensor_data.index)
 
-        return available and bool(sensor_data)
+        return available

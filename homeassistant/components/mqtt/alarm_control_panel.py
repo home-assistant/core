@@ -1,4 +1,5 @@
 """Control a MQTT alarm."""
+
 from __future__ import annotations
 
 import logging
@@ -6,23 +7,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,23 +23,19 @@ from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_FEATURES,
+    PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 _SUPPORTED_FEATURES = {
     "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
@@ -132,7 +118,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT alarm control panel through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttAlarm,
@@ -176,47 +162,46 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._attr_code_format = alarm.CodeFormat.TEXT
         self._attr_code_arm_required = bool(self._config[CONF_CODE_ARM_REQUIRED])
 
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Run when new MQTT message has been received."""
+        payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        if payload == PAYLOAD_NONE:
+            self._attr_alarm_state = None
+            return
+        if payload not in (
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
+            AlarmControlPanelState.DISARMING,
+            AlarmControlPanelState.TRIGGERED,
+        ):
+            _LOGGER.warning("Received unexpected payload: %s", msg.payload)
+            return
+        assert isinstance(payload, str)
+        self._attr_alarm_state = AlarmControlPanelState(payload)
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_state"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Run when new MQTT message has been received."""
-            payload = self._value_template(msg.payload)
-            if payload not in (
-                STATE_ALARM_DISARMED,
-                STATE_ALARM_ARMED_HOME,
-                STATE_ALARM_ARMED_AWAY,
-                STATE_ALARM_ARMED_NIGHT,
-                STATE_ALARM_ARMED_VACATION,
-                STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                STATE_ALARM_PENDING,
-                STATE_ALARM_ARMING,
-                STATE_ALARM_DISARMING,
-                STATE_ALARM_TRIGGERED,
-            ):
-                _LOGGER.warning("Received unexpected payload: %s", msg.payload)
-                return
-            self._attr_state = str(payload)
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": message_received,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
-            },
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.
@@ -299,13 +284,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     def _validate_code(self, code: str | None, state: str) -> bool:
         """Validate given code."""

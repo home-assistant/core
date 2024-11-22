@@ -1,14 +1,13 @@
 """Manage the history_stats data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
@@ -58,7 +57,7 @@ class HistoryStats:
         self._end = end
 
     async def async_update(
-        self, event: EventType[EventStateChangedData] | None
+        self, event: Event[EventStateChangedData] | None
     ) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end
@@ -177,18 +176,19 @@ class HistoryStats:
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
-        previous_state_matches = (
-            self._history_current_period
-            and self._history_current_period[0].state in self._entity_states
-        )
-        last_state_change_timestamp = start_timestamp
+        previous_state_matches = False
+        last_state_change_timestamp = 0.0
         elapsed = 0.0
-        match_count = 1 if previous_state_matches else 0
+        match_count = 0
 
         # Make calculations
         for history_state in self._history_current_period:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
+
+            if state_change_timestamp > now_timestamp:
+                # Shouldn't count states that are in the future
+                continue
 
             if previous_state_matches:
                 elapsed += state_change_timestamp - last_state_change_timestamp
@@ -196,7 +196,7 @@ class HistoryStats:
                 match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = state_change_timestamp
+            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:

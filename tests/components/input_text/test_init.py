@@ -1,4 +1,6 @@
 """The tests for the Input text component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +37,7 @@ TEST_VAL_MAX = 22
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -69,7 +71,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def async_set_value(hass, entity_id, value):
+async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_text to value."""
     await hass.services.async_call(
         DOMAIN,
@@ -165,7 +167,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         (State("input_text.b1", "test"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}}
@@ -187,7 +189,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         (State("input_text.b1", "testing"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -211,7 +213,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 
@@ -397,18 +399,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -420,11 +424,14 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test updating min/max updates the state."""
 
@@ -432,13 +439,12 @@ async def test_update(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_MODE] == MODE_TEXT
     assert state.state == "loaded from storage"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -470,18 +476,20 @@ async def test_update(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 

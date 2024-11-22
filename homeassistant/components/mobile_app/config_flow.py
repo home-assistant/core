@@ -1,20 +1,24 @@
 """Config flow for Mobile App."""
+
+from typing import Any
 import uuid
 
-from homeassistant import config_entries
 from homeassistant.components import person
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.helpers import entity_registry as er
 
 from .const import ATTR_APP_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
 
 
-class MobileAppFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Mobile App config flow."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         placeholders = {
             "apps_url": "https://www.home-assistant.io/integrations/mobile_app/#apps"
@@ -24,7 +28,9 @@ class MobileAppFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             reason="install_app", description_placeholders=placeholders
         )
 
-    async def async_step_registration(self, user_input=None):
+    async def async_step_registration(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized during registration."""
         if ATTR_DEVICE_ID in user_input:
             # Unique ID is combi of app + device ID.

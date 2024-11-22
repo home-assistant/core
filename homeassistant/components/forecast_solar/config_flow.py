@@ -1,4 +1,5 @@
 """Config flow for Forecast.Solar integration."""
+
 from __future__ import annotations
 
 import re
@@ -6,10 +7,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -36,11 +41,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> ForecastSolarOptionFlowHandler:
         """Get the options flow for this handler."""
-        return ForecastSolarOptionFlowHandler(config_entry)
+        return ForecastSolarOptionFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is not None:
             return self.async_create_entry(
@@ -75,7 +80,9 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_AZIMUTH, default=180): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=360)
                     ),
-                    vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
+                    vol.Required(CONF_MODULES_POWER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ),
         )
@@ -84,13 +91,9 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 class ForecastSolarOptionFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
@@ -126,7 +129,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                     vol.Required(
                         CONF_MODULES_POWER,
                         default=self.config_entry.options[CONF_MODULES_POWER],
-                    ): vol.Coerce(int),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                     vol.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(

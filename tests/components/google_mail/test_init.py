@@ -1,4 +1,5 @@
 """Tests for Google Mail."""
+
 import http
 import time
 from unittest.mock import patch

@@ -1,40 +1,36 @@
 """Test the V2C config flow."""
-from unittest.mock import AsyncMock, patch
+
+from unittest.mock import AsyncMock
 
 import pytest
 from pytrydan.exceptions import TrydanError
 
-from homeassistant import config_entries
 from homeassistant.components.v2c.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_full_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_v2c_client: AsyncMock
+) -> None:
+    """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "pytrydan.Trydan.get_data",
-        return_value={},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1"},
+    )
+    await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "EVSE 1.1.1.1"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EVSE 1.1.1.1"
+    assert result["data"] == {CONF_HOST: "1.1.1.1"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -46,41 +42,32 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ],
 )
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, side_effect: Exception, error: str
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    error: str,
+    mock_v2c_client: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    mock_v2c_client.get_data.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1"},
     )
 
-    with patch(
-        "pytrydan.Trydan.get_data",
-        side_effect=side_effect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    mock_v2c_client.get_data.side_effect = None
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1"},
+    )
+    await hass.async_block_till_done()
 
-    with patch(
-        "pytrydan.Trydan.get_data",
-        return_value={},
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "EVSE 1.1.1.1"
-    assert result3["data"] == {
-        "host": "1.1.1.1",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EVSE 1.1.1.1"
+    assert result["data"] == {CONF_HOST: "1.1.1.1"}

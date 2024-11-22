@@ -3,44 +3,46 @@
 The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
+
 from functools import partial
 import importlib
 import json
 from pathlib import Path
 import sys
+import threading
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import (
     CREATE_ENGINE_TARGET,
+    async_wait_recording_done,
     create_engine_test_for_schema_version_postfix,
     get_schema_module_path,
-    wait_recording_done,
 )
 
-from tests.common import get_test_home_assistant
-
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+from tests.common import async_test_home_assistant
+from tests.typing import RecorderInstanceGenerator
 
 SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
 
-def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_delete_duplicates(
+    async_test_recorder: RecorderInstanceGenerator, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -161,66 +163,73 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+            ),
         ),
     ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+        async with async_test_home_assistant() as hass, async_test_recorder(hass):
+            get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
-            )
-        with session_scope(hass=hass) as session:
-            for stat in external_energy_statistics_1:
-                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
-            for stat in external_energy_statistics_2:
-                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
-            for stat in external_co2_statistics:
-                session.add(recorder.db_schema.Statistics.from_stats(3, stat))
+            with session_scope(hass=hass) as session:
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_1
+                    )
+                )
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_2
+                    )
+                )
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
+                )
+            with session_scope(hass=hass) as session:
+                for stat in external_energy_statistics_1:
+                    session.add(recorder.db_schema.Statistics.from_stats(1, stat))
+                for stat in external_energy_statistics_2:
+                    session.add(recorder.db_schema.Statistics.from_stats(2, stat))
+                for stat in external_co2_statistics:
+                    session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    async with async_test_home_assistant() as hass, async_test_recorder(hass):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+        await hass.async_stop()
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
-def test_delete_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_delete_duplicates_many(
+    async_test_recorder: RecorderInstanceGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -341,57 +350,63 @@ def test_delete_duplicates_many(
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+            ),
         ),
     ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+        async with async_test_home_assistant() as hass, async_test_recorder(hass):
+            get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
-            )
-        with session_scope(hass=hass) as session:
-            for stat in external_energy_statistics_1:
-                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
-            for _ in range(3000):
+            with session_scope(hass=hass) as session:
                 session.add(
-                    recorder.db_schema.Statistics.from_stats(
-                        1, external_energy_statistics_1[-1]
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_1
                     )
                 )
-            for stat in external_energy_statistics_2:
-                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
-            for stat in external_co2_statistics:
-                session.add(recorder.db_schema.Statistics.from_stats(3, stat))
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_2
+                    )
+                )
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
+                )
+            with session_scope(hass=hass) as session:
+                for stat in external_energy_statistics_1:
+                    session.add(recorder.db_schema.Statistics.from_stats(1, stat))
+                for _ in range(3000):
+                    session.add(
+                        recorder.db_schema.Statistics.from_stats(
+                            1, external_energy_statistics_1[-1]
+                        )
+                    )
+                for stat in external_energy_statistics_2:
+                    session.add(recorder.db_schema.Statistics.from_stats(2, stat))
+                for stat in external_co2_statistics:
+                    session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    async with async_test_home_assistant() as hass, async_test_recorder(hass):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+        await hass.async_stop()
 
     assert "Deleted 3002 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
@@ -399,15 +414,18 @@ def test_delete_duplicates_many(
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-def test_delete_duplicates_non_identical(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_delete_duplicates_non_identical(
+    async_test_recorder: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -498,47 +516,55 @@ def test_delete_duplicates_non_identical(
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+            ),
         ),
     ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+        async with async_test_home_assistant() as hass, async_test_recorder(hass):
+            get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
-            )
-        with session_scope(hass=hass) as session:
-            for stat in external_energy_statistics_1:
-                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
-            for stat in external_energy_statistics_2:
-                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
+            with session_scope(hass=hass) as session:
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_1
+                    )
+                )
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_2
+                    )
+                )
+            with session_scope(hass=hass) as session:
+                for stat in external_energy_statistics_1:
+                    session.add(recorder.db_schema.Statistics.from_stats(1, stat))
+                for stat in external_energy_statistics_2:
+                    session.add(recorder.db_schema.Statistics.from_stats(2, stat))
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    async with (
+        async_test_home_assistant(config_dir=tmp_path) as hass,
+        async_test_recorder(hass),
+    ):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+        await hass.async_stop()
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Deleted 1 non identical" in caplog.text
@@ -547,8 +573,11 @@ def test_delete_duplicates_non_identical(
     isotime = dt_util.utcnow().isoformat()
     backup_file_name = f".storage/deleted_statistics.{isotime}.json"
 
-    with open(hass.config.path(backup_file_name)) as backup_file:
-        backup = json.load(backup_file)
+    def read_backup():
+        with open(hass.config.path(backup_file_name), encoding="utf8") as backup_file:
+            return json.load(backup_file)
+
+    backup = await hass.async_add_executor_job(read_backup)
 
     assert backup == [
         {
@@ -580,15 +609,18 @@ def test_delete_duplicates_non_identical(
     ]
 
 
-def test_delete_duplicates_short_term(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_delete_duplicates_short_term(
+    async_test_recorder: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -610,46 +642,52 @@ def test_delete_duplicates_short_term(
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+            ),
         ),
     ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+        async with async_test_home_assistant() as hass, async_test_recorder(hass):
+            get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
-            )
-            session.add(
-                recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
-            )
+            with session_scope(hass=hass) as session:
+                session.add(
+                    recorder.db_schema.StatisticsMeta.from_meta(
+                        external_energy_metadata_1
+                    )
+                )
+            with session_scope(hass=hass) as session:
+                session.add(
+                    recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
+                )
+                session.add(
+                    recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
+                )
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    async with (
+        async_test_home_assistant(config_dir=tmp_path) as hass,
+        async_test_recorder(hass),
+    ):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+        await hass.async_stop()
 
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text

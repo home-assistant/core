@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_setup_and_update
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.10_10_10_10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ping',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_and_update.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': '10.10.10.10',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.10_10_10_10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_and_update.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': '10.10.10.10',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.10_10_10_10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

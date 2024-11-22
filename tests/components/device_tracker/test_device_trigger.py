@@ -1,14 +1,14 @@
 """The tests for Device Tracker device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, zone
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_tracker import DOMAIN, device_trigger
-import homeassistant.components.zone as zone
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -17,11 +17,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -36,14 +32,8 @@ HOME_LATITUDE = 32.880837
 HOME_LONGITUDE = -117.237561
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
 @pytest.fixture(autouse=True)
-def setup_zone(hass):
+def setup_zone(hass: HomeAssistant) -> None:
     """Create test zone."""
     hass.loop.run_until_complete(
         async_setup_component(
@@ -85,7 +75,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["leaves", "enters"]
+        for trigger in ("leaves", "enters")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -95,12 +85,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -133,7 +123,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["leaves", "enters"]
+        for trigger in ("leaves", "enters")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -145,7 +135,7 @@ async def test_if_fires_on_zone_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for enter and leave triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -228,9 +218,9 @@ async def test_if_fires_on_zone_change(
         {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"enter - device - {entry.entity_id} - -117.235 - -117.238"
     )
 
@@ -241,9 +231,9 @@ async def test_if_fires_on_zone_change(
         {"latitude": AWAY_LATITUDE, "longitude": AWAY_LONGITUDE},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"leave - device - {entry.entity_id} - -117.238 - -117.235"
     )
 
@@ -252,7 +242,7 @@ async def test_if_fires_on_zone_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for enter and leave triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -311,9 +301,9 @@ async def test_if_fires_on_zone_change_legacy(
         {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"enter - device - {entry.entity_id} - -117.235 - -117.238"
     )
 

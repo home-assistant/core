@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'cameras': dict({
+      'Camera 1': dict({
+        'battery': 'ok',
+        'battery_voltage': None,
+        'camera_id': '111111',
+        'last_record': None,
+        'motion_detected': False,
+        'motion_enabled': True,
+        'name': 'Camera 1',
+        'network_id': 222222,
+        'recent_clips': list([
+        ]),
+        'serial': '**REDACTED**',
+        'sync_module': 'sync module',
+        'temperature': None,
+        'temperature_c': 25.1,
+        'temperature_calibrated': None,
+        'thumbnail': 'https://rest-u034.immedia-semi.com/api/v3/media/accounts/111111/networks/222222/lotus/333333/thumbnail/thumbnail.jpg?ts=1698141602&ext=',
+        'type': 'lotus',
+        'video': None,
+        'wifi_strength': None,
+      }),
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'account_id': 654321,
+        'client_id': 123456,
+        'device_id': 'Home Assistant',
+        'host': 'u034.immedia-semi.com',
+        'password': '**REDACTED**',
+        'region_id': 'u034',
+        'token': '**REDACTED**',
+        'uid': 'BlinkCamera_e1233333e2-0909-09cd-777a-123456789012',
+        'unique_id': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'blink',
+      'minor_version': 1,
+      'options': dict({
+        'scan_interval': 300,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 3,
+    }),
+  })
+# ---

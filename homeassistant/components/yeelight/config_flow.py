@@ -1,8 +1,9 @@
 """Config flow for Yeelight integration."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
+from typing import Any, Self
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -10,13 +11,19 @@ import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_DETECTED_MODEL,
@@ -41,52 +48,57 @@ MODEL_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yeelight."""
 
     VERSION = 1
 
+    _discovered_ip: str = ""
+    _discovered_model: str
+
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices = {}
-        self._discovered_model = None
-        self._discovered_ip = None
+        self._discovered_devices: dict[str, Any] = {}
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from homekit."""
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from dhcp."""
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host
-        await self.async_set_unique_id(
-            "{0:#0{1}x}".format(int(discovery_info.name[-26:-18]), 18)
-        )
+        await self.async_set_unique_id(f"{int(discovery_info.name[-26:-18]):#018x}")
         return await self._async_handle_discovery_with_unique_id()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from ssdp."""
         self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
         await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
         return await self._async_handle_discovery_with_unique_id()
 
-    async def _async_handle_discovery_with_unique_id(self):
+    async def _async_handle_discovery_with_unique_id(self) -> ConfigFlowResult:
         """Handle any discovery with a unique id."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id != self.unique_id and self.unique_id != entry.data.get(
@@ -103,18 +115,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                 )
             if reload:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 
-    async def _async_handle_discovery(self):
+    async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
-        self.context[CONF_HOST] = self._discovered_ip
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
         try:
@@ -132,7 +140,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None):
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
@@ -155,7 +169,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -187,7 +203,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_pick_device(self, user_input=None):
+    async def async_step_pick_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
@@ -232,23 +250,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import step."""
-        host = user_input[CONF_HOST]
+        host = import_data[CONF_HOST]
         try:
             await self._async_try_connect(host, raise_on_progress=False)
         except CannotConnect:
             _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
-        if CONF_NIGHTLIGHT_SWITCH_TYPE in user_input:
-            user_input[CONF_NIGHTLIGHT_SWITCH] = (
-                user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
+        if CONF_NIGHTLIGHT_SWITCH_TYPE in import_data:
+            import_data[CONF_NIGHTLIGHT_SWITCH] = (
+                import_data.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
                 == NIGHTLIGHT_SWITCH_TYPE_LIGHT
             )
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+        return self.async_create_entry(title=import_data[CONF_NAME], data=import_data)
 
-    async def _async_try_connect(self, host, raise_on_progress=True):
+    async def _async_try_connect(
+        self, host: str, raise_on_progress: bool = True
+    ) -> str:
         """Set up with options."""
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -268,24 +288,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
-        except (asyncio.TimeoutError, yeelight.BulbException) as err:
+        except (TimeoutError, yeelight.BulbException) as err:
             _LOGGER.debug("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
         return MODEL_UNKNOWN
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Yeelight."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the option flow."""
-        self._config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data = self._config_entry.data
-        options = self._config_entry.options
+        data = self.config_entry.data
+        options = self.config_entry.options
         detected_model = data.get(CONF_DETECTED_MODEL)
         model = options[CONF_MODEL] or detected_model
 
@@ -294,7 +312,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 title="", data={CONF_MODEL: model, **options, **user_input}
             )
 
-        schema_dict = {}
+        schema_dict: VolDictType = {}
         known_models = get_known_models()
         if is_unknown_model := model not in known_models:
             known_models.insert(0, model)
@@ -326,5 +344,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

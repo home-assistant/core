@@ -1,4 +1,5 @@
 """Platform for Control4 Lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,9 +23,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import Control4Entity, get_items_of_category
+from . import get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
 from .director_utils import update_variables_for_config_entry
+from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ async def async_setup_entry(
         scan_interval,
     )
 
-    async def async_update_data_non_dimmer():
+    async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for non-dimmer lights."""
         try:
             return await update_variables_for_config_entry(
@@ -53,7 +55,7 @@ async def async_setup_entry(
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    async def async_update_data_dimmer():
+    async def async_update_data_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for dimmer lights."""
         try:
             return await update_variables_for_config_entry(
@@ -62,14 +64,14 @@ async def async_setup_entry(
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    non_dimmer_coordinator = DataUpdateCoordinator(
+    non_dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
         _LOGGER,
         name="light",
         update_method=async_update_data_non_dimmer,
         update_interval=timedelta(seconds=scan_interval),
     )
-    dimmer_coordinator = DataUpdateCoordinator(
+    dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
         _LOGGER,
         name="light",
@@ -148,10 +150,12 @@ async def async_setup_entry(
 class Control4Light(Control4Entity, LightEntity):
     """Control4 light entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         entry_data: dict,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
         idx: int,
         device_name: str | None,

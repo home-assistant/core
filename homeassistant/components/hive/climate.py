@@ -1,8 +1,10 @@
 """Support for the Hive climate devices."""
+
 from datetime import timedelta
 import logging
 from typing import Any
 
+from apyhiveapi import Hive
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -19,13 +21,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import (
     ATTR_TIME_PERIOD,
     DOMAIN,
     SERVICE_BOOST_HEATING_OFF,
     SERVICE_BOOST_HEATING_ON,
 )
+from .entity import HiveEntity
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVACMode.AUTO,
@@ -45,7 +48,10 @@ HIVE_TO_HASS_HVAC_ACTION = {
     True: HVACAction.HEATING,
 }
 
-TEMP_UNIT = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
+TEMP_UNIT = {
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
+}
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger()
@@ -58,11 +64,8 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("climate")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveClimateEntity(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -81,7 +84,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING_OFF,
-        {},
+        None,
         "async_heating_boost_off",
     )
 
@@ -92,14 +95,18 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = [PRESET_BOOST, PRESET_NONE]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, hive_session, hive_device):
+    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the Climate device."""
-        super().__init__(hive_session, hive_device)
+        super().__init__(hive, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
-        self._attr_temperature_unit = TEMP_UNIT.get(hive_device["temperatureunit"])
+        self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 
     @refresh_system
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -130,7 +137,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         await self.hive.heating.setBoostOn(self.device, time_period, temperature)
 
     @refresh_system
-    async def async_heating_boost_off(self):
+    async def async_heating_boost_off(self) -> None:
         """Handle boost heating service call."""
         await self.hive.heating.setBoostOff(self.device)
 
@@ -140,10 +147,10 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         self.device = await self.hive.heating.getClimate(self.device)
         self._attr_available = self.device["deviceData"].get("online")
         if self._attr_available:
-            self._attr_hvac_mode = HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
-            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION[
+            self._attr_hvac_mode = HIVE_TO_HASS_STATE.get(self.device["status"]["mode"])
+            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(
                 self.device["status"]["action"]
-            ]
+            )
             self._attr_current_temperature = self.device["status"][
                 "current_temperature"
             ]
@@ -152,5 +159,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             self._attr_max_temp = self.device["max_temp"]
             if self.device["status"]["boost"] == "ON":
                 self._attr_preset_mode = PRESET_BOOST
+                self._attr_hvac_mode = HVACMode.HEAT
             else:
                 self._attr_preset_mode = PRESET_NONE

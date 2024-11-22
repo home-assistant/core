@@ -1,14 +1,15 @@
-"""Support for the PRT Heatmiser themostats using the V3 protocol."""
+"""Support for the PRT Heatmiser thermostats using the V3 protocol."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from heatmiserV3 import connection, heatmiser
+from heatmiserv3 import connection, heatmiser
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -37,7 +38,7 @@ TSTATS_SCHEMA = vol.Schema(
     )
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.string,
@@ -76,7 +77,12 @@ class HeatmiserV3Thermostat(ClimateEntity):
     """Representation of a HeatmiserV3 thermostat."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""

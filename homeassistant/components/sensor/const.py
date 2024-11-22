@@ -1,7 +1,9 @@
 """Constants for sensor."""
+
 from __future__ import annotations
 
 from enum import StrEnum
+from functools import partial
 from typing import Final
 
 import voluptuous as vol
@@ -12,10 +14,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -28,17 +32,29 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -50,6 +66,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 DOMAIN: Final = "sensor"
@@ -102,6 +119,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
+    """
+
     ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
     """Atmospheric pressure.
 
@@ -114,6 +137,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
+    """
+
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
@@ -124,6 +153,12 @@ class SensorDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -163,7 +198,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -172,7 +207,7 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -280,7 +315,7 @@ class SensorDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -331,9 +366,10 @@ class SensorDeviceClass(StrEnum):
     """Generic speed.
 
     Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
-    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
-    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`, `mm/s`
+    - USCS / imperial: `in/d`, `in/h`, `in/s`, `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
     SULPHUR_DIOXIDE = "sulphur_dioxide"
@@ -363,7 +399,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`
+    Unit of measurement: `V`, `mV`, `µV`
     """
 
     VOLUME = "volume"
@@ -385,6 +421,14 @@ class SensorDeviceClass(StrEnum):
     - SI / metric: `mL`, `L`, `m³`
     - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    VOLUME_FLOW_RATE = "volume_flow_rate"
+    """Generic flow rate
+
+    Unit of measurement: UnitOfVolumeFlowRate
+    - SI / metric: `m³/h`, `L/min`, `mL/s`
+    - USCS / imperial: `ft³/min`, `gal/min`
     """
 
     WATER = "water"
@@ -413,6 +457,7 @@ class SensorDeviceClass(StrEnum):
     - SI /metric: `m/s`, `km/h`
     - USCS / imperial: `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
 
@@ -451,17 +496,27 @@ STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
 
 # STATE_CLASS* is deprecated as of 2021.12
 # use the SensorStateClass enum instead.
-STATE_CLASS_MEASUREMENT: Final = "measurement"
-STATE_CLASS_TOTAL: Final = "total"
-STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
+_DEPRECATED_STATE_CLASS_MEASUREMENT: Final = DeprecatedConstantEnum(
+    SensorStateClass.MEASUREMENT, "2025.1"
+)
+_DEPRECATED_STATE_CLASS_TOTAL: Final = DeprecatedConstantEnum(
+    SensorStateClass.TOTAL, "2025.1"
+)
+_DEPRECATED_STATE_CLASS_TOTAL_INCREASING: Final = DeprecatedConstantEnum(
+    SensorStateClass.TOTAL_INCREASING, "2025.1"
+)
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
+    SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
+    SensorDeviceClass.DURATION: DurationConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
@@ -476,6 +531,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
+    SensorDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
@@ -484,10 +540,13 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
 DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
+    SensorDeviceClass.AREA: set(UnitOfArea),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -524,7 +583,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
-    SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -542,6 +601,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
+    SensorDeviceClass.VOLUME_FLOW_RATE: set(UnitOfVolumeFlowRate),
     SensorDeviceClass.VOLUME_STORAGE: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -557,10 +617,13 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.AREA: set(SensorStateClass),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CURRENT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),
@@ -608,10 +671,22 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL_INCREASING,
     },
     SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLUME_FLOW_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.WEIGHT: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.WEIGHT: {
+        SensorStateClass.MEASUREMENT,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -1,4 +1,5 @@
 """The youless integration."""
+
 from datetime import timedelta
 import logging
 from urllib.error import URLError
@@ -35,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="youless_gateway",
         update_method=async_update_data,
         update_interval=timedelta(seconds=10),

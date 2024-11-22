@@ -1,4 +1,5 @@
 """Tests for various Plex services."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

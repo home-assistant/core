@@ -1,4 +1,5 @@
 """Tests for light platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
@@ -23,7 +24,6 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     CONF_WHITE_CHANNEL_TYPE,
@@ -55,6 +55,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EFFECT,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
@@ -516,7 +517,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     await hass.services.async_call(
@@ -533,7 +534,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 56)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 56)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -651,7 +652,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     # which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128

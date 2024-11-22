@@ -1,4 +1,5 @@
 """Services for the Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -52,7 +53,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for config_entry in config_entries:
             if config_entry.state != ConfigEntryState.LOADED:
                 raise HomeAssistantError(f"{config_entry.title} is not loaded")
-            coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
+            coordinators.append(config_entry.runtime_data)
         return coordinators
 
     async def async_load_url(call: ServiceCall) -> None:
@@ -68,18 +69,21 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def async_set_config(call: ServiceCall) -> None:
         """Set a Fully Kiosk Browser config value on the device."""
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            key = call.data[ATTR_KEY]
+            value = call.data[ATTR_VALUE]
+
             # Fully API has different methods for setting string and bool values.
             # check if call.data[ATTR_VALUE] is a bool
-            if isinstance(call.data[ATTR_VALUE], bool) or call.data[
-                ATTR_VALUE
-            ].lower() in ("true", "false"):
-                await coordinator.fully.setConfigurationBool(
-                    call.data[ATTR_KEY], call.data[ATTR_VALUE]
-                )
+            if isinstance(value, bool) or (
+                isinstance(value, str) and value.lower() in ("true", "false")
+            ):
+                await coordinator.fully.setConfigurationBool(key, value)
             else:
-                await coordinator.fully.setConfigurationString(
-                    call.data[ATTR_KEY], call.data[ATTR_VALUE]
-                )
+                # Convert any int values to string
+                if isinstance(value, int):
+                    value = str(value)
+
+                await coordinator.fully.setConfigurationString(key, value)
 
     # Register all the above services
     service_mapping = [
@@ -110,7 +114,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 {
                     vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
                     vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(str, bool),
+                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int),
                 }
             )
         ),

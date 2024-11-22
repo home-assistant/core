@@ -1,4 +1,5 @@
 """Test the Panasonic Viera setup process."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant.components.panasonic_viera.const import (

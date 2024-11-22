@@ -1,4 +1,5 @@
 """Support for Magic Home lights."""
+
 from __future__ import annotations
 
 import ast
@@ -22,10 +23,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -37,7 +40,6 @@ from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
@@ -87,7 +89,7 @@ SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 SERVICE_SET_ZONES: Final = "set_zones"
 SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
 
-CUSTOM_EFFECT_DICT: Final = {
+CUSTOM_EFFECT_DICT: VolDictType = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
@@ -101,7 +103,7 @@ CUSTOM_EFFECT_DICT: Final = {
     ),
 }
 
-SET_MUSIC_MODE_DICT: Final = {
+SET_MUSIC_MODE_DICT: VolDictType = {
     vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=100)
     ),
@@ -120,7 +122,7 @@ SET_MUSIC_MODE_DICT: Final = {
     ),
 }
 
-SET_ZONES_DICT: Final = {
+SET_ZONES_DICT: VolDictType = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=2048),

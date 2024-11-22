@@ -1,4 +1,5 @@
 """Support for SCSGate switches."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,10 @@ from scsgate.messages import ScenarioTriggeredMessage, StateMessage
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +26,7 @@ ATTR_SCENARIO_ID = "scenario_id"
 CONF_TRADITIONAL = "traditional"
 CONF_SCENARIO = "scenario"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(SCSGATE_SCHEMA)}
 )
 

@@ -1,4 +1,5 @@
 """Matter switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -34,6 +35,8 @@ async def async_setup_entry(
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
+    _platform_translation_key = "switch"
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.matter_client.send_device_command(
@@ -63,21 +66,77 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=SwitchEntityDescription(
-            key="MatterPlug", device_class=SwitchDeviceClass.OUTLET, name=None
+            key="MatterPlug",
+            device_class=SwitchDeviceClass.OUTLET,
+            name=None,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
-        # restrict device type to prevent discovery by the wrong platform
+        device_type=(device_types.OnOffPlugInUnit,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=SwitchEntityDescription(
+            key="MatterPowerToggle",
+            device_class=SwitchDeviceClass.SWITCH,
+            translation_key="power",
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        device_type=(
+            device_types.AirPurifier,
+            device_types.BasicVideoPlayer,
+            device_types.CastingVideoPlayer,
+            device_types.CookSurface,
+            device_types.Cooktop,
+            device_types.Dishwasher,
+            device_types.ExtractorHood,
+            device_types.HeatingCoolingUnit,
+            device_types.LaundryDryer,
+            device_types.LaundryWasher,
+            device_types.Oven,
+            device_types.Pump,
+            device_types.PumpController,
+            device_types.Refrigerator,
+            device_types.RoboticVacuumCleaner,
+            device_types.RoomAirConditioner,
+            device_types.Speaker,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=SwitchEntityDescription(
+            key="MatterSwitch",
+            device_class=SwitchDeviceClass.OUTLET,
+            name=None,
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
         not_device_type=(
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.ExtendedColorLight,
-            device_types.OnOffLight,
-            device_types.DoorLock,
-            device_types.ColorDimmerSwitch,
             device_types.DimmerSwitch,
-            device_types.OnOffLightSwitch,
-            device_types.Thermostat,
+            device_types.ColorDimmerSwitch,
+            device_types.OnOffLight,
+            device_types.AirPurifier,
+            device_types.BasicVideoPlayer,
+            device_types.CastingVideoPlayer,
+            device_types.CookSurface,
+            device_types.Cooktop,
+            device_types.Dishwasher,
+            device_types.ExtractorHood,
+            device_types.Fan,
+            device_types.HeatingCoolingUnit,
+            device_types.LaundryDryer,
+            device_types.LaundryWasher,
+            device_types.Oven,
+            device_types.Pump,
+            device_types.PumpController,
+            device_types.Refrigerator,
+            device_types.RoboticVacuumCleaner,
+            device_types.RoomAirConditioner,
+            device_types.Speaker,
         ),
     ),
 ]

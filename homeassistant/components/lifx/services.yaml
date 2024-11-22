@@ -281,6 +281,58 @@ effect_morph:
       default: true
       selector:
         boolean:
+effect_sky:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power_on:
+      default: true
+      selector:
+        boolean:
+    speed:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 86400
+          step: 1
+          unit_of_measurement: seconds
+    sky_type:
+      default: "Clouds"
+      example: "Clouds"
+      selector:
+        select:
+          options:
+            - "Clouds"
+            - "Sunrise"
+            - "Sunset"
+    cloud_saturation_min:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 255
+    cloud_saturation_max:
+      default: 180
+      example: 180
+      selector:
+        number:
+          min: 0
+          max: 255
+    palette:
+      example:
+        - "[200, 1, 1, 3500]"
+        - "[241, 1, 0.01, 3500]"
+        - "[189, 1, 0.08, 3500]"
+        - "[40, 1, 1, 3500]"
+        - "[40, 0.5, 1, 3500]"
+        - "[40, 0, 1, 6500]"
+      selector:
+        object:
 effect_stop:
   target:
     entity:

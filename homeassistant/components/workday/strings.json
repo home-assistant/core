@@ -19,15 +19,19 @@
           "workdays": "Workdays",
           "add_holidays": "Add holidays",
           "remove_holidays": "Remove Holidays",
-          "province": "Subdivision of country"
+          "province": "Subdivision of country",
+          "language": "Language for named holidays",
+          "category": "Additional category as holiday"
         },
         "data_description": {
-          "excludes": "List of workdays to exclude",
-          "days_offset": "Days offset",
-          "workdays": "List of workdays",
+          "excludes": "List of workdays to exclude, notice the keyword `holiday` and read the documentation on how to use it correctly",
+          "days_offset": "Days offset from current day",
+          "workdays": "List of working days",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
-          "province": "State, Territory, Province, Region of Country"
+          "province": "State, territory, province or region of country",
+          "language": "Language to use when configuring named holiday exclusions",
+          "category": "Select additional categories to include as holidays"
         }
       }
     },
@@ -48,7 +52,9 @@
           "workdays": "[%key:component::workday::config::step::options::data::workdays%]",
           "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
-          "province": "[%key:component::workday::config::step::options::data::province%]"
+          "province": "[%key:component::workday::config::step::options::data::province%]",
+          "language": "[%key:component::workday::config::step::options::data::language%]",
+          "category": "[%key:component::workday::config::step::options::data::category%]"
         },
         "data_description": {
           "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
@@ -56,7 +62,9 @@
           "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]",
           "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
-          "province": "[%key:component::workday::config::step::options::data_description::province%]"
+          "province": "[%key:component::workday::config::step::options::data_description::province%]",
+          "language": "[%key:component::workday::config::step::options::data_description::language%]",
+          "category": "[%key:component::workday::config::step::options::data_description::category%]"
         }
       }
     },
@@ -72,6 +80,25 @@
     "province": {
       "options": {
         "none": "No subdivision"
+      }
+    },
+    "category": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "catholic": "Catholic",
+        "chinese": "Chinese",
+        "christian": "Christian",
+        "government": "Government",
+        "half_day": "Half day",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic",
+        "optional": "Optional",
+        "public": "Public",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday"
       }
     },
     "days": {
@@ -126,6 +153,46 @@
               "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
             }
           }
+        }
+      }
+    },
+    "bad_named_holiday": {
+      "title": "Configured named holiday {remove_holidays} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "fix_remove_holiday": {
+            "title": "[%key:component::workday::issues::bad_named_holiday::title%]",
+            "description": "Remove named holiday `{remove_holidays}` as it can't be found in country {country}.",
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            }
+          }
+        },
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
+        }
+      }
+    },
+    "bad_date_holiday": {
+      "title": "Configured holiday date {remove_holidays} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "fix_remove_holiday": {
+            "title": "[%key:component::workday::issues::bad_date_holiday::title%]",
+            "description": "Remove holiday date `{remove_holidays}` as it can't be found in country {country}.",
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            }
+          }
+        },
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
         }
       }
     }

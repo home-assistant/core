@@ -1,0 +1,16 @@
+{
+  "services": {
+    "purge": {
+      "service": "mdi:database-sync"
+    },
+    "purge_entities": {
+      "service": "mdi:database-sync"
+    },
+    "disable": {
+      "service": "mdi:database-off"
+    },
+    "enable": {
+      "service": "mdi:database"
+    }
+  }
+}

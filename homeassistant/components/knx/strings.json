@@ -108,10 +108,6 @@
         }
       }
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
@@ -271,6 +267,22 @@
     }
   },
   "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "auto": "Auto",
+              "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "standby": "Standby",
+              "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "building_protection": "Building protection"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "individual_address": {
         "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
@@ -282,25 +294,46 @@
         "name": "Connection type"
       },
       "telegrams_incoming": {
-        "name": "Incoming telegrams"
+        "name": "Incoming telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegram_count::unit_of_measurement%]"
       },
       "telegrams_incoming_error": {
-        "name": "Incoming telegram errors"
+        "name": "Incoming telegram errors",
+        "unit_of_measurement": "errors"
       },
       "telegrams_outgoing": {
-        "name": "Outgoing telegrams"
+        "name": "Outgoing telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegram_count::unit_of_measurement%]"
       },
       "telegrams_outgoing_error": {
-        "name": "Outgoing telegram errors"
+        "name": "Outgoing telegram errors",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegrams_incoming_error::unit_of_measurement%]"
       },
       "telegram_count": {
-        "name": "Telegrams"
+        "name": "Telegrams",
+        "unit_of_measurement": "telegrams"
       }
     }
   },
   "device_automation": {
     "trigger_type": {
-      "telegram": "Telegram sent or received"
+      "telegram": "Telegram"
+    },
+    "extra_fields": {
+      "destination": "Group addresses",
+      "group_value_write": "GroupValueWrite",
+      "group_value_read": "GroupValueRead",
+      "group_value_response": "GroupValueResponse",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "extra_fields_descriptions": {
+      "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
+      "group_value_write": "Listen on GroupValueWrite telegrams.",
+      "group_value_read": "Listen on GroupValueRead telegrams.",
+      "group_value_response": "Listen on GroupValueResponse telegrams.",
+      "incoming": "Listen on incoming telegrams.",
+      "outgoing": "Listen on outgoing telegrams."
     }
   },
   "services": {

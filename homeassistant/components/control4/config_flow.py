@@ -1,8 +1,9 @@
 """Config flow for Control4 integration."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError as asyncioTimeoutError
 import logging
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientError
 from pyControl4.account import C4Account
@@ -10,14 +11,20 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -42,7 +49,9 @@ DATA_SCHEMA = vol.Schema(
 class Control4Validator:
     """Validates that config details can be used to authenticate and communicate with Control4."""
 
-    def __init__(self, host, username, password, hass):
+    def __init__(
+        self, host: str, username: str, password: str, hass: HomeAssistant
+    ) -> None:
         """Initialize."""
         self.host = host
         self.username = username
@@ -67,9 +76,9 @@ class Control4Validator:
             self.director_bearer_token = (
                 await account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
-            return True
         except (Unauthorized, NotFound):
             return False
+        return True
 
     async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
@@ -81,18 +90,20 @@ class Control4Validator:
                 self.host, self.director_bearer_token, director_session
             )
             await director.getAllItemInfo()
-            return True
-        except (Unauthorized, ClientError, asyncioTimeoutError):
+        except (Unauthorized, ClientError, TimeoutError):
             _LOGGER.error("Failed to connect to the Control4 controller")
             return False
+        return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -104,19 +115,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 if not await hub.authenticate():
-                    raise InvalidAuth
+                    raise InvalidAuth  # noqa: TRY301
                 if not await hub.connect_to_director():
-                    raise CannotConnect
+                    raise CannotConnect  # noqa: TRY301
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if not errors:
                 controller_unique_id = hub.controller_unique_id
+                if TYPE_CHECKING:
+                    assert hub.controller_unique_id
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
                 await self.async_set_unique_id(formatted_mac)
@@ -138,20 +151,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Control4."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -169,9 +180,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

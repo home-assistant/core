@@ -1,9 +1,10 @@
 """Tests for the APCUPSd component."""
+
 from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -95,9 +96,7 @@ async def async_init_integration(
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", return_value=status), patch(
-        "apcaccess.status.get", return_value=b""
-    ):
+    with patch("aioapcaccess.request_status", return_value=status):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

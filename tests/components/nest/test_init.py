@@ -7,6 +7,8 @@ By default all tests use test fixtures that run in each possible configuration
 mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
+
+from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -22,19 +24,15 @@ import pytest
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .common import (
     PROJECT_ID,
     SUBSCRIBER_ID,
-    TEST_CONFIG_ENTRY_LEGACY,
-    TEST_CONFIG_LEGACY,
-    TEST_CONFIGFLOW_APP_CREDS,
+    TEST_CONFIG_NEW_SUBSCRIPTION,
     FakeSubscriber,
+    PlatformSetup,
     YieldFixture,
 )
-
-from tests.common import MockConfigEntry
 
 PLATFORM = "sensor"
 
@@ -46,27 +44,33 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture
-def error_caplog(caplog):
+def error_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init error messages."""
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         yield caplog
 
 
 @pytest.fixture
-def warning_caplog(caplog):
+def warning_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init warning messages."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         yield caplog
 
 
 @pytest.fixture
-def subscriber_side_effect() -> None:
+def subscriber_side_effect() -> Any | None:
     """Fixture to inject failures into FakeSubscriber start."""
     return None
 
 
 @pytest.fixture
-def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscriber]:
+def failing_subscriber(
+    subscriber_side_effect: Any | None,
+) -> YieldFixture[FakeSubscriber]:
     """Fixture overriding default subscriber behavior to allow failure injection."""
     subscriber = FakeSubscriber()
     with patch(
@@ -76,7 +80,22 @@ def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscrib
         yield subscriber
 
 
-async def test_setup_success(hass: HomeAssistant, error_caplog, setup_platform) -> None:
+async def test_setup_success(
+    hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, setup_platform
+) -> None:
+    """Test successful setup."""
+    await setup_platform()
+    assert not error_caplog.records
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("nest_test_config", [(TEST_CONFIG_NEW_SUBSCRIPTION)])
+async def test_setup_success_new_subscription_format(
+    hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, setup_platform
+) -> None:
     """Test successful setup."""
     await setup_platform()
     assert not error_caplog.records
@@ -107,7 +126,10 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass: HomeAssistant, caplog, failing_subscriber, setup_base_platform
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    failing_subscriber,
+    setup_base_platform,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
@@ -119,14 +141,15 @@ async def test_setup_susbcriber_failure(
 
 
 async def test_setup_device_manager_failure(
-    hass: HomeAssistant, caplog, setup_base_platform
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, setup_base_platform
 ) -> None:
     """Test device manager api failure."""
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
-    ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
-        side_effect=ApiException(),
+    with (
+        patch("homeassistant.components.nest.api.GoogleNestSubscriber.start_async"),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
+            side_effect=ApiException(),
+        ),
     ):
         await setup_base_platform()
 
@@ -156,22 +179,12 @@ async def test_subscriber_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("subscriber_id", [(None)])
-async def test_setup_missing_subscriber_id(
-    hass: HomeAssistant, warning_caplog, setup_base_platform
-) -> None:
-    """Test missing susbcriber id from configuration."""
-    await setup_base_platform()
-    assert "Configuration option" in warning_caplog.text
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_ERROR
-
-
 @pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
 async def test_subscriber_configuration_failure(
-    hass: HomeAssistant, error_caplog, setup_base_platform, failing_subscriber
+    hass: HomeAssistant,
+    error_caplog: pytest.LogCaptureFixture,
+    setup_base_platform,
+    failing_subscriber,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
@@ -180,18 +193,6 @@ async def test_subscriber_configuration_failure(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
-
-
-@pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_empty_config(
-    hass: HomeAssistant, error_caplog, config, setup_platform
-) -> None:
-    """Test setup is a no-op with not config."""
-    await setup_platform()
-    assert not error_caplog.records
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0
 
 
 async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
@@ -204,7 +205,7 @@ async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_remove_entry(
@@ -226,16 +227,34 @@ async def test_remove_entry(
     assert entry.data.get("subscriber_id") == SUBSCRIBER_ID
     assert entry.data.get("project_id") == PROJECT_ID
 
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
-    ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
-    ) as delete:
+    with (
+        patch("homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+        ) as delete,
+    ):
         assert await hass.config_entries.async_remove(entry.entry_id)
         assert delete.called
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    subscriber: FakeSubscriber,
+) -> None:
+    """Test successful subscriber shutdown when HomeAssistant stops."""
+    await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.async_stop()
+    assert subscriber.stop_calls == 1
 
 
 async def test_remove_entry_delete_subscriber_failure(
@@ -281,26 +300,3 @@ async def test_migrate_unique_id(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == PROJECT_ID
-
-
-@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY])
-async def test_legacy_works_with_nest_yaml(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test integration won't start with legacy works with nest yaml config."""
-    config_entry.add_to_hass(hass)
-    assert not await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_ENTRY_LEGACY])
-async def test_legacy_works_with_nest_cleanup(
-    hass: HomeAssistant, setup_platform
-) -> None:
-    """Test legacy works with nest config entries are silently removed once yaml is removed."""
-    await setup_platform()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0

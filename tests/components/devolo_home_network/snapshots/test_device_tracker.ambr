@@ -11,6 +11,7 @@
     'context': <ANY>,
     'entity_id': 'device_tracker.devolo_home_network_1234567890_aa_bb_cc_dd_ee_ff',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'home',
   })

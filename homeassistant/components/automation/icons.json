@@ -1,0 +1,28 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:robot",
+      "state": {
+        "off": "mdi:robot-off",
+        "unavailable": "mdi:robot-confused"
+      }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "service": "mdi:robot"
+    },
+    "turn_off": {
+      "service": "mdi:robot-off"
+    },
+    "toggle": {
+      "service": "mdi:robot"
+    },
+    "trigger": {
+      "service": "mdi:robot"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

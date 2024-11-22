@@ -19,10 +19,9 @@ async def modern_forms_call_mock(method, url, data):
         fixture = "modern_forms/device_info.json"
     else:
         fixture = "modern_forms/device_status.json"
-    response = AiohttpClientMockResponse(
+    return AiohttpClientMockResponse(
         method=method, url=url, json=json.loads(load_fixture(fixture))
     )
-    return response
 
 
 async def modern_forms_no_light_call_mock(method, url, data):
@@ -31,10 +30,9 @@ async def modern_forms_no_light_call_mock(method, url, data):
         fixture = "modern_forms/device_info_no_light.json"
     else:
         fixture = "modern_forms/device_status_no_light.json"
-    response = AiohttpClientMockResponse(
+    return AiohttpClientMockResponse(
         method=method, url=url, json=json.loads(load_fixture(fixture))
     )
-    return response
 
 
 async def modern_forms_timers_set_mock(method, url, data):
@@ -43,10 +41,9 @@ async def modern_forms_timers_set_mock(method, url, data):
         fixture = "modern_forms/device_info.json"
     else:
         fixture = "modern_forms/device_status_timers_active.json"
-    response = AiohttpClientMockResponse(
+    return AiohttpClientMockResponse(
         method=method, url=url, json=json.loads(load_fixture(fixture))
     )
-    return response
 
 
 async def init_integration(
@@ -65,7 +62,9 @@ async def init_integration(
     )
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:DD:EE:FF"}
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+        unique_id="AA:BB:CC:DD:EE:FF",
     )
 
     entry.add_to_hass(hass)

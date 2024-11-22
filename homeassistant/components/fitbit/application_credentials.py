@@ -60,12 +60,17 @@ class FitbitOAuth2Implementation(AuthImplementation):
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                error_body = await resp.text() if not session.closed else ""
+                try:
+                    error_body = await resp.text()
+                except aiohttp.ClientError:
+                    error_body = ""
                 _LOGGER.debug(
                     "Client response error status=%s, body=%s", err.status, error_body
                 )
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise FitbitAuthException(f"Unauthorized error: {err}") from err
+            if err.status == HTTPStatus.BAD_REQUEST:
+                raise FitbitAuthException(f"Bad Request error: {err}") from err
             raise FitbitApiException(f"Server error response: {err}") from err
         except aiohttp.ClientError as err:
             raise FitbitApiException(f"Client connection error: {err}") from err

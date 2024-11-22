@@ -1,13 +1,17 @@
 """Constants for the Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import logging
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.const.command_class.window_covering import (
     WindowCoveringPropertyKey,
 )
 
 from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
+
+LR_ADDON_VERSION = AwesomeVersion("0.5.0")
 
 USER_AGENT = {APPLICATION_NAME: HA_VERSION}
 
@@ -19,12 +23,17 @@ CONF_ADDON_S0_LEGACY_KEY = "s0_legacy_key"
 CONF_ADDON_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"
 CONF_ADDON_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
 CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
+CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
+CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
+CONF_INSTALLER_MODE = "installer_mode"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
 CONF_S0_LEGACY_KEY = "s0_legacy_key"
 CONF_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"
 CONF_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
 CONF_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
+CONF_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
+CONF_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
@@ -34,6 +43,7 @@ DATA_CLIENT = "client"
 DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)
 LIB_LOGGER = logging.getLogger("zwave_js_server")
@@ -99,6 +109,7 @@ SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_SET_LOCK_CONFIGURATION = "set_lock_configuration"
 SERVICE_SET_VALUE = "set_value"
 
 ATTR_NODES = "nodes"
@@ -118,6 +129,13 @@ ATTR_METER_TYPE_NAME = "meter_type_name"
 # invoke CC API
 ATTR_METHOD_NAME = "method_name"
 ATTR_PARAMETERS = "parameters"
+# lock set configuration
+ATTR_AUTO_RELOCK_TIME = "auto_relock_time"
+ATTR_BLOCK_TO_BLOCK = "block_to_block"
+ATTR_HOLD_AND_RELEASE_TIME = "hold_and_release_time"
+ATTR_LOCK_TIMEOUT = "lock_timeout"
+ATTR_OPERATION_TYPE = "operation_type"
+ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"
 

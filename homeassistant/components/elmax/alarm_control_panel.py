@@ -1,6 +1,8 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
+from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.command import AreaCommand
 from elmax_api.model.panel import PanelStatus
@@ -8,17 +10,17 @@ from elmax_api.model.panel import PanelStatus
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
-from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
+from .entity import ElmaxEntity
 
 
 async def async_setup_entry(
@@ -39,7 +41,6 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = [
             ElmaxArea(
-                panel=coordinator.panel_entry,
                 elmax_device=area,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
@@ -66,46 +67,87 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _pending_state: AlarmControlPanelState | None = None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self._attr_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
+        if self._attr_alarm_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
             raise InvalidStateError(
                 f"Cannot arm {self.name}: please check for open windows/doors first"
             )
 
-        await self.coordinator.http_client.execute_command(
-            endpoint_id=self._device.endpoint_id,
-            command=AreaCommand.ARM_TOTALLY,
-            extra_payload={"code": code},
-        )
-        await self.coordinator.async_refresh()
+        self._pending_state = AlarmControlPanelState.ARMING
+        self.async_write_ha_state()
+
+        try:
+            await self.coordinator.http_client.execute_command(
+                endpoint_id=self._device.endpoint_id,
+                command=AreaCommand.ARM_TOTALLY,
+                extra_payload={"code": code},
+            )
+        except ElmaxApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "arm"},
+            ) from err
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Elmax alarm panels do always require a code to be passed for disarm operations
         if code is None or code == "":
             raise ValueError("Please input the disarm code.")
-        await self.coordinator.http_client.execute_command(
-            endpoint_id=self._device.endpoint_id,
-            command=AreaCommand.DISARM,
-            extra_payload={"code": code},
-        )
-        await self.coordinator.async_refresh()
+
+        self._pending_state = AlarmControlPanelState.DISARMING
+        self.async_write_ha_state()
+
+        try:
+            await self.coordinator.http_client.execute_command(
+                endpoint_id=self._device.endpoint_id,
+                command=AreaCommand.DISARM,
+                extra_payload={"code": code},
+            )
+        except ElmaxApiError as err:
+            if err.status_code == 403:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="invalid_disarm_code"
+                ) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "disarm"},
+            ) from err
+        finally:
+            await self.coordinator.async_refresh()
+
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        """Return the state of the entity."""
+        if self._pending_state is not None:
+            return self._pending_state
+        if (
+            state := self.coordinator.get_area_state(self._device.endpoint_id)
+        ) is not None:
+            if state.status == AlarmStatus.TRIGGERED:
+                return ALARM_STATE_TO_HA.get(AlarmStatus.TRIGGERED)
+            return ALARM_STATE_TO_HA.get(state.armed_status)
+        return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_state = ALARM_STATE_TO_HA.get(
-            self.coordinator.get_area_state(self._device.endpoint_id).armed_status
-        )
+        # Just reset the local pending_state so that it no longer overrides the one from coordinator.
+        self._pending_state = None
         super()._handle_coordinator_update()
 
 
 ALARM_STATE_TO_HA = {
-    AlarmArmStatus.ARMED_TOTALLY: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1_P2: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P2: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.NOT_ARMED: STATE_ALARM_DISARMED,
+    AlarmArmStatus.ARMED_TOTALLY: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.NOT_ARMED: AlarmControlPanelState.DISARMED,
+    AlarmStatus.TRIGGERED: AlarmControlPanelState.TRIGGERED,
 }

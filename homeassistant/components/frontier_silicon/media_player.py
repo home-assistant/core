@@ -1,4 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+
 from __future__ import annotations
 
 import logging
@@ -117,7 +118,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                 return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Reconnected to %s",
                 self.name or afsapi.webfsapi_endpoint,
             )
@@ -307,10 +308,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             # Keys of presets are 0-based, while the list shown on the device starts from 1
             preset = int(keys[0]) - 1
 
-            result = await self.fs_device.select_preset(preset)
+            await self.fs_device.select_preset(preset)
         else:
-            result = await self.fs_device.nav_select_item_via_path(keys)
+            await self.fs_device.nav_select_item_via_path(keys)
 
         await self.async_update()
         self._attr_media_content_id = media_id
-        return result

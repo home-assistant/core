@@ -1,4 +1,5 @@
-"""The Huisbaasje integration."""
+"""The EnergyFlip integration."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -30,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Huisbaasje from a config entry."""
-    # Create the Huisbaasje client
+    """Set up EnergyFlip from a config entry."""
+    # Create the EnergyFlip client
     energyflip = EnergyFlip(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
@@ -47,12 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     async def async_update_data() -> dict[str, dict[str, Any]]:
-        return await async_update_huisbaasje(energyflip)
+        return await async_update_energyflip(energyflip)
 
     # Create a coordinator for polling updates
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="sensor",
         update_method=async_update_data,
         update_interval=timedelta(seconds=POLLING_INTERVAL),
@@ -74,21 +76,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Forward the unloading of the entry to the platform
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # If successful, unload the Huisbaasje client
+    # If successful, unload the EnergyFlip client
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-async def async_update_huisbaasje(energyflip: EnergyFlip) -> dict[str, dict[str, Any]]:
-    """Update the data by performing a request to Huisbaasje."""
+async def async_update_energyflip(energyflip: EnergyFlip) -> dict[str, dict[str, Any]]:
+    """Update the data by performing a request to EnergyFlip."""
     try:
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+        # Note: TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with asyncio.timeout(FETCH_TIMEOUT):
             if not energyflip.is_authenticated():
-                _LOGGER.warning("Huisbaasje is unauthenticated. Reauthenticating")
+                _LOGGER.warning("EnergyFlip is unauthenticated. Reauthenticating")
                 await energyflip.authenticate()
 
             current_measurements = await energyflip.current_measurements()
@@ -124,7 +126,7 @@ def _get_cumulative_value(
 ):
     """Get the cumulative energy consumption for a certain period.
 
-    :param current_measurements: The result from the Huisbaasje client
+    :param current_measurements: The result from the EnergyFlip client
     :param source_type: The source of energy (electricity or gas)
     :param period_type: The period for which cumulative value should be given.
     """

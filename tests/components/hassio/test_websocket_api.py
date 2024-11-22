@@ -1,4 +1,7 @@
 """Test websocket API."""
+
+from unittest.mock import AsyncMock
+
 import pytest
 
 from homeassistant.components.hassio.const import (
@@ -22,10 +25,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock):
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -63,23 +69,11 @@ def mock_all(aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
-    )
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_ws_subscription(
-    hassio_env, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
@@ -115,8 +109,8 @@ async def test_ws_subscription(
     assert response["success"]
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api(
-    hassio_env,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -159,8 +153,8 @@ async def test_websocket_supervisor_api(
     }
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api_error(
-    hassio_env,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -171,6 +165,7 @@ async def test_websocket_supervisor_api_error(
     aioclient_mock.get(
         "http://127.0.0.1/ping",
         json={"result": "error", "message": "example error"},
+        status=400,
     )
 
     await websocket_client.send_json(
@@ -183,11 +178,41 @@ async def test_websocket_supervisor_api_error(
     )
 
     msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "example error"
 
 
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_error_without_msg(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api error."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/ping",
+        json={},
+        status=400,
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ping",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["message"] == ""
+
+
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_non_admin_user(
-    hassio_env,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,

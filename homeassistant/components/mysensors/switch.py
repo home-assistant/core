@@ -1,4 +1,5 @@
 """Support for MySensors switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
-from .device import MySensorsChildEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 

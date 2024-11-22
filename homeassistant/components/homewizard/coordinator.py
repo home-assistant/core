@@ -1,10 +1,11 @@
 """Update coordinator for HomeWizard."""
+
 from __future__ import annotations
 
 import logging
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE, SUPPORTS_SYSTEM
+from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 from homewizard_energy.models import Device
 
@@ -52,8 +53,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 if self.supports_state(data.device):
                     data.state = await self.api.state()
 
-                if self.supports_system(data.device):
-                    data.system = await self.api.system()
+                data.system = await self.api.system()
 
             except UnsupportedError as ex:
                 # Old firmware, ignore
@@ -74,7 +74,8 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
                 # Do not reload when performing first refresh
                 if self.data is not None:
-                    await self.hass.config_entries.async_reload(
+                    # Reload config entry to let init flow handle retrying and trigger repair flow
+                    self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
                     )
 
@@ -92,13 +93,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             device = self.data.device
 
         return device.product_type in SUPPORTS_STATE
-
-    def supports_system(self, device: Device | None = None) -> bool:
-        """Return True if the device supports system."""
-        if device is None:
-            device = self.data.device
-
-        return device.product_type in SUPPORTS_SYSTEM
 
     def supports_identify(self, device: Device | None = None) -> bool:
         """Return True if the device supports identify."""

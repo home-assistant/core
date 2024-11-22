@@ -1,4 +1,5 @@
 """The Litter-Robot integration."""
+
 from __future__ import annotations
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
@@ -10,6 +11,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
+
+type LitterRobotConfigEntry = ConfigEntry[LitterRobotHub]
 
 PLATFORMS_BY_TYPE = {
     Robot: (
@@ -36,40 +39,35 @@ def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
     }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
+    hub = LitterRobotHub(hass, entry.data)
     await hub.login(load_robots=True, subscribe_for_updates=True)
+    entry.runtime_data = hub
 
     if platforms := get_platforms_for_robots(hub.account.robots):
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: LitterRobotConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    await hub.account.disconnect()
+    await entry.runtime_data.account.disconnect()
 
-    platforms = get_platforms_for_robots(hub.account.robots)
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    platforms = get_platforms_for_robots(entry.runtime_data.account.robots)
+    return await hass.config_entries.async_unload_platforms(entry, platforms)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, entry: LitterRobotConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
     return not any(
         identifier
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
-        for robot in hub.account.robots
+        for robot in entry.runtime_data.account.robots
         if robot.serial == identifier[1]
     )

@@ -1,4 +1,6 @@
 """The tests for the demo light component."""
+
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -26,7 +28,7 @@ ENTITY_LIGHT = "light.bed_light"
 
 
 @pytest.fixture
-async def light_only() -> None:
+def light_only() -> Generator[None]:
     """Enable only the light platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -36,7 +38,7 @@ async def light_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, light_only):
+async def setup_comp(hass: HomeAssistant, light_only: None) -> None:
     """Set up demo component."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}
@@ -71,8 +73,8 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_RGB_COLOR) == (250, 252, 255)
-    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.326)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (251, 253, 255)
+    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.327)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

@@ -1,11 +1,12 @@
 """Test default blueprints."""
+
 import importlib
 import logging
 import pathlib
 
 import pytest
 
-from homeassistant.components.blueprint import models
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, models
 from homeassistant.components.blueprint.const import BLUEPRINT_FOLDER
 from homeassistant.util import yaml
 
@@ -25,4 +26,4 @@ def test_default_blueprints(domain: str) -> None:
         LOGGER.info("Processing %s", fil)
         assert fil.name.endswith(".yaml")
         data = yaml.load_yaml(fil)
-        models.Blueprint(data, expected_domain=domain)
+        models.Blueprint(data, expected_domain=domain, schema=BLUEPRINT_SCHEMA)

@@ -6,5 +6,10 @@
   "documentation": "https://www.home-assistant.io/integrations/elmax",
   "iot_class": "cloud_polling",
   "loggers": ["elmax_api"],
-  "requirements": ["elmax-api==0.0.4"]
+  "requirements": ["elmax-api==0.0.6.1"],
+  "zeroconf": [
+    {
+      "type": "_elmax-ssl._tcp.local."
+    }
+  ]
 }

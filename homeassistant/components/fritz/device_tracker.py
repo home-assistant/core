@@ -1,23 +1,24 @@
 """Support for FRITZ!Box devices."""
+
 from __future__ import annotations
 
 import datetime
 import logging
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
+from .const import DATA_FRITZ, DOMAIN
+from .coordinator import (
     AvmWrapper,
     FritzData,
     FritzDevice,
-    FritzDeviceBase,
     device_filter_out_from_trackers,
 )
-from .const import DATA_FRITZ, DOMAIN
+from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +112,3 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         if device.ssid:
             attrs["ssid"] = device.ssid
         return attrs
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.ROUTER

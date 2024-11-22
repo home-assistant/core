@@ -1,4 +1,5 @@
 """Class to hold all sensor accessories."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -40,6 +41,8 @@ from .const import (
     CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
     CHAR_VOC_DENSITY,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     PROP_CELSIUS,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
@@ -334,6 +337,10 @@ class CarbonMonoxideSensor(HomeAccessory):
             SERV_CARBON_MONOXIDE_SENSOR,
             [CHAR_CARBON_MONOXIDE_LEVEL, CHAR_CARBON_MONOXIDE_PEAK_LEVEL],
         )
+
+        self.threshold_co = self.config.get(CONF_THRESHOLD_CO, THRESHOLD_CO)
+        _LOGGER.debug("%s: Set CO threshold to %d", self.entity_id, self.threshold_co)
+
         self.char_level = serv_co.configure_char(CHAR_CARBON_MONOXIDE_LEVEL, value=0)
         self.char_peak = serv_co.configure_char(
             CHAR_CARBON_MONOXIDE_PEAK_LEVEL, value=0
@@ -352,7 +359,7 @@ class CarbonMonoxideSensor(HomeAccessory):
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
-            co_detected = value > THRESHOLD_CO
+            co_detected = value > self.threshold_co
             self.char_detected.set_value(co_detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
@@ -370,6 +377,10 @@ class CarbonDioxideSensor(HomeAccessory):
             SERV_CARBON_DIOXIDE_SENSOR,
             [CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL],
         )
+
+        self.threshold_co2 = self.config.get(CONF_THRESHOLD_CO2, THRESHOLD_CO2)
+        _LOGGER.debug("%s: Set CO2 threshold to %d", self.entity_id, self.threshold_co2)
+
         self.char_level = serv_co2.configure_char(CHAR_CARBON_DIOXIDE_LEVEL, value=0)
         self.char_peak = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_PEAK_LEVEL, value=0
@@ -388,7 +399,7 @@ class CarbonDioxideSensor(HomeAccessory):
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
-            co2_detected = value > THRESHOLD_CO2
+            co2_detected = value > self.threshold_co2
             self.char_detected.set_value(co2_detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 

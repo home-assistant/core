@@ -1,5 +1,7 @@
 """Tests for the Heos Media Player platform."""
+
 import asyncio
+from typing import Any
 
 from pyheos import CommandFailedError, const
 from pyheos.error import HeosError
@@ -57,8 +59,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 
-async def setup_platform(hass, config_entry, config):
+
+async def setup_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry, config: dict[str, Any]
+) -> None:
     """Set up the media player platform for testing."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
@@ -687,7 +693,7 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 

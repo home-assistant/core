@@ -1,5 +1,5 @@
 """Tests for the Fully Kiosk Browser integration."""
-import asyncio
+
 import json
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +9,13 @@ import pytest
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.entity import valid_global_mac_address
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -39,7 +45,7 @@ async def test_load_unload_config_entry(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [FullyKioskError("error", "status"), asyncio.TimeoutError],
+    [FullyKioskError("error", "status"), TimeoutError],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -92,6 +98,8 @@ async def test_multiple_kiosk_with_empty_mac(
             CONF_HOST: "127.0.0.1",
             CONF_PASSWORD: "mocked-password",
             CONF_MAC: "",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
         unique_id="111111",
     )
@@ -105,6 +113,8 @@ async def test_multiple_kiosk_with_empty_mac(
             CONF_HOST: "127.0.0.2",
             CONF_PASSWORD: "mocked-password",
             CONF_MAC: "",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
         unique_id="22222",
     )

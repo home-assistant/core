@@ -1,30 +1,34 @@
 """Text entities for UniFi Protect."""
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera,
     DoorbellMessageType,
+    ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
 )
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
+from .data import ProtectDeviceType, UFPConfigEntry
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):
     """Describes UniFi Protect Text entity."""
 
@@ -51,57 +55,49 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
+    ModelType.CAMERA: CAMERA,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectDeviceText,
-            camera_descs=CAMERA,
-            ufp_device=device,
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectDeviceText,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                ufp_device=device,
+            )
         )
-        async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    data.async_subscribe_adopt(_add_new_device)
+    async_add_entities(
+        async_all_device_entities(
+            data, ProtectDeviceText, model_descriptions=_MODEL_DESCRIPTIONS
+        )
     )
-
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectDeviceText,
-        camera_descs=CAMERA,
-    )
-
-    async_add_entities(entities)
 
 
 class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
     entity_description: ProtectTextEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectTextEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
+    _state_attrs = ("_attr_available", "_attr_native_value")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-
         await self.entity_description.ufp_set(self.device, value)

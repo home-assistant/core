@@ -1,4 +1,5 @@
 """Support for Minut Point binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ import logging
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -15,8 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
+from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ async def async_setup_entry(
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities(
             (
                 MinutPointBinarySensor(client, device_id, device_name)
@@ -59,7 +60,9 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+        hass,
+        POINT_DISCOVERY_NEW.format(BINARY_SENSOR_DOMAIN, POINT_DOMAIN),
+        async_discover_sensor,
     )
 
 
@@ -71,14 +74,13 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(
             point_client,
             device_id,
-            DEVICES[device_name].get("device_class"),
+            DEVICES[device_name].get("device_class", device_name),
         )
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_name]
         self._attr_unique_id = f"point.{device_id}-{device_name}"
         self._attr_icon = DEVICES[self._device_name].get("icon")
-        self._attr_name = f"{self._name} {device_name.capitalize()}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""

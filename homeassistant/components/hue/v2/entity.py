@@ -1,7 +1,8 @@
 """Generic Hue Entity Model."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -9,9 +10,9 @@ from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
 
-    HueResource: TypeAlias = Light | DevicePower | GroupedLight | LightLevel | Motion
+    type HueResource = Light | DevicePower | GroupedLight | LightLevel | Motion
 
 
 RESOURCE_TYPE_NAMES = {
@@ -33,7 +34,7 @@ RESOURCE_TYPE_NAMES = {
 }
 
 
-class HueBaseEntity(Entity):
+class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
     """Generic Entity Class for a Hue resource."""
 
     _attr_should_poll = False
@@ -127,7 +128,7 @@ class HueBaseEntity(Entity):
         if event_type == EventType.RESOURCE_DELETED:
             # cleanup entities that are not strictly device-bound and have the bridge as parent
             if self.device is None and resource.id == self.resource.id:
-                ent_reg = async_get_entity_registry(self.hass)
+                ent_reg = er.async_get(self.hass)
                 ent_reg.async_remove(self.entity_id)
             return
 

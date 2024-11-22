@@ -1,4 +1,6 @@
 """The tests for the Xiaomi vacuum platform."""
+
+from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -10,7 +12,7 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -23,15 +25,14 @@ from homeassistant.components.vacuum import (
     STATE_ERROR,
 )
 from homeassistant.components.xiaomi_miio.const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODELS_VACUUM,
 )
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_ERROR,
     ATTR_TIMERS,
+    CONF_DEVICE,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -44,6 +45,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
     STATE_UNAVAILABLE,
@@ -54,8 +56,6 @@ from homeassistant.util import dt as dt_util
 from . import TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-# pylint: disable=consider-using-tuple
 
 # calls made when device status is requested
 STATUS_CALLS = [
@@ -139,7 +139,9 @@ new_fanspeeds = {
 
 
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
-def mirobo_old_speeds_fixture(request):
+def mirobo_old_speeds_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Fixture for testing both types of fanspeeds."""
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
@@ -237,7 +239,7 @@ async def test_xiaomi_exceptions(hass: HomeAssistant, mock_mirobo_is_on) -> None
     mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
     future = dt_util.utcnow() + timedelta(seconds=60)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not is_available()
 
@@ -246,7 +248,7 @@ async def test_xiaomi_exceptions(hass: HomeAssistant, mock_mirobo_is_on) -> None
     mock_mirobo_is_on.status.reset_mock()
     future += timedelta(seconds=60)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not is_available()
     assert mock_mirobo_is_on.status.call_count == 1
@@ -281,7 +283,7 @@ async def test_xiaomi_vacuum_services(
 
     # Call services
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_START, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.resume_or_start()], any_order=True
@@ -290,42 +292,42 @@ async def test_xiaomi_vacuum_services(
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_PAUSE, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.pause()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_STOP, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.stop()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.home()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCATE, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_LOCATE, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.find()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": entity_id}, blocking=True
+        VACUUM_DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.spot()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        VACUUM_DOMAIN,
         SERVICE_SEND_COMMAND,
         {"entity_id": entity_id, "command": "raw"},
         blocking=True,
@@ -337,7 +339,7 @@ async def test_xiaomi_vacuum_services(
     mock_mirobo_is_got_error.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        VACUUM_DOMAIN,
         SERVICE_SEND_COMMAND,
         {"entity_id": entity_id, "command": "raw", "params": {"k1": 2}},
         blocking=True,
@@ -371,13 +373,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": -0.1,
             },
             "manual_control",
-            mock.call(
-                **{
-                    "duration": 1000,
-                    "rotation": -40,
-                    "velocity": -0.1,
-                }
-            ),
+            mock.call(duration=1000, rotation=-40, velocity=-0.1),
         ),
         (
             SERVICE_STOP_REMOTE_CONTROL,
@@ -396,13 +392,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": 0.1,
             },
             "manual_control_once",
-            mock.call(
-                **{
-                    "duration": 2000,
-                    "rotation": 120,
-                    "velocity": 0.1,
-                }
-            ),
+            mock.call(duration=2000, rotation=120, velocity=0.1),
         ),
         (
             SERVICE_CLEAN_ZONE,
@@ -431,7 +421,7 @@ async def test_xiaomi_vacuum_services(
                 "segments": ["1", "2"],
             },
             "segment_clean",
-            mock.call(segments=[int(i) for i in ["1", "2"]]),
+            mock.call(segments=[int(i) for i in ("1", "2")]),
         ),
         (
             SERVICE_CLEAN_SEGMENT,
@@ -503,12 +493,12 @@ async def test_xiaomi_vacuum_fanspeeds(
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     fanspeeds = state.attributes.get(ATTR_FAN_SPEED_LIST)
-    for speed in ["Silent", "Standard", "Medium", "Turbo"]:
+    for speed in ("Silent", "Standard", "Medium", "Turbo"):
         assert speed in fanspeeds
 
     # Set speed service:
     await hass.services.async_call(
-        DOMAIN,
+        VACUUM_DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {"entity_id": entity_id, "fan_speed": 60},
         blocking=True,
@@ -522,7 +512,7 @@ async def test_xiaomi_vacuum_fanspeeds(
     fan_speed_dict = mock_mirobo_fanspeeds.fan_speed_presets()
 
     await hass.services.async_call(
-        DOMAIN,
+        VACUUM_DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {"entity_id": entity_id, "fan_speed": "Medium"},
         blocking=True,
@@ -535,7 +525,7 @@ async def test_xiaomi_vacuum_fanspeeds(
 
     assert "ERROR" not in caplog.text
     await hass.services.async_call(
-        DOMAIN,
+        VACUUM_DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {"entity_id": entity_id, "fan_speed": "invent"},
         blocking=True,
@@ -543,9 +533,9 @@ async def test_xiaomi_vacuum_fanspeeds(
     assert "Fan speed step not recognized" in caplog.text
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up vacuum component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{VACUUM_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
         domain=XIAOMI_DOMAIN,

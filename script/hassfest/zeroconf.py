@@ -1,4 +1,5 @@
 """Generate zeroconf file."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -89,19 +90,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(zeroconf_path)) as fp:
-        current = fp.read()
-        if current != content:
-            config.add_error(
-                "zeroconf",
-                "File zeroconf.py is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if zeroconf_path.read_text() != content:
+        config.add_error(
+            "zeroconf",
+            "File zeroconf.py is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
-    with open(str(zeroconf_path), "w") as fp:
-        fp.write(f"{config.cache['zeroconf']}")
+    zeroconf_path.write_text(f"{config.cache['zeroconf']}")

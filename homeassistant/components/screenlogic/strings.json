@@ -41,9 +41,37 @@
       "name": "Set Color Mode",
       "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
       "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this action."
+        },
         "color_mode": {
           "name": "Color Mode",
           "description": "The ScreenLogic color mode to set."
+        }
+      }
+    },
+    "start_super_chlorination": {
+      "name": "Start Super Chlorination",
+      "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this action."
+        },
+        "runtime": {
+          "name": "Run Time",
+          "description": "Number of hours for super chlorination to run."
+        }
+      }
+    },
+    "stop_super_chlorination": {
+      "name": "Stop Super Chlorination",
+      "description": "Stops super chlorination.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this action."
         }
       }
     }

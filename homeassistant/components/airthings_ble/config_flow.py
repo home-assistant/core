@@ -15,13 +15,19 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_UUIDS = [
+    "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    "b42e3882-ade7-11e4-89d3-123b93f75cba",
+]
 
 
 @dataclasses.dataclass
@@ -81,12 +87,12 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Unknown error occurred from %s: %s", discovery_info.address, err
             )
-            raise err
+            raise
         return data
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered BT device: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
@@ -96,7 +102,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await self._get_device_data(discovery_info)
         except AirthingsDeviceUpdateError:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="unknown")
 
         name = get_name(device)
@@ -107,7 +113,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
@@ -122,7 +128,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -147,11 +153,14 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             if MFCT_ID not in discovery_info.manufacturer_data:
                 continue
 
+            if not any(uuid in SERVICE_UUIDS for uuid in discovery_info.service_uuids):
+                continue
+
             try:
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 return self.async_abort(reason="unknown")
             name = get_name(device)
             self._discovered_devices[address] = Discovery(name, discovery_info, device)

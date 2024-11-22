@@ -1,4 +1,5 @@
 """Support for Z-Wave fans."""
+
 from __future__ import annotations
 
 import math
@@ -18,7 +19,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Fan from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
@@ -78,7 +78,12 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -181,11 +186,6 @@ class ValueMappingZwaveFan(ZwaveFan):
                 await self._async_set_value(self._target_value, zwave_value)
                 return
 
-        raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode:"
-            f" {self.preset_modes}"
-        )
-
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
@@ -254,7 +254,11 @@ class ValueMappingZwaveFan(ZwaveFan):
     @property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = FanEntityFeature.SET_SPEED
+        flags = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
         if self.has_fan_value_mapping and self.fan_value_mapping.presets:
             flags |= FanEntityFeature.PRESET_MODE
 
@@ -387,7 +391,13 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        return FanEntityFeature.PRESET_MODE
+        if not self._fan_off:
+            return FanEntityFeature.PRESET_MODE
+        return (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
 
     @property
     def fan_state(self) -> str | None:

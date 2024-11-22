@@ -1,8 +1,9 @@
 """The tests for Trafikcerket Camera recorder."""
+
 from __future__ import annotations
 
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket.models import CameraInfoModel
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -14,17 +15,17 @@ from tests.components.recorder.common import async_wait_recording_done
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_exclude_attributes(
     recorder_mock: Recorder,
-    entity_registry_enabled_by_default: None,
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test camera has description and location excluded from recording."""
-    state1 = hass.states.get("camera.test_location")
+    state1 = hass.states.get("camera.test_camera")
     assert state1.state == "idle"
     assert state1.attributes["description"] == "Test Camera for testing"
     assert state1.attributes["location"] == "Test location"
@@ -39,10 +40,10 @@ async def test_exclude_attributes(
         hass.states.async_entity_ids(),
     )
     assert len(states) == 8
-    assert states.get("camera.test_location")
+    assert states.get("camera.test_camera")
     for entity_states in states.values():
         for state in entity_states:
-            if state.entity_id == "camera.test_location":
+            if state.entity_id == "camera.test_camera":
                 assert "location" not in state.attributes
                 assert "description" not in state.attributes
                 assert "type" in state.attributes

@@ -1,4 +1,5 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
@@ -56,7 +57,7 @@ OPENALPR_REGIONS = [
     "vn2",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
@@ -79,15 +80,12 @@ async def async_setup_platform(
         "country": config[CONF_REGION],
     }
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            OpenAlprCloudEntity(
-                camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
-            )
+    async_add_entities(
+        OpenAlprCloudEntity(
+            camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
@@ -141,8 +139,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire,
+            self.hass.bus.async_fire(
                 EVENT_FOUND_PLATE,
                 {
                     ATTR_PLATE: i_plate,
@@ -209,7 +206,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                     _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for OpenALPR API")
             return
 

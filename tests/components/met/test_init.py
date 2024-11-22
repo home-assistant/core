@@ -1,4 +1,5 @@
 """Test the Met integration init."""
+
 import pytest
 
 from homeassistant.components.met.const import (
@@ -6,9 +7,9 @@ from homeassistant.components.met.const import (
     DEFAULT_HOME_LONGITUDE,
     DOMAIN,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
@@ -52,13 +53,15 @@ async def test_fail_default_home_entry(
 
 
 async def test_removing_incorrect_devices(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_weather
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    mock_weather,
 ) -> None:
     """Test we remove incorrect devices."""
     entry = await init_integration(hass)
 
-    device_reg = dr.async_get(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         name="Forecast_legacy",
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -71,6 +74,6 @@ async def test_removing_incorrect_devices(
     assert await hass.config_entries.async_reload(entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert not device_reg.async_get_device(identifiers={(DOMAIN,)})
-    assert device_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN,)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     assert "Removing improper device Forecast_legacy" in caplog.text

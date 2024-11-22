@@ -1,12 +1,13 @@
 """Binary sensor platform support for wiffi devices."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 
 
 async def async_setup_entry(
@@ -16,7 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform for a new integration.
 
-    Called by the HA framework after async_forward_entry_setup has been called
+    Called by the HA framework after async_forward_entry_setups has been called
     during initialization of a new integration (= wiffi).
     """
 
