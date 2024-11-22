@@ -307,7 +307,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "electrasmart",
     "electric_kiwi",
     "elevenlabs",
-    "elgato",
     "eliqonline",
     "elkm1",
     "elmax",
