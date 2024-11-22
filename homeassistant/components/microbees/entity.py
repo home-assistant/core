@@ -62,3 +62,7 @@ class MicroBeesActuatorEntity(MicroBeesEntity):
     def actuator(self) -> Actuator:
         """Return the actuator."""
         return self.coordinator.data.actuators[self.actuator_id]
+
+    async def async_update_callback(self) -> None:
+        """Handle updates from the coordinator."""
+        self.async_write_ha_state()

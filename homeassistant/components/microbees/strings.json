@@ -3,10 +3,21 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "mqtt": {
+        "title": "Configure MQTT",
+        "description": "Set up the MQTT details for the integration.",
+        "data": {
+          "mqtt_username": "Username",
+          "mqtt_port": "Port",
+          "mqtt_password": "Password",
+          "client_id": "Client ID"
+        }
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "mqtt_configuration_failed": "Failed to configure MQTT. Please check the input and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -26,7 +37,8 @@
       "wrong_account": "You can only reauthenticate this entry with the same microBees account."
     },
     "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+      "default": "[%key:common::config_flow::create_entry::authenticated%]",
+      "mqtt": "MQTT configured successfully."
     }
   }
 }
