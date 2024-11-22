@@ -30,7 +30,7 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 
 
 async def async_setup_entry(

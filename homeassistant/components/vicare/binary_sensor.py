@@ -31,7 +31,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixin
-from .utils import get_burners, get_circuits, get_compressors, is_supported
+from .utils import (
+    get_burners,
+    get_circuits,
+    get_compressors,
+    get_device_serial,
+    is_supported,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +122,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
+                get_device_serial(device.api),
                 device.config,
                 device.api,
             )
@@ -131,6 +138,7 @@ def _build_entities(
             entities.extend(
                 ViCareBinarySensor(
                     description,
+                    get_device_serial(device.api),
                     device.config,
                     device.api,
                     component,
@@ -166,12 +174,15 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     def __init__(
         self,
         description: ViCareBinarySensorEntityDescription,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(description.key, device_config, device, component)
+        super().__init__(
+            description.key, device_serial, device_config, device, component
+        )
         self.entity_description = description
 
     @property

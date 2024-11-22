@@ -332,7 +332,7 @@ class LIFXManager:
 
         elif service == SERVICE_EFFECT_MORPH:
             theme_name = kwargs.get(ATTR_THEME, "exciting")
-            palette = kwargs.get(ATTR_PALETTE, None)
+            palette = kwargs.get(ATTR_PALETTE)
 
             if palette is not None:
                 theme = Theme()
@@ -362,7 +362,7 @@ class LIFXManager:
                         direction=kwargs.get(
                             ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
                         ),
-                        theme_name=kwargs.get(ATTR_THEME, None),
+                        theme_name=kwargs.get(ATTR_THEME),
                         power_on=kwargs.get(ATTR_POWER_ON, False),
                     )
                     for coordinator in coordinators
@@ -410,7 +410,7 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_SKY:
-            palette = kwargs.get(ATTR_PALETTE, None)
+            palette = kwargs.get(ATTR_PALETTE)
             if palette is not None:
                 theme = Theme()
                 for hsbk in palette:

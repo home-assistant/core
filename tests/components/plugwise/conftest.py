@@ -7,6 +7,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from packaging.version import Version
 from plugwise import PlugwiseData
 import pytest
 
@@ -65,15 +66,16 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
         smile = smile_mock.return_value
         smile.smile_hostname = "smile12345"
         smile.smile_model = "Test Model"
+        smile.smile_model_id = "Test Model ID"
         smile.smile_name = "Test Smile Name"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.3.2")
         yield smile
 
 
 @pytest.fixture
 def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
-    chosen_env = "adam_multiple_devices_per_zone"
+    chosen_env = "m_adam_multiple_devices_per_zone"
 
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
@@ -86,8 +88,9 @@ def mock_smile_adam() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("3.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -112,8 +115,9 @@ def mock_smile_adam_2() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("3.6.4")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -138,8 +142,9 @@ def mock_smile_adam_3() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("3.6.4")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -164,8 +169,9 @@ def mock_smile_adam_4() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("3.2.8")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -189,8 +195,9 @@ def mock_smile_anna() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_thermo"
         smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -214,8 +221,9 @@ def mock_smile_anna_2() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_thermo"
         smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -239,8 +247,9 @@ def mock_smile_anna_3() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile_thermo"
         smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -264,8 +273,9 @@ def mock_smile_p1() -> Generator[MagicMock]:
         smile.smile_type = "power"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile"
         smile.smile_name = "Smile P1"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.4.2")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -289,8 +299,35 @@ def mock_smile_p1_2() -> Generator[MagicMock]:
         smile.smile_type = "power"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = "smile"
         smile.smile_name = "Smile P1"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("4.4.2")
+        all_data = _read_json(chosen_env, "all_data")
+        smile.async_update.return_value = PlugwiseData(
+            all_data["gateway"], all_data["devices"]
+        )
+
+        yield smile
+
+
+@pytest.fixture
+def mock_smile_legacy_anna() -> Generator[MagicMock]:
+    """Create a Mock legacy Anna environment for testing exceptions."""
+    chosen_env = "legacy_anna"
+    with patch(
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
+
+        smile.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
+        smile.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
+        smile.smile_version = "1.8.22"
+        smile.smile_type = "thermostat"
+        smile.smile_hostname = "smile98765"
+        smile.smile_model = "Gateway"
+        smile.smile_model_id = None
+        smile.smile_name = "Smile Anna"
+        smile.connect.return_value = Version("1.8.22")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -314,8 +351,9 @@ def mock_stretch() -> Generator[MagicMock]:
         smile.smile_type = "stretch"
         smile.smile_hostname = "stretch98765"
         smile.smile_model = "Gateway"
+        smile.smile_model_id = None
         smile.smile_name = "Stretch"
-        smile.connect.return_value = True
+        smile.connect.return_value = Version("3.1.11")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]

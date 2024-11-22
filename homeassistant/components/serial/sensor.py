@@ -196,7 +196,7 @@ class SerialSensor(SensorEntity):
                     logged_error = True
                 await self._handle_error()
             else:
-                _LOGGER.info("Serial device %s connected", device)
+                _LOGGER.debug("Serial device %s connected", device)
                 while True:
                     try:
                         line = await reader.readline()

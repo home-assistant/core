@@ -9,7 +9,7 @@
       }
     },
     "progress": {
-      "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```\n"
+      "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -19,22 +19,28 @@
   "entity": {
     "sensor": {
       "discussions_count": {
-        "name": "Discussions"
+        "name": "Discussions",
+        "unit_of_measurement": "discussions"
       },
       "stargazers_count": {
-        "name": "Stars"
+        "name": "Stars",
+        "unit_of_measurement": "stars"
       },
       "subscribers_count": {
-        "name": "Watchers"
+        "name": "Watchers",
+        "unit_of_measurement": "watchers"
       },
       "forks_count": {
-        "name": "Forks"
+        "name": "Forks",
+        "unit_of_measurement": "forks"
       },
       "issues_count": {
-        "name": "Issues"
+        "name": "Issues",
+        "unit_of_measurement": "issues"
       },
       "pulls_count": {
-        "name": "Pull requests"
+        "name": "Pull requests",
+        "unit_of_measurement": "pull requests"
       },
       "latest_commit": {
         "name": "Latest commit"

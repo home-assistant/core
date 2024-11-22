@@ -61,9 +61,10 @@ class TomatoDeviceScanner(DeviceScanner):
         if port is None:
             port = 443 if self.ssl else 80
 
+        protocol = "https" if self.ssl else "http"
         self.req = requests.Request(
             "POST",
-            "http{}://{}:{}/update.cgi".format("s" if self.ssl else "", host, port),
+            f"{protocol}://{host}:{port}/update.cgi",
             data={"_http_id": http_id, "exec": "devlist"},
             auth=requests.auth.HTTPBasicAuth(username, password),
         ).prepare()
@@ -96,7 +97,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         try:
             if self.ssl:

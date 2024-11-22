@@ -1,14 +1,22 @@
 """Support for MotionMount numeric control."""
 
+from datetime import timedelta
+import logging
+import socket
+
 import motionmount
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, WALL_PRESET_NAME
 from .entity import MotionMountEntity
+
+_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -23,6 +31,7 @@ async def async_setup_entry(
 class MotionMountPresets(MotionMountEntity, SelectEntity):
     """The presets of a MotionMount."""
 
+    _attr_should_poll = True
     _attr_translation_key = "motionmount_preset"
 
     def __init__(
@@ -44,8 +53,15 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_update(self) -> None:
         """Get latest state from MotionMount."""
-        self._presets = await self.mm.get_presets()
-        self._update_options(self._presets)
+        if not await self._ensure_connected():
+            return
+
+        try:
+            self._presets = await self.mm.get_presets()
+        except (TimeoutError, socket.gaierror) as ex:
+            _LOGGER.warning("Failed to communicate with MotionMount: %s", ex)
+        else:
+            self._update_options(self._presets)
 
     @property
     def current_option(self) -> str | None:
@@ -72,8 +88,12 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
         index = int(option[:1])
-        await self.mm.go_to_preset(index)
-        self._attr_current_option = option
-
-        # Perform an update so we detect changes to the presets (changes are not pushed)
-        self.async_schedule_update_ha_state(True)
+        try:
+            await self.mm.go_to_preset(index)
+        except (TimeoutError, socket.gaierror) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
+        else:
+            self._attr_current_option = option

@@ -20,6 +20,7 @@ from aioesphomeapi import (
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -49,6 +50,8 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
         EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
     }
 )
+
+ATTR_BYPASS_PROXY = "bypass_proxy"
 
 
 class EsphomeMediaPlayer(
@@ -108,13 +111,15 @@ class EsphomeMediaPlayer(
 
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
+        bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
 
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
             self._entry_data.media_player_formats.get(self._static_info.unique_id)
         )
 
         if (
-            supported_formats
+            not bypass_proxy
+            and supported_formats
             and _is_url(media_id)
             and (
                 proxy_url := self._get_proxy_url(
@@ -170,13 +175,28 @@ class EsphomeMediaPlayer(
         _LOGGER.debug("Proxying media url %s with format %s", url, format_to_use)
         device_id = self.device_entry.id
         media_format = format_to_use.format
+
+        # 0 = None
+        rate: int | None = None
+        channels: int | None = None
+        width: int | None = None
+        if format_to_use.sample_rate > 0:
+            rate = format_to_use.sample_rate
+
+        if format_to_use.num_channels > 0:
+            channels = format_to_use.num_channels
+
+        if format_to_use.sample_bytes > 0:
+            width = format_to_use.sample_bytes
+
         proxy_url = async_create_proxy_url(
             self.hass,
             device_id,
             url,
             media_format=media_format,
-            rate=format_to_use.sample_rate,
-            channels=format_to_use.num_channels,
+            rate=rate,
+            channels=channels,
+            width=width,
         )
 
         # Resolve URL

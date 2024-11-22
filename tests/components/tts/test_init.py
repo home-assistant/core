@@ -1318,10 +1318,16 @@ async def test_tags_with_wave() -> None:
 @pytest.mark.parametrize(
     ("engine", "language", "options", "cache", "result_query"),
     [
-        (None, None, None, None, ""),
-        (None, "de_DE", None, None, "language=de_DE"),
-        (None, "de_DE", {"voice": "henk"}, None, "language=de_DE&voice=henk"),
-        (None, "de_DE", None, True, "cache=true&language=de_DE"),
+        (None, None, None, None, "&tts_options=null"),
+        (None, "de_DE", None, None, "&language=de_DE&tts_options=null"),
+        (
+            None,
+            "de_DE",
+            {"voice": "henk"},
+            None,
+            "&language=de_DE&tts_options=%7B%22voice%22:%22henk%22%7D",
+        ),
+        (None, "de_DE", None, True, "&cache=true&language=de_DE&tts_options=null"),
     ],
 )
 async def test_generate_media_source_id(
@@ -1343,8 +1349,9 @@ async def test_generate_media_source_id(
     _, _, engine_query = media_source_id.rpartition("/")
     engine, _, query = engine_query.partition("?")
     assert engine == result_engine
-    assert query.startswith("message=msg")
-    assert query[12:] == result_query
+    query_prefix = "message=msg"
+    assert query.startswith(query_prefix)
+    assert query[len(query_prefix) :] == result_query
 
 
 @pytest.mark.parametrize(

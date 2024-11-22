@@ -7,11 +7,14 @@ from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
 from homeassistant.components.home_connect.const import (
+    ATTR_ALLOWED_VALUES,
+    ATTR_CONSTRAINTS,
     BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_ON,
+    BSH_POWER_STANDBY,
     BSH_POWER_STATE,
     REFRIGERATION_SUPERMODEFREEZER,
 )
@@ -26,6 +29,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import get_all_appliances
 
@@ -34,7 +38,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 SETTINGS_STATUS = {
     setting.pop("key"): setting
     for setting in load_json_object_fixture("home_connect/settings.json")
-    .get("Washer")
+    .get("Dishwasher")
     .get("data")
     .get("settings")
 }
@@ -64,56 +68,38 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "state"),
+    ("entity_id", "status", "service", "state", "appliance"),
     [
         (
-            "switch.washer_program_mix",
+            "switch.dishwasher_program_mix",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
             SERVICE_TURN_ON,
             STATE_ON,
+            "Dishwasher",
         ),
         (
-            "switch.washer_program_mix",
+            "switch.dishwasher_program_mix",
             {BSH_ACTIVE_PROGRAM: {"value": ""}},
             SERVICE_TURN_OFF,
             STATE_OFF,
+            "Dishwasher",
         ),
         (
-            "switch.washer_power",
-            {BSH_POWER_STATE: {"value": BSH_POWER_ON}},
-            SERVICE_TURN_ON,
-            STATE_ON,
-        ),
-        (
-            "switch.washer_power",
-            {BSH_POWER_STATE: {"value": BSH_POWER_OFF}},
-            SERVICE_TURN_OFF,
-            STATE_OFF,
-        ),
-        (
-            "switch.washer_power",
-            {
-                BSH_POWER_STATE: {"value": ""},
-                BSH_OPERATION_STATE: {
-                    "value": "BSH.Common.EnumType.OperationState.Inactive"
-                },
-            },
-            SERVICE_TURN_OFF,
-            STATE_OFF,
-        ),
-        (
-            "switch.washer_childlock",
+            "switch.dishwasher_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": True}},
             SERVICE_TURN_ON,
             STATE_ON,
+            "Dishwasher",
         ),
         (
-            "switch.washer_childlock",
+            "switch.dishwasher_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": False}},
             SERVICE_TURN_OFF,
             STATE_OFF,
+            "Dishwasher",
         ),
     ],
+    indirect=["appliance"],
 )
 async def test_switch_functionality(
     entity_id: str,
@@ -145,51 +131,72 @@ async def test_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "mock_attr"),
+    (
+        "entity_id",
+        "status",
+        "service",
+        "mock_attr",
+        "problematic_appliance",
+        "exception_match",
+    ),
     [
         (
-            "switch.washer_program_mix",
+            "switch.dishwasher_program_mix",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
             SERVICE_TURN_ON,
             "start_program",
+            "Dishwasher",
+            r"Error.*start.*program.*",
         ),
         (
-            "switch.washer_program_mix",
+            "switch.dishwasher_program_mix",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
             SERVICE_TURN_OFF,
             "stop_program",
+            "Dishwasher",
+            r"Error.*stop.*program.*",
         ),
         (
-            "switch.washer_power",
+            "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_OFF}},
+            SERVICE_TURN_OFF,
+            "set_setting",
+            "Dishwasher",
+            r"Error.*turn.*off.*appliance.*value",
+        ),
+        (
+            "switch.dishwasher_power",
             {BSH_POWER_STATE: {"value": ""}},
             SERVICE_TURN_ON,
             "set_setting",
+            "Dishwasher",
+            r"Error.*turn.*on.*appliance.*",
         ),
         (
-            "switch.washer_power",
-            {BSH_POWER_STATE: {"value": ""}},
-            SERVICE_TURN_OFF,
-            "set_setting",
-        ),
-        (
-            "switch.washer_childlock",
+            "switch.dishwasher_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": ""}},
             SERVICE_TURN_ON,
             "set_setting",
+            "Dishwasher",
+            r"Error.*turn.*on.*key.*",
         ),
         (
-            "switch.washer_childlock",
+            "switch.dishwasher_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": ""}},
             SERVICE_TURN_OFF,
             "set_setting",
+            "Dishwasher",
+            r"Error.*turn.*off.*key.*",
         ),
     ],
+    indirect=["problematic_appliance"],
 )
 async def test_switch_exception_handling(
     entity_id: str,
     status: dict,
     service: str,
     mock_attr: str,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -204,6 +211,7 @@ async def test_switch_exception_handling(
     get_appliances.return_value = [problematic_appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    problematic_appliance.status.update(status)
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -211,10 +219,10 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    problematic_appliance.status.update(status)
-    await hass.services.async_call(
-        SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
-    )
+    with pytest.raises(ServiceValidationError, match=exception_match):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == 2
 
 
@@ -222,14 +230,14 @@ async def test_switch_exception_handling(
     ("entity_id", "status", "service", "state", "appliance"),
     [
         (
-            "switch.fridgefreezer_supermode_freezer",
+            "switch.fridgefreezer_freezer_super_mode",
             {REFRIGERATION_SUPERMODEFREEZER: {"value": True}},
             SERVICE_TURN_ON,
             STATE_ON,
             "FridgeFreezer",
         ),
         (
-            "switch.fridgefreezer_supermode_freezer",
+            "switch.fridgefreezer_freezer_super_mode",
             {REFRIGERATION_SUPERMODEFREEZER: {"value": False}},
             SERVICE_TURN_OFF,
             STATE_OFF,
@@ -274,21 +282,30 @@ async def test_ent_desc_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "mock_attr", "problematic_appliance"),
+    (
+        "entity_id",
+        "status",
+        "service",
+        "mock_attr",
+        "problematic_appliance",
+        "exception_match",
+    ),
     [
         (
-            "switch.fridgefreezer_supermode_freezer",
+            "switch.fridgefreezer_freezer_super_mode",
             {REFRIGERATION_SUPERMODEFREEZER: {"value": ""}},
             SERVICE_TURN_ON,
             "set_setting",
             "FridgeFreezer",
+            r"Error.*turn.*on.*key.*",
         ),
         (
-            "switch.fridgefreezer_supermode_freezer",
+            "switch.fridgefreezer_freezer_super_mode",
             {REFRIGERATION_SUPERMODEFREEZER: {"value": ""}},
             SERVICE_TURN_OFF,
             "set_setting",
             "FridgeFreezer",
+            r"Error.*turn.*off.*key.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -298,6 +315,7 @@ async def test_ent_desc_switch_exception_handling(
     status: dict,
     service: str,
     mock_attr: str,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -326,7 +344,165 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
+    with pytest.raises(ServiceValidationError, match=exception_match):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert getattr(problematic_appliance, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "status", "allowed_values", "service", "power_state", "appliance"),
+    [
+        (
+            "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_ON}},
+            [BSH_POWER_ON, BSH_POWER_OFF],
+            SERVICE_TURN_ON,
+            STATE_ON,
+            "Dishwasher",
+        ),
+        (
+            "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_OFF}},
+            [BSH_POWER_ON, BSH_POWER_OFF],
+            SERVICE_TURN_OFF,
+            STATE_OFF,
+            "Dishwasher",
+        ),
+        (
+            "switch.dishwasher_power",
+            {
+                BSH_POWER_STATE: {"value": ""},
+                BSH_OPERATION_STATE: {
+                    "value": "BSH.Common.EnumType.OperationState.Run"
+                },
+            },
+            [BSH_POWER_ON],
+            SERVICE_TURN_ON,
+            STATE_ON,
+            "Dishwasher",
+        ),
+        (
+            "switch.dishwasher_power",
+            {
+                BSH_POWER_STATE: {"value": ""},
+                BSH_OPERATION_STATE: {
+                    "value": "BSH.Common.EnumType.OperationState.Inactive"
+                },
+            },
+            [BSH_POWER_ON],
+            SERVICE_TURN_ON,
+            STATE_OFF,
+            "Dishwasher",
+        ),
+        (
+            "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_ON}},
+            [BSH_POWER_ON, BSH_POWER_STANDBY],
+            SERVICE_TURN_ON,
+            STATE_ON,
+            "Dishwasher",
+        ),
+        (
+            "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_STANDBY}},
+            [BSH_POWER_ON, BSH_POWER_STANDBY],
+            SERVICE_TURN_OFF,
+            STATE_OFF,
+            "Dishwasher",
+        ),
+    ],
+    indirect=["appliance"],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_power_swtich(
+    entity_id: str,
+    status: dict,
+    allowed_values: list[str],
+    service: str,
+    power_state: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    appliance: Mock,
+    get_appliances: MagicMock,
+) -> None:
+    """Test power switch functionality."""
+    appliance.get.side_effect = [
+        {
+            ATTR_CONSTRAINTS: {
+                ATTR_ALLOWED_VALUES: allowed_values,
+            },
+        }
+    ]
+    appliance.status.update(SETTINGS_STATUS)
+    appliance.status.update(status)
+    get_appliances.return_value = [appliance]
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
     await hass.services.async_call(
         SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert getattr(problematic_appliance, mock_attr).call_count == 2
+    assert hass.states.is_state(entity_id, power_state)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "allowed_values", "service", "appliance", "exception_match"),
+    [
+        (
+            "switch.dishwasher_power",
+            [BSH_POWER_ON],
+            SERVICE_TURN_OFF,
+            "Dishwasher",
+            r".*not support.*turn.*off.*",
+        ),
+        (
+            "switch.dishwasher_power",
+            None,
+            SERVICE_TURN_OFF,
+            "Dishwasher",
+            r".*Unable.*turn.*off.*support.*not.*determined.*",
+        ),
+    ],
+    indirect=["appliance"],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_power_switch_service_validation_errors(
+    entity_id: str,
+    allowed_values: list[str],
+    service: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    appliance: Mock,
+    exception_match: str,
+    get_appliances: MagicMock,
+) -> None:
+    """Test power switch functionality validation errors."""
+    if allowed_values:
+        appliance.get.side_effect = [
+            {
+                ATTR_CONSTRAINTS: {
+                    ATTR_ALLOWED_VALUES: allowed_values,
+                },
+            }
+        ]
+    appliance.status.update(SETTINGS_STATUS)
+    get_appliances.return_value = [appliance]
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    appliance.status.update({BSH_POWER_STATE: {"value": BSH_POWER_ON}})
+
+    with pytest.raises(ServiceValidationError, match=exception_match):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        )

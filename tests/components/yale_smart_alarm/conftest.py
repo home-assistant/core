@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from yalesmartalarmclient import YaleSmartAlarmData
+from yalesmartalarmclient import YaleDoorManAPI, YaleLock, YaleSmartAlarmData
 from yalesmartalarmclient.const import YALE_STATE_ARM_FULL
 
 from homeassistant.components.yale_smart_alarm.const import DOMAIN, PLATFORMS
@@ -53,16 +53,29 @@ async def load_config_entry(
 
         config_entry.add_to_hass(hass)
 
+        cycle = get_data.cycle["data"]
+        data = {"data": cycle["device_status"]}
+
         with patch(
             "homeassistant.components.yale_smart_alarm.coordinator.YaleSmartAlarmClient",
             autospec=True,
         ) as mock_client_class:
             client = mock_client_class.return_value
             client.auth = Mock()
-            client.lock_api = Mock()
+            client.auth.get_authenticated = Mock(return_value=data)
+            client.auth.post_authenticated = Mock(return_value={"code": "000"})
+            client.auth.put_authenticated = Mock(return_value={"code": "000"})
+            client.lock_api = YaleDoorManAPI(client.auth)
+            locks = [
+                YaleLock(device, lock_api=client.lock_api)
+                for device in cycle["device_status"]
+                if device["type"] == YaleLock.DEVICE_TYPE
+            ]
+            client.get_locks.return_value = locks
             client.get_all.return_value = get_all_data
             client.get_information.return_value = get_data
             client.get_armed_status.return_value = YALE_STATE_ARM_FULL
+
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
@@ -78,7 +91,7 @@ def get_fixture_data() -> dict[str, Any]:
     return json_data
 
 
-@pytest.fixture(name="get_data", scope="package")
+@pytest.fixture(name="get_data")
 def get_update_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
     """Load update data and return."""
 
@@ -94,7 +107,7 @@ def get_update_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
     )
 
 
-@pytest.fixture(name="get_all_data", scope="package")
+@pytest.fixture(name="get_all_data")
 def get_diag_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
     """Load all data and return."""
 

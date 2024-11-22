@@ -73,6 +73,12 @@
       },
       "offline_error": {
         "name": "Offline error"
+      },
+      "cloud_connectivity": {
+        "name": "Cloud connectivity"
+      },
+      "local_connectivity": {
+        "name": "Local connectivity"
       }
     },
     "fan": {

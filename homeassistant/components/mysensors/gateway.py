@@ -114,14 +114,14 @@ async def try_connect(
                 await gateway_ready.wait()
                 return True
         except TimeoutError:
-            _LOGGER.info("Try gateway connect failed with timeout")
+            _LOGGER.warning("Try gateway connect failed with timeout")
             return False
         finally:
             if connect_task is not None and not connect_task.done():
                 connect_task.cancel()
             await gateway.stop()
     except OSError as err:
-        _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
+        _LOGGER.warning("Try gateway connect failed with exception", exc_info=err)
         return False
 
 

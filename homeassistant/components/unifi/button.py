@@ -117,6 +117,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     ),
     UnifiButtonEntityDescription[Wlans, Wlan](
         key="WLAN regenerate password",
+        translation_key="wlan_regenerate_password",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,

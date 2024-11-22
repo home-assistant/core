@@ -3,26 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, fields
-from typing import cast
 
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SW_VERSION,
-    CONF_API_KEY,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
     CalendarUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
@@ -31,7 +20,6 @@ from .coordinator import (
     QueueDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
-    T,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
@@ -89,36 +77,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
-    """Defines a base Radarr entity."""
-
-    _attr_has_entity_name = True
-    coordinator: RadarrDataUpdateCoordinator[T]
-
-    def __init__(
-        self,
-        coordinator: RadarrDataUpdateCoordinator[T],
-        description: EntityDescription,
-    ) -> None:
-        """Create Radarr entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the Radarr instance."""
-        device_info = DeviceInfo(
-            configuration_url=self.coordinator.host_configuration.url,
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
-            manufacturer=DEFAULT_NAME,
-            name=self.coordinator.config_entry.title,
-        )
-        if isinstance(self.coordinator, StatusDataUpdateCoordinator):
-            device_info[ATTR_SW_VERSION] = cast(
-                StatusDataUpdateCoordinator, self.coordinator
-            ).data.version
-        return device_info

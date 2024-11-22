@@ -6,7 +6,7 @@ import pathlib
 import sys
 import threading
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
@@ -583,6 +583,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.dependencies == ["test-dep"]
     assert integration.requirements == ["test-req==1.0.0"]
     assert integration.is_built_in is True
+    assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
 
     integration = loader.Integration(
@@ -597,6 +598,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
         },
     )
     assert integration.is_built_in is False
+    assert integration.overwrites_built_in is True
     assert integration.homekit is None
     assert integration.zeroconf is None
     assert integration.dhcp is None
@@ -619,6 +621,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
         },
     )
     assert integration.is_built_in is False
+    assert integration.overwrites_built_in is True
     assert integration.homekit is None
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
     assert integration.dhcp is None
@@ -815,7 +818,7 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
 
-    name = "homeassistant.loader._async_get_custom_components"
+    name = "homeassistant.loader._get_custom_components"
     with patch(name) as mock_get:
         mock_get.return_value = {
             "test_1": test_1_integration,
@@ -826,6 +829,29 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         integrations = await loader.async_get_custom_components(hass)
         assert integrations == mock_get.return_value
         mock_get.assert_called_once_with(hass)
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
+    """Test loading a custom component that overwrites a core component."""
+    # First load the core 'light' component
+    core_light = await loader.async_get_integration(hass, "light")
+    assert core_light.is_built_in is True
+
+    # create a mock custom 'light' component
+    mock_integration(
+        hass,
+        MockModule("light", partial_manifest={"version": "1.0.0"}),
+        built_in=False,
+    )
+
+    # Try to load the 'light' component again
+    custom_light = await loader.async_get_integration(hass, "light")
+
+    # Assert that we got the custom component instead of the core one
+    assert custom_light.is_built_in is False
+    assert custom_light.overwrites_built_in is True
+    assert custom_light.version == "1.0.0"
 
 
 async def test_get_config_flows(hass: HomeAssistant) -> None:
@@ -1269,26 +1295,29 @@ async def test_config_folder_not_in_path() -> None:
     import tests.testing_config.check_config_not_in_path  # noqa: F401
 
 
-async def test_hass_components_use_reported(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
-) -> None:
-    """Test that use of hass.components is reported."""
-    mock_integration_frame.filename = (
-        "/home/paulus/homeassistant/custom_components/demo/light.py"
-    )
-    integration_frame = frame.IntegrationFrame(
-        custom_integration=True,
-        frame=mock_integration_frame,
-        integration="test_integration_frame",
-        module="custom_components.test_integration_frame",
-        relative_filename="custom_components/test_integration_frame/__init__.py",
-    )
-
-    with (
-        patch(
-            "homeassistant.helpers.frame.get_integration_frame",
-            return_value=integration_frame,
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expected"),
+    [
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
         ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_hass_components_use_reported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    expected: bool,
+) -> None:
+    """Test whether use of hass.components is reported."""
+    with (
         patch(
             "homeassistant.components.http.start_http_server_and_save_config",
             return_value=None,
@@ -1296,10 +1325,11 @@ async def test_hass_components_use_reported(
     ):
         await hass.components.http.start_http_server_and_save_config(hass, [], None)
 
-        assert (
+        reported = (
             "Detected that custom integration 'test_integration_frame'"
             " accesses hass.components.http. This is deprecated"
         ) in caplog.text
+        assert reported == expected
 
 
 async def test_async_get_component_preloads_config_and_config_flow(
@@ -1961,24 +1991,29 @@ async def test_has_services(hass: HomeAssistant) -> None:
     assert integration.has_services is True
 
 
-async def test_hass_helpers_use_reported(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
-) -> None:
-    """Test that use of hass.components is reported."""
-    integration_frame = frame.IntegrationFrame(
-        custom_integration=True,
-        frame=mock_integration_frame,
-        integration="test_integration_frame",
-        module="custom_components.test_integration_frame",
-        relative_filename="custom_components/test_integration_frame/__init__.py",
-    )
-
-    with (
-        patch.object(frame, "_REPORTED_INTEGRATIONS", new=set()),
-        patch(
-            "homeassistant.helpers.frame.get_integration_frame",
-            return_value=integration_frame,
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expected"),
+    [
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
         ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_hass_helpers_use_reported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    expected: bool,
+) -> None:
+    """Test whether use of hass.helpers is reported."""
+    with (
         patch(
             "homeassistant.helpers.aiohttp_client.async_get_clientsession",
             return_value=None,
@@ -1986,10 +2021,11 @@ async def test_hass_helpers_use_reported(
     ):
         hass.helpers.aiohttp_client.async_get_clientsession()
 
-        assert (
+        reported = (
             "Detected that custom integration 'test_integration_frame' "
             "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
+        assert reported == expected
 
 
 async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:

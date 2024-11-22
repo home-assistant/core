@@ -20,11 +20,7 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_INTEGRATION_DISCOVERY,
-    SOURCE_REAUTH,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -44,6 +40,8 @@ from . import (
     init_integration,
     patch_async_setup_entry,
 )
+
+from tests.common import MockConfigEntry, start_reauth_flow
 
 
 @pytest.mark.usefixtures("ezviz_config_flow")
@@ -134,9 +132,8 @@ async def test_async_step_reauth(hass: HomeAssistant) -> None:
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
-    )
+    new_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    result = await start_reauth_flow(hass, new_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -182,9 +179,10 @@ async def test_step_discovery_abort_if_cloud_account_missing(
 async def test_step_reauth_abort_if_cloud_account_missing(hass: HomeAssistant) -> None:
     """Test reauth and confirm step, abort if cloud account was removed."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT_VALIDATE)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ezviz_cloud_account_missing"
 
@@ -562,9 +560,8 @@ async def test_async_step_reauth_exception(
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
-    )
+    new_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    result = await start_reauth_flow(hass, new_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}

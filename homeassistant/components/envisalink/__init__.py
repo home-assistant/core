@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_connection_success_callback(data):
         """Handle a successful connection."""
-        _LOGGER.info("Established a connection with the Envisalink")
+        _LOGGER.debug("Established a connection with the Envisalink")
         if not sync_connect.done():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
@@ -186,7 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
-        _LOGGER.info("Shutting down Envisalink")
+        _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
     async def handle_custom_function(call: ServiceCall) -> None:
@@ -203,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     controller.callback_login_timeout = async_connection_fail_callback
     controller.callback_login_success = async_connection_success_callback
 
-    _LOGGER.info("Start envisalink")
+    _LOGGER.debug("Start envisalink")
     controller.start()
 
     if not await sync_connect:
@@ -244,20 +243,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-class EnvisalinkDevice(Entity):
-    """Representation of an Envisalink device."""
-
-    _attr_should_poll = False
-
-    def __init__(self, name, info, controller):
-        """Initialize the device."""
-        self._controller = controller
-        self._info = info
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name

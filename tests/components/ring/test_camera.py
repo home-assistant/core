@@ -1,11 +1,12 @@
 """The tests for the Ring switch platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import ring_doorbell
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
@@ -17,9 +18,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockStreamReader
 
-from .common import setup_platform
+from .common import MockConfigEntry, setup_platform
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
@@ -29,19 +30,19 @@ SMALLEST_VALID_JPEG = (
 SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 
 
-async def test_entity_registry(
+async def test_states(
     hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_ring_client,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, Platform.CAMERA)
-
-    entry = entity_registry.async_get("camera.front")
-    assert entry.unique_id == "765432"
-
-    entry = entity_registry.async_get("camera.internal")
-    assert entry.unique_id == "345678"
+    """Test states."""
+    mock_config_entry.add_to_hass(hass)
+    # Patch getrandbits so the access_token doesn't change on camera attributes
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await setup_platform(hass, Platform.CAMERA)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

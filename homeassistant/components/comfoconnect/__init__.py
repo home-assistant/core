@@ -66,7 +66,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
         return False
     bridge = bridges[0]
-    _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
+    _LOGGER.debug("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
     # Setup ComfoConnect Bridge
     ccb = ComfoConnectBridge(hass, bridge, name, token, user_agent, pin)

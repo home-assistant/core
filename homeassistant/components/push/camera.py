@@ -15,8 +15,8 @@ from homeassistant.components import webhook
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
-    STATE_IDLE,
     Camera,
+    CameraState,
 )
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
@@ -135,7 +135,7 @@ class PushCamera(Camera):
 
     async def update_image(self, image, filename):
         """Update the camera image."""
-        if self.state == STATE_IDLE:
+        if self.state == CameraState.IDLE:
             self._attr_is_recording = True
             self._last_trip = dt_util.utcnow()
             self.queue.clear()
@@ -165,7 +165,7 @@ class PushCamera(Camera):
     ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
-            if self.state == STATE_IDLE:
+            if self.state == CameraState.IDLE:
                 self.queue.rotate(1)
             self._current_image = self.queue[0]
 

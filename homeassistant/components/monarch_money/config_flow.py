@@ -103,7 +103,7 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self.email: str | None = None
         self.password: str | None = None

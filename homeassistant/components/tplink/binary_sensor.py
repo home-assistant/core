@@ -58,6 +58,10 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
         key="water_alert",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
+    TPLinkBinarySensorEntityDescription(
+        key="motion_detected",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
 )
 
 BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARY_SENSOR_DESCRIPTIONS}
@@ -75,6 +79,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.BinarySensor,

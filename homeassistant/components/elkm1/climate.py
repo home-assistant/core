@@ -22,7 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from . import DOMAIN, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
+from .const import DOMAIN
+from .entity import ElkEntity, create_elk_entities
 
 SUPPORT_HVAC = [
     HVACMode.OFF,

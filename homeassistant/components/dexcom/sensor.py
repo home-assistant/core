@@ -6,7 +6,7 @@ from pydexcom import GlucoseReading
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, MG_DL
+from .const import DOMAIN
 
 TRENDS = {
     1: "rising_quickly",
@@ -36,13 +36,10 @@ async def async_setup_entry(
     """Set up the Dexcom sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     username = config_entry.data[CONF_USERNAME]
-    unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
     async_add_entities(
         [
             DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
-            DexcomGlucoseValueSensor(
-                coordinator, username, config_entry.entry_id, unit_of_measurement
-            ),
+            DexcomGlucoseValueSensor(coordinator, username, config_entry.entry_id),
         ],
     )
 
@@ -73,6 +70,10 @@ class DexcomSensorEntity(
 class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
+    _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
     _attr_translation_key = "glucose_value"
 
     def __init__(
@@ -80,18 +81,15 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         coordinator: DataUpdateCoordinator,
         username: str,
         entry_id: str,
-        unit_of_measurement: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "value")
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._key = "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return getattr(self.coordinator.data, self._key)
+            return self.coordinator.data.mg_dl
         return None
 
 

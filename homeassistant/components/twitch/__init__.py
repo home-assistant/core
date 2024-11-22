@@ -17,7 +17,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CLIENT, DOMAIN, OAUTH_SCOPES, PLATFORMS, SESSION
+from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .coordinator import TwitchCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,10 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CLIENT: client,
-        SESSION: session,
-    }
+    coordinator = TwitchCoordinator(hass, client, session)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

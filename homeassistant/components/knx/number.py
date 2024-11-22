@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
 from .const import CONF_RESPOND_TO_READ, CONF_STATE_ADDRESS, KNX_ADDRESS, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 from .schema import NumberSchema
 
 

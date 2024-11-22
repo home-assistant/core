@@ -7,9 +7,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxEntity
 
 
 async def async_setup_entry(

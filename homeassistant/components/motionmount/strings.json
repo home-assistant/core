@@ -56,5 +56,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "failed_communication": {
+      "message": "Failed to communicate with MotionMount"
+    }
   }
 }

@@ -45,11 +45,11 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
 
     features = [
         _mocked_feature(
-            "temperature", value=20, category=Feature.Category.Primary, unit="celsius"
+            "temperature", value=20.2, category=Feature.Category.Primary, unit="celsius"
         ),
         _mocked_feature(
             "target_temperature",
-            value=22,
+            value=22.2,
             type_=Feature.Type.Number,
             category=Feature.Category.Primary,
             unit="celsius",
@@ -94,8 +94,8 @@ async def test_climate(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_HVAC_ACTION] is HVACAction.HEATING
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20
-    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.2
+    assert state.attributes[ATTR_TEMPERATURE] == 22.2
 
 
 async def test_states(

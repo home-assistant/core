@@ -95,7 +95,13 @@ async def test_schema_update_calls(
             hass,
             engine,
             session_maker,
-            migration.SchemaValidationStatus(0, True, set(), 0),
+            migration.SchemaValidationStatus(
+                current_version=0,
+                migration_needed=True,
+                non_live_data_migration_needed=True,
+                schema_errors=set(),
+                start_version=0,
+            ),
             42,
         ),
         call(
@@ -103,7 +109,13 @@ async def test_schema_update_calls(
             hass,
             engine,
             session_maker,
-            migration.SchemaValidationStatus(42, True, set(), 0),
+            migration.SchemaValidationStatus(
+                current_version=42,
+                migration_needed=True,
+                non_live_data_migration_needed=True,
+                schema_errors=set(),
+                start_version=0,
+            ),
             db_schema.SCHEMA_VERSION,
         ),
     ]

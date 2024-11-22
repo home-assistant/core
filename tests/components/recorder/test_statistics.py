@@ -2512,6 +2512,7 @@ async def test_recorder_platform_with_statistics(
     recorder_platform = Mock(
         compile_statistics=Mock(wraps=_mock_compile_statistics),
         list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
+        update_statistics_issues=Mock(),
         validate_statistics=Mock(wraps=_mock_validate_statistics),
     )
 
@@ -2523,16 +2524,20 @@ async def test_recorder_platform_with_statistics(
 
     recorder_platform.compile_statistics.assert_not_called()
     recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.update_statistics_issues.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
 
-    # Test compile statistics
-    zero = get_start_time(dt_util.utcnow())
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
 
     recorder_platform.compile_statistics.assert_called_once_with(
         hass, ANY, zero, zero + timedelta(minutes=5)
     )
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
 
@@ -2542,6 +2547,7 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.list_statistic_ids.assert_called_once_with(
         hass, statistic_ids=None, statistic_type=None
     )
+    recorder_platform.update_statistics_issues.assert_called_once()
     recorder_platform.validate_statistics.assert_not_called()
 
     # Test validate statistics
@@ -2551,6 +2557,7 @@ async def test_recorder_platform_with_statistics(
     )
     recorder_platform.compile_statistics.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once()
     recorder_platform.validate_statistics.assert_called_once_with(hass)
 
 
@@ -2575,6 +2582,7 @@ async def test_recorder_platform_without_statistics(
     [
         ("compile_statistics",),
         ("list_statistic_ids",),
+        ("update_statistics_issues",),
         ("validate_statistics",),
     ],
 )
@@ -2601,6 +2609,7 @@ async def test_recorder_platform_with_partial_statistics_support(
     mock_impl = {
         "compile_statistics": _mock_compile_statistics,
         "list_statistic_ids": _mock_list_statistic_ids,
+        "update_statistics_issues": None,
         "validate_statistics": _mock_validate_statistics,
     }
 
@@ -2620,8 +2629,10 @@ async def test_recorder_platform_with_partial_statistics_support(
     for meth in supported_methods:
         getattr(recorder_platform, meth).assert_not_called()
 
-    # Test compile statistics
-    zero = get_start_time(dt_util.utcnow())
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
 

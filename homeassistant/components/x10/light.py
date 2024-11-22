@@ -54,7 +54,7 @@ def setup_platform(
     try:
         x10_command("info")
     except CalledProcessError as err:
-        _LOGGER.info("Assuming that the device is CM17A: %s", err.output)
+        _LOGGER.warning("Assuming that the device is CM17A: %s", err.output)
         is_cm11a = False
 
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])

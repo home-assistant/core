@@ -12,7 +12,7 @@ from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -43,7 +43,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     discovery: DiscoveryData
-    entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -151,7 +150,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-auth if API was disabled."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -160,20 +158,17 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm reauth dialog."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            assert self.entry is not None
+            reauth_entry = self._get_reauth_entry()
             try:
-                await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
+                await self._async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            errors=errors,
-        )
+        return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
     @staticmethod
     async def _async_try_connect(ip_address: str) -> Device:

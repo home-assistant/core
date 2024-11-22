@@ -21,6 +21,9 @@
       },
       "delay": {
         "default": "mdi:clock-plus"
+      },
+      "line": {
+        "default": "mdi:transit-connection-variant"
       }
     }
   },

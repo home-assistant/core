@@ -20,7 +20,7 @@ async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     """Test bad trigger platform."""
     with pytest.raises(vol.Invalid) as ex:
         await async_validate_trigger_config(hass, [{"platform": "not_a_platform"}])
-    assert "Invalid platform 'not_a_platform' specified" in str(ex)
+    assert "Invalid trigger 'not_a_platform' specified" in str(ex)
 
 
 async def test_trigger_subtype(hass: HomeAssistant) -> None:

@@ -92,7 +92,6 @@ CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
 CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_VISIBILITY_TEMPLATE = "visibility_template"
-CONF_FORECAST_TEMPLATE = "forecast_template"
 CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
 CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
 CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
@@ -133,10 +132,7 @@ WEATHER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FORECAST_TEMPLATE),
-    WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
-)
+PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
 
 
 async def async_setup_platform(

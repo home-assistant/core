@@ -10,9 +10,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import NZBGetDataUpdateCoordinator
+from .entity import NZBGetEntity
 
 
 async def async_setup_entry(

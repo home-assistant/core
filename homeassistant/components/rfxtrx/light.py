@@ -14,8 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .entity import RfxtrxCommandEntity
 
 _LOGGER = logging.getLogger(__name__)
 

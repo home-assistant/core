@@ -11,11 +11,14 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_captcha": "Captcha validation missing"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "account_mismatch": "Username and region are not allowed to change"
     }
   },
   "options": {
@@ -198,6 +201,9 @@
   "exceptions": {
     "invalid_poi": {
       "message": "Invalid data for point of interest: {poi_exception}"
+    },
+    "missing_captcha": {
+      "message": "Login requires captcha validation"
     }
   }
 }

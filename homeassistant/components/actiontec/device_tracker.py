@@ -51,7 +51,6 @@ class ActiontecDeviceScanner(DeviceScanner):
         self.last_results: list[Device] = []
         data = self.get_actiontec_data()
         self.success_init = data is not None
-        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
@@ -70,7 +69,7 @@ class ActiontecDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
         if not self.success_init:
             return False
 
@@ -79,7 +78,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         self.last_results = [
             device for device in actiontec_data if device.timevalid > -60
         ]
-        _LOGGER.info("Scan successful")
+        _LOGGER.debug("Scan successful")
         return True
 
     def get_actiontec_data(self) -> list[Device] | None:

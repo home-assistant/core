@@ -7,7 +7,11 @@ from ayla_iot_unofficial import AylaApi
 from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, SwingMode
 import pytest
 
-from homeassistant.components.fujitsu_fglair.const import CONF_EUROPE, DOMAIN
+from homeassistant.components.fujitsu_fglair.const import (
+    CONF_REGION,
+    DOMAIN,
+    REGION_DEFAULT,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -57,15 +61,19 @@ def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Return a regular config entry."""
+    region = REGION_DEFAULT
+    if hasattr(request, "param"):
+        region = request.param
+
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USERNAME,
         data={
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
+            CONF_REGION: region,
         },
     )
 

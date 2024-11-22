@@ -56,7 +56,7 @@ from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 PROVIDES_EXTRA_ATTRIBUTES = (

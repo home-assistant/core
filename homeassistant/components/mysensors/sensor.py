@@ -49,7 +49,7 @@ from .const import (
     DiscoveryInfo,
     NodeDiscoveryInfo,
 )
-from .device import MySensorNodeEntity, MySensorsChildEntity
+from .entity import MySensorNodeEntity, MySensorsChildEntity
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -193,7 +193,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",

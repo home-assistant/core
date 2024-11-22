@@ -13,11 +13,11 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
+from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaConfigEntry
 
 
-class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
@@ -59,7 +59,7 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
 
 
-class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron tilt only blind."""
 
     _attr_supported_features = (

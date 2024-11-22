@@ -1,4 +1,5 @@
 {
+  "title": "Timer",
   "entity_component": {
     "_": {
       "name": "Timer",
