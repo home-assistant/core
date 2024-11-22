@@ -161,19 +161,19 @@
     },
     "set_temperature": {
       "name": "Set target temperature",
-      "description": "Sets the target temperature for a climate device.",
+      "description": "Sets the temperature setpoint.",
       "fields": {
         "temperature": {
           "name": "Target temperature",
-          "description": "The setpoint for the climate device."
+          "description": "The temperature setpoint."
         },
         "target_temp_high": {
           "name": "Upper target temperature",
-          "description": "The highest temperature that the climate device will allow."
+          "description": "The highest temperature allowed."
         },
         "target_temp_low": {
           "name": "Lower target temperature",
-          "description": "The lowest temperature that the climate device will allow."
+          "description": "The lowest temperature allowed."
         },
         "hvac_mode": {
           "name": "HVAC mode",
