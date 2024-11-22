@@ -11,29 +11,31 @@ from rxv import RXV
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    BRAND,
     CURSOR_TYPE_DOWN,
     CURSOR_TYPE_LEFT,
     CURSOR_TYPE_RETURN,
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
-    DISCOVER_TIMEOUT,
     DOMAIN,
-    KNOWN_ZONES,
+    OPTION_INPUT_SOURCES,
+    OPTION_INPUT_SOURCES_IGNORE,
     SERVICE_ENABLE_OUTPUT,
     SERVICE_MENU_CURSOR,
     SERVICE_SELECT_SCENE,
@@ -47,11 +49,6 @@ ATTR_PORT = "port"
 
 ATTR_SCENE = "scene"
 
-CONF_SOURCE_IGNORE = "source_ignore"
-CONF_SOURCE_NAMES = "source_names"
-CONF_ZONE_IGNORE = "zone_ignore"
-CONF_ZONE_NAMES = "zone_names"
-
 CURSOR_TYPE_MAP = {
     CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
     CURSOR_TYPE_LEFT: rxv.RXV.menu_left.__name__,
@@ -60,7 +57,6 @@ CURSOR_TYPE_MAP = {
     CURSOR_TYPE_SELECT: rxv.RXV.menu_sel.__name__,
     CURSOR_TYPE_UP: rxv.RXV.menu_up.__name__,
 }
-DEFAULT_NAME = "Yamaha Receiver"
 
 SUPPORT_YAMAHA = (
     MediaPlayerEntityFeature.VOLUME_SET
@@ -72,117 +68,61 @@ SUPPORT_YAMAHA = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
-        vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
-    }
-)
 
+async def async_setup_entry(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Yamaha zones based on a config entry."""
+    device: rxv.RXV = hass.data[DOMAIN][entry.entry_id]
 
-class YamahaConfigInfo:
-    """Configuration Info for Yamaha Receivers."""
+    media_players: list[Entity] = []
 
-    def __init__(
-        self, config: ConfigType, discovery_info: DiscoveryInfoType | None
-    ) -> None:
-        """Initialize the Configuration Info for Yamaha Receiver."""
-        self.name = config.get(CONF_NAME)
-        self.host = config.get(CONF_HOST)
-        self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
-        self.source_ignore = config.get(CONF_SOURCE_IGNORE)
-        self.source_names = config.get(CONF_SOURCE_NAMES)
-        self.zone_ignore = config.get(CONF_ZONE_IGNORE)
-        self.zone_names = config.get(CONF_ZONE_NAMES)
-        self.from_discovery = False
-        _LOGGER.debug("Discovery Info: %s", discovery_info)
-        if discovery_info is not None:
-            self.name = discovery_info.get("name")
-            self.model = discovery_info.get("model_name")
-            self.ctrl_url = discovery_info.get("control_url")
-            self.desc_url = discovery_info.get("description_url")
-            self.zone_ignore = []
-            self.from_discovery = True
+    for zctrl in device.zone_controllers():
+        entity = YamahaDeviceZone(
+            entry.data.get(CONF_NAME),
+            zctrl,
+            entry.options.get(OPTION_INPUT_SOURCES_IGNORE),
+            entry.options.get(OPTION_INPUT_SOURCES),
+        )
 
+        media_players.append(entity)
 
-def _discovery(config_info: YamahaConfigInfo) -> list[RXV]:
-    """Discover list of zone controllers from configuration in the network."""
-    if config_info.from_discovery:
-        _LOGGER.debug("Discovery Zones")
-        zones = rxv.RXV(
-            config_info.ctrl_url,
-            model_name=config_info.model,
-            friendly_name=config_info.name,
-            unit_desc_url=config_info.desc_url,
-        ).zone_controllers()
-    elif config_info.host is None:
-        _LOGGER.debug("Config No Host Supplied Zones")
-        zones = []
-        for recv in rxv.find(DISCOVER_TIMEOUT):
-            zones.extend(recv.zone_controllers())
-    else:
-        _LOGGER.debug("Config Zones")
-        zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
-
-    _LOGGER.debug("Returned _discover zones: %s", zones)
-    return zones
+    async_add_entities(media_players)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Yamaha platform."""
-    # Keep track of configured receivers so that we don't end up
-    # discovering a receiver dynamically that we have static config
-    # for. Map each device from its zone_id .
-    known_zones = hass.data.setdefault(DOMAIN, {KNOWN_ZONES: set()})[KNOWN_ZONES]
-    _LOGGER.debug("Known receiver zones: %s", known_zones)
-
-    # Get the Infos for configuration from config (YAML) or Discovery
-    config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
-    # Async check if the Receivers are there in the network
-    try:
-        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
-    except requests.exceptions.ConnectionError as ex:
-        raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
-
-    entities = []
-    for zctrl in zone_ctrls:
-        _LOGGER.debug("Receiver zone: %s serial %s", zctrl.zone, zctrl.serial_number)
-        if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
-            _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
-            continue
-
-        assert config_info.name
-        entity = YamahaDeviceZone(
-            config_info.name,
-            zctrl,
-            config_info.source_ignore,
-            config_info.source_names,
-            config_info.zone_names,
-        )
-
-        # Only add device if it's not already added
-        if entity.zone_id not in known_zones:
-            known_zones.add(entity.zone_id)
-            entities.append(entity)
+    if config.get(CONF_HOST):
+        if hass.config_entries.async_entries(DOMAIN) and config[CONF_HOST] not in [
+            entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
+        ]:
+            _LOGGER.error(
+                "Configuration in configuration.yaml is not supported anymore. "
+                "Please add this device using the config flow: %s.",
+                config[CONF_HOST],
+            )
         else:
-            _LOGGER.debug(
-                "Ignoring duplicate zone: %s %s", config_info.name, zctrl.zone
+            _LOGGER.warning(
+                "Configuration in configuration.yaml is deprecated. Use the config flow instead."
             )
 
-    async_add_entities(entities)
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+                )
+            )
+    else:
+        _LOGGER.error(
+            "Configuration in configuration.yaml is not supported anymore. "
+            "Please add this device using the config flow."
+        )
 
     # Register Service 'select_scene'
     platform = entity_platform.async_get_current_platform()
@@ -216,7 +156,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
         zctrl: RXV,
         source_ignore: list[str] | None,
         source_names: dict[str, str] | None,
-        zone_names: dict[str, str] | None,
     ) -> None:
         """Initialize the Yamaha Receiver."""
         self.zctrl = zctrl
@@ -225,7 +164,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.OFF
         self._source_ignore: list[str] = source_ignore or []
         self._source_names: dict[str, str] = source_names or {}
-        self._zone_names: dict[str, str] = zone_names or {}
         self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
@@ -236,6 +174,12 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._attr_unique_id)},
+                manufacturer=BRAND,
+                name=name + " " + zctrl.zone,
+                model=zctrl.model_name
+            )
 
     def update(self) -> None:
         """Get the latest details from the device."""
@@ -293,10 +237,9 @@ class YamahaDeviceZone(MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the device."""
         name = self._name
-        zone_name = self._zone_names.get(self._zone, self._zone)
-        if zone_name != "Main_Zone":
+        if self._zone != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += f" {zone_name.replace('_', ' ')}"
+            name += f" {self._zone.replace('_', ' ')}"
         return name
 
     @property
@@ -312,7 +255,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         supports = self._playback_support
         mapping = {
             "play": (
-                MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
+                    MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
             ),
             "pause": MediaPlayerEntityFeature.PAUSE,
             "stop": MediaPlayerEntityFeature.STOP,
@@ -374,7 +317,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.input = self._reverse_mapping.get(source, source)
 
     def play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+            self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from an ID.
 

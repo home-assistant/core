@@ -1,4 +1,39 @@
 {
+  "config": {
+        "flow_title": "Receiver: {name}",
+        "step": {
+            "user": {
+            "description": "Set up Yamaha to integrate with Home Assistant.",
+            "data": {
+                "host": "[%key:common::config_flow::data::host%]"
+            },
+            "data_description": {
+                "host": "Hostname or IP address of your Yamaha receiver."
+            }
+            },
+            "confirm": {
+            "description": "[%key:common::config_flow::description::confirm_setup%]"
+            }
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "no_yamaha_device": "This device seems to be no Yamaha Device.",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        }
+        },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "source_ignore": "Ignore input sources"
+        }
+      }
+    }
+  },
   "services": {
     "enable_output": {
       "name": "Enable output",
