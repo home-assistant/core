@@ -277,6 +277,7 @@ async def test_reconfigure_flow(
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Testing reconfgure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -494,6 +495,7 @@ async def test_options_flow(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test options flow."""
     await async_init_integration(hass, mock_config_entry)

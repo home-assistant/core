@@ -61,6 +61,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self._config: dict[str, Any] = {}
         self._fleet: dict[str, LaMarzoccoDeviceInfo] = {}
         self._discovered: dict[str, str] = {}
+        self._cloud_client: LaMarzoccoCloudClient | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -79,13 +80,13 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **self._discovered,
             }
 
-            cloud_client = LaMarzoccoCloudClient(
+            self._cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
             )
             try:
-                self._fleet = await cloud_client.get_customer_fleet()
-                await cloud_client.async_logout()
+                self._fleet = await self._cloud_client.get_customer_fleet()
+                await self._cloud_client.async_logout()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
@@ -144,7 +145,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             if not self._discovered:
-                serial_number = user_input[CONF_MACHINE]
+                serial_number = str(user_input[CONF_MACHINE])
                 if self.source != SOURCE_RECONFIGURE:
                     await self.async_set_unique_id(serial_number)
                     self._abort_if_unique_id_configured()
@@ -155,10 +156,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
+                assert self._cloud_client
                 if not await LaMarzoccoLocalClient.validate_connection(
                     client=get_async_client(self.hass),
                     host=user_input[CONF_HOST],
                     token=selected_device.communication_key,
+                    cloud_details=(self._cloud_client, serial_number),
                 ):
                     errors[CONF_HOST] = "cannot_connect"
                 else:
