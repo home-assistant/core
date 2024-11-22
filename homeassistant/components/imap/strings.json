@@ -35,6 +35,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "imap_mail_count": {
+        "name": "Messages",
+        "unit_of_measurement": "messages"
+      }
+    }
+  },
   "exceptions": {
     "copy_failed": {
       "message": "Copying the message failed with \"{error}\"."
