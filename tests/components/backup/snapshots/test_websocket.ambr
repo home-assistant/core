@@ -1368,6 +1368,14 @@
 # name: test_generate[None]
   dict({
     'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[None].1
+  dict({
+    'id': 2,
     'result': dict({
       'backup_job_id': '27f5c632',
     }),
@@ -1375,10 +1383,11 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[None].1
+# name: test_generate[None].2
   dict({
     'event': dict({
       'done': True,
+      'event_type': 'backup_progress',
       'stage': None,
       'success': True,
     }),
@@ -1389,6 +1398,14 @@
 # name: test_generate[data1]
   dict({
     'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[data1].1
+  dict({
+    'id': 2,
     'result': dict({
       'backup_job_id': '27f5c632',
     }),
@@ -1396,10 +1413,11 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[data1].1
+# name: test_generate[data1].2
   dict({
     'event': dict({
       'done': True,
+      'event_type': 'backup_progress',
       'stage': None,
       'success': True,
     }),
@@ -1410,6 +1428,14 @@
 # name: test_generate[data2]
   dict({
     'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[data2].1
+  dict({
+    'id': 2,
     'result': dict({
       'backup_job_id': '27f5c632',
     }),
@@ -1417,10 +1443,11 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[data2].1
+# name: test_generate[data2].2
   dict({
     'event': dict({
       'done': True,
+      'event_type': 'backup_progress',
       'stage': None,
       'success': True,
     }),
@@ -1699,4 +1726,30 @@
 # ---
 # name: test_restore_remote_agent[remote_agents1-backups1].1
   1
+# ---
+# name: test_subscribe_event
+  dict({
+    'event': dict({
+      'event_type': 'test',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_subscribe_event.1
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_subscribe_event.2
+  dict({
+    'event': dict({
+      'event_type': 'test2',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
 # ---

@@ -62,10 +62,18 @@ class Backup(AgentBackup):
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class BackupProgress:
+class BackupEvent:
+    """Backup progress class."""
+
+    event_type: str
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BackupProgress(BackupEvent):
     """Backup progress class."""
 
     done: bool
+    event_type: str = "backup_progress"
     stage: str | None
     success: bool | None
 
@@ -96,7 +104,7 @@ class BackupReaderWriter(abc.ABC):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[BackupProgress], None] | None,
+        on_progress: Callable[[BackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""
@@ -130,6 +138,8 @@ class BackupManager:
         self.config = BackupConfig(hass, self)
         self.remove_next_backup_event: Callable[[], None] | None = None
         self.syncing = False
+        self.backup_event: BackupEvent | None = None
+        self._subscriptions: list[Callable[[BackupEvent], None]] = []
         self._reader_writer = reader_writer
 
     async def async_setup(self) -> None:
@@ -447,14 +457,9 @@ class BackupManager:
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
         name: str | None,
-        on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
     ) -> NewBackup:
-        """Initiate generating a backup.
-
-        :param on_progress: A callback that will be called with the progress of the
-            backup.
-        """
+        """Initiate generating a backup."""
         if self.backup_task:
             raise HomeAssistantError("Backup already in progress")
         if not agent_ids:
@@ -465,6 +470,7 @@ class BackupManager:
             raise HomeAssistantError(
                 "Cannot include all addons and specify specific addons"
             )
+
         backup_name = name or f"Core {HAVERSION}"
         new_backup, self.backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
@@ -474,7 +480,7 @@ class BackupManager:
             include_database=include_database,
             include_folders=include_folders,
             include_homeassistant=include_homeassistant,
-            on_progress=on_progress,
+            on_progress=self.async_on_backup_event,
             password=password,
         )
         self.finish_backup_task = self.hass.async_create_task(
@@ -517,6 +523,7 @@ class BackupManager:
         finally:
             self.backup_task = None
             self.finish_backup_task = None
+            self.backup_event = None
 
     async def async_restore_backup(
         self,
@@ -529,13 +536,7 @@ class BackupManager:
         restore_folders: list[Folder] | None,
         restore_homeassistant: bool,
     ) -> None:
-        """Initiate restoring a backup.
-
-        :param on_progress: A callback that will be called with the progress of the
-            restore. Home Assistant Core may need to be restarted during the backup
-            restore process, which means the restore process may not be able to report
-            when it's done.
-        """
+        """Initiate restoring a backup."""
 
         if agent_id in self.local_backup_agents:
             local_agent = self.local_backup_agents[agent_id]
@@ -562,6 +563,29 @@ class BackupManager:
             restore_homeassistant=restore_homeassistant,
         )
 
+    @callback
+    def async_on_backup_event(
+        self,
+        event: BackupEvent,
+    ) -> None:
+        """Forward event to subscribers."""
+        self.backup_event = event
+        for subscription in self._subscriptions:
+            subscription(event)
+
+    @callback
+    def async_subscribe_events(
+        self,
+        on_event: Callable[[BackupEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe events."""
+
+        def remove_subscription() -> None:
+            self._subscriptions.remove(on_event)
+
+        self._subscriptions.append(on_event)
+        return remove_subscription
+
 
 class CoreBackupReaderWriter(BackupReaderWriter):
     """Class for reading and writing backups in core and container installations."""
@@ -581,7 +605,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[BackupProgress], None] | None,
+        on_progress: Callable[[BackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Initiate generating a backup."""
@@ -619,7 +643,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         backup_name: str,
         date_str: str,
         include_database: bool,
-        on_progress: Callable[[BackupProgress], None] | None,
+        on_progress: Callable[[BackupEvent], None],
         password: str | None,
     ) -> tuple[AgentBackup, Path]:
         """Generate a backup."""
@@ -672,8 +696,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             success = True
             return (backup, tar_file_path)
         finally:
-            if on_progress:
-                on_progress(BackupProgress(done=True, stage=None, success=success))
+            on_progress(BackupProgress(done=True, stage=None, success=success))
             # Inform integrations the backup is done
             await manager.async_post_backup_actions()
 
