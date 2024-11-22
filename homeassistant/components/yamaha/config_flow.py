@@ -70,7 +70,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         # Check if device is a Yamaha receiver
         try:
             info = YamahaConfigInfo(host)
-            await self.hass.async_add_executor_job( rxv.RXV, info.ctrl_url )
+            await self.hass.async_add_executor_job(rxv.RXV, info.ctrl_url)
             serial_number, model = await get_upnp_serial_and_model(self.hass, host)
         except ConnectionError:
             errors["base"] = "cannot_connect"
@@ -94,7 +94,10 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: user_input.get(CONF_NAME) or DEFAULT_NAME,
                 },
                 options={
-                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(OPTION_INPUT_SOURCES_IGNORE) or [],
+                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(
+                        OPTION_INPUT_SOURCES_IGNORE
+                    )
+                    or [],
                     OPTION_INPUT_SOURCES: user_input.get(OPTION_INPUT_SOURCES) or {},
                 },
             )
@@ -116,7 +119,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.ConfigFlowResult:
         """Handle ssdp discoveries."""
         if not await YamahaConfigInfo.check_yamaha_ssdp(
-                discovery_info.ssdp_location, async_get_clientsession(self.hass)
+            discovery_info.ssdp_location, async_get_clientsession(self.hass)
         ):
             return self.async_abort(reason="yxc_control_url_missing")
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
@@ -158,7 +161,10 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: DEFAULT_NAME,
                 },
                 options={
-                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(OPTION_INPUT_SOURCES_IGNORE) or [],
+                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(
+                        OPTION_INPUT_SOURCES_IGNORE
+                    )
+                    or [],
                     OPTION_INPUT_SOURCES: user_input.get(OPTION_INPUT_SOURCES) or {},
                 },
             )
@@ -183,7 +189,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-            config_entry: ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         return YamahaOptionsFlowHandler(config_entry)
@@ -194,47 +200,63 @@ class YamahaOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self._input_sources_ignore: list[str] = config_entry.options[OPTION_INPUT_SOURCES_IGNORE]
+        self._input_sources_ignore: list[str] = config_entry.options[
+            OPTION_INPUT_SOURCES_IGNORE
+        ]
         self._input_sources: dict[str, str] = config_entry.options[OPTION_INPUT_SOURCES]
 
     async def async_step_init(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         yamaha = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        inputs = await self.hass.async_add_executor_job( yamaha.inputs )
+        inputs = await self.hass.async_add_executor_job(yamaha.inputs)
 
         if user_input is not None:
-            sources_store: dict[str, str] = {k: v for k, v in user_input.items() if k in inputs and v != ""}
+            sources_store: dict[str, str] = {
+                k: v for k, v in user_input.items() if k in inputs and v != ""
+            }
 
             return self.async_create_entry(
                 data={
                     OPTION_INPUT_SOURCES: sources_store,
-                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(OPTION_INPUT_SOURCES_IGNORE)
+                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(
+                        OPTION_INPUT_SOURCES_IGNORE
+                    ),
                 }
             )
 
         schema_dict: dict[Any, Selector] = {}
-        available_inputs = [ SelectOptionDict(value=k, label=k) for k, v in inputs.items() ]
+        available_inputs = [
+            SelectOptionDict(value=k, label=k) for k, v in inputs.items()
+        ]
 
         schema_dict[vol.Optional(OPTION_INPUT_SOURCES_IGNORE)] = SelectSelector(
-            SelectSelectorConfig(options=available_inputs, mode=SelectSelectorMode.DROPDOWN, multiple=True)
+            SelectSelectorConfig(
+                options=available_inputs,
+                mode=SelectSelectorMode.DROPDOWN,
+                multiple=True,
+            )
         )
 
         for source in inputs:
             if source not in self._input_sources_ignore:
-                schema_dict[vol.Optional(source, default="")] = (
-                    TextSelector()
-                )
+                schema_dict[vol.Optional(source, default="")] = TextSelector()
 
         options = self.config_entry.options.copy()
         if OPTION_INPUT_SOURCES_IGNORE in self.config_entry.options:
-            options[OPTION_INPUT_SOURCES_IGNORE] = self.config_entry.options[OPTION_INPUT_SOURCES_IGNORE]
+            options[OPTION_INPUT_SOURCES_IGNORE] = self.config_entry.options[
+                OPTION_INPUT_SOURCES_IGNORE
+            ]
         if OPTION_INPUT_SOURCES in self.config_entry.options:
-            for source, source_name in self.config_entry.options[OPTION_INPUT_SOURCES].items():
+            for source, source_name in self.config_entry.options[
+                OPTION_INPUT_SOURCES
+            ].items():
                 options[source] = source_name
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema( vol.Schema( schema_dict ), options ),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(schema_dict), options
+            ),
         )

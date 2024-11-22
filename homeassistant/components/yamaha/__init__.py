@@ -36,7 +36,9 @@ async def get_upnp_serial_and_model(hass: HomeAssistant, host: str):
         _LOGGER.warning(
             "Could not find serial from SSDP, attempting to retrieve serial from SSDP description URL"
         )
-        upnp_serial, model = await YamahaConfigInfo.get_upnp_serial_and_model(host, async_get_clientsession(hass))
+        upnp_serial, model = await YamahaConfigInfo.get_upnp_serial_and_model(
+            host, async_get_clientsession(hass)
+        )
     return upnp_serial, model
 
 
@@ -56,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     info = YamahaConfigInfo(entry.data[CONF_HOST])
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job( rxv.RXV, info.ctrl_url, entry.data[CONF_MODEL], entry.data[CONF_SERIAL] )
+    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+        rxv.RXV, info.ctrl_url, entry.data[CONF_MODEL], entry.data[CONF_SERIAL]
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

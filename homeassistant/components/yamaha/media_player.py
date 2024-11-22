@@ -70,9 +70,9 @@ SUPPORT_YAMAHA = (
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Yamaha zones based on a config entry."""
     device: rxv.RXV = hass.data[DOMAIN][entry.entry_id]
@@ -93,10 +93,10 @@ async def async_setup_entry(
 
 
 async def async_setup_platform(
-        hass: HomeAssistant,
-        config: ConfigType,
-        async_add_entities: AddEntitiesCallback,
-        discovery_info: DiscoveryInfoType | None = None,
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Yamaha platform."""
     if config.get(CONF_HOST):
@@ -178,7 +178,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer=BRAND,
                 name=name + " " + zctrl.zone,
-                model=zctrl.model_name
+                model=zctrl.model_name,
             )
 
     def update(self) -> None:
@@ -255,7 +255,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         supports = self._playback_support
         mapping = {
             "play": (
-                    MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
+                MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
             ),
             "pause": MediaPlayerEntityFeature.PAUSE,
             "stop": MediaPlayerEntityFeature.STOP,
@@ -317,7 +317,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.input = self._reverse_mapping.get(source, source)
 
     def play_media(
-            self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from an ID.
 

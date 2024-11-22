@@ -37,21 +37,14 @@ def silent_ssdp_scanner() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.yamaha.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.yamaha.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture
 def mock_get_device_info_valid():
     """Mock getting valid device info from Yamaha API."""
-    with (
-        patch(
-            "rxv.RXV",
-            return_value=Mock()
-        )
-    ):
+    with patch("rxv.RXV", return_value=Mock()):
         yield
 
 
@@ -60,8 +53,11 @@ def mock_get_device_info_invalid():
     """Mock getting invalid device info from Yamaha API."""
     with (
         patch("rxv.RXV", return_value=None),
-        patch("homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model", return_value=(None, None))
-    ) :
+        patch(
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
+            return_value=(None, None),
+        ),
+    ):
         yield
 
 
@@ -69,8 +65,8 @@ def mock_get_device_info_invalid():
 def mock_get_device_info_mc_exception():
     """Mock raising an unexpected Exception."""
     with patch(
-            "rxv.RXV",
-            side_effect=ConnectionError("mocked error"),
+        "rxv.RXV",
+        side_effect=ConnectionError("mocked error"),
     ):
         yield
 
@@ -78,14 +74,20 @@ def mock_get_device_info_mc_exception():
 @pytest.fixture
 def mock_ssdp_yamaha():
     """Mock that the SSDP detected device is a Yamaha device."""
-    with patch("homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp", return_value=True):
+    with patch(
+        "homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp",
+        return_value=True,
+    ):
         yield
 
 
 @pytest.fixture
 def mock_ssdp_no_yamaha():
     """Mock that the SSDP detected device is not a Yamaha device."""
-    with patch("homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp", return_value=False):
+    with patch(
+        "homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp",
+        return_value=False,
+    ):
         yield
 
 
@@ -116,8 +118,14 @@ def mock_valid_discovery_information():
 def mock_empty_discovery_information():
     """Mock that the ssdp scanner returns no upnp description."""
     with (
-        patch("homeassistant.components.ssdp.async_get_discovery_info_by_st", return_value=[]),
-        patch("homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model", return_value=("1234567890","MC20"))
+        patch(
+            "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
+            return_value=("1234567890", "MC20"),
+        ),
     ):
         yield
 
@@ -185,9 +193,7 @@ async def test_user_input_device_already_existing(
     assert result2["reason"] == "already_configured"
 
 
-async def test_user_input_unknown_error(
-    hass: HomeAssistant
-) -> None:
+async def test_user_input_unknown_error(hass: HomeAssistant) -> None:
     """Test when user specifies an existing device, which does not provide the Yamaha API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
