@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import BackupProgress
+from .manager import BackupEvent
 from .models import Folder
 
 
@@ -28,6 +28,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_create)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
+    websocket_api.async_register_command(hass, handle_subscribe_events)
 
     websocket_api.async_register_command(hass, handle_config_info)
     websocket_api.async_register_command(hass, handle_config_update)
@@ -163,9 +164,6 @@ async def handle_create(
 ) -> None:
     """Generate a backup."""
 
-    def on_progress(progress: BackupProgress) -> None:
-        connection.send_message(websocket_api.event_message(msg["id"], progress))
-
     backup = await hass.data[DATA_MANAGER].async_create_backup(
         agent_ids=msg["agent_ids"],
         include_addons=msg.get("include_addons"),
@@ -174,7 +172,6 @@ async def handle_create(
         include_folders=msg.get("include_folders"),
         include_homeassistant=msg["include_homeassistant"],
         name=msg.get("name"),
-        on_progress=on_progress,
         password=msg.get("password"),
     )
     connection.send_result(msg["id"], backup)
@@ -324,4 +321,24 @@ async def handle_config_update(
     changes.pop("id")
     changes.pop("type")
     await manager.config.update(**changes)
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "backup/subscribe_events"})
+@websocket_api.async_response
+async def handle_subscribe_events(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to backup events."""
+
+    def on_event(progress: BackupEvent) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], progress))
+
+    manager = hass.data[DATA_MANAGER]
+    if manager.backup_event:
+        on_event(manager.backup_event)
+    connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])
