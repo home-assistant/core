@@ -1,0 +1,20 @@
+rules:
+  # Bronze
+  config-flow: done
+  # test-before-configure:
+  # unique-config-entry:
+  # config-flow-test-coverage:
+  # runtime-data:
+  # test-before-setup:
+  # appropriate-polling:
+  # entity-unique-id:
+  # has-entity-name:
+  # entity-event-setup:
+  # dependency-transparency:
+  # action-setup:
+  # common-modules:
+  # docs-high-level-description:
+  # docs-installation-instructions:
+  # docs-removal-instructions:
+  # docs-actions:
+  # brands:
