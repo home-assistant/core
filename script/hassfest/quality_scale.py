@@ -1349,7 +1349,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     rules_met = set()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
-        if status == "done":
+        if status in {"done", "exempt"}:
             rules_met.add(rule_name)
 
     # An integration must have all the necessary rules for the declared
