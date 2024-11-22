@@ -24,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_user_timeout(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we get the form but not device is found, so we get a timeout."""
+    """Test we get the form but no device is found, so we get a timeout."""
     # Create a mock HomeServer
     mock_home_server = Mock(Spec=HomeServer)
 
@@ -39,7 +39,8 @@ async def test_form_user_timeout(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await create_configuration(hass, result)
+    with patch("homeassistant.components.hausbus.config_flow.DEVICE_SEARCH_TIMEOUT", 0):
+        result2 = await create_configuration(hass, result)
     assert result2["type"] == FlowResultType.SHOW_PROGRESS
     assert result2["step_id"] == "wait_for_device"
 
@@ -50,7 +51,8 @@ async def test_form_user_timeout(
     assert result3["step_id"] == "search_timeout"
 
     # try searching for a device a second time
-    result4 = await create_configuration(hass, result3)
+    with patch("homeassistant.components.hausbus.config_flow.DEVICE_SEARCH_TIMEOUT", 0):
+        result4 = await create_configuration(hass, result3)
     assert result4["type"] == FlowResultType.SHOW_PROGRESS
     assert result4["step_id"] == "wait_for_device"
 

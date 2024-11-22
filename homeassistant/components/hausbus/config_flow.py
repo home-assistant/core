@@ -21,6 +21,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICE_SEARCH_TIMEOUT = 5
+
 STEP_USER_SCHEMA = vol.Schema({})
 
 
@@ -101,7 +103,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         """Start searching for devices and wait until at least one device was found or timeout is reached."""
         self.hass.async_add_executor_job(self.home_server.searchDevices)
         # wait for up to 5 seconds to find devices
-        await asyncio.wait_for(self._check_device_found(), 5)
+        await asyncio.wait_for(self._check_device_found(), DEVICE_SEARCH_TIMEOUT)
 
     async def _check_device_found(self) -> bool:
         """Check if a device was found periodically."""
