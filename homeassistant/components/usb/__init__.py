@@ -363,19 +363,16 @@ class USBDiscovery:
 
     def _device_event(self, device: Device) -> None:
         """Call when the observer receives a USB device event."""
-        if device.action == "add":
-            _LOGGER.debug(
-                "Discovered Device at path: %s, triggering scan serial",
-                device.device_path,
-            )
-            self.hass.create_task(self._async_scan())
+        if device.action not in ("add", "remove"):
+            return
 
-        if device.action == "remove":
-            _LOGGER.debug(
-                "Device removed %s, triggering scan serial",
-                device,
-            )
-            self.hass.create_task(self._async_scan())
+        _LOGGER.info(
+            "Received a udev device event %r for %s, triggering scan",
+            device.action,
+            device.device_node,
+        )
+
+        self.hass.create_task(self._async_scan())
 
     @hass_callback
     def async_register_scan_request_callback(
