@@ -52,7 +52,6 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -565,18 +564,6 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_RETRIES: 3,
             CONF_SENSORS: [
                 {
                     CONF_NAME: "dummy",

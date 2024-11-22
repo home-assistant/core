@@ -703,7 +703,7 @@ async def test_reconfigure(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -739,7 +739,7 @@ async def test_reconfigure_nochange(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -775,7 +775,7 @@ async def test_reconfigure_otherenvoy(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # let mock return different serial from first time, sim it's other one on changed ip
@@ -889,7 +889,7 @@ async def test_reconfigure_change_ip_to_existing(
 
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry

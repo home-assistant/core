@@ -1,6 +1,5 @@
 """Config flow for Bose SoundTouch integration."""
 
-import logging
 from typing import Any
 
 from libsoundtouch import soundtouch_device
@@ -14,8 +13,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bose SoundTouch."""
@@ -25,7 +22,7 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new SoundTouch config flow."""
         self.host: str | None = None
-        self.name = None
+        self.name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -79,7 +76,7 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             last_step=True,
-            description_placeholders={"name": self.name},
+            description_placeholders={"name": self.name or "?"},
         )
 
     async def _async_get_device_id(self, raise_on_progress: bool = True) -> None:
@@ -94,10 +91,10 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.name = device.config.name
 
-    async def _async_create_soundtouch_entry(self):
+    async def _async_create_soundtouch_entry(self) -> ConfigFlowResult:
         """Finish config flow and create a SoundTouch config entry."""
         return self.async_create_entry(
-            title=self.name,
+            title=self.name or "SoundTouch",
             data={
                 CONF_HOST: self.host,
             },

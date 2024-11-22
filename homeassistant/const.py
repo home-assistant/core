@@ -24,14 +24,14 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2025.2"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -479,16 +479,6 @@ STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
 STATE_STANDBY: Final = "standby"
-STATE_ALARM_DISARMED: Final = "disarmed"
-STATE_ALARM_ARMED_HOME: Final = "armed_home"
-STATE_ALARM_ARMED_AWAY: Final = "armed_away"
-STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
-STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
-STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
-STATE_ALARM_PENDING: Final = "pending"
-STATE_ALARM_ARMING: Final = "arming"
-STATE_ALARM_DISARMING: Final = "disarming"
-STATE_ALARM_TRIGGERED: Final = "triggered"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
@@ -520,6 +510,60 @@ _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
     "jammed",
     "LockState.JAMMED",
     "2025.10",
+)
+
+# #### ALARM CONTROL PANEL STATES ####
+# STATE_ALARM_* below are deprecated as of 2024.11
+# use the AlarmControlPanelState enum instead.
+_DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
+    "disarmed",
+    "AlarmControlPanelState.DISARMED",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
+    "armed_home",
+    "AlarmControlPanelState.ARMED_HOME",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
+    "armed_away",
+    "AlarmControlPanelState.ARMED_AWAY",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
+    "armed_night",
+    "AlarmControlPanelState.ARMED_NIGHT",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
+    "armed_vacation",
+    "AlarmControlPanelState.ARMED_VACATION",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
+    "armed_custom_bypass",
+    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
+    "pending",
+    "AlarmControlPanelState.PENDING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
+    "arming",
+    "AlarmControlPanelState.ARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
+    "disarming",
+    "AlarmControlPanelState.DISARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
+    "triggered",
+    "AlarmControlPanelState.TRIGGERED",
+    "2025.11",
 )
 
 # #### STATE AND EVENT ATTRIBUTES ####
@@ -681,6 +725,9 @@ class UnitOfPower(StrEnum):
 
     WATT = "W"
     KILO_WATT = "kW"
+    MEGA_WATT = "MW"
+    GIGA_WATT = "GW"
+    TERA_WATT = "TW"
     BTU_PER_HOUR = "BTU/h"
 
 
@@ -726,6 +773,8 @@ class UnitOfEnergy(StrEnum):
     WATT_HOUR = "Wh"
     KILO_WATT_HOUR = "kWh"
     MEGA_WATT_HOUR = "MWh"
+    GIGA_WATT_HOUR = "GWh"
+    TERA_WATT_HOUR = "TWh"
     CALORIE = "cal"
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
@@ -773,6 +822,7 @@ _DEPRECATED_ELECTRIC_CURRENT_AMPERE: Final = DeprecatedConstantEnum(
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
+    MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
 
@@ -1116,6 +1166,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_MINUTE = "L/min"
     GALLONS_PER_MINUTE = "gal/min"
+    MILLILITERS_PER_SECOND = "mL/s"
 
 
 _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = DeprecatedConstantEnum(
@@ -1129,8 +1180,27 @@ _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = DeprecatedConstantEn
 )
 """Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
-# Area units
-AREA_SQUARE_METERS: Final = "m²"
+
+class UnitOfArea(StrEnum):
+    """Area units."""
+
+    SQUARE_METERS = "m²"
+    SQUARE_CENTIMETERS = "cm²"
+    SQUARE_KILOMETERS = "km²"
+    SQUARE_MILLIMETERS = "mm²"
+    SQUARE_INCHES = "in²"
+    SQUARE_FEET = "ft²"
+    SQUARE_YARDS = "yd²"
+    SQUARE_MILES = "mi²"
+    ACRES = "ac"
+    HECTARES = "ha"
+
+
+_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstantEnum(
+    UnitOfArea.SQUARE_METERS,
+    "2025.12",
+)
+"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
 
 
 # Mass units
@@ -1182,9 +1252,9 @@ class UnitOfConductivity(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
     },
 ):
     """Conductivity units."""
@@ -1307,6 +1377,13 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+
+
+class UnitOfBloodGlucoseConcentration(StrEnum):
+    """Blood glucose concentration units."""
+
+    MILLIGRAMS_PER_DECILITER = "mg/dL"
+    MILLIMOLE_PER_LITER = "mmol/L"
 
 
 # Speed units
@@ -1647,6 +1724,7 @@ RESTART_EXIT_CODE: Final = 100
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
 LENGTH: Final = "length"
+AREA: Final = "area"
 MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"

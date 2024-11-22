@@ -79,17 +79,39 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice:
+) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(device_id)
+    assert device_entry
+
+    ha_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    assert ha_id
+
     for hc_api in hass.data[DOMAIN].values():
         for device in hc_api.devices:
-            if device.device_id == device_id:
-                return device.appliance
+            appliance = device.appliance
+            if appliance.haId == ha_id:
+                return appliance
     raise ValueError(f"Appliance for device id {device_id} not found")
 
 
@@ -251,20 +273,9 @@ async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data = hass.data[DOMAIN]
     hc_api = data[entry.entry_id]
 
-    device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
         for device in hc_api.devices:
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device.appliance.haId)},
-                name=device.appliance.name,
-                manufacturer=device.appliance.brand,
-                model=device.appliance.vib,
-            )
-
-            device.device_id = device_entry.id
-
             await hass.async_add_executor_job(device.initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
@@ -296,3 +307,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True
+
+
+def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any]:
+    """Return a dict from a Home Connect error."""
+    return (
+        err.args[0]
+        if len(err.args) > 0 and isinstance(err.args[0], dict)
+        else {"description": err.args[0]}
+        if len(err.args) > 0 and isinstance(err.args[0], str)
+        else {}
+    )

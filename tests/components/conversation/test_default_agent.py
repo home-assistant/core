@@ -14,6 +14,7 @@ import yaml
 from homeassistant.components import conversation, cover, media_player
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -417,6 +418,44 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     assert len(callback.mock_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("language", "expected"),
+    [("en", "English done"), ("de", "German done"), ("not_translated", "Done")],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_trigger_sentence_response_translation(
+    hass: HomeAssistant, language: str, expected: str
+) -> None:
+    """Test translation of default response 'done'."""
+    hass.config.language = language
+
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    translations = {
+        "en": {"component.conversation.conversation.agent.done": "English done"},
+        "de": {"component.conversation.conversation.agent.done": "German done"},
+        "not_translated": {},
+    }
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.translation.async_get_translations",
+        return_value=translations.get(language),
+    ):
+        unregister = agent.register_trigger(
+            ["test sentence"], AsyncMock(return_value=None)
+        )
+        result = await conversation.async_converse(
+            hass, "test sentence", None, Context()
+        )
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.speech == {
+            "plain": {"speech": expected, "extra_data": None}
+        }
+
+        unregister()
+
+
 @pytest.mark.usefixtures("init_components", "sl_setup")
 async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
     """Test adding an item to the shopping list through the default agent."""
@@ -430,7 +469,7 @@ async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_nevermind_item(hass: HomeAssistant) -> None:
+async def test_nevermind_intent(hass: HomeAssistant) -> None:
     """Test HassNevermind intent through the default agent."""
     result = await conversation.async_converse(hass, "nevermind", None, Context())
     assert result.response.intent is not None
@@ -438,6 +477,17 @@ async def test_nevermind_item(hass: HomeAssistant) -> None:
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert not result.response.speech
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_respond_intent(hass: HomeAssistant) -> None:
+    """Test HassRespond intent through the default agent."""
+    result = await conversation.async_converse(hass, "hello", None, Context())
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == intent.INTENT_RESPOND
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello from Home Assistant."
 
 
 @pytest.mark.usefixtures("init_components")
@@ -720,8 +770,8 @@ async def test_error_no_device_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on test light on the ground floor", None, Context(), None
@@ -788,8 +838,8 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -823,8 +873,8 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -997,8 +1047,8 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open the windows", None, Context(), None
@@ -1046,8 +1096,8 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open all the windows", None, Context(), None
@@ -1157,8 +1207,8 @@ async def test_error_no_device_class_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open ground floor windows", None, Context(), None
@@ -1179,8 +1229,8 @@ async def test_error_no_device_class_on_floor_exposed(
 async def test_error_no_intent(hass: HomeAssistant) -> None:
     """Test response with an intent match failure."""
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=None,
     ):
         result = await conversation.async_converse(
             hass, "do something", None, Context(), None
@@ -2551,13 +2601,15 @@ async def test_light_area_same_name(
     device_registry.async_update_device(device.id, area_id=kitchen_area.id)
 
     kitchen_light = entity_registry.async_get_or_create(
-        "light", "demo", "1234", original_name="kitchen light"
+        "light", "demo", "1234", original_name="light in the kitchen"
     )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, area_id=kitchen_area.id
     )
     hass.states.async_set(
-        kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        kitchen_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "light in the kitchen"},
     )
 
     ceiling_light = entity_registry.async_get_or_create(
@@ -2570,12 +2622,19 @@ async def test_light_area_same_name(
         ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
     )
 
+    bathroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "9012", original_name="light"
+    )
+    hass.states.async_set(
+        bathroom_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "light"}
+    )
+
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on kitchen light"},
+        {conversation.ATTR_TEXT: "turn on light in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2649,7 +2708,10 @@ async def test_config_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from configuration.yaml have priority over builtin intents/sentences."""
+    """Test that user intents from configuration.yaml have priority over builtin intents/sentences.
+
+    Also test that they follow proper selection logic.
+    """
     # Add a custom sentence that would match a builtin sentence.
     # Custom sentences have priority.
     assert await async_setup_component(hass, "homeassistant", {})
@@ -2657,13 +2719,36 @@ async def test_config_sentences_priority(
     assert await async_setup_component(
         hass,
         "conversation",
-        {"conversation": {"intents": {"CustomIntent": ["turn on the lamp"]}}},
+        {
+            "conversation": {
+                "intents": {
+                    "CustomIntent": ["turn on <name>"],
+                    "WorseCustomIntent": ["turn on the lamp"],
+                    "FakeCustomIntent": ["turn on <name>"],
+                }
+            }
+        },
     )
+
+    # Fake intent not being custom
+    intents = (
+        await conversation.async_get_agent(hass).async_get_or_load_intents(
+            hass.config.language
+        )
+    ).intents.intents
+    intents["FakeCustomIntent"].data[0].metadata[METADATA_CUSTOM_SENTENCE] = False
+
     assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "intent_script",
-        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+        {
+            "intent_script": {
+                "CustomIntent": {"speech": {"text": "custom response"}},
+                "WorseCustomIntent": {"speech": {"text": "worse custom response"}},
+                "FakeCustomIntent": {"speech": {"text": "fake custom response"}},
+            }
+        },
     )
 
     # Ensure that a "lamp" exists so that we can verify the custom intent
@@ -2680,3 +2765,71 @@ async def test_config_sentences_priority(
     data = result.as_dict()
     assert data["response"]["response_type"] == "action_done"
     assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_query_same_name_different_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test asking a question about entities with the same name in different areas."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(kitchen_device.id, area_id=kitchen_area.id)
+
+    kitchen_light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+    )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, area_id=kitchen_area.id
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id,
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: "overhead light"},
+    )
+
+    bedroom_area = area_registry.async_create("bedroom")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "5678",
+    )
+    entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=bedroom_area.id
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "overhead light"},
+    )
+
+    # Should fail without a preferred area (duplicate name)
+    result = await conversation.async_converse(
+        hass, "is the overhead light on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Succeeds using area from device (kitchen)
+    result = await conversation.async_converse(
+        hass,
+        "is the overhead light on?",
+        None,
+        Context(),
+        None,
+        device_id=kitchen_device.id,
+    )
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id

@@ -17,6 +17,8 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -97,6 +99,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
+    """
+
     ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
     """Atmospheric pressure.
 
@@ -107,6 +115,12 @@ class NumberDeviceClass(StrEnum):
     """Percentage of battery that is left.
 
     Unit of measurement: `%`
+    """
+
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
     """
 
     CO = "carbon_monoxide"
@@ -162,7 +176,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -171,7 +185,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -279,7 +293,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -362,7 +376,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`
+    Unit of measurement: `V`, `mV`, `µV`
     """
 
     VOLUME = "volume"
@@ -390,7 +404,7 @@ class NumberDeviceClass(StrEnum):
     """Generic flow rate
 
     Unit of measurement: UnitOfVolumeFlowRate
-    - SI / metric: `m³/h`, `L/min`
+    - SI / metric: `m³/h`, `L/min`, `mL/s`
     - USCS / imperial: `ft³/min`, `gal/min`
     """
 
@@ -427,8 +441,10 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
+    NumberDeviceClass.AREA: set(UnitOfArea),
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),

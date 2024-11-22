@@ -445,7 +445,7 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with (
         patch(
@@ -488,7 +488,7 @@ async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
@@ -500,7 +500,7 @@ async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "cannot_connect"}
 
     with (
@@ -544,7 +544,7 @@ async def test_reconfigure_not_the_same_device(hass: HomeAssistant) -> None:
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with (
         patch(

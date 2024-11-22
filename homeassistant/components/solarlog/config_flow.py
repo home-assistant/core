@@ -139,12 +139,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             if not user_input[CONF_HAS_PWD] or user_input.get(CONF_PASSWORD, "") == "":
@@ -164,7 +158,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Optional(

@@ -10,7 +10,7 @@ from aioswitcher.bridge import SwitcherBase
 from aioswitcher.device.tools import validate_token
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 
 from .const import DOMAIN
@@ -32,7 +32,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
     username: str | None = None
     token: str | None = None
     discovered_devices: dict[str, SwitcherBase] = {}
@@ -82,7 +81,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -90,7 +88,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
 
         if user_input is not None:
             token_is_valid = await validate_token(
@@ -98,7 +95,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if token_is_valid:
                 return self.async_update_reload_and_abort(
-                    self.entry, data={**self.entry.data, **user_input}
+                    self._get_reauth_entry(), data_updates=user_input
                 )
             errors["base"] = "invalid_auth"
 

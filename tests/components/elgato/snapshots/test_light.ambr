@@ -17,7 +17,7 @@
       'min_mireds': 143,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -25,8 +25,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
@@ -132,7 +132,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -141,8 +141,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
@@ -249,7 +249,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        239,
+        240,
         240,
       ),
       'supported_color_modes': list([
@@ -258,8 +258,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.34,
-        0.327,
+        0.339,
+        0.328,
       ),
     }),
     'context': <ANY>,

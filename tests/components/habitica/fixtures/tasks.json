@@ -121,7 +121,8 @@
       "createdAt": "2024-07-07T17:51:53.264Z",
       "updatedAt": "2024-07-12T09:58:45.438Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
-      "id": "e97659e0-2c42-4599-a7bb-00282adc410d"
+      "id": "e97659e0-2c42-4599-a7bb-00282adc410d",
+      "alias": "create_a_task"
     },
     {
       "_id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
@@ -344,7 +345,12 @@
       "daysOfMonth": [],
       "weeksOfMonth": [],
       "checklist": [],
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "1491d640-6b21-4d0c-8940-0b7aa61c8836",
+          "time": "2024-09-22T20:00:00.0000Z"
+        }
+      ],
       "createdAt": "2024-07-07T17:51:53.266Z",
       "updatedAt": "2024-09-21T22:51:41.756Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
@@ -444,12 +450,18 @@
         "completedBy": {},
         "assignedUsers": []
       },
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "91c09432-10ac-4a49-bd20-823081ec29ed",
+          "time": "2024-09-22T02:00:00.0000Z"
+        }
+      ],
       "byHabitica": false,
       "createdAt": "2024-09-21T22:17:19.513Z",
       "updatedAt": "2024-09-21T22:19:35.576Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
-      "id": "2f6fcabc-f670-4ec3-ba65-817e8deea490"
+      "id": "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+      "alias": "pay_bills"
     },
     {
       "_id": "1aa3137e-ef72-4d1f-91ee-41933602f438",
@@ -477,7 +489,7 @@
     },
     {
       "_id": "86ea2475-d1b5-4020-bdcc-c188c7996afa",
-      "date": "2024-09-26T22:15:00.000Z",
+      "date": "2024-09-21T22:00:00.000Z",
       "completed": false,
       "collapseChecklist": false,
       "checklist": [],

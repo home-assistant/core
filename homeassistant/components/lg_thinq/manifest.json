@@ -1,0 +1,10 @@
+{
+  "domain": "lg_thinq",
+  "name": "LG ThinQ",
+  "codeowners": ["@LG-ThinQ-Integration"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lg_thinq",
+  "iot_class": "cloud_push",
+  "loggers": ["thinqconnect"],
+  "requirements": ["thinqconnect==1.0.1"]
+}

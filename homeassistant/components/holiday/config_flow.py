@@ -114,12 +114,6 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the re-configuration of a province."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the re-configuration of a province."""
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             combined_input: dict[str, Any] = {**reconfigure_entry.data, **user_input}
@@ -160,6 +154,4 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="reconfigure_confirm", data_schema=province_schema
-        )
+        return self.async_show_form(step_id="reconfigure", data_schema=province_schema)

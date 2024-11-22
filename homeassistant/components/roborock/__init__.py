@@ -47,7 +47,6 @@ class RoborockCoordinators:
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
-    _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
@@ -169,7 +168,7 @@ async def setup_device_v1(
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = await hass.async_add_executor_job(
-        RoborockMqttClientV1, user_data, DeviceData(device, product_info.name)
+        RoborockMqttClientV1, user_data, DeviceData(device, product_info.model)
     )
     try:
         networking = await mqtt_client.get_networking()

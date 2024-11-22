@@ -13,7 +13,7 @@ from homeassistant.components.renault.const import (
     CONF_LOCALE,
     DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
@@ -224,7 +224,10 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "email@test.com",
+    }
     assert result["errors"] == {}
 
     # Failed credentials
@@ -238,7 +241,10 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+    assert result2["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "email@test.com",
+    }
     assert result2["errors"] == {"base": "invalid_credentials"}
 
     # Valid credentials
@@ -250,3 +256,6 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+    assert config_entry.data[CONF_USERNAME] == "email@test.com"
+    assert config_entry.data[CONF_PASSWORD] == "any"

@@ -5,6 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ws66i",
   "iot_class": "local_polling",
-  "quality_scale": "silver",
   "requirements": ["pyws66i==1.1"]
 }

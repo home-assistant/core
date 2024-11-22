@@ -148,10 +148,6 @@ def default_options(hass: HomeAssistant) -> dict[str, str]:
 class GoogleOptionsFlow(OptionsFlow):
     """Handle an options flow for Google Travel Time."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize google options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
@@ -213,7 +209,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
-        return GoogleOptionsFlow(config_entry)
+        return GoogleOptionsFlow()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -238,12 +234,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = await validate_input(self.hass, user_input)
@@ -253,7 +243,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
