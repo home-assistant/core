@@ -13,13 +13,12 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PalazzettiConfigEntry
-from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES, FAN_SILENT, PALAZZETTI
+from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES, FAN_SILENT
 from .coordinator import PalazzettiDataUpdateCoordinator
+from .entity import PalazzettiEntity
 
 
 async def async_setup_entry(
@@ -31,9 +30,7 @@ async def async_setup_entry(
     async_add_entities([PalazzettiClimateEntity(entry.runtime_data)])
 
 
-class PalazzettiClimateEntity(
-    CoordinatorEntity[PalazzettiDataUpdateCoordinator], ClimateEntity
-):
+class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     """Defines a Palazzetti climate."""
 
     _attr_has_entity_name = True
@@ -53,15 +50,7 @@ class PalazzettiClimateEntity(
         super().__init__(coordinator)
         client = coordinator.client
         mac = coordinator.config_entry.unique_id
-        assert mac is not None
         self._attr_unique_id = mac
-        self._attr_device_info = dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            name=client.name,
-            manufacturer=PALAZZETTI,
-            sw_version=client.sw_version,
-            hw_version=client.hw_version,
-        )
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
         self._attr_min_temp = client.target_temperature_min
         self._attr_max_temp = client.target_temperature_max

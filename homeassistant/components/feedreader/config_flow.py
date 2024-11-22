@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 from typing import Any
 import urllib.error
@@ -107,7 +108,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.abort_on_import_error(user_input[CONF_URL], "url_error")
                 return self.show_user_form(user_input, {"base": "url_error"})
 
-        feed_title = feed["feed"]["title"]
+        feed_title = html.unescape(feed["feed"]["title"])
 
         return self.async_create_entry(
             title=feed_title,

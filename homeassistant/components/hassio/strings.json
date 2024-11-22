@@ -274,7 +274,7 @@
       "fields": {
         "addon": {
           "name": "Add-on",
-          "description": "The add-on slug."
+          "description": "The add-on to start."
         }
       }
     },
@@ -284,17 +284,17 @@
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to restart."
         }
       }
     },
     "addon_stdin": {
       "name": "Write data to add-on stdin.",
-      "description": "Writes data to add-on stdin.",
+      "description": "Writes data to the add-on's standard input.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to write to."
         }
       }
     },
@@ -304,7 +304,7 @@
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to stop."
         }
       }
     },
@@ -314,7 +314,7 @@
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to update."
         }
       }
     },

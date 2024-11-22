@@ -64,7 +64,7 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if (stream_type := camera.frontend_stream_type) is None:
+        if not (stream_types := camera.camera_capabilities.frontend_stream_types):
             return PlayMedia(
                 f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
             )
@@ -76,7 +76,7 @@ class CameraMediaSource(MediaSource):
             url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
         except HomeAssistantError as err:
             # Handle known error
-            if stream_type != StreamType.HLS:
+            if StreamType.HLS not in stream_types:
                 raise Unresolvable(
                     "Camera does not support MJPEG or HLS streaming."
                 ) from err

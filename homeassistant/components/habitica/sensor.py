@@ -24,7 +24,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, UNIT_TASKS
+from .const import ASSETS_URL, DOMAIN, UNIT_TASKS
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 from .util import entity_used_in, get_attribute_points, get_attributes_total
@@ -40,6 +40,7 @@ class HabitipySensorEntityDescription(SensorEntityDescription):
     attributes_fn: (
         Callable[[dict[str, Any], dict[str, Any]], dict[str, Any] | None] | None
     ) = None
+    entity_picture: str | None = None
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -144,6 +145,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         value_fn=lambda user, _: user.get("balance", 0) * 4,
         suggested_display_precision=0,
         native_unit_of_measurement="gems",
+        entity_picture="shop_gem.png",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.TRINKETS,
@@ -291,6 +293,13 @@ class HabitipySensor(HabiticaBase, SensorEntity):
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:
             return func(self.coordinator.data.user, self.coordinator.content)
+        return None
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        if entity_picture := self.entity_description.entity_picture:
+            return f"{ASSETS_URL}{entity_picture}"
         return None
 
 
