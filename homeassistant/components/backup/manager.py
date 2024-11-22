@@ -771,8 +771,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
             path = local_agent.get_backup_path(backup_id)
+            remove_after_restore = False
         else:
             path = self.temp_backup_dir / f"{backup_id}.tar"
+            remove_after_restore = True
 
         def _write_restore_file() -> None:
             """Write the restore file."""
@@ -781,6 +783,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     {
                         "path": path.as_posix(),
                         "password": password,
+                        "remove_after_restore": remove_after_restore,
                         "restore_database": restore_database,
                         "restore_homeassistant": restore_homeassistant,
                     }

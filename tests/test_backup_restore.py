@@ -23,20 +23,22 @@ from .common import get_test_config_dir
         ),
         (
             None,
-            '{"path": "test", "password": "psw", "restore_database": false, "restore_homeassistant": true}',
+            '{"path": "test", "password": "psw", "remove_after_restore": false, "restore_database": false, "restore_homeassistant": true}',
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password="psw",
+                remove_after_restore=False,
                 restore_database=False,
                 restore_homeassistant=True,
             ),
         ),
         (
             None,
-            '{"path": "test", "password": null, "restore_database": true, "restore_homeassistant": false}',
+            '{"path": "test", "password": null, "remove_after_restore": true, "restore_database": true, "restore_homeassistant": false}',
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password=None,
+                remove_after_restore=True,
                 restore_database=True,
                 restore_homeassistant=False,
             ),
@@ -71,6 +73,7 @@ def test_restoring_backup_that_does_not_exist() -> None:
             return_value=backup_restore.RestoreBackupFileContent(
                 backup_file_path=backup_file_path,
                 password=None,
+                remove_after_restore=False,
                 restore_database=True,
                 restore_homeassistant=True,
             ),
@@ -103,6 +106,7 @@ def test_restoring_backup_that_is_not_a_file() -> None:
             return_value=backup_restore.RestoreBackupFileContent(
                 backup_file_path=backup_file_path,
                 password=None,
+                remove_after_restore=False,
                 restore_database=True,
                 restore_homeassistant=True,
             ),
@@ -130,6 +134,7 @@ def test_aborting_for_older_versions() -> None:
             return_value=backup_restore.RestoreBackupFileContent(
                 backup_file_path=backup_file_path,
                 password=None,
+                remove_after_restore=False,
                 restore_database=True,
                 restore_homeassistant=True,
             ),
@@ -159,6 +164,7 @@ def test_aborting_for_older_versions() -> None:
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=None,
                 password=None,
+                remove_after_restore=False,
                 restore_database=True,
                 restore_homeassistant=True,
             ),
@@ -177,6 +183,7 @@ def test_aborting_for_older_versions() -> None:
                 backup_file_path=None,
                 password=None,
                 restore_database=False,
+                remove_after_restore=False,
                 restore_homeassistant=True,
             ),
             (".HA_RESTORE", ".HA_VERSION"),
@@ -189,6 +196,7 @@ def test_aborting_for_older_versions() -> None:
                 backup_file_path=None,
                 password=None,
                 restore_database=True,
+                remove_after_restore=False,
                 restore_homeassistant=False,
             ),
             ("home-assistant_v2.db", "home-assistant_v2.db-wal"),
@@ -296,6 +304,7 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
             return_value=backup_restore.RestoreBackupFileContent(
                 backup_file_path=backup_file_path,
                 password=None,
+                remove_after_restore=False,
                 restore_database=True,
                 restore_homeassistant=True,
             ),
@@ -320,6 +329,36 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         assert {
             member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
         } == {"data", "data/.HA_VERSION", "data/.storage", "data/www"}
+
+
+@pytest.mark.parametrize(
+    ("remove_after_restore", "unlink_calls"), [(True, 1), (False, 0)]
+)
+def test_remove_backup_file_after_restore(
+    remove_after_restore: bool, unlink_calls: int
+) -> None:
+    """Test removing a backup file after restore."""
+    config_dir = Path(get_test_config_dir())
+    backup_file_path = Path(config_dir, "backups", "test.tar")
+
+    with (
+        mock.patch(
+            "homeassistant.backup_restore.restore_backup_file_content",
+            return_value=backup_restore.RestoreBackupFileContent(
+                backup_file_path=backup_file_path,
+                password=None,
+                remove_after_restore=remove_after_restore,
+                restore_database=True,
+                restore_homeassistant=True,
+            ),
+        ),
+        mock.patch("homeassistant.backup_restore._extract_backup"),
+        mock.patch("pathlib.Path.unlink", autospec=True) as mock_unlink,
+    ):
+        assert backup_restore.restore_backup(config_dir) is True
+    assert mock_unlink.call_count == unlink_calls
+    for call in mock_unlink.mock_calls:
+        assert call.args[0] == backup_file_path
 
 
 @pytest.mark.parametrize(

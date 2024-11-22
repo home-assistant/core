@@ -551,20 +551,36 @@ async def test_async_receive_backup(
 
 
 @pytest.mark.parametrize(
-    ("password", "restore_database", "restore_homeassistant"),
-    [(None, True, False), ("abc123", False, True)],
+    ("agent_id", "password", "restore_database", "restore_homeassistant", "dir"),
+    [
+        (LOCAL_AGENT_ID, None, True, False, "backups"),
+        (LOCAL_AGENT_ID, "abc123", False, True, "backups"),
+        ("test.remote", None, True, True, "tmp_backups"),
+    ],
 )
 async def test_async_trigger_restore(
     hass: HomeAssistant,
+    agent_id: str,
     password: str | None,
     restore_database: bool,
     restore_homeassistant: bool,
+    dir: str,
 ) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     hass.data[DATA_MANAGER] = manager
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(
+                return_value=[BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])]
+            ),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
@@ -578,7 +594,7 @@ async def test_async_trigger_restore(
     ):
         await manager.async_restore_backup(
             TEST_BACKUP_ABC123.backup_id,
-            agent_id=LOCAL_AGENT_ID,
+            agent_id=agent_id,
             password=password,
             restore_addons=None,
             restore_database=restore_database,
@@ -587,8 +603,9 @@ async def test_async_trigger_restore(
         )
         expected_restore_file = json.dumps(
             {
-                "path": f"{hass.config.path()}/backups/abc123.tar",
+                "path": f"{hass.config.path()}/{dir}/abc123.tar",
                 "password": password,
+                "remove_after_restore": agent_id != LOCAL_AGENT_ID,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
             }

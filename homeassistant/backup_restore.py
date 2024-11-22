@@ -34,6 +34,7 @@ class RestoreBackupFileContent:
 
     backup_file_path: Path
     password: str | None
+    remove_after_restore: bool
     restore_database: bool
     restore_homeassistant: bool
 
@@ -57,6 +58,7 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
         return RestoreBackupFileContent(
             backup_file_path=Path(instruction_content["path"]),
             password=instruction_content["password"],
+            remove_after_restore=instruction_content["remove_after_restore"],
             restore_database=instruction_content["restore_database"],
             restore_homeassistant=instruction_content["restore_homeassistant"],
         )
@@ -173,5 +175,7 @@ def restore_backup(config_dir_path: str) -> bool:
         )
     except FileNotFoundError as err:
         raise ValueError(f"Backup file {backup_file_path} does not exist") from err
+    if restore_content.remove_after_restore:
+        backup_file_path.unlink(missing_ok=True)
     _LOGGER.info("Restore complete, restarting")
     return True
