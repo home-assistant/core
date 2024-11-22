@@ -105,9 +105,13 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed(f"Error while updating data: {ex!s}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from ex
         except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed(f"Querying API failed. Error: {ex!s}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex
 
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
