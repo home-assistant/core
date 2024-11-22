@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import aiohttp
 import pytest
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon import schemas
@@ -31,7 +32,42 @@ async def test_config_flow_single_account(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    # Random error
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LOCALE: "fr_FR",
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    # Failed connection
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=aiohttp.ClientConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LOCALE: "fr_FR",
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # Failed credentials
     with patch(
