@@ -53,6 +53,7 @@ async def handle_info(
             },
             "backups": list(backups.values()),
             "backing_up": manager.backup_task is not None,
+            "last_automatic_backup": manager.config.data.last_automatic_backup,
         },
     )
 
