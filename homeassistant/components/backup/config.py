@@ -407,6 +407,13 @@ async def _delete_filtered_backups(
     if not filtered_backups:
         return
 
+    # always delete oldest backup first
+    filtered_backups = dict(
+        sorted(
+            filtered_backups.items(),
+            key=lambda backup_item: backup_item[1].date,
+        )
+    )
     backup_ids = list(filtered_backups)
     delete_agent_errors = await asyncio.gather(
         *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)
