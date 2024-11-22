@@ -739,9 +739,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             raise HomeAssistantError(
                 "Addons and folders are not supported in core restore"
             )
-        if not restore_homeassistant or not restore_database:
+        if not restore_homeassistant and not restore_database:
             raise HomeAssistantError(
-                "Home Assistant and database must be included in restore"
+                "Home Assistant or database must be included in restore"
             )
 
         manager = self._hass.data[DATA_MANAGER]
@@ -754,7 +754,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self._hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                json.dumps({"path": path.as_posix(), "password": password}),
+                json.dumps(
+                    {
+                        "path": path.as_posix(),
+                        "password": password,
+                        "restore_database": restore_database,
+                        "restore_homeassistant": restore_homeassistant,
+                    }
+                ),
                 encoding="utf-8",
             )
 

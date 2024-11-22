@@ -1,5 +1,8 @@
 """Home Assistant module to handle restoring backups."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable
 from dataclasses import dataclass
 import hashlib
 import json
@@ -15,7 +18,12 @@ import securetar
 from .const import __version__ as HA_VERSION
 
 RESTORE_BACKUP_FILE = ".HA_RESTORE"
-KEEP_PATHS = ("backups",)
+KEEP_BACKUPS = ("backups",)
+KEEP_DATABASE = (
+    "home-assistant_v2.db",
+    "home-assistant_v2.db-wal",
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +33,9 @@ class RestoreBackupFileContent:
     """Definition for restore backup file content."""
 
     backup_file_path: Path
-    password: str | None = None
+    password: str | None
+    restore_database: bool
+    restore_homeassistant: bool
 
 
 def password_to_key(password: str) -> bytes:
@@ -46,20 +56,22 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
         instruction_content = json.loads(instruction_path.read_text(encoding="utf-8"))
         return RestoreBackupFileContent(
             backup_file_path=Path(instruction_content["path"]),
-            password=instruction_content.get("password"),
+            password=instruction_content["password"],
+            restore_database=instruction_content["restore_database"],
+            restore_homeassistant=instruction_content["restore_homeassistant"],
         )
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (FileNotFoundError, KeyError, json.JSONDecodeError):
         return None
 
 
-def _clear_configuration_directory(config_dir: Path) -> None:
-    """Delete all files and directories in the config directory except for the backups directory."""
-    keep_paths = [config_dir.joinpath(path) for path in KEEP_PATHS]
-    config_contents = sorted(
-        [entry for entry in config_dir.iterdir() if entry not in keep_paths]
+def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> None:
+    """Delete all files and directories in the config directory except entries in the keep list."""
+    keep_paths = [config_dir.joinpath(path) for path in keep]
+    entries_to_remove = sorted(
+        entry for entry in config_dir.iterdir() if entry not in keep_paths
     )
 
-    for entry in config_contents:
+    for entry in entries_to_remove:
         entrypath = config_dir.joinpath(entry)
 
         if entrypath.is_file():
@@ -70,14 +82,13 @@ def _clear_configuration_directory(config_dir: Path) -> None:
 
 def _extract_backup(
     config_dir: Path,
-    backup_file_path: Path,
-    password: str | None = None,
+    restore_content: RestoreBackupFileContent,
 ) -> None:
     """Extract the backup file to the config directory."""
     with (
         TemporaryDirectory() as tempdir,
         securetar.SecureTarFile(
-            backup_file_path,
+            restore_content.backup_file_path,
             gzip=False,
             mode="r",
         ) as ostf,
@@ -106,28 +117,41 @@ def _extract_backup(
                 f"homeassistant.tar{'.gz' if backup_meta["compressed"] else ''}",
             ),
             gzip=backup_meta["compressed"],
-            key=password_to_key(password) if password is not None else None,
+            key=password_to_key(restore_content.password)
+            if restore_content.password is not None
+            else None,
             mode="r",
         ) as istf:
             istf.extractall(
-                path=Path(
-                    tempdir,
-                    "homeassistant",
-                ),
+                path=Path(tempdir, "homeassistant"),
                 members=securetar.secure_path(istf),
                 filter="fully_trusted",
             )
-            _clear_configuration_directory(config_dir)
-            shutil.copytree(
-                Path(
-                    tempdir,
-                    "homeassistant",
-                    "data",
-                ),
-                config_dir,
-                dirs_exist_ok=True,
-                ignore=shutil.ignore_patterns(*(KEEP_PATHS)),
-            )
+            if restore_content.restore_homeassistant:
+                keep = list(KEEP_BACKUPS)
+                if not restore_content.restore_database:
+                    keep.extend(KEEP_DATABASE)
+                _clear_configuration_directory(config_dir, keep)
+                shutil.copytree(
+                    Path(tempdir, "homeassistant", "data"),
+                    config_dir,
+                    dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns(*(keep)),
+                )
+            elif restore_content.restore_database:
+                for entry in KEEP_DATABASE:
+                    entrypath = config_dir / entry
+
+                    if entrypath.is_file():
+                        entrypath.unlink()
+                    elif entrypath.is_dir():
+                        shutil.rmtree(entrypath)
+
+                for entry in KEEP_DATABASE:
+                    shutil.copy(
+                        Path(tempdir, "homeassistant", "data", entry),
+                        config_dir,
+                    )
 
 
 def restore_backup(config_dir_path: str) -> bool:
@@ -145,8 +169,7 @@ def restore_backup(config_dir_path: str) -> bool:
     try:
         _extract_backup(
             config_dir=config_dir,
-            backup_file_path=backup_file_path,
-            password=restore_content.password,
+            restore_content=restore_content,
         )
     except FileNotFoundError as err:
         raise ValueError(f"Backup file {backup_file_path} does not exist") from err

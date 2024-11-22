@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
@@ -542,9 +543,15 @@ async def test_async_receive_backup(
         assert copy_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
+@pytest.mark.parametrize(
+    ("password", "restore_database", "restore_homeassistant"),
+    [(None, True, False), ("abc123", False, True)],
+)
 async def test_async_trigger_restore(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    password: str | None,
+    restore_database: bool,
+    restore_homeassistant: bool,
 ) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
@@ -565,52 +572,21 @@ async def test_async_trigger_restore(
         await manager.async_restore_backup(
             TEST_BACKUP_ABC123.backup_id,
             agent_id=LOCAL_AGENT_ID,
-            password=None,
+            password=password,
             restore_addons=None,
-            restore_database=True,
+            restore_database=restore_database,
             restore_folders=None,
-            restore_homeassistant=True,
+            restore_homeassistant=restore_homeassistant,
         )
-        assert (
-            mocked_write_text.call_args[0][0]
-            == f'{{"path": "{hass.config.path()}/backups/abc123.tar", "password": null}}'
+        expected_restore_file = json.dumps(
+            {
+                "path": f"{hass.config.path()}/backups/abc123.tar",
+                "password": password,
+                "restore_database": restore_database,
+                "restore_homeassistant": restore_homeassistant,
+            }
         )
-        assert mocked_service_call.called
-
-
-async def test_async_trigger_restore_with_password(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test trigger restore."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
-
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.write_text") as mocked_write_text,
-        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
-    ):
-        await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id,
-            agent_id=LOCAL_AGENT_ID,
-            password="abc123",
-            restore_addons=None,
-            restore_database=True,
-            restore_folders=None,
-            restore_homeassistant=True,
-        )
-        assert (
-            mocked_write_text.call_args[0][0]
-            == f'{{"path": "{hass.config.path()}/backups/abc123.tar", "password": "abc123"}}'
-        )
+        assert mocked_write_text.call_args[0][0] == expected_restore_file
         assert mocked_service_call.called
 
 
@@ -630,12 +606,8 @@ async def test_async_trigger_restore_with_password(
             "Addons and folders are not supported in core restore",
         ),
         (
-            {"restore_database": False},
-            "Home Assistant and database must be included in restore",
-        ),
-        (
-            {"restore_homeassistant": False},
-            "Home Assistant and database must be included in restore",
+            {"restore_database": False, "restore_homeassistant": False},
+            "Home Assistant or database must be included in restore",
         ),
     ],
 )
