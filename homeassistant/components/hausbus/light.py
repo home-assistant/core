@@ -84,9 +84,7 @@ class HausbusLight(HausbusEntity, LightEntity):
     @staticmethod
     def is_light_channel(class_id: int) -> bool:
         """Check if a class_id is a light."""
-        if class_id in (Dimmer.CLASS_ID, RGBDimmer.CLASS_ID, Led.CLASS_ID):
-            return True
-        return False
+        return class_id in (Dimmer.CLASS_ID, RGBDimmer.CLASS_ID, Led.CLASS_ID)
 
     @abstractmethod
     def get_hardware_status(self) -> None:
@@ -171,20 +169,20 @@ class HausbusLight(HausbusEntity, LightEntity):
     def async_update_callback(self, **kwargs: Any) -> None:
         """Light state push update."""
         state_changed = False
-        if ATTR_ON_STATE in kwargs:
-            if self._attr_is_on != kwargs[ATTR_ON_STATE]:
-                self._attr_is_on = kwargs[ATTR_ON_STATE]
-                state_changed = True
+        if ATTR_ON_STATE in kwargs and self._attr_is_on != kwargs[ATTR_ON_STATE]:
+            self._attr_is_on = kwargs[ATTR_ON_STATE]
+            state_changed = True
 
-        if ATTR_BRIGHTNESS_PCT in kwargs:
-            if self._attr_brightness != kwargs[ATTR_BRIGHTNESS_PCT] * 255:
-                self._attr_brightness = kwargs[ATTR_BRIGHTNESS_PCT] * 255
-                state_changed = True
+        if (
+            ATTR_BRIGHTNESS_PCT in kwargs
+            and self._attr_brightness != kwargs[ATTR_BRIGHTNESS_PCT] * 255
+        ):
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS_PCT] * 255
+            state_changed = True
 
-        if ATTR_HS_COLOR in kwargs:
-            if self._attr_hs_color != kwargs[ATTR_HS_COLOR]:
-                self._attr_hs_color = kwargs[ATTR_HS_COLOR]
-                state_changed = True
+        if ATTR_HS_COLOR in kwargs and self._attr_hs_color != kwargs[ATTR_HS_COLOR]:
+            self._attr_hs_color = kwargs[ATTR_HS_COLOR]
+            state_changed = True
 
         if state_changed:
             self.schedule_update_ha_state()
@@ -203,8 +201,7 @@ class HausbusDimmerLight(HausbusLight):
         super().__init__(instance_id, device, channel)
 
         self._channel = channel
-        self._attr_supported_color_modes: set[ColorMode] = set()
-        self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS
 
     def get_hardware_status(self) -> None:
@@ -235,8 +232,7 @@ class HausbusRGBDimmerLight(HausbusLight):
         super().__init__(instance_id, device, channel)
 
         self._channel = channel
-        self._attr_supported_color_modes: set[ColorMode] = set()
-        self._attr_supported_color_modes.add(ColorMode.HS)
+        self._attr_supported_color_modes: set[ColorMode] = {ColorMode.HS}
         self._attr_color_mode = ColorMode.HS
 
     def get_hardware_status(self) -> None:
@@ -270,8 +266,7 @@ class HausbusLedLight(HausbusLight):
         super().__init__(instance_id, device, channel)
 
         self._channel = channel
-        self._attr_supported_color_modes: set[ColorMode] = set()
-        self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS
 
     def get_hardware_status(self) -> None:
