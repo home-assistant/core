@@ -554,6 +554,10 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
