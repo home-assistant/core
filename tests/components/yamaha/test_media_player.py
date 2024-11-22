@@ -8,7 +8,6 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
 CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
@@ -115,51 +114,6 @@ async def test_setup_no_host(hass: HomeAssistant, device, main_zone) -> None:
     """Test set up integration without host."""
     assert await async_setup_component(
         hass, MP_DOMAIN, {"media_player": {"platform": "yamaha"}}
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-    assert state is None
-
-
-@pytest.mark.skip(
-    reason="Remove this since it relies on a removed Disovery integration?"
-)
-async def test_setup_discovery(hass: HomeAssistant, device, main_zone) -> None:
-    """Test set up integration via discovery."""
-    discovery_info = {
-        "name": "Yamaha Receiver",
-        "model_name": "Yamaha",
-        "control_url": "http://receiver",
-        "description_url": "http://receiver/description",
-    }
-    await async_load_platform(
-        hass, MP_DOMAIN, "yamaha", discovery_info, {MP_DOMAIN: {}}
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-    assert state is not None
-    assert state.state == "off"
-
-
-@pytest.mark.skip(
-    reason="Remove this since zone_ignore and zone_names were removed from configation.yaml?"
-)
-async def test_setup_zone_ignore(hass: HomeAssistant, device, main_zone) -> None:
-    """Test set up integration without host."""
-    assert await async_setup_component(
-        hass,
-        MP_DOMAIN,
-        {
-            "media_player": {
-                "platform": "yamaha",
-                "host": "127.0.0.1",
-                "zone_ignore": "Main zone",
-            }
-        },
     )
     await hass.async_block_till_done()
 

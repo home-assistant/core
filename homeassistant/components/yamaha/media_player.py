@@ -33,6 +33,7 @@ from .const import (
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
+    DEFAULT_NAME,
     DOMAIN,
     OPTION_INPUT_SOURCES,
     OPTION_INPUT_SOURCES_IGNORE,
@@ -81,7 +82,7 @@ async def async_setup_entry(
 
     for zctrl in device.zone_controllers():
         entity = YamahaDeviceZone(
-            entry.data.get(CONF_NAME),
+            entry.data.get(CONF_NAME, DEFAULT_NAME),
             zctrl,
             entry.options.get(OPTION_INPUT_SOURCES_IGNORE),
             entry.options.get(OPTION_INPUT_SOURCES),
@@ -105,12 +106,12 @@ async def async_setup_platform(
         ]:
             _LOGGER.error(
                 "Configuration in configuration.yaml is not supported anymore. "
-                "Please add this device using the config flow: %s.",
+                "Please add this device using the config flow: %s",
                 config[CONF_HOST],
             )
         else:
             _LOGGER.warning(
-                "Configuration in configuration.yaml is deprecated. Use the config flow instead."
+                "Configuration in configuration.yaml is deprecated. Use the config flow instead"
             )
 
             hass.async_create_task(
@@ -121,7 +122,7 @@ async def async_setup_platform(
     else:
         _LOGGER.error(
             "Configuration in configuration.yaml is not supported anymore. "
-            "Please add this device using the config flow."
+            "Please add this device using the config flow"
         )
 
     # Register Service 'select_scene'

@@ -14,7 +14,7 @@ class YamahaConfigInfo:
         self.ctrl_url: str | None = f"http://{host}:80/YamahaRemoteControl/ctrl"
 
     @classmethod
-    async def check_yamaha_ssdp(cls, location: str, client: ClientSession):
+    async def check_yamaha_ssdp(cls, location: str, client: ClientSession) -> bool:
         """Check if the Yamaha receiver has a valid control URL."""
         res = await client.get(location)
         text = await res.text()
@@ -26,7 +26,9 @@ class YamahaConfigInfo:
         )
 
     @classmethod
-    async def get_upnp_serial_and_model(cls, host: str, client: ClientSession):
+    async def get_upnp_serial_and_model(
+        cls, host: str, client: ClientSession
+    ) -> tuple[str, str]:
         """Retrieve the serial_number and model from the SSDP description URL."""
         res = await client.get(f"http://{host}:49154/MediaRenderer/desc.xml")
         root = ET.fromstring(await res.text())

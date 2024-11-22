@@ -56,7 +56,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
@@ -86,7 +86,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=model,
+                title=model or DEFAULT_NAME,
                 data={
                     CONF_HOST: host,
                     CONF_MODEL: model,
@@ -104,9 +104,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._show_setup_form(errors)
 
-    def _show_setup_form(
-        self, errors: dict | None = None
-    ) -> data_entry_flow.ConfigFlowResult:
+    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -116,8 +114,9 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle ssdp discoveries."""
+        assert discovery_info.ssdp_location is not None
         if not await YamahaConfigInfo.check_yamaha_ssdp(
             discovery_info.ssdp_location, async_get_clientsession(self.hass)
         ):
@@ -153,7 +152,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.model,
+                title=self.model or DEFAULT_NAME,
                 data={
                     CONF_HOST: self.host,
                     CONF_MODEL: self.model,
@@ -171,7 +170,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="confirm")
 
-    async def async_step_import(self, import_data: dict) -> data_entry_flow.FlowResult:
+    async def async_step_import(self, import_data: dict) -> ConfigFlowResult:
         """Import data from configuration.yaml into the config flow."""
         res = await self.async_step_user(import_data)
         if res["type"] == FlowResultType.CREATE_ENTRY:
