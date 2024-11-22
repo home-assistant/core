@@ -9,7 +9,7 @@ from homeconnect.api import HomeConnectAppliance
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import HomeConnectConfigEntry, _get_appliance_by_device_id
+from . import HomeConnectConfigEntry, _get_appliance
 from .api import HomeConnectDevice
 
 
@@ -42,5 +42,5 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: HomeConnectConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    appliance = _get_appliance_by_device_id(hass, device.id, entry)
+    appliance = _get_appliance(hass, device_entry=device, entry=entry)
     return await hass.async_add_executor_job(_generate_appliance_diagnostics, appliance)

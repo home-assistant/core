@@ -91,12 +91,16 @@ PLATFORMS = [
 ]
 
 
-def _get_appliance_by_device_id(
-    hass: HomeAssistant, device_id: str, entry: HomeConnectConfigEntry | None = None
+def _get_appliance(
+    hass: HomeAssistant,
+    device_id: str | None = None,
+    device_entry: dr.DeviceEntry | None = None,
+    entry: HomeConnectConfigEntry | None = None,
 ) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance given an device_id."""
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
+    if device_id is not None and device_entry is None:
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(device_id)
     assert device_entry
 
     ha_id = next(
@@ -120,8 +124,8 @@ def _get_appliance_by_device_id(
 
     if entry is None:
         for entry_id in device_entry.config_entries:
-            if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-                continue
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
             if entry.domain == DOMAIN:
                 entry = cast(HomeConnectConfigEntry, entry)
                 if (appliance := find_appliance(entry)) is not None:
@@ -151,14 +155,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             options.append(option)
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
+        appliance = _get_appliance(hass, device_id)
         await hass.async_add_executor_job(getattr(appliance, method), program, options)
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
+        appliance = _get_appliance(hass, device_id)
         await hass.async_add_executor_job(appliance.execute_command, command)
 
     async def _async_service_key_value(call, method):
@@ -168,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unit = call.data.get(ATTR_UNIT)
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
+        appliance = _get_appliance(hass, device_id)
         if unit is not None:
             await hass.async_add_executor_job(
                 getattr(appliance, method),
