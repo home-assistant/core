@@ -77,7 +77,7 @@
       "description": "Sets the target humidity.",
       "fields": {
         "humidity": {
-          "name": "Humidify",
+          "name": "Humidity",
           "description": "The humidification setpoint."
         }
       }
