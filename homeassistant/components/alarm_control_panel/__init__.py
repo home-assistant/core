@@ -173,17 +173,17 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             # setting the state directly.
             cls.__alarm_legacy_state = True
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
+    def __setattr__(self, name: str, value: Any, /) -> None:
         """Set attribute.
 
         Deprecation warning if setting '_attr_state' directly
         unless already reported.
         """
-        if __name == "_attr_state":
+        if name == "_attr_state":
             if self.__alarm_legacy_state_reported is not True:
                 self._report_deprecated_alarm_state_handling()
             self.__alarm_legacy_state_reported = True
-        return super().__setattr__(__name, __value)
+        return super().__setattr__(name, value)
 
     @callback
     def add_to_platform_start(
