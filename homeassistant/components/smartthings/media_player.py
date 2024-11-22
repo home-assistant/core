@@ -12,7 +12,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,8 +54,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.audio_volume,
         Capability.media_input_source,
         Capability.media_playback,
-        Capability.media_playback_repeat,
-        Capability.media_playback_shuffle,
         Capability.switch,
     ]
     # Must have one of these.
@@ -65,8 +62,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.audio_volume,
         Capability.media_input_source,
         Capability.media_playback,
-        Capability.media_playback_repeat,
-        Capability.media_playback_shuffle,
     ]
     if any(capability in capabilities for capability in media_player_capabilities):
         return supported
@@ -99,19 +94,15 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             )
         if Capability.media_input_source in device.capabilities:
             self._supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
-        if Capability.media_playback_shuffle in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
-        if Capability.media_playback_repeat in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.REPEAT_SET
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the media player off."""
-        await self._device.switch_off(set_status=True)
-        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the media player on."""
         await self._device.switch_on(set_status=True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the media player off."""
+        await self._device.switch_off(set_status=True)
         self.async_write_ha_state()
 
     async def async_mute_volume(self, mute: bool) -> None:
@@ -155,16 +146,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select source."""
         await self._device.set_input_source(source, set_status=True)
-        self.async_write_ha_state()
-
-    async def async_set_shuffle(self, shuffle: bool) -> None:
-        """Set shuffle mode."""
-        await self._device.set_playback_shuffle(shuffle, set_status=True)
-        self.async_write_ha_state()
-
-    async def async_set_repeat(self, repeat: RepeatMode) -> None:
-        """Set repeat mode."""
-        await self._device.set_repeat(repeat, set_status=True)
         self.async_write_ha_state()
 
     @property
@@ -212,18 +193,4 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         """List of input sources."""
         if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE:
             return self._device.status.supported_input_sources
-        return None
-
-    @property
-    def shuffle(self) -> bool | None:
-        """Returns if shuffle mode is set."""
-        if self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET:
-            return self._device.status.playback_shuffle
-        return None
-
-    @property
-    def repeat(self) -> RepeatMode | None:
-        """Returns if repeat mode is set."""
-        if self.supported_features & MediaPlayerEntityFeature.REPEAT_SET:
-            return self._device.status.playback_repeat_mode
         return None

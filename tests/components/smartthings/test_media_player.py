@@ -1,228 +1,394 @@
-"""Test for the SmartThings media_player platform."""
+"""Test for the SmartThings media_player platform.
 
-from __future__ import annotations
+The only mocking required is of the underlying SmartThings API object so
+real HTTP calls are not initiated during testing.
+"""
 
-from collections.abc import Sequence
-from typing import Any
-
-from pysmartthings import Capability, DeviceEntity
+from pysmartthings import Attribute, Capability
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MediaPlayerEntity,
-    MediaPlayerEntityFeature,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_STOP,
+    SERVICE_SELECT_SOURCE,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     MediaPlayerState,
-    RepeatMode,
 )
-from homeassistant.components.smartthings.const import DATA_BROKERS, DOMAIN
-from homeassistant.components.smartthings.entity import SmartThingsEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-VALUE_TO_STATE = {
-    "buffering": MediaPlayerState.BUFFERING,
-    "pause": MediaPlayerState.PAUSED,
-    "paused": MediaPlayerState.PAUSED,
-    "play": MediaPlayerState.PLAYING,
-    "playing": MediaPlayerState.PLAYING,
-    "stop": MediaPlayerState.IDLE,
-    "stopped": MediaPlayerState.IDLE,
-}
+from .conftest import setup_platform
 
 
-async def async_setup_entry(
+async def test_entity_and_device_attributes(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
-    """Add media players for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    async_add_entities(
-        [
-            SmartThingsMediaPlayer(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, MEDIA_PLAYER_DOMAIN)
-        ]
+    """Test if the attributes of the entity are correct."""
+    # Arrange
+    device = device_factory(
+        "Media player 1",
+        [Capability.media_playback],
+        {
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
+    # Act
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Assert
+    entry = entity_registry.async_get("media_player.media_player_1")
+    assert entry
+    assert entry.unique_id == device.device_id
+
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
+    assert entry.name == device.label
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    supported = [
-        Capability.audio_mute,
-        Capability.audio_volume,
-        Capability.media_input_source,
-        Capability.media_playback,
-        Capability.media_playback_repeat,
-        Capability.media_playback_shuffle,
-        Capability.switch,
-    ]
-    # Must have one of these.
-    media_player_capabilities = [
-        Capability.audio_mute,
-        Capability.audio_volume,
-        Capability.media_input_source,
-        Capability.media_playback,
-        Capability.media_playback_repeat,
-        Capability.media_playback_shuffle,
-    ]
-    if any(capability in capabilities for capability in media_player_capabilities):
-        return supported
-    return None
+async def test_turn_on(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player turns on successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_playback,
+            Capability.switch,
+        ],
+        {
+            Attribute.playback_status: MediaPlayerState.OFF,
+            Attribute.switch: "off",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
 
 
-class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
-    """Define a SmartThings media player."""
+async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player turns off successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_playback,
+            Capability.switch,
+        ],
+        {
+            Attribute.playback_status: MediaPlayerState.ON,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
 
-    def __init__(self, device: DeviceEntity) -> None:
-        """Initialize the media_player class."""
-        super().__init__(device)
-        self._state = None
-        self._state_attrs = None
-        self._supported_features = (
-            MediaPlayerEntityFeature.PLAY
-            | MediaPlayerEntityFeature.PAUSE
-            | MediaPlayerEntityFeature.STOP
-        )
-        if Capability.audio_volume in device.capabilities:
-            self._supported_features |= (
-                MediaPlayerEntityFeature.VOLUME_SET
-                | MediaPlayerEntityFeature.VOLUME_STEP
-            )
-        if Capability.audio_mute in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
-        if Capability.switch in device.capabilities:
-            self._supported_features |= (
-                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
-            )
-        if Capability.media_input_source in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
-        if Capability.media_playback_shuffle in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
-        if Capability.media_playback_repeat in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.REPEAT_SET
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the media player off."""
-        await self._device.switch_off(set_status=True)
-        self.async_write_ha_state()
+async def test_mute_volume(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player mutes volume successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.audio_mute,
+            Capability.switch,
+        ],
+        {
+            Attribute.mute: False,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {
+            ATTR_ENTITY_ID: "media_player.media_player_1",
+            ATTR_MEDIA_VOLUME_MUTED: True,
+        },
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the media player on."""
-        await self._device.switch_on(set_status=True)
-        self.async_write_ha_state()
 
-    async def async_mute_volume(self, mute: bool) -> None:
-        """Mute volume."""
-        if mute:
-            await self._device.mute(set_status=True)
-        else:
-            await self._device.unmute(set_status=True)
-        self.async_write_ha_state()
+async def test_volume_set(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player sets volume successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.audio_volume,
+            Capability.switch,
+        ],
+        {
+            Attribute.volume: 50,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.media_player_1",
+            ATTR_MEDIA_VOLUME_LEVEL: 0.6,
+        },
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.6
 
-    async def async_set_volume_level(self, volume: float) -> None:
-        """Set volume level."""
-        await self._device.set_volume(int(volume * 100), set_status=True)
-        self.async_write_ha_state()
 
-    async def async_volume_up(self) -> None:
-        """Increase volume."""
-        await self._device.volume_up(set_status=True)
-        self.async_write_ha_state()
+async def test_volume_up(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player increases volume successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.audio_volume,
+            Capability.switch,
+        ],
+        {
+            Attribute.volume: 50,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.51
 
-    async def async_volume_down(self) -> None:
-        """Decrease volume."""
-        await self._device.volume_down(set_status=True)
-        self.async_write_ha_state()
 
-    async def async_media_play(self) -> None:
-        """Play media."""
-        await self._device.play(set_status=True)
-        self.async_write_ha_state()
+async def test_volume_down(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player decreases volume successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.audio_volume,
+            Capability.switch,
+        ],
+        {
+            Attribute.volume: 50,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.49
 
-    async def async_media_pause(self) -> None:
-        """Pause media."""
-        await self._device.pause(set_status=True)
-        self.async_write_ha_state()
 
-    async def async_media_stop(self) -> None:
-        """Stop media."""
-        await self._device.stop(set_status=True)
-        self.async_write_ha_state()
+async def test_media_play(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player plays a media successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_playback,
+            Capability.switch,
+        ],
+        {
+            Attribute.playback_status: MediaPlayerState.IDLE,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.PLAYING
 
-    async def async_select_source(self, source: str) -> None:
-        """Select source."""
-        await self._device.set_input_source(source, set_status=True)
-        self.async_write_ha_state()
 
-    async def async_set_shuffle(self, shuffle: bool) -> None:
-        """Set shuffle mode."""
-        await self._device.set_playback_shuffle(shuffle, set_status=True)
-        self.async_write_ha_state()
+async def test_media_pause(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player pauses a media successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_playback,
+            Capability.switch,
+        ],
+        {
+            Attribute.playback_status: MediaPlayerState.PLAYING,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.PAUSED
 
-    async def async_set_repeat(self, repeat: RepeatMode) -> None:
-        """Set repeat mode."""
-        await self._device.set_repeat(repeat, set_status=True)
-        self.async_write_ha_state()
 
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Supported features."""
-        return self._supported_features
+async def test_media_stop(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player stops a media successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_playback,
+            Capability.switch,
+        ],
+        {
+            Attribute.playback_status: MediaPlayerState.PLAYING,
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_STOP,
+        {ATTR_ENTITY_ID: "media_player.media_player_1"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.IDLE
 
-    @property
-    def media_title(self) -> str | None:
-        """Title of the current media."""
-        return self._device.status.media_title
 
-    @property
-    def state(self) -> MediaPlayerState | None:
-        """State of the media player."""
-        if not self._device.status.switch:
-            return MediaPlayerState.OFF
-        if self._device.status.playback_status in VALUE_TO_STATE:
-            return VALUE_TO_STATE[self._device.status.playback_status]
-        return MediaPlayerState.ON
+async def test_select_source(hass: HomeAssistant, device_factory) -> None:
+    """Test if the media_player selects a source successfully."""
+    # Arrange
+    device = device_factory(
+        "Media_player_1",
+        [
+            Capability.media_input_source,
+            Capability.switch,
+        ],
+        {
+            Attribute.input_source: "HDMI1",
+            Attribute.supported_input_sources: ["HDM1", "HDMI2", "wifi"],
+            Attribute.switch: "on",
+        },
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.media_player_1", ATTR_INPUT_SOURCE: "HDMI2"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.attributes["source"] == "HDMI2"
 
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Returns if the volume is muted."""
-        if self.supported_features & MediaPlayerEntityFeature.VOLUME_MUTE:
-            return self._device.status.mute
-        return None
 
-    @property
-    def volume_level(self) -> float | None:
-        """Volume level."""
-        if self.supported_features & MediaPlayerEntityFeature.VOLUME_SET:
-            return self._device.status.volume / 100
-        return None
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
+    """Test the media_player updates when receiving a signal."""
+    # Arrange
+    device = device_factory(
+        "Media player 1",
+        [Capability.media_playback],
+        {Attribute.playback_status: MediaPlayerState.OFF},
+    )
+    await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    await device.switch_on(True)
+    # Act
+    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
+    # Assert
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.media_player_1")
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
 
-    @property
-    def source(self) -> str | None:
-        """Input source."""
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE:
-            return self._device.status.input_source
-        return None
 
-    @property
-    def source_list(self) -> list[str] | None:
-        """List of input sources."""
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE:
-            return self._device.status.supported_input_sources
-        return None
-
-    @property
-    def shuffle(self) -> bool | None:
-        """Returns if shuffle mode is set."""
-        if self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET:
-            return self._device.status.playback_shuffle
-        return None
-
-    @property
-    def repeat(self) -> RepeatMode | None:
-        """Returns if repeat mode is set."""
-        if self.supported_features & MediaPlayerEntityFeature.REPEAT_SET:
-            return self._device.status.playback_repeat_mode
-        return None
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
+    """Test the media_player is removed when the config entry is unloaded."""
+    # Arrange
+    device = device_factory(
+        "Media player 1",
+        [Capability.media_playback],
+        {Attribute.playback_status: MediaPlayerState.OFF},
+    )
+    config_entry = await setup_platform(hass, MEDIA_PLAYER_DOMAIN, devices=[device])
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    # Act
+    await hass.config_entries.async_forward_entry_unload(config_entry, "media_player")
+    # Assert
+    assert hass.states.get("media_player.media_player_1").state == STATE_UNAVAILABLE
