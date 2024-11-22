@@ -195,6 +195,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
     "authentication_failed": {
       "message": "Authentication failed"
     },
