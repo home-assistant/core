@@ -9,62 +9,73 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
-RULES = [
-    "action-exceptions",
-    "action-setup",
-    "appropriate-polling",
-    "async-dependency",
-    "brands",
-    "common-modules",
-    "config-entry-unloading",
-    "config-flow",
-    "config-flow-test-coverage",
-    "dependency-transparency",
-    "devices",
-    "diagnostics",
-    "discovery",
-    "discovery-update-info",
-    "docs-actions",
-    "docs-configuration-parameters",
-    "docs-data-update",
-    "docs-examples",
-    "docs-high-level-description",
-    "docs-installation-instructions",
-    "docs-installation-parameters",
-    "docs-known-limitations",
-    "docs-removal-instructions",
-    "docs-supported-devices",
-    "docs-supported-functions",
-    "docs-troubleshooting",
-    "docs-use-cases",
-    "dynamic-devices",
-    "entity-category",
-    "entity-device-class",
-    "entity-disabled-by-default",
-    "entity-event-setup",
-    "entity-translations",
-    "entity-unavailable",
-    "entity-unique-id",
-    "exception-translations",
-    "has-entity-name",
-    "icon-translations",
-    "inject-websession",
-    "integration-owner",
-    "log-when-unavailable",
-    "parallel-updates",
-    "reauthentication-flow",
-    "reconfiguration-flow",
-    "repair-issues",
-    "runtime-data",
-    "stale-devices",
-    "strict-typing",
-    "test-before-configure",
-    "test-before-setup",
-    "test-coverage",
-    "unique-config-entry",
-]
+QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
+
+RULES = {
+    ScaledQualityScaleTiers.BRONZE: [
+        "action-setup",
+        "appropriate-polling",
+        "brands",
+        "common-modules",
+        "config-flow",
+        "config-flow-test-coverage",
+        "dependency-transparency",
+        "docs-actions",
+        "docs-high-level-description",
+        "docs-installation-parameters",
+        "docs-installation-instructions",
+        "docs-removal-instructions",
+        "entity-event-setup",
+        "entity-unique-id",
+        "has-entity-name",
+        "runtime-data",
+        "test-before-configure",
+        "test-before-setup",
+        "unique-config-entry",
+    ],
+    ScaledQualityScaleTiers.SILVER: [
+        "action-exceptions",
+        "config-entry-unloading",
+        "docs-configuration-parameters",
+        "docs-installation-parameters",
+        "entity-unavailable",
+        "integration-owner",
+        "log-when-unavailable",
+        "parallel-updates",
+        "reauthentication-flow",
+        "test-coverage",
+    ],
+    ScaledQualityScaleTiers.GOLD: [
+        "devices",
+        "diagnostics",
+        "discovery",
+        "discovery-update-info",
+        "docs-data-update",
+        "docs-examples",
+        "docs-known-limitations",
+        "docs-supported-devices",
+        "docs-supported-functions",
+        "docs-troubleshooting",
+        "docs-use-cases",
+        "dynamic-devices",
+        "entity-category",
+        "entity-device-class",
+        "entity-disabled-by-default",
+        "entity-translations",
+        "exception-translations",
+        "icon-translations",
+        "reconfiguration-flow",
+        "repair-issues",
+        "stale-devices",
+    ],
+    ScaledQualityScaleTiers.PLATINUM: [
+        "async-dependency",
+        "inject-websession",
+        "strict-typing",
+    ],
+}
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
@@ -1264,7 +1275,8 @@ SCHEMA = vol.Schema(
                         }
                     ),
                 )
-                for rule in RULES
+                for tier_list in RULES.values()
+                for rule in tier_list
             }
         )
     }
@@ -1275,6 +1287,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     """Validate quality scale file for integration."""
     if not integration.core:
         return
+
+    declared_quality_scale = QUALITY_SCALE_TIERS.get(integration.quality_scale)
+
     iqs_file = integration.path / "quality_scale.yaml"
     has_file = iqs_file.is_file()
     if not has_file:
@@ -1286,6 +1301,12 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             integration.add_error(
                 "quality_scale",
                 "Quality scale definition not found. New integrations are required to at least reach the Bronze tier.",
+            )
+            return
+        if declared_quality_scale is not None:
+            integration.add_error(
+                "quality_scale",
+                "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
             )
             return
         return
@@ -1321,6 +1342,28 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         integration.add_error(
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
+
+    if declared_quality_scale is None:
+        return
+
+    rules_met = set()
+    for rule_name, rule_value in data.get("rules", {}).items():
+        status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
+        if status == "done":
+            rules_met.add(rule_name)
+
+    # An integration must have all the necessary rules for the declared
+    # quality scale, and all the rules below.
+    for scale in ScaledQualityScaleTiers:
+        if scale > declared_quality_scale:
+            break
+        required_rules = set(RULES[scale])
+        if missing_rules := (required_rules - rules_met):
+            friendly_rule_str = "\n".join(f"  {rule}: todo" for rule in missing_rules)
+            integration.add_error(
+                "quality_scale",
+                f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
+            )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
