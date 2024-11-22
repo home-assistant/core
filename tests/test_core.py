@@ -3310,7 +3310,7 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
             "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
-            ". Please report this issue.",
+            ". Please report this issue",
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
