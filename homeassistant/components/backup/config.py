@@ -183,7 +183,7 @@ class DeleteAfterConfig:
                 """Return backups older than days to delete."""
                 if self.days is None:
                     return {}
-                now = dt_util.now()  # local time
+                now = dt_util.utcnow()
                 return {
                     backup_id: backup
                     for backup_id, backup in backups.items()
