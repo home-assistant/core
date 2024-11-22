@@ -156,7 +156,7 @@ def mock_lamarzocco(
 
         lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
-        lamarzocco._cloud_client = mock_cloud_client
+        lamarzocco.cloud_client = mock_cloud_client
 
         yield lamarzocco
 

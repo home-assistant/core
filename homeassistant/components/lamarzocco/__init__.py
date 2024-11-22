@@ -136,13 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
     """Unload a config entry."""
-    if (
-        cloud_client := entry.runtime_data.device._cloud_client  # noqa:SLF001
-    ) is not None:
-        try:
-            await cloud_client.async_logout()
-        except RequestNotSuccessful as ex:
-            _LOGGER.warning("Failed to log out from La Marzocco cloud: %s", ex)
+    try:
+        await entry.runtime_data.device.cloud_client.async_logout()
+    except RequestNotSuccessful as ex:
+        _LOGGER.warning("Failed to log out from La Marzocco cloud: %s", ex)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
