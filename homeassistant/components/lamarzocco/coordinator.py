@@ -126,9 +126,10 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await func(*args, **kwargs)
         except AuthFail as ex:
-            msg = "Authentication failed."
-            _LOGGER.debug(msg, exc_info=True)
-            raise ConfigEntryAuthFailed(msg) from ex
+            _LOGGER.debug("Authentication failed", exc_info=True)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex

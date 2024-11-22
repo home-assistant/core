@@ -4,7 +4,6 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
@@ -24,6 +23,11 @@
       },
       "resume": {
         "name": "[%key:component::sabnzbd::services::resume::name%]"
+      }
+    },
+    "number": {
+      "speedlimit": {
+        "name": "Speedlimit"
       }
     },
     "sensor": {
@@ -106,6 +110,10 @@
     "resume_action_deprecated": {
       "title": "SABnzbd resume action deprecated",
       "description": "The 'Resume' action is deprecated and will be removed in a future version. Please use the 'Resume' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
+    },
+    "set_speed_action_deprecated": {
+      "title": "SABnzbd set_speed action deprecated",
+      "description": "The 'Set speed' action is deprecated and will be removed in a future version. Please use the 'Speedlimit' number entity instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
     }
   },
   "exceptions": {
