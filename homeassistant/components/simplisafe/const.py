@@ -2,6 +2,8 @@
 
 import logging
 
+from homeassistant.const import CONF_CODE
+
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "simplisafe"
