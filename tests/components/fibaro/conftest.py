@@ -107,6 +107,29 @@ def mock_cover() -> Mock:
 
 
 @pytest.fixture
+def mock_light() -> Mock:
+    """Fixture for a dimmmable light."""
+    light = Mock()
+    light.fibaro_id = 3
+    light.parent_fibaro_id = 0
+    light.name = "Test light"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.FGD212"
+    light.base_type = "com.fibaro.device"
+    light.properties = {"manufacturer": ""}
+    light.actions = {"setValue": 1, "on": 0, "off": 0}
+    light.supported_features = {}
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     mock_config_entry = MockConfigEntry(
