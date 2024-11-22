@@ -11,6 +11,7 @@ from rxv import RXV
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -69,6 +70,13 @@ SUPPORT_YAMAHA = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,7 +84,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Yamaha zones based on a config entry."""
-    device: rxv.RXV = hass.data[DOMAIN][entry.entry_id]
+    device: rxv.RXV = entry.runtime_data
 
     media_players: list[Entity] = []
 
@@ -110,10 +118,6 @@ async def async_setup_platform(
                 config[CONF_HOST],
             )
         else:
-            _LOGGER.warning(
-                "Configuration in configuration.yaml is deprecated. Use the config flow instead"
-            )
-
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=config

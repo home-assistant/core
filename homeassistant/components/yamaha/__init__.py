@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     info = YamahaConfigInfo(entry.data[CONF_HOST])
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+    entry.runtime_data = await hass.async_add_executor_job(
         rxv.RXV, info.ctrl_url, entry.data[CONF_MODEL], entry.data[CONF_SERIAL]
     )
 
