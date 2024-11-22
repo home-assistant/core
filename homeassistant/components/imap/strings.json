@@ -39,7 +39,7 @@
     "sensor": {
       "imap_mail_count": {
         "name": "Messages",
-        "unit_of_measurement": "message(s)"
+        "unit_of_measurement": "messages"
       }
     }
   },
