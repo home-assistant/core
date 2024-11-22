@@ -34,6 +34,7 @@ from .const import (  # noqa: F401
     CONF_STATION_TO,
     DOMAIN,
     PLATFORMS,
+    find_station,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,6 +95,32 @@ async def async_setup_platform(
         if CONF_EXCLUDE_VIAS not in config:
             config[CONF_EXCLUDE_VIAS] = False
 
+        station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
+
+        for station_type in station_types:
+            station = (
+                find_station(hass, config[station_type])
+                if station_type in config
+                else None
+            )
+            if station is None and station_type in config:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_yaml_import_issue_station_not_found",
+                    breaks_in_ha_version="2025.6.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml_import_issue_station_not_found",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "NMBS",
+                        "station_name": config[station_type],
+                    },
+                )
+                return
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -106,7 +133,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.3.0",
+        breaks_in_ha_version="2025.6.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,

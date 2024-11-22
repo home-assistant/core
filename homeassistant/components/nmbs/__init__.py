@@ -11,7 +11,13 @@ from homeassistant.exceptions import ConfigEntryError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION_FROM, CONF_STATION_LIVE, CONF_STATION_TO, DOMAIN
+from .const import (
+    CONF_STATION_FROM,
+    CONF_STATION_LIVE,
+    CONF_STATION_TO,
+    DOMAIN,
+    find_station,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
@@ -41,15 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for station_type in station_types:
         station = (
-            next(
-                (
-                    s
-                    for s in hass.data[DOMAIN]
-                    if s["standardname"] == entry.data[station_type]
-                    or s["name"] == entry.data[station_type]
-                ),
-                None,
-            )
+            find_station(hass, entry.data[station_type])
             if station_type in entry.data
             else None
         )
