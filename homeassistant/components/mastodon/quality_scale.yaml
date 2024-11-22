@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      Legacy Notify platform can't be created within async-setup.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -14,7 +17,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      Entities of this integration does not explicitly subscribe to events.
+      Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -23,9 +26,15 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      Legacy Notify platform is not an action.
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      There are no configuration options.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -35,39 +44,46 @@ rules:
     status: todo
     comment: |
       Waiting to move to oAuth.
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      Legacy Notify needs rewriting once Notify architecture stabalises.
 
   # Gold
   devices: done
   diagnostics: done
   discovery-update-info:
-    status: todo
+    status: exempt
     comment: |
-      The integration doesn't update the device info based on DHCP discovery
-      of known existing devices.
-  discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices:
-    status: todo
+      Web service does not support discovery.
+  discovery:
+    status: exempt
     comment: |
-      Device are documented, but some are missing. For example, the their pro
-      strip is supported as well.
+      Web service does not support discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      There are no known limitations.
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: |
-      This integration connects to a single device.
+      This integration connects to a single web service.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Waiting to move to oAuth.
   repair-issues:
     status: exempt
     comment: |
@@ -75,9 +91,9 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration connects to a single device.
+      Web service does not go stale.
 
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession: todo
   strict-typing: done
