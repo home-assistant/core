@@ -37,17 +37,21 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
 
-    await hass.services.async_call(
+    response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
         blocking=True,
         context=context,
+        return_response=True,
     )
     await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].context == context
+
+    assert len(response["chats"]) == 1
+    assert (response["chats"][0]["message_id"]) == 12345
 
 
 async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
