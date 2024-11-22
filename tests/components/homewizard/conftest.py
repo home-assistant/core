@@ -79,10 +79,10 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             "product_name": "Product name",
             "product_type": "product_type",
-            "serial": "aabbccddeeff",
+            "serial": "5c2fafabcdef",
             CONF_IP_ADDRESS: "127.0.0.1",
         },
-        unique_id="aabbccddeeff",
+        unique_id="5c2fafabcdef",
     )
 
 
