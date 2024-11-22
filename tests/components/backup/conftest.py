@@ -30,30 +30,38 @@ def mocked_tarfile_fixture() -> Generator[Mock]:
         yield mocked_tarfile
 
 
+CONFIG_DIR = {
+    "testing_config": [
+        Path("test.txt"),
+        Path(".DS_Store"),
+        Path(".storage"),
+        Path("backups"),
+        Path("tmp_backups"),
+        Path("home-assistant_v2.db"),
+    ],
+    "backups": [
+        Path("backups/backup.tar"),
+        Path("backups/not_backup"),
+    ],
+    "tmp_backups": [
+        Path("tmp_backups/forgotten_backup.tar"),
+        Path("tmp_backups/not_backup"),
+    ],
+}
+CONFIG_DIR_DIRS = {Path(".storage"), Path("backups"), Path("tmp_backups")}
+
+
 @pytest.fixture(name="mock_backup_generation")
 def mock_backup_generation_fixture(
     hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
 ) -> Generator[None]:
     """Mock backup generator."""
 
-    def _mock_iterdir(path: Path) -> list[Path]:
-        if not path.name.endswith("testing_config"):
-            return []
-        return [
-            Path("test.txt"),
-            Path(".DS_Store"),
-            Path(".storage"),
-            Path("home-assistant_v2.db"),
-        ]
-
     with (
-        patch("pathlib.Path.iterdir", _mock_iterdir),
+        patch("pathlib.Path.iterdir", lambda x: CONFIG_DIR.get(x.name, [])),
         patch("pathlib.Path.stat", return_value=MagicMock(st_size=123)),
-        patch("pathlib.Path.is_file", lambda x: x.name != ".storage"),
-        patch(
-            "pathlib.Path.is_dir",
-            lambda x: x.name == ".storage",
-        ),
+        patch("pathlib.Path.is_file", lambda x: x not in CONFIG_DIR_DIRS),
+        patch("pathlib.Path.is_dir", lambda x: x in CONFIG_DIR_DIRS),
         patch(
             "pathlib.Path.exists",
             lambda x: x
