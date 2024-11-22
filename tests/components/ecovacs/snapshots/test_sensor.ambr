@@ -177,14 +177,14 @@
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Goat G1 Area cleaned',
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_area_cleaned',
@@ -512,7 +512,7 @@
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
@@ -520,7 +520,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Goat G1 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_total_area_cleaned',
@@ -755,14 +755,14 @@
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': 'E1234567890000000001_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Area cleaned',
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_area_cleaned',
@@ -1137,7 +1137,7 @@
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': 'E1234567890000000001_total_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
@@ -1145,7 +1145,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_area_cleaned',

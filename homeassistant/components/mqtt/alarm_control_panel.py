@@ -35,6 +35,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 _SUPPORTED_FEATURES = {
     "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
     "arm_away": AlarmControlPanelEntityFeature.ARM_AWAY,
