@@ -1,8 +1,8 @@
 """Test the cloud backup platform."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ from homeassistant.components.cloud import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.conftest import AiohttpClientMocker
 from tests.typing import MagicMock, WebSocketGenerator
 
 
@@ -129,10 +130,46 @@ async def test_agents_get_backup(
     cloud: MagicMock,
     backup_id: str,
     expected_result: dict[str, Any] | None,
+    mock_list_files: Mock,
 ) -> None:
     """Test agent get backup."""
     client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+    mock_list_files.assert_called_once_with(cloud, storage_type="backup")
 
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backup"] == expected_result
+
+
+async def test_agents_download_not_logged_in(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test agent download backup, when cloud user is logged in."""
+    client = await hass_ws_client(hass)
+    backup_id = "abc123"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "agent_id": "cloud.cloud",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "backup_agents_download",
+        "message": "Not logged in to cloud",
+    }
+
+
+@pytest.fixture
+def mock_list_files() -> Generator[MagicMock]:
+    """Mock list files."""
     with patch(
         "homeassistant.components.cloud.backup.async_files_list", spec_set=True
     ) as list_files:
@@ -156,12 +193,36 @@ async def test_agents_get_backup(
                 },
             }
         ]
-        await client.send_json_auto_id(
-            {"type": "backup/details", "backup_id": backup_id}
-        )
-        response = await client.receive_json()
-        list_files.assert_called_once_with(cloud, storage_type="backup")
+        yield list_files
 
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backup"] == expected_result
+
+@pytest.fixture
+def cloud_logged_in(cloud: MagicMock):
+    """Mock cloud logged in."""
+    type(cloud).is_logged_in = PropertyMock(return_value=True)
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_download_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test agent download backup raises error if not found."""
+    client = await hass_ws_client(hass)
+    backup_id = "1234"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "agent_id": "cloud.cloud",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "backup_agents_download",
+        "message": "Backup not found",
+    }
+
