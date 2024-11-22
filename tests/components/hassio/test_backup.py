@@ -38,6 +38,29 @@ TEST_BACKUP = supervisor_backups.Backup(
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
+TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
+    addons=[
+        supervisor_backups.BackupAddon(
+            name="Terminal & SSH",
+            size=0.0,
+            slug="core_ssh",
+            version="9.14.0",
+        )
+    ],
+    compressed=TEST_BACKUP.compressed,
+    date=TEST_BACKUP.date,
+    folders=["share"],
+    homeassistant_exclude_database=False,
+    homeassistant="2024.12.0",
+    location=TEST_BACKUP.location,
+    name=TEST_BACKUP.name,
+    protected=TEST_BACKUP.protected,
+    repositories=[],
+    size=TEST_BACKUP.size,
+    slug=TEST_BACKUP.slug,
+    supervisor_version="2024.11.2",
+    type=TEST_BACKUP.type,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -88,6 +111,7 @@ async def test_agent_list_backups(
     """Test agent list backups."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
@@ -95,7 +119,9 @@ async def test_agent_list_backups(
     assert response["success"]
     assert response["result"]["backups"] == [
         {
-            "addons": [],
+            "addons": [
+                {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
+            ],
             "agent_ids": ["hassio.local"],
             "backup_id": "abc123",
             "database_included": True,
