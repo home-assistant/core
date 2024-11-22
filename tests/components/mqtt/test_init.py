@@ -255,6 +255,26 @@ async def test_service_call_without_topic_does_not_publish(
     assert not mqtt_mock.async_publish.called
 
 
+async def test_service_call_mqtt_entry_does_not_publish(
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
+) -> None:
+    """Test the service call if topic is missing."""
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    with pytest.raises(
+        ServiceValidationError,
+        match='Cannot publish to topic "test_topic", make sure MQTT is set up correctly',
+    ):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test_topic",
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+
+
 # The use of a topic_template in an mqtt publish action call
 # has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
 async def test_mqtt_publish_action_call_with_topic_and_topic_template_does_not_publish(
@@ -1822,11 +1842,17 @@ async def test_subscribe_connection_status(
 
 async def test_unload_config_entry(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
     assert hass.services.has_service(mqtt.DOMAIN, "publish")
 
@@ -1843,8 +1869,8 @@ async def test_unload_config_entry(
     mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert not hass.services.has_service(mqtt.DOMAIN, "dump")
-    assert not hass.services.has_service(mqtt.DOMAIN, "publish")
+    assert hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert hass.services.has_service(mqtt.DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
 
 
@@ -1852,6 +1878,9 @@ async def test_publish_or_subscribe_without_valid_config_entry(
     hass: HomeAssistant, record_calls: MessageCallbackType
 ) -> None:
     """Test internal publish function with bad use cases."""
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    assert hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert hass.services.has_service(mqtt.DOMAIN, "publish")
     with pytest.raises(HomeAssistantError):
         await mqtt.async_publish(
             hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None

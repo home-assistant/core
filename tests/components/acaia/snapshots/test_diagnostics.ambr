@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device_state': dict({
+      'auto_off_time': 0,
+      'battery_level': 42,
+      'beeps': True,
+      'units': 'ounces',
+    }),
+    'last_disconnect_time': '1732181388.1895587',
+    'mac': 'aa:bb:cc:dd:ee:ff',
+    'model': 'Lunar',
+    'timer': 23,
+    'weight': 123.45,
+  })
+# ---

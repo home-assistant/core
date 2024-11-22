@@ -30,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
+    UnitOfArea,
     UnitOfDataRate,
     UnitOfEnergy,
     UnitOfLength,
@@ -651,6 +652,34 @@ async def test_custom_unit(
         "device_class",
     ),
     [
+        # Area
+        (
+            UnitOfArea.SQUARE_KILOMETERS,
+            UnitOfArea.SQUARE_MILES,
+            UnitOfArea.SQUARE_MILES,
+            1000,
+            "1000",
+            "386",
+            SensorDeviceClass.AREA,
+        ),
+        (
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_INCHES,
+            7.24,
+            "7.24",
+            "1.12",
+            SensorDeviceClass.AREA,
+        ),
+        (
+            UnitOfArea.SQUARE_KILOMETERS,
+            "peer_distance",
+            UnitOfArea.SQUARE_KILOMETERS,
+            1000,
+            "1000",
+            "1000",
+            SensorDeviceClass.AREA,
+        ),
         # Distance
         (
             UnitOfLength.KILOMETERS,
@@ -1834,6 +1863,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
     [
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.BATTERY,
         SensorDeviceClass.CO,

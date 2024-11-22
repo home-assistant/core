@@ -7,12 +7,11 @@ from dataclasses import dataclass
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
@@ -39,10 +38,12 @@ NOTIFIERS: tuple[FullyNotifyEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FullyKioskConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser notify entities."""
-    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         FullyNotifyEntity(coordinator, description) for description in NOTIFIERS
     )
