@@ -169,11 +169,11 @@
         },
         "target_temp_high": {
           "name": "Upper target temperature",
-          "description": "The highest temperature allowed."
+          "description": "The max temperature setpoint."
         },
         "target_temp_low": {
           "name": "Lower target temperature",
-          "description": "The lowest temperature allowed."
+          "description": "The min temperature setpoint."
         },
         "hvac_mode": {
           "name": "HVAC mode",
