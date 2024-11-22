@@ -329,14 +329,12 @@ async def ws_get_client_config(
     )
 
 
-def _parse_webrtc_candidate_init(msg_value: dict) -> RTCIceCandidateInit:
+def _parse_webrtc_candidate_init(value: Any) -> RTCIceCandidateInit:
     """Validate and parse a WebRTCCandidateInit dict."""
     try:
-        cand_init = RTCIceCandidateInit.from_dict(msg_value)
+        return RTCIceCandidateInit.from_dict(value)
     except (MissingField, ValueError) as ex:
         raise vol.Invalid(str(ex)) from ex
-
-    return cand_init
 
 
 @websocket_api.websocket_command(
@@ -344,7 +342,7 @@ def _parse_webrtc_candidate_init(msg_value: dict) -> RTCIceCandidateInit:
         vol.Required("type"): "camera/webrtc/candidate",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("session_id"): str,
-        vol.Required("candidate"): dict,
+        vol.Required("candidate"): _parse_webrtc_candidate_init,
     }
 )
 @websocket_api.async_response
@@ -353,16 +351,7 @@ async def ws_candidate(
     connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle WebRTC candidate websocket command."""
-    try:
-        candidate_init = _parse_webrtc_candidate_init(msg["candidate"])
-    except vol.Invalid as ex:
-        connection.send_error(
-            msg["id"],
-            "webrtc_candidate_failed",
-            ("Unable to parse RTCIceCandidateInit," f" error={ex}"),
-        )
-        return
-    await camera.async_on_webrtc_candidate(msg["session_id"], candidate_init)
+    await camera.async_on_webrtc_candidate(msg["session_id"], msg["candidate"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 

@@ -1000,16 +1000,22 @@ async def test_ws_webrtc_candidate(
     [
         (
             {"sdpMLineIndex": 0},
-            'Field "candidate" of type str is missing in RTCIceCandidateInit instance',
+            (
+                'Field "candidate" of type str is missing in RTCIceCandidateInit instance'
+                " for dictionary value @ data['candidate']. Got {'sdpMLineIndex': 0}"
+            ),
         ),
         (
             {"candidate": "candidate", "sdpMLineIndex": -1},
-            "sdpMLineIndex must be greater than or equal to 0",
+            (
+                "sdpMLineIndex must be greater than or equal to 0 for dictionary value @ "
+                "data['candidate']. Got {'candidate': 'candidate', 'sdpMLineIndex': -1}"
+            ),
         ),
     ],
     ids=[
-        "candidate-missing",
-        "spd_mline_index-lt0",
+        "candidate missing",
+        "spd_mline_index smaller than 0",
     ],
 )
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
@@ -1035,8 +1041,8 @@ async def test_ws_webrtc_candidate_invalid_candidate_message(
     assert response["type"] == TYPE_RESULT
     assert not response["success"]
     assert response["error"] == {
-        "code": "webrtc_candidate_failed",
-        "message": f"Unable to parse RTCIceCandidateInit, error={expected_error_msg}",
+        "code": "invalid_format",
+        "message": expected_error_msg,
     }
 
 
