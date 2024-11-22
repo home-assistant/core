@@ -850,7 +850,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "remote_rpi_gpio",
     "renault",
     "renson",
-    "reolink",
     "repetier",
     "rest",
     "rest_command",
