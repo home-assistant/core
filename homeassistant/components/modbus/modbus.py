@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
@@ -158,12 +158,10 @@ async def async_modbus_setup(
 
     async def async_stop_modbus(event: Event) -> None:
         """Stop Modbus service."""
-
-        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
         for client in hub_collect.values():
             await client.async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_modbus)
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
