@@ -7,9 +7,10 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import TEST_FILE_NAME, async_create_file
@@ -68,7 +69,10 @@ async def test_invalid_path(
 
 
 async def test_valid_path(
-    hass: HomeAssistant, tmp_path: Path, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for a valid path."""
     testfile = str(tmp_path.joinpath("file.txt"))
@@ -82,9 +86,14 @@ async def test_valid_path(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.file_txt_size")
+    state = hass.states.get("sensor.mock_file_test_filesize_txt_size")
     assert state
     assert state.state == "0.0"
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert device.name == mock_config_entry.title
 
     await hass.async_add_executor_job(os.remove, testfile)
 
@@ -104,12 +113,12 @@ async def test_state_unavailable(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.file_txt_size")
+    state = hass.states.get("sensor.mock_file_test_filesize_txt_size")
     assert state
     assert state.state == "0.0"
 
     await hass.async_add_executor_job(os.remove, testfile)
-    await async_update_entity(hass, "sensor.file_txt_size")
+    await async_update_entity(hass, "sensor.mock_file_test_filesize_txt_size")
 
-    state = hass.states.get("sensor.file_txt_size")
+    state = hass.states.get("sensor.mock_file_test_filesize_txt_size")
     assert state.state == STATE_UNAVAILABLE

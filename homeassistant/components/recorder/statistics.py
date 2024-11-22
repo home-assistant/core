@@ -27,6 +27,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
     ConductivityConverter,
@@ -129,6 +130,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
     **{
         unit: BloodGlucoseConcentrationConverter
         for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
