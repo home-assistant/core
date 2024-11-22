@@ -429,8 +429,8 @@ async def _delete_filtered_backups(
         for backup_id, error in zip(backup_ids, delete_results, strict=True)
         if error
     }
-    if actual_agent_errors:
+    if agent_errors:
         LOGGER.error(
             "Error deleting old copies: %s",
-            actual_agent_errors,
+            agent_errors,
         )
