@@ -66,7 +66,9 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        identifier = item.identifier.split("|", 5)
+        identifier = ["UNKNOWN"]
+        if item.identifier is not None:
+            identifier = item.identifier.split("|", 5)
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
@@ -111,7 +113,8 @@ class ReolinkVODMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if item.identifier is None:
+        if not item.identifier:
+            _LOGGER.error(item.identifier)
             return await self._async_generate_root()
 
         identifier = item.identifier.split("|", 7)
