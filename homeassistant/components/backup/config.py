@@ -385,7 +385,7 @@ async def _delete_filtered_backups(
     manager: BackupManager,
     backup_filter: Callable[[dict[str, Backup]], dict[str, Backup]],
 ) -> None:
-    """Delete a backups parsed with a filter.
+    """Delete backups parsed with a filter.
 
     :param manager: The backup manager.
     :param backup_filter: A filter that should return the backups to delete.
@@ -421,12 +421,12 @@ async def _delete_filtered_backups(
         return
 
     backup_ids = list(filtered_backups)
-    delete_agent_errors = await asyncio.gather(
+    delete_results = await asyncio.gather(
         *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)
     )
-    actual_agent_errors = {
+    agent_errors = {
         backup_id: error
-        for backup_id, error in zip(backup_ids, delete_agent_errors, strict=True)
+        for backup_id, error in zip(backup_ids, delete_results, strict=True)
         if error
     }
     if actual_agent_errors:
