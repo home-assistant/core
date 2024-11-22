@@ -181,6 +181,8 @@ class DeleteAfterConfig:
 
             def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
                 """Return backups older than days to delete."""
+                # we need to check here since we await before
+                # this filter is applied
                 if self.days is None:
                     return {}
                 now = dt_util.utcnow()
@@ -301,12 +303,10 @@ class BackupSchedule:
             )
 
             # Delete old backups more numerous than copies
-            if config_data.delete_after_config.copies is None:
-                return
 
             def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
                 """Return oldest backups more numerous than copies to delete."""
-                # we need an extra check here since we await before
+                # we need to check here since we await before
                 # this filter is applied
                 if config_data.delete_after_config.copies is None:
                     return {}
@@ -401,6 +401,9 @@ async def _delete_filtered_backups(
     LOGGER.debug("Total backups: %s", backups)
 
     filtered_backups = backup_filter(backups)
+
+    if not filtered_backups:
+        return
 
     # always delete oldest backup first
     filtered_backups = dict(

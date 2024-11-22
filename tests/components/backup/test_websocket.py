@@ -1128,7 +1128,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
-            0,
+            1,  # we get backups even if delete after copies is None
             0,
             [],
         ),
@@ -1266,6 +1266,26 @@ async def test_config_schedule_logic(
             1,
             3,
             [call("backup-1"), call("backup-2"), call("backup-3")],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "delete_after": {"copies": 0, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(date="2024-11-12T04:45:00+01:00"),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            0,
+            [],
         ),
     ],
 )
