@@ -405,6 +405,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
+        self._current_tz = None
         self._config_scheduler()
 
     def _config_scheduler(self):
@@ -606,6 +607,8 @@ class UtilityMeterSensor(RestoreSensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
+        self._current_tz = self.hass.config.time_zone  # track current timezone in case it changes and we need to reconfigure the scheduler
+
         await self._program_reset()
 
         self.async_on_remove(
@@ -662,9 +665,12 @@ class UtilityMeterSensor(RestoreSensor):
 
         async def async_track_time_zone(event):
             """Reconfigure Scheduler after time zone changes."""
-            self._config_scheduler()
 
-            await self._program_reset()
+            if self._current_tz != self.hass.config.time_zone:
+                self._current_tz = self.hass.config.time_zone
+
+                self._config_scheduler()
+                await self._program_reset()
 
         self.async_on_remove(
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
