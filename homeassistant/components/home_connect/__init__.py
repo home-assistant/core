@@ -132,7 +132,7 @@ def _get_appliance(
                     return appliance
     elif (appliance := find_appliance(entry)) is not None:
         return appliance
-    raise ValueError(f"Appliance for device id {device_id} not found")
+    raise ValueError(f"Appliance for device id {device_entry.id} not found")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
