@@ -6,7 +6,6 @@ from typing import Any
 
 from homeconnect.api import HomeConnectAppliance
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
