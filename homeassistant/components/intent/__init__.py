@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any, Protocol
 
@@ -42,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TIMER_DATA
 from .timers import (
@@ -405,7 +405,7 @@ class GetCurrentDateIntentHandler(intent.IntentHandler):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"date": datetime.now().date()})
+        response.async_set_speech_slots({"date": dt_util.now().date()})
         return response
 
 
@@ -417,7 +417,7 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"time": datetime.now().time()})
+        response.async_set_speech_slots({"time": dt_util.now().time()})
         return response
 
 

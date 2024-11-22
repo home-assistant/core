@@ -1195,9 +1195,9 @@ def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None
         f"calls {what} for integration {entry.domain} with "
         f"title: {entry.title} and entry_id: {entry.entry_id}, "
         f"during setup without awaiting {what}, which can cause "
-        "the setup lock to be released before the setup is done. "
-        "This will stop working in Home Assistant 2025.1",
+        "the setup lock to be released before the setup is done",
         core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2025.1",
     )
 
 
@@ -1267,6 +1267,7 @@ class ConfigEntriesFlowManager(
             # Deprecated in 2024.12, should fail in 2025.12
             report_usage(
                 f"initialises a {source} flow without a link to the config entry",
+                breaks_in_ha_version="2025.12",
             )
 
         flow_id = ulid_util.ulid_now()
@@ -1481,8 +1482,6 @@ class ConfigEntriesFlowManager(
             )
 
         # Unload the entry before setting up the new one.
-        # We will remove it only after the other one is set up,
-        # so that device customizations are not getting lost.
         if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
@@ -1505,12 +1504,14 @@ class ConfigEntriesFlowManager(
         )
 
         if existing_entry is not None:
-            # Unload and remove the existing entry
+            # Unload and remove the existing entry, but don't clean up devices and
+            # entities until the new entry is added
             await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
             # Clean up devices and entities belonging to the existing entry
+            # which are not present in the new entry
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
@@ -2321,10 +2322,10 @@ class ConfigEntries:
         report_usage(
             "calls async_forward_entry_setup for "
             f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated and "
-            "will stop working in Home Assistant 2025.6, "
+            f"and entry_id: {entry.entry_id}, which is deprecated, "
             "await async_forward_entry_setups instead",
             core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.6",
         )
         if not entry.setup_lock.locked():
             async with entry.setup_lock:
@@ -2886,18 +2887,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            report_issue = async_suggest_report_issue(
-                self.hass, integration_domain=self.handler
-            )
-            _LOGGER.warning(
-                (
-                    "Detected %s config flow creating a new entry, "
-                    "when it is expected to update an existing entry and abort. "
-                    "This will stop working in %s, please %s"
-                ),
-                self.source,
-                "2025.11",
-                report_issue,
+            report_usage(
+                f"creates a new entry in a '{self.source}' flow, "
+                "when it is expected to update an existing entry and abort",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.11",
+                integration_domain=self.handler,
             )
         result = super().async_create_entry(
             title=title,
@@ -3155,11 +3150,11 @@ class OptionsFlow(ConfigEntryBaseFlow):
     def config_entry(self, value: ConfigEntry) -> None:
         """Set the config entry value."""
         report_usage(
-            "sets option flow config_entry explicitly, which is deprecated "
-            "and will stop working in 2025.12",
+            "sets option flow config_entry explicitly, which is deprecated",
             core_behavior=ReportBehavior.ERROR,
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.12",
         )
         self._config_entry = value
 
