@@ -38,11 +38,6 @@
       "start_stop": {
         "name": "Start/stop timer"
       }
-    },
-    "sensor": {
-      "flow_rate": {
-        "name": "Flow rate"
-      }
     }
   }
 }

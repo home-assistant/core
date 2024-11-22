@@ -51,7 +51,6 @@ SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
     ),
     AcaiaDynamicUnitSensorEntityDescription(
         key="flow_rate",
-        translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         suggested_display_precision=1,
