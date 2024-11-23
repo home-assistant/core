@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from .climate import AdaxDataHandler
-from .const import PLATFORMS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from .climate import AdaxDataHandler
+from .const import PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

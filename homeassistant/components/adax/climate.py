@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
-from .data_handler import Adax, AdaxDataHandler
+from .data_handler import AdaxDataHandler
 
 
 async def async_setup_entry(
@@ -38,7 +38,7 @@ async def async_setup_entry(
         return
 
     async_add_entities(
-        (AdaxDevice(room, adax_data_handler) for room in adax_data_handler._rooms),
+        (AdaxDevice(room, adax_data_handler) for room in adax_data_handler.get_rooms()),
         True,
     )
 
@@ -77,31 +77,33 @@ class AdaxDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        adax = self._adax_data_handler.get_data_handler()
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
-            await self._adax_data_handler._adax.set_room_target_temperature(
+            await adax.set_room_target_temperature(
                 self._device_id, temperature, True
             )
         elif hvac_mode == HVACMode.OFF:
-            await self._adax_data_handler._adax.set_room_target_temperature(
+            await adax.set_room_target_temperature(
                 self._device_id, self.min_temp, False
             )
         else:
             return
-        await self._adax_data_handler._adax.update()
+        await adax.update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        adax = self._adax_data_handler.get_data_handler()
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler._adax.set_room_target_temperature(
+        await adax.set_room_target_temperature(
             self._device_id, temperature, True
         )
 
     async def async_update(self) -> None:
         """Get the latest data."""
         await self._adax_data_handler.async_update()
-        for room in self._adax_data_handler._rooms:
+        for room in self._adax_data_handler.get_rooms():
             if room["id"] != self._device_id:
                 continue
             self._attr_name = room["name"]
@@ -142,21 +144,24 @@ class LocalAdaxDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        adax = self._adax_data_handler.get_data_handler()
         if hvac_mode == HVACMode.HEAT:
             temperature = self._attr_target_temperature or self._attr_min_temp
-            await self._adax_data_handler._adax.set_target_temperature(temperature)
+            await adax.set_target_temperature(temperature)
         elif hvac_mode == HVACMode.OFF:
-            await self._adax_data_handler._adax.set_target_temperature(0)
+            await adax.set_target_temperature(0)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        adax = self._adax_data_handler.get_data_handler()
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler._adax.set_target_temperature(temperature)
+        await adax.set_target_temperature(temperature)
 
     async def async_update(self) -> None:
         """Get the latest data."""
-        data = await self._adax_data_handler._adax.get_status()
+        adax = self._adax_data_handler.get_data_handler()
+        data = await adax.get_status()
         self._attr_current_temperature = data["current_temperature"]
         self._attr_available = self._attr_current_temperature is not None
         if (target_temp := data["target_temperature"]) == 0:

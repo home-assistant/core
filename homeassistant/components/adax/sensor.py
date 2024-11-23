@@ -1,10 +1,10 @@
 """Support for Adax energy sensors."""
 
 import logging
-import datetime
+
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy
@@ -17,7 +17,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     adax_data_handler = hass.data[entry.entry_id]
     sensors = []
 
-    for room in adax_data_handler._rooms:
+    for room in adax_data_handler.get_rooms():
         sensors.append(AdaxEnergySensor(adax_data_handler, room))
 
     async_add_entities(sensors, True)

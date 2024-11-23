@@ -1,18 +1,19 @@
-# custom_components/adax/data_handler.py
+"""Data handler for Adax wifi-enabled home heaters."""
+
 from adax import Adax
 from adax_local import Adax as AdaxLocal
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-)
+
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, LOCAL
 
 
 class AdaxDataHandler:
+    """Representation of a heater data handler."""
+
     def __init__(self, entry, hass):
+        """Initialize the data handler."""
         if entry.data.get(CONNECTION_TYPE) == LOCAL:
             self._adax = AdaxLocal(
                 entry.data[CONF_IP_ADDRESS],
@@ -29,13 +30,23 @@ class AdaxDataHandler:
         self._rooms = None
 
     async def async_update(self):
+        """Get the latest data."""
         self._rooms = await self._adax.get_rooms()
         return self._rooms
 
     def get_room(self, room_id):
+        """Get room by id."""
         if self._rooms is None:
             return None
         for room in self._rooms:
             if room["id"] == room_id:
                 return room
         return None
+
+    def get_rooms(self):
+        """Get all rooms."""
+        return self._rooms
+
+    def get_data_handler(self):
+        """Get data handler."""
+        return self._adax
