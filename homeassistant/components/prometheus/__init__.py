@@ -342,6 +342,7 @@ class PrometheusMetrics:
             "friendly_name",
             "domain",
             "device",
+            "area",
         ]
         if extra_labels is not None:
             labels.extend(extra_labels)
@@ -383,12 +384,17 @@ class PrometheusMetrics:
         """Return a dict of extra labels, or None if no extra labels necessary."""
         final_labels = {
             "device": "",
+            "area": "",
         }
         if entity := self._entity_registry.async_get(state.entity_id):
             if device_id := entity.device_id:
                 if device := self._device_registry.async_get(device_id):
                     if device_name := device.name:
                         final_labels["device"] = device_name
+            if area_id := entity.area_id:
+                if area := self._area_registry.async_get_area(area_id):
+                    if area_name := area.name:
+                        final_labels["area"] = area_name
         return dict(final_labels)
 
     def _labels(self, state: State) -> dict[str, Any]:

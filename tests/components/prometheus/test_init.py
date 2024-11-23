@@ -107,6 +107,16 @@ class EntityMetric:
             "friendly_name",
             "entity",
             "device",
+            "area",
+        ]
+
+    @classmethod
+    def allowed_empty_required_labels(cls) -> list[str]:
+        """List of all required labels for a Prometheus metric that can have an empty string."""
+        return [
+            "friendly_name",
+            "device",
+            "area",
         ]
 
     def __init__(self, metric_name: str, **kwargs: Any) -> None:
@@ -115,12 +125,14 @@ class EntityMetric:
         self.labels = kwargs
         if "device" not in self.labels:
             self.labels["device"] = ""
+        if "area" not in self.labels:
+            self.labels["area"] = ""
 
         # Labels that are required for all entities.
         for labelname in self.required_labels():
             assert labelname in self.labels
             # would be nice to check for None for "friendly_name"
-            if labelname in ["friendly_name", "device"]:
+            if labelname in self.allowed_empty_required_labels():
                 continue
             assert self.labels[labelname] != ""
 
@@ -190,6 +202,7 @@ def test_entity_metric_generates_metric_name_string_without_value() -> None:
     )
     assert entity_metric._metric_name_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -209,6 +222,7 @@ def test_entity_metric_generates_metric_string_with_value() -> None:
     ).withValue(17.2)
     assert entity_metric._metric_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -232,7 +246,7 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
 
     for labelname in EntityMetric.required_labels():
         # Skip this for now
-        if labelname == "device":
+        if labelname in ["device", "area"]:
             continue
         label_kwargs = dict(test_kwargs)
         # Delete the required label and ensure we get an exception
@@ -256,7 +270,7 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
 
     for labelname in EntityMetric.required_labels():
         # Skip "friendly_name" and "device" as it's an exception to the rule
-        if labelname in ["friendly_name", "device"]:
+        if labelname in EntityMetric.allowed_empty_required_labels():
             continue
         label_kwargs = dict(test_kwargs)
         # Replace the required label with "" and ensure we get an exception
@@ -272,6 +286,7 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
 
     static_metric_string = (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -311,6 +326,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(1)
     assert mode_entity_metric._metric_string == (
         "climate_preset_mode{"
+        'area="",'
         'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
@@ -330,6 +346,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     assert action_entity_metric._metric_string == (
         "climate_action{"
         'action="heating",'
+        'area="",'
         'device="",'
         'domain="climate",'
         'entity="climate.heatpump",'
@@ -347,6 +364,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(1)
     assert state_entity_metric._metric_string == (
         "cover_state{"
+        'area="",'
         'device="",'
         'domain="cover",'
         'entity="cover.curtain",'
@@ -365,6 +383,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(17.2)
     assert foo_entity_metric._metric_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -379,6 +398,7 @@ def test_entity_metric_assert_helpers() -> None:
     """Test using EntityMetric for both assert_in_metrics and assert_not_in_metrics."""
     temp_metric = (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -388,6 +408,7 @@ def test_entity_metric_assert_helpers() -> None:
     )
     climate_metric = (
         "climate_preset_mode{"
+        'area="",'
         'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
@@ -397,6 +418,7 @@ def test_entity_metric_assert_helpers() -> None:
     )
     excluded_cover_metric = (
         "cover_state{"
+        'area="",'
         'device="",'
         'domain="cover",'
         'entity="cover.curtain",'
@@ -446,6 +468,7 @@ def test_entity_metric_with_value_assert_helpers() -> None:
     """Test using EntityMetricWithValue helpers, which is only assert_in_metrics."""
     temp_metric = (
         "homeassistant_sensor_temperature_celsius{"
+        'area="",'
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
@@ -456,6 +479,7 @@ def test_entity_metric_with_value_assert_helpers() -> None:
     )
     climate_metric = (
         "climate_preset_mode{"
+        'area="",'
         'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
