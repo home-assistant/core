@@ -1686,6 +1686,29 @@ def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
 
 
 @callback
+def async_get_issue_integration(
+    hass: HomeAssistant | None,
+    integration_domain: str | None,
+) -> Integration | None:
+    """Return details of an integration for issue reporting."""
+    integration: Integration | None = None
+    if not hass or not integration_domain:
+        # We are unable to get the integration
+        return None
+
+    if (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS)) and not isinstance(
+        comps_or_future, asyncio.Future
+    ):
+        integration = comps_or_future.get(integration_domain)
+
+    if not integration:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+
+    return integration
+
+
+@callback
 def async_get_issue_tracker(
     hass: HomeAssistant | None,
     *,
@@ -1698,20 +1721,11 @@ def async_get_issue_tracker(
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
     if not integration and not integration_domain and not module:
-        # If we know nothing about the entity, suggest opening an issue on HA core
+        # If we know nothing about the integration, suggest opening an issue on HA core
         return issue_tracker
 
-    if (
-        not integration
-        and (hass and integration_domain)
-        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
-        and not isinstance(comps_or_future, asyncio.Future)
-    ):
-        integration = comps_or_future.get(integration_domain)
-
-    if not integration and (hass and integration_domain):
-        with suppress(IntegrationNotLoaded):
-            integration = async_get_loaded_integration(hass, integration_domain)
+    if not integration:
+        integration = async_get_issue_integration(hass, integration_domain)
 
     if integration and not integration.is_built_in:
         return integration.issue_tracker
