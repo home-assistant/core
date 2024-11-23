@@ -8,7 +8,10 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: done
+    comment: |
+      YAML flow deprecated and will be removed in 2025.2.0
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
