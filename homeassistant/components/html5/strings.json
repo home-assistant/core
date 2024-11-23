@@ -7,7 +7,7 @@
           "vapid_prv_key": "VAPID private key"
         },
         "data_description": {
-          "vapid_email": "Contact address for the metadata of each notification.",
+          "vapid_email": "This contact address will be included in the metadata of each notification.",
           "vapid_prv_key": "If not specified, one will be automatically generated."
         }
       }
