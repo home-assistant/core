@@ -8,7 +8,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
-from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
+from .agent import (
+    BackupAgent,
+    BackupAgentError,
+    BackupAgentPlatformProtocol,
+    LocalBackupAgent,
+)
 from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
@@ -28,6 +33,7 @@ __all__ = [
     "AgentBackup",
     "Backup",
     "BackupAgent",
+    "BackupAgentError",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
     "BackupProgress",

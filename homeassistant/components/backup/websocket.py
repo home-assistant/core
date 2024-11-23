@@ -306,7 +306,12 @@ async def handle_config_info(
                 vol.Optional("password"): vol.Any(str, None),
             },
         ),
-        vol.Optional("max_copies"): int,
+        vol.Optional("delete_after"): vol.Schema(
+            {
+                vol.Optional("copies"): vol.Any(int, None),
+                vol.Optional("days"): vol.Any(int, None),
+            },
+        ),
         vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
     }
 )
