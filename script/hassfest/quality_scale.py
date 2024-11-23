@@ -1494,7 +1494,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "goalzero",
     "gogogate2",
     "goodwe",
-    "google",
     "google_assistant",
     "google_assistant_sdk",
     "google_cloud",
