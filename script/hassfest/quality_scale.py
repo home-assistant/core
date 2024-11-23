@@ -425,7 +425,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_generative_ai_conversation",
     "google_mail",
     "google_maps",
-    "google_photos",
     "google_pubsub",
     "google_sheets",
     "google_tasks",
