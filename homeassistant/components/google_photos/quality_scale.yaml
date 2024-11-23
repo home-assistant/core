@@ -1,24 +1,41 @@
 rules:
   # Bronze
-  config-flow: done
+  config-flow:
+    status: done
+    comment: |
+      The integration uses an OAuth config flow.
   brands: done
   dependency-transparency: done
-  common-modules: done
-  has-entity-name: done
-  action-setup: todo
-  appropriate-polling: done
+  common-modules:
+    status: done
+    comment: |
+      The integration has a coordinator.py and no entities.
+  has-entity-name:
+    status: exempt
+    comment: Integration does not have entities
+  action-setup:
+    status: todo
+    comment: |
+      The integration does action setup in `async_setup_entry` which needs to be
+      moved to `async_setup`.
+  appropriate-polling:
+    status: done
+    comment: |
+      The integration polls one per day for the list of albums.
   test-before-configure: done
   entity-event-setup:
     status: exempt
-    comment: Integration does not subscribe to events
+    comment: Integration does not subscribe to events.
   unique-config-entry: done
   entity-unique-id: done
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
   runtime-data: done
+
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: todo
@@ -30,6 +47,7 @@ rules:
   test-coverage: todo
   docs-configuration-parameters: todo
   entity-unavailable: todo
+
   # Gold
   docs-examples: todo
   discovery-update-info: todo
@@ -52,6 +70,7 @@ rules:
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo
+
   # Platinum
   async-dependency: todo
   strict-typing: todo
