@@ -12,7 +12,6 @@ from homeassistant.components.habitica.const import (
     ATTR_ARGS,
     ATTR_DATA,
     ATTR_PATH,
-    DEFAULT_URL,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
@@ -21,14 +20,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Event, HomeAssistant
 
-from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED, ERROR_TOO_MANY_REQUESTS
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    load_json_object_fixture,
+from .conftest import (
+    ERROR_BAD_REQUEST,
+    ERROR_NOT_AUTHORIZED,
+    ERROR_NOT_FOUND,
+    ERROR_TOO_MANY_REQUESTS,
 )
+
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
@@ -41,7 +40,7 @@ def capture_api_call_success(hass: HomeAssistant) -> list[Event]:
     return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
 
 
-@pytest.mark.usefixtures("mock_habitica", "habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_entry_setup_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -58,7 +57,6 @@ async def test_entry_setup_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("mock_habitica")
 async def test_service_call(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -124,19 +122,11 @@ async def test_config_entry_not_ready(
 async def test_coordinator_update_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test coordinator update failed."""
 
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture("user.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        status=HTTPStatus.NOT_FOUND,
-    )
-
+    habitica.get_tasks.side_effect = ERROR_NOT_FOUND
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -147,7 +137,7 @@ async def test_coordinator_update_failed(
 async def test_coordinator_rate_limited(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -159,11 +149,7 @@ async def test_coordinator_rate_limited(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.clear_requests()
-    mock_habitica.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        status=HTTPStatus.TOO_MANY_REQUESTS,
-    )
+    habitica.get_user.side_effect = ERROR_TOO_MANY_REQUESTS
 
     with caplog.at_level(logging.DEBUG):
         freezer.tick(datetime.timedelta(seconds=60))

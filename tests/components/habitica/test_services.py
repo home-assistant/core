@@ -39,7 +39,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica, try again later"
 RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again later"
@@ -59,7 +58,6 @@ def services_only() -> Generator[None]:
 async def load_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
     habitica: AsyncMock,
     services_only: Generator,
 ) -> None:
@@ -156,7 +154,6 @@ def uuid_mock() -> Generator[None]:
         "select task_by_alias",
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_cast_skill(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -234,7 +231,6 @@ async def test_cast_skill(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_cast_skill_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -260,11 +256,9 @@ async def test_cast_skill_exceptions(
         )
 
 
-@pytest.mark.usefixtures("mock_habitica")
 async def test_get_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test Habitica config entry exceptions."""
 
@@ -527,11 +521,10 @@ async def test_score_task(
             },
             ERROR_NOT_AUTHORIZED,
             HomeAssistantError,
-            "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10 GP",
+            "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10.00 GP",
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_score_task_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -757,11 +750,9 @@ async def test_transformation(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_transformation_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    # mock_habitica: AiohttpClientMocker,
     habitica: AsyncMock,
     service_data: dict[str, Any],
     raise_exception_members: Exception,
@@ -770,16 +761,7 @@ async def test_transformation_exceptions(
     expected_exception_msg: str,
 ) -> None:
     """Test Habitica transformation action exceptions."""
-    # mock_habitica.get(
-    #     f"{DEFAULT_URL}/api/v3/groups/party/members",
-    #     json=load_json_object_fixture("party_members.json", DOMAIN),
-    #     status=http_status_members,
-    # )
-    # mock_habitica.post(
-    #     f"{DEFAULT_URL}/api/v3/user/class/cast/spookySparkles?targetId=ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
-    #     json={"success": True, "data": {}},
-    #     status=http_status_cast,
-    # )
+
     habitica.cast_skill.side_effect = raise_exception_cast
     habitica.get_group_members.side_effect = raise_exception_members
     with pytest.raises(expected_exception, match=expected_exception_msg):

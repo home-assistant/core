@@ -28,7 +28,7 @@ class HabiticaSwitchEntityDescription(SwitchEntityDescription):
 
     turn_on_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
     turn_off_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
-    is_on_fn: Callable[[HabiticaData], bool]
+    is_on_fn: Callable[[HabiticaData], bool | None]
 
 
 class HabiticaSwitchEntity(StrEnum):
@@ -44,7 +44,7 @@ SWTICH_DESCRIPTIONS: tuple[HabiticaSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
         turn_on_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
         turn_off_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
-        is_on_fn=lambda data: data.user["preferences"]["sleep"],
+        is_on_fn=lambda data: data.user.preferences.sleep,
     ),
 )
 

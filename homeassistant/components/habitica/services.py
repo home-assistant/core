@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
 from habiticalib import (
@@ -177,10 +177,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         try:
             task_id = next(
-                task["id"]
+                task.id
                 for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
-                or call.data[ATTR_TASK] == task["text"]
+                if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
             )
         except StopIteration as e:
             raise ServiceValidationError(
@@ -190,7 +189,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             ) from e
 
         try:
-            response = await coordinator.habitica.cast_skill(skill, UUID(task_id))
+            response = await coordinator.habitica.cast_skill(skill, task_id)
         except TooManyRequestsError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -202,7 +201,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_key="not_enough_mana",
                 translation_placeholders={
                     "cost": cost,
-                    "mana": f"{int(coordinator.data.user.get("stats", {}).get("mp", 0))} MP",
+                    "mana": f"{int(coordinator.data.user.stats.mp or 0)} MP",
                 },
             ) from e
         except NotFoundError as e:
@@ -287,10 +286,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         try:
             task_id, task_value = next(
-                (task["id"], task.get("value"))
+                (task.id, task.value)
                 for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
-                or call.data[ATTR_TASK] == task["text"]
+                if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
             )
         except StopIteration as e:
             raise ServiceValidationError(
@@ -299,8 +297,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
             ) from e
 
+        if TYPE_CHECKING:
+            assert task_id
         try:
-            response = await coordinator.habitica.update_score(UUID(task_id), direction)
+            response = await coordinator.habitica.update_score(task_id, direction)
         except TooManyRequestsError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -312,8 +312,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     translation_domain=DOMAIN,
                     translation_key="not_enough_gold",
                     translation_placeholders={
-                        "gold": f"{coordinator.data.user["stats"]["gp"]:.2f} GP",
-                        "cost": f"{task_value} GP",
+                        "gold": f"{(coordinator.data.user.stats.gp or 0):.2f} GP",
+                        "cost": f"{task_value:.2f} GP",
                     },
                 ) from e
             raise HomeAssistantError(
@@ -343,11 +343,11 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         item = ITEMID_MAP[call.data[ATTR_ITEM]]
         # check if target is self
         if call.data[ATTR_TARGET] in (
-            coordinator.data.user["id"],
-            coordinator.data.user["profile"]["name"],
-            coordinator.data.user["auth"]["local"]["username"],
+            str(coordinator.data.user.id),
+            coordinator.data.user.profile.name,
+            coordinator.data.user.auth.local.username,
         ):
-            target_id = UUID(coordinator.data.user["id"])
+            target_id = coordinator.data.user.id
         else:
             # check if target is a party member
             try:

@@ -5,13 +5,20 @@ from unittest.mock import AsyncMock, patch
 
 from habiticalib import (
     BadRequestError,
+    HabiticaContentResponse,
     HabiticaErrorResponse,
     HabiticaGroupMembersResponse,
     HabiticaLoginResponse,
+    HabiticaResponse,
+    HabiticaScoreResponse,
     HabiticaSleepResponse,
+    HabiticaTaskOrderResponse,
+    HabiticaTaskResponse,
+    HabiticaTasksResponse,
     HabiticaUserResponse,
     NotAuthorizedError,
     NotFoundError,
+    TaskFilter,
     TooManyRequestsError,
 )
 from habiticalib.types import HabiticaQuestResponse
@@ -114,6 +121,16 @@ async def set_tz(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Berlin")
 
 
+def mock_get_tasks(task_type: TaskFilter | None = None) -> HabiticaTasksResponse:
+    """Load tasks fixtures."""
+
+    if task_type is TaskFilter.COMPLETED_TODOS:
+        return HabiticaTasksResponse.from_json(
+            load_fixture("completed_todos.json", DOMAIN)
+        )
+    return HabiticaTasksResponse.from_json(load_fixture("tasks.json", DOMAIN))
+
+
 @pytest.fixture(name="habitica")
 async def mock_habiticalib() -> Generator[AsyncMock]:
     """Mock habiticalib."""
@@ -159,6 +176,28 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             getattr(client, func).return_value = HabiticaQuestResponse.from_json(
                 load_fixture("party_quest.json", DOMAIN)
             )
+        client.get_content.return_value = HabiticaContentResponse.from_json(
+            load_fixture("content.json", DOMAIN)
+        )
+        client.get_tasks.side_effect = mock_get_tasks
+        client.update_score.return_value = HabiticaScoreResponse.from_json(
+            load_fixture("score_with_drop.json", DOMAIN)
+        )
+        client.update_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
+        )
+        client.create_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
+        )
+        client.delete_task.return_value = HabiticaResponse.from_dict(
+            {"data": {}, "success": True}
+        )
+        client.delete_completed_todos.return_value = HabiticaResponse.from_dict(
+            {"data": {}, "success": True}
+        )
+        client.reorder_task.return_value = HabiticaTaskOrderResponse.from_dict(
+            {"data": [], "success": True}
+        )
         yield client
 
 
