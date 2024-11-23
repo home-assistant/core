@@ -41,7 +41,7 @@ class VelbusEntity(Entity):
             },
             manufacturer="Velleman",
             model=channel.get_module_type_name(),
-            model_id=channel.get_module_type(),
+            model_id=str(channel.get_module_type()),
             name=channel.get_full_name(),
             sw_version=channel.get_module_sw_version(),
             serial_number=channel.get_module_serial(),
