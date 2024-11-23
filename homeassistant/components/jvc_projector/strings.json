@@ -57,6 +57,148 @@
           "cooling": "Cooling",
           "error": "Error"
         }
+      },
+      "jvc_hdmi_input": {
+        "name": "HDMI input",
+        "state": {
+          "hdmi1": "HDMI 1",
+          "hdmi2": "HDMI 2"
+        }
+      },
+      "jvc_source_status": {
+        "name": "Source status",
+        "state": {
+          "signal": "Signal",
+          "no_signal": "No signal"
+        }
+      },
+      "jvc_picture_mode": {
+        "name": "Picture mode"
+      },
+      "jvc_low_latency_status": {
+        "name": "Low latency",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "jvc_installation_mode": {
+        "name": "Installation mode"
+      },
+      "jvc_anamorphic_mode": {
+        "name": "Anamorphic mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "a": "Mode A",
+          "b": "Mode B",
+          "c": "Mode C",
+          "d": "Mode D"
+        }
+      },
+      "jvc_hdr_mode": {
+        "name": "HDR mode",
+        "state": {
+          "none": "None",
+          "hdr10": "HDR10",
+          "hdr10_plus": "HDR10+",
+          "hlg": "HLG",
+          "sdr": "SDR"
+        }
+      },
+      "jvc_hdmi_input_level": {
+        "name": "HDMI input level",
+        "state": {
+          "standard": "Standard",
+          "enhanced": "Enhanced",
+          "super_white": "Super White",
+          "auto": "Auto"
+        }
+      },
+      "jvc_hdmi_color_space": {
+        "name": "HDMI color space"
+      },
+      "jvc_color_profile": {
+        "name": "Color profile"
+      },
+      "jvc_graphics_mode": {
+        "name": "Graphics mode",
+        "state": {
+          "standard": "Standard",
+          "high-res": "High Resolution"
+        }
+      },
+      "jvc_color_space": {
+        "name": "Color space",
+        "state": {
+          "rgb": "RGB",
+          "yuv": "YUV"
+        }
+      },
+      "jvc_eshift": {
+        "name": "eShift",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "jvc_laser_dimming_mode": {
+        "name": "Laser dimming",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "auto3": "Auto 3"
+        }
+      },
+      "jvc_laser_value": {
+        "name": "Laser value"
+      },
+      "jvc_laser_power": {
+        "name": "Laser power",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "jvc_laser_time": {
+        "name": "Laser time"
+      },
+      "jvc_motion_enhance": {
+        "name": "Motion enhance",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "Low",
+          "high": "High"
+        }
+      },
+      "jvc_clear_motion_drive": {
+        "name": "Clear motion drive",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "none": "None",
+          "low": "Low",
+          "high": "High",
+          "inverse_telecine": "Inverse Telecine"
+        }
+      },
+      "jvc_hdr_processing_mode": {
+        "name": "HDR processing",
+        "state": {
+          "static": "Static",
+          "frame": "Frame by Frame",
+          "scene": "Scene by Scene"
+        }
+      },
+      "jvc_hdr_content_type": {
+        "name": "HDR content type",
+        "state": {
+          "auto": "Auto",
+          "sdr": "SDR",
+          "none": "None",
+          "hdr10": "HDR10",
+          "hlg": "HLG"
+        }
       }
     }
   }

@@ -125,9 +125,7 @@ JVC_SENSORS = (
     SensorEntityDescription(
         key=const.KEY_COLOR_SPACE,
         translation_key="jvc_color_space",
-        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_COLOR_SPACE,
     ),
     SensorEntityDescription(
         key=const.KEY_ESHIFT,
@@ -221,4 +219,4 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the native value."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data.get(self.entity_description.key)
