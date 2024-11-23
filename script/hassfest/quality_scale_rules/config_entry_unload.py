@@ -20,6 +20,7 @@ def validate(integration: Integration) -> None:
 
     if not _has_function(init, ast.AsyncFunctionDef, "async_unload_entry"):
         integration.add_error(
-            "IQS005",
-            "Integration is missing async_unload_entry and does not support config entry unloading",
+            "quality_scale",
+            "[config_entry_unload] Integration does not support config entry "
+            "unloading (is missing async_unload_entry in __init__.py)",
         )

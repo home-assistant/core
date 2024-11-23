@@ -20,7 +20,7 @@ def validate(integration: Integration) -> None:
                 and node.attr == "data"
             ):
                 integration.add_error(
-                    "IQS006",
-                    "Integration is using hass.data, use ConfigEntry.runtime_data instead",
+                    "quality_scale",
+                    f"[runtime_data] Integration is not using ConfigEntry.runtime_data (found use of hass.data in {file})",
                 )
                 return

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+import enum
+from types import ModuleType
+
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -10,71 +14,123 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration, ScaledQualityScaleTiers
+from .quality_scale_rules import config_entry_unload, config_flow, runtime_data
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
 
-RULES = {
-    ScaledQualityScaleTiers.BRONZE: [
-        "action-setup",
-        "appropriate-polling",
-        "brands",
-        "common-modules",
-        "config-flow",
+
+class QualityScaleRules(enum.Enum):
+    """Quality scale rules."""
+
+    ACTION_SETUP = ("action-setup", ScaledQualityScaleTiers.BRONZE)
+    APPROPRIATE_POLLING = ("appropriate-polling", ScaledQualityScaleTiers.BRONZE)
+    BRANDS = ("brands", ScaledQualityScaleTiers.BRONZE)
+    COMMON_MODULES = ("common-modules", ScaledQualityScaleTiers.BRONZE)
+    CONFIG_FLOW = ("config-flow", ScaledQualityScaleTiers.BRONZE, config_flow)
+    CONFIG_FLOW_TEST_COVERAGE = (
         "config-flow-test-coverage",
+        ScaledQualityScaleTiers.BRONZE,
+    )
+    DEPENDENCY_TRANSPARENCY = (
         "dependency-transparency",
-        "docs-actions",
+        ScaledQualityScaleTiers.BRONZE,
+    )
+    DOCS_ACTIONS = ("docs-actions", ScaledQualityScaleTiers.BRONZE)
+    DOCS_HIGH_LEVEL_DESCRIPTION = (
         "docs-high-level-description",
+        ScaledQualityScaleTiers.BRONZE,
+    )
+    DOCS_INSTALLATION_INSTRUCTIONS = (
         "docs-installation-instructions",
+        ScaledQualityScaleTiers.BRONZE,
+    )
+    DOCS_REMOVAL_INSTRUCTIONS = (
         "docs-removal-instructions",
-        "entity-event-setup",
-        "entity-unique-id",
-        "has-entity-name",
-        "runtime-data",
-        "test-before-configure",
-        "test-before-setup",
-        "unique-config-entry",
-    ],
-    ScaledQualityScaleTiers.SILVER: [
-        "action-exceptions",
+        ScaledQualityScaleTiers.BRONZE,
+    )
+    ENTITY_EVENT_SETUP = ("entity-event-setup", ScaledQualityScaleTiers.BRONZE)
+    ENTITY_UNIQUE_ID = ("entity-unique-id", ScaledQualityScaleTiers.BRONZE)
+    HAS_ENTITY_NAME = ("has-entity-name", ScaledQualityScaleTiers.BRONZE)
+    RUNTIME_DATA = ("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data)
+    TEST_BEFORE_CONFIGURE = ("test-before-configure", ScaledQualityScaleTiers.BRONZE)
+    TEST_BEFORE_SETUP = ("test-before-setup", ScaledQualityScaleTiers.BRONZE)
+    UNIQUE_CONFIG_ENTRY = ("unique-config-entry", ScaledQualityScaleTiers.BRONZE)
+
+    ACTION_EXCEPTIONS = ("action-exceptions", ScaledQualityScaleTiers.SILVER)
+    CONFIG_ENTRY_UNLOADING = (
         "config-entry-unloading",
+        ScaledQualityScaleTiers.SILVER,
+        config_entry_unload,
+    )
+    DOCS_CONFIGURATION_PARAMETERS = (
         "docs-configuration-parameters",
+        ScaledQualityScaleTiers.SILVER,
+    )
+    DOCS_INSTALLATION_PARAMETERS = (
         "docs-installation-parameters",
-        "entity-unavailable",
-        "integration-owner",
-        "log-when-unavailable",
-        "parallel-updates",
-        "reauthentication-flow",
-        "test-coverage",
-    ],
-    ScaledQualityScaleTiers.GOLD: [
-        "devices",
-        "diagnostics",
-        "discovery",
-        "discovery-update-info",
-        "docs-data-update",
-        "docs-examples",
-        "docs-known-limitations",
-        "docs-supported-devices",
+        ScaledQualityScaleTiers.SILVER,
+    )
+    ENTITY_UNAVAILABLE = ("entity-unavailable", ScaledQualityScaleTiers.SILVER)
+    INTEGRATION_OWNER = ("integration-owner", ScaledQualityScaleTiers.SILVER)
+    LOG_WHEN_UNAVAILABLE = ("log-when-unavailable", ScaledQualityScaleTiers.SILVER)
+    PARALLEL_UPDATES = ("parallel-updates", ScaledQualityScaleTiers.SILVER)
+    REAUTHENTICATION_FLOW = ("reauthentication-flow", ScaledQualityScaleTiers.SILVER)
+    TEST_COVERAGE = ("test-coverage", ScaledQualityScaleTiers.SILVER)
+
+    DEVICES = ("devices", ScaledQualityScaleTiers.GOLD)
+    DIAGNOSTICS = ("diagnostics", ScaledQualityScaleTiers.GOLD)
+    DISCOVERY = ("discovery", ScaledQualityScaleTiers.GOLD)
+    DISCOVERY_UPDATE_INFO = ("discovery-update-info", ScaledQualityScaleTiers.GOLD)
+    DOCS_DATA_UPDATE = ("docs-data-update", ScaledQualityScaleTiers.GOLD)
+    DOCS_EXAMPLES = ("docs-examples", ScaledQualityScaleTiers.GOLD)
+    DOCS_KNOWN_LIMITATIONS = ("docs-known-limitations", ScaledQualityScaleTiers.GOLD)
+    DOCS_SUPPORTED_DEVICES = ("docs-supported-devices", ScaledQualityScaleTiers.GOLD)
+    DOCS_SUPPORTED_FUNCTIONS = (
         "docs-supported-functions",
-        "docs-troubleshooting",
-        "docs-use-cases",
-        "dynamic-devices",
-        "entity-category",
-        "entity-device-class",
+        ScaledQualityScaleTiers.GOLD,
+    )
+    DOCS_TROUBLESHOOTING = ("docs-troubleshooting", ScaledQualityScaleTiers.GOLD)
+    DOCS_USE_CASES = ("docs-use-cases", ScaledQualityScaleTiers.GOLD)
+    DYNAMIC_DEVICES = ("dynamic-devices", ScaledQualityScaleTiers.GOLD)
+    ENTITY_CATEGORY = ("entity-category", ScaledQualityScaleTiers.GOLD)
+    ENTITY_DEVICE_CLASS = ("entity-device-class", ScaledQualityScaleTiers.GOLD)
+    ENTITY_DISABLED_BY_DEFAULT = (
         "entity-disabled-by-default",
-        "entity-translations",
-        "exception-translations",
-        "icon-translations",
-        "reconfiguration-flow",
-        "repair-issues",
-        "stale-devices",
-    ],
-    ScaledQualityScaleTiers.PLATINUM: [
-        "async-dependency",
-        "inject-websession",
-        "strict-typing",
-    ],
+        ScaledQualityScaleTiers.GOLD,
+    )
+    ENTITY_TRANSLATIONS = ("entity-translations", ScaledQualityScaleTiers.GOLD)
+    EXCEPTION_TRANSLATIONS = ("exception-translations", ScaledQualityScaleTiers.GOLD)
+    ICON_TRANSLATIONS = ("icon-translations", ScaledQualityScaleTiers.GOLD)
+    RECONFIGURATION_FLOW = ("reconfiguration-flow", ScaledQualityScaleTiers.GOLD)
+    REPAIR_ISSUES = ("repair-issues", ScaledQualityScaleTiers.GOLD)
+    STALE_DEVICES = ("stale-devices", ScaledQualityScaleTiers.GOLD)
+
+    ASYNC_DEPENDENCY = ("async-dependency", ScaledQualityScaleTiers.PLATINUM)
+    INJECT_WEBSESSION = ("inject-websession", ScaledQualityScaleTiers.PLATINUM)
+    STRICT_TYPING = ("strict-typing", ScaledQualityScaleTiers.PLATINUM)
+
+    def __init__(
+        self,
+        slug: str,
+        tier: ScaledQualityScaleTiers,
+        validator: ModuleType | None = None,
+    ) -> None:
+        """Initialize quality scale rule."""
+        self.slug = slug
+        self.tier = tier
+        self.validator = validator
+
+
+RULES = {
+    tier: [rule for rule in QualityScaleRules if rule.tier == tier]
+    for tier in ScaledQualityScaleTiers
 }
+VALIDATORS: dict[str, Callable[[Integration], None]] = {
+    rule.slug: rule.validator.validate
+    for rule in QualityScaleRules
+    if rule.validator is not None
+}
+
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
@@ -1248,7 +1304,7 @@ SCHEMA = vol.Schema(
     {
         vol.Required("rules"): vol.Schema(
             {
-                vol.Optional(rule): vol.Any(
+                vol.Optional(rule.slug): vol.Any(
                     vol.In(["todo", "done"]),
                     vol.Schema(
                         {
@@ -1263,8 +1319,7 @@ SCHEMA = vol.Schema(
                         }
                     ),
                 )
-                for tier_list in RULES.values()
-                for rule in tier_list
+                for rule in QualityScaleRules
             }
         )
     }
@@ -1339,13 +1394,18 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status in {"done", "exempt"}:
             rules_met.add(rule_name)
+            if (
+                status == "done"
+                and (validator := VALIDATORS.get(rule_name)) is not None
+            ):
+                validator(integration)
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.
     for scale in ScaledQualityScaleTiers:
         if scale > declared_quality_scale:
             break
-        required_rules = set(RULES[scale])
+        required_rules = {rule.slug for rule in RULES[scale]}
         if missing_rules := (required_rules - rules_met):
             friendly_rule_str = "\n".join(
                 f"  {rule}: todo" for rule in sorted(missing_rules)
