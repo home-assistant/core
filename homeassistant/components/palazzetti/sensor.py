@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass
 
-from pypalazzetti.const import STATUSES
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PalazzettiConfigEntry
+from .const import STATUSES
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
