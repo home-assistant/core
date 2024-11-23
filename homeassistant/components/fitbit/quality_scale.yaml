@@ -1,12 +1,19 @@
 rules:
   # Bronze
-  action-setup: done
-  appropriate-polling: done
+  action-setup:
+    status: exempt
+    comment: The integration has no actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      The integration uses polling to get data from Fitbit API every 30 minutes.
   brands: done
   common-modules:
     status: done
     comment: Coordinator is in coordinator.py and there is no base entity.
-  config-flow: done
+  config-flow:
+    status: done
+    comment: The integration uses an OAuth flow setup from the UI.
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
@@ -15,17 +22,24 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions:
     status: done
-    comment: Documentation includes all necessary steps to set up application credentials.
+    comment: |
+      Documentation includes all necessary steps to set up application
+      credentials.
   docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
     comment: Fitbit is a polling integration that does use async events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data:
+    status: todo
+    comment: |
+      The integration uses `hass.data` for data associated with a configuration
+      entry and needs to be updated to use `runtime_data`.
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
   # Silver
   action-exceptions: todo
   config-entry-unloading: todo
@@ -37,6 +51,7 @@ rules:
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: todo
+
   # Gold
   devices: todo
   diagnostics: todo
@@ -59,6 +74,7 @@ rules:
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
+
   # Platinum
   async-dependency: todo
   inject-websession: todo
