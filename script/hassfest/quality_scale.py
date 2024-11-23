@@ -841,7 +841,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
-    "renault",
     "renson",
     "reolink",
     "repetier",
