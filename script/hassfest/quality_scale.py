@@ -1103,7 +1103,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "version",
     "vesync",
     "viaggiatreno",
-    "vicare",
     "vilfo",
     "vivotek",
     "vizio",
