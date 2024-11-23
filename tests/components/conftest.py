@@ -27,7 +27,7 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -776,10 +776,26 @@ async def check_translations(
         return result
 
     async def _service_registry_async_call(
-        self: ServiceRegistry, *args, **kwargs
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
     ) -> ServiceResponse:
         try:
-            return await _original_service_registry_async_call(self, *args, **kwargs)
+            return await _original_service_registry_async_call(
+                self,
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
+            )
         except HomeAssistantError as err:
             translation_coros.add(
                 _check_exception_translation(self._hass, err, translation_errors)
