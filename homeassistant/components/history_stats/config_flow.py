@@ -66,11 +66,11 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
-        vol.Optional(CONF_ENTITY_ID, description={"readonly": True}): EntitySelector(),
-        vol.Optional(CONF_STATE, description={"readonly": True}): TextSelector(
+        vol.Optional(CONF_ENTITY_ID, description={"read_only": True}): EntitySelector(),
+        vol.Optional(CONF_STATE, description={"read_only": True}): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
-        vol.Optional(CONF_TYPE, description={"readonly": True}): SelectSelector(
+        vol.Optional(CONF_TYPE, description={"read_only": True}): SelectSelector(
             SelectSelectorConfig(
                 options=CONF_TYPE_KEYS,
                 mode=SelectSelectorMode.DROPDOWN,
