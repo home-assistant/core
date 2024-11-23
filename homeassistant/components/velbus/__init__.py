@@ -2,30 +2,21 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 import logging
 import os
 import shutil
 
 from velbusaio.controller import Velbus
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    CONF_INTERFACE,
-    CONF_MEMO_TEXT,
-    DOMAIN,
-    SERVICE_CLEAR_CACHE,
-    SERVICE_SCAN,
-    SERVICE_SET_MEMO_TEXT,
-    SERVICE_SYNC,
-)
+from .const import DOMAIN, SERVICE_SCAN
+from .services import cleanup_services, setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,96 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, SERVICE_SCAN):
-        return True
-
-    def check_entry_id(interface: str) -> str:
-        for config_entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in config_entry.data and config_entry.data["port"] == interface:
-                return config_entry.entry_id
-        raise vol.Invalid(
-            "The interface provided is not defined as a port in a Velbus integration"
-        )
-
-    async def scan(call: ServiceCall) -> None:
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].scan()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SCAN,
-        scan,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
-    )
-
-    async def syn_clock(call: ServiceCall) -> None:
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].sync_clock()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SYNC,
-        syn_clock,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
-    )
-
-    async def set_memo_text(call: ServiceCall) -> None:
-        """Handle Memo Text service call."""
-        memo_text = call.data[CONF_MEMO_TEXT]
-        await (
-            hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
-            .get_module(call.data[CONF_ADDRESS])
-            .set_memo_text(memo_text)
-        )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_MEMO_TEXT,
-        set_memo_text,
-        vol.Schema(
-            {
-                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Required(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
-                ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
-            }
-        ),
-    )
-
-    async def clear_cache(call: ServiceCall) -> None:
-        """Handle a clear cache service call."""
-        # clear the cache
-        with suppress(FileNotFoundError):
-            if call.data.get(CONF_ADDRESS):
-                await hass.async_add_executor_job(
-                    os.unlink,
-                    hass.config.path(
-                        STORAGE_DIR,
-                        f"velbuscache-{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p",
-                    ),
-                )
-            else:
-                await hass.async_add_executor_job(
-                    shutil.rmtree,
-                    hass.config.path(
-                        STORAGE_DIR, f"velbuscache-{call.data[CONF_INTERFACE]}/"
-                    ),
-                )
-        # call a scan to repopulate
-        await scan(call)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CLEAR_CACHE,
-        clear_cache,
-        vol.Schema(
-            {
-                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Optional(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
-                ),
-            }
-        ),
-    )
+    if not hass.services.has_service(DOMAIN, SERVICE_SCAN):
+        setup_services(hass)
 
     return True
 
@@ -186,10 +89,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
-        hass.services.async_remove(DOMAIN, SERVICE_SCAN)
-        hass.services.async_remove(DOMAIN, SERVICE_SYNC)
-        hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
-        hass.services.async_remove(DOMAIN, SERVICE_CLEAR_CACHE)
+        cleanup_services(hass)
     return unload_ok
 
 
