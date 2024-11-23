@@ -763,7 +763,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ovo_energy",
     "owntracks",
     "p1_monitor",
-    "palazzetti",
     "panasonic_bluray",
     "panasonic_viera",
     "pandora",
