@@ -29,7 +29,7 @@ def get_cache_device_info(
 
 
 # pylint: disable=hass-enforce-class-module
-class GeoEntity_Base(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity):
+class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity):
     """Base class for Geocaching entities."""
 
     _attr_has_entity_name = True
@@ -49,10 +49,14 @@ class GeoEntity_Base(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity)
         self._attr_unique_id = NEARBY_CACHE_ID_SENSOR_FORMAT.format(
             cache.reference_code, entity_type
         )
+        self._attr_translation_key = f"cache_{entity_type}"
+        self._attr_translation_placeholders = {
+            "reference_code": cache.reference_code or ""
+        }
 
 
 # pylint: disable=hass-enforce-class-module
-class GeoEntity_Cache_Location(GeoEntity_Base, TrackerEntity):
+class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
     """Entity for a cache GPS location."""
 
     def __init__(
@@ -83,7 +87,7 @@ class GeoEntity_Cache_Location(GeoEntity_Base, TrackerEntity):
 
 
 # pylint: disable=hass-enforce-class-module
-class GeoEntity_Cache_HideDate(GeoEntity_Base, DateEntity):
+class GeoEntity_Cache_HideDate(GeoEntity_BaseCache, DateEntity):
     """Entity for when a cache was hidden."""
 
     def __init__(
@@ -100,7 +104,7 @@ class GeoEntity_Cache_HideDate(GeoEntity_Base, DateEntity):
         )  # TODO: Connect with API | pylint: disable=fixme
 
 
-class GeoEntity_Cache_IntegerBase(GeoEntity_Base, NumberEntity):
+class GeoEntity_Cache_IntegerBase(GeoEntity_BaseCache, NumberEntity):
     """Base class for integer-based cache entities."""
 
     def __init__(
@@ -150,7 +154,7 @@ class GeoEntity_Cache_NumberOfFavorites(GeoEntity_Cache_IntegerBase, NumberEntit
 
 def get_cache_entities(
     coordinator: GeocachingDataUpdateCoordinator, cache: GeocachingCache
-) -> list[GeoEntity_Base]:
+) -> list[GeoEntity_BaseCache]:
     """Generate all entities for a single cache."""
     return [
         GeoEntity_Cache_Location(coordinator, cache),
