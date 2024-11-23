@@ -24,7 +24,6 @@ RULES = {
         "dependency-transparency",
         "docs-actions",
         "docs-high-level-description",
-        "docs-installation-parameters",
         "docs-installation-instructions",
         "docs-removal-instructions",
         "entity-event-setup",
@@ -1356,7 +1355,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             break
         required_rules = set(RULES[scale])
         if missing_rules := (required_rules - rules_met):
-            friendly_rule_str = "\n".join(f"  {rule}: todo" for rule in missing_rules)
+            friendly_rule_str = "\n".join(
+                f"  {rule}: todo" for rule in sorted(missing_rules)
+            )
             integration.add_error(
                 "quality_scale",
                 f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
