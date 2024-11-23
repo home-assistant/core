@@ -12,11 +12,13 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, GEOCACHING_ID_SENSOR_FORMAT
 from .coordinator import GeocachingDataUpdateCoordinator
+from .entities import get_cache_entities
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -90,6 +92,13 @@ async def async_setup_entry(
     async_add_entities(
         GeocachingSensor(coordinator, description) for description in SENSORS
     )
+
+    # Temporary: Get the nearby caches
+    status: GeocachingStatus = await coordinator._async_update_data()  # noqa: SLF001
+    entities: list[Entity] = []
+    for cache in status.nearby_caches[:3]:
+        entities.extend(get_cache_entities(coordinator, cache))
+    async_add_entities(entities)
 
 
 class GeocachingSensor(
