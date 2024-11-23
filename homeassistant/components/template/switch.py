@@ -73,7 +73,6 @@ SWITCH_SCHEMA = (
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
 )
 
 LEGACY_SWITCH_SCHEMA = vol.All(
