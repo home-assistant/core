@@ -63,6 +63,11 @@ async def test_buttons(
         f"{DEFAULT_URL}/api/v3/tasks/user",
         json=load_json_object_fixture("tasks.json", DOMAIN),
     )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -163,6 +168,11 @@ async def test_button_press(
         f"{DEFAULT_URL}/api/v3/tasks/user",
         json=load_json_object_fixture("tasks.json", DOMAIN),
     )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -207,7 +217,7 @@ async def test_button_press(
     [
         (
             HTTPStatus.TOO_MANY_REQUESTS,
-            "Currently rate limited",
+            "Rate limit exceeded, try again later",
             ServiceValidationError,
         ),
         (
@@ -217,7 +227,7 @@ async def test_button_press(
         ),
         (
             HTTPStatus.UNAUTHORIZED,
-            "Unable to carry out this action",
+            "Unable to complete action, the required conditions are not met",
             ServiceValidationError,
         ),
     ],

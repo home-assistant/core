@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,9 +45,11 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> HomeassistantAnalyticsOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HomeassistantAnalyticsOptionsFlowHandler(config_entry)
+        return HomeassistantAnalyticsOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,7 +133,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
     """Handle Homeassistant Analytics options."""
 
     async def async_step_init(
@@ -211,6 +212,6 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     },
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

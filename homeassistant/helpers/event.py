@@ -224,10 +224,10 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    frame.report(
+    frame.report_usage(
         "calls `async_track_state_change` instead of `async_track_state_change_event`"
         " which is deprecated and will be removed in Home Assistant 2025.5",
-        error_if_core=False,
+        core_behavior=frame.ReportBehavior.LOG,
     )
 
     if from_state is not None:
@@ -997,14 +997,14 @@ class TrackTemplateResultInfo:
                 continue
 
             # pylint: disable-next=import-outside-toplevel
-            from .frame import report
+            from .frame import ReportBehavior, report_usage
 
-            report(
+            report_usage(
                 (
                     "calls async_track_template_result with template without hass, "
                     "which will stop working in HA Core 2025.10"
                 ),
-                error_if_core=False,
+                core_behavior=ReportBehavior.LOG,
             )
             track_template_.template.hass = hass
 

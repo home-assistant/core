@@ -380,6 +380,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F8811A*",
     },
     {
+        "domain": "palazzetti",
+        "hostname": "connbox*",
+        "macaddress": "40F3857*",
+    },
+    {
+        "domain": "palazzetti",
+        "registered_devices": True,
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },

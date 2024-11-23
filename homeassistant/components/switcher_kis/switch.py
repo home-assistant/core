@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api
+from aioswitcher.api import Command, SwitcherApi, SwitcherBaseResponse
 from aioswitcher.device import DeviceCategory, DeviceState
 import voluptuous as vol
 
@@ -105,7 +105,7 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         error = None
 
         try:
-            async with SwitcherType1Api(
+            async with SwitcherApi(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,

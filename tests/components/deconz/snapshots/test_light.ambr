@@ -125,7 +125,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -134,7 +134,7 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -283,7 +283,7 @@
       'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -291,7 +291,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -429,7 +429,7 @@
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -438,7 +438,7 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -587,7 +587,7 @@
       'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -595,7 +595,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -891,7 +891,7 @@
       'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -899,7 +899,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -981,7 +981,7 @@
       'rgb_color': tuple(
         255,
         165,
-        84,
+        85,
       ),
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -990,8 +990,8 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.53,
-        0.388,
+        0.529,
+        0.387,
       ),
     }),
     'context': <ANY>,
@@ -1180,7 +1180,7 @@
       'is_deconz_group': False,
       'rgb_color': tuple(
         243,
-        113,
+        114,
         255,
       ),
       'supported_color_modes': list([
@@ -1189,7 +1189,7 @@
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
         0.357,
-        0.188,
+        0.189,
       ),
     }),
     'context': <ANY>,
