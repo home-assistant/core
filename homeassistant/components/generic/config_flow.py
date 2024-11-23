@@ -439,7 +439,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
     def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
         self.preview_cam: dict[str, Any] = {}
-        self.preview_stream: PreviewStream | None = None
         self.user_input: dict[str, Any] = {}
 
     async def async_step_init(
@@ -608,9 +607,6 @@ async def ws_start_preview(
     flow = cast(
         GenericIPCamConfigFlow,
         hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
-    ) or cast(
-        GenericOptionsFlowHandler,
-        hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
     )
     user_input = flow.preview_cam
 
