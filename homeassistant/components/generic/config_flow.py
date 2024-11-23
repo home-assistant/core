@@ -603,8 +603,6 @@ async def ws_start_preview(
 ) -> None:
     """Generate websocket handler for the camera still/stream preview."""
     _LOGGER.debug("Generating websocket handler for generic camera preview")
-    ha_still_url = None
-    ha_stream_url = None
 
     flow_id = msg["flow_id"]
     flow = cast(
@@ -629,6 +627,9 @@ async def ws_start_preview(
     )
     await entity_platform.async_load_translations()
 
+    ha_still_url = None
+    ha_stream_url = None
+
     if user_input.get(CONF_STILL_IMAGE_URL):
         ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
@@ -637,7 +638,6 @@ async def ws_start_preview(
         ha_stream_url = ha_stream.endpoint_url(HLS_PROVIDER)
         _LOGGER.debug("Got preview stream URL: %s", ha_stream_url)
 
-    connection.send_result(msg["id"])
     connection.send_message(
         websocket_api.event_message(
             msg["id"],
