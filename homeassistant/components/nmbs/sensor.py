@@ -117,6 +117,7 @@ async def async_setup_platform(
                         "domain": DOMAIN,
                         "integration_title": "NMBS",
                         "station_name": config[station_type],
+                        "url": "/config/integrations/dashboard/add?domain=nmbs",
                     },
                 )
                 return
