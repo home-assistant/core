@@ -7,6 +7,7 @@ from .const import PLATFORMS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Adax from a config entry."""
     adax_data_handler = AdaxDataHandler(entry, hass)

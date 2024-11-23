@@ -1,10 +1,16 @@
 """Support for Adax energy sensors."""
+
 import logging
 import datetime
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfEnergy
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Adax energy sensors from a config entry."""
@@ -15,6 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(AdaxEnergySensor(adax_data_handler, room))
 
     async_add_entities(sensors, True)
+
 
 class AdaxEnergySensor(SensorEntity):
     """Representation of an Adax Energy Sensor."""
@@ -62,11 +69,15 @@ class AdaxEnergySensor(SensorEntity):
 
     async def async_update(self):
         """Get the latest data."""
-        _LOGGER.debug("Updating AdaxEnergySensor for room ID %s", self._heater_data["id"])
+        _LOGGER.debug(
+            "Updating AdaxEnergySensor for room ID %s", self._heater_data["id"]
+        )
         room = self._adax_data_handler.get_room(self._heater_data["id"])
         if room:
             self._heater_data = room
             self._state = room.get("energyWh", 0) / 1000
             _LOGGER.debug("Updated state: %s kWh", self._state)
         else:
-            _LOGGER.warning("Room ID %s not found in data handler", self._heater_data["id"])
+            _LOGGER.warning(
+                "Room ID %s not found in data handler", self._heater_data["id"]
+            )

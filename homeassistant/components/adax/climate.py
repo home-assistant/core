@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
 from .data_handler import Adax, AdaxDataHandler
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -37,10 +38,7 @@ async def async_setup_entry(
         return
 
     async_add_entities(
-        (
-            AdaxDevice(room, adax_data_handler)
-            for room in adax_data_handler._rooms
-        ),
+        (AdaxDevice(room, adax_data_handler) for room in adax_data_handler._rooms),
         True,
     )
 
@@ -60,7 +58,9 @@ class AdaxDevice(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, heater_data: dict[str, Any], adax_data_handler: AdaxDataHandler) -> None:
+    def __init__(
+        self, heater_data: dict[str, Any], adax_data_handler: AdaxDataHandler
+    ) -> None:
         """Initialize the heater."""
         self._device_id = heater_data["id"]
         self._adax_data_handler = adax_data_handler

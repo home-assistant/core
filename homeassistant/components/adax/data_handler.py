@@ -10,14 +10,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, LOCAL
 
+
 class AdaxDataHandler:
     def __init__(self, entry, hass):
         if entry.data.get(CONNECTION_TYPE) == LOCAL:
-            self._adax = AdaxLocal(entry.data[CONF_IP_ADDRESS], entry.data[CONF_TOKEN],
-                                   websession=async_get_clientsession(hass, verify_ssl=False))
+            self._adax = AdaxLocal(
+                entry.data[CONF_IP_ADDRESS],
+                entry.data[CONF_TOKEN],
+                websession=async_get_clientsession(hass, verify_ssl=False)
+            )
         else:
-            self._adax = Adax(entry.data[ACCOUNT_ID], entry.data[CONF_PASSWORD],
-                              websession=async_get_clientsession(hass))
+            self._adax = Adax(
+                entry.data[ACCOUNT_ID],
+                entry.data[CONF_PASSWORD],
+                websession=async_get_clientsession(hass)
+            )
 
         self._rooms = None
 
