@@ -18,7 +18,7 @@ FAN_HIGH: Final = "high"
 FAN_AUTO: Final = "auto"
 FAN_MODES: Final = [FAN_SILENT, "1", "2", "3", "4", "5", FAN_HIGH, FAN_AUTO]
 
-STATUSES: dict[str | int | float | None, str] = {
+STATUSES: Final[dict[str | int | float | None, str]] = {
     0: "off",
     1: "off_timer",
     2: "test_fire",
