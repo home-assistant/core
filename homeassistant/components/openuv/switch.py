@@ -38,6 +38,7 @@ class SunscreenReminderSwitch(SwitchEntity):
         self._is_on = False
         self._attr_name = "Sunscreen Reminder"
         self._attr_unique_id = "sunscreen_reminder_switch"
+        self._attr_icon = "mdi:emoticon-cool-outline"
 
     @property
     def is_on(self) -> bool:

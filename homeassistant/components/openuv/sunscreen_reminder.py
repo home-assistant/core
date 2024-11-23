@@ -13,7 +13,7 @@ from .const import SUNSCREEN_DOMAIN
 # Constants
 LOCAL_TIMEZONE = "Europe/Stockholm"
 UV_SENSOR = "sensor.openuv_current_uv_index"
-UV_THRESHOLD = 0  # In real life should be 3 (For demo lower values)
+UV_THRESHOLD = 3  # In real life should be 3 (For demo lower values)
 NOTIFICATION_INTERVAL_HOURS = 0.0166  # Equal to 1 min (For demo lower values)
 CHECK_INTERVAL_MINUTES = 0.5  # Frequency to check the UV index
 
