@@ -2833,3 +2833,110 @@ async def test_query_same_name_different_areas(
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for exposed entities."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    entity_id = "light.test_light"
+    hass.states.async_set(entity_id, "off")
+    expose_entity(hass, entity_id, True)
+    await hass.async_block_till_done()
+
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.entities["name"].text == "test light"
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True
+
+    # Unexposing clears the cache
+    expose_entity(hass, entity_id, False)
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for all entities."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    entity_id = "light.test_light"
+    hass.states.async_set(entity_id, "off")
+    expose_entity(hass, entity_id, False)  # not exposed
+    await hass.async_block_till_done()
+
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.entities["name"].text == "test light"
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True
+
+    # Adding a new entity clears the cache
+    hass.states.async_set("light.new_light", "off")
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for fuzzy matches."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    # There is no entity named test light
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.unmatched_entities["name"].text == "test light"
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True

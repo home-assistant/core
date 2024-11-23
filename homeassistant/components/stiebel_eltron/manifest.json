@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/stiebel_eltron",
   "iot_class": "local_polling",
   "loggers": ["pymodbus", "pystiebeleltron"],
+  "quality_scale": "legacy",
   "requirements": ["pystiebeleltron==0.0.1.dev2"]
 }

@@ -629,7 +629,7 @@ async def test_async_config_entry_first_refresh_invalid_state(
         match="Detected code that uses `async_config_entry_first_refresh`, which "
         "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
         "but it is in state ConfigEntryState.NOT_LOADED. This will stop working "
-        "in Home Assistant 2025.11. Please report this issue.",
+        "in Home Assistant 2025.11. Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -666,7 +666,7 @@ async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) ->
         RuntimeError,
         match="Detected code that uses `async_config_entry_first_refresh`, "
         "which is only supported for coordinators with a config entry and will "
-        "stop working in Home Assistant 2025.11. Please report this issue.",
+        "stop working in Home Assistant 2025.11. Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 

@@ -372,7 +372,7 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders={
                 "name": options[CONF_NAME],
-                "country": options.get(CONF_COUNTRY),
+                "country": options.get(CONF_COUNTRY, "-"),
             },
         )
 

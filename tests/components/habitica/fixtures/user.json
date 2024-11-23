@@ -2,6 +2,7 @@
   "data": {
     "api_user": "test-api-user",
     "profile": { "name": "test-user" },
+    "auth": { "local": { "username": "test-username" } },
     "stats": {
       "buffs": {
         "str": 26,
@@ -65,6 +66,7 @@
     },
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z",
+    "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
     "items": {
       "gear": {
         "equipped": {

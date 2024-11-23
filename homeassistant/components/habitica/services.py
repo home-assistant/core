@@ -27,8 +27,10 @@ from .const import (
     ATTR_CONFIG_ENTRY,
     ATTR_DATA,
     ATTR_DIRECTION,
+    ATTR_ITEM,
     ATTR_PATH,
     ATTR_SKILL,
+    ATTR_TARGET,
     ATTR_TASK,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
@@ -42,6 +44,7 @@ from .const import (
     SERVICE_SCORE_HABIT,
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
+    SERVICE_TRANSFORMATION,
 )
 from .types import HabiticaConfigEntry
 
@@ -74,6 +77,14 @@ SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_TASK): cv.string,
         vol.Optional(ATTR_DIRECTION): cv.string,
+    }
+)
+
+SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_ITEM): cv.string,
+        vol.Required(ATTR_TARGET): cv.string,
     }
 )
 
@@ -294,6 +305,83 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             await coordinator.async_request_refresh()
             return response
 
+    async def transformation(call: ServiceCall) -> ServiceResponse:
+        """User a transformation item on a player character."""
+
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        ITEMID_MAP = {
+            "snowball": {"itemId": "snowball"},
+            "spooky_sparkles": {"itemId": "spookySparkles"},
+            "seafoam": {"itemId": "seafoam"},
+            "shiny_seed": {"itemId": "shinySeed"},
+        }
+        # check if target is self
+        if call.data[ATTR_TARGET] in (
+            coordinator.data.user["id"],
+            coordinator.data.user["profile"]["name"],
+            coordinator.data.user["auth"]["local"]["username"],
+        ):
+            target_id = coordinator.data.user["id"]
+        else:
+            # check if target is a party member
+            try:
+                party = await coordinator.api.groups.party.members.get()
+            except ClientResponseError as e:
+                if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                    ) from e
+                if e.status == HTTPStatus.NOT_FOUND:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="party_not_found",
+                    ) from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_call_exception",
+                ) from e
+            try:
+                target_id = next(
+                    member["id"]
+                    for member in party
+                    if call.data[ATTR_TARGET].lower()
+                    in (
+                        member["id"],
+                        member["auth"]["local"]["username"].lower(),
+                        member["profile"]["name"].lower(),
+                    )
+                )
+            except StopIteration as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="target_not_found",
+                    translation_placeholders={"target": f"'{call.data[ATTR_TARGET]}'"},
+                ) from e
+        try:
+            response: dict[str, Any] = await coordinator.api.user.class_.cast[
+                ITEMID_MAP[call.data[ATTR_ITEM]]["itemId"]
+            ].post(targetId=target_id)
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"item": call.data[ATTR_ITEM]},
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        else:
+            return response
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,
@@ -321,5 +409,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         SERVICE_SCORE_REWARD,
         score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TRANSFORMATION,
+        transformation,
+        schema=SERVICE_TRANSFORMATION_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
