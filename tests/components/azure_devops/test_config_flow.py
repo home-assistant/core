@@ -57,6 +57,7 @@ async def test_reauth_authorization_error(
     mock_devops_client: AsyncMock,
 ) -> None:
     """Test we show user form on Azure DevOps authorization error."""
+    mock_config_entry.add_to_hass(hass)
     mock_devops_client.authorize.return_value = False
     mock_devops_client.authorized = False
 
@@ -108,6 +109,7 @@ async def test_reauth_connection_error(
     mock_devops_client: AsyncMock,
 ) -> None:
     """Test we show user form on Azure DevOps connection error."""
+    mock_config_entry.add_to_hass(hass)
     mock_devops_client.authorize.side_effect = aiohttp.ClientError
     mock_devops_client.authorized = False
 

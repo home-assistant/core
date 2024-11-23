@@ -253,10 +253,6 @@ async def test_user_options_set_multiple(
     )
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.onewire.options.abort.No configurable devices found."],
-)
 async def test_user_options_no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
@@ -267,4 +263,4 @@ async def test_user_options_no_devices(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "No configurable devices found."
+    assert result["reason"] == "no_configurable_devices"

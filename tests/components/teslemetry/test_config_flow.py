@@ -89,10 +89,6 @@ async def test_form_errors(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.teslemetry.config.abort.reauth_successful"],
-)
 async def test_reauth(hass: HomeAssistant, mock_metadata: AsyncMock) -> None:
     """Test reauth flow."""
 
@@ -124,10 +120,6 @@ async def test_reauth(hass: HomeAssistant, mock_metadata: AsyncMock) -> None:
     assert mock_entry.data == CONFIG
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.teslemetry.config.abort.reauth_successful"],
-)
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [

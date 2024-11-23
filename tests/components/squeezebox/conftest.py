@@ -120,6 +120,7 @@ async def mock_async_browse(
     """Mock the async_browse method of pysqueezebox.Player."""
     child_types = {
         "favorites": "favorites",
+        "new music": "album",
         "albums": "album",
         "album": "track",
         "genres": "genre",
@@ -206,7 +207,7 @@ def player_factory() -> MagicMock:
 def mock_pysqueezebox_player(uuid: str) -> MagicMock:
     """Mock a Lyrion Media Server player."""
     with patch(
-        "homeassistant.components.squeezebox.media_player.Player", autospec=True
+        "homeassistant.components.squeezebox.Player", autospec=True
     ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
         mock_player.generate_image_url_from_track_id = MagicMock(

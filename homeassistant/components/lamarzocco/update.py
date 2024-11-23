@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import FirmwareType
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import RequestNotSuccessful
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
 from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 

@@ -124,7 +124,9 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=STEP_CONN_STRING,
                 data_schema=CONN_STRING_SCHEMA,
                 errors=errors,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                description_placeholders={
+                    "event_hub_instance_name": self._data[CONF_EVENT_HUB_INSTANCE_NAME]
+                },
                 last_step=True,
             )
 
@@ -144,7 +146,9 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=STEP_SAS,
                 data_schema=SAS_SCHEMA,
                 errors=errors,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                description_placeholders={
+                    "event_hub_instance_name": self._data[CONF_EVENT_HUB_INSTANCE_NAME]
+                },
                 last_step=True,
             )
 

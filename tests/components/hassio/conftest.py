@@ -5,7 +5,7 @@ import os
 import re
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohasupervisor.models import AddonState
+from aiohasupervisor.models import AddonsStats, AddonState
 from aiohttp.test_utils import TestClient
 import pytest
 
@@ -32,14 +32,10 @@ def disable_security_filter() -> Generator[None]:
 
 
 @pytest.fixture
-def hassio_env() -> Generator[None]:
+def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
     """Fixture to inject hassio env."""
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value={"result": "ok", "data": {}},
-        ),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
         patch(
             "homeassistant.components.hassio.HassIO.get_info",
@@ -55,6 +51,7 @@ def hassio_stubs(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
 ) -> RefreshToken:
     """Create mock hassio http client."""
     with (
@@ -76,9 +73,6 @@ def hassio_stubs(
         ),
         patch(
             "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.refresh_updates",
         ),
     ):
         hass.set_state(CoreState.starting)
@@ -133,7 +127,9 @@ def all_setup_requests(
     aioclient_mock: AiohttpClientMocker,
     request: pytest.FixtureRequest,
     addon_installed: AsyncMock,
-    store_info,
+    store_info: AsyncMock,
+    addon_changelog: AsyncMock,
+    addon_stats: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
@@ -141,7 +137,6 @@ def all_setup_requests(
     )
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -222,7 +217,6 @@ def all_setup_requests(
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
     addon_installed.return_value.update_available = False
     addon_installed.return_value.version = "1.0.0"
@@ -249,8 +243,6 @@ def all_setup_requests(
 
     addon_installed.side_effect = mock_addon_info
 
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={
@@ -283,38 +275,32 @@ def all_setup_requests(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.8,
-                "memory_usage": 51941376,
-                "memory_limit": 3977146368,
-                "memory_percent": 1.31,
-                "network_rx": 31338284,
-                "network_tx": 15692900,
-                "blk_read": 740077568,
-                "blk_write": 6004736,
-            },
-        },
-    )
+
+    async def mock_addon_stats(addon: str) -> AddonsStats:
+        """Mock addon stats for test and test2."""
+        if addon == "test2":
+            return AddonsStats(
+                cpu_percent=0.8,
+                memory_usage=51941376,
+                memory_limit=3977146368,
+                memory_percent=1.31,
+                network_rx=31338284,
+                network_tx=15692900,
+                blk_read=740077568,
+                blk_write=6004736,
+            )
+        return AddonsStats(
+            cpu_percent=0.99,
+            memory_usage=182611968,
+            memory_limit=3977146368,
+            memory_percent=4.59,
+            network_rx=362570232,
+            network_tx=82374138,
+            blk_read=46010945536,
+            blk_write=15051526144,
+        )
+
+    addon_stats.side_effect = mock_addon_stats
     aioclient_mock.get(
         "http://127.0.0.1/network/info",
         json={

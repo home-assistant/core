@@ -16,7 +16,6 @@ from .conftest import (
     MockPchkConnectionManager,
     create_config_entry,
     init_integration,
-    setup_component,
 )
 
 
@@ -83,18 +82,6 @@ async def test_async_setup_entry_update(
     assert dummy_entity in entity_registry.entities.values()
     assert dummy_device in device_registry.devices.values()
 
-    # setup new entry with same data via import step (should cleanup dummy device)
-    with patch(
-        "homeassistant.components.lcn.config_flow.validate_connection",
-        return_value=None,
-    ):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=entry.data
-        )
-
-    assert dummy_device not in device_registry.devices.values()
-    assert dummy_entity not in entity_registry.entities.values()
-
 
 @pytest.mark.parametrize(
     "exception", [PchkAuthenticationError, PchkLicenseError, TimeoutError]
@@ -114,20 +101,6 @@ async def test_async_setup_entry_raises_authentication_error(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
-    """Test a successful setup using data from configuration.yaml."""
-    with (
-        patch(
-            "homeassistant.components.lcn.config_flow.validate_connection",
-            return_value=None,
-        ),
-        patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry,
-    ):
-        await setup_component(hass)
-
-        assert async_setup_entry.await_count == 2
-
-
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
 async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
     """Test migration config entry."""
@@ -139,6 +112,22 @@ async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
 
     entry_migrated = hass.config_entries.async_get_entry(entry_v1_1.entry_id)
     assert entry_migrated.state is ConfigEntryState.LOADED
-    assert entry_migrated.version == 1
-    assert entry_migrated.minor_version == 2
+    assert entry_migrated.version == 2
+    assert entry_migrated.minor_version == 1
+    assert entry_migrated.data == entry.data
+
+
+@patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
+async def test_migrate_1_2(hass: HomeAssistant, entry) -> None:
+    """Test migration config entry."""
+    entry_v1_2 = create_config_entry("pchk_v1_2", version=(1, 2))
+    entry_v1_2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry_v1_2.entry_id)
+    await hass.async_block_till_done()
+
+    entry_migrated = hass.config_entries.async_get_entry(entry_v1_2.entry_id)
+    assert entry_migrated.state is ConfigEntryState.LOADED
+    assert entry_migrated.version == 2
+    assert entry_migrated.minor_version == 1
     assert entry_migrated.data == entry.data

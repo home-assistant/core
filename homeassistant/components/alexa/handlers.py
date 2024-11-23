@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    alarm_control_panel,
     button,
     camera,
     climate,
@@ -51,7 +52,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_ALARM_DISARMED,
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
@@ -1083,7 +1083,13 @@ async def async_api_arm(
     arm_state = directive.payload["armState"]
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.state != STATE_ALARM_DISARMED:
+    # Per Alexa Documentation: users are not allowed to switch from armed_away
+    # directly to another armed state without first disarming the system.
+    # https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-securitypanelcontroller.html#arming
+    if (
+        entity.state == alarm_control_panel.AlarmControlPanelState.ARMED_AWAY
+        and arm_state != "ARMED_AWAY"
+    ):
         msg = "You must disarm the system before you can set the requested arm state."
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 
@@ -1133,7 +1139,7 @@ async def async_api_disarm(
     # Per Alexa Documentation: If you receive a Disarm directive, and the
     # system is already disarmed, respond with a success response,
     # not an error response.
-    if entity.state == STATE_ALARM_DISARMED:
+    if entity.state == alarm_control_panel.AlarmControlPanelState.DISARMED:
         return response
 
     payload = directive.payload

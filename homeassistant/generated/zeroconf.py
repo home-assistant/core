@@ -617,6 +617,12 @@ ZEROCONF = {
         {
             "domain": "lutron_caseta",
             "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
                 "SYSTYPE": "radiora3*",
             },
         },
@@ -631,6 +637,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
         },
     ],
     "_matter._tcp.local.": [
@@ -859,6 +870,12 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "*zigate*",
+        },
+    ],
+    "_zigbee-coordinator._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*",
         },
     ],
     "_zigstar_gw._tcp.local.": [
