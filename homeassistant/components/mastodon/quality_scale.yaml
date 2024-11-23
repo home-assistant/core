@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
+    status: done
     comment: |
       Legacy Notify platform can't be created within async-setup.
   appropriate-polling: done
