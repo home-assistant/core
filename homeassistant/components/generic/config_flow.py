@@ -292,7 +292,7 @@ async def async_test_and_preview_stream(
                 stream_source,
                 stream_options,
                 DynamicStreamSettings(),
-                f"{DOMAIN}.test_stream"
+                f"{DOMAIN}.test_stream",
             )
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
@@ -362,7 +362,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors, still_format = await async_test_still(hass, user_input)
                 try:
-                    self.preview_stream = await async_test_and_preview_stream(hass, user_input)
+                    self.preview_stream = await async_test_and_preview_stream(
+                        hass, user_input
+                    )
                 except InvalidStreamException as err:
                     errors[CONF_STREAM_SOURCE] = str(err)
                     if err.details:
@@ -591,8 +593,6 @@ class PreviewStream:
     {
         vol.Required("type"): "generic_camera/start_preview",
         vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow"),
-        vol.Required("user_input"): dict,
     }
 )
 @websocket_api.async_response
