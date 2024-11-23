@@ -14,7 +14,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration, ScaledQualityScaleTiers
-from .quality_scale_rules import config_entry_unload, config_flow, runtime_data
+from .quality_scale_rules import (
+    QualityScaleCheck,
+    config_entry_unload,
+    config_flow,
+    runtime_data,
+)
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
 
@@ -1386,19 +1391,24 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
 
-    if declared_quality_scale is None:
-        return
-
+    rules_done = set()
     rules_met = set()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
-        if status in {"done", "exempt"}:
-            rules_met.add(rule_name)
-            if (
-                status == "done"
-                and (validator := VALIDATORS.get(rule_name)) is not None
-            ):
-                validator(integration)
+        if status not in ("done", "exempt"):
+            continue
+        rules_met.add(rule_name)
+        if status == "done":
+            rules_done.add(rule_name)
+
+    check = QualityScaleCheck(integration)
+
+    for rule_name in rules_done:
+        if (validator := VALIDATORS.get(rule_name)) is not None:
+            validator(check)
+
+    if declared_quality_scale is None:
+        return
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.

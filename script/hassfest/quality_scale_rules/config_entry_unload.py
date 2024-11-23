@@ -2,7 +2,7 @@
 
 import ast
 
-from script.hassfest.model import Integration
+from . import QualityScaleCheck
 
 
 def _has_function(
@@ -12,15 +12,15 @@ def _has_function(
     return any(type(item) is _type and item.name == name for item in module.body)
 
 
-def validate(integration: Integration) -> None:
+def validate(check: QualityScaleCheck) -> None:
     """Validate that the integration has a config flow."""
 
-    init_file = integration.path / "__init__.py"
+    init_file = check.integration.path / "__init__.py"
     init = ast.parse(init_file.read_text())
 
     if not _has_function(init, ast.AsyncFunctionDef, "async_unload_entry"):
-        integration.add_error(
-            "quality_scale",
-            "[config_entry_unload] Integration does not support config entry "
-            "unloading (is missing async_unload_entry in __init__.py)",
+        check.add_error(
+            "config_entry_unload",
+            "Integration does not support config entry unloading (is missing async_unload_entry "
+            "in __init__.py)",
         )
