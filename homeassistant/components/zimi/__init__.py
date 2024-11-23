@@ -49,7 +49,7 @@ async def async_connect_to_controller(
     msg = "Connection failed: not ready"
     _LOGGER.error(msg=msg)
 
-    return None
+    raise ConfigEntryNotReady
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
