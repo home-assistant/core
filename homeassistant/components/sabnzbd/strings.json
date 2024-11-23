@@ -4,11 +4,11 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The full URL, including port, of the SABnzbd server. Example: `http://localhost:8080` or `http://a02368d7-sabnzbd:8080`"
+          "url": "The full URL, including port, of the SABnzbd server. Example: `http://localhost:8080` or `http://a02368d7-sabnzbd:8080`, if you are using the add-on.",
+          "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security."
         }
       }
     },

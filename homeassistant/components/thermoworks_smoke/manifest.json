@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/thermoworks_smoke",
   "iot_class": "cloud_polling",
   "loggers": ["thermoworks_smoke"],
+  "quality_scale": "legacy",
   "requirements": ["stringcase==1.2.0", "thermoworks-smoke==0.1.8"]
 }

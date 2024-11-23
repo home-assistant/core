@@ -177,18 +177,24 @@ def test_deprecated_constants(
 
 
 @pytest.mark.parametrize(
-    ("replacement", "constant_name"),
+    ("replacement", "constant_name", "breaks_in_version"),
     [
-        (const.UnitOfLength.YARDS, "LENGTH_YARD"),
-        (const.UnitOfSoundPressure.DECIBEL, "SOUND_PRESSURE_DB"),
-        (const.UnitOfSoundPressure.WEIGHTED_DECIBEL_A, "SOUND_PRESSURE_WEIGHTED_DBA"),
-        (const.UnitOfVolume.FLUID_OUNCES, "VOLUME_FLUID_OUNCE"),
+        (const.UnitOfLength.YARDS, "LENGTH_YARD", "2025.1"),
+        (const.UnitOfSoundPressure.DECIBEL, "SOUND_PRESSURE_DB", "2025.1"),
+        (
+            const.UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
+            "SOUND_PRESSURE_WEIGHTED_DBA",
+            "2025.1",
+        ),
+        (const.UnitOfVolume.FLUID_OUNCES, "VOLUME_FLUID_OUNCE", "2025.1"),
+        (const.UnitOfArea.SQUARE_METERS, "AREA_SQUARE_METERS", "2025.12"),
     ],
 )
 def test_deprecated_constant_name_changes(
     caplog: pytest.LogCaptureFixture,
     replacement: Enum,
     constant_name: str,
+    breaks_in_version: str,
 ) -> None:
     """Test deprecated constants, where the name is not the same as the enum value."""
     import_and_test_deprecated_constant(
@@ -197,7 +203,7 @@ def test_deprecated_constant_name_changes(
         constant_name,
         f"{replacement.__class__.__name__}.{replacement.name}",
         replacement,
-        "2025.1",
+        breaks_in_version,
     )
 
 
