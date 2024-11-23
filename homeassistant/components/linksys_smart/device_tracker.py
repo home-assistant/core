@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 
 import requests
+import base64
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -13,17 +14,22 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_TIMEOUT = 10
+DEFAULT_USERNAME = "admin"
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+    }
 )
 
 
@@ -43,12 +49,22 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
+        self.auth = ""
+        if CONF_PASSWORD in config:
+            self.auth = "Basic " + base64.b64encode(
+                f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}".encode()
+            ).decode("utf-8")
         self.last_results = {}
 
         # Check if the access point is accessible
         response = self._make_request()
         if response.status_code != HTTPStatus.OK:
             raise ConnectionError("Cannot connect to Linksys Access Point")
+        data = response.json()
+        if data["result"] != "OK":
+            raise ConnectionError(
+                "Linksys Access Point returned error - incorrect password?"
+            )
 
     def scan_devices(self):
         """Scan for new devices and return a list with device IDs (MACs)."""
@@ -73,8 +89,11 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             return False
         try:
             data = response.json()
-            result = data["responses"][0]
-            devices = result["output"]["devices"]
+            if data["result"] != "OK":
+                _LOGGER.error("Error response when getting device list")
+                return False
+            responses = data["responses"][0]
+            devices = responses["output"]["devices"]
             for device in devices:
                 if not (macs := device["knownMACAddresses"]):
                     _LOGGER.warning("Skipping device without known MAC address")
@@ -107,6 +126,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             }
         ]
         headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        if self.auth:
+            headers["X-JNAP-Authorization"] = self.auth
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
