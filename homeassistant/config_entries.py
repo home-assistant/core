@@ -22,7 +22,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
 from propcache import cached_property
@@ -1823,28 +1823,18 @@ class ConfigEntries:
             }
         )
 
-    @overload
     @callback
-    def async_get_entry(
-        self, entry_id: str, *, required: Literal[True]
-    ) -> ConfigEntry: ...
-
-    @overload
-    @callback
-    def async_get_entry(
-        self, entry_id: str, *, required: bool = False
-    ) -> ConfigEntry | None: ...
+    def async_get_entry(self, entry_id: str) -> ConfigEntry | None:
+        """Return entry with matching entry_id."""
+        return self._entries.data.get(entry_id)
 
     @callback
-    def async_get_entry(
-        self, entry_id: str, *, required: bool = False
-    ) -> ConfigEntry | None:
+    def async_get_known_entry(self, entry_id: str) -> ConfigEntry:
         """Return entry with matching entry_id.
 
-        Raises UnknownEntry if entry is not found and required is True.
+        Raises UnknownEntry if entry is not found.
         """
-        entry = self._entries.data.get(entry_id)
-        if required and entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
         return entry
 
@@ -1937,7 +1927,7 @@ class ConfigEntries:
 
     async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
         """Remove and unload an entry."""
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
 
         async with entry.setup_lock:
             if not entry.state.recoverable:
@@ -2030,7 +2020,7 @@ class ConfigEntries:
 
         Return True if entry has been successfully loaded.
         """
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
@@ -2061,7 +2051,7 @@ class ConfigEntries:
 
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
 
         if not entry.state.recoverable:
             raise OperationNotAllowed(
@@ -2079,7 +2069,7 @@ class ConfigEntries:
     @callback
     def async_schedule_reload(self, entry_id: str) -> None:
         """Schedule a config entry to be reloaded."""
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
         entry.async_cancel_retry_setup()
         self.hass.async_create_task(
             self.async_reload(entry_id),
@@ -2097,7 +2087,7 @@ class ConfigEntries:
 
         If an entry was not loaded, will just load.
         """
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
 
         # Cancel the setup retry task before waiting for the
         # reload lock to reduce the chance of concurrent reload
@@ -2127,7 +2117,7 @@ class ConfigEntries:
 
         If disabled_by is changed, the config entry will be reloaded.
         """
-        entry = self.async_get_entry(entry_id, required=True)
+        entry = self.async_get_known_entry(entry_id)
 
         _validate_item(disabled_by=disabled_by)
         if entry.disabled_by is disabled_by:
@@ -3014,9 +3004,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
     @callback
     def _get_reauth_entry(self) -> ConfigEntry:
         """Return the reauth config entry linked to the current context."""
-        return self.hass.config_entries.async_get_entry(
-            self._reauth_entry_id, required=True
-        )
+        return self.hass.config_entries.async_get_known_entry(self._reauth_entry_id)
 
     @property
     def _reconfigure_entry_id(self) -> str:
@@ -3028,8 +3016,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
     @callback
     def _get_reconfigure_entry(self) -> ConfigEntry:
         """Return the reconfigure config entry linked to the current context."""
-        return self.hass.config_entries.async_get_entry(
-            self._reconfigure_entry_id, required=True
+        return self.hass.config_entries.async_get_known_entry(
+            self._reconfigure_entry_id
         )
 
 
@@ -3042,7 +3030,7 @@ class OptionsFlowManager(
 
     def _async_get_config_entry(self, config_entry_id: str) -> ConfigEntry:
         """Return config entry or raise if not found."""
-        return self.hass.config_entries.async_get_entry(config_entry_id, required=True)
+        return self.hass.config_entries.async_get_known_entry(config_entry_id)
 
     async def async_create_flow(
         self,
@@ -3076,7 +3064,7 @@ class OptionsFlowManager(
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
-        entry = self.hass.config_entries.async_get_entry(flow.handler, required=True)
+        entry = self.hass.config_entries.async_get_known_entry(flow.handler)
 
         if result["data"] is not None:
             self.hass.config_entries.async_update_entry(entry, options=result["data"])
@@ -3149,9 +3137,7 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
         if self.hass is None:
             raise ValueError("The config entry is not available during initialisation")
-        return self.hass.config_entries.async_get_entry(
-            self._config_entry_id, required=True
-        )
+        return self.hass.config_entries.async_get_known_entry(self._config_entry_id)
 
     @config_entry.setter
     def config_entry(self, value: ConfigEntry) -> None:
@@ -3230,8 +3216,8 @@ class EntityRegistryDisabledHandler:
         ):
             return
 
-        config_entry = self.hass.config_entries.async_get_entry(
-            entity_entry.config_entry_id, required=True
+        config_entry = self.hass.config_entries.async_get_known_entry(
+            entity_entry.config_entry_id
         )
 
         if config_entry.entry_id not in self.changed and config_entry.supports_unload:
