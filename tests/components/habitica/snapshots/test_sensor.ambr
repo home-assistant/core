@@ -907,6 +907,7 @@
 # name: test_sensors[sensor.test_user_mystic_hourglasses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
       'friendly_name': 'test-user Mystic hourglasses',
       'unit_of_measurement': '⧖',
     }),
