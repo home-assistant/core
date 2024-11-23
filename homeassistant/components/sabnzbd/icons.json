@@ -6,6 +6,9 @@
       },
       "resume": {
         "default": "mdi:play"
+      },
+      "speedlimit": {
+        "default": "mdi:speedometer"
       }
     }
   },

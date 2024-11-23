@@ -29,7 +29,7 @@ dependencies    = [
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
     "aiohasupervisor==0.2.1",
-    "aiohttp==3.11.6",
+    "aiohttp==3.11.7",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
     "aiozoneinfo==0.2.1",
@@ -45,7 +45,7 @@ dependencies    = [
     "fnv-hash-fast==1.0.2",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.84.0",
+    "hass-nabucasa==0.85.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.2",
@@ -65,7 +65,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "securetar==2024.2.1",
+    "securetar==2024.11.0",
     "SQLAlchemy==2.0.31",
     "standard-aifc==3.13.0;python_version>='3.13'",
     "standard-telnetlib==3.13.0;python_version>='3.13'",
@@ -79,7 +79,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.17.2",
+    "yarl==1.18.0",
     "webrtc-models==0.3.0",
 ]
 
@@ -700,7 +700,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.6.8"
+required-version = ">=0.8.0"
 
 [tool.ruff.lint]
 select = [
@@ -783,7 +783,7 @@ select = [
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
-    "TCH", # flake8-type-checking
+    "TC", # flake8-type-checking
     "TID", # Tidy imports
     "TRY", # tryceratops
     "UP", # pyupgrade
@@ -807,7 +807,6 @@ ignore = [
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
-    "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT018", # Assertion should be broken down into multiple parts
     "RUF001", # String contains ambiguous unicode character.
@@ -820,9 +819,9 @@ ignore = [
     "SIM115", # Use context handler for opening files
 
     # Moving imports into type-checking blocks can mess with pytest.patch()
-    "TCH001", # Move application import {} into a type-checking block
-    "TCH002", # Move third-party import {} into a type-checking block
-    "TCH003", # Move standard library import {} into a type-checking block
+    "TC001", # Move application import {} into a type-checking block
+    "TC002", # Move third-party import {} into a type-checking block
+    "TC003", # Move standard library import {} into a type-checking block
 
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
