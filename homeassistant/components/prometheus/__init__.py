@@ -43,10 +43,8 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
-    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -67,6 +65,7 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, Stat
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     entityfilter,
     state as state_helper,
 )
@@ -143,8 +142,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
-    area_registry = ar.AreaRegistry(hass)
-    device_registry = dr.DeviceRegistry(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     metrics = PrometheusMetrics(
         entity_filter,
@@ -153,6 +153,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component_config,
         area_registry,
         device_registry,
+        entity_registry,
         override_metric,
         default_metric,
     )
@@ -181,6 +182,7 @@ class PrometheusMetrics:
         component_config: EntityValues,
         area_registry: ar.AreaRegistry,
         device_registry: dr.DeviceRegistry,
+        entity_registry: er.EntityRegistry,
         override_metric: str | None,
         default_metric: str | None,
     ) -> None:
@@ -188,6 +190,7 @@ class PrometheusMetrics:
         self._component_config = component_config
         self._area_registry = area_registry
         self._device_registry = device_registry
+        self._entity_registry = entity_registry
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
@@ -334,7 +337,12 @@ class PrometheusMetrics:
         documentation: str,
         extra_labels: list[str] | None = None,
     ) -> _MetricBaseT:
-        labels = ["entity", "friendly_name", "domain"]
+        labels = [
+            "entity",
+            "friendly_name",
+            "domain",
+            "device",
+        ]
         if extra_labels is not None:
             labels.extend(extra_labels)
 
@@ -371,20 +379,17 @@ class PrometheusMetrics:
             value = None
         return value
 
-    def _get_area(self, state: State) -> str | None:
-        """Return an area, or None if no area is registered."""
-        if area_id := state.attributes.get(ATTR_AREA_ID):
-            if area := self._area_registry.async_get_area(area_id):
-                return area.name
-        return None
-
-    def _get_device(self, state: State) -> str | None:
-        """Return a device, or None if no device is registered."""
-        if device_id := state.attributes.get(ATTR_DEVICE_ID):
-            if device := self._device_registry.async_get(device_id):
-                # should I use device.name_by_user instead?
-                return device.name
-        return None
+    def _get_extra_labels(self, state: State) -> dict[str, Any] | None:
+        """Return a dict of extra labels, or None if no extra labels necessary."""
+        final_labels = {
+            "device": "",
+        }
+        if entity := self._entity_registry.async_get(state.entity_id):
+            if device_id := entity.device_id:
+                if device := self._device_registry.async_get(device_id):
+                    if device_name := device.name:
+                        final_labels["device"] = device_name
+        return dict(final_labels)
 
     def _labels(self, state: State) -> dict[str, Any]:
         final_labels = {
@@ -393,11 +398,8 @@ class PrometheusMetrics:
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME) or "",
         }
 
-        if area := self._get_area(state):
-            final_labels["area"] = area
-
-        if device := self._get_device(state):
-            final_labels["device"] = device
+        if extra_labels := self._get_extra_labels(state):
+            final_labels.update(extra_labels)
 
         return dict(final_labels)
 
@@ -670,7 +672,6 @@ class PrometheusMetrics:
             documentation = "State of the sensor"
             if unit:
                 documentation = f"Sensor data measured in {unit}"
-
             _metric = self._metric(metric, prometheus_client.Gauge, documentation)
 
             if (value := self.state_as_number(state)) is not None:

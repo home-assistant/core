@@ -79,10 +79,15 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
@@ -101,19 +106,23 @@ class EntityMetric:
             "domain",
             "friendly_name",
             "entity",
+            "device",
         ]
 
     def __init__(self, metric_name: str, **kwargs: Any) -> None:
         """Create a new EntityMetric based on metric name and labels."""
         self.metric_name = metric_name
         self.labels = kwargs
+        if "device" not in self.labels:
+            self.labels["device"] = ""
 
         # Labels that are required for all entities.
         for labelname in self.required_labels():
             assert labelname in self.labels
             # would be nice to check for None for "friendly_name"
-            if labelname != "friendly_name":
-                assert self.labels[labelname] != ""
+            if labelname in ["friendly_name", "device"]:
+                continue
+            assert self.labels[labelname] != ""
 
     def withValue(self, value: float) -> Self:
         """Return a metric with value."""
@@ -181,6 +190,7 @@ def test_entity_metric_generates_metric_name_string_without_value() -> None:
     )
     assert entity_metric._metric_name_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"}'
@@ -199,6 +209,7 @@ def test_entity_metric_generates_metric_string_with_value() -> None:
     ).withValue(17.2)
     assert entity_metric._metric_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"}'
@@ -220,6 +231,9 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
     assert len(EntityMetric.required_labels()) > 0
 
     for labelname in EntityMetric.required_labels():
+        # Skip this for now
+        if labelname == "device":
+            continue
         label_kwargs = dict(test_kwargs)
         # Delete the required label and ensure we get an exception
         del label_kwargs[labelname]
@@ -241,8 +255,8 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
     assert len(EntityMetric.required_labels()) > 0
 
     for labelname in EntityMetric.required_labels():
-        # Skip "friendly_name" as it's an exception to the rule
-        if labelname == "friendly_name":
+        # Skip "friendly_name" and "device" as it's an exception to the rule
+        if labelname in ["friendly_name", "device"]:
             continue
         label_kwargs = dict(test_kwargs)
         # Replace the required label with "" and ensure we get an exception
@@ -258,6 +272,7 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
 
     static_metric_string = (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature",'
@@ -296,6 +311,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(1)
     assert mode_entity_metric._metric_string == (
         "climate_preset_mode{"
+        'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
@@ -314,6 +330,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     assert action_entity_metric._metric_string == (
         "climate_action{"
         'action="heating",'
+        'device="",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"'
@@ -330,6 +347,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(1)
     assert state_entity_metric._metric_string == (
         "cover_state{"
+        'device="",'
         'domain="cover",'
         'entity="cover.curtain",'
         'friendly_name="Curtain",'
@@ -347,6 +365,7 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     ).withValue(17.2)
     assert foo_entity_metric._metric_string == (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
@@ -360,6 +379,7 @@ def test_entity_metric_assert_helpers() -> None:
     """Test using EntityMetric for both assert_in_metrics and assert_not_in_metrics."""
     temp_metric = (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
@@ -368,6 +388,7 @@ def test_entity_metric_assert_helpers() -> None:
     )
     climate_metric = (
         "climate_preset_mode{"
+        'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
@@ -376,6 +397,7 @@ def test_entity_metric_assert_helpers() -> None:
     )
     excluded_cover_metric = (
         "cover_state{"
+        'device="",'
         'domain="cover",'
         'entity="cover.curtain",'
         'friendly_name="Curtain",'
@@ -424,6 +446,7 @@ def test_entity_metric_with_value_assert_helpers() -> None:
     """Test using EntityMetricWithValue helpers, which is only assert_in_metrics."""
     temp_metric = (
         "homeassistant_sensor_temperature_celsius{"
+        'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
@@ -433,6 +456,7 @@ def test_entity_metric_with_value_assert_helpers() -> None:
     )
     climate_metric = (
         "climate_preset_mode{"
+        'device="",'
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
@@ -594,6 +618,13 @@ async def test_sensor_unit(
     body = await generate_latest_metrics(client)
 
     EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="sensor_unit_kwh",
         domain="sensor",
         friendly_name="Television Energy",
@@ -620,6 +651,22 @@ async def test_sensor_unit(
         friendly_name="SPS30 PM <1µm Weight concentration",
         entity="sensor.sps30_pm_1um_weight_concentration",
     ).withValue(3.7069).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="test_device",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="test_device",
+    ).withValue(56.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1845,7 +1892,10 @@ async def test_entity_becomes_unavailable(
 
 @pytest.fixture(name="sensor_entities")
 async def sensor_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate sensor entities."""
     data = {}
@@ -1985,6 +2035,54 @@ async def sensor_fixture(
     )
     set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
     data["sensor_12"] = sensor_12
+
+    config_entry = MockConfigEntry(domain="my")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        name="test_device",
+        identifiers={("test", "current_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+    )
+    assert device is not None
+
+    sensor_13 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_13",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature_device",
+        original_name="Outside Temperature Device",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+    sensor_13_attributes = {ATTR_BATTERY_LEVEL: 13}
+    set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
+
+    data["sensor_13"] = sensor_13
+    data["sensor_13_attributes"] = sensor_13_attributes
+
+    sensor_14 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_14",
+        unit_of_measurement=PERCENTAGE,
+        original_device_class=SensorDeviceClass.HUMIDITY,
+        suggested_object_id="outside_humidity_device",
+        original_name="Outside Humidity Device",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+    set_state_with_entry(hass, sensor_14, 56.0)
+    data["sensor_14"] = sensor_14
+
+    # Create area with only mandatory parameters
+    # area = area_registry.async_create("fake")
+    # sensor_13 = entity_registry.async_update_entity(sensor_13.entity_id, area_id=area.id)
+    # print(f"!!!!!!!!!!!!!!!! area: {area} with area.id: {area.id}")
+
     await hass.async_block_till_done()
     return data
 
