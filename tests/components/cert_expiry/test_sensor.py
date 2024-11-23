@@ -13,7 +13,7 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
-from .helpers import datetime_today, future_timestamp, past_timestamp
+from .helpers import datetime_today, expired_certificate, future_timestamp
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -82,10 +82,9 @@ async def test_async_setup_entry_expired_cert(hass: HomeAssistant) -> None:
         unique_id=f"{HOST}:{PORT}",
     )
 
-    timestamp = past_timestamp(100)
     with patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=timestamp,
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        return_value=expired_certificate(),
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
