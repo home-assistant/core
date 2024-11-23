@@ -683,6 +683,7 @@
             'username': 'test-username',
           }),
         }),
+        'balance': 10,
         'flags': dict({
           'classSelected': True,
         }),

@@ -5,12 +5,12 @@ from datetime import timedelta
 import re
 from unittest.mock import AsyncMock, patch
 
-from habiticalib import Skill
+from habiticalib import HabiticaUserResponse, Skill
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -23,10 +23,9 @@ from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED, ERROR_TOO_MANY_RE
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    load_fixture,
     snapshot_platform,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -48,33 +47,18 @@ def button_only() -> Generator[None]:
         "healer_fixture",
     ],
 )
-@pytest.mark.usefixtures("habitica")
 async def test_buttons(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     fixture: str,
 ) -> None:
     """Test button entities."""
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json=load_json_object_fixture("completed_todos.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -174,7 +158,6 @@ async def test_buttons(
 async def test_button_press(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
     habitica: AsyncMock,
     entity_id: str,
     call_func: str,
@@ -182,24 +165,11 @@ async def test_button_press(
     fixture: str,
 ) -> None:
     """Test button press method."""
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json=load_json_object_fixture("completed_todos.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
-    )
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -261,7 +231,6 @@ async def test_button_press(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_button_press_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -340,21 +309,15 @@ async def test_button_press_exceptions(
 async def test_button_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
     fixture: str,
     entity_ids: list[str],
 ) -> None:
     """Test buttons are unavailable if conditions are not met."""
 
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(re.compile(r".*"), json={"success": True, "data": []})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

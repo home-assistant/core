@@ -33,7 +33,7 @@ def switch_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -59,7 +59,6 @@ async def test_switch(
         SERVICE_TOGGLE,
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_turn_on_off_toggle(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -99,7 +98,6 @@ async def test_turn_on_off_toggle(
         (ERROR_BAD_REQUEST, HomeAssistantError),
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
 async def test_turn_on_off_toggle_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

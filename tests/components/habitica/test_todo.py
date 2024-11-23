@@ -1,15 +1,15 @@
 """Tests for Habitica todo platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
-import json
-import re
-from unittest.mock import patch
+from datetime import date
+from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
+from habiticalib import Direction, HabiticaTasksResponse, Task, TaskType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -25,15 +25,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import mock_called_with
+from .conftest import ERROR_NOT_FOUND
 
 from tests.common import (
     MockConfigEntry,
     async_get_persistent_notifications,
-    load_json_object_fixture,
+    load_fixture,
     snapshot_platform,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -47,7 +46,7 @@ def todo_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_todos(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -72,7 +71,7 @@ async def test_todos(
         "todo.test_user_dailies",
     ],
 )
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_todo_items(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -111,7 +110,7 @@ async def test_todo_items(
 async def test_complete_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     snapshot: SnapshotAssertion,
     entity_id: str,
     uid: str,
@@ -124,10 +123,6 @@ async def test_complete_todo_item(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/up",
-        json=load_json_object_fixture("score_with_drop.json", DOMAIN),
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
@@ -136,9 +131,7 @@ async def test_complete_todo_item(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/up"
-    )
+    habitica.update_score.assert_awaited_once_with(UUID(uid), Direction.UP)
 
     # Test notification for item drop
     notifications = async_get_persistent_notifications(hass)
@@ -158,7 +151,7 @@ async def test_complete_todo_item(
 async def test_uncomplete_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     entity_id: str,
     uid: str,
 ) -> None:
@@ -170,10 +163,6 @@ async def test_uncomplete_todo_item(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/down",
-        json={"data": {}, "success": True},
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
@@ -182,9 +171,7 @@ async def test_uncomplete_todo_item(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/down"
-    )
+    habitica.update_score.assert_called_once_with(UUID(uid), Direction.DOWN)
 
 
 @pytest.mark.parametrize(
@@ -198,7 +185,7 @@ async def test_uncomplete_todo_item(
 async def test_complete_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     uid: str,
     status: str,
 ) -> None:
@@ -210,10 +197,7 @@ async def test_complete_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        re.compile(f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/.+"),
-        status=HTTPStatus.NOT_FOUND,
-    )
+    habitica.update_score.side_effect = ERROR_NOT_FOUND
     with pytest.raises(
         expected_exception=ServiceValidationError,
         match=r"Unable to update the score for your Habitica to-do `.+`, please try again",
@@ -233,7 +217,7 @@ async def test_complete_todo_item_exception(
         (
             "todo.test_user_to_do_s",
             "88de7cd9-af2b-49ce-9afd-bf941d87336b",
-            "2024-07-30",
+            date(day=30, month=7, year=2024),
         ),
         (
             "todo.test_user_dailies",
@@ -246,10 +230,10 @@ async def test_complete_todo_item_exception(
 async def test_update_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     entity_id: str,
     uid: str,
-    date: str,
+    date: date | None,
 ) -> None:
     """Test update details of a item on the todo list."""
 
@@ -259,10 +243,6 @@ async def test_update_todo_item(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.put(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-        json={"data": {}, "success": True},
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
@@ -276,21 +256,19 @@ async def test_update_todo_item(
         blocking=True,
     )
 
-    mock_call = mock_called_with(
-        mock_habitica, "PUT", f"{DEFAULT_URL}/api/v3/tasks/{uid}"
+    task = Task(
+        notes="test-description",
+        text="test-summary",
     )
-    assert mock_call
-    assert json.loads(mock_call[2]) == {
-        "date": date,
-        "notes": "test-description",
-        "text": "test-summary",
-    }
+    if date:
+        task["date"] = date
+    habitica.update_task.assert_awaited_once_with(UUID(uid), task)
 
 
 async def test_update_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test exception when update item on the todo list."""
     uid = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
@@ -300,10 +278,11 @@ async def test_update_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.put(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-        status=HTTPStatus.NOT_FOUND,
-    )
+    # mock_habitica.put(
+    #     f"{DEFAULT_URL}/api/v3/tasks/{uid}",
+    #     status=HTTPStatus.NOT_FOUND,
+    # )
+    habitica.update_task.side_effect = ERROR_NOT_FOUND
     with pytest.raises(
         expected_exception=ServiceValidationError,
         match="Unable to update the Habitica to-do `test-summary`, please try again",
@@ -325,7 +304,7 @@ async def test_update_todo_item_exception(
 async def test_add_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test add a todo item to the todo list."""
 
@@ -335,11 +314,6 @@ async def test_add_todo_item(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json={"data": {}, "success": True},
-        status=HTTPStatus.CREATED,
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
@@ -352,24 +326,20 @@ async def test_add_todo_item(
         blocking=True,
     )
 
-    mock_call = mock_called_with(
-        mock_habitica,
-        "post",
-        f"{DEFAULT_URL}/api/v3/tasks/user",
+    habitica.create_task.assert_awaited_once_with(
+        Task(
+            date=date(day=30, month=7, year=2024),
+            notes="test-description",
+            text="test-summary",
+            type=TaskType.TODO,
+        )
     )
-    assert mock_call
-    assert json.loads(mock_call[2]) == {
-        "date": "2024-07-30",
-        "notes": "test-description",
-        "text": "test-summary",
-        "type": "todo",
-    }
 
 
 async def test_add_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test exception when adding a todo item to the todo list."""
 
@@ -379,10 +349,7 @@ async def test_add_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        status=HTTPStatus.NOT_FOUND,
-    )
+    habitica.create_task.side_effect = ERROR_NOT_FOUND
     with pytest.raises(
         expected_exception=ServiceValidationError,
         match="Unable to create new to-do `test-summary` for Habitica, please try again",
@@ -403,7 +370,7 @@ async def test_add_todo_item_exception(
 async def test_delete_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test deleting a todo item from the todo list."""
 
@@ -414,10 +381,6 @@ async def test_delete_todo_item(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.delete(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-        json={"data": {}, "success": True},
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
@@ -426,15 +389,13 @@ async def test_delete_todo_item(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica, "delete", f"{DEFAULT_URL}/api/v3/tasks/{uid}"
-    )
+    habitica.delete_task.assert_awaited_once_with(UUID(uid))
 
 
 async def test_delete_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test exception when deleting a todo item from the todo list."""
 
@@ -445,10 +406,8 @@ async def test_delete_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.delete(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-        status=HTTPStatus.NOT_FOUND,
-    )
+    habitica.delete_task.side_effect = ERROR_NOT_FOUND
+
     with pytest.raises(
         expected_exception=ServiceValidationError,
         match="Unable to delete item from Habitica to-do list, please try again",
@@ -465,7 +424,7 @@ async def test_delete_todo_item_exception(
 async def test_delete_completed_todo_items(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test deleting completed todo items from the todo list."""
     config_entry.add_to_hass(hass)
@@ -474,10 +433,6 @@ async def test_delete_completed_todo_items(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/clearCompletedTodos",
-        json={"data": {}, "success": True},
-    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
@@ -486,15 +441,13 @@ async def test_delete_completed_todo_items(
         blocking=True,
     )
 
-    assert mock_called_with(
-        mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/clearCompletedTodos"
-    )
+    habitica.delete_completed_todos.assert_awaited_once()
 
 
 async def test_delete_completed_todo_items_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test exception when deleting completed todo items from the todo list."""
     config_entry.add_to_hass(hass)
@@ -503,10 +456,7 @@ async def test_delete_completed_todo_items_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/clearCompletedTodos",
-        status=HTTPStatus.NOT_FOUND,
-    )
+    habitica.delete_completed_todos.side_effect = ERROR_NOT_FOUND
     with pytest.raises(
         expected_exception=ServiceValidationError,
         match="Unable to delete completed to-do items from Habitica to-do list, please try again",
@@ -539,7 +489,7 @@ async def test_delete_completed_todo_items_exception(
 async def test_move_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     hass_ws_client: WebSocketGenerator,
     entity_id: str,
     uid: str,
@@ -552,12 +502,6 @@ async def test_move_todo_item(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-    for pos in (0, 1):
-        mock_habitica.post(
-            f"{DEFAULT_URL}/api/v3/tasks/{uid}/move/to/{pos}",
-            json={"data": {}, "success": True},
-        )
 
     client = await hass_ws_client()
     # move to second position
@@ -572,6 +516,9 @@ async def test_move_todo_item(
     resp = await client.receive_json()
     assert resp.get("success")
 
+    habitica.reorder_task.assert_awaited_once_with(UUID(uid), 1)
+    habitica.reorder_task.reset_mock()
+
     # move to top position
     data = {
         "id": id,
@@ -583,18 +530,13 @@ async def test_move_todo_item(
     resp = await client.receive_json()
     assert resp.get("success")
 
-    for pos in (0, 1):
-        assert mock_called_with(
-            mock_habitica,
-            "post",
-            f"{DEFAULT_URL}/api/v3/tasks/{uid}/move/to/{pos}",
-        )
+    habitica.reorder_task.assert_awaited_once_with(UUID(uid), 0)
 
 
 async def test_move_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test exception when moving todo item."""
@@ -606,11 +548,7 @@ async def test_move_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}/move/to/0",
-        status=HTTPStatus.NOT_FOUND,
-    )
-
+    habitica.reorder_task.side_effect = ERROR_NOT_FOUND
     client = await hass_ws_client()
 
     data = {
@@ -620,8 +558,15 @@ async def test_move_todo_item_exception(
         "uid": uid,
     }
     await client.send_json_auto_id(data)
+
     resp = await client.receive_json()
-    assert resp.get("success") is False
+    habitica.reorder_task.assert_awaited_once_with(UUID(uid), 0)
+
+    assert resp["success"] is False
+    assert (
+        resp["error"]["message"]
+        == "Unable to move the Habitica to-do to position 0, please try again"
+    )
 
 
 @pytest.mark.parametrize(
@@ -651,31 +596,18 @@ async def test_move_todo_item_exception(
 async def test_next_due_date(
     hass: HomeAssistant,
     fixture: str,
-    calculated_due_date: tuple | None,
+    calculated_due_date: str | None,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test next_due_date calculation."""
 
     dailies_entity = "todo.test_user_dailies"
 
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user", json=load_json_object_fixture("user.json", DOMAIN)
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json={"data": []},
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture(fixture, DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
-    )
+    habitica.get_tasks.side_effect = [
+        HabiticaTasksResponse.from_json(load_fixture(fixture, DOMAIN)),
+        HabiticaTasksResponse.from_dict({"success": True, "data": []}),
+    ]
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
