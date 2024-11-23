@@ -43,10 +43,10 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    # ATTR_AREA_ID,
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
-    # ATTR_DEVICE_ID,
+    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -361,15 +361,16 @@ class PrometheusMetrics:
         final_labels = {
             "entity": state.entity_id,
             "domain": state.domain,
-            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME) or "",
         }
-        # if True:
-        #     final_labels.update(
-        #         {
-        #             "area": state.attributes.get(ATTR_AREA_ID) or "",
-        #             "device": state.attributes.get(ATTR_DEVICE_ID) or "",
-        #         }
-        #     )
+
+        area = state.attributes.get(ATTR_AREA_ID)
+        if area and len(area):
+            final_labels["area"] = area
+
+        device = state.attributes.get(ATTR_DEVICE_ID)
+        if device and len(device):
+            final_labels["device"] = device
 
         return dict(final_labels)
 

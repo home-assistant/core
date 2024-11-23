@@ -111,7 +111,9 @@ class EntityMetric:
         # Labels that are required for all entities.
         for labelname in self.required_labels():
             assert labelname in self.labels
-            assert self.labels[labelname] != ""
+            # would be nice to check for None for "friendly_name"
+            if labelname != "friendly_name":
+                assert self.labels[labelname] != ""
 
     def withValue(self, value: float) -> Self:
         """Return a metric with value."""
@@ -239,6 +241,9 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
     assert len(EntityMetric.required_labels()) > 0
 
     for labelname in EntityMetric.required_labels():
+        # Skip "friendly_name" as it's an exception to the rule
+        if labelname == "friendly_name":
+            continue
         label_kwargs = dict(test_kwargs)
         # Replace the required label with "" and ensure we get an exception
         label_kwargs[labelname] = ""
@@ -706,7 +711,7 @@ async def test_input_number(
     EntityMetric(
         metric_name="input_number_state",
         domain="input_number",
-        friendly_name="None",
+        friendly_name="",
         entity="input_number.brightness",
     ).withValue(60.0).assert_in_metrics(body)
 
@@ -742,7 +747,7 @@ async def test_number(
     EntityMetric(
         metric_name="number_state",
         domain="number",
-        friendly_name="None",
+        friendly_name="",
         entity="number.brightness",
     ).withValue(60.0).assert_in_metrics(body)
 
@@ -1226,7 +1231,7 @@ async def test_counter(
     EntityMetric(
         metric_name="counter_value",
         domain="counter",
-        friendly_name="None",
+        friendly_name="",
         entity="counter.counter",
     ).withValue(2.0).assert_in_metrics(body)
 
