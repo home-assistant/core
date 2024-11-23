@@ -1,24 +1,51 @@
 rules:
   # Bronze
-  config-flow: done
+  config-flow:
+    status: done
+    comment: Integration uses an OAuth config flow.
   brands: done
   dependency-transparency: done
   common-modules: done
   has-entity-name: done
-  action-setup: todo
-  appropriate-polling: done
-  test-before-configure: done
+  action-setup:
+    status: todo
+    comment: |
+      Actions are current setup in `async_setup_entry` and need to be moved
+      to `async_setup`.
+  appropriate-polling:
+    status: done
+    comment: |
+      Integration uses a coordinator that polls the calendar API every 15
+      minutes to sync down changes.
+  test-before-configure:
+    status: done
+    comment: |
+      The config flow tests the connection and determines the primary calendar
+      in the config flow.
   entity-event-setup:
     status: exempt
-    comment: Integration does not subscribe to events
+    comment: Integration does not subscribe to events.
   unique-config-entry: done
   entity-unique-id: done
+  docs-installation-instructions:
+    status: done
+    comment: |
+      There integration instructions have many details about OAuth requirements.
   docs-removal-instructions: todo
-  test-before-setup: done
+  test-before-setup:
+    status: todo
+    comment: |
+      The integration does not test the connection in `async_setup` but
+      instead does this in the calendar platform only, which can be improved.
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
-  runtime-data: todo
+  runtime-data:
+    status: todo
+    comment: |
+      The integration stores config entry data in `hass.data` and should be
+      updated to use `runtime_data`.
+
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: todo
@@ -30,6 +57,7 @@ rules:
   test-coverage: todo
   docs-configuration-parameters: todo
   entity-unavailable: todo
+
   # Gold
   docs-examples: todo
   discovery-update-info: todo
@@ -52,6 +80,7 @@ rules:
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo
+
   # Platinum
   async-dependency: todo
   strict-typing: todo
