@@ -211,6 +211,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -220,10 +224,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -240,6 +240,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': 3,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -254,10 +258,6 @@
           ]),
           'name': 'test-name',
           'password': 'test-password',
-        }),
-        'delete_after_config': dict({
-          'copies': 3,
-          'days': 7,
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'schedule': dict({
@@ -274,6 +274,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -284,10 +288,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': 3,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -304,6 +304,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -314,10 +318,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': 7,
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
         'schedule': dict({
@@ -334,6 +334,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -344,10 +348,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -364,6 +364,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -374,10 +378,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -394,6 +394,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -403,10 +407,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -423,6 +423,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -433,10 +437,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': 7,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -451,6 +451,10 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -461,10 +465,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': 7,
       }),
       'last_automatic_backup': None,
       'schedule': 'never',
@@ -479,6 +479,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -488,10 +492,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -508,6 +508,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -518,10 +522,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': 7,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -536,6 +536,10 @@
 # name: test_config_update[command10].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -546,10 +550,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': 7,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -564,6 +564,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -573,10 +577,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -593,6 +593,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -603,10 +607,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -621,6 +621,10 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -631,10 +635,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -649,6 +649,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -658,10 +662,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -678,6 +678,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -688,10 +692,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -706,6 +706,10 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -716,10 +720,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'mon',
@@ -734,6 +734,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -743,10 +747,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -763,6 +763,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -773,10 +777,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -791,6 +791,10 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -801,10 +805,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'never',
@@ -819,6 +819,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -828,10 +832,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -848,6 +848,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -863,10 +867,6 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'last_automatic_backup': None,
         'schedule': dict({
           'state': 'daily',
@@ -880,6 +880,10 @@
 # name: test_config_update[command4].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -895,10 +899,6 @@
         'name': 'test-name',
         'password': 'test-password',
       }),
-      'delete_after': dict({
-        'copies': None,
-        'days': None,
-      }),
       'last_automatic_backup': None,
       'schedule': 'daily',
     }),
@@ -912,6 +912,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -921,10 +925,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -941,6 +941,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': 3,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -951,10 +955,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': 3,
-          'days': 7,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -969,6 +969,10 @@
 # name: test_config_update[command5].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': 3,
+        'days': 7,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -979,10 +983,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': 3,
-        'days': 7,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -997,6 +997,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1006,10 +1010,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1026,6 +1026,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1036,10 +1040,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1054,6 +1054,10 @@
 # name: test_config_update[command6].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1064,10 +1068,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -1082,6 +1082,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1091,10 +1095,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1111,6 +1111,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1121,10 +1125,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': 3,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1139,6 +1139,10 @@
 # name: test_config_update[command7].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': 3,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1149,10 +1153,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': 3,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -1167,6 +1167,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1176,10 +1180,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1196,6 +1196,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1206,10 +1210,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': 7,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1224,6 +1224,10 @@
 # name: test_config_update[command8].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1234,10 +1238,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': None,
-        'days': 7,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -1252,6 +1252,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1261,10 +1265,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1281,6 +1281,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1291,10 +1295,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': 3,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1309,6 +1309,10 @@
 # name: test_config_update[command9].2
   dict({
     'data': dict({
+      'backup_retention': dict({
+        'copies': 3,
+        'days': None,
+      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1319,10 +1323,6 @@
         'include_folders': None,
         'name': None,
         'password': None,
-      }),
-      'delete_after': dict({
-        'copies': 3,
-        'days': None,
       }),
       'last_automatic_backup': None,
       'schedule': 'daily',
@@ -1337,6 +1337,10 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1346,10 +1350,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({
@@ -1366,6 +1366,10 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'backup_retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1375,10 +1379,6 @@
           'include_folders': None,
           'name': None,
           'password': None,
-        }),
-        'delete_after_config': dict({
-          'copies': None,
-          'days': None,
         }),
         'last_automatic_backup': None,
         'schedule': dict({

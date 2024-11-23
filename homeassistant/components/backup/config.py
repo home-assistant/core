@@ -37,7 +37,7 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
-    delete_after: StoredDeleteAfterConfig
+    backup_retention: StoredBackupRetentionConfig
     last_automatic_backup: datetime | None
     schedule: ScheduleState
 
@@ -47,7 +47,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
-    delete_after_config: DeleteAfterConfig
+    backup_retention_config: BackupRetentionConfig
     last_automatic_backup: datetime | None = None
     schedule: BackupSchedule
 
@@ -59,7 +59,7 @@ class BackupConfigData:
             include_folders = [Folder(folder) for folder in include_folders_data]
         else:
             include_folders = None
-        delete_after = data["delete_after"]
+        backup_retention = data["backup_retention"]
 
         return cls(
             create_backup=CreateBackupConfig(
@@ -71,9 +71,9 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
-            delete_after_config=DeleteAfterConfig(
-                copies=delete_after["copies"],
-                days=delete_after["days"],
+            backup_retention_config=BackupRetentionConfig(
+                copies=backup_retention["copies"],
+                days=backup_retention["days"],
             ),
             last_automatic_backup=data["last_automatic_backup"],
             schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
@@ -83,7 +83,7 @@ class BackupConfigData:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
-            delete_after=self.delete_after_config.to_dict(),
+            backup_retention=self.backup_retention_config.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
             schedule=self.schedule.state,
         )
@@ -96,7 +96,7 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             create_backup=CreateBackupConfig(),
-            delete_after_config=DeleteAfterConfig(),
+            backup_retention_config=BackupRetentionConfig(),
             schedule=BackupSchedule(),
         )
         self._manager = manager
@@ -126,17 +126,17 @@ class BackupConfig:
         self,
         *,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
-        delete_after: DeleteAfterParametersDict | UndefinedType = UNDEFINED,
+        backup_retention: BackupRetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleState | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
-        if delete_after is not UNDEFINED:
-            delete_after_config = DeleteAfterConfig(**delete_after)
-            if delete_after_config != self.data.delete_after_config:
-                self.data.delete_after_config = delete_after_config
-                self.data.delete_after_config.apply(self._manager)
+        if backup_retention is not UNDEFINED:
+            backup_retention_config = BackupRetentionConfig(**backup_retention)
+            if backup_retention_config != self.data.backup_retention_config:
+                self.data.backup_retention_config = backup_retention_config
+                self.data.backup_retention_config.apply(self._manager)
         if schedule is not UNDEFINED:
             new_schedule = BackupSchedule(state=schedule)
             if new_schedule != self.data.schedule:
@@ -147,22 +147,22 @@ class BackupConfig:
 
 
 @dataclass(kw_only=True)
-class DeleteAfterConfig:
-    """Represent the delete after configuration."""
+class BackupRetentionConfig:
+    """Represent the backup retention configuration."""
 
     copies: int | None = None
     days: int | None = None
 
     def apply(self, manager: BackupManager) -> None:
-        """Apply delete after configuration."""
+        """Apply backup retention configuration."""
         if self.days is not None:
             self._schedule_next(manager)
         else:
             self._unschedule_next(manager)
 
-    def to_dict(self) -> StoredDeleteAfterConfig:
-        """Convert delete after configuration to a dict."""
-        return StoredDeleteAfterConfig(
+    def to_dict(self) -> StoredBackupRetentionConfig:
+        """Convert backup retention configuration to a dict."""
+        return StoredBackupRetentionConfig(
             copies=self.copies,
             days=self.days,
         )
@@ -208,15 +208,15 @@ class DeleteAfterConfig:
             manager.remove_next_delete_event = None
 
 
-class StoredDeleteAfterConfig(TypedDict):
-    """Represent the stored delete after configuration."""
+class StoredBackupRetentionConfig(TypedDict):
+    """Represent the stored backup retention configuration."""
 
     copies: int | None
     days: int | None
 
 
-class DeleteAfterParametersDict(TypedDict, total=False):
-    """Represent the parameters for delete_after."""
+class BackupRetentionParametersDict(TypedDict, total=False):
+    """Represent the parameters for backup_retention."""
 
     copies: int | None
     days: int | None
@@ -308,13 +308,13 @@ class BackupSchedule:
                 """Return oldest backups more numerous than copies to delete."""
                 # we need to check here since we await before
                 # this filter is applied
-                if config_data.delete_after_config.copies is None:
+                if config_data.backup_retention_config.copies is None:
                     return {}
                 return dict(
                     sorted(
                         backups.items(),
                         key=lambda backup_item: backup_item[1].date,
-                    )[: len(backups) - config_data.delete_after_config.copies]
+                    )[: len(backups) - config_data.backup_retention_config.copies]
                 )
 
             await _delete_filtered_backups(manager, _backups_filter)
