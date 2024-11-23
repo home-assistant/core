@@ -38,7 +38,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def switch_only() -> Generator[None]:
+def todo_only() -> Generator[None]:
     """Enable only the todo platform."""
     with patch(
         "homeassistant.components.habitica.PLATFORMS",
