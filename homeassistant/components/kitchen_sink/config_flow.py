@@ -89,7 +89,29 @@ class OptionsFlowHandler(OptionsFlow):
                                 ): int,
                             }
                         ),
-                        {"collapsed": False},
+                        {
+                            "collapsed": False,
+                            "multiple": True,
+                        },
+                    ),
+                    vol.Required("section_2"): data_entry_flow.section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    "a",
+                                    default=2,
+                                ): int,
+                                vol.Optional(
+                                    "b",
+                                    default=4,
+                                ): int,
+                            }
+                        ),
+                        {
+                            "collapsed": False,
+                            "multiple": True,
+                            "default": [{"a": 7, "b": 10}],
+                        },
                     ),
                 }
             ),

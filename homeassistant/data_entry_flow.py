@@ -908,6 +908,8 @@ class SectionConfig(TypedDict, total=False):
     """Class to represent a section config."""
 
     collapsed: bool
+    multiple: bool
+    default: list[Any]
 
 
 class section:
@@ -916,6 +918,8 @@ class section:
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("collapsed", default=False): bool,
+            vol.Optional("multiple", default=False): bool,
+            vol.Optional("default", default=[]): list[Any],
         },
     )
 
@@ -928,7 +932,11 @@ class section:
 
     def __call__(self, value: Any) -> Any:
         """Validate input."""
-        return self.schema(value)
+        if not self.options["multiple"]:
+            return self.schema(value)
+        if not isinstance(value, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(dict)(val) for val in value]
 
 
 # These can be removed if no deprecated constant are in this module anymore
