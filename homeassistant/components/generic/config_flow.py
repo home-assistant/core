@@ -362,8 +362,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors, still_format = await async_test_still(hass, user_input)
                 try:
-                    result = await async_test_and_preview_stream(hass, user_input)
-                    self.preview_stream = result
+                    self.preview_stream = await async_test_and_preview_stream(hass, user_input)
                 except InvalidStreamException as err:
                     errors[CONF_STREAM_SOURCE] = str(err)
                     if err.details:
