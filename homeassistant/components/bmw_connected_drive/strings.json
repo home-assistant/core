@@ -7,6 +7,13 @@
           "password": "[%key:common::config_flow::data::password%]",
           "region": "ConnectedDrive Region"
         }
+      },
+      "captcha": {
+        "title": "Captcha",
+        "description": "Verify that you are a human at {captcha_url} and enter the token below.",
+        "data": {
+          "captcha_token": "Captcha token"
+        }
       }
     },
     "error": {
