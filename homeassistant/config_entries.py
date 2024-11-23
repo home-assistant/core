@@ -3231,9 +3231,8 @@ class EntityRegistryDisabledHandler:
             return
 
         config_entry = self.hass.config_entries.async_get_entry(
-            entity_entry.config_entry_id
+            entity_entry.config_entry_id, required=True
         )
-        assert config_entry is not None
 
         if config_entry.entry_id not in self.changed and config_entry.supports_unload:
             self.changed.add(config_entry.entry_id)
