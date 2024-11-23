@@ -65,11 +65,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: exempt
-    comment: >
-      If a folder error occurs the entry is set in error.
-      But the folder is part of the unique id of the entry, so the user
-      must recover this at the IMAP server to fix this.
+    status: todo
+    comment: |
+      Options can be set through the option flow, reconfiguration is not supported yet.
   dynamic-devices:
     status: exempt
     comment: |
