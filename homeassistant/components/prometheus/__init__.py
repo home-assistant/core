@@ -373,16 +373,17 @@ class PrometheusMetrics:
 
     def _get_area(self, state: State) -> str | None:
         """Return an area, or None if no area is registered."""
-        area = state.attributes.get(ATTR_AREA_ID)
-        if area and len(area):
-            return str(area)
+        if area_id := state.attributes.get(ATTR_AREA_ID):
+            if area := self._area_registry.async_get_area(area_id):
+                return area.name
         return None
 
     def _get_device(self, state: State) -> str | None:
         """Return a device, or None if no device is registered."""
-        device = state.attributes.get(ATTR_DEVICE_ID)
-        if device and len(device):
-            return str(device)
+        if device_id := state.attributes.get(ATTR_DEVICE_ID):
+            if device := self._device_registry.async_get(device_id):
+                # should I use device.name_by_user instead?
+                return device.name
         return None
 
     def _labels(self, state: State) -> dict[str, Any]:
