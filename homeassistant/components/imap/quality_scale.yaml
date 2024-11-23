@@ -93,5 +93,5 @@ rules:
   inject-websession:
     status: exempt
     comment: |
-      This integration dos not use web sessions.
+      This integration does not use web sessions.
   strict-typing: done
