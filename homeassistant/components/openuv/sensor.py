@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
@@ -169,6 +170,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
+    entry_data = dict(entry.data)
+
+    async_add_entities([SkinTypeSensor(entry_data, entry=entry)])
+
     coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -197,3 +202,45 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     def native_value(self) -> int | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class SkinTypeSensor(SensorEntity):
+    """Define a sensor that reflects the user's selected skin type."""
+
+    def __init__(self, entry_data: dict, entry: ConfigEntry) -> None:
+        """Initialize the Skin Type sensor."""
+        self._attr_name = "Skin Type"
+        self._attr_unique_id = (
+            f"skin_type_{entry_data['latitude']}_{entry_data['longitude']}"
+        )
+        self._entry_data = dict(entry_data)
+        self.entry = entry
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{entry_data['latitude']}_{entry_data['longitude']}")
+            },
+            name="OpenUV",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> str:
+        """Return the current state of the skin type sensor."""
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is None:
+            skin_type = self._entry_data.get("skin_type", "None")
+        return str(skin_type)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return extra state attributes."""
+        return {
+            "skin_type": self._entry_data.get("skin_type", "None"),
+        }
+
+    async def async_update(self) -> None:
+        """Update the sensor state from the configuration."""
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is not None:
+            self._entry_data["skin_type"] = skin_type
+        self.async_write_ha_state()
