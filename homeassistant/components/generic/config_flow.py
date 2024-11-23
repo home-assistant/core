@@ -292,7 +292,7 @@ async def async_test_and_preview_stream(
                 stream_source,
                 stream_options,
                 DynamicStreamSettings(),
-                "test_stream",
+                f"{DOMAIN}.test_stream"
             )
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
