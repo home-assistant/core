@@ -826,7 +826,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "radarr",
     "radio_browser",
     "radiotherm",
-    "rainbird",
     "raincloud",
     "rainforest_eagle",
     "rainforest_raven",
