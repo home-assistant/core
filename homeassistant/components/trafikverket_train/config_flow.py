@@ -98,11 +98,9 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._from_stations: list[StationInfoModel] = []
-        self._to_stations: list[StationInfoModel] = []
-        self._data: dict[str, Any] = {}
+    _from_stations: list[StationInfoModel]
+    _to_stations: list[StationInfoModel]
+    _data: dict[str, Any]
 
     @staticmethod
     @callback
