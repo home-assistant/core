@@ -6,6 +6,9 @@
         "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your HomeWizard Energy device."
         }
       },
       "discovery_confirm": {
