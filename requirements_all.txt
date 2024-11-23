@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.6.2
+AEMET-OpenData==0.6.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -325,7 +325,7 @@ aioopenexchangerates==0.6.8
 aiooui==0.1.7
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.10
+aiopegelonline==0.1.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.6
@@ -384,7 +384,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.5
+aiostreammagic==2.8.6
 
 # homeassistant.components.switcher_kis
 aioswitcher==5.0.0
@@ -1370,7 +1370,7 @@ mficlient==0.5.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.3.3
+microBeesPy==0.3.5
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -1403,7 +1403,7 @@ motionblindsble==0.1.2
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==4.1.1.116.0
+mozart-api==4.1.1.116.3
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -2027,7 +2027,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.7
+pylamarzocco==1.2.11
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2448,7 +2448,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==1.0.0
+pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
@@ -2704,7 +2704,7 @@ solaredge-local==0.2.3
 solarlog_cli==0.3.2
 
 # homeassistant.components.solax
-solax==3.1.1
+solax==3.2.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
