@@ -64,7 +64,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
-from homeassistant.helpers import entityfilter, state as state_helper
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entityfilter,
+    state as state_helper,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
@@ -138,11 +143,16 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
+    area_registry = ar.AreaRegistry(hass)
+    device_registry = dr.DeviceRegistry(hass)
+
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
         climate_units,
         component_config,
+        area_registry,
+        device_registry,
         override_metric,
         default_metric,
     )
@@ -169,11 +179,15 @@ class PrometheusMetrics:
         namespace: str,
         climate_units: UnitOfTemperature,
         component_config: EntityValues,
+        area_registry: ar.AreaRegistry,
+        device_registry: dr.DeviceRegistry,
         override_metric: str | None,
         default_metric: str | None,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
+        self._area_registry = area_registry
+        self._device_registry = device_registry
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
@@ -357,6 +371,20 @@ class PrometheusMetrics:
             value = None
         return value
 
+    def _get_area(self, state: State) -> str | None:
+        """Return an area, or None if no area is registered."""
+        area = state.attributes.get(ATTR_AREA_ID)
+        if area and len(area):
+            return str(area)
+        return None
+
+    def _get_device(self, state: State) -> str | None:
+        """Return a device, or None if no device is registered."""
+        device = state.attributes.get(ATTR_DEVICE_ID)
+        if device and len(device):
+            return str(device)
+        return None
+
     def _labels(self, state: State) -> dict[str, Any]:
         final_labels = {
             "entity": state.entity_id,
@@ -364,12 +392,10 @@ class PrometheusMetrics:
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME) or "",
         }
 
-        area = state.attributes.get(ATTR_AREA_ID)
-        if area and len(area):
+        if area := self._get_area(state):
             final_labels["area"] = area
 
-        device = state.attributes.get(ATTR_DEVICE_ID)
-        if device and len(device):
+        if device := self._get_device(state):
             final_labels["device"] = device
 
         return dict(final_labels)
