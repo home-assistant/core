@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
-import dataclasses
 from datetime import datetime, timedelta
 import sqlite3
 import sys
@@ -1691,6 +1690,15 @@ async def test_database_corruption_while_running(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
+    # Setup listener for DB corruption event
+    corruption_events = 0
+
+    def handle_corruption_event(event):
+        nonlocal corruption_events
+        corruption_events += 1
+
+    hass.bus.async_listen("recorder_database_corrupt", handle_corruption_event)
+
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1705,10 +1713,15 @@ async def test_database_corruption_while_running(
     )
 
     await async_wait_recording_done(hass)
-    with patch.object(
-        get_instance(hass).event_session,
-        "close",
-        side_effect=OperationalError("statement", {}, []),
+    with (
+        patch.object(
+            get_instance(hass).event_session,
+            "close",
+            side_effect=OperationalError("statement", {}, []),
+        ),
+        patch(
+            "homeassistant.components.recorder.core.persistent_notification.create"
+        ) as notify_create_mock,
     ):
         await async_wait_recording_done(hass)
         test_db_file = recorder_db_url.removeprefix("sqlite:///")
@@ -1730,27 +1743,15 @@ async def test_database_corruption_while_running(
     assert "The system will rename the corrupt database file" in caplog.text
     assert "Connected to recorder database" in caplog.text
 
-    # Retrieve the created database corrupted issue, but clear the 'created' DT for comparison
-    created_issue = dataclasses.replace(
-        issue_registry.async_get_issue(DOMAIN, "database_corrupt"), created=None
+    # Check that we tried to create a persistent notification
+    assert notify_create_mock.call_count == 1
+    assert (
+        "Corruption was detected in the recorder SQLite database and a new database has been create"
+        in notify_create_mock.call_args.args[1]
     )
-    # Confirm issue has been created, and matches expected format
-    assert created_issue == ir.IssueEntry(
-        active=True,
-        breaks_in_ha_version=None,
-        created=None,
-        data=None,
-        dismissed_version=None,
-        domain=DOMAIN,
-        is_fixable=True,
-        is_persistent=True,
-        issue_domain=None,
-        issue_id="database_corrupt",
-        learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="database_corrupt",
-        translation_placeholders=None,
-    ), "Created issue does not match expected format"
+
+    # Check the DB corruption event was fired
+    assert corruption_events == 1
 
     # This state should go into the new database
     hass.states.async_set("test.two", "on", {})

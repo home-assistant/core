@@ -38,7 +38,6 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -1237,23 +1236,30 @@ class Recorder(threading.Thread):
         move_away_broken_database(dburl_to_path(self.db_url))
         self.recorder_runs_manager.reset()
         self._setup_recorder()
-        self._create_sqlite_corruption_issue()
+        self._notify_db_corruption()
 
         if setup_run:
             self._setup_run()
 
-    def _create_sqlite_corruption_issue(self) -> None:
-        """Create an issue to notify users of database corruption."""
-        ir.create_issue(
+    def _notify_db_corruption(self) -> None:
+        """Notify users of SQLite database corruption.
+
+        Create a persistent notification and fire a 'recorder_database_corrupt' event to inform
+        users that their recorder database has been rebuilt due to database corruption.
+        """
+        persistent_notification.create(
             self.hass,
-            DOMAIN,
-            "database_corrupt",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="database_corrupt",
-            learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
+            (
+                "Corruption was detected in the recorder SQLite database and a"
+                " new database has been created. See"
+                " [this page](https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures) for more information."
+            ),
+            "Database corrupt",
+            "recorder_database_corrupt",
         )
+
+        # Send an event to the bus
+        self.hass.bus.fire("recorder_database_corrupt")
 
     def _close_event_session(self) -> None:
         """Close the event session."""
