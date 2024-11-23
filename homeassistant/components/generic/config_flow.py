@@ -637,6 +637,6 @@ async def ws_start_preview(
     connection.send_message(
         websocket_api.event_message(
             msg["id"],
-            {"attributes": {"stillUrl": ha_still_url, "streamUrl": ha_stream_url}},
+            {"attributes": {"still_url": ha_still_url, "stream_url": ha_stream_url}},
         )
     )
