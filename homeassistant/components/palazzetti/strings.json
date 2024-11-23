@@ -57,7 +57,7 @@
           "test_fire": "Ignition test",
           "heatup": "Pellet feed",
           "fueling": "Ignition",
-          "igntest": "Fuel check",
+          "ign_test": "Fuel check",
           "burning": "Operating",
           "burning_mod": "Operating - Modulating",
           "unknown": "Unknown",
