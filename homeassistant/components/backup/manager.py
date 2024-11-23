@@ -137,6 +137,7 @@ class BackupManager:
         self.local_backup_agents: dict[str, LocalBackupAgent] = {}
         self.config = BackupConfig(hass, self)
         self.remove_next_backup_event: Callable[[], None] | None = None
+        self.remove_next_delete_event: Callable[[], None] | None = None
         self.syncing = False
         self.backup_event: BackupEvent | None = None
         self._subscriptions: list[Callable[[BackupEvent], None]] = []
