@@ -20,7 +20,7 @@
       }
     },
     "error": {
-      "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
+      "api_not_enabled": "[%key:component::homewizard::config::step::reauth_confirm::description%]",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
     },
     "abort": {
@@ -123,7 +123,7 @@
   },
   "exceptions": {
     "api_disabled": {
-      "message": "The local API of the HomeWizard device is disabled"
+      "message": "[%key:component::homewizard::config::step::reauth_confirm::description%]"
     },
     "communication_error": {
       "message": "An error occurred while communicating with HomeWizard device"
