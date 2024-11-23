@@ -8,18 +8,30 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .sab import get_client
 
 _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_URL): str,
+        vol.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.URL,
+            )
+        ),
+        vol.Required(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+            )
+        ),
     }
 )
 

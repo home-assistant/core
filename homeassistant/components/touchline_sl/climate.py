@@ -5,6 +5,7 @@ from typing import Any
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -36,6 +37,7 @@ CONSTANT_TEMPERATURE = "constant_temperature"
 class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
     """Roth Touchline SL Zone."""
 
+    _attr_hvac_action = HVACAction.IDLE
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_name = None
@@ -105,3 +107,16 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         elif self.zone.mode == "globalSchedule":
             schedule = self.zone.schedule
             self._attr_preset_mode = schedule.name
+
+        if self.zone.algorithm == "heating":
+            self._attr_hvac_action = (
+                HVACAction.HEATING if self.zone.relay_on else HVACAction.IDLE
+            )
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_hvac_modes = [HVACMode.HEAT]
+        elif self.zone.algorithm == "cooling":
+            self._attr_hvac_action = (
+                HVACAction.COOLING if self.zone.relay_on else HVACAction.IDLE
+            )
+            self._attr_hvac_mode = HVACMode.COOL
+            self._attr_hvac_modes = [HVACMode.COOL]
