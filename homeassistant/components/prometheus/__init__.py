@@ -43,10 +43,10 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    ATTR_AREA_ID,
+    # ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
-    ATTR_DEVICE_ID,
+    # ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -85,7 +85,6 @@ DOMAIN = "prometheus"
 CONF_FILTER = "filter"
 CONF_REQUIRES_AUTH = "requires_auth"
 CONF_PROM_NAMESPACE = "namespace"
-CONF_INCLUDE_EXTRA_LABELS = "include_extra_labels"
 CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
@@ -105,7 +104,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
                 vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
-                vol.Optional(CONF_INCLUDE_EXTRA_LABELS, default=False): cv.boolean,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -147,7 +145,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component_config,
         override_metric,
         default_metric,
-        include_extra_labels=conf[CONF_INCLUDE_EXTRA_LABELS],
     )
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
@@ -174,14 +171,12 @@ class PrometheusMetrics:
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
-        include_extra_labels: bool = False,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
-        self._include_extra_labels = include_extra_labels
         self._sensor_metric_handlers: list[
             Callable[[State, str | None], str | None]
         ] = [
@@ -368,13 +363,13 @@ class PrometheusMetrics:
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
         }
-        if self._include_extra_labels:
-            final_labels.update(
-                {
-                    "area": state.attributes.get(ATTR_AREA_ID) or "",
-                    "device": state.attributes.get(ATTR_DEVICE_ID) or "",
-                }
-            )
+        # if True:
+        #     final_labels.update(
+        #         {
+        #             "area": state.attributes.get(ATTR_AREA_ID) or "",
+        #             "device": state.attributes.get(ATTR_DEVICE_ID) or "",
+        #         }
+        #     )
 
         return dict(final_labels)
 
