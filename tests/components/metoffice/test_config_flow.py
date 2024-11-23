@@ -28,8 +28,11 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
-    all_sites = json.dumps(mock_json["all_sites"])
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -66,17 +69,10 @@ async def test_form_already_configured(
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
-
-    all_sites = json.dumps(mock_json["all_sites"])
-
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly",
-        text="",
-    )
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily",
-        text="",
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
     )
 
     MockConfigEntry(
@@ -102,7 +98,9 @@ async def test_form_cannot_connect(
     hass.config.latitude = TEST_LATITUDE_WAVERTREE
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily", text=""
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,7 +120,7 @@ async def test_form_unknown_error(
 ) -> None:
     """Test we handle unknown error."""
     mock_instance = mock_simple_manager_fail.return_value
-    mock_instance.get_nearest_forecast_site.side_effect = ValueError
+    mock_instance.get_forecast.side_effect = ValueError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

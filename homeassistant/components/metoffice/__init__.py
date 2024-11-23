@@ -8,6 +8,8 @@ import re
 from typing import Any
 
 import datapoint
+import datapoint.Forecast
+import datapoint.Manager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +20,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
@@ -30,11 +31,8 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY,
-    MODE_DAILY,
 )
-from .data import MetOfficeData
-from .helpers import fetch_data, fetch_site
+from .helpers import fetch_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,60 +58,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entity_entry.domain != Platform.SENSOR:
             return None
 
-        name_to_key = {
-            "Station Name": "name",
-            "Weather": "weather",
-            "Temperature": "temperature",
-            "Feels Like Temperature": "feels_like_temperature",
-            "Wind Speed": "wind_speed",
-            "Wind Direction": "wind_direction",
-            "Wind Gust": "wind_gust",
-            "Visibility": "visibility",
-            "Visibility Distance": "visibility_distance",
-            "UV Index": "uv",
-            "Probability of Precipitation": "precipitation",
-            "Humidity": "humidity",
+        key_mapping = {
+            "weather": "significantWeatherCode",
+            "temperature": "screenTemperature",
+            "feels_like_temperature": "feelsLikeTemperature",
+            "wind_speed": "windSpeed10m",
+            "wind_direction": "windDirectionFrom10m",
+            "wind_gust": "windGustSpeed10m",
+            "uv": "uvIndex",
+            "precipitation": "probOfPrecipitation",
+            "humidity": "screenRelativeHumidity",
         }
 
-        match = re.search(f"(?P<name>.*)_{coordinates}.*", entity_entry.unique_id)
+        match = re.search(f"(?P<key>.*)_{coordinates}.*", entity_entry.unique_id)
 
         if match is None:
             return None
 
-        if (name := match.group("name")) in name_to_key:
+        if (old_key := match.group("key")) in key_mapping:
             return {
-                "new_unique_id": entity_entry.unique_id.replace(name, name_to_key[name])
+                "new_unique_id": entity_entry.unique_id.replace(
+                    old_key, key_mapping[old_key]
+                )
             }
         return None
 
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-    connection = datapoint.connection(api_key=api_key)
+    connection = datapoint.Manager.Manager(api_key=api_key)
 
-    site = await hass.async_add_executor_job(
-        fetch_site, connection, latitude, longitude
-    )
-    if site is None:
-        raise ConfigEntryNotReady
-
-    async def async_update_3hourly() -> MetOfficeData:
+    async def async_update_daily() -> datapoint.Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_3HOURLY
+            fetch_data, connection, latitude, longitude, "daily"
         )
 
-    async def async_update_daily() -> MetOfficeData:
+    async def async_update_hourly() -> datapoint.Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_DAILY
+            fetch_data, connection, latitude, longitude, "hourly"
         )
-
-    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"MetOffice Hourly Coordinator for {site_name}",
-        update_method=async_update_3hourly,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
 
     metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
         hass,
@@ -124,18 +106,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=f"MetOffice Hourly Coordinator for {site_name}",
+        update_method=async_update_hourly,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
-        METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
+        METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_NAME: site_name,
         METOFFICE_COORDINATES: coordinates,
     }
 
     # Fetch initial data so we have data when entities subscribe
     await asyncio.gather(
-        metoffice_hourly_coordinator.async_config_entry_first_refresh(),
         metoffice_daily_coordinator.async_config_entry_first_refresh(),
+        metoffice_hourly_coordinator.async_config_entry_first_refresh(),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
