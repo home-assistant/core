@@ -495,7 +495,7 @@ async def test_websocket_webrtc_offer_webrtc_provider_deprecated(
         hass_ws_client,
         register_test_provider,
         WebRTCCandidate(RTCIceCandidate("candidate")),
-        {"type": "candidate", "candidate": "candidate"},
+        {"type": "candidate", "candidate": {"candidate": "candidate"}},
     )
 
 
@@ -504,7 +504,10 @@ async def test_websocket_webrtc_offer_webrtc_provider_deprecated(
     [
         (
             WebRTCCandidate(RTCIceCandidateInit("candidate")),
-            {"type": "candidate", "candidate": "candidate"},
+            {
+                "type": "candidate",
+                "candidate": {"candidate": "candidate", "sdpMLineIndex": 0},
+            },
         ),
         (
             WebRTCError("webrtc_offer_failed", "error"),
@@ -955,14 +958,34 @@ async def test_rtsp_to_webrtc_offer_not_accepted(
     unsub()
 
 
+@pytest.mark.parametrize(
+    ("frontend_candidate", "expected_candidate"),
+    [
+        (
+            {"candidate": "candidate", "sdpMLineIndex": 0},
+            RTCIceCandidateInit("candidate"),
+        ),
+        (
+            {"candidate": "candidate", "sdpMLineIndex": 1},
+            RTCIceCandidateInit("candidate", sdp_m_line_index=1),
+        ),
+        (
+            {"candidate": "candidate", "sdpMid": "1"},
+            RTCIceCandidateInit("candidate", sdp_mid="1"),
+        ),
+    ],
+    ids=["candidate", "candidate-mline-index", "candidate-mid"],
+)
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_ws_webrtc_candidate(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    frontend_candidate: dict[str, Any],
+    expected_candidate: RTCIceCandidateInit,
 ) -> None:
     """Test ws webrtc candidate command."""
     client = await hass_ws_client(hass)
     session_id = "session_id"
-    candidate = "candidate"
     with patch.object(
         get_camera_from_entity_id(hass, "camera.async"), "async_on_webrtc_candidate"
     ) as mock_on_webrtc_candidate:
@@ -971,15 +994,64 @@ async def test_ws_webrtc_candidate(
                 "type": "camera/webrtc/candidate",
                 "entity_id": "camera.async",
                 "session_id": session_id,
-                "candidate": candidate,
+                "candidate": frontend_candidate,
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
-        mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidateInit(candidate)
+        mock_on_webrtc_candidate.assert_called_once_with(session_id, expected_candidate)
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_error_msg"),
+    [
+        (
+            {"sdpMLineIndex": 0},
+            (
+                'Field "candidate" of type str is missing in RTCIceCandidateInit instance'
+                " for dictionary value @ data['candidate']. Got {'sdpMLineIndex': 0}"
+            ),
+        ),
+        (
+            {"candidate": "candidate", "sdpMLineIndex": -1},
+            (
+                "sdpMLineIndex must be greater than or equal to 0 for dictionary value @ "
+                "data['candidate']. Got {'candidate': 'candidate', 'sdpMLineIndex': -1}"
+            ),
+        ),
+    ],
+    ids=[
+        "candidate missing",
+        "spd_mline_index smaller than 0",
+    ],
+)
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_ws_webrtc_candidate_invalid_candidate_message(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    message: dict,
+    expected_error_msg: str,
+) -> None:
+    """Test ws WebRTC candidate command for a camera with a different stream_type."""
+    client = await hass_ws_client(hass)
+    with patch("homeassistant.components.camera.Camera.async_on_webrtc_candidate"):
+        await client.send_json_auto_id(
+            {
+                "type": "camera/webrtc/candidate",
+                "entity_id": "camera.async",
+                "session_id": "session_id",
+                "candidate": message,
+            }
         )
+        response = await client.receive_json()
+
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "invalid_format",
+        "message": expected_error_msg,
+    }
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
@@ -993,7 +1065,7 @@ async def test_ws_webrtc_candidate_not_supported(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.sync",
             "session_id": "session_id",
-            "candidate": "candidate",
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
@@ -1023,14 +1095,14 @@ async def test_ws_webrtc_candidate_webrtc_provider(
                 "type": "camera/webrtc/candidate",
                 "entity_id": "camera.demo_camera",
                 "session_id": session_id,
-                "candidate": candidate,
+                "candidate": {"candidate": candidate, "sdpMLineIndex": 1},
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidateInit(candidate)
+            session_id, RTCIceCandidateInit(candidate, sdp_m_line_index=1)
         )
 
 
@@ -1045,7 +1117,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.does_not_exist",
             "session_id": "session_id",
-            "candidate": "candidate",
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
@@ -1089,7 +1161,7 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
-            "candidate": "candidate",
+            "candidate": {"candidate": "candidate"},
         }
     )
     response = await client.receive_json()
