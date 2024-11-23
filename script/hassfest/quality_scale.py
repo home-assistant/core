@@ -150,7 +150,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aurora",
     "aurora_abb_powerone",
     "aussie_broadband",
-    "autarco",
     "avea",
     "avion",
     "awair",
