@@ -41,8 +41,8 @@ rules:
   runtime-data:
     status: todo
     comment: |
-      The integration currently stores config entry data in `hass.data` and needs
-      to be moved to `runtime_data`.
+      The integration currently stores config entry data in `hass.data` and
+      needs to be moved to `runtime_data`.
 
   # Silver
   log-when-unavailable: todo
