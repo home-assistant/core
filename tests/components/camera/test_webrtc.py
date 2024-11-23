@@ -65,7 +65,6 @@ class MockCamera(Camera):
 
     _attr_name = "Test"
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
-    _attr_frontend_stream_type: StreamType = StreamType.WEB_RTC
 
     def __init__(self) -> None:
         """Initialize the mock entity."""
@@ -399,7 +398,7 @@ async def test_ws_get_client_config_custom_config(
     }
 
 
-@pytest.mark.usefixtures("mock_camera_hls")
+@pytest.mark.usefixtures("mock_camera")
 async def test_ws_get_client_config_no_rtc_camera(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -684,24 +683,33 @@ async def test_websocket_webrtc_offer_failure(
     }
 
 
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_websocket_webrtc_offer_sync(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    init_test_integration: MockCamera,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sync WebRTC stream offer."""
     client = await hass_ws_client(hass)
-    init_test_integration.set_sync_answer(WEBRTC_ANSWER)
 
     await client.send_json_auto_id(
         {
             "type": "camera/webrtc/offer",
-            "entity_id": "camera.test",
+            "entity_id": "camera.sync",
             "offer": WEBRTC_OFFER,
         }
     )
     response = await client.receive_json()
 
+    assert (
+        "tests.components.camera.conftest",
+        logging.WARNING,
+        (
+            "async_handle_web_rtc_offer was called from camera, this is a deprecated "
+            "function which will be removed in HA Core 2025.6. Use "
+            "async_handle_async_webrtc_offer instead"
+        ),
+    ) in caplog.record_tuples
     assert response["type"] == TYPE_RESULT
     assert response["success"]
     subscription_id = response["id"]

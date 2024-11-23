@@ -93,8 +93,8 @@ async def validate_input(
     try:
         web_session = async_get_clientsession(hass)
         train_api = TrafikverketTrain(web_session, api_key)
-        from_station = await train_api.async_get_train_station(train_from)
-        to_station = await train_api.async_get_train_station(train_to)
+        from_station = await train_api.async_search_train_station(train_from)
+        to_station = await train_api.async_search_train_station(train_to)
         if train_time:
             await train_api.async_get_train_stop(
                 from_station, to_station, when, product_filter
