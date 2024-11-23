@@ -162,6 +162,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         if len(self._attr_preset_modes) > 0:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
         # init set_speed
+        supported_levels: list[str] | None = None
         with suppress(PyViCareNotSupportedFeatureError):
             supported_levels = self._api.getPermanentLevels()
         if supported_levels is not None and len(supported_levels) > 0:
