@@ -13,12 +13,12 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
-from .helpers import future_timestamp, static_datetime
+from .helpers import datetime_today, future_timestamp, past_timestamp
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@freeze_time(static_datetime())
+@freeze_time(datetime_today())
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test async_setup_entry."""
     assert hass.state is CoreState.running
@@ -47,7 +47,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     assert state.attributes.get("is_valid")
 
 
-async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:
+async def test_async_setup_entry_ssl_error(hass: HomeAssistant) -> None:
     """Test async_setup_entry with a bad/expired cert."""
     assert hass.state is CoreState.running
 
@@ -72,6 +72,32 @@ async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:
     assert not state.attributes.get("is_valid")
 
 
+async def test_async_setup_entry_expired_cert(hass: HomeAssistant) -> None:
+    """Test async_setup_entry with an expired cert."""
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    timestamp = past_timestamp(100)
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes.get("error") == "Certificate has expired"
+    assert not state.attributes.get("is_valid")
+
+
 async def test_update_sensor(hass: HomeAssistant) -> None:
     """Test async_update for sensor."""
     assert hass.state is CoreState.running
@@ -82,7 +108,7 @@ async def test_update_sensor(hass: HomeAssistant) -> None:
         unique_id=f"{HOST}:{PORT}",
     )
 
-    starting_time = static_datetime()
+    starting_time = datetime_today()
     timestamp = future_timestamp(100)
 
     with (
@@ -132,7 +158,7 @@ async def test_update_sensor_network_errors(hass: HomeAssistant) -> None:
         unique_id=f"{HOST}:{PORT}",
     )
 
-    starting_time = static_datetime()
+    starting_time = datetime_today()
     timestamp = future_timestamp(100)
 
     with (

@@ -15,6 +15,10 @@ class ValidationFailure(CertExpiryException):
     """Certificate validation failure has occurred."""
 
 
+class CertificateExpiredFailure(CertExpiryException):
+    """Certificate is expired."""
+
+
 class ResolveFailed(TemporaryFailure):
     """Name resolution failed."""
 

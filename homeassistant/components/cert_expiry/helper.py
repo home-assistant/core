@@ -4,14 +4,15 @@ import asyncio
 import datetime
 import socket
 import ssl
-from typing import Any
+
+from cryptography.x509 import Certificate, load_der_x509_certificate
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import get_default_context
+from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import TIMEOUT
 from .errors import (
+    CertificateExpiredFailure,
     ConnectionRefused,
     ConnectionTimeout,
     ResolveFailed,
@@ -23,19 +24,20 @@ async def async_get_cert(
     hass: HomeAssistant,
     host: str,
     port: int,
-) -> dict[str, Any]:
+) -> Certificate:
     """Get the certificate for the host and port combination."""
     async with asyncio.timeout(TIMEOUT):
         transport, _ = await hass.loop.create_connection(
             asyncio.Protocol,
             host,
             port,
-            ssl=get_default_context(),
+            ssl=get_default_no_verify_context(),
             happy_eyeballs_delay=0.25,
             server_hostname=host,
         )
     try:
-        return transport.get_extra_info("peercert")  # type: ignore[no-any-return]
+        der_certificate = transport.get_extra_info("ssl_object").getpeercert(True)
+        return load_der_x509_certificate(der_certificate)
     finally:
         transport.close()
 
@@ -47,7 +49,7 @@ async def get_cert_expiry_timestamp(
 ) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
-        cert = await async_get_cert(hass, hostname, port)
+        cert: Certificate = await async_get_cert(hass, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except TimeoutError as err:
@@ -58,10 +60,17 @@ async def get_cert_expiry_timestamp(
         raise ConnectionRefused(
             f"Connection refused by server: {hostname}:{port}"
         ) from err
-    except ssl.CertificateError as err:
-        raise ValidationFailure(err.verify_message) from err
     except ssl.SSLError as err:
         raise ValidationFailure(err.args[0]) from err
 
-    ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt_util.utc_from_timestamp(ts_seconds)
+    return cert.not_valid_after_utc
+
+
+async def validate_cert_expiry(
+    timestamp: datetime.datetime,
+) -> bool:
+    """Validate that timestamp has not expired."""
+    if datetime.datetime.now(datetime.UTC) > timestamp:
+        raise CertificateExpiredFailure("Certificate has expired")
+
+    return True
