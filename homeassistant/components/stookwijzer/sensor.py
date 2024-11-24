@@ -86,10 +86,7 @@ class StookwijzerSensor(CoordinatorEntity, SensorEntity):
         """Initialize the Sensor Entity."""
         self.entity_description = description
         self._coordinator = entry.runtime_data
-
-        super().__init__(self._coordinator)
-
-        self._attr_unique_id = f"{entry.entry_id}{DOMAIN}{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Atlas Leefomgeving",
