@@ -50,7 +50,7 @@ async def test_hmip_doorlockdrive(
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_lock_state"
+    assert hmip_device.mock_calls[-1][0] == "set_lock_state_async"
     assert hmip_device.mock_calls[-1][1] == (HomematicLockState.OPEN,)
 
     await hass.services.async_call(
@@ -59,7 +59,7 @@ async def test_hmip_doorlockdrive(
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_lock_state"
+    assert hmip_device.mock_calls[-1][0] == "set_lock_state_async"
     assert hmip_device.mock_calls[-1][1] == (HomematicLockState.LOCKED,)
 
     await hass.services.async_call(
@@ -69,7 +69,7 @@ async def test_hmip_doorlockdrive(
         blocking=True,
     )
 
-    assert hmip_device.mock_calls[-1][0] == "set_lock_state"
+    assert hmip_device.mock_calls[-1][0] == "set_lock_state_async"
     assert hmip_device.mock_calls[-1][1] == (HomematicLockState.UNLOCKED,)
 
     await async_manipulate_test_data(
@@ -96,7 +96,7 @@ async def test_hmip_doorlockdrive_handle_errors(
         test_devices=[entity_name]
     )
     with patch(
-        "homematicip.aio.device.AsyncDoorLockDrive.set_lock_state",
+        "homematicip.device.DoorLockDrive.set_lock_state_async",
         return_value={
             "errorCode": "INVALID_NUMBER_PARAMETER_VALUE",
             "minValue": 0.0,
