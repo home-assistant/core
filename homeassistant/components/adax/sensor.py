@@ -30,16 +30,10 @@ class AdaxEnergySensor(SensorEntity):
         self._adax_data_handler = adax_data_handler
         self._heater_data = room
         self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"Adax Energy Sensor {self._heater_data['name']}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"adax_energy_{self._heater_data['homeId']}_{self._heater_data['name']}"
+        self._attr_name = f"Adax Energy Sensor {self._heater_data['name']}"
+        self._attr_unique_id = f"adax_energy_{self._heater_data['homeId']}_{self._heater_data['name']}"
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def state(self) -> float:
@@ -50,16 +44,6 @@ class AdaxEnergySensor(SensorEntity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return UnitOfEnergy.KILO_WATT_HOUR
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self) -> str:
-        """Return the device class of the sensor."""
-        return SensorStateClass.MEASUREMENT
 
     @property
     def last_reset(self) -> None:
