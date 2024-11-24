@@ -139,7 +139,7 @@
             'data': dict({
               'code': 'no_intent_match',
             }),
-            'language': 'en-US',
+            'language': 'en',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
@@ -228,7 +228,7 @@
             'data': dict({
               'code': 'no_intent_match',
             }),
-            'language': 'en-US',
+            'language': 'en',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({

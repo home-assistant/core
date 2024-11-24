@@ -1115,8 +1115,8 @@ async def test_async_forward_entry_setup_deprecated(
     assert (
         "Detected code that calls async_forward_entry_setup for integration, "
         f"original with title: Mock Title and entry_id: {entry_id}, "
-        "which is deprecated and will stop working in Home Assistant 2025.6, "
-        "await async_forward_entry_setups instead. Please report this issue."
+        "which is deprecated, await async_forward_entry_setups instead. "
+        "This will stop working in Home Assistant 2025.6, please report this issue"
     ) in caplog.text
 
 
@@ -4802,7 +4802,7 @@ async def test_reauth_reconfigure_missing_entry(
     with pytest.raises(
         RuntimeError,
         match=f"Detected code that initialises a {source} flow without a link "
-        "to the config entry. Please report this issue.",
+        "to the config entry. Please report this issue",
     ):
         await manager.flow.async_init("test", context={"source": source})
     await hass.async_block_till_done()
@@ -5697,8 +5697,8 @@ async def test_starting_config_flow_on_single_config_entry(
             "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 @pytest.mark.parametrize(
@@ -5778,8 +5778,8 @@ async def test_starting_config_flow_on_single_config_entry_2(
             "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 async def test_avoid_adding_second_config_entry_on_single_config_entry(
@@ -6244,7 +6244,7 @@ async def test_non_awaited_async_forward_entry_setups(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -6316,7 +6316,7 @@ async def test_non_awaited_async_forward_entry_setup(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setup, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -7157,7 +7157,10 @@ async def test_create_entry_reauth_reconfigure(
 
     assert len(hass.config_entries.async_entries("test")) == 1
 
-    with mock_config_flow("test", TestFlow):
+    with (
+        mock_config_flow("test", TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
         result = await getattr(entry, f"start_{source}_flow")(hass)
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -7169,10 +7172,10 @@ async def test_create_entry_reauth_reconfigure(
         assert entries[0].entry_id != entry.entry_id
 
     assert (
-        f"Detected {source} config flow creating a new entry, when it is expected "
-        "to update an existing entry and abort. This will stop working in "
-        "2025.11, please create a bug report at https://github.com/home"
-        "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+        f"Detected that integration 'test' creates a new entry in a '{source}' flow, "
+        "when it is expected to update an existing entry and abort. This will stop "
+        "working in Home Assistant 2025.11, please create a bug report at "
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
         "label%3A%22integration%3A+test%22"
     ) in caplog.text
 
@@ -7501,6 +7504,7 @@ async def test_options_flow_config_entry(
     assert result["reason"] == "abort"
 
 
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
@@ -7509,13 +7513,15 @@ async def test_options_flow_deprecated_config_entry_setter(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setting config_entry explicitly still works."""
-    original_entry = MockConfigEntry(domain="hue", data={})
+    original_entry = MockConfigEntry(domain="my_integration", data={})
     original_entry.add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
 
-    mock_integration(hass, MockModule("hue", async_setup_entry=mock_setup_entry))
-    mock_platform(hass, "hue.config_flow", None)
+    mock_integration(
+        hass, MockModule("my_integration", async_setup_entry=mock_setup_entry)
+    )
+    mock_platform(hass, "my_integration.config_flow", None)
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -7549,15 +7555,18 @@ async def test_options_flow_deprecated_config_entry_setter(
 
             return _OptionsFlow(config_entry)
 
-    with mock_config_flow("hue", TestFlow):
+    with mock_config_flow("my_integration", TestFlow):
         result = await hass.config_entries.options.async_init(original_entry.entry_id)
 
     options_flow = hass.config_entries.options._progress.get(result["flow_id"])
     assert options_flow.config_entry is original_entry
 
     assert (
-        "Detected that integration 'hue' sets option flow config_entry explicitly, "
-        "which is deprecated and will stop working in 2025.12" in caplog.text
+        "Detected that custom integration 'my_integration' sets option flow "
+        "config_entry explicitly, which is deprecated at "
+        "custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
+        "create a bug report at " in caplog.text
     )
 
 
