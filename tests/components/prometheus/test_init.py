@@ -2317,6 +2317,7 @@ async def entity_config_fixture(
         "humidifier": "Test Humidifier Device",
         "lock": "Test Lock Device",
         "sensor": "Test Device",
+        "cover": "Test Cover Device",
     }
     for key, value in devices.items():
         identifier = "".join(
@@ -2906,25 +2907,18 @@ async def cover_fixture(
     )
     data["cover_tilt_position"] = cover_tilt_position
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Cover Device",
-        "Test Area",
-    )
     cover_open_device = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_open_device",
         suggested_object_id="open_shade_device",
         original_name="Open Shade Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["cover"]["config_entry"],
+        device_id=entity_config_data["cover"]["device_id"],
     )
     cover_open_device_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["cover"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["cover"]["device_id"],
     }
     set_state_with_entry(
         hass, cover_open_device, STATE_OPEN, cover_open_device_attributes
@@ -2937,13 +2931,13 @@ async def cover_fixture(
         unique_id="cover_position_device",
         suggested_object_id="position_shade_device",
         original_name="Position Shade Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["cover"]["config_entry"],
+        device_id=entity_config_data["cover"]["device_id"],
     )
     cover_position_device_attributes = {
         cover.ATTR_CURRENT_POSITION: 75,
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["cover"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["cover"]["device_id"],
     }
     set_state_with_entry(
         hass, cover_position_device, STATE_OPEN, cover_position_device_attributes
