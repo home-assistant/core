@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.6.2
+AEMET-OpenData==0.6.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==27.0.1
+aioesphomeapi==27.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1367,7 +1367,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.10
+py-aosmith==1.0.11
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -1880,7 +1880,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.3.0
+python-homewizard-energy==v7.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2153,10 +2153,10 @@ snapcast==2.3.6
 soco==0.30.6
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.2
+solarlog_cli==0.4.0
 
 # homeassistant.components.solax
-solax==3.1.1
+solax==3.2.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2433,7 +2433,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.0
+yalexs-ble==2.5.1
 
 # homeassistant.components.august
 # homeassistant.components.yale

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
 
-from homewizard_energy.models import Data, ExternalDevice
+from homewizard_energy.v1.models import Data, ExternalDevice
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
