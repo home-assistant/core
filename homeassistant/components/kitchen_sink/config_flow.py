@@ -89,7 +89,6 @@ class OptionsFlowHandler(OptionsFlow):
                         ),
                         {
                             "collapsed": False,
-                            "multiple": True,
                             "default": self.config_entry.options.get("section_1"),
                         },
                     ),
