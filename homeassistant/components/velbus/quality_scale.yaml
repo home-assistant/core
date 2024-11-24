@@ -66,5 +66,5 @@ rules:
   inject-websession:
     status: exempt
     comment: |
-      This integration does not require a web session.
+      This integration communicates via serial/usb/tcp and does not require a web session.
   strict-typing: done
