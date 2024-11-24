@@ -817,14 +817,17 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="ventilation_demand",
+        translation_key="ventilation_demand",
         value_getter=lambda api: api.getVentilationDemand().lower(),
     ),
     ViCareSensorEntityDescription(
         key="ventilation_level",
+        translation_key="ventilation_level",
         value_getter=lambda api: api.getVentilationLevel().lower(),
     ),
     ViCareSensorEntityDescription(
         key="ventilation_reason",
+        translation_key="ventilation_reason",
         value_getter=lambda api: api.getVentilationReason().lower(),
     ),
 )
