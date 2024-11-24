@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from habiticalib.types import UserData
+from habiticalib import UserData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,

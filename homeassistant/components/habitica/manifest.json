@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/habitica",
   "iot_class": "cloud_polling",
-  "loggers": ["habitipy", "plumbum", "habiticalib"],
-  "requirements": ["habitipy==0.3.3", "habiticalib==0.2.0a2"]
+  "loggers": ["habiticalib"],
+  "requirements": ["habiticalib==0.2.0"]
 }

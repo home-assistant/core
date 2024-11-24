@@ -8,9 +8,14 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
-from habiticalib import HabiticaClass, TaskType
-from habiticalib.helpers import deserialize_task
-from habiticalib.types import ContentData, TaskData, UserData
+from habiticalib import (
+    ContentData,
+    HabiticaClass,
+    TaskData,
+    TaskType,
+    UserData,
+    deserialize_task,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,

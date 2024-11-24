@@ -278,10 +278,6 @@ async def test_update_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # mock_habitica.put(
-    #     f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-    #     status=HTTPStatus.NOT_FOUND,
-    # )
     habitica.update_task.side_effect = ERROR_NOT_FOUND
     with pytest.raises(
         expected_exception=ServiceValidationError,

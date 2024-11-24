@@ -1,7 +1,6 @@
 """Test the habitica module."""
 
 import datetime
-from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock
 
@@ -28,10 +27,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
-TEST_USER_NAME = "test_user"
 
 
 @pytest.fixture
@@ -57,11 +52,11 @@ async def test_entry_setup_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("habitica")
 async def test_service_call(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     capture_api_call_success: list[Event],
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test integration setup, service call and unload."""
     config_entry.add_to_hass(hass)
@@ -72,16 +67,10 @@ async def test_service_call(
 
     assert len(capture_api_call_success) == 0
 
-    mock_habitica.post(
-        "https://habitica.com/api/v3/tasks/user",
-        status=HTTPStatus.CREATED,
-        json={"data": TEST_API_CALL_ARGS},
-    )
-
     TEST_SERVICE_DATA = {
         ATTR_NAME: "test-user",
         ATTR_PATH: ["tasks", "user", "post"],
-        ATTR_ARGS: TEST_API_CALL_ARGS,
+        ATTR_ARGS: {"text": "Use API from Home Assistant", "type": "todo"},
     }
     await hass.services.async_call(
         DOMAIN, SERVICE_API_CALL, TEST_SERVICE_DATA, blocking=True
