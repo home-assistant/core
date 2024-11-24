@@ -56,7 +56,7 @@ async def mock_setup() -> AsyncGenerator[AsyncMock]:
         yield mock_setup
 
 
-async def complete_flow(hass: HomeAssistant) -> FlowResult:
+async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowResult:
     """Start the config flow and enter the host and password."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -276,18 +276,49 @@ async def test_controller_invalid_auth(
 ) -> None:
     """Test an invalid password."""
 
-    # Controller response with a failure
     responses.clear()
-    responses.append(
-        AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN)
+    responses.extend(
+        [
+            # Incorrect password response
+            AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
+            AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
+            # Second attempt with the correct password
+            mock_response(SERIAL_RESPONSE),
+            mock_json_response(WIFI_PARAMS_RESPONSE),
+        ]
     )
 
-    result = await complete_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
+    assert "flow_id" in result
+
+    # Simulate authentication error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_PASSWORD: "wrong-password"},
+    )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "invalid_auth"}
 
     assert not mock_setup.mock_calls
+
+    # Correct the form and enter the password again and setup completes
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == HOST
+    assert "result" in result
+    assert dict(result["result"].data) == CONFIG_ENTRY_DATA
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
+
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_controller_timeout(
