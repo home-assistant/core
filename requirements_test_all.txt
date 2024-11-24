@@ -1367,7 +1367,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.10
+py-aosmith==1.0.11
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -1880,7 +1880,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.3.0
+python-homewizard-energy==v7.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2433,7 +2433,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.0
+yalexs-ble==2.5.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
