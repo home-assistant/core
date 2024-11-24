@@ -14,9 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_SCAN
-from .services import cleanup_services, setup_services
+from .const import DOMAIN
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,9 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if not hass.services.has_service(DOMAIN, SERVICE_SCAN):
-        setup_services(hass)
-
     return True
 
 
@@ -89,7 +87,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
-        cleanup_services(hass)
     return unload_ok
 
 
@@ -114,4 +111,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(config_entry, version=2)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the actions for the Velbus component."""
+    setup_services(hass)
     return True

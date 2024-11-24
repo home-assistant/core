@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from contextlib import suppress
-import logging
 import os
 import shutil
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -23,27 +22,6 @@ from .const import (
     SERVICE_SET_MEMO_TEXT,
     SERVICE_SYNC,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.LIGHT,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
-
-
-def cleanup_services(hass: HomeAssistant) -> None:
-    """Unregister the velbus services."""
-    hass.services.async_remove(DOMAIN, SERVICE_SCAN)
-    hass.services.async_remove(DOMAIN, SERVICE_SYNC)
-    hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
-    hass.services.async_remove(DOMAIN, SERVICE_CLEAR_CACHE)
 
 
 def setup_services(hass: HomeAssistant) -> None:
