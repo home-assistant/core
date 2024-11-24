@@ -147,6 +147,16 @@
           "description": "Reading in m³ or kWh without decimals."
         }
       }
+    },
+    "set_zone_heating_circuit": {
+      "name": "Set Zone Heating Circuit",
+      "description": "Sets the heating circuit for zone(s)",
+      "fields": {
+        "heater": {
+          "name": "Heater",
+          "description": "Set heating circuit"
+        }
+      }
     }
   },
   "issues": {

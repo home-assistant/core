@@ -47,6 +47,20 @@ set_water_heater_timer:
           step: 0.5
           unit_of_measurement: "°"
 
+set_zone_heating_circuit:
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    heater:
+      required: false
+      default: null
+      selector:
+        entity:
+          integration: tado
+          domain: water_heater    
+
 set_climate_temperature_offset:
   target:
     entity:
@@ -76,3 +90,4 @@ add_meter_reading:
           mode: box
           min: 0
           step: 1
+

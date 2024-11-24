@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform, selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
@@ -100,6 +100,10 @@ CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
 }
 
 
+SERVICE_ZONE_HEATING_CIRCUIT = "set_zone_heating_circuit"
+ATTR_HEATER = "heater"
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -120,6 +124,12 @@ async def async_setup_entry(
         SERVICE_TEMP_OFFSET,
         CLIMATE_TEMP_OFFSET_SCHEMA,
         "set_temp_offset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ZONE_HEATING_CIRCUIT,
+        {vol.Optional(ATTR_HEATER):str,},
+        "set_heating_circuit",
     )
 
     async_add_entities(entities, True)
@@ -495,6 +505,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
+
+    def set_heating_circuit(self, heater=None):
+        #TODO: Convert heater entity ID to water heater SerialNo and find its ID by self._tado.circuits
+        if heater:
+            heater = 1
+        self._tado.set_zone_heating_circuit(self.zone_id,heater)
 
     @property
     def available(self) -> bool:
