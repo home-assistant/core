@@ -1050,7 +1050,7 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none-entry]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1062,7 +1062,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_none',
+    'entity_id': 'sensor.model0_ventilation_demand',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1074,29 +1074,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Ventilation demand',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'ventilation_demand',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_demand',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none-state]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 None',
+      'friendly_name': 'model0 Ventilation demand',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_none',
+    'entity_id': 'sensor.model0_ventilation_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ventilation',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none_2-entry]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1108,7 +1108,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_none_2',
+    'entity_id': 'sensor.model0_ventilation_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1120,29 +1120,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Ventilation level',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'ventilation_level',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_level',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none_2-state]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 None',
+      'friendly_name': 'model0 Ventilation level',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_none_2',
+    'entity_id': 'sensor.model0_ventilation_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'levelone',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none_3-entry]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1154,7 +1154,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_none_3',
+    'entity_id': 'sensor.model0_ventilation_reason',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1166,22 +1166,22 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Ventilation reason',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'ventilation_reason',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_reason',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_none_3-state]
+# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 None',
+      'friendly_name': 'model0 Ventilation reason',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_none_3',
+    'entity_id': 'sensor.model0_ventilation_reason',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
