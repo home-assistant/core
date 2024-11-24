@@ -23,17 +23,41 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
     command: Callable[[JvcProjector, str], Awaitable[None]]
 
 
-OPTIONS: Final[dict[str, dict[str, str]]] = {
-    "input": {const.HDMI1: const.REMOTE_HDMI_1, const.HDMI2: const.REMOTE_HDMI_2}
+# these options correspond to a command and its possible values
+OPTIONS: Final[dict[str, list[str]]] = {
+    "input": [const.HDMI1, const.HDMI2],
+    "eshift": [const.ON, const.OFF],
+    "installation_mode": [f"mode{i}" for i in range(1, 11)],
+    "anamorphic": [
+        const.ANAMORPHIC_A,
+        const.ANAMORPHIC_B,
+        const.OFF,
+        const.ANAMORPHIC_C,
+        const.ANAMORPHIC_D,
+    ],
+    "laser_power": [const.LOW, const.MEDIUM, const.HIGH],
+    "laser_dimming": [const.OFF, const.AUTO1, const.AUTO2, const.AUTO3],
 }
 
+
+def create_select_command(key: str) -> Callable[[JvcProjector, str], Awaitable[None]]:
+    """Create a command function for a select."""
+
+    async def command(device: JvcProjector, option: str) -> None:
+        await device.send_command(key, option)
+
+    return command
+
+
+# create a select for each option defined
 SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
-        key="input",
-        translation_key="input",
-        options=list(OPTIONS["input"]),
-        command=lambda device, option: device.remote(OPTIONS["input"][option]),
+        key=key,
+        translation_key=key,
+        options=list(options),
+        command=create_select_command(key),
     )
+    for key, options in OPTIONS.items()
 ]
 
 
@@ -68,7 +92,7 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data.get(self.entity_description.key)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

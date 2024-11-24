@@ -44,7 +44,7 @@
         "name": "Low latency"
       },
       "jvc_eshift": {
-        "name": "eShift"
+        "name": "eshift"
       }
     },
     "select": {
@@ -53,6 +53,55 @@
         "state": {
           "hdmi1": "HDMI 1",
           "hdmi2": "HDMI 2"
+        }
+      },
+      "eshift": {
+        "name": "Eshift",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "installation_mode": {
+        "name": "Installation Mode",
+        "state": {
+          "mode1": "Mode 1",
+          "mode2": "Mode 2",
+          "mode3": "Mode 3",
+          "mode4": "Mode 4",
+          "mode5": "Mode 5",
+          "mode6": "Mode 6",
+          "mode7": "Mode 7",
+          "mode8": "Mode 8",
+          "mode9": "Mode 9",
+          "mode10": "Mode 10"
+        }
+      },
+      "anamorphic": {
+        "name": "Anamorphic",
+        "state": {
+          "off": "Off",
+          "a": "Mode A",
+          "b": "Mode B",
+          "c": "Mode C",
+          "d": "Mode D"
+        }
+      },
+      "laser_power": {
+        "name": "Laser Power",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "laser_dimming": {
+        "name": "Laser Dimming",
+        "state": {
+          "off": "Off",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "auto3": "Auto 3"
         }
       }
     },
