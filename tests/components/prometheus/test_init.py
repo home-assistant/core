@@ -78,7 +78,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -108,6 +108,8 @@ class EntityMetric:
             "entity",
             "device",
             "area",
+            "platform",
+            "object_id",
         ]
 
     @classmethod
@@ -127,6 +129,14 @@ class EntityMetric:
             self.labels["device"] = ""
         if "area" not in self.labels:
             self.labels["area"] = ""
+        if "platform" not in self.labels:
+            self.labels["platform"] = "test"
+
+        # Special assert for entity as we derive object_id from it
+        assert "entity" in self.labels
+        assert self.labels["entity"] != ""
+        _, object_id = split_entity_id(self.labels["entity"])
+        self.labels["object_id"] = object_id
 
         # Labels that are required for all entities.
         for labelname in self.required_labels():
@@ -206,7 +216,10 @@ def test_entity_metric_generates_metric_name_string_without_value() -> None:
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}'
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test"'
+        "}"
     )
 
 
@@ -226,7 +239,10 @@ def test_entity_metric_generates_metric_string_with_value() -> None:
         'device="",'
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}'
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test"'
+        "}"
         " 17.2"
     )
 
@@ -246,7 +262,12 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
 
     for labelname in EntityMetric.required_labels():
         # Skip this for now
-        if labelname in ["device", "area"]:
+        if labelname in [
+            "device",
+            "area",
+            "platform",
+            "object_id",
+        ]:
             continue
         label_kwargs = dict(test_kwargs)
         # Delete the required label and ensure we get an exception
@@ -270,7 +291,10 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
 
     for labelname in EntityMetric.required_labels():
         # Skip "friendly_name" and "device" as it's an exception to the rule
-        if labelname in EntityMetric.allowed_empty_required_labels():
+        if (
+            labelname in EntityMetric.allowed_empty_required_labels()
+            or labelname == "object_id"
+        ):
             continue
         label_kwargs = dict(test_kwargs)
         # Replace the required label with "" and ensure we get an exception
@@ -291,6 +315,8 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test",'
         'zed_label="foo"'
         "}"
         " 17.2"
@@ -331,7 +357,9 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
-        'mode="away"'
+        'mode="away",'
+        'object_id="ecobee",'
+        'platform="test"'
         "}"
         " 1.0"
     )
@@ -350,7 +378,9 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
         'device="",'
         'domain="climate",'
         'entity="climate.heatpump",'
-        'friendly_name="HeatPump"'
+        'friendly_name="HeatPump",'
+        'object_id="heatpump",'
+        'platform="test"'
         "}"
         " 1.0"
     )
@@ -369,6 +399,8 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
         'domain="cover",'
         'entity="cover.curtain",'
         'friendly_name="Curtain",'
+        'object_id="curtain",'
+        'platform="test",'
         'state="open"'
         "}"
         " 1.0"
@@ -388,7 +420,9 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
-        'friendly_name="Outside Temperature"'
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test"'
         "}"
         " 17.2"
     )
@@ -403,7 +437,9 @@ def test_entity_metric_assert_helpers() -> None:
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
-        'friendly_name="Outside Temperature"'
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test"'
         "}"
     )
     climate_metric = (
@@ -413,7 +449,9 @@ def test_entity_metric_assert_helpers() -> None:
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
-        'mode="away"'
+        'mode="away",'
+        'object_id="ecobee",'
+        'platform="test"'
         "}"
     )
     excluded_cover_metric = (
@@ -423,6 +461,8 @@ def test_entity_metric_assert_helpers() -> None:
         'domain="cover",'
         'entity="cover.curtain",'
         'friendly_name="Curtain",'
+        'object_id="curtain",'
+        'platform="test",'
         'state="open"'
         "}"
     )
@@ -473,7 +513,9 @@ def test_entity_metric_with_value_assert_helpers() -> None:
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'foo="bar",'
-        'friendly_name="Outside Temperature"'
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature",'
+        'platform="test"'
         "}"
         " 17.2"
     )
@@ -484,7 +526,9 @@ def test_entity_metric_with_value_assert_helpers() -> None:
         'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
-        'mode="away"'
+        'mode="away",'
+        'object_id="ecobee",'
+        'platform="test"'
         "}"
         " 1.0"
     )

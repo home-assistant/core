@@ -340,9 +340,11 @@ class PrometheusMetrics:
         labels = [
             "entity",
             "friendly_name",
+            "object_id",
             "domain",
             "device",
             "area",
+            "platform",
         ]
         if extra_labels is not None:
             labels.extend(extra_labels)
@@ -387,6 +389,7 @@ class PrometheusMetrics:
             "area": "",
         }
         if entity := self._entity_registry.async_get(state.entity_id):
+            final_labels["platform"] = entity.platform
             if device_id := entity.device_id:
                 if device := self._device_registry.async_get(device_id):
                     if device_name := device.name:
@@ -400,6 +403,7 @@ class PrometheusMetrics:
     def _labels(self, state: State) -> dict[str, Any]:
         final_labels = {
             "entity": state.entity_id,
+            "object_id": state.object_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME) or "",
         }
