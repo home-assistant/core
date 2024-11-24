@@ -919,7 +919,7 @@ class section:
         {
             vol.Optional("collapsed", default=False): bool,
             vol.Optional("multiple", default=False): bool,
-            vol.Optional("default", default=[]): list[dict[str, Any]],
+            vol.Optional("default"): list[dict[str, Any]],
         },
     )
 
