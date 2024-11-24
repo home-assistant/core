@@ -52,9 +52,10 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_scale: MagicMock
-) -> None:
+) -> MockConfigEntry:
     """Set up the acaia integration for testing."""
     await setup_integration(hass, mock_config_entry)
+    return mock_config_entry
 
 
 @pytest.fixture
@@ -70,6 +71,7 @@ def mock_scale() -> Generator[MagicMock]:
         scale.connected = True
         scale.mac = "aa:bb:cc:dd:ee:ff"
         scale.model = "Lunar"
+        scale.last_disconnect_time = "1732181388.1895587"
         scale.timer_running = True
         scale.heartbeat_task = None
         scale.process_queue_task = None
@@ -77,4 +79,6 @@ def mock_scale() -> Generator[MagicMock]:
             battery_level=42, units=AcaiaUnitOfMass.OUNCES
         )
         scale.weight = 123.45
+        scale.timer = 23
+        scale.flow_rate = 1.23
         yield scale

@@ -90,6 +90,7 @@ def mock_config_entry(
             **imported_config_data,
         },
         unique_id=PROFILE_USER_ID,
+        title=DISPLAY_NAME,
     )
 
 

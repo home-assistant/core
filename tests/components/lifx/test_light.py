@@ -1098,8 +1098,8 @@ async def test_color_light_with_temp(
         ColorMode.HS,
     ]
     assert attributes[ATTR_HS_COLOR] == (30.754, 7.122)
-    assert attributes[ATTR_RGB_COLOR] == (255, 246, 236)
-    assert attributes[ATTR_XY_COLOR] == (0.34, 0.339)
+    assert attributes[ATTR_RGB_COLOR] == (255, 246, 237)
+    assert attributes[ATTR_XY_COLOR] == (0.339, 0.338)
     bulb.color = [65535, 65535, 65535, 65535]
 
     await hass.services.async_call(

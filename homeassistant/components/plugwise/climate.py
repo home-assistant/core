@@ -143,7 +143,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return HVAC operation ie. auto, cool, heat, heat_cool, or off mode."""
-        if (mode := self.device.get("mode")) is None or mode not in self.hvac_modes:
+        if (
+            mode := self.device.get("climate_mode")
+        ) is None or mode not in self.hvac_modes:
             return HVACMode.HEAT
         return HVACMode(mode)
 
