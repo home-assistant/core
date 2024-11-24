@@ -2323,6 +2323,8 @@ async def entity_config_fixture(
         "light": "Test Light Device",
         "switch": "Test Switch Device",
         "fan": "Test Fan Device",
+        "alarm_control_panel": "Test Alarm Control Panel Device",
+        "device_tracker": "Test Laptop Device",
     }
     for key, value in devices.items():
         identifier = "".join(
@@ -3351,25 +3353,18 @@ async def alarm_control_panel_fixture(
     set_state_with_entry(hass, alarm_control_panel_2, AlarmControlPanelState.ARMED_HOME)
     data["alarm_control_panel_2"] = alarm_control_panel_2
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Alarm Control Panel Device",
-        "Test Area",
-    )
     alarm_control_panel_3 = entity_registry.async_get_or_create(
         domain=alarm_control_panel.DOMAIN,
         platform="test",
         unique_id="alarm_control_panel_3",
         suggested_object_id="alarm_control_panel_3",
         original_name="Alarm Control Panel 3",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["alarm_control_panel"]["config_entry"],
+        device_id=entity_config_data["alarm_control_panel"]["device_id"],
     )
     alarm_control_panel_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["alarm_control_panel"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["alarm_control_panel"]["device_id"],
     }
     set_state_with_entry(
         hass,
@@ -3444,25 +3439,18 @@ async def device_tracker_fixture(
     set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
     data["device_tracker_2"] = device_tracker_2
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Laptop Device",
-        "Test Area",
-    )
     device_tracker_3 = entity_registry.async_get_or_create(
         domain=device_tracker.DOMAIN,
         platform="test",
         unique_id="device_tracker_3",
         suggested_object_id="laptop",
         original_name="Laptop",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["device_tracker"]["config_entry"],
+        device_id=entity_config_data["device_tracker"]["device_id"],
     )
     device_tracker_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["device_tracker"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["device_tracker"]["device_id"],
     }
     set_state_with_entry(
         hass, device_tracker_3, STATE_HOME, device_tracker_3_attributes
