@@ -31,7 +31,7 @@ STATUSES: Final[dict[str | int | float | None, str]] = {
     9: "cool_fluid",
     10: "fire_stop",
     11: "clean_fire",
-    12: "cool",
+    12: "cooling",
     50: "cleanup",
     51: "ecomode",
     241: "chimney_alarm",
