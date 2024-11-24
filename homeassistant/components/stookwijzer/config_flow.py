@@ -27,13 +27,11 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
             x, y = await Stookwijzer.async_transform_coordinates(
-                session,
+                async_get_clientsession(self.hass),
                 user_input[CONF_LOCATION][CONF_LATITUDE],
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
-
             if x and y:
                 return self.async_create_entry(
                     title="Stookwijzer",
