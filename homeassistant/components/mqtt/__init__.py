@@ -78,6 +78,7 @@ from .const import (  # noqa: F401
     DOMAIN,
     ENTITY_PLATFORMS,
     MQTT_CONNECTION_STATE,
+    MQTT_UNIQUE_ID,
     TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
@@ -359,6 +360,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf: dict[str, Any]
     mqtt_data: MqttData
+
+    if entry.unique_id is None:
+        # Migrate existing config entries to have a unique id
+        # Can be removed in HA Core 2025.12.0
+        hass.config_entries.async_update_entry(entry, unique_id=MQTT_UNIQUE_ID)
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""

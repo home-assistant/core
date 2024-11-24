@@ -86,6 +86,7 @@ from .const import (
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
     DOMAIN,
+    MQTT_UNIQUE_ID,
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
@@ -98,8 +99,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-MQTT_UNIQUE_ID = "mqtt_entry_unique_id"
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
