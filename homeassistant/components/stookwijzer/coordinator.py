@@ -31,6 +31,8 @@ class StookwijzerCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()
-
         if self.client.advice is None:
-            raise UpdateFailed
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_data_received",
+            )

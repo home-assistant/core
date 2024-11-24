@@ -36,6 +36,9 @@
   "exceptions": {
     "location_migration_failed": {
       "message": "Unable to migrate location to new format. Restart to try again, or remove and re-add the integration."
+    },
+    "no_data_received": {
+      "message": "No data received from Stookwijzer."
     }
   }
 }
