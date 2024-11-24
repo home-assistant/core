@@ -43,8 +43,10 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
+    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -382,23 +384,30 @@ class PrometheusMetrics:
             value = None
         return value
 
-    def _get_extra_labels(self, state: State) -> dict[str, Any] | None:
+    def _get_extra_labels(self, state: State) -> dict[str, Any]:
         """Return a dict of extra labels, or None if no extra labels necessary."""
-        final_labels = {
-            "device": "",
-            "area": "",
-        }
+        final_area = ""
+        final_device = ""
+        final_platform = ""
         if entity := self._entity_registry.async_get(state.entity_id):
-            final_labels["platform"] = entity.platform
-            if device_id := entity.device_id:
+            final_platform = entity.platform
+            if device_id := state.attributes.get(ATTR_DEVICE_ID):
                 if device := self._device_registry.async_get(device_id):
                     if device_name := device.name:
-                        final_labels["device"] = device_name
-            if area_id := entity.area_id:
+                        final_device = device_name
+                    else:
+                        final_device = device_id
+            if area_id := state.attributes.get(ATTR_AREA_ID):
                 if area := self._area_registry.async_get_area(area_id):
                     if area_name := area.name:
-                        final_labels["area"] = area_name
-        return dict(final_labels)
+                        final_area = area_name
+                    else:
+                        final_area = area_id
+        return {
+            "platform": final_platform,
+            "area": final_area,
+            "device": final_device,
+        }
 
     def _labels(self, state: State) -> dict[str, Any]:
         final_labels = {

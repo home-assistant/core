@@ -55,8 +55,10 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
+    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -725,7 +727,8 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="Outside Temperature Device",
         entity="sensor.outside_temperature_device",
-        device="test_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(16.3).assert_in_metrics(body)
 
     EntityMetric(
@@ -733,7 +736,8 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="Outside Humidity Device",
         entity="sensor.outside_humidity_device",
-        device="test_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(56.0).assert_in_metrics(body)
 
 
@@ -2108,15 +2112,17 @@ async def sensor_fixture(
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
-        name="test_device",
+        name="Test Device",
         identifiers={("test", "current_device")},
         connections={("mac", "30:31:32:33:34:00")},
         config_entry_id=config_entry.entry_id,
         suggested_area="Test Area",
     )
     assert device is not None
+    assert device.id is not None
     area = area_registry.async_get_area_by_name("Test Area")
     assert area is not None
+    assert area.id is not None
 
     sensor_13 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
@@ -2129,12 +2135,13 @@ async def sensor_fixture(
         config_entry=config_entry,
         device_id=device.id,
     )
-    sensor_13_attributes = {ATTR_BATTERY_LEVEL: 13}
+    sensor_13_attributes = {
+        ATTR_BATTERY_LEVEL: 13,
+        ATTR_AREA_ID: area.id,
+        ATTR_DEVICE_ID: device.id,
+    }
     set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
 
-    await hass.async_block_till_done()
-    entity_registry.async_update_entity(sensor_13.entity_id, area_id=area.id)
-    await hass.async_block_till_done()
     data["sensor_13"] = sensor_13
     data["sensor_13_attributes"] = sensor_13_attributes
 
@@ -2149,8 +2156,15 @@ async def sensor_fixture(
         config_entry=config_entry,
         device_id=device.id,
     )
-    set_state_with_entry(hass, sensor_14, 56.0)
+
+    sensor_14_attributes = {
+        ATTR_BATTERY_LEVEL: 13,
+        ATTR_AREA_ID: area.id,
+        ATTR_DEVICE_ID: device.id,
+    }
+    set_state_with_entry(hass, sensor_14, 56.0, sensor_14_attributes)
     data["sensor_14"] = sensor_14
+    data["sensor_14_attributes"] = sensor_14_attributes
 
     await hass.async_block_till_done()
     return data
