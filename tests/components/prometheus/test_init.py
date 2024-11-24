@@ -53,6 +53,10 @@ from homeassistant.components.fan import (
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
+from homeassistant.components.prometheus import (
+    PrometheusLabels,
+    PrometheusLabelsException,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -93,6 +97,12 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
+
+
+def test_prometheus_label_throws_exception_for_unhandled_label() -> None:
+    """Test that unhandled prometheus label enums throw exceptions."""
+    with pytest.raises(PrometheusLabelsException):
+        PrometheusLabels.label_value_from_state(PrometheusLabels.UNKNOWN, None)
 
 
 class EntityMetric:

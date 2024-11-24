@@ -188,6 +188,7 @@ class PrometheusLabels(Enum):
     DEVICE = "device"
     AREA = "area"
     PLATFORM = "platform"
+    UNKNOWN = "unknown"  # mostly just for testing
 
     @classmethod
     def get_shared_common_labels(cls) -> list[PrometheusLabels]:
@@ -202,7 +203,7 @@ class PrometheusLabels(Enum):
     @classmethod
     def get_all_common_label_strings(cls) -> list[str]:
         """Return all possible common prometheus label strings."""
-        return [p.value for p in cls]
+        return [p.value for p in cls if p != cls.UNKNOWN]
 
     @classmethod
     def label_value_from_state(cls, label: PrometheusLabels, state: State) -> str:
