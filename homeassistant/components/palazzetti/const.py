@@ -44,7 +44,7 @@ STATUSES: Final[dict[str | int | float | None, str]] = {
     250: "flue_probe_failure",
     252: "exhaust_temp_high",
     253: "pellet_finished",
-    501: "OFF",
+    501: "off",
     502: "fueling",
     503: "ign_test",
     504: "burning",
