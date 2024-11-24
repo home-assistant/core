@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import random
+import string
 from typing import Any, Self
 from unittest import mock
 
@@ -1807,7 +1809,45 @@ async def test_renaming_entity_id(
         entity="sensor.outside_humidity",
     ).withValue(1).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
     assert "sensor.outside_temperature" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_humidity_device" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
     entity_registry.async_update_entity(
         entity_id="sensor.outside_temperature",
@@ -1817,12 +1857,25 @@ async def test_renaming_entity_id(
         hass, data["sensor_1"], 15.6, None, "sensor.outside_temperature_renamed"
     )
 
+    entity_registry.async_update_entity(
+        entity_id="sensor.outside_temperature_device",
+        new_entity_id="sensor.outside_temperature_device_renamed",
+    )
+    set_state_with_entry(
+        hass,
+        data["sensor_13"],
+        16.3,
+        data["sensor_13_attributes"],
+        "sensor.outside_temperature_device_renamed",
+    )
+
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     # Check if old metrics deleted
     body_line = "\n".join(body)
     assert 'entity="sensor.outside_temperature"' not in body_line
+    assert 'entity="sensor.outside_temperature_device"' not in body_line
 
     # Check if new metrics created
     EntityMetric(
@@ -1839,6 +1892,24 @@ async def test_renaming_entity_id(
         entity="sensor.outside_temperature_renamed",
     ).withValue(1).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device_renamed",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device_renamed",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
     # Keep other sensors
     EntityMetric(
         metric_name="sensor_humidity_percent",
@@ -1851,6 +1922,23 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -2215,12 +2303,54 @@ async def test_entity_becomes_unavailable(
     ).withValue(1).assert_in_metrics(body)
 
 
+@pytest.fixture(name="entity_config_data")
+async def entity_config_fixture(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
+    """Simulate config entries along with device and area stuff."""
+    data = {}
+    default_area = "Test Area"
+    devices = {
+        "humidifier_4": "Test Humidifier Device",
+        "lock_3": "Test Lock Device",
+        "sensor": "Test Device",
+    }
+    for key, value in devices.items():
+        identifier = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=10)
+        )
+        mac = ":".join(
+            [("0" + hex(random.randint(0, 256))[2:])[-2:].upper() for _ in range(6)]
+        )
+        config_entry, device_id, area_id = _get_device_setup_info(
+            hass,
+            device_registry,
+            area_registry,
+            value,
+            default_area,
+            identifier=identifier,
+            mac=mac,
+        )
+        data[key] = {
+            "config_entry": config_entry,
+            "device_id": device_id,
+            "area_id": area_id,
+        }
+
+    return data
+
+
 def _get_device_setup_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     device_name: str,
     area_name: str,
+    identifier: str = "current_device",
+    mac: str = "30:31:32:33:34:00",
 ) -> (ConfigEntry, str, str):
     """Set up config entry and basic device and area and return ids of each for testing."""
     config_entry = MockConfigEntry(domain="test")
@@ -2228,8 +2358,8 @@ def _get_device_setup_info(
 
     device = device_registry.async_get_or_create(
         name=device_name,
-        identifiers={("test", "current_device")},
-        connections={("mac", "30:31:32:33:34:00")},
+        identifiers={("test", identifier)},
+        connections={("mac", mac)},
         config_entry_id=config_entry.entry_id,
         suggested_area=area_name,
     )
@@ -2247,6 +2377,7 @@ async def sensor_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate sensor entities."""
     data = {}
@@ -2387,14 +2518,6 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
     data["sensor_12"] = sensor_12
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Device",
-        "Test Area",
-    )
-
     sensor_13 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
@@ -2403,13 +2526,13 @@ async def sensor_fixture(
         original_device_class=SensorDeviceClass.TEMPERATURE,
         suggested_object_id="outside_temperature_device",
         original_name="Outside Temperature Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["sensor"]["config_entry"],
+        device_id=entity_config_data["sensor"]["device_id"],
     )
     sensor_13_attributes = {
         ATTR_BATTERY_LEVEL: 13,
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["sensor"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["sensor"]["device_id"],
     }
     set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
 
@@ -2424,14 +2547,14 @@ async def sensor_fixture(
         original_device_class=SensorDeviceClass.HUMIDITY,
         suggested_object_id="outside_humidity_device",
         original_name="Outside Humidity Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["sensor"]["config_entry"],
+        device_id=entity_config_data["sensor"]["device_id"],
     )
 
     sensor_14_attributes = {
         ATTR_BATTERY_LEVEL: 13,
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["sensor"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["sensor"]["device_id"],
     }
     set_state_with_entry(hass, sensor_14, 56.0, sensor_14_attributes)
     data["sensor_14"] = sensor_14
@@ -2443,13 +2566,13 @@ async def sensor_fixture(
         unique_id="sensor_15",
         suggested_object_id="trend_gradient_device",
         original_name="Trend Gradient Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["sensor"]["config_entry"],
+        device_id=entity_config_data["sensor"]["device_id"],
     )
 
     sensor_15_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["sensor"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["sensor"]["device_id"],
     }
     set_state_with_entry(hass, sensor_15, 0.903, sensor_15_attributes)
     data["sensor_15"] = sensor_15
@@ -2465,6 +2588,7 @@ async def climate_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate climate entities."""
     data = {}
@@ -2576,6 +2700,7 @@ async def humidifier_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate humidifier entities."""
     data = {}
@@ -2625,28 +2750,28 @@ async def humidifier_fixture(
     data["humidifier_3"] = humidifier_3
     data["humidifier_3_attributes"] = humidifier_3_attributes
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Humidifier Device",
-        "Test Area",
-    )
+    # config_entry, device_id, area_id = _get_device_setup_info(
+    #     hass,
+    #     device_registry,
+    #     area_registry,
+    #     "Test Humidifier Device",
+    #     "Test Area",
+    # )
     humidifier_4 = entity_registry.async_get_or_create(
         domain=humidifier.DOMAIN,
         platform="test",
         unique_id="humidifier_4",
         suggested_object_id="hygrostat_device",
         original_name="Hygrostat Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["humidifier_4"]["config_entry"],
+        device_id=entity_config_data["humidifier_4"]["device_id"],
     )
     humidifier_4_attributes = {
         ATTR_HUMIDITY: 42.0,
         ATTR_MODE: "sleep",
         ATTR_AVAILABLE_MODES: ["auto", "sleep", "normal"],
-        ATTR_DEVICE_ID: device_id,
-        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: entity_config_data["humidifier_4"]["device_id"],
+        ATTR_AREA_ID: entity_config_data["humidifier_4"]["area_id"],
     }
     set_state_with_entry(hass, humidifier_4, STATE_OFF, humidifier_4_attributes)
     data["humidifier_4"] = humidifier_4
@@ -2662,6 +2787,7 @@ async def lock_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate lock entities."""
     data = {}
@@ -2685,25 +2811,18 @@ async def lock_fixture(
     set_state_with_entry(hass, lock_2, LockState.UNLOCKED)
     data["lock_2"] = lock_2
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Lock Device",
-        "Test Area",
-    )
     lock_3 = entity_registry.async_get_or_create(
         domain=lock.DOMAIN,
         platform="test",
         unique_id="lock_3",
         suggested_object_id="back_door",
         original_name="Back Door",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["lock_3"]["config_entry"],
+        device_id=entity_config_data["lock_3"]["device_id"],
     )
     lock_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["lock_3"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["lock_3"]["device_id"],
     }
     set_state_with_entry(hass, lock_3, LockState.UNLOCKED, lock_3_attributes)
     data["lock_3"] = lock_3
@@ -2719,6 +2838,7 @@ async def cover_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate cover entities."""
     data = {}
@@ -2961,6 +3081,7 @@ async def binary_sensor_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate binary_sensor entities."""
     data = {}
@@ -3018,6 +3139,7 @@ async def light_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate light entities."""
     data = {}
@@ -3114,6 +3236,7 @@ async def switch_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate switch entities."""
     data = {}
@@ -3175,6 +3298,7 @@ async def fan_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate fan entities."""
     data = {}
@@ -3247,6 +3371,7 @@ async def alarm_control_panel_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate alarm control panel entities."""
     data = {}
@@ -3339,6 +3464,7 @@ async def device_tracker_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate device_tracker entities."""
     data = {}
@@ -3417,6 +3543,7 @@ async def update_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    entity_config_data: dict[str, Any],
 ) -> dict[str, er.RegistryEntry]:
     """Simulate update entities."""
     data = {}
