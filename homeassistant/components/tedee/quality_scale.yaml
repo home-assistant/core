@@ -3,7 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      The integration does not provide any additional actions.
+      No custom actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -13,14 +13,14 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      The integration does not provide any additional actions.
+      No custom actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
-      Entities of this integration does not explicitly subscribe to events.
+      No explicit event subscriptions
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -29,17 +29,23 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: |
-      This integration does not have an options flow.
+      Options flow not documented, doesn't have one
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: todo
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
@@ -47,11 +53,13 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info:
-    status: todo
+    status: exempt
     comment: |
-      The integration doesn't update the device info based on DHCP discovery
-      of known existing devices.
-  discovery: done
+      No discovery
+  discovery:
+    status: exempt
+    comment: |
+      No discovery supported atm
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -59,31 +67,19 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      The integration connects to a single device per configuration entry.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: |
-      While the integration provides some of the exception translations, the
-      translation for the error raised in the update error of the coordinator
-      is missing.
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
-      This integration does not raise any repairable issues.
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration connect to a single device per configuration entry.
-
+      Currently no repairs/issues
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done
