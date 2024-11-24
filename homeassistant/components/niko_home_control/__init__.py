@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from nclib.errors import NetcatError
 from nikohomecontrol import NikoHomeControlConnection
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +23,12 @@ async def async_setup_entry(
         controller = NikoHomeControlConnection(
             entry.data[CONF_HOST], entry.data[CONF_PORT]
         )
-    except Exception as err:
+    except NetcatError as err:
         raise ConfigEntryNotReady("cannot connect to controller.") from err
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            "unknown error while connecting to controller."
+        ) from err
 
     entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
