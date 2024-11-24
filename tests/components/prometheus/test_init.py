@@ -2319,6 +2319,10 @@ async def entity_config_fixture(
         "sensor": "Test Device",
         "cover": "Test Cover Device",
         "climate": "Test Climate Device",
+        "binary_sensor": "Test Binary Sensor Device",
+        "light": "Test Light Device",
+        "switch": "Test Switch Device",
+        "fan": "Test Fan Device",
     }
     for key, value in devices.items():
         identifier = "".join(
@@ -3085,25 +3089,18 @@ async def binary_sensor_fixture(
     set_state_with_entry(hass, binary_sensor_2, STATE_OFF)
     data["binary_sensor_2"] = binary_sensor_2
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Binary Sensor Device",
-        "Test Area",
-    )
     binary_sensor_3 = entity_registry.async_get_or_create(
         domain=binary_sensor.DOMAIN,
         platform="test",
         unique_id="binary_sensor_3",
         suggested_object_id="status",
         original_name="Status",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["binary_sensor"]["config_entry"],
+        device_id=entity_config_data["binary_sensor"]["device_id"],
     )
     binary_sensor_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["binary_sensor"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["binary_sensor"]["device_id"],
     }
     set_state_with_entry(hass, binary_sensor_3, STATE_OFF, binary_sensor_3_attributes)
     data["binary_sensor_3"] = binary_sensor_3
@@ -3181,26 +3178,19 @@ async def light_fixture(
     data["light_5"] = light_5
     data["light_5_attributes"] = light_5_attributes
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Light Device",
-        "Test Area",
-    )
     light_6 = entity_registry.async_get_or_create(
         domain=light.DOMAIN,
         platform="test",
         unique_id="light_6",
         suggested_object_id="smart_light",
         original_name="Smart Light",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["light"]["config_entry"],
+        device_id=entity_config_data["light"]["device_id"],
     )
     light_6_attributes = {
         light.ATTR_BRIGHTNESS: 255,
-        ATTR_DEVICE_ID: device_id,
-        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: entity_config_data["light"]["device_id"],
+        ATTR_AREA_ID: entity_config_data["light"]["area_id"],
     }
     set_state_with_entry(hass, light_6, STATE_ON, light_6_attributes)
     data["light_6"] = light_6
@@ -3244,25 +3234,18 @@ async def switch_fixture(
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Switch Device",
-        "Test Area",
-    )
     switch_3 = entity_registry.async_get_or_create(
         domain=switch.DOMAIN,
         platform="test",
         unique_id="switch_3",
         suggested_object_id="relay",
         original_name="Relay",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["switch"]["config_entry"],
+        device_id=entity_config_data["switch"]["device_id"],
     )
     switch_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["switch"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["switch"]["device_id"],
     }
     set_state_with_entry(hass, switch_3, STATE_OFF, switch_3_attributes)
     data["switch_3"] = switch_3
@@ -3312,21 +3295,14 @@ async def fan_fixture(
     data["fan_2"] = fan_2
     data["fan_2_attributes"] = fan_2_attributes
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Fan Device",
-        "Test Area",
-    )
     fan_3 = entity_registry.async_get_or_create(
         domain=fan.DOMAIN,
         platform="test",
         unique_id="fan_3",
         suggested_object_id="fan_3",
         original_name="Test Device Fan",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["fan"]["config_entry"],
+        device_id=entity_config_data["fan"]["device_id"],
     )
     fan_3_attributes = {
         ATTR_DIRECTION: DIRECTION_FORWARD,
@@ -3334,8 +3310,8 @@ async def fan_fixture(
         ATTR_PERCENTAGE: 44,
         ATTR_PRESET_MODE: "OFF",
         ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
-        ATTR_DEVICE_ID: device_id,
-        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: entity_config_data["fan"]["device_id"],
+        ATTR_AREA_ID: entity_config_data["fan"]["area_id"],
     }
     set_state_with_entry(hass, fan_3, STATE_ON, fan_3_attributes)
     data["fan_3"] = fan_3
