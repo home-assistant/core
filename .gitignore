@@ -1,6 +1,8 @@
-/config
+# Ignore everything in the config folder
+config/*
 config2/*
-
+config/custom_components/hacs
+!config/custom_components/
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*
 

@@ -1,0 +1,4136 @@
+add_player_queue_items:
+  name: Add Player Queue Items
+  description: Add one or more items to the end of the user's current Spotify Player playback queue.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    uris:
+      name: URI's
+      description: A list of Spotify track or episode URIs to add to the queue (spotify:track:6zd8T1PBe9JFHmuVnurdRp, spotify:track:1kWUud3vY5ij5r62zxpTRy); values can be track or episode URIs.  All URIs must be of the same type - you cannot mix and match tracks and episodes.  An unlimited number of items can be added in one request, but the more items the longer it will take.
+      example: "spotify:track:6zd8T1PBe9JFHmuVnurdRp"
+      required: true
+      selector:
+        text:
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an '*' is specified), then the Spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    verify_device_id:
+      name: Verify Device ID?
+      description: True to verify a device id is active; otherwise, false to assume that a device id is already active. Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final add request (if necessary). This delay will give the spotify web api time to process the change before another command is issued.  Default is 0.15; value range is 0 - 10.
+      example: "0.15"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+check_album_favorites:
+  name: Check Album Favorites
+  description: Check if one or more albums (or the currently playing album) exists in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify album id's (e.g. `6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track album uri id value is used.
+      example: "6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX"
+      required: false
+      selector:
+        text:
+
+check_artists_following:
+  name: Check Artists Following
+  description: Check if one or more artists (or the currently playing artists) is followed in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify artist id's (e.g. `2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track artist uri id value is used.
+      example: "2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk"
+      required: false
+      selector:
+        text:
+
+check_audiobook_favorites:
+  name: Check Audiobook Favorites
+  description: Check if one or more audiobooks (or the currently playing audiobook) exists in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify audiobook id's (e.g. `3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe`).  A maximum of 50 id's may be specified.  If omitted, the currently playing audiobook uri id value is used.
+      example: "3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe"
+      required: false
+      selector:
+        text:
+
+check_episode_favorites:
+  name: Check Episode Favorites
+  description: Check if one or more episodes (or the currently playing episode) exists in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify episode id's (e.g. `3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4`).  A maximum of 50 id's may be specified.  If omitted, the currently playing episode uri id value is used.
+      example: "3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4"
+      required: false
+      selector:
+        text:
+
+check_playlist_followers:
+  name: Check Playlist Followers
+  description: Check to see if the current user is following a specified playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. `3cEYpjA9oz9GiPac4AsH4n`).
+      example: "3cEYpjA9oz9GiPac4AsH4n"
+      required: true
+      selector:
+        text:
+    user_ids:
+      name: User ID's
+      description: Deprecated - must contain the current user's Spotify Username; Maximum of 1 id.  Omit to default to current user name.
+      required: false
+      selector:
+        text:
+
+check_show_favorites:
+  name: Check Show Favorites
+  description: Check if one or more shows (or the currently playing show) exists in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify show id's (e.g. `6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing show uri id value is used.
+      example: "6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk"
+      required: false
+      selector:
+        text:
+
+check_track_favorites:
+  name: Check Track Favorites
+  description: Check if one or more tracks (or the currently playing track) exists in the current user's 'Your Library' favorites.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify track id's (e.g. `1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK`).  A maximum of 50 id's may be specified.  If omitted, the currently playing context uri id value is used.
+      example: "1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK"
+      required: false
+      selector:
+        text:
+
+check_users_following:
+  name: Check Users Following
+  description: Check to see if the current user is following one or more users.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify user ID's to check (e.g. `smedjan, 7piUznRWxNyKpaPvmOSdiZ`).  A maximum of 50 ID's can be specified.
+      example: "smedjan, 7piUznRWxNyKpaPvmOSdiZ"
+      required: true
+      selector:
+        text:
+
+follow_artists:
+  name: Follow Artists
+  description: Add the current user as a follower of one or more artists.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify artist id's (e.g. `2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track artist uri id value is used.
+      example: "2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk"
+      required: false
+      selector:
+        text:
+
+follow_playlist:
+  name: Follow Playlist
+  description: Add the current user as a follower of a playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. `3cEYpjA9oz9GiPac4AsH4n`).  If omitted, the currently playing playlist uri id value is used.
+      example: "3cEYpjA9oz9GiPac4AsH4n"
+      required: false
+      selector:
+        text:
+    public:
+      name: Public?
+      description: If true the playlist will be included in user's public playlists, if false it will remain private.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+follow_users:
+  name: Follow Users
+  description: Add the current user as a follower of one or more users.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of the Spotify user IDs (e.g. 'smedjan,3758dfdsfjk435hjk6k79lm0n3c4').  A maximum of 50 IDs can be sent in one request.
+      example: "smedjan,3758dfdsfjk435hjk6k79lm0n3c4"
+      required: true
+      selector:
+        text:
+
+get_album:
+  name: Get Album
+  description: Get Spotify catalog information for a single album.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    album_id:
+      name: Album Id
+      description: The Spotify ID of the album.  If omitted, the currently playing album uri id value is used.
+      example: "6vc9OTcyd3hyzabCmsdnwE"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+
+get_album_favorites:
+  name: Get Album Favorites
+  description: Get a list of the albums saved in the current Spotify user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_album_new_releases:
+  name: Get Album New Releases
+  description: Get a list of new album releases featured in Spotify.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    country:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_album_tracks:
+  name: Get Album Tracks
+  description: Get Spotify catalog information about an album's tracks.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    album_id:
+      name: Album ID
+      description: The Spotify ID of the album (e.g. `6vc9OTcyd3hyzabCmsdnwE`). If null, the currently playing album uri id value is used; a Spotify Free or Premium account is required to correctly read the currently playing context.
+      example: "6vc9OTcyd3hyzabCmsdnwE"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_artist:
+  name: Get Artist
+  description: Get Spotify catalog information for a single artist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    artist_id:
+      name: Artist Id
+      description: The Spotify ID of the artist.  If omitted, the currently playing artist uri id value is used.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+
+get_artist_albums:
+  name: Get Artist Albums
+  description: Get Spotify catalog information about an artist's albums.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    artist_id:
+      name: Artist Id
+      description: The Spotify ID of the artist.  If omitted, the currently playing artist uri id value is used.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+    include_groups:
+      name: Include Groups
+      description: A comma-separated list of keywords that will be used to filter the response.  If not supplied, only `album` types will be returned. Valid values are `album`, `single`, `appears_on`, `compilation`.
+      example: "album"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_artist_info:
+  name: Get Artist Info
+  description: Get artist about information from the Spotify Artist Biography page for the specified Spotify artist ID.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    artist_id:
+      name: Artist Id
+      description: The Spotify ID of the artist.  If omitted, the currently playing artist uri id value is used.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+
+get_artist_related_artists:
+  name: Get Artist Related Artists
+  description: Get Spotify catalog information about artists similar to a given artist. Similarity is based on analysis of the Spotify community's listening history.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    artist_id:
+      name: Artist Id
+      description: The Spotify ID of the artist.  If omitted, the currently playing artist uri id value is used.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_artist_top_tracks:
+  name: Get Artist Top Tracks
+  description: Get Spotify catalog information about an artist's top tracks by country.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    artist_id:
+      name: Artist Id
+      description: The Spotify ID of the artist.  If omitted, the currently playing artist uri id value is used.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_artists_followed:
+  name: Get Artists Followed
+  description: Get the current user's followed artists.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    after:
+      name: After
+      description: The last artist ID retrieved from the previous request, or null for the first request.
+      example: "6APm8EjxOHSYM5B4i3vT3q"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_audiobook:
+  name: Get Audiobook
+  description: Get Spotify catalog information for a single audiobook.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    audiobook_id:
+      name: Audiobook Id
+      description: The Spotify ID for the audiobook (e.g. `74aydHJKgYz3AIq3jjBSv1`). If null, the currently playing audiobook uri id value is used.
+      example: "74aydHJKgYz3AIq3jjBSv1"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+
+get_audiobook_chapters:
+  name: Get Audiobook Chapters
+  description: Get Spotify catalog information about an audiobook's chapters.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    audiobook_id:
+      name: Audiobook Id
+      description: The Spotify ID for the audiobook (e.g. `74aydHJKgYz3AIq3jjBSv1`). If null, the currently playing audiobook uri id value is used.
+      example: "74aydHJKgYz3AIq3jjBSv1"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_audiobook_favorites:
+  name: Get Audiobook Favorites
+  description: Get a list of the audiobooks saved in the current Spotify user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_browse_categorys_list:
+  name: Get Browse Categorys List
+  description: Get a sorted list of ALL categories used to tag items in Spotify.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    country:
+      name: Country
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    locale:
+      name: Locale
+      description: The desired language, consisting of a lowercase ISO 639-1 language code and an uppercase ISO 3166-1 alpha-2 country code, joined by an underscore.  For example `es_MX`, meaning `Spanish (Mexico)`.  Provide this parameter if you want the results returned in a particular language (where available).  Note that if locale is not supplied, or if the specified language is not available, all strings will be returned in the Spotify default language (American English).
+      example: "es_MX"
+      required: false
+      selector:
+        text:
+    refresh:
+      name: Refresh Cache?
+      description: True to return real-time information from the spotify web api and update the cache; otherwise, False to just return the cached value.
+      example: "False"
+      required: false
+      selector:
+        boolean:
+
+get_category_playlists:
+  name: Get Category Playlists
+  description: Get a list of Spotify playlists tagged with a particular category.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    category_id:
+      name: Category ID
+      description: Spotify category ID (not name) for the category.
+      example: "dinner"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    country:
+      name: Country
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_chapter:
+  name: Get Chapter
+  description: Get Spotify catalog information for a single audiobook chapter identified by its unique Spotify ID.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    chapter_id:
+      name: Chapter Id
+      description: The Spotify ID for the chapter.  If omitted, the currently playing chapter uri id value is used.
+      example: "3V0yw9UDrYAfkhAvTrvt9Y"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+
+get_episode:
+  name: Get Episode
+  description: Get Spotify catalog information for a single episode identified by its unique Spotify ID.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    episode_id:
+      name: Episode Id
+      description: The Spotify ID for the episode.  If omitted, the currently playing episode uri id value is used.
+      example: "26c0zVyOv1lzfYpBXdh1zC"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+
+get_episode_favorites:
+  name: Get Episode Favorites
+  description: Get a list of the episodes saved in the current Spotify user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_featured_playlists:
+  name: Get Featured Playlists
+  description: Get a list of Spotify featured playlists.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    country:
+      name: Country
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    locale:
+      name: Locale
+      description: The desired language, consisting of a lowercase ISO 639-1 language code and an uppercase ISO 3166-1 alpha-2 country code, joined by an underscore.  For example `es_MX`, meaning `Spanish (Mexico)`.  Provide this parameter if you want the results returned in a particular language (where available).  Note that if locale is not supplied, or if the specified language is not available, all strings will be returned in the Spotify default language (American English).
+      example: "es_MX"
+      required: false
+      selector:
+        text:
+    timestamp:
+      name: Timestamp
+      description: A timestamp in ISO 8601 format (yyyy-MM-ddTHH:mm:ss). Use this parameter to specify the user's local time to get results tailored for that specific date and time in the day. If not provided, the response defaults to the current UTC time.
+      example: "2023-10-23T09:00:00"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_player_devices:
+  name: Get Player Devices
+  description: Get information about a user's available Spotify Connect player devices.  Some device models are not supported and will not be listed in the API response.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    refresh:
+      name: Refresh?
+      description: True to return real-time information from the spotify web api and update the cache; otherwise, False to just return the cached value.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_player_now_playing:
+  name: Get Player Now Playing
+  description: Get the object currently being played on the user's Spotify account.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    additional_types:
+      name: Additional Types
+      description: A comma-separated list of item types that your client supports besides the default track type. Valid types are 'track' and 'episode'.
+      example: "episode"
+      required: false
+      selector:
+        text:
+
+get_player_playback_state:
+  name: Get Player Playback State
+  description: Get information about the user's current playback state, including track or episode, progress, and active device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    additional_types:
+      name: Additional Types
+      description: A comma-separated list of item types that your client supports besides the default track type. Valid types are 'track' and 'episode'.
+      example: "episode"
+      required: false
+      selector:
+        text:
+
+get_player_queue_info:
+  name: Get Player Queue Info
+  description: Get the list of objects that make up the user's playback queue.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+
+get_player_recent_tracks:
+  name: Get Player Recent Tracks
+  description: Get tracks from the current user's recently played tracks; currently doesn't support podcast episodes, and only 50 items may be returned due to spotify limits.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    after:
+      name: After Time MS
+      description: Returns all items after (but not including) this cursor position, which is a Unix timestamp in milliseconds.  If `after` is specified, `before` must not be specified.  Use with limit to get the next set of items.  Default is `0` (the first item).
+      example: 1706218456821
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 99999999999999
+          mode: box
+    before:
+      name: Before Time MS
+      description: Returns all items before (but not including) this cursor position, which is a Unix timestamp in milliseconds.  If `before` is specified, `after` must not be specified.  Use with limit to get the next set of items.  Default is `0` (the first item).
+      example: 1706218467821
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 99999999999999
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_playlist:
+  name: Get Playlist
+  description: Get a playlist owned by a Spotify user.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist Id
+      description: The Spotify ID of the playlist.  If omitted, the currently playing playlist uri id value is used.
+      example: "5v5ETK9WFXAnGQ3MRubKuE"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    fields:
+      name: Fields
+      description: A comma-separated list of fields to return from the Spotify Web API. All fields are returned if omitted. Limiting fields results can improve performance.
+      example: "description,id,name,public,snapshot_id,type,uri,tracks(limit,next,offset,previous,total,items(track(id,name,track_number,type,uri,album(id,images,name,total_tracks,type,uri,artists(id,name,type,uri)))))"
+      required: false
+      selector:
+        text:
+    additional_types:
+      name: Additional Types
+      description: A comma-separated list of item types that your client supports besides the default track type. Valid types are 'track' and 'episode'.
+      example: "episode"
+      required: false
+      selector:
+        text:
+
+get_playlist_cover_image:
+  name: Get Playlist Cover Image
+  description: Get the current image associated with a specific playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5v5ETK9WFXAnGQ3MRubKuE).  If null, the currently playing playlist uri id value is used.
+      example: "5v5ETK9WFXAnGQ3MRubKuE"
+      required: false
+      selector:
+        text:
+
+get_playlist_favorites:
+  name: Get Playlist Favorites
+  description: Get a list of the playlists owned or followed by the current Spotify user.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_playlist_items:
+  name: Get Playlist Items
+  description: Get full details of the items of a playlist owned by a Spotify user.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5v5ETK9WFXAnGQ3MRubKuE).  If null, the currently playing playlist uri id value is used.
+      example: "5v5ETK9WFXAnGQ3MRubKuE"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    fields:
+      name: Fields
+      description: Filters for the query; a comma-separated list of the fields to return. If omitted, all fields are returned. For example, specify 'items(track(name,uri))' to get just the playlist's track names and URIs.
+      example: "items(track(name,uri,album(name,uri)))"
+      required: false
+      selector:
+        text:
+    additional_types:
+      name: Additional Types
+      description: A comma-separated list of item types that your client supports besides the default track type.  Valid types are 'track' and 'episode'.
+      example: "track"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_playlists_for_user:
+  name: Get Playlists For User
+  description: Get a list of the playlists owned or followed by a Spotify user.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    user_id:
+      name: User ID
+      description: The user's Spotify user ID (e.g. `smedjan`).
+      example: "smedjan"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_show:
+  name: Get Show
+  description: Get Spotify catalog information for a single show identified by its unique Spotify ID.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    show_id:
+      name: Show Id
+      description: The Spotify ID for the show.  If omitted, the currently playing show uri id value is used.
+      example: "5CfCWKI5pZ28U0uOzXkDHe"
+      required: false
+      selector:
+        text:
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+
+get_show_episodes:
+  name: Get Show Episodes
+  description: Get Spotify catalog information about a show's episodes.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    show_id:
+      name: Show Id
+      description: The Spotify ID for the show.  If omitted, the currently playing show uri id value is used.
+      example: "6kAsbP8pxwaU2kPibKTuHE"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_show_favorites:
+  name: Get Show Favorites
+  description: Get a list of the shows saved in the current Spotify user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    exclude_audiobooks:
+      name: Exclude Audiobooks?
+      description: True (default) to exclude audiobook shows from the returned list, leaving only podcast shows; otherwise, False to include all results returned by the Spotify Web API.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_spotify_connect_device:
+  name: Get Spotify Connect Device
+  description: Get information about a specific Spotify Connect player device, and (optionally) activate the device if it requires it.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_value:
+      name: Device Value
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If an "*" is specified, then the spotify default device is used.
+      example: "Bose-ST10-1"
+      required: true
+      selector:
+        text:
+    verify_user_context:
+      name: Verify User Context?
+      description: If True, the active user context of the resolved device is checked to ensure it matches the Spotify Connect user context specified in the spotify configuration options.  If False, the user context will not be checked.  Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    verify_timeout:
+      name: Verify Timeout
+      description: Maximum time to wait (in seconds) for the device to become active in the Spotify Connect device list.  This value is only used if a Connect command has to be issued to activate the device. Default is 5; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+    refresh_device_list:
+      name: Refresh Device List?
+      description: True (default) to refresh the Spotify Connect device list; otherwise, False to use the Spotify Connect device list cache.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    activate_device:
+      name: Activate Device?
+      description: True to activate the device if necessary; otherwise, False.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing any command to the device.  This delay will give the spotify zeroconf api time to process the change before another command is issued.  Default is 0.25; value range is 0 - 10.
+      example: "0.25"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+get_spotify_connect_devices:
+  name: Get Spotify Connect Devices
+  description: Get information about all available Spotify Connect player (both static and dynamic) devices.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    refresh:
+      name: Refresh Cache?
+      description: True (default) to return real-time information from the spotify zeroconf api and update the cache; otherwise, False to just return the cached value.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_track:
+  name: Get Track
+  description: Get Spotify catalog information for a single track identified by its unique Spotify ID.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    track_id:
+      name: Track Id
+      description: The Spotify ID for the track.  If omitted, the currently playing track uri id value is used.
+      example: "1kWUud3vY5ij5r62zxpTRy"
+      required: false
+      selector:
+        text:
+
+get_track_favorites:
+  name: Get Track Favorites
+  description: Get a list of the tracks saved in the current Spotify user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_track_recommendations:
+  name: Get Track Recommendations
+  description: Get track recommendations for specified criteria.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items. Default is 20, Range is 1 to 50.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    seed_artists:
+      name: Seed Artists
+      description: A comma separated list of Spotify IDs for seed artists (e.g. 4NHQUGzhtTLFvgF5SZesLK).  Up to 5 seed values may be provided in any combination of seedArtists, seedTracks and seedGenres; only required if seedGenres and seedTracks are not set.
+      required: false
+      selector:
+        text:
+    seed_genres:
+      name: Seed Genres
+      description: A comma separated list of any genres in the set of available genre seeds (e.g. rock,hard-rock,rock-n-roll).  Up to 5 seed values may be provided in any combination of seedArtists, seedTracks and seedGenres; only required if seedArtists and seedTracks are not set.
+      example: "rock,hard-rock,rock-n-roll"
+      required: false
+      selector:
+        text:
+    seed_tracks:
+      name: Seed Tracks
+      description: A comma separated list of Spotify IDs for a seed track (e.g. 0c6xIDDpzE81m2q797ordA).  Up to 5 seed values may be provided in any combination of seedArtists, seedTracks and seedGenres; only required if seedArtists and seedGenres are not set.
+      required: false
+      selector:
+        text:
+    min_acousticness:
+      name: Minimum Acousticness
+      description: Restrict results to only those tracks whose acousticness level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_acousticness:
+      name: Maximum Acousticness
+      description: Restrict results to only those tracks whose acousticness level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_acousticness:
+      name: Target Acousticness
+      description: Restrict results to only those tracks whose acousticness level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_danceability:
+      name: Minimum Danceability
+      description: Restrict results to only those tracks whose danceability level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_danceability:
+      name: Maximum Danceability
+      description: Restrict results to only those tracks whose danceability level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_danceability:
+      name: Target Danceability
+      description: Restrict results to only those tracks whose acousticness is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_duration_ms:
+      name: Minimum Duration MS
+      description: Restrict results to only those tracks whose duration is greater than the specified value in milliseconds.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_duration_ms:
+      name: Maximum Duration MS
+      description: Restrict results to only those tracks whose duration is less than the specified value in milliseconds.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_duration_ms:
+      name: Target Duration MS
+      description: Restrict results to only those tracks whose duration is equal to the specified value in milliseconds.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_energy:
+      name: Minimum Energy
+      description: Restrict results to only those tracks whose energy level is greater than the specified value.  Range is `0` - `1`.
+      example: 0.975
+      required: false
+      selector:
+        number:
+          mode: box
+    max_energy:
+      name: Maximum Energy
+      description: Restrict results to only those tracks whose energy level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_energy:
+      name: Target Energy
+      description: Restrict results to only those tracks whose energy level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_instrumentalness:
+      name: Minimum Instrumentalness
+      description: Restrict results to only those tracks whose instrumentalness level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_instrumentalness:
+      name: Maximum Instrumentalness
+      description: Restrict results to only those tracks whose instrumentalness level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_instrumentalness:
+      name: Target Instrumentalness
+      description: Restrict results to only those tracks whose instrumentalness level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_key:
+      name: Minimum Key
+      description: Restrict results to only those tracks whose key level is greater than the specified value.  Range is `0` - `11`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_key:
+      name: Maximum Key
+      description: Restrict results to only those tracks whose key level is less than the specified value.  Range is `0` - `11`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_key:
+      name: Target Key
+      description: Restrict results to only those tracks whose key level is equal to the specified value.  Range is `0` - `11`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_liveness:
+      name: Minimum Liveness
+      description: Restrict results to only those tracks whose liveness level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_liveness:
+      name: Maximum Liveness
+      description: Restrict results to only those tracks whose liveness level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_liveness:
+      name: Target Liveness
+      description: Restrict results to only those tracks whose liveness level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_loudness:
+      name: Minimum Loudness
+      description: Restrict results to only those tracks whose loudness level is greater than the specified value.
+      example: -9.201
+      required: false
+      selector:
+        number:
+          mode: box
+    max_loudness:
+      name: Maximum Loudness
+      description: Restrict results to only those tracks whose loudness level is less than the specified value.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_loudness:
+      name: Target Loudness
+      description: Restrict results to only those tracks whose loudness level is equal to the specified value.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_mode:
+      name: Minimum Mode
+      description: Restrict results to only those tracks whose mode level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_mode:
+      name: Maximum Mode
+      description: Restrict results to only those tracks whose mode level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_mode:
+      name: Target Mode
+      description: Restrict results to only those tracks whose mode level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_popularity:
+      name: Minimum Popularity
+      description: Restrict results to only those tracks whose popularity level is greater than the specified value.  Range is `0` - `100`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_popularity:
+      name: Maximum Popularity
+      description: Restrict results to only those tracks whose popularity level is less than the specified value.  Range is `0` - `100`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_popularity:
+      name: Target Popularity
+      description: Restrict results to only those tracks whose popularity level is equal to the specified value.  Range is `0` - `100`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_speechiness:
+      name: Minimum Speechiness
+      description: Restrict results to only those tracks whose speechiness level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_speechiness:
+      name: Maximum Speechiness
+      description: Restrict results to only those tracks whose speechiness level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_speechiness:
+      name: Target Speechiness
+      description: Restrict results to only those tracks whose speechiness level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_tempo:
+      name: Minimum Tempo
+      description: Restrict results to only those tracks with a tempo greater than the specified number of beats per minute.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_tempo:
+      name: Maximum Tempo
+      description: Restrict results to only those tracks with a tempo less than the specified number of beats per minute.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_tempo:
+      name: Target Tempo
+      description: Restrict results to only those tracks with a tempo equal to the specified number of beats per minute.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_time_signature:
+      name: Minimum Time Signature
+      description: Restrict results to only those tracks whose time signature is greater than the specified value.  Range is `0` - `11`.
+      example: 4
+      required: false
+      selector:
+        number:
+          mode: box
+    max_time_signature:
+      name: Maximum Time Signature
+      description: Restrict results to only those tracks whose time signature is less than the specified value.  Range is `0` - `11`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_time_signature:
+      name: Target Time Signature
+      description: Restrict results to only those tracks whose time signature is equal to the specified value.  Range is `0` - `11`.
+      required: false
+      selector:
+        number:
+          mode: box
+    min_valence:
+      name: Minimum Valence
+      description: Restrict results to only those tracks whose valence level is greater than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    max_valence:
+      name: Maximum Valence
+      description: Restrict results to only those tracks whose valence level is less than the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+    target_valence:
+      name: Target Valence
+      description: Restrict results to only those tracks whose valence level is equal to the specified value.  Range is `0` - `1`.
+      required: false
+      selector:
+        number:
+          mode: box
+
+get_tracks_audio_features:
+  name: Get Tracks Audio Features
+  description: Get audio features for multiple tracks based on their Spotify IDs.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of the Spotify track IDs. Maximum of 100 IDs.  Example = `7ouMYWpwJ422jRcDASZB7P,4VqPOruhp5EdPBeR92t6lQ,2takcwOaAZWiXQijPHIx7B`.
+      example: "7ouMYWpwJ422jRcDASZB7P,4VqPOruhp5EdPBeR92t6lQ,2takcwOaAZWiXQijPHIx7B"
+      required: true
+      selector:
+        text:
+
+get_users_top_artists:
+  name: Get Users Top Artists
+  description: Get the current user's top artists based on calculated affinity.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    time_range:
+      name: Time Range
+      description: Over what time frame the affinities are computed. Valid values are `long_term` (calculated from several years of data and including all new data as it becomes available), `medium_term` (approximately last 6 months), and `short_term` (approximately last 4 weeks).
+      example: "long_term"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+get_users_top_tracks:
+  name: Get Users Top Tracks
+  description: Get the current user's top tracks based on calculated affinity.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    time_range:
+      name: Time Range
+      description: Over what time frame the affinities are computed. Valid values are `long_term` (calculated from several years of data and including all new data as it becomes available), `medium_term` (approximately last 6 months), and `short_term` (approximately last 4 weeks).
+      example: "long_term"
+      required: false
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+    sort_result:
+      name: Sort Result?
+      description: True to sort result items by name prior to returning to the caller; otherwise, False to return results in the order that the Spotify Web API returned them.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+player_activate_devices:
+  name: Player Activate Devices
+  description: Activates all static Spotify Connect player devices, and (optionally) switches the active user context to the current user context.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    verify_user_context:
+      name: Verify User Context?
+      description: If True, the active user context of the resolved device is checked to ensure it matches the specified Spotify Connect user context.  If False, the user context will not be checked.  Default is False.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_pause:
+  name: Player Media Pause
+  description: Pause media play for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_play_context:
+  name: Player Media Play Context
+  description: Start playing one or more tracks of the specified context on a Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    context_uri:
+      name: Context Uri
+      description: Spotify URI of the context to play (e.g. `spotify:album:6vc9OTcyd3hyzabCmsdnwE`).  Valid contexts are albums, artists & playlists.
+      example: "spotify:album:6vc9OTcyd3hyzabCmsdnwE"
+      required: true
+      selector:
+        text:
+    offset_uri:
+      name: Offset Uri
+      description: Indicates from what Uri in the context playback should start (e.g. `1kWUud3vY5ij5r62zxpTRy`.  Only available when contextUri corresponds to an artist, album or playlist.  The offsetPosition argument will be used if this value is null.
+      example: "spotify:track:1kWUud3vY5ij5r62zxpTRy"
+      required: false
+      selector:
+        text:
+    offset_position:
+      name: Offset Position
+      description: Indicates from what position in the context playback should start.  The value is zero-based, and can't be negative.  Only available when contextUri corresponds to an album or playlist.
+      example: 3
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 500
+          mode: box
+    position_ms:
+      name: Seek Position
+      description: The position (in milliseconds) to seek to; must be a positive number.  Passing in a position that is greater than the length of the track will cause the player to start playing the next track.
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 999999999
+          mode: box
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_play_track_favorites:
+  name: Player Media Play Track Favorites
+  description: Start playing track favorites on the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    shuffle:
+      name: Shuffle?
+      description: True to set player shuffle mode to on; otherwise, False for no shuffle.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the command to the player.  This delay will give the spotify web api time to process the change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+    resolve_device_id:
+      name: Resolve Device Id?
+      description: True to resolve the supplied `deviceId` value; otherwise, False not resolve the `deviceId` value as it has already been resolved.  Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to retrieve from favorites.  Default is 200.
+      example: 200
+      required: false
+      selector:
+        number:
+          mode: box
+
+player_media_play_tracks:
+  name: Player Media Play Tracks
+  description: Start playing one or more tracks on the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    uris:
+      name: Uri's
+      description: A comma-separated list of Spotify track URIs to play; can be track or episode URIs.  A maximum of 50 items can be specified.
+      example: "spotify:track:6zd8T1PBe9JFHmuVnurdRp,spotify:track:1kWUud3vY5ij5r62zxpTRy"
+      required: true
+      selector:
+        text:
+    position_ms:
+      name: Seek Position
+      description: The position (in milliseconds) to seek to; must be a positive number.  Passing in a position that is greater than the length of the track will cause the player to start playing the next track.
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 999999999
+          mode: box
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_resume:
+  name: Player Media Resume
+  description: Resume media play for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_seek:
+  name: Player Media Seek
+  description: Seeks to the given absolute or relative position in the user's currently playing track for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    position_ms:
+      name: Absolute Seek Position
+      description: The absolute position in milliseconds to seek to; must be a positive number or zero if the `relativePositionMS` argument is specified. Passing in a position that is greater than the length of the track will cause the player to start playing the next song. Example = `25000` to start playing at the 25 second mark.
+      example: 25000
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 999999999
+          mode: box
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+    relative_position_ms:
+      name: Relative Seek Position
+      description: The relative position in milliseconds to seek to; can be a positive or negative number, or zero if the `positionMS` argument is specified. Example = `-10000` to seek behind by 10 seconds; `10000` to seek ahead by 10 seconds.
+      example: 10000
+      required: false
+      selector:
+        number:
+          min: -999999999
+          max: 999999999
+          mode: box
+
+player_media_skip_next:
+  name: Player Media Skip Next
+  description: Skips to next track in the user's queue for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_media_skip_previous:
+  name: Player Media Skip Previous
+  description: Skips to previous track in the user's queue for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_resolve_device_id:
+  name: Player Resolve Device ID
+  description: Resolves a Spotify Connect device identifier from a specified device id, name, alias id, or alias name.  This will ensure that the device id can be found on the network, as well as connect to the device if necessary with the current user context.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_value:
+      name: Device Value
+      description: The device id (e.g. '0d1841b0976bae2a3a310dd74c0f337465899bc8') or name (e.g. 'Bose-ST10-1') value to resolve.
+      example: "Bose-ST10-1"
+      required: true
+      selector:
+        text:
+    verify_user_context:
+      name: Verify User Context?
+      description: If True, the active user context of the resolved device is checked to ensure it matches the user context specified on the class constructor. If False, the user context will not be checked.  Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    verify_timeout:
+      name: Verify Timeout
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 5.0; value range is 0 - 10.
+      example: "5.0"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_set_repeat_mode:
+  name: Player Set Repeat Mode
+  description: Set repeat mode for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    state:
+      name: Repeat State
+      description: The repeat mode state to set; `track` will repeat the current track; `context` will repeat the current context; `off` will turn repeat off.  Default is 'off'.
+      example: "off"
+      required: true
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - 'off'
+            - track
+            - context
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the command to the player.  This delay will give the spotify web api time to process the change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_set_shuffle_mode:
+  name: Player Set Shuffle Mode
+  description: Set shuffle mode for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    state:
+      name: Shuffle State?
+      description: True to set player shuffle mode to on; otherwise, False for no shuffle.
+      example: "True"
+      required: true
+      selector:
+        boolean:
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the command to the player.  This delay will give the spotify web api time to process the change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_set_volume_level:
+  name: Player Set Volume Level
+  description: Set volume level for the specified Spotify Connect device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    volume_level:
+      name: Volume Level
+      description: The volume level to set, expressed as a percentage value (e.g. 25).  Must be a value from 0 (muted) to 100 (max volume) inclusive.
+      example: "25"
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device this command is targeting.  If not supplied, the user's currently active device is the target.  If no device is active (or an "*" is specified), then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the command to the player.  This delay will give the spotify web api time to process the change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+player_transfer_playback:
+  name: Player Transfer Playback
+  description: Transfer playback to a new Spotify Connect device and optionally begin playback.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    device_id:
+      name: Device ID
+      description: The id or name of the Spotify Connect Player device on which playback should be started/transferred.  If no device is specified, then the spotify default device is activated.
+      example: "0d1841b0976bae2a3a310dd74c0f337465899bc8"
+      required: false
+      selector:
+        text:
+    play:
+      name: Start Play?
+      description: True (default) to start playback on the new device; otherise, False to keep the current playback state on the existing device.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing the final Connect command (if necessary). This delay will give the spotify web api time to process the device list change before another command is issued.  Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+    refresh_device_list:
+      name: Refresh Device List?
+      description: True to refresh the Spotify Connect device list; otherwise, False to use the Spotify Connect device list cache.  Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+    force_activate_device:
+      name: Force Activate Device?
+      description: True to issue a Spotify Connect Disconnect call prior to transfer, which will force the device to reconnect to Spotify Connect; otherwise, False to not disconnect. Default is True.
+      example: "True"
+      required: false
+      selector:
+        boolean:
+
+playlist_cover_image_add:
+  name: Playlist Cover Image Add
+  description: Replace the image used to represent a specific playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5v5ETK9WFXAnGQ3MRubKuE).
+      example: "5v5ETK9WFXAnGQ3MRubKuE"
+      required: true
+      selector:
+        text:
+    image_path:
+      name: Image Path
+      description: The fully-qualified path of the image to be uploaded (e.g. `www/images/spotify_playlist_default_image.png`).  The image must be in PNG or JPEG format, and cannot exceed 256KB in Base64 encoded size.
+      example: "www/images/spotify_playlist_default_image.png"
+      required: true
+      selector:
+        text:
+
+playlist_change:
+  name: Playlist Change
+  description: Change a playlists details (name, description, and public / private state).
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. `5AC9ZXA7nJ7oGWO911FuDG`).
+      example: "5AC9ZXA7nJ7oGWO911FuDG"
+      required: true
+      selector:
+        text:
+    name:
+      name: Name
+      description: The updated name for the playlist (e.g. `My Updated Playlist`).  This name does not need to be unique; a user may have several playlists with the same name.
+      example: "My Updated Playlist"
+      required: true
+      selector:
+        text:
+    description:
+      name: Description
+      description: The playlist description, as displayed in Spotify Clients and in the Web API.
+      example: "A Playlist updated by the spotify integration"
+      required: true
+      selector:
+        text:
+    public:
+      name: Public?
+      description: If true, the playlist will be public; if false, it will be private.
+      example: "False"
+      required: true
+      selector:
+        boolean:
+    collaborative:
+      name: Collaborative?
+      description: If true, the playlist will be collaborative (other users can modify it).  To create a collaborative playlist you must also set the public argument to false.
+      example: "False"
+      required: true
+      selector:
+        boolean:
+    image_path:
+      name: Image Path
+      description: The fully-qualified path of the image to be uploaded (e.g. `www/images/spotify_playlist_default_image.png`).  The image must be in PNG or JPEG format, and cannot exceed 256KB in Base64 encoded size.  Omit this parameter if you do not wish to update the existing playlist image.
+      example: "www/images/spotify_playlist_default_image.png"
+      required: false
+      selector:
+        text:
+
+playlist_create:
+  name: Playlist Create
+  description: Create an empty playlist for a Spotify user.  The playlist will remain empty until you add tracks.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    user_id:
+      name: User ID
+      description: The user's Spotify user ID (e.g. 32k99y2kg5lnn3mxhtmd2bpdkjfu).  Omit this argument to use the Spotify User ID of the player entity_id.
+      example: "32k99y2kg5lnn3mxhtmd2bpdkjfu"
+      required: false
+      selector:
+        text:
+    name:
+      name: Name
+      description: The name for the new playlist (e.g. `My New Playlist`).  This name does not need to be unique; a user may have several playlists with the same name.
+      example: "My New Playlist"
+      required: true
+      selector:
+        text:
+    description:
+      name: Description
+      description: The playlist description, as displayed in Spotify Clients and in the Web API.
+      example: "A Playlist created by the spotify integration"
+      required: true
+      selector:
+        text:
+    public:
+      name: Public?
+      description: If true, the playlist will be public; if false, it will be private.
+      example: "False"
+      required: true
+      selector:
+        boolean:
+    collaborative:
+      name: Collaborative?
+      description: If true, the playlist will be collaborative (other users can modify it).  To create a collaborative playlist you must also set the public argument to false.
+      example: "False"
+      required: true
+      selector:
+        boolean:
+    image_path:
+      name: Image Path
+      description: The fully-qualified path of the image to be uploaded (e.g. `www/images/spotify_playlist_default_image.png`).  The image must be in PNG or JPEG format, and cannot exceed 256KB in Base64 encoded size.  Omit this parameter if you do not wish to add a playlist image.
+      example: "www/images/spotify_playlist_default_image.png"
+      required: false
+      selector:
+        text:
+
+playlist_items_add:
+  name: Playlist Items Add
+  description: Add one or more items to a user's playlist.  Items are added in the order they are listed in the `uris` argument.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5AC9ZXA7nJ7oGWO911FuDG).
+      example: "5AC9ZXA7nJ7oGWO911FuDG"
+      required: true
+      selector:
+        text:
+    uris:
+      name: URI's
+      description: A comma-separated list of Spotify URIs to add; can be track or episode URIs (e.g. spotify:track:4iV5W9uYEdYUVa79Axb7Rh).  A maximum of 100 items can be specified in one request.  If nothing is specified, then the track (or episode) uri currently playing is used.
+      example: "spotify:track:4iV5W9uYEdYUVa79Axb7Rh,spotify:episode:512ojhOuo1ktJprKbVcKyQ"
+      required: false
+      selector:
+        text:
+    position:
+      name: Position
+      description: The position to insert the items, a zero-based index.  For example, to insert the items in the first position use a value of 0; to insert the items in the third position use a value of 2.  Omit the parameter to append the items to the end of the playlist.
+      example: "0"
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+
+playlist_items_clear:
+  name: Playlist Items Clear
+  description: Removes (clears) all items from a user's playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5AC9ZXA7nJ7oGWO911FuDG).
+      example: "5AC9ZXA7nJ7oGWO911FuDG"
+      required: true
+      selector:
+        text:
+
+playlist_items_remove:
+  name: Playlist Items Remove
+  description: Remove one or more items from a user's playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 5AC9ZXA7nJ7oGWO911FuDG).
+      example: "5AC9ZXA7nJ7oGWO911FuDG"
+      required: true
+      selector:
+        text:
+    uris:
+      name: URI's
+      description: A comma-separated list of Spotify URIs to remove; can be track or episode URIs (e.g. spotify:track:4iV5W9uYEdYUVa79Axb7Rh).  A maximum of 100 items can be specified in one request.  If nothing is specified, then the track (or episode) uri currently playing is used.
+      example: "spotify:track:4iV5W9uYEdYUVa79Axb7Rh,spotify:episode:512ojhOuo1ktJprKbVcKyQ"
+      required: false
+      selector:
+        text:
+    snapshot_id:
+      name: Snapshot ID
+      description: The playlist's snapshot ID against which you want to make the changes (e.g. `MzgsMWVkNDY3MTQ5YjVjYWE0MzAyNjkyZWMyOThjNjE3YWMwOTY0ZmJjYg==`).  The API will validate that the specified items exist and make the changes, even if more recent changes have been made to the playlist.  If omitted, the current playlist is updated.
+      required: false
+      selector:
+        text:
+
+playlist_items_reorder:
+  name: Playlist Items Reorder
+  description: Reorder items in a user's playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. 4yptcTKnXjCu3V92tVVafS).
+      example: "4yptcTKnXjCu3V92tVVafS"
+      required: true
+      selector:
+        text:
+    range_start:
+      name: Range Start
+      description: The position of the first item to be reordered.  This is a one-offset integer (NOT zero-offset).
+      example: 2
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999
+          mode: box
+    insert_before:
+      name: Insert Before
+      description: The position where the items should be inserted.  To reorder the items to the end of the playlist, simply set `insertBefore` to the position after the last item.  This is a one-offset integer (NOT zero-offset).
+      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999
+          mode: box
+    range_length:
+      name: Range Length
+      description: The amount of items to be reordered; defaults to 1 if not set.  The range of items to be reordered begins from the `rangeStart` position, and includes the `rangeLength` subsequent items.
+      example: 1
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 99999
+          mode: box
+    snapshot_id:
+      name: Snapshot ID
+      description: The playlist's snapshot ID against which you want to make the changes (e.g. `MzgsMWVkNDY3MTQ5YjVjYWE0MzAyNjkyZWMyOThjNjE3YWMwOTY0ZmJjYg==`).  The API will validate that the specified items exist and make the changes, even if more recent changes have been made to the playlist.  If omitted, the current playlist is updated.
+      required: false
+      selector:
+        text:
+
+playlist_items_replace:
+  name: Playlist Items Replace
+  description: Replace one or more items in a user's playlist. Replacing items in a playlist will overwrite its existing items. This service can also be used to clear a playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. `3cEYpjA9oz9GiPac4AsH4n`).
+      example: "3cEYpjA9oz9GiPac4AsH4n"
+      required: true
+      selector:
+        text:
+    uris:
+      name: URI's
+      description: A comma-separated list of Spotify URIs to replace; can be track or episode URIs (e.g. `spotify:track:4iV5W9uYEdYUVa79Axb7Rh, spotify:episode:26c0zVyOv1lzfYpBXdh1zC`). A maximum of 100 items can be specified in one request.
+      required: false
+      selector:
+        text:
+
+remove_album_favorites:
+  name: Remove Album Favorites
+  description: Remove one or more albums from the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify album id's (e.g. `6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track album uri id value is used.
+      example: "6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX"
+      required: false
+      selector:
+        text:
+
+remove_audiobook_favorites:
+  name: Remove Audiobook Favorites
+  description: Remove one or more audiobooks from the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify audiobook id's (e.g. `3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe`).  A maximum of 50 id's may be specified.  If omitted, the currently playing audiobook uri id value is used.
+      example: "3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe"
+      required: false
+      selector:
+        text:
+
+remove_episode_favorites:
+  name: Remove Episode Favorites
+  description: Remove one or more episodes from the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify episode id's (e.g. `3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4`).  A maximum of 50 id's may be specified.  If omitted, the currently playing episode uri id value is used.
+      example: "3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4"
+      required: false
+      selector:
+        text:
+
+remove_show_favorites:
+  name: Remove Show Favorites
+  description: Remove one or more shows from the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify show id's (e.g. `6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing show uri id value is used.
+      example: "6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk"
+      required: false
+      selector:
+        text:
+
+remove_track_favorites:
+  name: Remove Track Favorites
+  description: Remove one or more tracks from the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify track id's (e.g. `1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK`).  A maximum of 50 id's may be specified.  If omitted, the currently playing context uri id value is used.
+      example: "1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK"
+      required: false
+      selector:
+        text:
+
+save_album_favorites:
+  name: Save Album Favorites
+  description: Save one or more albums to the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify album id's (e.g. `6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track album uri id value is used.
+      example: "6vc9OTcyd3hyzabCmsdnwE,382ObEPsp2rxGrnsizN5TX"
+      required: false
+      selector:
+        text:
+
+save_audiobook_favorites:
+  name: Save Audiobook Favorites
+  description: Save one or more audiobooks to the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify audiobook id's (e.g. `3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe`).  A maximum of 50 id's may be specified.  If omitted, the currently playing audiobook uri id value is used.
+      example: "3PFyizE2tGCSRLusl2Qizf,7iHfbu1YPACw6oZPAFJtqe"
+      required: false
+      selector:
+        text:
+
+save_episode_favorites:
+  name: Save Episode Favorites
+  description: Save one or more episodes to the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify episode id's (e.g. `3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4`).  A maximum of 50 id's may be specified.  If omitted, the currently playing episode uri id value is used.
+      example: "3F97boSWlXi8OzuhWClZHQ,1hPX5WJY6ja6yopgVPBqm4"
+      required: false
+      selector:
+        text:
+
+save_show_favorites:
+  name: Save Show Favorites
+  description: Save one or more shows to the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify show id's (e.g. `6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing show uri id value is used.
+      example: "6kAsbP8pxwaU2kPibKTuHE,4rOoJ6Egrf8K2IrywzwOMk"
+      required: false
+      selector:
+        text:
+
+save_track_favorites:
+  name: Save Track Favorites
+  description: Save one or more tracks to the current user's 'Your Library'.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify track id's (e.g. `1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK`).  A maximum of 50 id's may be specified.  If omitted, the currently playing context uri id value is used.
+      example: "1kWUud3vY5ij5r62zxpTRy,4eoYKv2kDwJS7gRGh5q6SK"
+      required: false
+      selector:
+        text:
+
+search_albums:
+  name: Search Albums
+  description: Get Spotify catalog information about Albums that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "Welcome to the New"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_artists:
+  name: Search Artists
+  description: Get Spotify catalog information about Artists that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "MercyMe"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_audiobooks:
+  name: Search Audiobooks
+  description: Get Spotify catalog information about Audiobooks that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "The Elfstones of Shannara"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_episodes:
+  name: Search Episodes
+  description: Get Spotify catalog information about Episodes that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "Armchair Anonymous"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_playlists:
+  name: Search Playlists
+  description: Get Spotify catalog information about Playlists that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "Daily Mix"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_shows:
+  name: Search Shows (aka Podcasts)
+  description: Get Spotify catalog information about Show (aka Podcasts) that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "Dax Shepard"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+search_tracks:
+  name: Search Tracks
+  description: Get Spotify catalog information about Tracks that match a keyword string.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    criteria:
+      name: Search Criteria
+      description: The criteria to search for.
+      example: "Dear Younger Me"
+      required: true
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: The maximum number of items to return in a page of items when manual paging is used.  Default is 20, Range is 1 to 50.  See the limit_total argument for automatic paging option.
+      example: 20
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    offset:
+      name: Offset
+      description: The page index offset of the first item to return.  Use with limit to get the next set of items.  Default is 0 (the first item).
+      example: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box
+    market:
+      name: Market / Country Code
+      description: An ISO 3166-1 alpha-2 country code. If a country code is specified, only content that is available in that market will be returned.  The country associated with the Spotify user account will take priority over this parameter.
+      example: "ES"
+      required: false
+      selector:
+        text:
+    include_external:
+      name: Include External
+      description: If 'audio' is specified it signals that the client can play externally hosted audio content, and marks the content as playable in the response. By default externally hosted audio content is marked as unplayable in the response.  Allowed values are 'audio'.
+      example: "audio"
+      required: false
+      selector:
+        text:
+    limit_total:
+      name: Limit Total
+      description: The maximum number of items to return for the request.  If specified, this argument overrides the limit and offset argument values and paging is automatically used to retrieve all available items up to the specified limit total.
+      example: 20
+      required: false
+      selector:
+        number:
+          mode: box
+
+unfollow_artists:
+  name: Unfollow Artists
+  description: Remove the current user as a follower of one or more artists.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify artist id's (e.g. `2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk`).  A maximum of 50 id's may be specified.  If omitted, the currently playing track artist uri id value is used.
+      example: "2CIMQHirSU0MQqyYHq0eOx,1IQ2e1buppatiN1bxUVkrk"
+      required: false
+      selector:
+        text:
+
+unfollow_playlist:
+  name: Unfollow Playlist
+  description: Remove the current user as a follower of a playlist.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    playlist_id:
+      name: Playlist ID
+      description: The Spotify ID of the playlist (e.g. `3cEYpjA9oz9GiPac4AsH4n`).  If omitted, the currently playing playlist uri id value is used.
+      example: "3cEYpjA9oz9GiPac4AsH4n"
+      required: false
+      selector:
+        text:
+
+unfollow_users:
+  name: Unfollow Users
+  description: Remove the current user as a follower of one or more users.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the Spotify Web API.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    ids:
+      name: ID's
+      description: A comma-separated list of Spotify user IDs (e.g. `smedjan,3758dfdsfjk435hjk6k79lm0n3c4`).  A maximum of 50 IDs can be sent in one request.
+      example: "smedjan,3758dfdsfjk435hjk6k79lm0n3c4"
+      required: true
+      selector:
+        text:
+
+zeroconf_device_connect:
+  name: ZeroConf Device Connect
+  description: Calls the `addUser` Spotify Zeroconf API endpoint to issue a call to SpConnectionLoginBlob.  If successful, the associated device id is added to the Spotify Connect active device list for the specified user account.  This will also issue a `resetUsers` call prior to the `addUser` call.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the ZeroConf service.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    host_ipv4_address:
+      name: Device IPV4 Address
+      description: IPV4 address at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. '192.168.1.81').
+      example: "192.168.1.81"
+      required: true
+      selector:
+        text:
+    host_ip_port:
+      name: Device IP Port
+      description: Port number at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. 8200).
+      example: 8200
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    cpath:
+      name: CPath Identifier
+      description: Spotify Connect Zeroconf API CPath property value (e.g. '/zc').
+      example: "/zc"
+      required: true
+      selector:
+        text:
+    version:
+      name: Version Indicator
+      description: Spotify Connect Zeroconf API version number that the device supports (e.g. '1.0').
+      example: "1.0"
+      required: false
+      selector:
+        text:
+    use_ssl:
+      name: Use SSL?
+      description: True if the host device utilizes HTTPS Secure Sockets Layer (SSL) support; otherwise, False to utilize HTTP.  Default is False (HTTP).
+      example: "False"
+      required: false
+      selector:
+        boolean:
+    username:
+      name: Spotify User Name
+      description: Spotify user name to login with (e.g. 'yourusername@mail.com').  This MUST match the account name (or one of them) that was used to configure Spotify Connect on the manufacturer device. If not specified, the integration options Spotify Connect username value will be used.
+      example: "yourusername@mail.com"
+      required: false
+      selector:
+        text:
+    password:
+      name: Spotify User Password
+      description: Spotify Connect user password to login with. If not specified, the integration options Spotify Connect password value will be used.
+      example: "yourpassword"
+      required: false
+      selector:
+        text:
+    loginid:
+      name: Spotify Login ID
+      description: Spotify Connect login id to login with (e.g. "31l77fd87g8h9j00k89f07jf87ge").  This is also known as the canonical user id value.  This MUST be the value that relates to the `username` argument. If not specified, the integration options Spotify Connect loginId value will be used.
+      example: "31l77y75hfnhk79f7gk6jkk878mg"
+      required: false
+      selector:
+        text:
+    pre_disconnect:
+      name: Pre Disconnect?
+      description: True if a Disconnect should be made prior to the Connect call.  This will ensure that the active user is logged out, which must be done if switching user accounts; otherwise, False to not issue a Disconnect call.  Default is False.
+      example: "False"
+      required: false
+      selector:
+        boolean:
+    verify_device_list_entry:
+      name: Verify Device List Entry?
+      description: True to ensure that the device id is present in the Spotify Connect device list before issuing a call to Connect; Connect will not be called if the device id is already in the list; otherwise, False to always call Connect to add the device.  Default is False.
+      example: "False"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing a command to the device. This delay will give the spotify zeroconf api time to process the change before another command is issued. Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+zeroconf_device_disconnect:
+  name: ZeroConf Device Disconnect
+  description: Calls the `resetUsers` Spotify Zeroconf API endpoint to issue a call to SpConnectionLogout. The currently logged in user (if any) will be logged out of Spotify Connect, and the device id removed from the active Spotify Connect device list.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the ZeroConf service.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    host_ipv4_address:
+      name: Device IPV4 Address
+      description: IPV4 address at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. '192.168.1.81').
+      example: "192.168.1.81"
+      required: true
+      selector:
+        text:
+    host_ip_port:
+      name: Device IP Port
+      description: Port number at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. 8200).
+      example: 8200
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    cpath:
+      name: CPath Identifier
+      description: Spotify Connect Zeroconf API CPath property value (e.g. '/zc').
+      example: "/zc"
+      required: true
+      selector:
+        text:
+    version:
+      name: Version Indicator
+      description: Spotify Connect Zeroconf API version number that the device supports (e.g. '1.0').
+      example: "1.0"
+      required: false
+      selector:
+        text:
+    use_ssl:
+      name: Use SSL?
+      description: Spotify Connect Zeroconf API version number that the device supports (e.g. False).
+      example: "False"
+      required: false
+      selector:
+        boolean:
+    delay:
+      name: Delay
+      description: Time delay (in seconds) to wait AFTER issuing a command to the device. This delay will give the spotify zeroconf api time to process the change before another command is issued. Default is 0.50; value range is 0 - 10.
+      example: "0.50"
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          mode: box
+
+zeroconf_device_getinfo:
+  name: ZeroConf Device GetInformation
+  description: Calls the `getInfo` Spotify Zeroconf API endpoint to return information about the device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the spotify device that will make the request to the ZeroConf service.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    host_ipv4_address:
+      name: Device IPV4 Address
+      description: IPV4 address at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. '192.168.1.81').
+      example: "192.168.1.81"
+      required: true
+      selector:
+        text:
+    host_ip_port:
+      name: Device IP Port
+      description: Port number at which the Spotify Connect Zeroconf API can be reached on the Spotify Connect device (e.g. 8200).
+      example: 8200
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    cpath:
+      name: CPath Identifier
+      description: Spotify Connect Zeroconf API CPath property value (e.g. '/zc').
+      example: "/zc"
+      required: true
+      selector:
+        text:
+    version:
+      name: Version Indicator
+      description: Spotify Connect Zeroconf API version number that the device supports (e.g. '1.0').
+      example: "1.0"
+      required: false
+      selector:
+        text:
+    use_ssl:
+      name: Use SSL?
+      description: Spotify Connect Zeroconf API version number that the device supports (e.g. False).
+      example: "False"
+      required: false
+      selector:
+        boolean:
+
+zeroconf_discover_devices:
+  name: ZeroConf Discover Devices
+  description: Discover Spotify Connect devices on the local network via the ZeroConf (aka MDNS) service, and return details about each device.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Spotify device that will make the request to the ZeroConf service.
+      example: "media_player.spotify_username"
+      required: true
+      selector:
+        entity:
+          integration: spotify
+          domain: media_player
+    timeout:
+      name: Timeout
+      description: Maximum amount of time to wait (in seconds) for the discovery to complete.  Default is 5, range is 1 thru 10.
+      example: 5.0
+      required: false
+      selector:
+        number:
+          min: 1.0
+          max: 10.0
+          mode: box
