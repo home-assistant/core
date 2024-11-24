@@ -909,7 +909,7 @@ class SectionConfig(TypedDict, total=False):
 
     collapsed: bool
     multiple: bool
-    default: list[Any] | None
+    default: list[dict[str, Any]]
 
 
 class section:
@@ -919,7 +919,7 @@ class section:
         {
             vol.Optional("collapsed", default=False): bool,
             vol.Optional("multiple", default=False): bool,
-            vol.Optional("default", default=[]): list[Any],
+            vol.Optional("default", default=[]): list[dict[str, Any]],
         },
     )
 
