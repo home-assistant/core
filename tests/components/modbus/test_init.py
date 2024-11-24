@@ -100,7 +100,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
     SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -1128,7 +1128,7 @@ async def test_shutdown(
     mock_modbus_with_pymodbus,
 ) -> None:
     """Run test for shutdown."""
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mock_pymodbus.close.called
