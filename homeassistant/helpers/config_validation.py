@@ -1136,7 +1136,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     if isinstance(schema, data_entry_flow.section):
         if not allow_section:
             raise ValueError("Nesting expandable sections is not supported")
-        return {
+        section_schema = {
             "type": "expandable",
             "schema": voluptuous_serialize.convert(
                 schema.schema,
@@ -1146,8 +1146,10 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
             ),
             "expanded": not schema.options["collapsed"],
             "multiple": schema.options["multiple"],
-            "default": schema.options.get("default"),
         }
+        if schema.options["multiple"]:
+            section_schema["default"] = schema.options["default"]
+        return section_schema
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}

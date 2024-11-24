@@ -1021,7 +1021,7 @@ def test_section_in_serializer() -> None:
         ],
         "type": "expandable",
         "multiple": False,
-        "default": [],
+        "default": None,
     }
 
 
