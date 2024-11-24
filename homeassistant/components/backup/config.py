@@ -37,7 +37,7 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
-    backup_retention: StoredBackupRetentionConfig
+    retention: StoredRetentionConfig
     last_automatic_backup: datetime | None
     schedule: ScheduleState
 
@@ -47,7 +47,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
-    backup_retention_config: BackupRetentionConfig
+    retention_config: RetentionConfig
     last_automatic_backup: datetime | None = None
     schedule: BackupSchedule
 
@@ -59,7 +59,7 @@ class BackupConfigData:
             include_folders = [Folder(folder) for folder in include_folders_data]
         else:
             include_folders = None
-        backup_retention = data["backup_retention"]
+        retention = data["retention"]
 
         return cls(
             create_backup=CreateBackupConfig(
@@ -71,9 +71,9 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
-            backup_retention_config=BackupRetentionConfig(
-                copies=backup_retention["copies"],
-                days=backup_retention["days"],
+            retention_config=RetentionConfig(
+                copies=retention["copies"],
+                days=retention["days"],
             ),
             last_automatic_backup=data["last_automatic_backup"],
             schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
@@ -83,7 +83,7 @@ class BackupConfigData:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
-            backup_retention=self.backup_retention_config.to_dict(),
+            retention=self.retention_config.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
             schedule=self.schedule.state,
         )
@@ -96,7 +96,7 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             create_backup=CreateBackupConfig(),
-            backup_retention_config=BackupRetentionConfig(),
+            retention_config=RetentionConfig(),
             schedule=BackupSchedule(),
         )
         self._manager = manager
@@ -126,17 +126,17 @@ class BackupConfig:
         self,
         *,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
-        backup_retention: BackupRetentionParametersDict | UndefinedType = UNDEFINED,
+        retention: RetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleState | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
-        if backup_retention is not UNDEFINED:
-            backup_retention_config = BackupRetentionConfig(**backup_retention)
-            if backup_retention_config != self.data.backup_retention_config:
-                self.data.backup_retention_config = backup_retention_config
-                self.data.backup_retention_config.apply(self._manager)
+        if retention is not UNDEFINED:
+            retention_config = RetentionConfig(**retention)
+            if retention_config != self.data.retention_config:
+                self.data.retention_config = retention_config
+                self.data.retention_config.apply(self._manager)
         if schedule is not UNDEFINED:
             new_schedule = BackupSchedule(state=schedule)
             if new_schedule != self.data.schedule:
@@ -147,7 +147,7 @@ class BackupConfig:
 
 
 @dataclass(kw_only=True)
-class BackupRetentionConfig:
+class RetentionConfig:
     """Represent the backup retention configuration."""
 
     copies: int | None = None
@@ -160,9 +160,9 @@ class BackupRetentionConfig:
         else:
             self._unschedule_next(manager)
 
-    def to_dict(self) -> StoredBackupRetentionConfig:
+    def to_dict(self) -> StoredRetentionConfig:
         """Convert backup retention configuration to a dict."""
-        return StoredBackupRetentionConfig(
+        return StoredRetentionConfig(
             copies=self.copies,
             days=self.days,
         )
@@ -208,15 +208,15 @@ class BackupRetentionConfig:
             manager.remove_next_delete_event = None
 
 
-class StoredBackupRetentionConfig(TypedDict):
+class StoredRetentionConfig(TypedDict):
     """Represent the stored backup retention configuration."""
 
     copies: int | None
     days: int | None
 
 
-class BackupRetentionParametersDict(TypedDict, total=False):
-    """Represent the parameters for backup_retention."""
+class RetentionParametersDict(TypedDict, total=False):
+    """Represent the parameters for retention."""
 
     copies: int | None
     days: int | None
@@ -308,13 +308,13 @@ class BackupSchedule:
                 """Return oldest backups more numerous than copies to delete."""
                 # we need to check here since we await before
                 # this filter is applied
-                if config_data.backup_retention_config.copies is None:
+                if config_data.retention_config.copies is None:
                     return {}
                 return dict(
                     sorted(
                         backups.items(),
                         key=lambda backup_item: backup_item[1].date,
-                    )[: len(backups) - config_data.backup_retention_config.copies]
+                    )[: len(backups) - config_data.retention_config.copies]
                 )
 
             await _delete_filtered_backups(manager, _backups_filter)

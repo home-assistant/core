@@ -211,10 +211,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -226,6 +222,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -240,10 +240,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': 3,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -260,6 +256,10 @@
           'password': 'test-password',
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
+        'retention_config': dict({
+          'copies': 3,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -274,10 +274,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': 3,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -290,6 +286,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -304,10 +304,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -320,6 +316,10 @@
           'password': None,
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
+        'retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -334,10 +334,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -350,6 +346,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'mon',
         }),
@@ -364,10 +364,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -380,6 +376,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'sat',
         }),
@@ -394,10 +394,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -409,6 +405,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -423,10 +423,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -439,6 +435,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -451,10 +451,6 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': 7,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -467,6 +463,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -479,10 +479,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -494,6 +490,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -508,10 +508,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -524,6 +520,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -536,10 +536,6 @@
 # name: test_config_update[command10].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': 7,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -552,6 +548,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -564,10 +564,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -579,6 +575,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -593,10 +593,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -609,6 +605,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -621,10 +621,6 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -637,6 +633,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -649,10 +649,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -664,6 +660,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -678,10 +678,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -694,6 +690,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'mon',
         }),
@@ -706,10 +706,6 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -722,6 +718,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'schedule': 'mon',
     }),
     'key': 'backup',
@@ -734,10 +734,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -749,6 +745,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -763,10 +763,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -779,6 +775,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -791,10 +791,6 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -807,6 +803,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'schedule': 'never',
     }),
     'key': 'backup',
@@ -819,10 +819,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -834,6 +830,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -848,10 +848,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -868,6 +864,10 @@
           'password': 'test-password',
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -880,10 +880,6 @@
 # name: test_config_update[command4].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -900,6 +896,10 @@
         'password': 'test-password',
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -912,10 +912,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -927,6 +923,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -941,10 +941,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': 3,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -957,6 +953,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': 3,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -969,10 +969,6 @@
 # name: test_config_update[command5].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': 3,
-        'days': 7,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -985,6 +981,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': 3,
+        'days': 7,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -997,10 +997,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1012,6 +1008,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -1026,10 +1026,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1042,6 +1038,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -1054,10 +1054,6 @@
 # name: test_config_update[command6].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1070,6 +1066,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -1082,10 +1082,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1097,6 +1093,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -1111,10 +1111,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': 3,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1127,6 +1123,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -1139,10 +1139,6 @@
 # name: test_config_update[command7].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': 3,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1155,6 +1151,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': 3,
+        'days': None,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -1167,10 +1167,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1182,6 +1178,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -1196,10 +1196,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': 7,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1212,6 +1208,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': 7,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -1224,10 +1224,6 @@
 # name: test_config_update[command8].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': None,
-        'days': 7,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1240,6 +1236,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': 7,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -1252,10 +1252,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1267,6 +1263,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -1281,10 +1281,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': 3,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1297,6 +1293,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': 3,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'daily',
         }),
@@ -1309,10 +1309,6 @@
 # name: test_config_update[command9].2
   dict({
     'data': dict({
-      'backup_retention': dict({
-        'copies': 3,
-        'days': None,
-      }),
       'create_backup': dict({
         'agent_ids': list([
           'test-agent',
@@ -1325,6 +1321,10 @@
         'password': None,
       }),
       'last_automatic_backup': None,
+      'retention': dict({
+        'copies': 3,
+        'days': None,
+      }),
       'schedule': 'daily',
     }),
     'key': 'backup',
@@ -1337,10 +1337,6 @@
     'id': 1,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1352,6 +1348,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),
@@ -1366,10 +1366,6 @@
     'id': 3,
     'result': dict({
       'config': dict({
-        'backup_retention_config': dict({
-          'copies': None,
-          'days': None,
-        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1381,6 +1377,10 @@
           'password': None,
         }),
         'last_automatic_backup': None,
+        'retention_config': dict({
+          'copies': None,
+          'days': None,
+        }),
         'schedule': dict({
           'state': 'never',
         }),

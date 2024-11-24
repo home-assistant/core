@@ -730,7 +730,7 @@ async def test_agents_download_unknown_agent(
                 "name": "test-name",
                 "password": "test-password",
             },
-            "backup_retention": {"copies": 3, "days": 7},
+            "retention": {"copies": 3, "days": 7},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -746,7 +746,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "backup_retention": {"copies": 3, "days": None},
+            "retention": {"copies": 3, "days": None},
             "last_automatic_backup": None,
             "schedule": "never",
         },
@@ -760,7 +760,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "backup_retention": {"copies": None, "days": 7},
+            "retention": {"copies": None, "days": 7},
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
@@ -776,7 +776,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "backup_retention": {"copies": None, "days": None},
+            "retention": {"copies": None, "days": None},
             "last_automatic_backup": None,
             "schedule": "mon",
         },
@@ -790,7 +790,7 @@ async def test_agents_download_unknown_agent(
                 "name": None,
                 "password": None,
             },
-            "backup_retention": {"copies": None, "days": None},
+            "retention": {"copies": None, "days": None},
             "last_automatic_backup": None,
             "schedule": "sat",
         },
@@ -826,7 +826,7 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": None, "days": 7},
+            "retention": {"copies": None, "days": 7},
         },
         {
             "type": "backup/config/update",
@@ -857,37 +857,37 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": 3, "days": 7},
+            "retention": {"copies": 3, "days": 7},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": None, "days": None},
+            "retention": {"copies": None, "days": None},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": 3, "days": None},
+            "retention": {"copies": 3, "days": None},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": None, "days": 7},
+            "retention": {"copies": None, "days": 7},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"copies": 3},
+            "retention": {"copies": 3},
             "schedule": "daily",
         },
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "backup_retention": {"days": 7},
+            "retention": {"days": 7},
             "schedule": "daily",
         },
     ],
@@ -1065,7 +1065,7 @@ async def test_config_schedule_logic(
             "name": "test-name",
             "password": "test-password",
         },
-        "backup_retention": {"copies": None, "days": None},
+        "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
         "schedule": "daily",
     }
@@ -1114,7 +1114,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": None},
+                "retention": {"copies": None, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1136,7 +1136,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 3, "days": None},
+                "retention": {"copies": 3, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1158,7 +1158,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 3, "days": None},
+                "retention": {"copies": 3, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1181,7 +1181,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 2, "days": None},
+                "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1204,7 +1204,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 2, "days": None},
+                "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1226,7 +1226,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 2, "days": None},
+                "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1248,7 +1248,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 0, "days": None},
+                "retention": {"copies": 0, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1271,7 +1271,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": 0, "days": None},
+                "retention": {"copies": 0, "days": None},
                 "schedule": "daily",
             },
             {
@@ -1289,7 +1289,7 @@ async def test_config_schedule_logic(
         ),
     ],
 )
-async def test_config_backup_retention_copies_logic(
+async def test_config_retention_copies_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1321,7 +1321,7 @@ async def test_config_backup_retention_copies_logic(
             "name": "test-name",
             "password": "test-password",
         },
-        "backup_retention": {"copies": None, "days": None},
+        "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_backup_time),
         "schedule": "daily",
     }
@@ -1373,7 +1373,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 2},
+                "retention": {"copies": None, "days": 2},
                 "schedule": "never",
             },
             {
@@ -1393,7 +1393,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 3},
+                "retention": {"copies": None, "days": 3},
                 "schedule": "never",
             },
             {
@@ -1413,7 +1413,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 2},
+                "retention": {"copies": None, "days": 2},
                 "schedule": "never",
             },
             {
@@ -1434,7 +1434,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 2},
+                "retention": {"copies": None, "days": 2},
                 "schedule": "never",
             },
             {
@@ -1454,7 +1454,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 2},
+                "retention": {"copies": None, "days": 2},
                 "schedule": "never",
             },
             {
@@ -1474,7 +1474,7 @@ async def test_config_backup_retention_copies_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test-agent"]},
-                "backup_retention": {"copies": None, "days": 0},
+                "retention": {"copies": None, "days": 0},
                 "schedule": "never",
             },
             {
@@ -1493,7 +1493,7 @@ async def test_config_backup_retention_copies_logic(
         ),
     ],
 )
-async def test_config_backup_retention_days_logic(
+async def test_config_retention_days_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1523,7 +1523,7 @@ async def test_config_backup_retention_days_logic(
             "name": "test-name",
             "password": "test-password",
         },
-        "backup_retention": {"copies": None, "days": None},
+        "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_backup_time),
         "schedule": "never",
     }
