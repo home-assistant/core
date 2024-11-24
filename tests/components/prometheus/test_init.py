@@ -1079,6 +1079,15 @@ async def test_switch(
         entity="switch.number",
     ).withValue(10.2).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="switch_state",
+        domain="switch",
+        friendly_name="Relay",
+        entity="switch.relay",
+        area="Test Area",
+        device="Test Switch Device",
+    ).withValue(0.0).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_binary_sensor(
@@ -1099,6 +1108,22 @@ async def test_binary_sensor(
         domain="binary_sensor",
         friendly_name="Window",
         entity="binary_sensor.window",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="binary_sensor_state",
+        domain="binary_sensor",
+        friendly_name="Window",
+        entity="binary_sensor.window",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="binary_sensor_state",
+        domain="binary_sensor",
+        friendly_name="Status",
+        entity="binary_sensor.status",
+        area="Test Area",
+        device="Test Binary Sensor Device",
     ).withValue(0.0).assert_in_metrics(body)
 
 
