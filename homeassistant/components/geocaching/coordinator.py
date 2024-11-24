@@ -53,6 +53,9 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
         # TODO: Read this from the config | pylint: disable=fixme
         settings.set_trackables(["TB89YPV"])
 
+        # TODO: Read this from the config | pylint: disable=fixme
+        settings.set_caches(["GC1DQPM", "GC9P6FN"])
+
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             settings=settings,

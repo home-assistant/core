@@ -18,17 +18,19 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CACHE_ID_SENSOR_FORMAT, DOMAIN
+from .const import CACHE_ID_SENSOR_FORMAT, DOMAIN, GeocacheCategory
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
 # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
 # Therefore, we create a device for each cache, which holds all related entities.
 # This function returns the device info for a cache.
-def get_cache_device_info(cache: GeocachingCache) -> DeviceInfo:
+def get_cache_device_info(
+    cache: GeocachingCache, category: GeocacheCategory
+) -> DeviceInfo:
     """Generate device info for a cache."""
     return DeviceInfo(
-        name=f"Geocache {cache.reference_code}",
+        name=f"Geocache {category.value} {cache.reference_code}",
         identifiers={(DOMAIN, cast(str, cache.reference_code))},
         entry_type=DeviceEntryType.SERVICE,
         manufacturer="Groundspeak, Inc.",
@@ -49,17 +51,18 @@ class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], En
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
         entity_type: str,
+        category: GeocacheCategory,
     ) -> None:
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.cache = cache
 
         # Set the device info from the cache, to group all entities for a cache together
-        self._attr_device_info = get_cache_device_info(cache)
+        self._attr_device_info = get_cache_device_info(cache, category)
 
         # TODO: Change this from NEARBY_CACHE... | pylint: disable=fixme
         self._attr_unique_id = CACHE_ID_SENSOR_FORMAT.format(
-            cache.reference_code, entity_type
+            category.value, cache.reference_code, entity_type
         )
 
         # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
@@ -72,10 +75,13 @@ class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
     """Entity for a cache GPS location."""
 
     def __init__(
-        self, coordinator: GeocachingDataUpdateCoordinator, cache: GeocachingCache
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        cache: GeocachingCache,
+        category: GeocacheCategory,
     ) -> None:
         """Initialize the Geocaching sensor."""
-        super().__init__(coordinator, cache, "location")
+        super().__init__(coordinator, cache, "location", category)
 
     @property
     def native_value(self) -> str | None:
@@ -95,7 +101,7 @@ class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
     @property
     def location_name(self) -> str | None:
         """Return the location of the cache."""
-        return "Sweden"  # TODO: Connect with API, either cache country or state if it works for all countries | pylint: disable=fixme
+        return self.cache.location
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,20 +114,18 @@ class GeocachingCacheEntityDescription(SensorEntityDescription):
 SENSORS: tuple[GeocachingCacheEntityDescription, ...] = (
     GeocachingCacheEntityDescription(
         key="find_count",
-        native_unit_of_measurement="caches",
-        value_fn=lambda cache: 3,  # TODO: Connect with API | pylint: disable=fixme
+        native_unit_of_measurement="finds",
+        value_fn=lambda cache: cache.findCount,
     ),
     GeocachingCacheEntityDescription(
         key="favorite_points",
         native_unit_of_measurement="points",
-        value_fn=lambda cache: 15,  # TODO: Connect with API | pylint: disable=fixme
+        value_fn=lambda cache: cache.favoritePoints,
     ),
     GeocachingCacheEntityDescription(
         key="hide_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=lambda cache: datetime.date(
-            2022, 3, 13
-        ),  # TODO: Connect with API | pylint: disable=fixme
+        value_fn=lambda cache: cache.hiddenDate,
     ),
 )
 
@@ -138,9 +142,10 @@ class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
         description: GeocachingCacheEntityDescription,
+        category: GeocacheCategory,
     ) -> None:
         """Initialize the Geocaching sensor."""
-        super().__init__(coordinator, cache, description.key)
+        super().__init__(coordinator, cache, description.key, category)
         self.entity_description = description
 
     @property
@@ -150,18 +155,20 @@ class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
 
 
 def get_cache_entities(
-    coordinator: GeocachingDataUpdateCoordinator, cache: GeocachingCache
+    coordinator: GeocachingDataUpdateCoordinator,
+    cache: GeocachingCache,
+    category: GeocacheCategory,
 ) -> list[GeoEntity_BaseCache]:
     """Generate all entities for a single cache."""
     entities: list[GeoEntity_BaseCache] = []
 
     # Tracker entities
-    entities.extend([GeoEntity_Cache_Location(coordinator, cache)])
+    entities.extend([GeoEntity_Cache_Location(coordinator, cache, category)])
 
     # Sensor entities
     entities.extend(
         [
-            GeoEntity_Cache_SensorEntity(coordinator, cache, description)
+            GeoEntity_Cache_SensorEntity(coordinator, cache, description, category)
             for description in SENSORS
         ]
     )
