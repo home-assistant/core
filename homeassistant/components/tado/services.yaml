@@ -91,4 +91,3 @@ add_meter_reading:
           min: 0
           step: 1
 
-clear_cache:
