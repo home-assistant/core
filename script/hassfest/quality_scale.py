@@ -21,6 +21,7 @@ from .quality_scale_rules import (
     diagnostics,
     reauthentication_flow,
     reconfiguration_flow,
+    runtime_data,
     strict_typing,
     unique_config_flow,
 )
@@ -60,7 +61,7 @@ class QualityScaleRules(enum.Enum):
     ENTITY_EVENT_SETUP = ("entity-event-setup", ScaledQualityScaleTiers.BRONZE)
     ENTITY_UNIQUE_ID = ("entity-unique-id", ScaledQualityScaleTiers.BRONZE)
     HAS_ENTITY_NAME = ("has-entity-name", ScaledQualityScaleTiers.BRONZE)
-    RUNTIME_DATA = ("runtime-data", ScaledQualityScaleTiers.BRONZE)
+    RUNTIME_DATA = ("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data)
     TEST_BEFORE_CONFIGURE = ("test-before-configure", ScaledQualityScaleTiers.BRONZE)
     TEST_BEFORE_SETUP = ("test-before-setup", ScaledQualityScaleTiers.BRONZE)
     UNIQUE_CONFIG_ENTRY = (
