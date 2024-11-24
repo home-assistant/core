@@ -79,17 +79,20 @@ class OptionsFlowHandler(OptionsFlow):
                             {
                                 vol.Optional(
                                     CONF_BOOLEAN,
-                                    default=False,
+                                    default=self.config_entry.options.get(
+                                        "section_1", {}
+                                    ).get(CONF_BOOLEAN, False),
                                 ): bool,
                                 vol.Optional(
                                     CONF_INT,
-                                    default=10,
+                                    self.config_entry.options.get("section_1", {}).get(
+                                        CONF_INT, 10
+                                    ),
                                 ): int,
                             }
                         ),
                         {
                             "collapsed": False,
-                            "default": self.config_entry.options.get("section_1"),
                         },
                     ),
                     vol.Required("section_2"): data_entry_flow.section(
@@ -108,7 +111,7 @@ class OptionsFlowHandler(OptionsFlow):
                         {
                             "collapsed": False,
                             "multiple": True,
-                            "default": self.config_entry.options.get("section_2"),
+                            "default": self.config_entry.options.get("section_2", []),
                         },
                     ),
                 }
