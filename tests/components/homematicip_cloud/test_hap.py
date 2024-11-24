@@ -1,6 +1,6 @@
 """Test HomematicIP Cloud accesspoint."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.base.base_connection import HmipConnectionError
@@ -140,7 +140,7 @@ async def test_hap_create(
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    with patch.object(hap, "async_connect"):
+    with patch.object(hap, "async_connect", new_callable=AsyncMock):
         async with hmip_config_entry.setup_lock:
             assert await hap.async_setup()
 
@@ -155,14 +155,14 @@ async def test_hap_create_exception(
     assert hap
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
         side_effect=Exception,
     ):
         assert not await hap.async_setup()
 
     with (
         patch(
-            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
             side_effect=HmipConnectionError,
         ),
         pytest.raises(ConfigEntryNotReady),

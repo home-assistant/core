@@ -157,7 +157,7 @@ class HomematicipHAP:
 
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
-        await self.home.get_current_state_async()
+        await self.home.get_current_state()
         self.update_all()
 
     def get_state_finished(self, future) -> None:
@@ -188,7 +188,7 @@ class HomematicipHAP:
             retry_delay = 2 ** min(tries, 8)
 
             try:
-                await self.home.get_current_state_async()
+                await self.home.get_current_state()
                 hmip_events = await self.home.enable_events()
                 tries = 0
                 await hmip_events
@@ -256,7 +256,7 @@ class HomematicipHAP:
 
         try:
             await home.init(hapid, authtoken)
-            await home.get_current_state_async()
+            await home.get_current_state()
         except HmipConnectionError as err:
             raise HmipcConnectionError from err
         home.on_update(self.async_update)
