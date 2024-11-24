@@ -24,17 +24,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class GrowattNumberEntityDescription(NumberEntityDescription):
-    """Describes Growatt number entity."""
+class GrowattRequiredNumberKey:
+    """Mixin for required keys."""
 
     api_key: str
 
 
+@dataclass(frozen=True)
+class GrowattNumberEntityDescription(NumberEntityDescription, GrowattRequiredNumberKey):
+    """Describes Growatt number entity."""
+
+
 TLX_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
     GrowattNumberEntityDescription(
+        api_key="charge_power",
         key="tlx_charge_power",
         translation_key="tlx_charge_power",
-        api_key="charge_power",
         native_step=1,
         native_min_value=0,
         native_max_value=100,
@@ -42,9 +47,9 @@ TLX_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
         mode=NumberMode.AUTO,
     ),
     GrowattNumberEntityDescription(
+        api_key="charge_stop_soc",
         key="tlx_charge_stop_soc",
         translation_key="tlx_charge_stop_soc",
-        api_key="charge_stop_soc",
         native_step=1,
         native_min_value=0,
         native_max_value=100,
@@ -52,9 +57,9 @@ TLX_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
         mode=NumberMode.AUTO,
     ),
     GrowattNumberEntityDescription(
+        api_key="discharge_power",
         key="tlx_discharge_power",
         translation_key="tlx_discharge_power",
-        api_key="discharge_power",
         native_step=1,
         native_min_value=0,
         native_max_value=100,
@@ -62,9 +67,9 @@ TLX_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
         mode=NumberMode.AUTO,
     ),
     GrowattNumberEntityDescription(
+        api_key="on_grid_discharge_stop_soc",
         key="tlx_discharge_stop_soc",
         translation_key="tlx_discharge_stop_soc",
-        api_key="on_grid_discharge_stop_soc",
         native_step=1,
         native_min_value=0,
         native_max_value=100,
@@ -143,7 +148,7 @@ async def async_setup_entry(
 
     entities = []
 
-    # Add switches for each device type
+    # Add numbers for each device type
     for device_sn, device_coordinator in coordinators["devices"].items():
         if device_coordinator.device_type == "tlx":
             for description in TLX_NUMBER_TYPES:

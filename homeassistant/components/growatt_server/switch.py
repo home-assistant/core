@@ -20,17 +20,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class GrowattSwitchEntityDescription(SwitchEntityDescription):
-    """Describes Growatt switch entity."""
+class GrowattRequiredNumberKey:
+    """Mixin for required keys."""
 
     api_key: str
 
 
+@dataclass(frozen=True)
+class GrowattSwitchEntityDescription(SwitchEntityDescription, GrowattRequiredNumberKey):
+    """Describes Growatt number entity."""
+
+
 TLX_SWITCH_TYPES: tuple[GrowattSwitchEntityDescription, ...] = (
     GrowattSwitchEntityDescription(
+        api_key="ac_charge",
         key="tlx_ac_charge",
         translation_key="tlx_ac_charge",
-        api_key="ac_charge",
     ),
 )
 
