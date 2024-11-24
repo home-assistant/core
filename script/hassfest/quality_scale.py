@@ -493,7 +493,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iglo",
     "ign_sismologia",
     "ihc",
-    "imap",
     "imgw_pib",
     "improv_ble",
     "incomfort",
