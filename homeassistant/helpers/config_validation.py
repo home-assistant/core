@@ -1145,8 +1145,8 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
                 ),
             ),
             "expanded": not schema.options["collapsed"],
-            "multiple": schema.options["multiple"],
-            "default": schema.options["default"],
+            "multiple": schema.options.get("multiple"),
+            "default": schema.options.get("default"),
         }
 
     if isinstance(schema, multi_select):
