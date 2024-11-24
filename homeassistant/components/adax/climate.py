@@ -80,11 +80,9 @@ class AdaxDevice(ClimateEntity):
         adax = self._adax_data_handler.get_interface()
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
-            await adax.set_room_target_temperature(
-                self._device_id, temperature, True
-            )
+            await adax.set_room_target_temperature(self._device_id, temperature, True)
         elif hvac_mode == HVACMode.OFF:
-            await adax.set_room_target_temperature( self._device_id, self.min_temp, False)
+            await adax.set_room_target_temperature(self._device_id, self.min_temp, False)
         else:
             return
         await adax.update()
@@ -100,6 +98,8 @@ class AdaxDevice(ClimateEntity):
         """Get the latest data."""
         await self._adax_data_handler.async_update()
         for room in self._adax_data_handler.get_rooms():
+            if room is None:
+                continue
             if room["id"] != self._device_id:
                 continue
             self._attr_name = room["name"]

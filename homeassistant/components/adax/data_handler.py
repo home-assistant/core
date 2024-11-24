@@ -5,7 +5,9 @@ from typing import Any
 from adax import Adax
 from adax_local import Adax as AdaxLocal
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, LOCAL
@@ -14,7 +16,7 @@ from .const import ACCOUNT_ID, CONNECTION_TYPE, LOCAL
 class AdaxDataHandler:
     """Representation of a heater data handler."""
 
-    def __init__(self, entry, hass) -> None:
+    def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:
         """Initialize the data handler."""
         self._is_local = False
         if entry.data.get(CONNECTION_TYPE) == LOCAL:
@@ -41,7 +43,7 @@ class AdaxDataHandler:
             return None
         return self._rooms
 
-    def get_room(self, room_id) -> Any | None:
+    def get_room(self, room_id: Any) -> Any | None:
         """Get room by id."""
         if self._rooms is None:
             return None
