@@ -77,7 +77,7 @@ class AdaxDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        adax = self._adax_data_handler.get_data_handler()
+        adax = self._adax_data_handler.get_interface()
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
             await adax.set_room_target_temperature(
@@ -91,7 +91,7 @@ class AdaxDevice(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        adax = self._adax_data_handler.get_data_handler()
+        adax = self._adax_data_handler.get_interface()
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await adax.set_room_target_temperature(self._device_id, temperature, True)
@@ -140,7 +140,7 @@ class LocalAdaxDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        adax = self._adax_data_handler.get_data_handler()
+        adax = self._adax_data_handler.get_interface()
         if hvac_mode == HVACMode.HEAT:
             temperature = self._attr_target_temperature or self._attr_min_temp
             await adax.set_target_temperature(temperature)
@@ -149,14 +149,14 @@ class LocalAdaxDevice(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        adax = self._adax_data_handler.get_data_handler()
+        adax = self._adax_data_handler.get_interface()
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await adax.set_target_temperature(temperature)
 
     async def async_update(self) -> None:
         """Get the latest data."""
-        adax = self._adax_data_handler.get_data_handler()
+        adax = self._adax_data_handler.get_interface()
         data = await adax.get_status()
         self._attr_current_temperature = data["current_temperature"]
         self._attr_available = self._attr_current_temperature is not None

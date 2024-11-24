@@ -16,7 +16,9 @@ class AdaxDataHandler:
 
     def __init__(self, entry, hass) -> None:
         """Initialize the data handler."""
+        self._is_local = False
         if entry.data.get(CONNECTION_TYPE) == LOCAL:
+            self._is_local = True
             self._adax = AdaxLocal(
                 entry.data[CONF_IP_ADDRESS],
                 entry.data[CONF_TOKEN],
@@ -31,12 +33,15 @@ class AdaxDataHandler:
 
         self._rooms = None
 
-    async def async_update(self) -> Any:
+    async def async_update(self) -> Any | None:
         """Get the latest data."""
-        self._rooms = await self._adax.get_rooms()
+        if self._is_local is False:
+            self._rooms = await self._adax.get_rooms()
+        else:
+            return None
         return self._rooms
 
-    def get_room(self, room_id) -> Any:
+    def get_room(self, room_id) -> Any | None:
         """Get room by id."""
         if self._rooms is None:
             return None
@@ -45,10 +50,10 @@ class AdaxDataHandler:
                 return room
         return None
 
-    def get_rooms(self) -> Any:
+    def get_rooms(self) -> Any | None:
         """Get all rooms."""
         return self._rooms
 
-    def get_data_handler(self) -> Adax | AdaxLocal:
+    def get_interface(self) -> Adax | AdaxLocal:
         """Get data handler."""
         return self._adax
