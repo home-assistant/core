@@ -18,6 +18,9 @@ def _has_function_call(module: ast.Module, name: str) -> bool:
 def validate(check: QualityScaleCheck) -> None:
     """Validate that the integration prevents duplicate devices."""
 
+    if check.integration.manifest.get("single_config_entry"):
+        return
+
     config_flow_file = check.integration.path / "config_flow.py"
     config_flow = ast.parse(config_flow_file.read_text())
 
