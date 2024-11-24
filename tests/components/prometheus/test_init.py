@@ -2129,6 +2129,12 @@ async def sensor_fixture(
     sensor_13_attributes = {ATTR_BATTERY_LEVEL: 13}
     set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
 
+    # Create area with only mandatory parameters
+    area = area_registry.async_create("fake")
+    assert area is not None
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(sensor_13.entity_id, area_id=area.id)
+    await hass.async_block_till_done()
     data["sensor_13"] = sensor_13
     data["sensor_13_attributes"] = sensor_13_attributes
 
@@ -2145,11 +2151,6 @@ async def sensor_fixture(
     )
     set_state_with_entry(hass, sensor_14, 56.0)
     data["sensor_14"] = sensor_14
-
-    # Create area with only mandatory parameters
-    # area = area_registry.async_create("fake")
-    # sensor_13 = entity_registry.async_update_entity(sensor_13.entity_id, area_id=area.id)
-    # print(f"!!!!!!!!!!!!!!!! area: {area} with area.id: {area.id}")
 
     await hass.async_block_till_done()
     return data
