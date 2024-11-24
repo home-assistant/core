@@ -1386,9 +1386,10 @@ async def test_cover(
         "cover_position",
         "cover_tilt_position",
         "cover_open_device",
+        "cover_position_device",
     ]
     for testcover in data:
-        if testcover == "cover_open_device":
+        if testcover in ["cover_open_device", "cover_position_device"]:
             EntityMetric(
                 metric_name="cover_state",
                 domain="cover",
@@ -1400,6 +1401,16 @@ async def test_cover(
             ).withValue(
                 1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
             ).assert_in_metrics(body)
+
+            if testcover == "cover_position_device":
+                EntityMetric(
+                    metric_name="cover_position",
+                    domain="cover",
+                    friendly_name=cover_entities[testcover].original_name,
+                    entity=cover_entities[testcover].entity_id,
+                    area="Test Area",
+                    device="Test Cover Device",
+                ).withValue(75.0).assert_in_metrics(body)
 
         else:
             EntityMetric(
@@ -2718,6 +2729,25 @@ async def cover_fixture(
         hass, cover_open_device, STATE_OPEN, cover_open_device_attributes
     )
     data["cover_open_device"] = cover_open_device
+
+    cover_position_device = entity_registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_position_device",
+        suggested_object_id="position_shade_device",
+        original_name="Position Shade Device",
+        config_entry=config_entry,
+        device_id=device_id,
+    )
+    cover_position_device_attributes = {
+        cover.ATTR_CURRENT_POSITION: 75,
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(
+        hass, cover_position_device, STATE_OPEN, cover_position_device_attributes
+    )
+    data["cover_position_device"] = cover_position_device
 
     await hass.async_block_till_done()
     return data
