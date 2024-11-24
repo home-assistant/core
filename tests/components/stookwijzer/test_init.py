@@ -90,17 +90,3 @@ async def test_migration_failure(
 
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1
     assert len(mock_stookwijzer.return_value.async_update.mock_calls) == 0
-
-
-# async def test_load_unload_config_entry_when_device_unavailable(
-#     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-# ) -> None:
-#     """Test the Stookwijzer configuration entry loading and unloading when the website is unavailable."""
-#     entry = await setup_integration(hass, aioclient_mock, False)
-
-#     assert entry.state is ConfigEntryState.SETUP_ERROR
-
-#     await hass.config_entries.async_unload(entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     assert entry.state is ConfigEntryState.NOT_LOADED
