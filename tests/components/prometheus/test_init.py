@@ -903,6 +903,15 @@ async def test_battery(
         entity="sensor.outside_temperature",
     ).withValue(12.0).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        area="Test Area",
+        device="Test Device",
+    ).withValue(13.0).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_climate(
