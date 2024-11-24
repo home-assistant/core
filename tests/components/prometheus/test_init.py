@@ -670,6 +670,15 @@ async def test_view_empty_namespace(
         entity="sensor.radio_energy",
     ).withValue(86400.0).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [None])
 async def test_view_default_namespace(
@@ -690,6 +699,15 @@ async def test_view_default_namespace(
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
     ).withValue(15.6).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2070,6 +2088,42 @@ async def test_deleting_entity(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="climate_action",
         domain="climate",
         friendly_name="HeatPump",
@@ -2086,8 +2140,11 @@ async def test_deleting_entity(
     ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_humidity_device" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
     entity_registry.async_remove(data["sensor_1"].entity_id)
+    entity_registry.async_remove(data["sensor_13"].entity_id)
     entity_registry.async_remove(data["climate_1"].entity_id)
 
     await hass.async_block_till_done()
@@ -2097,6 +2154,8 @@ async def test_deleting_entity(
     body_line = "\n".join(body)
     assert 'entity="sensor.outside_temperature"' not in body_line
     assert 'friendly_name="Outside Temperature"' not in body_line
+    assert 'entity="sensor.outside_temperature_device"' not in body_line
+    assert 'friendly_name="Outside Temperature Device"' not in body_line
     assert 'entity="climate.heatpump"' not in body_line
     assert 'friendly_name="HeatPump"' not in body_line
 
@@ -2113,6 +2172,23 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(1).assert_in_metrics(body)
 
 
