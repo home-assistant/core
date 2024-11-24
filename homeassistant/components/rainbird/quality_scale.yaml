@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: Some fields are missing data descriptions.
+  config-flow: done
   brands: done
   dependency-transparency: done
   common-modules: done
@@ -47,7 +45,7 @@ rules:
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   action-exceptions: todo
   docs-installation-parameters: todo
   integration-owner: todo
