@@ -12,11 +12,14 @@ from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
+    Camera,
     CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
+    PTZPosition,
+    PTZPreset,
 )
 
 from homeassistant.const import (
@@ -135,3 +138,18 @@ def get_camera_base_name(channel: CameraChannel) -> str:
         camera_name = f"{channel.name} resolution channel"
 
     return camera_name
+
+
+async def get_ptz_current(obj: Camera) -> PTZPosition:
+    """Get the current PTZ position."""
+    return await obj.get_ptz_position()
+
+
+async def get_ptz_presets(obj: Camera) -> list[PTZPreset]:
+    """Get the PTZ presets."""
+    return await obj.get_ptz_presets()
+
+
+async def get_ptz_home(obj: Camera) -> PTZPreset:
+    """Get the PTZ home position."""
+    return await obj.get_ptz_home()

@@ -141,7 +141,7 @@ async def test_select_setup_viewer(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_select_setup_camera_all(
+async def test_select_setup_camera_no_ptz(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
@@ -164,6 +164,8 @@ async def test_select_setup_camera_all(
         unique_id, entity_id = ids_from_device_description(
             Platform.SELECT, doorbell, description
         )
+        if description.key == "ptz_preset":
+            continue
 
         entity = entity_registry.async_get(entity_id)
         assert entity

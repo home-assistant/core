@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
 from typing import Any, Final
 
+import nest_asyncio
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
     Camera,
@@ -41,7 +43,14 @@ from .entity import (
     T,
     async_all_device_entities,
 )
-from .utils import async_get_light_motion_current
+from .utils import (
+    async_get_light_motion_current,
+    get_ptz_current,
+    get_ptz_home,
+    get_ptz_presets,
+)
+
+nest_asyncio.apply()
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -111,7 +120,7 @@ class ProtectSelectEntityDescription(
     """Describes UniFi Protect Select entity."""
 
     ufp_options: list[dict[str, Any]] | None = None
-    ufp_options_fn: Callable[[ProtectApiClient], list[dict[str, Any]]] | None = None
+    ufp_options_fn: Callable[[Any], list[dict[str, Any]]] | None = None
     ufp_enum_type: type[Enum] | None = None
 
 
@@ -149,6 +158,14 @@ def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     return options
 
 
+def _get_ptz_camera_presets(obj: Camera) -> list[dict]:
+    presets = [{"id": -1, "name": "Home"}]
+    loop = asyncio.get_event_loop()
+    ptz_presets = loop.run_until_complete(get_ptz_presets(obj))
+    presets.extend({"id": preset.slot, "name": preset.name} for preset in ptz_presets)
+    return presets
+
+
 def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
@@ -157,6 +174,26 @@ def _get_doorbell_current(obj: Camera) -> str | None:
     if obj.lcd_message is None:
         return None
     return obj.lcd_message.text
+
+
+def _get_ptz_current(obj: Camera) -> str | None:
+    if not obj.feature_flags.is_ptz:
+        return None
+    loop = asyncio.get_event_loop()
+    current = loop.run_until_complete(get_ptz_current(obj)).steps.dict()
+    # Remove focus as it is not a preset
+    del current["focus"]
+    presets = loop.run_until_complete(get_ptz_presets(obj))
+    # Create a dict of preset positions with name as key
+    preset_positions = {"Home": loop.run_until_complete(get_ptz_home(obj)).ptz.dict()}
+    for preset in presets:
+        preset_positions[preset.name] = preset.ptz.dict()
+    # Find if current position is a presets position and return the name
+    if current in preset_positions.values():
+        for name, position in preset_positions.items():
+            if position == current:
+                return name
+    return None
 
 
 async def _set_light_mode(obj: Light, mode: str) -> None:
@@ -183,6 +220,10 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
         await obj.set_lcd_text(None)
     else:
         await obj.set_lcd_text(DoorbellMessageType(message))
+
+
+async def _set_ptz_preset(obj: Camera, preset_id: int) -> None:
+    await obj.goto_ptz_slot(slot=preset_id)
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -247,6 +288,17 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
         ufp_set_method="set_hdr_mode",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSelectEntityDescription[Camera](
+        key="ptz_preset",
+        name="PTZ Preset",
+        icon="mdi:video-outline",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.is_ptz",
+        ufp_options_fn=_get_ptz_camera_presets,
+        ufp_value_fn=_get_ptz_current,
+        ufp_set_method_fn=_set_ptz_preset,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -372,7 +424,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
-        self._async_set_options(data, description)
+        self._async_set_options(data, description, device)
         super().__init__(data, device, description)
 
     @callback
@@ -397,18 +449,28 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
 
     @callback
     def _async_set_options(
-        self, data: ProtectData, description: ProtectSelectEntityDescription
+        self,
+        data: ProtectData,
+        description: ProtectSelectEntityDescription,
+        device: Camera | Light | Viewer | None = None,
     ) -> None:
         """Set options attributes from UniFi Protect device."""
         if (ufp_options := description.ufp_options) is not None:
             options = ufp_options
+        # ptz presets are dynamic and require the device to be passed
+        elif description.key == "ptz_preset":
+            assert description.ufp_options_fn is not None
+            if not device:
+                return
+            options = description.ufp_options_fn(device)
         else:
             assert description.ufp_options_fn is not None
             options = description.ufp_options_fn(data.api)
 
-        self._attr_options = [item["name"] for item in options]
-        self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
-        self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
+        if isinstance(options, list):
+            self._attr_options = [item["name"] for item in options]
+            self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
+            self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
 
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
