@@ -17,9 +17,6 @@
   },
   "entity": {
     "sensor": {
-      "air_quality_index": {
-        "name": "Air quality index"
-      },
       "advice": {
         "name": "Advice code",
         "state": {
@@ -27,9 +24,6 @@
           "code_orange": "Orange",
           "code_red": "Red"
         }
-      },
-      "windspeed": {
-        "name": "Windspeed"
       }
     }
   },

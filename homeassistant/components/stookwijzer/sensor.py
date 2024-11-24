@@ -33,7 +33,6 @@ class StookwijzerSensorDescription(SensorEntityDescription):
 STOOKWIJZER_SENSORS = [
     StookwijzerSensorDescription(
         key="windspeed",
-        translation_key="windspeed",
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         suggested_unit_of_measurement=UnitOfSpeed.BEAUFORT,
         device_class=SensorDeviceClass.WIND_SPEED,
@@ -43,7 +42,6 @@ STOOKWIJZER_SENSORS = [
     ),
     StookwijzerSensorDescription(
         key="air_quality_index",
-        translation_key="air_quality_index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.lki,
