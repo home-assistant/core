@@ -13,7 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, auth_successful
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -21,10 +23,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "igloohome_api.Auth.async_get_access_token",
-        return_value="mock_access_token",
-    ):
+    with auth_successful:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

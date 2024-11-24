@@ -13,3 +13,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.igloohome.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def auth_successful():
+    """Set up the Auth module to always successfully operate."""
+    return patch(
+        "igloohome_api.Auth.async_get_access_token",
+        return_value="mock_access_token",
+    )
