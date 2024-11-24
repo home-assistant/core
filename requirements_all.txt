@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==27.0.1
+aioesphomeapi==27.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1672,7 +1672,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.10
+py-aosmith==1.0.11
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -3044,7 +3044,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.0
+yalexs-ble==2.5.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
