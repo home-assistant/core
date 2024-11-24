@@ -168,7 +168,6 @@ def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     All tasks have an order amongst their siblings based on position.
     """
-    # print(["({}, {})".format(task.get("id"), task.get("parent")) for task in tasks])
     # Group tasks by parent
     root_tasks = []
     child_tasks = []
