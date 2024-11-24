@@ -51,8 +51,13 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
     CambridgeAudioSelectEntityDescription(
         key="display_brightness",
         translation_key="display_brightness",
-        options=[x.value for x in DisplayBrightness],
+        options=[
+            DisplayBrightness.BRIGHT.value,
+            DisplayBrightness.DIM.value,
+            DisplayBrightness.OFF.value,
+        ],
         entity_category=EntityCategory.CONFIG,
+        load_fn=lambda client: client.display.brightness != DisplayBrightness.NONE,
         value_fn=lambda client: client.display.brightness,
         set_value_fn=lambda client, value: client.set_display_brightness(
             DisplayBrightness(value)

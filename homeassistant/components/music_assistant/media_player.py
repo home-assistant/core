@@ -152,6 +152,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_supported_features = SUPPORTED_FEATURES
         if PlayerFeature.SYNC in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
+        if PlayerFeature.VOLUME_MUTE in self.player.supported_features:
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
 
@@ -219,7 +221,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     )
                 )
             ]
-        self._attr_group_members = group_members_entity_ids
+        # NOTE: we sort the group_members for now,
+        # until the MA API returns them sorted (group_childs is now a set)
+        self._attr_group_members = sorted(group_members_entity_ids)
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
         )

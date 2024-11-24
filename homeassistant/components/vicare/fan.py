@@ -130,8 +130,7 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             device_list,
-        ),
-        True,
+        )
     )
 
 

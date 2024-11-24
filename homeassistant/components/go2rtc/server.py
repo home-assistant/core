@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import HA_MANAGED_API_PORT, HA_MANAGED_RTSP_PORT, HA_MANAGED_URL
+from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
@@ -33,7 +33,7 @@ api:
   listen: "{api_ip}:{api_port}"
 
 rtsp:
-  listen: "127.0.0.1:{rtsp_port}"
+  listen: "127.0.0.1:18554"
 
 webrtc:
   listen: ":18555/tcp"
@@ -68,9 +68,7 @@ def _create_temp_file(api_ip: str) -> str:
     with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
-                api_ip=api_ip,
-                api_port=HA_MANAGED_API_PORT,
-                rtsp_port=HA_MANAGED_RTSP_PORT,
+                api_ip=api_ip, api_port=HA_MANAGED_API_PORT
             ).encode()
         )
         return file.name
