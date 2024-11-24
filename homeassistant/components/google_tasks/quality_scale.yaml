@@ -1,0 +1,81 @@
+rules:
+  # Bronze
+  config-flow:
+    status: done
+    comment: |
+      The integration uses an OAuth config flow.
+  brands: done
+  dependency-transparency: done
+  common-modules:
+    status: done
+    comment: |
+      The integration has a coordinator.py and no base entities.
+  has-entity-name: done
+  action-setup:
+    status: done
+    comment: The integration does not register any actions.
+  appropriate-polling:
+    status: done
+    comment: The coordinator polls every 30 minutes.
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  test-before-setup:
+    status: todo
+    comment: |
+      The integration refreshes the access token, but does not poll the API. The
+      setup can be changed to request the list of todo lists in setup instead
+      of during platform setup.
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions: done
+  runtime-data:
+    status: todo
+    comment: |
+      The integration currently stores config entry data in `hass.data` and
+      needs to be moved to `runtime_data`.
+
+  # Silver
+  log-when-unavailable: todo
+  config-entry-unloading: todo
+  reauthentication-flow: todo
+  action-exceptions: todo
+  docs-installation-parameters: todo
+  integration-owner: todo
+  parallel-updates: todo
+  test-coverage: todo
+  docs-configuration-parameters: todo
+  entity-unavailable: todo
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: todo
+  icon-translations: todo
+  docs-known-limitations: todo
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: todo
+  strict-typing: todo
+  inject-websession: todo

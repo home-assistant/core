@@ -425,7 +425,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_photos",
     "google_pubsub",
     "google_sheets",
-    "google_tasks",
     "google_translate",
     "google_travel_time",
     "google_wifi",
