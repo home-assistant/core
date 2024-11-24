@@ -82,7 +82,9 @@ class AdaxDevice(ClimateEntity):
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
             await adax.set_room_target_temperature(self._device_id, temperature, True)
         elif hvac_mode == HVACMode.OFF:
-            await adax.set_room_target_temperature(self._device_id, self.min_temp, False)
+            await adax.set_room_target_temperature(
+                self._device_id, self.min_temp, False
+            )
         else:
             return
         await adax.update()

@@ -1,11 +1,8 @@
 """Support for Adax energy sensors."""
 
+from datetime import UTC, datetime
 import logging
-
-from datetime import datetime, timezone
 from typing import Any
-
-from .climate import AdaxDataHandler
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,6 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .climate import AdaxDataHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ class AdaxEnergySensor(SensorEntity):
             self._state = room.get("energyWh", 0) / 1000
             _LOGGER.debug("Updated state: %s kWh", self._state)
             if int(self._state * 1000) < int(old_state * 1000):
-                self._last_reset = datetime.now(timezone.utc)
+                self._last_reset = datetime.now(UTC)
         else:
             _LOGGER.warning(
                 "Room ID %s not found in data handler", self._heater_data["id"]
