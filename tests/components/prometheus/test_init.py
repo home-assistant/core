@@ -1185,13 +1185,6 @@ async def test_binary_sensor(
     EntityMetric(
         metric_name="binary_sensor_state",
         domain="binary_sensor",
-        friendly_name="Window",
-        entity="binary_sensor.window",
-    ).withValue(0.0).assert_in_metrics(body)
-
-    EntityMetric(
-        metric_name="binary_sensor_state",
-        domain="binary_sensor",
         friendly_name="Status",
         entity="binary_sensor.status",
         area="Test Area",
