@@ -58,6 +58,7 @@ from homeassistant.components.prometheus import (
     PrometheusLabelsException,
 )
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
@@ -960,6 +961,44 @@ async def test_climate(
         friendly_name="Ecobee",
         entity="climate.ecobee",
         mode="auto",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_target_temperature_low_celsius",
+        domain="climate",
+        friendly_name="Ecobee Device",
+        entity="climate.ecobee_device",
+        area="Test Area",
+        device="Test Climate Device",
+    ).withValue(18.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_target_temperature_high_celsius",
+        domain="climate",
+        friendly_name="Ecobee Device",
+        entity="climate.ecobee_device",
+        area="Test Area",
+        device="Test Climate Device",
+    ).withValue(29.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee Device",
+        entity="climate.ecobee_device",
+        mode="away",
+        area="Test Area",
+        device="Test Climate Device",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_fan_mode",
+        domain="climate",
+        friendly_name="Ecobee Device",
+        entity="climate.ecobee_device",
+        mode="auto",
+        area="Test Area",
+        device="Test Climate Device",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1972,6 +2011,32 @@ async def test_entity_becomes_unavailable(
     ).withValue(1).assert_in_metrics(body)
 
 
+def _get_device_setup_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    device_name: str,
+    area_name: str,
+) -> (ConfigEntry, str, str):
+    """Set up config entry and basic device and area and return ids of each for testing."""
+    config_entry = MockConfigEntry(domain="my")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        name=device_name,
+        identifiers={("test", "current_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area=area_name,
+    )
+    assert device is not None
+    assert device.id is not None
+    area = area_registry.async_get_area_by_name(area_name)
+    assert area is not None
+    assert area.id is not None
+    return config_entry, device.id, area.id
+
+
 @pytest.fixture(name="sensor_entities")
 async def sensor_fixture(
     hass: HomeAssistant,
@@ -2118,21 +2183,13 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
     data["sensor_12"] = sensor_12
 
-    config_entry = MockConfigEntry(domain="my")
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_or_create(
-        name="Test Device",
-        identifiers={("test", "current_device")},
-        connections={("mac", "30:31:32:33:34:00")},
-        config_entry_id=config_entry.entry_id,
-        suggested_area="Test Area",
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Device",
+        "Test Area",
     )
-    assert device is not None
-    assert device.id is not None
-    area = area_registry.async_get_area_by_name("Test Area")
-    assert area is not None
-    assert area.id is not None
 
     sensor_13 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
@@ -2143,12 +2200,12 @@ async def sensor_fixture(
         suggested_object_id="outside_temperature_device",
         original_name="Outside Temperature Device",
         config_entry=config_entry,
-        device_id=device.id,
+        device_id=device_id,
     )
     sensor_13_attributes = {
         ATTR_BATTERY_LEVEL: 13,
-        ATTR_AREA_ID: area.id,
-        ATTR_DEVICE_ID: device.id,
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
     }
     set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
 
@@ -2164,13 +2221,13 @@ async def sensor_fixture(
         suggested_object_id="outside_humidity_device",
         original_name="Outside Humidity Device",
         config_entry=config_entry,
-        device_id=device.id,
+        device_id=device_id,
     )
 
     sensor_14_attributes = {
         ATTR_BATTERY_LEVEL: 13,
-        ATTR_AREA_ID: area.id,
-        ATTR_DEVICE_ID: device.id,
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
     }
     set_state_with_entry(hass, sensor_14, 56.0, sensor_14_attributes)
     data["sensor_14"] = sensor_14
@@ -2182,7 +2239,10 @@ async def sensor_fixture(
 
 @pytest.fixture(name="climate_entities")
 async def climate_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate climate entities."""
     data = {}
@@ -2247,6 +2307,50 @@ async def climate_fixture(
     set_state_with_entry(hass, climate_3, climate.HVACAction.OFF, climate_3_attributes)
     data["climate_3"] = climate_3
     data["climate_3_attributes"] = climate_3_attributes
+
+    config_entry = MockConfigEntry(domain="my")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        name="Test Climate Device",
+        identifiers={("test", "current_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area="Test Area",
+    )
+    assert device is not None
+    assert device.id is not None
+    area = area_registry.async_get_area_by_name("Test Area")
+    assert area is not None
+    assert area.id is not None
+
+    climate_4 = entity_registry.async_get_or_create(
+        domain=climate.DOMAIN,
+        platform="test",
+        unique_id="climate_4",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_object_id="ecobee_device",
+        original_name="Ecobee Device",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+    climate_4_attributes = {
+        ATTR_TEMPERATURE: 17,
+        ATTR_CURRENT_TEMPERATURE: 24,
+        ATTR_TARGET_TEMP_LOW: 18,
+        ATTR_TARGET_TEMP_HIGH: 29,
+        ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+        ATTR_HVAC_MODES: ["off", "heat", "cool", "heat_cool"],
+        ATTR_PRESET_MODE: "away",
+        ATTR_PRESET_MODES: ["away", "home", "sleep"],
+        ATTR_FAN_MODE: "auto",
+        ATTR_FAN_MODES: ["auto", "on"],
+        ATTR_AREA_ID: area.id,
+        ATTR_DEVICE_ID: device.id,
+    }
+    set_state_with_entry(hass, climate_4, climate.HVACAction.IDLE, climate_4_attributes)
+    data["climate_4"] = climate_4
+    data["climate_4_attributes"] = climate_4_attributes
 
     await hass.async_block_till_done()
     return data
