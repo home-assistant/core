@@ -1102,7 +1102,7 @@ async def test_switch(
     client: ClientSessionGenerator,
     switch_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
-    """Test prometheus metrics for switch."""
+    """Test prometheus metrics for switch entities."""
     body = await generate_latest_metrics(client)
 
     EntityMetric(
