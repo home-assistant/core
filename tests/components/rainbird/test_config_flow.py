@@ -313,6 +313,10 @@ async def test_controller_timeout(
     [
         (
             [
+                # First attempt simulate the wrong password
+                AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
+                AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
+                # Second attempt simulate the correct password
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -336,10 +340,19 @@ async def test_reauth_flow(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     result = flows[0]
-
     assert result.get("step_id") == "reauth_confirm"
     assert not result.get("errors")
 
+    # Simluate the wrong password
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "incorrect_password"},
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+    assert result.get("errors") == {"base": "invalid_auth"}
+
+    # Enter the correct password and complete the flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_PASSWORD: PASSWORD},

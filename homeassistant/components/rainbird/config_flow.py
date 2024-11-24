@@ -88,12 +88,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             try:
-                _LOGGER.debug(
-                    "Reauthenticating to Rain Bird controller: %s", user_input
-                )
-                serial_number, wifi_params = await self._test_connection(
-                    self.host, user_input[CONF_PASSWORD]
-                )
+                await self._test_connection(self.host, user_input[CONF_PASSWORD])
             except ConfigFlowError as err:
                 _LOGGER.error("Error during config flow: %s", err)
                 errors["base"] = err.error_code
