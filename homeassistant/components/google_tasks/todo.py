@@ -45,6 +45,7 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
     else:
         result["due"] = None
     result["notes"] = item.description
+    result["parent"] = item.parent
     return result
 
 
@@ -99,6 +100,7 @@ class GoogleTaskTodoListEntity(
         | TodoListEntityFeature.MOVE_TODO_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.SET_PARENT_ON_ITEM
     )
 
     def __init__(

@@ -85,6 +85,7 @@ class AsyncConfigEntryAuth:
         cmd: HttpRequest = service.tasks().insert(
             tasklist=task_list_id,
             body=task,
+            parent=task.get("parent"),
         )
         await self._execute(cmd)
 

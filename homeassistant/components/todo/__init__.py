@@ -36,6 +36,7 @@ from .const import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_PARENT,
     ATTR_RENAME,
     ATTR_STATUS,
     DATA_COMPONENT,
@@ -88,6 +89,12 @@ TODO_ITEM_FIELDS = [
         validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_PARENT,
+        validation=vol.Any(cv.string, None),
+        todo_item_field=ATTR_PARENT,
+        required_feature=TodoListEntityFeature.SET_PARENT_ON_ITEM,
     ),
 ]
 
