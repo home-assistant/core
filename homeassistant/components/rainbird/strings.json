@@ -9,7 +9,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Rain Bird device."
+          "host": "The hostname or IP address of your Rain Bird device.",
+          "password": "The password used to authenticate with the Rain Bird device."
         }
       }
     },

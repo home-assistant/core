@@ -493,7 +493,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iglo",
     "ign_sismologia",
     "ihc",
-    "imap",
     "imgw_pib",
     "improv_ble",
     "incomfort",
@@ -1313,7 +1312,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     if integration.domain in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE:
         integration.add_error(
             "quality_scale",
-            "Quality scale file found! Please remove from quality_scale.py",
+            "Quality scale file found! Please remove from script/hassfest/quality_scale.py",
         )
         return
     name = str(iqs_file)
