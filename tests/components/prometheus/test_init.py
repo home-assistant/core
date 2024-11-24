@@ -2318,6 +2318,7 @@ async def entity_config_fixture(
         "lock": "Test Lock Device",
         "sensor": "Test Device",
         "cover": "Test Cover Device",
+        "climate": "Test Climate Device",
     }
     for key, value in devices.items():
         identifier = "".join(
@@ -2655,14 +2656,6 @@ async def climate_fixture(
     data["climate_3"] = climate_3
     data["climate_3_attributes"] = climate_3_attributes
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Climate Device",
-        "Test Area",
-    )
-
     climate_4 = entity_registry.async_get_or_create(
         domain=climate.DOMAIN,
         platform="test",
@@ -2670,8 +2663,8 @@ async def climate_fixture(
         unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_object_id="ecobee_device",
         original_name="Ecobee Device",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["climate"]["config_entry"],
+        device_id=entity_config_data["climate"]["device_id"],
     )
     climate_4_attributes = {
         ATTR_TEMPERATURE: 17,
@@ -2684,8 +2677,8 @@ async def climate_fixture(
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
         ATTR_FAN_MODES: ["auto", "on"],
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["climate"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["climate"]["device_id"],
     }
     set_state_with_entry(hass, climate_4, climate.HVACAction.IDLE, climate_4_attributes)
     data["climate_4"] = climate_4
@@ -2751,13 +2744,6 @@ async def humidifier_fixture(
     data["humidifier_3"] = humidifier_3
     data["humidifier_3_attributes"] = humidifier_3_attributes
 
-    # config_entry, device_id, area_id = _get_device_setup_info(
-    #     hass,
-    #     device_registry,
-    #     area_registry,
-    #     "Test Humidifier Device",
-    #     "Test Area",
-    # )
     humidifier_4 = entity_registry.async_get_or_create(
         domain=humidifier.DOMAIN,
         platform="test",
