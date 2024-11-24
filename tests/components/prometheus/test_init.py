@@ -1332,6 +1332,13 @@ async def test_fan(
     EntityMetric(
         metric_name="fan_direction_reversed",
         domain="fan",
+        friendly_name="Reverse Fan",
+        entity="fan.fan_2",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_direction_reversed",
+        domain="fan",
         friendly_name="Test Device Fan",
         entity="fan.fan_3",
         area="Test Area",
