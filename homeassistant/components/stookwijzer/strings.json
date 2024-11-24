@@ -18,14 +18,14 @@
   "entity": {
     "sensor": {
       "air_quality_index": {
-        "name": "Air Quality Index"
+        "name": "Air quality index"
       },
       "advice": {
-        "name": "Advice",
+        "name": "Advice code",
         "state": {
-          "code_yellow": "Code yellow",
-          "code_orange": "Code orange",
-          "code_red": "Code red"
+          "code_yellow": "Yellow",
+          "code_orange": "Orange",
+          "code_red": "Red"
         }
       },
       "windspeed": {
@@ -33,10 +33,13 @@
       }
     }
   },
-  "exceptions": {
+  "issues": {
     "location_migration_failed": {
-      "message": "Unable to migrate location to new format. Restart to try again, or remove and re-add the integration."
-    },
+      "description": "The Stookwijzer integration was unable to automatically migrate your location to a new format the updated integrations uses.\n\nMake sure you are connected to the internet and restart Home Assistant to try again.\n\nIf this doesn't resolve the error, remove and re-add the integration.",
+      "title": "Migration of your location failed"
+    }
+  },
+  "exceptions": {
     "no_data_received": {
       "message": "No data received from Stookwijzer."
     }

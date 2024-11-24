@@ -25,17 +25,16 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
-
         if user_input is not None:
-            x, y = await Stookwijzer.async_transform_coordinates(
+            latitude, longitude = await Stookwijzer.async_transform_coordinates(
                 async_get_clientsession(self.hass),
                 user_input[CONF_LOCATION][CONF_LATITUDE],
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
-            if x and y:
+            if latitude and longitude:
                 return self.async_create_entry(
                     title="Stookwijzer",
-                    data={CONF_LATITUDE: x, CONF_LONGITUDE: y},
+                    data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
                 )
             errors["base"] = "unknown"
 

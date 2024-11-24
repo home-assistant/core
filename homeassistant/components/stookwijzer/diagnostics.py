@@ -4,25 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from .coordinator import StookwijzerConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: StookwijzerConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
-
-    last_updated = None
-    if coordinator.client.last_updated:
-        last_updated = coordinator.client.last_updated.isoformat()
-
+    client = entry.runtime_data.client
     return {
-        "advice": coordinator.client.advice,
-        "air_quality_index": coordinator.client.lki,
-        "windspeed_bft": coordinator.client.windspeed_bft,
-        "windspeed_ms": coordinator.client.windspeed_ms,
-        "forecast_advice": coordinator.client.forecast_advice,
-        "last_updated": last_updated,
+        "advice": client.advice,
+        "air_quality_index": client.lki,
+        "windspeed_ms": client.windspeed_ms,
     }
