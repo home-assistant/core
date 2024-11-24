@@ -23,6 +23,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
 
@@ -445,6 +446,7 @@ class _CameraRtspToWebRTCProvider(CameraWebRTCLegacyProvider):
         return await self._fn(stream_source, offer_sdp, camera.entity_id)
 
 
+@deprecated_function("async_register_webrtc_provider", breaks_in_ha_version="2025.6")
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,
