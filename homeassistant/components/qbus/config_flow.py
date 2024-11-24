@@ -31,7 +31,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._gateway_topic = self._topic_factory.get_gateway_state_topic()
         self._config_topic = self._topic_factory.get_config_topic()
-        self._controller_topic = self._topic_factory.get_device_state_topic("+")
+        self._device_topic = self._topic_factory.get_device_state_topic("+")
 
         self._device: QbusMqttDevice | None = None
 
@@ -53,10 +53,9 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             case self._config_topic:
                 return await self._async_handle_config_topic(discovery_info)
 
-            case self._controller_topic:
-                return await self._async_handle_controller_topic(discovery_info)
+            case self._device_topic:
+                return await self._async_handle_device_topic(discovery_info)
 
-        # Abort
         return self.async_abort(reason="invalid_discovery_info")
 
     async def async_step_discovery_confirm(
@@ -119,13 +118,13 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             request = self._message_factory.create_state_request(device_ids)
             await mqtt.async_publish(self.hass, request.topic, request.payload)
 
-        # Abort to wait for controller topic
+        # Abort to wait for device topic
         return self.async_abort(reason="invalid_discovery_info")
 
-    async def _async_handle_controller_topic(
+    async def _async_handle_device_topic(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
-        _LOGGER.debug("Discovering controller")
+        _LOGGER.debug("Discovering device")
         qbus_config = await QbusConfigContainer.async_get_or_request_config(self.hass)
 
         if qbus_config is None:
@@ -144,8 +143,8 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Do not use error message "already_configured" (which is the
         # default), as this will result in unsubscribing from the triggered
         # mqtt topic. The topic subscribed to has a wildcard to allow
-        # discovery of multiple controllers. Unsubscribing would result in
-        # not discovering new or unconfigured controllers.
+        # discovery of multiple devices. Unsubscribing would result in
+        # not discovering new or unconfigured devices.
         self._abort_if_unique_id_configured(error="device_already_configured")
 
         self.context.update(

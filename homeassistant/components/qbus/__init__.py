@@ -1,22 +1,20 @@
 """The Qbus integration."""
 
-from __future__ import annotations
-
 import logging
 
-from homeassistant.components.mqtt import async_wait_for_mqtt_client
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant
+from qbusmqttapi.factory import QbusMqttTopicFactory
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import QbusDataCoordinator
+from homeassistant.components.mqtt import async_wait_for_mqtt_client, client as mqtt
+from homeassistant.core import HomeAssistant
+
+from .const import PLATFORMS
+from .coordinator import QbusConfigEntry, QbusDataCoordinator, QbusRuntimeData
 from .qbus import QbusConfigContainer
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
     """Set up Qbus from a config entry."""
     _LOGGER.debug("Loading entry %s", entry.entry_id)
 
@@ -24,41 +22,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("MQTT integration not available")
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hub = hass.data[DOMAIN].get(entry.entry_id)
+    coordinator = QbusDataCoordinator(hass, entry)
+    entry.runtime_data = QbusRuntimeData(coordinator)
 
-    if not hub:
-        hub = QbusDataCoordinator(hass, entry)
-        hass.data[DOMAIN][entry.entry_id] = hub
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await hub.async_setup_entry()
+    # Subscribe to Qbus config topic
+    config_topic = QbusMqttTopicFactory().get_config_topic()
+    _LOGGER.debug("Subscribing to %s", config_topic)
+    entry.async_on_unload(
+        await mqtt.async_subscribe(hass, config_topic, coordinator.config_received)
+    )
 
-    async def _homeassistant_started(event: Event) -> None:
-        _LOGGER.debug("Home Assistant started, requesting config")
-        await QbusConfigContainer.async_get_or_request_config(hass)
+    # Request Qbus config
+    config = await QbusConfigContainer.async_get_or_request_config(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _homeassistant_started)
+    if config:
+        await coordinator.async_update_config(config)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading entry %s", entry.entry_id)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hub: QbusDataCoordinator = hass.data[DOMAIN][entry.entry_id]
-        hub.shutdown()
+        entry.runtime_data.coordinator.shutdown()
 
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Remove a config entry."""
     _LOGGER.debug("Removing entry %s", entry.entry_id)
-
-    hub: QbusDataCoordinator = hass.data[DOMAIN][entry.entry_id]
-    hub.remove()
-    hass.data[DOMAIN].pop(entry.entry_id)
+    entry.runtime_data.coordinator.remove()

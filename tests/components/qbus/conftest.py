@@ -71,8 +71,8 @@ def mqtt_discovery_info_config():
 
 
 @pytest.fixture
-def mqtt_discovery_info_controller():
-    """Create MQTT discovery info for a controller state topic."""
+def mqtt_discovery_info_device():
+    """Create MQTT discovery info for a device state topic."""
     return MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
         topic="cloudapp/QBUSMQTTGW/UL1/state",

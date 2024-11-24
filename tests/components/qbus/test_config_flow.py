@@ -18,8 +18,8 @@ async def test_step_mqtt_empty_payload(
 ) -> None:
     """Test mqtt discovery with empty payload."""
     result = await qbus_config_flow.async_step_mqtt(mqtt_discovery_info)
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
 async def test_step_mqtt_invalid_topic(
@@ -32,8 +32,8 @@ async def test_step_mqtt_invalid_topic(
     invalid_mqtt_info.payload = "{ }"
 
     result = await qbus_config_flow.async_step_mqtt(invalid_mqtt_info)
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
 async def test_step_mqtt_calls_gateway(
@@ -55,15 +55,15 @@ async def test_step_mqtt_calls_gateway(
         ) as mock_config,
         patch.object(
             qbus_config_flow,
-            "_async_handle_controller_topic",
+            "_async_handle_device_topic",
             return_value={"type": "abort"},
-        ) as mock_controller,
+        ) as mock_device,
     ):
         await qbus_config_flow.async_step_mqtt(mqtt_discovery_info_gateway)
 
     mock_gateway.assert_called_once_with(mqtt_discovery_info_gateway)
     mock_config.assert_not_called()
-    mock_controller.assert_not_called()
+    mock_device.assert_not_called()
 
 
 async def test_step_mqtt_calls_config(
@@ -85,22 +85,22 @@ async def test_step_mqtt_calls_config(
         ) as mock_config,
         patch.object(
             qbus_config_flow,
-            "_async_handle_controller_topic",
+            "_async_handle_device_topic",
             return_value={"type": "abort"},
-        ) as mock_controller,
+        ) as mock_device,
     ):
         await qbus_config_flow.async_step_mqtt(mqtt_discovery_info_config)
 
     mock_gateway.assert_not_called()
     mock_config.assert_called_once_with(mqtt_discovery_info_config)
-    mock_controller.assert_not_called()
+    mock_device.assert_not_called()
 
 
-async def test_step_mqtt_calls_controller(
+async def test_step_mqtt_calls_device(
     qbus_config_flow: QbusFlowHandler,
-    mqtt_discovery_info_controller: MqttServiceInfo,
+    mqtt_discovery_info_device: MqttServiceInfo,
 ) -> None:
-    """Test if _async_handle_gateway_topic is called when subscribed_topic matches controller."""
+    """Test if _async_handle_gateway_topic is called when subscribed_topic matches device."""
 
     with (
         patch.object(
@@ -115,15 +115,15 @@ async def test_step_mqtt_calls_controller(
         ) as mock_config,
         patch.object(
             qbus_config_flow,
-            "_async_handle_controller_topic",
+            "_async_handle_device_topic",
             return_value={"type": "abort"},
-        ) as mock_controller,
+        ) as mock_device,
     ):
-        await qbus_config_flow.async_step_mqtt(mqtt_discovery_info_controller)
+        await qbus_config_flow.async_step_mqtt(mqtt_discovery_info_device)
 
     mock_gateway.assert_not_called()
     mock_config.assert_not_called()
-    mock_controller.assert_called_once_with(mqtt_discovery_info_controller)
+    mock_device.assert_called_once_with(mqtt_discovery_info_device)
 
 
 async def test_handle_gateway_topic_when_online(
@@ -144,8 +144,8 @@ async def test_handle_gateway_topic_when_online(
         )
 
     assert mock_publish.called
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
 async def test_handle_gateway_topic_when_offline(
@@ -166,8 +166,8 @@ async def test_handle_gateway_topic_when_offline(
         )
 
     assert mock_publish.called is False
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
 async def test_handle_config_topic(
@@ -193,14 +193,14 @@ async def test_handle_config_topic(
 
     assert mock_store.called
     assert mock_publish.called
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_handle_controller_topic_success(
-    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_controller: MqttServiceInfo
+async def test_handle_device_topic_success(
+    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_device: MqttServiceInfo
 ) -> None:
-    """Test handling of controller topic."""
+    """Test handling of device topic."""
 
     mock_qbus_config = MagicMock(spec=QbusDiscovery)
     mock_qbus_config.get_device_by_id.return_value = QbusMqttDevice(
@@ -220,19 +220,19 @@ async def test_handle_controller_topic_success(
             return_value=FlowResult(type=FlowResultType.FORM),
         ) as mock_step_discovery,
     ):
-        result = await qbus_config_flow._async_handle_controller_topic(
-            mqtt_discovery_info_controller
+        result = await qbus_config_flow._async_handle_device_topic(
+            mqtt_discovery_info_device
         )
 
     assert mock_get_config.called
     assert mock_step_discovery.called
-    assert result["type"] == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.FORM
 
 
-async def test_handle_controller_topic_missing_config(
-    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_controller: MqttServiceInfo
+async def test_handle_device_topic_missing_config(
+    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_device: MqttServiceInfo
 ) -> None:
-    """Test handling of controller topic when config is missing."""
+    """Test handling of device topic when config is missing."""
     with (
         patch.object(
             QbusConfigContainer,
@@ -240,19 +240,19 @@ async def test_handle_controller_topic_missing_config(
             return_value=None,
         ) as mock_get_config,
     ):
-        result = await qbus_config_flow._async_handle_controller_topic(
-            mqtt_discovery_info_controller
+        result = await qbus_config_flow._async_handle_device_topic(
+            mqtt_discovery_info_device
         )
 
     assert mock_get_config.called
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_handle_controller_topic_device_not_found(
-    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_controller: MqttServiceInfo
+async def test_handle_device_topic_device_not_found(
+    qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_device: MqttServiceInfo
 ) -> None:
-    """Test handling of controller topic when device is not found."""
+    """Test handling of device topic when device is not found."""
 
     mock_qbus_config = MagicMock(spec=QbusDiscovery)
     mock_qbus_config.get_device_by_id.return_value = None
@@ -261,12 +261,12 @@ async def test_handle_controller_topic_device_not_found(
         "homeassistant.components.qbus.config_flow.QbusConfigContainer.async_get_or_request_config",
         return_value=mock_qbus_config,
     ):
-        result = await qbus_config_flow._async_handle_controller_topic(
-            mqtt_discovery_info_controller
+        result = await qbus_config_flow._async_handle_device_topic(
+            mqtt_discovery_info_device
         )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "invalid_discovery_info"
 
 
 async def test_step_discovery_confirm_form(
@@ -275,7 +275,7 @@ async def test_step_discovery_confirm_form(
     """Test mqtt confirm showing the form."""
     result = await qbus_config_flow_with_device.async_step_discovery_confirm()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.FORM
 
 
 async def test_step_discovery_confirm_create_entry(
@@ -285,8 +285,8 @@ async def test_step_discovery_confirm_create_entry(
     user_input = {}
     result = await qbus_config_flow_with_device.async_step_discovery_confirm(user_input)
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {
         CONF_ID: "UL1",
         CONF_SERIAL: "000001",
     }
@@ -298,5 +298,5 @@ async def test_step_user_not_supported(
     """Test user step, which should abort."""
     result = await qbus_config_flow.async_step_user()
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "not_supported"

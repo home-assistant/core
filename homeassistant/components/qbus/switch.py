@@ -11,12 +11,10 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import QbusDataCoordinator
+from .coordinator import QbusConfigEntry
 from .entity import QbusEntity
 from .qbus import QbusEntry
 
@@ -24,12 +22,10 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     """Set up switch entities."""
-
-    hub: QbusDataCoordinator = hass.data[DOMAIN][entry.entry_id]
-    hub.register_platform("onoff", QbusSwitch, add_entities)
+    entry.runtime_data.coordinator.register_platform("onoff", QbusSwitch, add_entities)
 
 
 class QbusSwitch(QbusEntity, SwitchEntity):

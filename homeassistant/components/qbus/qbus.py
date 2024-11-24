@@ -176,5 +176,5 @@ class QbusEntry:
 
     @property
     def serial(self) -> str:
-        """Return the controller serial."""
+        """Return the device serial."""
         return self._config_entry.data.get(CONF_SERIAL, "")
