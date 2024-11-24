@@ -35,6 +35,7 @@ from .entity import (
 from .util import ReolinkConfigEntry, ReolinkData
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -196,6 +197,16 @@ CHIME_SELECT_ENTITIES = (
         supported=lambda chime: "people" in chime.chime_event_types,
         value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="vehicle_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="vehicle_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "vehicle" in chime.chime_event_types,
+        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
         key="visitor_tone",

@@ -6,10 +6,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -125,6 +125,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 return await self.async_step_machine_selection()
 
+        placeholders: dict[str, str] | None = None
+        if self._discovered:
+            self.context["title_placeholders"] = placeholders = {
+                CONF_NAME: self._discovered[CONF_MACHINE]
+            }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -134,6 +140,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_machine_selection(

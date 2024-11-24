@@ -1327,7 +1327,7 @@ async def test_hass_components_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame'"
-            " accesses hass.components.http. This is deprecated"
+            " accesses hass.components.http, which should be updated"
         ) in caplog.text
         assert reported == expected
 
@@ -2023,7 +2023,7 @@ async def test_hass_helpers_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame' "
-            "accesses hass.helpers.aiohttp_client. This is deprecated"
+            "accesses hass.helpers.aiohttp_client, which should be updated"
         ) in caplog.text
         assert reported == expected
 

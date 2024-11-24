@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 

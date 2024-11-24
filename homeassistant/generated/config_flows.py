@@ -24,6 +24,7 @@ FLOWS = {
     ],
     "integration": [
         "abode",
+        "acaia",
         "accuweather",
         "acmeda",
         "adax",
@@ -408,6 +409,7 @@ FLOWS = {
         "nina",
         "nmap_tracker",
         "nobo_hub",
+        "nordpool",
         "notion",
         "nuheat",
         "nuki",
@@ -536,6 +538,7 @@ FLOWS = {
         "simplefin",
         "simplepush",
         "simplisafe",
+        "sky_remote",
         "skybell",
         "slack",
         "sleepiq",

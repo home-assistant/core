@@ -112,4 +112,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert str(error.value) == TEST_RESPONSE_ERROR["reason"]
+    assert str(error.value) == f"Command failed, {TEST_RESPONSE_ERROR["reason"]}"

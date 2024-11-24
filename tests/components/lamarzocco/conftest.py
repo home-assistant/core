@@ -2,12 +2,12 @@
 
 from collections.abc import Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -17,6 +17,15 @@ from homeassistant.core import HomeAssistant
 from . import SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture

@@ -573,7 +573,7 @@
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Chromecast built-in',
+      'source': 'Line-In',
       'source_list': list([
         'Tidal',
         'Line-In',

@@ -20,7 +20,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTER_ID): str,
+        vol.Optional(CONF_COUNTER_ID): str,
     }
 )
 
@@ -31,15 +31,22 @@ async def validate_input(data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
+        counter_id = data.get(CONF_COUNTER_ID)
         client = SuezClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
-            data[CONF_COUNTER_ID],
+            counter_id,
         )
         if not await client.check_credentials():
             raise InvalidAuth
     except PySuezError as ex:
         raise CannotConnect from ex
+
+    if counter_id is None:
+        try:
+            data[CONF_COUNTER_ID] = await client.find_counter()
+        except PySuezError as ex:
+            raise CounterNotFound from ex
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -61,6 +68,8 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except CounterNotFound:
+                errors["base"] = "counter_not_found"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -80,3 +89,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class CounterNotFound(HomeAssistantError):
+    """Error to indicate we cannot automatically found the counter id."""

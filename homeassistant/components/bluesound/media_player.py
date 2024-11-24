@@ -770,7 +770,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
-        volume = int(volume * 100)
+        volume = int(round(volume * 100))
         volume = min(100, volume)
         volume = max(0, volume)
 

@@ -339,6 +339,11 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["title_placeholders"] == {
+        "ip_address": VALID_CONFIG[CONF_IP_ADDRESS],
+        "name": entry.title,
+    }
 
     mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
 

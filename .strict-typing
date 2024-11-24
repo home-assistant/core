@@ -340,6 +340,7 @@ homeassistant.components.nfandroidtv.*
 homeassistant.components.nightscout.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
+homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
@@ -384,6 +385,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.reolink.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*
 homeassistant.components.rest_command.*

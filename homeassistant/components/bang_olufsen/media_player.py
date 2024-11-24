@@ -688,36 +688,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current audio source."""
-
-        # Try to fix some of the source_change chromecast weirdness.
-        if hasattr(self._playback_metadata, "title"):
-            # source_change is chromecast but line in is selected.
-            if self._playback_metadata.title == BangOlufsenSource.LINE_IN.name:
-                return BangOlufsenSource.LINE_IN.name
-
-            # source_change is chromecast but bluetooth is selected.
-            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH.name:
-                return BangOlufsenSource.BLUETOOTH.name
-
-            # source_change is line in, bluetooth or optical but stale metadata is sent through the WebSocket,
-            # And the source has not changed.
-            if self._source_change.id in (
-                BangOlufsenSource.BLUETOOTH.id,
-                BangOlufsenSource.LINE_IN.id,
-                BangOlufsenSource.SPDIF.id,
-            ):
-                return BangOlufsenSource.CHROMECAST.name
-
-        # source_change is chromecast and there is metadata but no artwork. Bluetooth does support metadata but not artwork
-        # So i assume that it is bluetooth and not chromecast
-        if (
-            hasattr(self._playback_metadata, "art")
-            and self._playback_metadata.art is not None
-            and len(self._playback_metadata.art) == 0
-            and self._source_change.id == BangOlufsenSource.CHROMECAST.id
-        ):
-            return BangOlufsenSource.BLUETOOTH.name
-
         return self._source_change.name
 
     @property

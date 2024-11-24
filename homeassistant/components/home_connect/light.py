@@ -15,14 +15,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import get_dict_from_home_connect_error
-from .api import ConfigEntryAuth, HomeConnectDevice
+from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
+from .api import HomeConnectDevice
 from .const import (
     ATTR_VALUE,
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
@@ -88,18 +87,17 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect light."""
 
     def get_entities() -> list[LightEntity]:
         """Get a list of entities."""
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         return [
             HomeConnectLight(device, description)
             for description in LIGHTS
-            for device in hc_api.devices
+            for device in entry.runtime_data.devices
             if description.key in device.appliance.status
         ]
 
