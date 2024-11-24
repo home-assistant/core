@@ -107,8 +107,6 @@ async def test_form(
             {
                 "type": "generic_camera/start_preview",
                 "flow_id": flow_id,
-                "flow_type": "config_flow",
-                "user_input": {},
             },
         )
         _ = await ws_client.receive_json()
