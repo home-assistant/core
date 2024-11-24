@@ -60,7 +60,6 @@ from homeassistant.components.prometheus import (
     PrometheusLabelsException,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
@@ -2309,10 +2308,14 @@ async def entity_config_fixture(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    default_area: str = "Test Area",
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate config entries along with device and area stuff."""
     data = {}
-    default_area = "Test Area"
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
     devices = {
         "humidifier": "Test Humidifier Device",
         "lock": "Test Lock Device",
@@ -2334,50 +2337,26 @@ async def entity_config_fixture(
         mac = ":".join(
             [("0" + hex(random.randint(0, 256))[2:])[-2:].upper() for _ in range(6)]
         )
-        config_entry, device_id, area_id = _get_device_setup_info(
-            hass,
-            device_registry,
-            area_registry,
-            value,
-            default_area,
-            identifier=identifier,
-            mac=mac,
+        device = device_registry.async_get_or_create(
+            name=value,
+            identifiers={("test", identifier)},
+            connections={("mac", mac)},
+            config_entry_id=config_entry.entry_id,
+            suggested_area=default_area,
         )
+        assert device is not None
+        assert device.id is not None
+        area = area_registry.async_get_area_by_name(default_area)
+        assert area is not None
+        assert area.id is not None
+
         data[key] = {
             "config_entry": config_entry,
-            "device_id": device_id,
-            "area_id": area_id,
+            "device_id": device.id,
+            "area_id": area.id,
         }
 
     return data
-
-
-def _get_device_setup_info(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
-    device_name: str,
-    area_name: str,
-    identifier: str = "current_device",
-    mac: str = "30:31:32:33:34:00",
-) -> (ConfigEntry, str, str):
-    """Set up config entry and basic device and area and return ids of each for testing."""
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_or_create(
-        name=device_name,
-        identifiers={("test", identifier)},
-        connections={("mac", mac)},
-        config_entry_id=config_entry.entry_id,
-        suggested_area=area_name,
-    )
-    assert device is not None
-    assert device.id is not None
-    area = area_registry.async_get_area_by_name(area_name)
-    assert area is not None
-    assert area.id is not None
-    return config_entry, device.id, area.id
 
 
 @pytest.fixture(name="sensor_entities")
