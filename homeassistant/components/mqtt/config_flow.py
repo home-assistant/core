@@ -213,6 +213,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
+        self._existing_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -469,24 +470,42 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
+        broker_config: dict[str, Any] = {}
+        existing_entry_data = (
+            self._existing_entry.data if self._existing_entry else None
+        )
         if await async_get_broker_settings(
             self,
             fields,
-            None,
+            existing_entry_data,
             user_input,
             validated_user_input,
             errors,
         ):
+            if existing_entry_data:
+                broker_config.update(
+                    update_password_from_user_input(
+                        existing_entry_data.get(CONF_PASSWORD), validated_user_input
+                    ),
+                )
+            else:
+                broker_config = validated_user_input
+
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                validated_user_input,
+                broker_config,
             )
 
             if can_connect:
+                if self._existing_entry is not None:
+                    return self.async_update_reload_and_abort(
+                        self._existing_entry,
+                        data_updates=broker_config,
+                    )
                 validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
-                    title=validated_user_input[CONF_BROKER],
-                    data=validated_user_input,
+                    title=broker_config[CONF_BROKER],
+                    data=broker_config,
                 )
 
             errors["base"] = "cannot_connect"
@@ -494,6 +513,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        self._existing_entry = self._get_reconfigure_entry()
+        return await self.async_step_broker()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -547,7 +573,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
 
     def __init__(self) -> None:
         """Initialize MQTT options flow."""
-        self.broker_config: dict[str, str | int] = {}
+        self.broker_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
