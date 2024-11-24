@@ -1671,6 +1671,42 @@ async def test_renaming_entity_name(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="climate_action",
         domain="climate",
         friendly_name="HeatPump",
@@ -1687,6 +1723,9 @@ async def test_renaming_entity_name(
     ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_humidity_device" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
     entity_registry.async_update_entity(
         entity_id=data["sensor_1"].entity_id,
@@ -1697,6 +1736,18 @@ async def test_renaming_entity_name(
         data["sensor_1"],
         15.6,
         {ATTR_FRIENDLY_NAME: "Outside Temperature Renamed"},
+    )
+    entity_registry.async_update_entity(
+        entity_id=data["sensor_13"].entity_id,
+        name="Outside Temperature Device Renamed",
+    )
+    renamed_sensor_data = dict(data["sensor_13_attributes"])
+    renamed_sensor_data[ATTR_FRIENDLY_NAME] = "Outside Temperature Device Renamed"
+    set_state_with_entry(
+        hass,
+        data["sensor_13"],
+        16.3,
+        renamed_sensor_data,
     )
     entity_registry.async_update_entity(
         entity_id=data["climate_1"].entity_id,
@@ -1719,6 +1770,7 @@ async def test_renaming_entity_name(
     # Check if old metrics deleted
     body_line = "\n".join(body)
     assert 'friendly_name="Outside Temperature"' not in body_line
+    assert 'friendly_name="Outside Temperature Device"' not in body_line
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Check if new metrics created
@@ -1734,6 +1786,24 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Temperature Renamed",
         entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device Renamed",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device Renamed",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1765,6 +1835,24 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
     ).withValue(1).assert_in_metrics(body)
 
 
