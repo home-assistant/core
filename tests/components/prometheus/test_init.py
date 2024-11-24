@@ -1962,8 +1962,8 @@ async def test_entity_becomes_unavailable(
 async def sensor_fixture(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate sensor entities."""
     data = {}
@@ -2112,8 +2112,11 @@ async def sensor_fixture(
         identifiers={("test", "current_device")},
         connections={("mac", "30:31:32:33:34:00")},
         config_entry_id=config_entry.entry_id,
+        suggested_area="Test Area",
     )
     assert device is not None
+    area = area_registry.async_get_area_by_name("Test Area")
+    assert area is not None
 
     sensor_13 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
@@ -2129,9 +2132,6 @@ async def sensor_fixture(
     sensor_13_attributes = {ATTR_BATTERY_LEVEL: 13}
     set_state_with_entry(hass, sensor_13, 16.3, sensor_13_attributes)
 
-    # Create area with only mandatory parameters
-    area = area_registry.async_create("fake")
-    assert area is not None
     await hass.async_block_till_done()
     entity_registry.async_update_entity(sensor_13.entity_id, area_id=area.id)
     await hass.async_block_till_done()
