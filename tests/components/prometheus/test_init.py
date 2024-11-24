@@ -1381,63 +1381,82 @@ async def test_cover(
     data = {**cover_entities}
     body = await generate_latest_metrics(client)
 
-    open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
+    open_covers = [
+        "cover_open",
+        "cover_position",
+        "cover_tilt_position",
+        "cover_open_device",
+    ]
     for testcover in data:
-        EntityMetric(
-            metric_name="cover_state",
-            domain="cover",
-            friendly_name=cover_entities[testcover].original_name,
-            entity=cover_entities[testcover].entity_id,
-            state="open",
-        ).withValue(
-            1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
-        ).assert_in_metrics(body)
-
-        EntityMetric(
-            metric_name="cover_state",
-            domain="cover",
-            friendly_name=cover_entities[testcover].original_name,
-            entity=cover_entities[testcover].entity_id,
-            state="closed",
-        ).withValue(
-            1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0
-        ).assert_in_metrics(body)
-
-        EntityMetric(
-            metric_name="cover_state",
-            domain="cover",
-            friendly_name=cover_entities[testcover].original_name,
-            entity=cover_entities[testcover].entity_id,
-            state="opening",
-        ).withValue(
-            1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0
-        ).assert_in_metrics(body)
-
-        EntityMetric(
-            metric_name="cover_state",
-            domain="cover",
-            friendly_name=cover_entities[testcover].original_name,
-            entity=cover_entities[testcover].entity_id,
-            state="closing",
-        ).withValue(
-            1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0
-        ).assert_in_metrics(body)
-
-        if testcover == "cover_position":
+        if testcover == "cover_open_device":
             EntityMetric(
-                metric_name="cover_position",
+                metric_name="cover_state",
                 domain="cover",
                 friendly_name=cover_entities[testcover].original_name,
                 entity=cover_entities[testcover].entity_id,
-            ).withValue(50.0).assert_in_metrics(body)
+                state="open",
+                area="Test Area",
+                device="Test Cover Device",
+            ).withValue(
+                1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
+            ).assert_in_metrics(body)
 
-        if testcover == "cover_tilt_position":
+        else:
             EntityMetric(
-                metric_name="cover_tilt_position",
+                metric_name="cover_state",
                 domain="cover",
                 friendly_name=cover_entities[testcover].original_name,
                 entity=cover_entities[testcover].entity_id,
-            ).withValue(50.0).assert_in_metrics(body)
+                state="open",
+            ).withValue(
+                1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
+            ).assert_in_metrics(body)
+
+            EntityMetric(
+                metric_name="cover_state",
+                domain="cover",
+                friendly_name=cover_entities[testcover].original_name,
+                entity=cover_entities[testcover].entity_id,
+                state="closed",
+            ).withValue(
+                1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0
+            ).assert_in_metrics(body)
+
+            EntityMetric(
+                metric_name="cover_state",
+                domain="cover",
+                friendly_name=cover_entities[testcover].original_name,
+                entity=cover_entities[testcover].entity_id,
+                state="opening",
+            ).withValue(
+                1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0
+            ).assert_in_metrics(body)
+
+            EntityMetric(
+                metric_name="cover_state",
+                domain="cover",
+                friendly_name=cover_entities[testcover].original_name,
+                entity=cover_entities[testcover].entity_id,
+                state="closing",
+            ).withValue(
+                1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0
+            ).assert_in_metrics(body)
+
+            if testcover == "cover_position":
+                EntityMetric(
+                    metric_name="cover_position",
+                    domain="cover",
+                    friendly_name=cover_entities[testcover].original_name,
+                    entity=cover_entities[testcover].entity_id,
+                ).withValue(50.0).assert_in_metrics(body)
+
+            if testcover == "cover_tilt_position":
+                EntityMetric(
+                    metric_name="cover_tilt_position",
+                    domain="cover",
+                    friendly_name=cover_entities[testcover].original_name,
+                    entity=cover_entities[testcover].entity_id,
+                ).withValue(50.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2604,7 +2623,10 @@ async def lock_fixture(
 
 @pytest.fixture(name="cover_entities")
 async def cover_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate cover entities."""
     data = {}
@@ -2671,6 +2693,31 @@ async def cover_fixture(
         hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
     )
     data["cover_tilt_position"] = cover_tilt_position
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Cover Device",
+        "Test Area",
+    )
+    cover_open_device = entity_registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_open_device",
+        suggested_object_id="open_shade_device",
+        original_name="Open Shade Device",
+        config_entry=config_entry,
+        device_id=device_id,
+    )
+    cover_open_device_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(
+        hass, cover_open_device, STATE_OPEN, cover_open_device_attributes
+    )
+    data["cover_open_device"] = cover_open_device
 
     await hass.async_block_till_done()
     return data
