@@ -832,6 +832,24 @@ async def test_sensor_device_class(
         entity="sensor.timestamp",
     ).withValue(1.691445808136036e09).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(56.0).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_input_number(
