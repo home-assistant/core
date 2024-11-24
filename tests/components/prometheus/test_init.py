@@ -2308,21 +2308,13 @@ async def climate_fixture(
     data["climate_3"] = climate_3
     data["climate_3_attributes"] = climate_3_attributes
 
-    config_entry = MockConfigEntry(domain="my")
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_or_create(
-        name="Test Climate Device",
-        identifiers={("test", "current_device")},
-        connections={("mac", "30:31:32:33:34:00")},
-        config_entry_id=config_entry.entry_id,
-        suggested_area="Test Area",
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Climate Device",
+        "Test Area",
     )
-    assert device is not None
-    assert device.id is not None
-    area = area_registry.async_get_area_by_name("Test Area")
-    assert area is not None
-    assert area.id is not None
 
     climate_4 = entity_registry.async_get_or_create(
         domain=climate.DOMAIN,
@@ -2332,7 +2324,7 @@ async def climate_fixture(
         suggested_object_id="ecobee_device",
         original_name="Ecobee Device",
         config_entry=config_entry,
-        device_id=device.id,
+        device_id=device_id,
     )
     climate_4_attributes = {
         ATTR_TEMPERATURE: 17,
@@ -2345,8 +2337,8 @@ async def climate_fixture(
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
         ATTR_FAN_MODES: ["auto", "on"],
-        ATTR_AREA_ID: area.id,
-        ATTR_DEVICE_ID: device.id,
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
     }
     set_state_with_entry(hass, climate_4, climate.HVACAction.IDLE, climate_4_attributes)
     data["climate_4"] = climate_4
