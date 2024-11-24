@@ -1025,28 +1025,30 @@ async def test_humidifier(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
-        metric_name="humidifier_mode",
+        metric_name="humidifier_target_humidity_percent",
         domain="humidifier",
-        friendly_name="Hygrostat",
-        entity="humidifier.hygrostat",
-        mode="home",
-    ).withValue(1).assert_in_metrics(body)
+        friendly_name="Hygrostat Device",
+        entity="humidifier.hygrostat_device",
+        area="Test Area",
+        device="Test Humidifier Device",
+    ).withValue(42.0).assert_in_metrics(body)
 
     EntityMetric(
-        metric_name="humidifier_mode",
+        metric_name="humidifier_state",
         domain="humidifier",
-        friendly_name="Hygrostat",
-        entity="humidifier.hygrostat",
-        mode="eco",
-    ).withValue(0.0).assert_in_metrics(body)
+        friendly_name="Hygrostat Device",
+        entity="humidifier.hygrostat_device",
+        area="Test Area",
+        device="Test Humidifier Device",
+    ).withValue(0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_attributes(
+async def test_switch(
     client: ClientSessionGenerator,
     switch_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
-    """Test prometheus metrics for entity attributes."""
+    """Test prometheus metrics for switch."""
     body = await generate_latest_metrics(client)
 
     EntityMetric(
@@ -1195,6 +1197,15 @@ async def test_lock(
         entity="lock.kitchen_door",
     ).withValue(0.0).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="lock_state",
+        domain="lock",
+        friendly_name="Back Door",
+        entity="lock.back_door",
+        area="Test Area",
+        device="Test Lock Device",
+    ).withValue(0.0).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_fan(
@@ -1242,9 +1253,29 @@ async def test_fan(
     EntityMetric(
         metric_name="fan_direction_reversed",
         domain="fan",
-        friendly_name="Reverse Fan",
-        entity="fan.fan_2",
+        friendly_name="Test Device Fan",
+        entity="fan.fan_3",
+        area="Test Area",
+        device="Test Fan Device",
+    ).withValue(0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_state",
+        domain="fan",
+        friendly_name="Test Device Fan",
+        entity="fan.fan_3",
+        area="Test Area",
+        device="Test Fan Device",
     ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_speed_percent",
+        domain="fan",
+        friendly_name="Test Device Fan",
+        entity="fan.fan_3",
+        area="Test Area",
+        device="Test Fan Device",
+    ).withValue(44.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1285,6 +1316,26 @@ async def test_alarm_control_panel(
         friendly_name="Alarm Control Panel 2",
         entity="alarm_control_panel.alarm_control_panel_2",
         state="armed_away",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 3",
+        entity="alarm_control_panel.alarm_control_panel_3",
+        state="armed_home",
+        area="Test Area",
+        device="Test Alarm Control Panel Device",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 3",
+        entity="alarm_control_panel.alarm_control_panel_3",
+        state="armed_away",
+        area="Test Area",
+        device="Test Alarm Control Panel Device",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1376,6 +1427,15 @@ async def test_device_tracker(
         entity="device_tracker.watch",
     ).withValue(0.0).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="device_tracker_state",
+        domain="device_tracker",
+        friendly_name="Laptop",
+        entity="device_tracker.laptop",
+        area="Test Area",
+        device="Test Laptop Device",
+    ).withValue(1).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_person(
@@ -1431,6 +1491,14 @@ async def test_update(
         domain="update",
         friendly_name="Addon",
         entity="update.addon",
+    ).withValue(0.0).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="update_state",
+        domain="update",
+        friendly_name="Firmware Update",
+        entity="update.firmware_update",
+        area="Test Area",
+        device="Test Laptop Device",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -2423,15 +2491,15 @@ async def humidifier_fixture(
         domain=humidifier.DOMAIN,
         platform="test",
         unique_id="humidifier_4",
-        suggested_object_id="humidifier",
-        original_name="Humidifier",
+        suggested_object_id="hygrostat_device",
+        original_name="Hygrostat Device",
         config_entry=config_entry,
         device_id=device_id,
     )
     humidifier_4_attributes = {
-        ATTR_HUMIDITY: 40,
-        ATTR_MODE: "home",
-        ATTR_AVAILABLE_MODES: ["home", "eco"],
+        ATTR_HUMIDITY: 42.0,
+        ATTR_MODE: "sleep",
+        ATTR_AVAILABLE_MODES: ["auto", "sleep", "normal"],
         ATTR_DEVICE_ID: device_id,
         ATTR_AREA_ID: area_id,
     }
@@ -2492,7 +2560,7 @@ async def lock_fixture(
         ATTR_AREA_ID: area_id,
         ATTR_DEVICE_ID: device_id,
     }
-    set_state_with_entry(hass, lock_2, LockState.UNLOCKED, lock_3_attributes)
+    set_state_with_entry(hass, lock_3, LockState.UNLOCKED, lock_3_attributes)
     data["lock_3"] = lock_3
     data["lock_3_attributes"] = lock_3_attributes
 
@@ -3032,7 +3100,7 @@ async def alarm_control_panel_fixture(
     }
     set_state_with_entry(
         hass,
-        alarm_control_panel_2,
+        alarm_control_panel_3,
         AlarmControlPanelState.ARMED_HOME,
         alarm_control_panel_3_attributes,
     )
