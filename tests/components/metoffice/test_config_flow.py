@@ -1,14 +1,19 @@
 """Test the National Weather Service (NWS) config flow."""
 
+import datetime
 import json
 from unittest.mock import patch
 
+import pytest
 import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import utcnow
 
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
@@ -18,7 +23,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -133,3 +138,70 @@ async def test_form_unknown_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test handling authentication errors and reauth flow."""
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=wavertree_hourly,
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 1
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text="",
+        status_code=401,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text="",
+        status_code=401,
+    )
+
+    future_time = utcnow() + datetime.timedelta(minutes=40)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=wavertree_hourly,
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
