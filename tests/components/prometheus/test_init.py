@@ -780,6 +780,15 @@ async def test_sensor_without_unit(
         entity="sensor.text_unit",
     ).assert_not_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_state",
+        domain="sensor",
+        friendly_name="Trend Gradient Device",
+        entity="sensor.trend_gradient_device",
+        area="Test Area",
+        device="Test Device",
+    ).withValue(0.903).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_sensor_device_class(
@@ -2409,6 +2418,24 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_14, 56.0, sensor_14_attributes)
     data["sensor_14"] = sensor_14
     data["sensor_14_attributes"] = sensor_14_attributes
+
+    sensor_15 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_15",
+        suggested_object_id="trend_gradient_device",
+        original_name="Trend Gradient Device",
+        config_entry=config_entry,
+        device_id=device_id,
+    )
+
+    sensor_15_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(hass, sensor_15, 0.903, sensor_15_attributes)
+    data["sensor_15"] = sensor_15
+    data["sensor_15_attributes"] = sensor_15_attributes
 
     await hass.async_block_till_done()
     return data
