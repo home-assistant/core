@@ -932,7 +932,7 @@ class section:
 
     def __call__(self, value: Any) -> Any:
         """Validate input."""
-        if not self.options["multiple"]:
+        if not self.options.get("multiple"):
             return self.schema(value)
         if not isinstance(value, list):
             raise vol.Invalid("Value should be a list")
