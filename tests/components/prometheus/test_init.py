@@ -1034,6 +1034,22 @@ async def test_humidifier(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat",
+        entity="humidifier.hygrostat",
+        mode="home",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat",
+        entity="humidifier.hygrostat",
+        mode="eco",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="humidifier_target_humidity_percent",
         domain="humidifier",
         friendly_name="Hygrostat Device",
@@ -1050,6 +1066,26 @@ async def test_humidifier(
         area="Test Area",
         device="Test Humidifier Device",
     ).withValue(0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat Device",
+        entity="humidifier.hygrostat_device",
+        mode="sleep",
+        area="Test Area",
+        device="Test Humidifier Device",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat Device",
+        entity="humidifier.hygrostat_device",
+        mode="normal",
+        area="Test Area",
+        device="Test Humidifier Device",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
