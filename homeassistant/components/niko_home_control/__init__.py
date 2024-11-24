@@ -18,10 +18,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
 ) -> bool:
     """Set Niko Home Control from a config entry."""
-    controller = NikoHomeControlConnection(entry.data[CONF_HOST], entry.data[CONF_PORT])
-
-    if not controller:
-        raise ConfigEntryNotReady("cannot connect to controller.")
+    try:
+        controller = NikoHomeControlConnection(
+            entry.data[CONF_HOST], entry.data[CONF_PORT]
+        )
+    except Exception as err:
+        raise ConfigEntryNotReady("cannot connect to controller.") from err
 
     entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

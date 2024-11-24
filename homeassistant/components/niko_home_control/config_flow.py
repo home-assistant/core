@@ -47,7 +47,9 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             error = test_connection(user_input[CONF_HOST], user_input[CONF_PORT])
             if not error:
                 return self.async_create_entry(
@@ -62,6 +64,9 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
+        self._async_abort_entries_match(
+            {CONF_HOST: import_info[CONF_HOST], CONF_PORT: DEFAULT_PORT}
+        )
         error = test_connection(import_info[CONF_HOST], DEFAULT_PORT)
 
         if not error:
