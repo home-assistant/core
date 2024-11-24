@@ -1,6 +1,6 @@
 """Tests for Glances config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 
-from tests.common import MockConfigEntry, patch
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
