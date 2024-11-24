@@ -4,7 +4,7 @@ rules:
   appropriate-polling:
     status: exempt
     comment: |
-      This integration does not require polling.
+      This integration does not do polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
