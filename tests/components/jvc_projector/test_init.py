@@ -32,10 +32,9 @@ async def test_unload_config_entry(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test config entry loading and unloading."""
-    mock_config_entry = mock_integration
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_integration.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_integration.entry_id)
     await hass.async_block_till_done()
 
 

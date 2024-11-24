@@ -1,0 +1,1221 @@
+# serializer version: 1
+# name: test_entity_state[sensor.jvc_projector_anamorphic_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'a',
+        'b',
+        'c',
+        'd',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_anamorphic_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Anamorphic mode',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_anamorphic_mode',
+    'unique_id': 'jvcmac_anamorphic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_anamorphic_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Anamorphic mode',
+      'options': list([
+        'off',
+        'a',
+        'b',
+        'c',
+        'd',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_anamorphic_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_clear_motion_drive-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'none',
+        'low',
+        'high',
+        'inverse_telecine',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_clear_motion_drive',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Clear motion drive',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_clear_motion_drive',
+    'unique_id': 'jvcmac_clear_motion_drive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_clear_motion_drive-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Clear motion drive',
+      'options': list([
+        'off',
+        'none',
+        'low',
+        'high',
+        'inverse_telecine',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_clear_motion_drive',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_color_profile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_color_profile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color profile',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_color_profile',
+    'unique_id': 'jvcmac_color_profile',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_color_profile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Color profile',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_color_profile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bt2020(wide)',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_color_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_color_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color space',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_color_space',
+    'unique_id': 'jvcmac_color_space',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_color_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Color space',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_color_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rgb',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_eshift-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_eshift',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'eShift',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_eshift',
+    'unique_id': 'jvcmac_eshift',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_eshift-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector eShift',
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_eshift',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_graphics_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standard',
+        'high-res',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_graphics_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Graphics mode',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_graphics_mode',
+    'unique_id': 'jvcmac_graphics_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_graphics_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Graphics mode',
+      'options': list([
+        'standard',
+        'high-res',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_graphics_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_color_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'ycbcr(4:4:4)',
+        'ycbcr(4:2:2)',
+        'rgb',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdmi_color_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDMI color space',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdmi_color_space',
+    'unique_id': 'jvcmac_hdmi_color_space',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_color_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDMI color space',
+      'options': list([
+        'auto',
+        'ycbcr(4:4:4)',
+        'ycbcr(4:2:2)',
+        'rgb',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdmi_color_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rgb',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'hdmi1',
+        'hdmi2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdmi_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDMI input',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdmi_input',
+    'unique_id': 'jvcmac_input',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDMI input',
+      'options': list([
+        'hdmi1',
+        'hdmi2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdmi_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'hdmi1',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_input_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standard',
+        'enhanced',
+        'super_white',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdmi_input_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDMI input level',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdmi_input_level',
+    'unique_id': 'jvcmac_hdmi_input_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdmi_input_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDMI input level',
+      'options': list([
+        'standard',
+        'enhanced',
+        'super_white',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdmi_input_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'enhanced',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_content_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'sdr',
+        'none',
+        'hdr10',
+        'hlg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdr_content_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDR content type',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdr_content_type',
+    'unique_id': 'jvcmac_hdr_content_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_content_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDR content type',
+      'options': list([
+        'auto',
+        'sdr',
+        'none',
+        'hdr10',
+        'hlg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdr_content_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sdr',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'hdr10',
+        'hdr10_plus',
+        'hlg',
+        'sdr',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdr_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDR mode',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdr_mode',
+    'unique_id': 'jvcmac_hdr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDR mode',
+      'options': list([
+        'none',
+        'hdr10',
+        'hdr10_plus',
+        'hlg',
+        'sdr',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdr_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_processing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'static',
+        'frame',
+        'scene',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_hdr_processing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'HDR processing',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_hdr_processing_mode',
+    'unique_id': 'jvcmac_hdr_processing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_hdr_processing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector HDR processing',
+      'options': list([
+        'static',
+        'frame',
+        'scene',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_hdr_processing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'static',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_installation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_installation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Installation mode',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_installation_mode',
+    'unique_id': 'jvcmac_installation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_installation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Installation mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_installation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'mode1',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_dimming-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'auto1',
+        'auto2',
+        'auto3',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_laser_dimming',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Laser dimming',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_laser_dimming_mode',
+    'unique_id': 'jvcmac_laser_dimming',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_dimming-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Laser dimming',
+      'options': list([
+        'off',
+        'auto1',
+        'auto2',
+        'auto3',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_laser_dimming',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto1',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+        'medium',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_laser_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Laser power',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_laser_power',
+    'unique_id': 'jvcmac_laser_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Laser power',
+      'options': list([
+        'low',
+        'high',
+        'medium',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_laser_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_laser_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Laser time',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_laser_time',
+    'unique_id': 'jvcmac_laser_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Laser time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_laser_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_value-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_laser_value',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Laser value',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_laser_value',
+    'unique_id': 'jvcmac_laser_value',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_laser_value-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Laser value',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_laser_value',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_low_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_low_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Low latency',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_low_latency_status',
+    'unique_id': 'jvcmac_low_latency',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_low_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Low latency',
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_low_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_motion_enhance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_motion_enhance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Motion enhance',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_motion_enhance',
+    'unique_id': 'jvcmac_motion_enhance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_motion_enhance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Motion enhance',
+      'options': list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_motion_enhance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_picture_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_picture_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Picture mode',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_picture_mode',
+    'unique_id': 'jvcmac_picture_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_picture_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Picture mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_picture_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'natural',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_power_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'on',
+        'warming',
+        'cooling',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_power_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Power status',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_power_status',
+    'unique_id': 'jvcmac_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_power_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Power status',
+      'options': list([
+        'standby',
+        'on',
+        'warming',
+        'cooling',
+        'error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_power_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_source_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'signal',
+        'nosignal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.jvc_projector_source_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Source status',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_source_status',
+    'unique_id': 'jvcmac_source',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[sensor.jvc_projector_source_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'JVC Projector Source status',
+      'options': list([
+        'signal',
+        'nosignal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jvc_projector_source_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'signal',
+  })
+# ---

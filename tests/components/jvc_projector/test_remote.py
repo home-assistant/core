@@ -1,6 +1,6 @@
 """Tests for JVC Projector remote platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,9 +9,16 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -22,9 +29,11 @@ async def test_entity_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.REMOTE]):
+        await setup_integration(hass, mock_config_entry)
     entity = hass.states.get(ENTITY_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
@@ -33,9 +42,11 @@ async def test_entity_state(
 async def test_commands(
     hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test service call are called."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.REMOTE]):
+        await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_TURN_ON,
@@ -80,9 +91,11 @@ async def test_commands(
 async def test_bad_format_command(
     hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unknown service call errors."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.REMOTE]):
+        await setup_integration(hass, mock_config_entry)
     with pytest.raises(ValueError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -96,9 +109,11 @@ async def test_bad_format_command(
 async def test_unknown_command(
     hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unknown service call errors."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.REMOTE]):
+        await setup_integration(hass, mock_config_entry)
     mock_device.send_command.side_effect = ValueError("bad is not a known command")
 
     with pytest.raises(ValueError) as err:

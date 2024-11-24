@@ -1,6 +1,6 @@
 """Tests for JVC Projector select platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from jvcprojector import const
 
@@ -9,9 +9,16 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_OPTION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -22,9 +29,12 @@ async def test_input_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test input select."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
     entity = hass.states.get(INPUT_ENTITY_ID)
     assert entity
     assert entity.attributes.get(ATTR_FRIENDLY_NAME) == "JVC Projector Input"

@@ -1,24 +1,51 @@
 """Tests for the JVC Projector binary sensor device."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
+from syrupy import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
 
-POWER_ID = "sensor.jvc_projector_power_status"
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
-    state = hass.states.get(POWER_ID)
-    assert state
-    assert entity_registry.async_get(state.entity_id)
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
-    assert state.state == "standby"
+    # use a snapshot to validate state of entities
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_disabled_entity(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Tests entity is disabled by default."""
+    with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    ANAMORPHIC_ID = "sensor.jvc_projector_anamorphic_mode"
+
+    assert hass.states.get(ANAMORPHIC_ID) is None
+
+    # Entity should exist in registry but be disabled
+    entity = entity_registry.async_get(ANAMORPHIC_ID)
+    assert entity
+    assert entity.disabled
+    assert entity.entity_category == "diagnostic"

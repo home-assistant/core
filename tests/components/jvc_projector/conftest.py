@@ -29,7 +29,30 @@ def fixture_mock_device(
         device.port = MOCK_PORT
         device.mac = MOCK_MAC
         device.model = MOCK_MODEL
-        device.get_state.return_value = {"power": "standby", "input": "hdmi1"}
+        device.get_state.return_value = {
+            "power": "standby",
+            "input": "hdmi1",
+            "source": "signal",
+            "picture_mode": "natural",
+            "low_latency": "off",
+            "installation_mode": "mode1",
+            "eshift": "on",
+            "laser_dimming": "auto1",
+            "laser_value": "100",
+            "laser_power": "high",
+            "laser_time": "1000",
+            "hdr_content_type": "sdr",
+            "anamorphic": "off",
+            "hdr": "none",
+            "hdmi_input_level": "enhanced",
+            "hdmi_color_space": "rgb",
+            "color_profile": "bt2020(wide)",
+            "graphics_mode": "standard",
+            "color_space": "rgb",
+            "motion_enhance": "low",
+            "clear_motion_drive": "low",
+            "hdr_processing": "static",
+        }
         yield device
 
 
