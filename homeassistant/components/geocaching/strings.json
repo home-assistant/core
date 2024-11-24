@@ -37,16 +37,16 @@
         "name": "Total tracked distance traveled"
       },
       "cache_location": {
-        "name": "Cache {reference_code} location"
+        "name": "Location"
       },
       "cache_find_count": {
-        "name": "Cache {reference_code} find count"
+        "name": "Find count"
       },
       "cache_favorite_points": {
-        "name": "Cache {reference_code} favorite points"
+        "name": "Favorite points"
       },
       "cache_hide_date": {
-        "name": "Cache {reference_code} hide date"
+        "name": "Hide date"
       }
     }
   }

@@ -18,19 +18,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NEARBY_CACHE_ID_SENSOR_FORMAT
+from .const import CACHE_ID_SENSOR_FORMAT, DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
 # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
 # Therefore, we create a device for each cache, which holds all related entities.
 # This function returns the device info for a cache.
-def get_cache_device_info(
-    coordinator: GeocachingDataUpdateCoordinator, cache: GeocachingCache
-) -> DeviceInfo:
+def get_cache_device_info(cache: GeocachingCache) -> DeviceInfo:
     """Generate device info for a cache."""
     return DeviceInfo(
-        name=f"Geocaching {coordinator.data.user.username}",
+        name=f"Geocache {cache.reference_code}",
         identifiers={(DOMAIN, cast(str, cache.reference_code))},
         entry_type=DeviceEntryType.SERVICE,
         manufacturer="Groundspeak, Inc.",
@@ -57,21 +55,15 @@ class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], En
         self.cache = cache
 
         # Set the device info from the cache, to group all entities for a cache together
-        self._attr_device_info = get_cache_device_info(coordinator, cache)
+        self._attr_device_info = get_cache_device_info(cache)
 
         # TODO: Change this from NEARBY_CACHE... | pylint: disable=fixme
-        self._attr_unique_id = NEARBY_CACHE_ID_SENSOR_FORMAT.format(
+        self._attr_unique_id = CACHE_ID_SENSOR_FORMAT.format(
             cache.reference_code, entity_type
         )
 
         # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
         self._attr_translation_key = f"cache_{entity_type}"
-
-        # For a cache, the reference code (unique ID for the cache) needs to be included in the name to avoid duplicates.
-        # Therefore, we interpolate the reference code into the name using translation placeholders.
-        self._attr_translation_placeholders = {
-            "reference_code": cache.reference_code or ""
-        }
 
 
 # pylint: disable=hass-enforce-class-module

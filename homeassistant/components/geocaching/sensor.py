@@ -93,7 +93,7 @@ async def async_setup_entry(
         GeocachingSensor(coordinator, description) for description in SENSORS
     )
 
-    # Temporary: Get the nearby caches
+    # TODO: Switch to fetch nearby caches function from API when available | pylint: disable=fixme
     status: GeocachingStatus = await coordinator._async_update_data()  # noqa: SLF001
     entities: list[Entity] = []
     for cache in status.nearby_caches[:3]:
