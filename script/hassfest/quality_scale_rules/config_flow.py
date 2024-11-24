@@ -17,7 +17,7 @@ def validate(check: QualityScaleCheck) -> None:
     domains = flows["integration"]
     if check.integration.domain not in domains:
         check.add_error(
-            "config_flow",
+            "config-flow",
             "Integration is missing a config_flow.py, and needs to be set up with the UI",
         )
 
@@ -37,7 +37,7 @@ def validate(check: QualityScaleCheck) -> None:
             if field in data_description:
                 continue
             check.add_error(
-                "config_flow",
+                "config-flow",
                 f'Configuration flow step "{step}" does not give context about input field '
                 f'"{field}" (is missing "data_description" in strings.json)',
             )

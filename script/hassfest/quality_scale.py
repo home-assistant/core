@@ -18,7 +18,11 @@ from .quality_scale_rules import (
     QualityScaleCheck,
     config_entry_unload,
     config_flow,
-    runtime_data,
+    diagnostics,
+    reauthentication_flow,
+    reconfiguration_flow,
+    strict_typing,
+    unique_config_flow,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -56,10 +60,14 @@ class QualityScaleRules(enum.Enum):
     ENTITY_EVENT_SETUP = ("entity-event-setup", ScaledQualityScaleTiers.BRONZE)
     ENTITY_UNIQUE_ID = ("entity-unique-id", ScaledQualityScaleTiers.BRONZE)
     HAS_ENTITY_NAME = ("has-entity-name", ScaledQualityScaleTiers.BRONZE)
-    RUNTIME_DATA = ("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data)
+    RUNTIME_DATA = ("runtime-data", ScaledQualityScaleTiers.BRONZE)
     TEST_BEFORE_CONFIGURE = ("test-before-configure", ScaledQualityScaleTiers.BRONZE)
     TEST_BEFORE_SETUP = ("test-before-setup", ScaledQualityScaleTiers.BRONZE)
-    UNIQUE_CONFIG_ENTRY = ("unique-config-entry", ScaledQualityScaleTiers.BRONZE)
+    UNIQUE_CONFIG_ENTRY = (
+        "unique-config-entry",
+        ScaledQualityScaleTiers.BRONZE,
+        unique_config_flow,
+    )
 
     ACTION_EXCEPTIONS = ("action-exceptions", ScaledQualityScaleTiers.SILVER)
     CONFIG_ENTRY_UNLOADING = (
@@ -79,11 +87,15 @@ class QualityScaleRules(enum.Enum):
     INTEGRATION_OWNER = ("integration-owner", ScaledQualityScaleTiers.SILVER)
     LOG_WHEN_UNAVAILABLE = ("log-when-unavailable", ScaledQualityScaleTiers.SILVER)
     PARALLEL_UPDATES = ("parallel-updates", ScaledQualityScaleTiers.SILVER)
-    REAUTHENTICATION_FLOW = ("reauthentication-flow", ScaledQualityScaleTiers.SILVER)
+    REAUTHENTICATION_FLOW = (
+        "reauthentication-flow",
+        ScaledQualityScaleTiers.SILVER,
+        reauthentication_flow,
+    )
     TEST_COVERAGE = ("test-coverage", ScaledQualityScaleTiers.SILVER)
 
     DEVICES = ("devices", ScaledQualityScaleTiers.GOLD)
-    DIAGNOSTICS = ("diagnostics", ScaledQualityScaleTiers.GOLD)
+    DIAGNOSTICS = ("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics)
     DISCOVERY = ("discovery", ScaledQualityScaleTiers.GOLD)
     DISCOVERY_UPDATE_INFO = ("discovery-update-info", ScaledQualityScaleTiers.GOLD)
     DOCS_DATA_UPDATE = ("docs-data-update", ScaledQualityScaleTiers.GOLD)
@@ -106,13 +118,17 @@ class QualityScaleRules(enum.Enum):
     ENTITY_TRANSLATIONS = ("entity-translations", ScaledQualityScaleTiers.GOLD)
     EXCEPTION_TRANSLATIONS = ("exception-translations", ScaledQualityScaleTiers.GOLD)
     ICON_TRANSLATIONS = ("icon-translations", ScaledQualityScaleTiers.GOLD)
-    RECONFIGURATION_FLOW = ("reconfiguration-flow", ScaledQualityScaleTiers.GOLD)
+    RECONFIGURATION_FLOW = (
+        "reconfiguration-flow",
+        ScaledQualityScaleTiers.GOLD,
+        reconfiguration_flow,
+    )
     REPAIR_ISSUES = ("repair-issues", ScaledQualityScaleTiers.GOLD)
     STALE_DEVICES = ("stale-devices", ScaledQualityScaleTiers.GOLD)
 
     ASYNC_DEPENDENCY = ("async-dependency", ScaledQualityScaleTiers.PLATINUM)
     INJECT_WEBSESSION = ("inject-websession", ScaledQualityScaleTiers.PLATINUM)
-    STRICT_TYPING = ("strict-typing", ScaledQualityScaleTiers.PLATINUM)
+    STRICT_TYPING = ("strict-typing", ScaledQualityScaleTiers.PLATINUM, strict_typing)
 
     def __init__(
         self,
