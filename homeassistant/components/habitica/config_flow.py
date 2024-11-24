@@ -94,9 +94,9 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            api = Habitica(session=session, x_client=X_CLIENT)
             try:
-                session = async_get_clientsession(self.hass)
-                api = Habitica(session=session, x_client=X_CLIENT)
                 login = await api.login(
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
@@ -145,10 +145,10 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         if user_input is not None:
+            session = async_get_clientsession(
+                self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+            )
             try:
-                session = async_get_clientsession(
-                    self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
-                )
                 api = Habitica(
                     session=session,
                     x_client=X_CLIENT,
