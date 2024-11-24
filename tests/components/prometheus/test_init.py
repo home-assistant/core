@@ -1164,6 +1164,15 @@ async def test_light(
         entity="light.hallway",
     ).withValue(100.0).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="Smart Light",
+        entity="light.smart_light",
+        area="Test Area",
+        device="Test Light Device",
+    ).withValue(100.0).assert_in_metrics(body)
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_lock(
@@ -2350,7 +2359,10 @@ async def climate_fixture(
 
 @pytest.fixture(name="humidifier_entities")
 async def humidifier_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate humidifier entities."""
     data = {}
@@ -2400,13 +2412,41 @@ async def humidifier_fixture(
     data["humidifier_3"] = humidifier_3
     data["humidifier_3_attributes"] = humidifier_3_attributes
 
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Humidifier Device",
+        "Test Area",
+    )
+    humidifier_4 = entity_registry.async_get_or_create(
+        domain=humidifier.DOMAIN,
+        platform="test",
+        unique_id="humidifier_4",
+        suggested_object_id="humidifier",
+        original_name="Humidifier",
+    )
+    humidifier_4_attributes = {
+        ATTR_HUMIDITY: 40,
+        ATTR_MODE: "home",
+        ATTR_AVAILABLE_MODES: ["home", "eco"],
+        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: area_id,
+    }
+    set_state_with_entry(hass, humidifier_4, STATE_OFF, humidifier_4_attributes)
+    data["humidifier_4"] = humidifier_4
+    data["humidifier_4_attributes"] = humidifier_4_attributes
+
     await hass.async_block_till_done()
     return data
 
 
 @pytest.fixture(name="lock_entities")
 async def lock_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate lock entities."""
     data = {}
@@ -2429,6 +2469,28 @@ async def lock_fixture(
     )
     set_state_with_entry(hass, lock_2, LockState.UNLOCKED)
     data["lock_2"] = lock_2
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Lock Device",
+        "Test Area",
+    )
+    lock_3 = entity_registry.async_get_or_create(
+        domain=lock.DOMAIN,
+        platform="test",
+        unique_id="lock_3",
+        suggested_object_id="back_door",
+        original_name="Back Door",
+    )
+    lock_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(hass, lock_2, LockState.UNLOCKED, lock_3_attributes)
+    data["lock_3"] = lock_3
+    data["lock_3_attributes"] = lock_3_attributes
 
     await hass.async_block_till_done()
     return data
@@ -2631,7 +2693,10 @@ async def input_boolean_fixture(
 
 @pytest.fixture(name="binary_sensor_entities")
 async def binary_sensor_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate binary_sensor entities."""
     data = {}
@@ -2655,13 +2720,38 @@ async def binary_sensor_fixture(
     set_state_with_entry(hass, binary_sensor_2, STATE_OFF)
     data["binary_sensor_2"] = binary_sensor_2
 
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Binary Sensor Device",
+        "Test Area",
+    )
+    binary_sensor_3 = entity_registry.async_get_or_create(
+        domain=binary_sensor.DOMAIN,
+        platform="test",
+        unique_id="binary_sensor_3",
+        suggested_object_id="status",
+        original_name="Status",
+    )
+    binary_sensor_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(hass, binary_sensor_3, STATE_OFF, binary_sensor_3_attributes)
+    data["binary_sensor_3"] = binary_sensor_3
+    data["binary_sensor_3_attributes"] = binary_sensor_3_attributes
+
     await hass.async_block_till_done()
     return data
 
 
 @pytest.fixture(name="light_entities")
 async def light_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate light entities."""
     data = {}
@@ -2722,13 +2812,42 @@ async def light_fixture(
     set_state_with_entry(hass, light_5, STATE_ON, light_5_attributes)
     data["light_5"] = light_5
     data["light_5_attributes"] = light_5_attributes
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Light Device",
+        "Test Area",
+    )
+    light_6 = entity_registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_6",
+        suggested_object_id="smart_light",
+        original_name="Smart Light",
+        config_entry=config_entry,
+        device_id=device_id,
+    )
+    light_6_attributes = {
+        light.ATTR_BRIGHTNESS: 255,
+        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: area_id,
+    }
+    set_state_with_entry(hass, light_6, STATE_ON, light_6_attributes)
+    data["light_6"] = light_6
+    data["light_6_attributes"] = light_6_attributes
+
     await hass.async_block_till_done()
     return data
 
 
 @pytest.fixture(name="switch_entities")
 async def switch_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate switch entities."""
     data = {}
@@ -2756,13 +2875,38 @@ async def switch_fixture(
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
 
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Switch Device",
+        "Test Area",
+    )
+    switch_3 = entity_registry.async_get_or_create(
+        domain=switch.DOMAIN,
+        platform="test",
+        unique_id="switch_3",
+        suggested_object_id="relay",
+        original_name="Relay",
+    )
+    switch_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(hass, switch_3, STATE_OFF, switch_3_attributes)
+    data["switch_3"] = switch_3
+    data["switch_3_attributes"] = switch_3_attributes
+
     await hass.async_block_till_done()
     return data
 
 
 @pytest.fixture(name="fan_entities")
 async def fan_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate fan entities."""
     data = {}
@@ -2796,13 +2940,43 @@ async def fan_fixture(
     data["fan_2"] = fan_2
     data["fan_2_attributes"] = fan_2_attributes
 
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Fan Device",
+        "Test Area",
+    )
+    fan_3 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_3",
+        suggested_object_id="fan_3",
+        original_name="Test Device Fan",
+    )
+    fan_3_attributes = {
+        ATTR_DIRECTION: DIRECTION_FORWARD,
+        ATTR_OSCILLATING: False,
+        ATTR_PERCENTAGE: 44,
+        ATTR_PRESET_MODE: "OFF",
+        ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
+        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: area_id,
+    }
+    set_state_with_entry(hass, fan_3, STATE_ON, fan_3_attributes)
+    data["fan_3"] = fan_3
+    data["fan_3_attributes"] = fan_3_attributes
+
     await hass.async_block_till_done()
     return data
 
 
 @pytest.fixture(name="alarm_control_panel_entities")
 async def alarm_control_panel_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate alarm control panel entities."""
     data = {}
@@ -2825,6 +2999,33 @@ async def alarm_control_panel_fixture(
     )
     set_state_with_entry(hass, alarm_control_panel_2, AlarmControlPanelState.ARMED_HOME)
     data["alarm_control_panel_2"] = alarm_control_panel_2
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Alarm Control Panel Device",
+        "Test Area",
+    )
+    alarm_control_panel_3 = entity_registry.async_get_or_create(
+        domain=alarm_control_panel.DOMAIN,
+        platform="test",
+        unique_id="alarm_control_panel_3",
+        suggested_object_id="alarm_control_panel_3",
+        original_name="Alarm Control Panel 3",
+    )
+    alarm_control_panel_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(
+        hass,
+        alarm_control_panel_2,
+        AlarmControlPanelState.ARMED_HOME,
+        alarm_control_panel_3_attributes,
+    )
+    data["alarm_control_panel_3"] = alarm_control_panel_3
+    data["alarm_control_panel_3_attributes"] = alarm_control_panel_3_attributes
 
     await hass.async_block_till_done()
     return data
@@ -2862,7 +3063,10 @@ async def person_fixture(
 
 @pytest.fixture(name="device_tracker_entities")
 async def device_tracker_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate device_tracker entities."""
     data = {}
@@ -2885,6 +3089,30 @@ async def device_tracker_fixture(
     )
     set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
     data["device_tracker_2"] = device_tracker_2
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Laptop Device",
+        "Test Area",
+    )
+    device_tracker_3 = entity_registry.async_get_or_create(
+        domain=device_tracker.DOMAIN,
+        platform="test",
+        unique_id="device_tracker_3",
+        suggested_object_id="laptop",
+        original_name="Laptop",
+    )
+    device_tracker_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(
+        hass, device_tracker_3, STATE_HOME, device_tracker_3_attributes
+    )
+    data["device_tracker_3"] = device_tracker_3
+    data["device_tracker_3_attributes"] = device_tracker_3_attributes
 
     await hass.async_block_till_done()
     return data
@@ -2911,7 +3139,10 @@ async def counter_fixture(
 
 @pytest.fixture(name="update_entities")
 async def update_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> dict[str, er.RegistryEntry]:
     """Simulate update entities."""
     data = {}
@@ -2934,6 +3165,29 @@ async def update_fixture(
     )
     set_state_with_entry(hass, update_2, STATE_OFF)
     data["update_2"] = update_2
+
+    config_entry, device_id, area_id = _get_device_setup_info(
+        hass,
+        device_registry,
+        area_registry,
+        "Test Laptop Device",
+        "Test Area",
+    )
+
+    update_3 = entity_registry.async_get_or_create(
+        domain=update.DOMAIN,
+        platform="test",
+        unique_id="update_3",
+        suggested_object_id="firmware_update",
+        original_name="Firmware Update",
+    )
+    update_3_attributes = {
+        ATTR_AREA_ID: area_id,
+        ATTR_DEVICE_ID: device_id,
+    }
+    set_state_with_entry(hass, update_3, STATE_OFF, update_3_attributes)
+    data["update_3"] = update_3
+    data["update_3_attributes"] = update_3_attributes
 
     await hass.async_block_till_done()
     return data
