@@ -2842,26 +2842,24 @@ async def test_changing_area(
 
     # need to remove old metrics when area name changes.
     # Check if area name changed
-    # import pprint
-    # pprint.pp(body)
 
-    # EntityMetric(
-    #     metric_name="sensor_temperature_celsius",
-    #     domain="sensor",
-    #     friendly_name="Outside Temperature Device",
-    #     entity="sensor.outside_temperature_device",
-    #     device="Test Device",
-    #     area=original_area_name,
-    # ).withValue(16.3).assert_not_in_metrics(body)
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(16.3).assert_not_in_metrics(body)
 
-    # EntityMetric(
-    #     metric_name="entity_available",
-    #     domain="sensor",
-    #     friendly_name="Outside Temperature Device",
-    #     entity="sensor.outside_temperature_device",
-    #     device="Test Device",
-    #     area=original_area_name,
-    # ).withValue(1).assert_not_in_metrics(body)
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(1).assert_not_in_metrics(body)
 
     # Check if new metrics created
     EntityMetric(
@@ -2884,7 +2882,7 @@ async def test_changing_area(
         friendly_name="Outside Temperature Device",
         entity="sensor.outside_temperature_device",
         device="Test Device",
-        area="Test Area",
+        area=changed_area_name,
     ).withValue(16.3).assert_in_metrics(body)
 
     EntityMetric(

@@ -282,10 +282,23 @@ class PrometheusMetrics:
             _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
 
-        if (old_state := event.data.get("old_state")) is not None and (
-            old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
-        ) != state.attributes.get(ATTR_FRIENDLY_NAME):
-            self._remove_labelsets(old_state.entity_id, old_friendly_name)
+        if (old_state := event.data.get("old_state")) is not None:
+            removal_kwargs = {}
+            if (
+                old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
+            ) != state.attributes.get(ATTR_FRIENDLY_NAME):
+                removal_kwargs["friendly_name"] = old_friendly_name
+            if (
+                old_area_id := old_state.attributes.get(ATTR_AREA_ID)
+            ) != state.attributes.get(ATTR_AREA_ID):
+                old_area = self._area_registry.async_get_area(str(old_area_id))
+                if old_area and (old_area_name := old_area.name):
+                    removal_kwargs["area"] = old_area_name
+                else:
+                    removal_kwargs["area"] = old_area_id
+
+            if removal_kwargs:
+                self._remove_labelsets(old_state.entity_id, **removal_kwargs)
 
         self.handle_state(state)
 
@@ -317,8 +330,12 @@ class PrometheusMetrics:
         if state.state in IGNORED_STATES:
             self._remove_labelsets(
                 entity_id,
-                None,
-                {state_change, entity_available, last_updated_time_seconds},
+                friendly_name=None,
+                ignored_metrics={
+                    state_change,
+                    entity_available,
+                    last_updated_time_seconds,
+                },
             )
         else:
             domain, _ = hacore.split_entity_id(entity_id)
@@ -355,6 +372,7 @@ class PrometheusMetrics:
         self,
         entity_id: str,
         friendly_name: str | None = None,
+        area: str | None = None,
         ignored_metrics: set[MetricWrapperBase] | None = None,
     ) -> None:
         """Remove labelsets matching the given entity id from all non-ignored metrics."""
@@ -366,16 +384,30 @@ class PrometheusMetrics:
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:
-                if sample.labels["entity"] == entity_id and (
-                    not friendly_name or sample.labels["friendly_name"] == friendly_name
-                ):
-                    _LOGGER.debug(
-                        "Removing labelset from %s for entity_id: %s",
-                        sample.name,
-                        entity_id,
-                    )
-                    with suppress(KeyError):
-                        metric.remove(*sample.labels.values())
+                if sample.labels["entity"] == entity_id:
+                    if (
+                        not friendly_name
+                        or sample.labels["friendly_name"] == friendly_name
+                    ):
+                        _LOGGER.debug(
+                            "!!!!!!! friendly_name Removing labelset (%s, %s) from %s for entity_id: %s",
+                            friendly_name,
+                            area,
+                            sample.name,
+                            entity_id,
+                        )
+                        with suppress(KeyError):
+                            metric.remove(*sample.labels.values())
+                    if not area or sample.labels["area"] == area:
+                        _LOGGER.debug(
+                            "!!!!!!! area Removing labelset (%s, %s) from %s for entity_id: %s",
+                            friendly_name,
+                            area,
+                            sample.name,
+                            entity_id,
+                        )
+                        with suppress(KeyError):
+                            metric.remove(*sample.labels.values())
 
     def _handle_attributes(self, state: State) -> None:
         for key, value in state.attributes.items():
