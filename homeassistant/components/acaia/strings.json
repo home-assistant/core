@@ -18,6 +18,8 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
+        },
+          "address": "Select Acaia scale you want to set up"
         }
       }
     }
