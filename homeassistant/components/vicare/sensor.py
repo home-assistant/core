@@ -815,6 +815,18 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
     ),
+    ViCareSensorEntityDescription(
+        key="ventilation_demand",
+        value_getter=lambda api: api.getVentilationDemand(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_level",
+        value_getter=lambda api: api.getVentilationLevel(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_reason",
+        value_getter=lambda api: api.getVentilationReason(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
