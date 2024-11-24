@@ -2840,6 +2840,7 @@ async def test_changing_area(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
+    # need to remove old metrics when area name changes.
     # Check if area name changed
     # import pprint
     # pprint.pp(body)

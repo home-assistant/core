@@ -277,6 +277,7 @@ class PrometheusMetrics:
         if (state := event.data.get("new_state")) is None:
             return
 
+        # Need to handle state changes for area and device here
         if not self._filter(state.entity_id):
             _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
