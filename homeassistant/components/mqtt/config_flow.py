@@ -99,6 +99,8 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+MQTT_UNIQUE_ID = "mqtt_entry_unique_id"
+
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
@@ -482,6 +484,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
+                await self.async_set_unique_id(MQTT_UNIQUE_ID)
                 return self.async_create_entry(
                     title=validated_user_input[CONF_BROKER],
                     data=validated_user_input,
