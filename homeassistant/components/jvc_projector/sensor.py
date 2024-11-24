@@ -32,23 +32,14 @@ JVC_SENSORS = (
         translation_key="jvc_power_status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.STANDBY,
-            const.ON,
-            const.WARMING,
-            const.COOLING,
-            const.ERROR,
-        ],
+        options=const.VAL_POWER,
     ),
     JVCSensorEntityDescription(
         key=const.KEY_INPUT,
         translation_key="jvc_hdmi_input",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.HDMI1,
-            const.HDMI2,
-        ],
+        options=const.VAL_FUNCTION_INPUT,
     ),
     JVCSensorEntityDescription(
         key=const.KEY_PICTURE_MODE,
@@ -97,13 +88,7 @@ JVC_SENSORS = (
         translation_key="jvc_anamorphic_mode",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.OFF,
-            const.ANAMORPHIC_A,
-            const.ANAMORPHIC_B,
-            const.ANAMORPHIC_C,
-            const.ANAMORPHIC_D,
-        ],
+        options=const.VAL_ANAMORPHIC,
         enabled_default=False,
     ),
     JVCSensorEntityDescription(

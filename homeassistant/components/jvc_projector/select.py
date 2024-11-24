@@ -24,22 +24,18 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
 
 
 # these options correspond to a command and its possible values
+# note low latency is intentionally excluded because you can't just turn it on you need to meet conditions first so you should instead switch picture modes
 OPTIONS: Final[dict[str, list[str]]] = {
-    "input": [const.HDMI1, const.HDMI2],
-    "eshift": [const.ON, const.OFF],
-    "installation_mode": [f"mode{i}" for i in range(1, 11)],
-    "anamorphic": [
-        const.ANAMORPHIC_A,
-        const.ANAMORPHIC_B,
-        const.OFF,
-        const.ANAMORPHIC_C,
-        const.ANAMORPHIC_D,
-    ],
-    "laser_power": [const.LOW, const.MEDIUM, const.HIGH],
-    "laser_dimming": [const.OFF, const.AUTO1, const.AUTO2, const.AUTO3],
+    "input": const.VAL_FUNCTION_INPUT,
+    "eshift": const.VAL_TOGGLE,
+    "installation_mode": const.VAL_INSTALLATION_MODE,
+    "anamorphic": const.VAL_ANAMORPHIC,
+    "laser_power": const.VAL_LASER_POWER,
+    "laser_dimming": const.VAL_LASER_DIMMING,
 }
 
 
+# type safe command function for a select
 def create_select_command(key: str) -> Callable[[JvcProjector, str], Awaitable[None]]:
     """Create a command function for a select."""
 

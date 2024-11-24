@@ -998,8 +998,8 @@
       'options': list([
         'standby',
         'on',
-        'warming',
         'cooling',
+        'warming',
         'error',
       ]),
     }),
@@ -1038,8 +1038,8 @@
       'options': list([
         'standby',
         'on',
-        'warming',
         'cooling',
+        'warming',
         'error',
       ]),
     }),
