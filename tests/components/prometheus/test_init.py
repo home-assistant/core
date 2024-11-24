@@ -2712,6 +2712,224 @@ async def test_entity_becomes_unavailable(
     ).withValue(1).assert_in_metrics(body)
 
 
+@pytest.mark.parametrize("namespace", [""])
+async def test_changing_area(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+    entity_config_data: dict[str, Any],
+) -> None:
+    """Test renaming entity name."""
+    data = {**sensor_entities, **climate_entities}
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    original_area_name = "Test Area"
+    test_area = area_registry.async_get_area_by_name(original_area_name)
+    assert test_area is not None
+    assert test_area.id is not None
+    assert test_area.name == original_area_name
+
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area=original_area_name,
+    ).withValue(1).assert_in_metrics(body)
+
+    assert "sensor.outside_temperature" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_humidity_device" in entity_registry.entities
+    changed_area_name = "Changed Test Area"
+    changed_area = area_registry.async_create(changed_area_name)
+    assert changed_area is not None
+    assert changed_area.id is not None
+    assert changed_area.name == changed_area_name
+
+    await hass.async_block_till_done()
+    assert changed_area.id != test_area.id
+    assert original_area_name != changed_area_name
+
+    changed_13_attributes = dict(data["sensor_13_attributes"])
+    changed_13_attributes[ATTR_AREA_ID] = changed_area.id
+    set_state_with_entry(
+        hass,
+        data["sensor_13"],
+        16.3,
+        changed_13_attributes,
+    )
+
+    changed_14_attributes = dict(data["sensor_14_attributes"])
+    changed_14_attributes[ATTR_AREA_ID] = changed_area.id
+    set_state_with_entry(
+        hass,
+        data["sensor_14"],
+        56.0,
+        changed_14_attributes,
+    )
+
+    changed_15_attributes = dict(data["sensor_15_attributes"])
+    changed_15_attributes[ATTR_AREA_ID] = changed_area.id
+    set_state_with_entry(
+        hass,
+        data["sensor_15"],
+        0.903,
+        changed_15_attributes,
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Check if area name changed
+    # import pprint
+    # pprint.pp(body)
+
+    # EntityMetric(
+    #     metric_name="sensor_temperature_celsius",
+    #     domain="sensor",
+    #     friendly_name="Outside Temperature Device",
+    #     entity="sensor.outside_temperature_device",
+    #     device="Test Device",
+    #     area=original_area_name,
+    # ).withValue(16.3).assert_not_in_metrics(body)
+
+    # EntityMetric(
+    #     metric_name="entity_available",
+    #     domain="sensor",
+    #     friendly_name="Outside Temperature Device",
+    #     entity="sensor.outside_temperature_device",
+    #     device="Test Device",
+    #     area=original_area_name,
+    # ).withValue(1).assert_not_in_metrics(body)
+
+    # Check if new metrics created
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area="Test Area",
+    ).withValue(16.3).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Device",
+        entity="sensor.outside_temperature_device",
+        device="Test Device",
+        area=changed_area_name,
+    ).withValue(1).assert_in_metrics(body)
+
+    # Keep other sensors
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    # Might be nice to have a sensor with another area that doesn't change
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area=changed_area_name,
+    ).withValue(56.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity Device",
+        entity="sensor.outside_humidity_device",
+        device="Test Device",
+        area=changed_area_name,
+    ).withValue(1).assert_in_metrics(body)
+
+
 @pytest.fixture(name="entity_config_data")
 async def entity_config_fixture(
     hass: HomeAssistant,
