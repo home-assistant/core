@@ -1050,6 +1050,144 @@
     'state': '25.5',
   })
 # ---
+# name: test_all_ventilation_entities[sensor.model0_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_demand',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ventilation',
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'levelone',
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_none_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_none_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'permanent',
+  })
+# ---
 # name: test_room_sensors[sensor.model0_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
