@@ -918,8 +918,8 @@ class section:
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("collapsed", default=False): bool,
-            vol.Inclusive("multiple", "multiple"): bool,
-            vol.Inclusive("default", "multiple"): list[Any],
+            vol.Optional("multiple", default=False): bool,
+            vol.Optional("default", default=[]): list[Any],
         },
     )
 
