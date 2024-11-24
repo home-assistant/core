@@ -1627,7 +1627,7 @@ async def test_update(
         friendly_name="Firmware Update",
         entity="update.firmware_update",
         area="Test Area",
-        device="Test Laptop Device",
+        device="Test Tablet Device",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -2325,6 +2325,7 @@ async def entity_config_fixture(
         "fan": "Test Fan Device",
         "alarm_control_panel": "Test Alarm Control Panel Device",
         "device_tracker": "Test Laptop Device",
+        "update": "Test Tablet Device",
     }
     for key, value in devices.items():
         identifier = "".join(
@@ -3511,26 +3512,18 @@ async def update_fixture(
     set_state_with_entry(hass, update_2, STATE_OFF)
     data["update_2"] = update_2
 
-    config_entry, device_id, area_id = _get_device_setup_info(
-        hass,
-        device_registry,
-        area_registry,
-        "Test Laptop Device",
-        "Test Area",
-    )
-
     update_3 = entity_registry.async_get_or_create(
         domain=update.DOMAIN,
         platform="test",
         unique_id="update_3",
         suggested_object_id="firmware_update",
         original_name="Firmware Update",
-        config_entry=config_entry,
-        device_id=device_id,
+        config_entry=entity_config_data["update"]["config_entry"],
+        device_id=entity_config_data["update"]["device_id"],
     )
     update_3_attributes = {
-        ATTR_AREA_ID: area_id,
-        ATTR_DEVICE_ID: device_id,
+        ATTR_AREA_ID: entity_config_data["update"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["update"]["device_id"],
     }
     set_state_with_entry(hass, update_3, STATE_OFF, update_3_attributes)
     data["update_3"] = update_3
