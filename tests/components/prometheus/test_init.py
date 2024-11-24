@@ -2425,6 +2425,8 @@ async def humidifier_fixture(
         unique_id="humidifier_4",
         suggested_object_id="humidifier",
         original_name="Humidifier",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     humidifier_4_attributes = {
         ATTR_HUMIDITY: 40,
@@ -2483,6 +2485,8 @@ async def lock_fixture(
         unique_id="lock_3",
         suggested_object_id="back_door",
         original_name="Back Door",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     lock_3_attributes = {
         ATTR_AREA_ID: area_id,
@@ -2733,6 +2737,8 @@ async def binary_sensor_fixture(
         unique_id="binary_sensor_3",
         suggested_object_id="status",
         original_name="Status",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     binary_sensor_3_attributes = {
         ATTR_AREA_ID: area_id,
@@ -2888,6 +2894,8 @@ async def switch_fixture(
         unique_id="switch_3",
         suggested_object_id="relay",
         original_name="Relay",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     switch_3_attributes = {
         ATTR_AREA_ID: area_id,
@@ -2953,6 +2961,8 @@ async def fan_fixture(
         unique_id="fan_3",
         suggested_object_id="fan_3",
         original_name="Test Device Fan",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     fan_3_attributes = {
         ATTR_DIRECTION: DIRECTION_FORWARD,
@@ -3013,6 +3023,8 @@ async def alarm_control_panel_fixture(
         unique_id="alarm_control_panel_3",
         suggested_object_id="alarm_control_panel_3",
         original_name="Alarm Control Panel 3",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     alarm_control_panel_3_attributes = {
         ATTR_AREA_ID: area_id,
@@ -3103,6 +3115,8 @@ async def device_tracker_fixture(
         unique_id="device_tracker_3",
         suggested_object_id="laptop",
         original_name="Laptop",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     device_tracker_3_attributes = {
         ATTR_AREA_ID: area_id,
@@ -3180,6 +3194,8 @@ async def update_fixture(
         unique_id="update_3",
         suggested_object_id="firmware_update",
         original_name="Firmware Update",
+        config_entry=config_entry,
+        device_id=device_id,
     )
     update_3_attributes = {
         ATTR_AREA_ID: area_id,
