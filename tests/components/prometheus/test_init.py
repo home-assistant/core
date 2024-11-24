@@ -2796,9 +2796,27 @@ async def test_changing_area(
         area=original_area_name,
     ).withValue(1).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Other Device",
+        entity="sensor.outside_temperature_other_device",
+        device="Other Test Device",
+        area="Other Test Area",
+    ).withValue(33.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Other Device",
+        entity="sensor.outside_temperature_other_device",
+        device="Other Test Device",
+        area="Other Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
     assert "sensor.outside_temperature" in entity_registry.entities
     assert "sensor.outside_temperature_device" in entity_registry.entities
-    assert "sensor.outside_temperature_device" in entity_registry.entities
+    assert "sensor.outside_temperature_other_device" in entity_registry.entities
     assert "sensor.outside_humidity_device" in entity_registry.entities
     changed_area_name = "Changed Test Area"
     changed_area = area_registry.async_create(changed_area_name)
@@ -2928,6 +2946,24 @@ async def test_changing_area(
         area=changed_area_name,
     ).withValue(1).assert_in_metrics(body)
 
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Other Device",
+        entity="sensor.outside_temperature_other_device",
+        device="Other Test Device",
+        area="Other Test Area",
+    ).withValue(33.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Other Device",
+        entity="sensor.outside_temperature_other_device",
+        device="Other Test Device",
+        area="Other Test Area",
+    ).withValue(1).assert_in_metrics(body)
+
 
 @pytest.fixture(name="entity_config_data")
 async def entity_config_fixture(
@@ -2936,6 +2972,7 @@ async def entity_config_fixture(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     default_area: str = "Test Area",
+    other_default_area: str = "Other Test Area",
 ) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate config entries along with device and area stuff."""
     data = {}
@@ -2956,8 +2993,14 @@ async def entity_config_fixture(
         "alarm_control_panel": "Test Alarm Control Panel Device",
         "device_tracker": "Test Laptop Device",
         "update": "Test Tablet Device",
+        "other_sensor": "Other Test Device",
     }
     for key, value in devices.items():
+        if key == "other_sensor":
+            final_area_name = other_default_area
+        else:
+            final_area_name = default_area
+
         identifier = "".join(
             random.choices(string.ascii_uppercase + string.digits, k=10)
         )
@@ -2969,11 +3012,11 @@ async def entity_config_fixture(
             identifiers={("test", identifier)},
             connections={("mac", mac)},
             config_entry_id=config_entry.entry_id,
-            suggested_area=default_area,
+            suggested_area=final_area_name,
         )
         assert device is not None
         assert device.id is not None
-        area = area_registry.async_get_area_by_name(default_area)
+        area = area_registry.async_get_area_by_name(final_area_name)
         assert area is not None
         assert area.id is not None
 
@@ -3192,6 +3235,27 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_15, 0.903, sensor_15_attributes)
     data["sensor_15"] = sensor_15
     data["sensor_15_attributes"] = sensor_15_attributes
+
+    sensor_16 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_16",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature_other_device",
+        original_name="Outside Temperature Other Device",
+        config_entry=entity_config_data["other_sensor"]["config_entry"],
+        device_id=entity_config_data["other_sensor"]["device_id"],
+    )
+    sensor_16_attributes = {
+        ATTR_BATTERY_LEVEL: 21,
+        ATTR_AREA_ID: entity_config_data["other_sensor"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["other_sensor"]["device_id"],
+    }
+    set_state_with_entry(hass, sensor_16, 33.0, sensor_16_attributes)
+
+    data["sensor_16"] = sensor_16
+    data["sensor_16_attributes"] = sensor_16_attributes
 
     await hass.async_block_till_done()
     return data
