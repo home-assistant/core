@@ -15,7 +15,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
 
@@ -28,8 +28,8 @@ rules:
   parallel-updates: done
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
-  docs-configuration-parameters: todo
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: done
@@ -49,16 +49,21 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Solar-Log device cannot be discovered
-  repair-issues: done
-  docs-use-cases: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      This integration doesn't have known issues that could be resolved by the user.
   docs-examples: done
-
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession: done
   strict-typing: done
