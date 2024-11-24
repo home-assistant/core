@@ -36,6 +36,15 @@
     "binary_sensor": {
       "jvc_power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "jvc_source_status": {
+        "name": "Source status"
+      },
+      "jvc_low_latency_status": {
+        "name": "Low latency"
+      },
+      "jvc_eshift": {
+        "name": "eShift"
       }
     },
     "select": {
@@ -65,22 +74,8 @@
           "hdmi2": "HDMI 2"
         }
       },
-      "jvc_source_status": {
-        "name": "Source status",
-        "state": {
-          "signal": "Signal",
-          "no_signal": "No signal"
-        }
-      },
       "jvc_picture_mode": {
         "name": "Picture mode"
-      },
-      "jvc_low_latency_status": {
-        "name": "Low latency",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
-        }
       },
       "jvc_installation_mode": {
         "name": "Installation mode"
@@ -132,13 +127,6 @@
         "state": {
           "rgb": "RGB",
           "yuv": "YUV"
-        }
-      },
-      "jvc_eshift": {
-        "name": "eShift",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
         }
       },
       "jvc_laser_dimming_mode": {

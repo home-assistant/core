@@ -1,0 +1,186 @@
+# serializer version: 1
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_eshift-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.jvc_projector_eshift',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'eShift',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_eshift',
+    'unique_id': 'jvcmac_eshift',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_eshift-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector eShift',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jvc_projector_eshift',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_low_latency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.jvc_projector_low_latency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Low latency',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_low_latency_status',
+    'unique_id': 'jvcmac_low_latency',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_low_latency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Low latency',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jvc_projector_low_latency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.jvc_projector_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_power',
+    'unique_id': 'jvcmac_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'JVC Projector Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jvc_projector_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_source_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.jvc_projector_source_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Source status',
+    'platform': 'jvc_projector',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'jvc_source_status',
+    'unique_id': 'jvcmac_source',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.jvc_projector_source_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JVC Projector Source status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jvc_projector_source_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

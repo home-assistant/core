@@ -51,44 +51,14 @@ JVC_SENSORS = (
         ],
     ),
     JVCSensorEntityDescription(
-        key=const.KEY_SOURCE,
-        translation_key="jvc_source_status",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.SIGNAL,
-            const.NOSIGNAL,
-        ],
-    ),
-    JVCSensorEntityDescription(
         key=const.KEY_PICTURE_MODE,
         translation_key="jvc_picture_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     JVCSensorEntityDescription(
-        key=const.KEY_LOW_LATENCY,
-        translation_key="jvc_low_latency_status",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.OFF,
-            const.ON,
-        ],
-    ),
-    JVCSensorEntityDescription(
         key=const.KEY_INSTALLATION_MODE,
         translation_key="jvc_installation_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    JVCSensorEntityDescription(
-        key=const.KEY_ESHIFT,
-        translation_key="jvc_eshift",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.OFF,
-            const.ON,
-        ],
     ),
     JVCSensorEntityDescription(
         key=const.KEY_LASER_DIMMING,
