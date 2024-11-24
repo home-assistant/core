@@ -314,7 +314,7 @@ class UpnpOptionsFlowHandler(OptionsFlow):
             {
                 vol.Optional(
                     CONFIG_ENTRY_FORCE_POLL,
-                    default=self.options.get(
+                    default=self.config_entry.options.get(
                         CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL
                     ),
                 ): bool,

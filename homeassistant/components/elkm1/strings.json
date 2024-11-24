@@ -68,7 +68,7 @@
       }
     },
     "alarm_arm_home_instant": {
-      "name": "Alarm are home instant",
+      "name": "Alarm arm home instant",
       "description": "Arms the ElkM1 in home instant mode.",
       "fields": {
         "code": {

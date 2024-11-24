@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+from math import floor
 from typing import TYPE_CHECKING, Any
 
 from dateutil.rrule import (
@@ -139,3 +140,52 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     """
     return str(recurrence).split("RRULE:")[1]
+
+
+def get_attribute_points(
+    user: dict[str, Any], content: dict[str, Any], attribute: str
+) -> dict[str, float]:
+    """Get modifiers contributing to strength attribute."""
+
+    gear_set = {
+        "weapon",
+        "armor",
+        "head",
+        "shield",
+        "back",
+        "headAccessory",
+        "eyewear",
+        "body",
+    }
+
+    equipment = sum(
+        stats[attribute]
+        for gear in gear_set
+        if (equipped := user["items"]["gear"]["equipped"].get(gear))
+        and (stats := content["gear"]["flat"].get(equipped))
+    )
+
+    class_bonus = sum(
+        stats[attribute] / 2
+        for gear in gear_set
+        if (equipped := user["items"]["gear"]["equipped"].get(gear))
+        and (stats := content["gear"]["flat"].get(equipped))
+        and stats["klass"] == user["stats"]["class"]
+    )
+
+    return {
+        "level": min(round(user["stats"]["lvl"] / 2), 50),
+        "equipment": equipment,
+        "class": class_bonus,
+        "allocated": user["stats"][attribute],
+        "buffs": user["stats"]["buffs"][attribute],
+    }
+
+
+def get_attributes_total(
+    user: dict[str, Any], content: dict[str, Any], attribute: str
+) -> int:
+    """Get total attribute points."""
+    return floor(
+        sum(value for value in get_attribute_points(user, content, attribute).values())
+    )

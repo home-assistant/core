@@ -78,7 +78,7 @@
           "description": "When should user be reminded of this task, in natural language."
         },
         "reminder_date_lang": {
-          "name": "Reminder data language",
+          "name": "Reminder date language",
           "description": "The language of reminder_date_string."
         },
         "reminder_date": {

@@ -169,7 +169,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlow):
                             )
                         ),
                         **tts_options_schema(
-                            self.options, voices, from_config_flow=True
+                            self.config_entry.options, voices, from_config_flow=True
                         ).schema,
                         vol.Optional(
                             CONF_STT_MODEL,
@@ -182,6 +182,6 @@ class GoogleCloudOptionsFlowHandler(OptionsFlow):
                         ),
                     }
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

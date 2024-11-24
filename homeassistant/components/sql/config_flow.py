@@ -223,7 +223,7 @@ class SQLOptionsFlowHandler(OptionsFlow):
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            name = self.options.get(CONF_NAME, self.config_entry.title)
+            name = self.config_entry.options.get(CONF_NAME, self.config_entry.title)
 
             try:
                 query = validate_sql_select(query)
@@ -275,7 +275,7 @@ class SQLOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, user_input or self.options
+                OPTIONS_SCHEMA, user_input or self.config_entry.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,

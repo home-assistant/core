@@ -210,14 +210,21 @@
   dict({
     'id': 1,
     'result': dict({
-      'date': '1970-01-01T00:00:00.000Z',
-      'name': 'Test',
-      'path': 'abc123.tar',
-      'size': 0.0,
-      'slug': 'abc123',
+      'slug': '27f5c632',
     }),
     'success': True,
     'type': 'result',
+  })
+# ---
+# name: test_generate[without_hassio].1
+  dict({
+    'event': dict({
+      'done': True,
+      'stage': None,
+      'success': True,
+    }),
+    'id': 1,
+    'type': 'event',
   })
 # ---
 # name: test_info[with_hassio]

@@ -6,7 +6,7 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -173,17 +173,17 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             # setting the state directly.
             cls.__alarm_legacy_state = True
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
+    def __setattr__(self, name: str, value: Any, /) -> None:
         """Set attribute.
 
         Deprecation warning if setting '_attr_state' directly
         unless already reported.
         """
-        if __name == "_attr_state":
+        if name == "_attr_state":
             if self.__alarm_legacy_state_reported is not True:
                 self._report_deprecated_alarm_state_handling()
             self.__alarm_legacy_state_reported = True
-        return super().__setattr__(__name, __value)
+        return super().__setattr__(name, value)
 
     @callback
     def add_to_platform_start(
@@ -221,9 +221,15 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if (alarm_state := self.alarm_state) is None:
-            return None
-        return alarm_state
+        if (alarm_state := self.alarm_state) is not None:
+            return alarm_state
+        if self._attr_state is not None:
+            # Backwards compatibility for integrations that set state directly
+            # Should be removed in 2025.11
+            if TYPE_CHECKING:
+                assert isinstance(self._attr_state, str)
+            return self._attr_state
+        return None
 
     @cached_property
     def alarm_state(self) -> AlarmControlPanelState | None:
@@ -269,7 +275,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Check if arm code is required, raise if no code is given."""
         if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
             raise ServiceValidationError(
-                f"Arming requires a code but none was given for {self.entity_id}",
                 translation_domain=DOMAIN,
                 translation_key="code_arm_required",
                 translation_placeholders={

@@ -168,7 +168,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
                 return self.async_create_entry(
-                    title=get_extra_name(data) or "CO2 Signal",
+                    title=get_extra_name(data) or "Electricity Maps",
                     data=data,
                 )
 
