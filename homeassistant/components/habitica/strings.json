@@ -32,7 +32,7 @@
           "username": "Email or username (case-sensitive) to connect Home Assistant to your Habitica account",
           "password": "Password for the account to connect Home Assistant to Habitica"
         },
-        "description": "Enter your login details to start using Habitica with Home Assistant"
+        "description": "Enter your login details to start using Habitica with Home Assistant\n\n[Forgot your password?](https://habitica.com/login)"
       },
       "advanced": {
         "title": "[%key:component::habitica::config::step::user::menu_options::advanced%]",
