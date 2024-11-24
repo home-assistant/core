@@ -2314,8 +2314,8 @@ async def entity_config_fixture(
     data = {}
     default_area = "Test Area"
     devices = {
-        "humidifier_4": "Test Humidifier Device",
-        "lock_3": "Test Lock Device",
+        "humidifier": "Test Humidifier Device",
+        "lock": "Test Lock Device",
         "sensor": "Test Device",
     }
     for key, value in devices.items():
@@ -2763,15 +2763,15 @@ async def humidifier_fixture(
         unique_id="humidifier_4",
         suggested_object_id="hygrostat_device",
         original_name="Hygrostat Device",
-        config_entry=entity_config_data["humidifier_4"]["config_entry"],
-        device_id=entity_config_data["humidifier_4"]["device_id"],
+        config_entry=entity_config_data["humidifier"]["config_entry"],
+        device_id=entity_config_data["humidifier"]["device_id"],
     )
     humidifier_4_attributes = {
         ATTR_HUMIDITY: 42.0,
         ATTR_MODE: "sleep",
         ATTR_AVAILABLE_MODES: ["auto", "sleep", "normal"],
-        ATTR_DEVICE_ID: entity_config_data["humidifier_4"]["device_id"],
-        ATTR_AREA_ID: entity_config_data["humidifier_4"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["humidifier"]["device_id"],
+        ATTR_AREA_ID: entity_config_data["humidifier"]["area_id"],
     }
     set_state_with_entry(hass, humidifier_4, STATE_OFF, humidifier_4_attributes)
     data["humidifier_4"] = humidifier_4
@@ -2817,12 +2817,12 @@ async def lock_fixture(
         unique_id="lock_3",
         suggested_object_id="back_door",
         original_name="Back Door",
-        config_entry=entity_config_data["lock_3"]["config_entry"],
-        device_id=entity_config_data["lock_3"]["device_id"],
+        config_entry=entity_config_data["lock"]["config_entry"],
+        device_id=entity_config_data["lock"]["device_id"],
     )
     lock_3_attributes = {
-        ATTR_AREA_ID: entity_config_data["lock_3"]["area_id"],
-        ATTR_DEVICE_ID: entity_config_data["lock_3"]["device_id"],
+        ATTR_AREA_ID: entity_config_data["lock"]["area_id"],
+        ATTR_DEVICE_ID: entity_config_data["lock"]["device_id"],
     }
     set_state_with_entry(hass, lock_3, LockState.UNLOCKED, lock_3_attributes)
     data["lock_3"] = lock_3
