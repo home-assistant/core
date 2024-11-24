@@ -9,9 +9,15 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from habiticalib import Habitica, HabiticaException, TaskFilter, TooManyRequestsError
-from habiticalib.types import ContentData, TaskData, UserData
-from habitipy.aio import HabitipyAsync
+from habiticalib import (
+    ContentData,
+    Habitica,
+    HabiticaException,
+    TaskData,
+    TaskFilter,
+    TooManyRequestsError,
+    UserData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,9 +43,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, habitica: Habitica, habitipy: HabitipyAsync
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, habitica: Habitica) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(
             hass,
@@ -53,7 +57,6 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 immediate=False,
             ),
         )
-        self.api = habitipy
         self.habitica = habitica
         self.content: ContentData
 

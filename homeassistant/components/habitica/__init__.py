@@ -7,7 +7,6 @@ from habiticalib import (
     NotAuthorizedError,
     TooManyRequestsError,
 )
-from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,30 +52,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up habitica from a config entry."""
 
-    class HAHabitipyAsync(HabitipyAsync):
-        """Closure API class to hold session."""
-
-        def __call__(self, **kwargs):
-            return super().__call__(session, **kwargs)
-
-        def _make_headers(self) -> dict[str, str]:
-            headers = super()._make_headers()
-            headers.update({"x-client": X_CLIENT})
-            return headers
-
     session = async_get_clientsession(
         hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
-    )
-
-    # habitipy is still needed for the deprecated api_call action
-    # but it will be removed in 2025.6.0
-    habitipy = await hass.async_add_executor_job(
-        HAHabitipyAsync,
-        {
-            "url": config_entry.data[CONF_URL],
-            "login": config_entry.data[CONF_API_USER],
-            "password": config_entry.data[CONF_API_KEY],
-        },
     )
 
     api = Habitica(
@@ -111,7 +88,7 @@ async def async_setup_entry(
             data={**config_entry.data, CONF_NAME: user.data.profile.name},
         )
 
-    coordinator = HabiticaDataUpdateCoordinator(hass, api, habitipy)
+    coordinator = HabiticaDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator

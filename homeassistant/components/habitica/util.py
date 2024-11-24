@@ -20,7 +20,7 @@ from dateutil.rrule import (
     YEARLY,
     rrule,
 )
-from habiticalib.types import ContentData, Frequency, TaskData, UserData
+from habiticalib import ContentData, Frequency, TaskData, UserData
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity

@@ -131,12 +131,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
-        entries = hass.config_entries.async_entries(DOMAIN)
+        entries: list[HabiticaConfigEntry] = hass.config_entries.async_entries(DOMAIN)
 
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
-                api = entry.runtime_data.api
+                api = await entry.runtime_data.habitica.habitipy()
                 break
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
