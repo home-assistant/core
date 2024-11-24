@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector.device import JvcProjectorAuthError
+from jvcprojector.projector import JvcProjector, JvcProjectorConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

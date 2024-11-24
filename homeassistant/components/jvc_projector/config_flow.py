@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
-from jvcprojector.projector import DEFAULT_PORT
+from jvcprojector.device import JvcProjectorAuthError
+from jvcprojector.projector import DEFAULT_PORT, JvcProjector, JvcProjectorConnectError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

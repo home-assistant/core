@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from jvcprojector import JvcProjector
+from jvcprojector.projector import JvcProjector
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

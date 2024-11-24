@@ -5,12 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from jvcprojector import (
-    JvcProjector,
-    JvcProjectorAuthError,
-    JvcProjectorConnectError,
-    const,
-)
+from jvcprojector.device import JvcProjectorAuthError
+from jvcprojector.projector import JvcProjector, JvcProjectorConnectError, const
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -43,7 +39,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     async def _async_update_data(self) -> dict[str, str]:
         """Get the latest state data."""
         try:
-            state = await self.device.get_state()
+            state_mapping = await self.device.get_state()
+            # Convert Mapping[str, str | None] to dict[str, str]
+            state = {k: v if v is not None else "" for k, v in state_mapping.items()}
         except JvcProjectorConnectError as err:
             raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:
