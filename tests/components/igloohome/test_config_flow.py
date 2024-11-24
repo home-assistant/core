@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from igloohome_api import AuthException
-from parameterized import parameterized
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.igloohome.const import DOMAIN
@@ -43,8 +43,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@parameterized.expand(
-    [(AuthException(), "invalid_auth"), (ClientError(), "cannot_connect")]
+@pytest.mark.parametrize(
+    ("auth_exception", "result_error"),
+    [(AuthException(), "invalid_auth"), (ClientError(), "cannot_connect")],
 )
 async def test_form_invalid_input(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, auth_exception, result_error
