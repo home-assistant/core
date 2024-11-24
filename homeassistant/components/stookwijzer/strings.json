@@ -29,5 +29,10 @@
         "name": "Windspeed"
       }
     }
+  },
+  "exceptions": {
+    "location_migration_failed": {
+      "message": "Unable to migrate location to new format. Restart to try again, or remove and re-add the integration."
+    }
   }
 }
