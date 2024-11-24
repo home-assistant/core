@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
+from enum import Enum
 import logging
 import string
 from typing import Any, cast
@@ -173,6 +174,62 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class PrometheusLabelsException(Exception):
+    """Exceptions when dealing with shared PrometheusLabels functionality."""
+
+
+class PrometheusLabels(Enum):
+    """Model shared Prometheus labels."""
+
+    ENTITY = "entity"
+    FRIENDLY_NAME = "friendly_name"
+    OBJECT_ID = "object_id"
+    DOMAIN = "domain"
+    DEVICE = "device"
+    AREA = "area"
+    PLATFORM = "platform"
+
+    @classmethod
+    def get_shared_common_labels(cls) -> list[PrometheusLabels]:
+        """Return all shared prometheus labels that are always expected."""
+        return [
+            cls.ENTITY,
+            cls.OBJECT_ID,
+            cls.DOMAIN,
+            cls.FRIENDLY_NAME,
+        ]
+
+    @classmethod
+    def get_all_common_label_strings(cls) -> list[str]:
+        """Return all possible common prometheus label strings."""
+        return [p.value for p in cls]
+
+    @classmethod
+    def label_value_from_state(cls, label: PrometheusLabels, state: State) -> str:
+        """Return a label value for a metric from a hass state."""
+        if label == cls.ENTITY:
+            return state.entity_id
+        if label == cls.OBJECT_ID:
+            return state.object_id
+        if label == cls.DOMAIN:
+            return state.domain
+        if label == cls.FRIENDLY_NAME:
+            return state.attributes.get(ATTR_FRIENDLY_NAME) or ""
+        raise PrometheusLabelsException(f"Unexpected label: {label}")
+
+    def label_value(self, state: State) -> str:
+        """Return a label value as an instance shortcut to `cls.label_value_from_state`."""
+        return self.label_value_from_state(self, state)
+
+    @classmethod
+    def get_shared_common_label_dict(cls, state: State) -> dict[str, str]:
+        """Return a dict of label and values for all shared expected metrics for a state."""
+        final_labels = {}
+        for label in cls.get_shared_common_labels():
+            final_labels[label.value] = label.label_value(state)
+        return dict(final_labels)
+
+
 class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
@@ -339,15 +396,7 @@ class PrometheusMetrics:
         documentation: str,
         extra_labels: list[str] | None = None,
     ) -> _MetricBaseT:
-        labels = [
-            "entity",
-            "friendly_name",
-            "object_id",
-            "domain",
-            "device",
-            "area",
-            "platform",
-        ]
+        labels = PrometheusLabels.get_all_common_label_strings()
         if extra_labels is not None:
             labels.extend(extra_labels)
 
@@ -410,12 +459,7 @@ class PrometheusMetrics:
         }
 
     def _labels(self, state: State) -> dict[str, Any]:
-        final_labels = {
-            "entity": state.entity_id,
-            "object_id": state.object_id,
-            "domain": state.domain,
-            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME) or "",
-        }
+        final_labels = PrometheusLabels.get_shared_common_label_dict(state)
 
         if extra_labels := self._get_extra_labels(state):
             final_labels.update(extra_labels)
