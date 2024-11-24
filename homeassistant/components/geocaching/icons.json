@@ -28,8 +28,8 @@
       "cache_find_count": {
         "default": "mdi:eye-check-outline"
       },
-      "cache_favorite_count": {
-        "default": "mdi:star"
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
       },
       "cache_hide_date": {
         "default": "mdi:calendar-range"

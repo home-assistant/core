@@ -42,8 +42,8 @@
       "cache_find_count": {
         "name": "Cache {reference_code} find count"
       },
-      "cache_favorite_count": {
-        "name": "Cache {reference_code} favorite count"
+      "cache_favorite_points": {
+        "name": "Cache {reference_code} favorite points"
       },
       "cache_hide_date": {
         "name": "Cache {reference_code} hide date"

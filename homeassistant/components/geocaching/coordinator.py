@@ -50,7 +50,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                 radiusKm=3,
             )
         )
-        # Currently hardcoded
+        # TODO: Read this from the config | pylint: disable=fixme
         settings.set_trackables(["TB89YPV"])
 
         self.geocaching = GeocachingApi(
