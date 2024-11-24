@@ -2223,7 +2223,7 @@ def _get_device_setup_info(
     area_name: str,
 ) -> (ConfigEntry, str, str):
     """Set up config entry and basic device and area and return ids of each for testing."""
-    config_entry = MockConfigEntry(domain="my")
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
