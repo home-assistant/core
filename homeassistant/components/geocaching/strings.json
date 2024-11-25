@@ -33,8 +33,14 @@
       "souvenir_count": { "name": "Total souvenirs" },
       "awarded_favorite_points": { "name": "Awarded favorite points" },
       "nearby_caches": { "name": "Nearby caches" },
-      "total_tracked_distance_traveled": {
-        "name": "Total tracked distance traveled"
+      "total_tracked_trackables_distance_traveled": {
+        "name": "Total tracked trackables distance traveled"
+      },
+      "cache_name": {
+        "name": "Name"
+      },
+      "cache_owner": {
+        "name": "Owner"
       },
       "cache_location": {
         "name": "Location"
@@ -47,6 +53,24 @@
       },
       "cache_hide_date": {
         "name": "Hide date"
+      },
+      "trackable_name": {
+        "name": "Name"
+      },
+      "trackable_owner": {
+        "name": "Owner"
+      },
+      "trackable_traveled_distance": {
+        "name": "Traveled distance"
+      },
+      "trackable_current_cache_code": {
+        "name": "Current cache code"
+      },
+      "trackable_current_cache_name": {
+        "name": "Current cache name"
+      },
+      "trackable_release_date": {
+        "name": "Release date"
       }
     }
   }

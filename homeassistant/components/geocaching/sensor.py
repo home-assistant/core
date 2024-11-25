@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, GEOCACHING_ID_SENSOR_FORMAT, GeocacheCategory
 from .coordinator import GeocachingDataUpdateCoordinator
-from .entities import get_cache_entities
+from .entities import get_cache_entities, get_trackable_entities
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,8 +69,8 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         value_fn=lambda status: len(status.nearby_caches),
     ),
     GeocachingSensorEntityDescription(
-        key="total_tracked_distance_traveled",
-        translation_key="total_tracked_distance_traveled",
+        key="total_tracked_trackables_distance_traveled",
+        translation_key="total_tracked_trackables_distance_traveled",
         native_unit_of_measurement="km",
         value_fn=lambda status: round(
             sum(
@@ -105,6 +105,10 @@ async def async_setup_entry(
         entities.extend(
             get_cache_entities(coordinator, cache, GeocacheCategory.TRACKED)
         )
+
+    # Add entities for tracked trackables
+    for trackable in status.trackables.values():
+        entities.extend(get_trackable_entities(coordinator, trackable))
     async_add_entities(entities)
 
 

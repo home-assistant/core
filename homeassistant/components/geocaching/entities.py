@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import datetime
 from typing import cast
 
-from geocachingapi.models import GeocachingCache
+from geocachingapi.models import GeocachingCache, GeocachingTrackable
 
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.sensor import (
@@ -18,7 +18,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CACHE_ID_SENSOR_FORMAT, DOMAIN, GeocacheCategory
+from .const import (
+    CACHE_ID_SENSOR_FORMAT,
+    DOMAIN,
+    TRACKABLE_ID_SENSOR_FORMAT,
+    GeocacheCategory,
+)
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
@@ -37,11 +42,24 @@ def get_cache_device_info(
     )
 
 
+# A device can have multiple entities, and for a trackable which requires multiple entities we want to group them together.
+# Therefore, we create a device for each trackable, which holds all related entities.
+# This function returns the device info for a trackable.
+def get_trackable_device_info(trackable: GeocachingTrackable) -> DeviceInfo:
+    """Generate device info for a cache."""
+    return DeviceInfo(
+        name=f"Geotrackable {trackable.reference_code}",
+        identifiers={(DOMAIN, cast(str, trackable.reference_code))},
+        entry_type=DeviceEntryType.SERVICE,
+        manufacturer="Groundspeak, Inc.",
+    )
+
+
 # pylint: disable=hass-enforce-class-module
 # Base class for a cache entity.
 # Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
 class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity):
-    """Base class for Geocaching entities."""
+    """Base class for cache entities."""
 
     _attr_has_entity_name = True
     cache: GeocachingCache
@@ -60,13 +78,44 @@ class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], En
         # Set the device info from the cache, to group all entities for a cache together
         self._attr_device_info = get_cache_device_info(cache, category)
 
-        # TODO: Change this from NEARBY_CACHE... | pylint: disable=fixme
         self._attr_unique_id = CACHE_ID_SENSOR_FORMAT.format(
             category.value, cache.reference_code, entity_type
         )
 
         # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
         self._attr_translation_key = f"cache_{entity_type}"
+
+
+# pylint: disable=hass-enforce-class-module
+# Base class for a trackable entity.
+# Sets the device, ID and translation settings to correctly group the entity to the correct trackable device and give it the correct name.
+class GeoEntity_BaseTrackable(
+    CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity
+):
+    """Base class for trackable entities."""
+
+    _attr_has_entity_name = True
+    trackable: GeocachingTrackable
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        trackable: GeocachingTrackable,
+        entity_type: str,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator)
+        self.trackable = trackable
+
+        # Set the device info from the trackable, to group all entities for a trackable together
+        self._attr_device_info = get_trackable_device_info(trackable)
+
+        self._attr_unique_id = TRACKABLE_ID_SENSOR_FORMAT.format(
+            trackable.reference_code, entity_type
+        )
+
+        # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
+        self._attr_translation_key = f"trackable_{entity_type}"
 
 
 # pylint: disable=hass-enforce-class-module
@@ -111,7 +160,22 @@ class GeocachingCacheEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingCache], StateType | datetime.date]
 
 
-SENSORS: tuple[GeocachingCacheEntityDescription, ...] = (
+@dataclass(frozen=True, kw_only=True)
+class GeocachingTrackableEntityDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
+
+    value_fn: Callable[[GeocachingTrackable], StateType | datetime.date]
+
+
+CACHE_SENSORS: tuple[GeocachingCacheEntityDescription, ...] = (
+    GeocachingCacheEntityDescription(
+        key="name",
+        value_fn=lambda cache: cache.name,
+    ),
+    GeocachingCacheEntityDescription(
+        key="owner",
+        value_fn=lambda cache: cache.owner.username,
+    ),
     GeocachingCacheEntityDescription(
         key="find_count",
         native_unit_of_measurement="finds",
@@ -126,6 +190,37 @@ SENSORS: tuple[GeocachingCacheEntityDescription, ...] = (
         key="hide_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda cache: cache.hiddenDate,
+    ),
+)
+
+TRACKABLE_SENSORS: tuple[GeocachingTrackableEntityDescription, ...] = (
+    GeocachingTrackableEntityDescription(
+        key="name",
+        value_fn=lambda trackable: trackable.name,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="owner",
+        value_fn=lambda trackable: trackable.owner.username,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="traveled_distance",
+        native_unit_of_measurement="km",
+        value_fn=lambda trackable: None
+        if trackable.kilometers_traveled is None
+        else round(trackable.kilometers_traveled),
+    ),
+    GeocachingTrackableEntityDescription(
+        key="current_cache_code",
+        value_fn=lambda trackable: trackable.current_geocache_code,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="current_cache_name",
+        value_fn=lambda trackable: trackable.current_geocache_name,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="release_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda trackable: trackable.release_date,
     ),
 )
 
@@ -154,6 +249,29 @@ class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
         return self.entity_description.value_fn(self.cache)
 
 
+# pylint: disable=hass-enforce-class-module
+class GeoEntity_Trackable_SensorEntity(GeoEntity_BaseTrackable, SensorEntity):
+    """Representation of a trackable sensor."""
+
+    entity_description: GeocachingTrackableEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        trackable: GeocachingTrackable,
+        description: GeocachingTrackableEntityDescription,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator, trackable, description.key)
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> StateType | datetime.date:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.trackable)
+
+
 def get_cache_entities(
     coordinator: GeocachingDataUpdateCoordinator,
     cache: GeocachingCache,
@@ -169,7 +287,19 @@ def get_cache_entities(
     entities.extend(
         [
             GeoEntity_Cache_SensorEntity(coordinator, cache, description, category)
-            for description in SENSORS
+            for description in CACHE_SENSORS
         ]
     )
     return entities
+
+
+def get_trackable_entities(
+    coordinator: GeocachingDataUpdateCoordinator, trackable: GeocachingTrackable
+) -> list[GeoEntity_BaseTrackable]:
+    """Generate all entities for a single trackable."""
+
+    # Sensor entities
+    return [
+        GeoEntity_Trackable_SensorEntity(coordinator, trackable, description)
+        for description in TRACKABLE_SENSORS
+    ]
