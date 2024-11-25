@@ -29,6 +29,8 @@ ENTITY_KEY_ECO = "eco"
 ENTITY_KEY_OFFSET = "offset"
 ENTITY_KEY_WINDOW_OPEN_TEMPERATURE = "window_open_temperature"
 ENTITY_KEY_WINDOW_OPEN_TIMEOUT = "window_open_timeout"
+ENTITY_KEY_VALVE = "valve"
+ENTITY_KEY_AWAY_UNTIL = "away_until"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
