@@ -2,10 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
-from universal_silabs_flasher.const import ApplicationType
-
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
     FirmwareGuess,
     get_zha_device_path,
     guess_firmware_type,
