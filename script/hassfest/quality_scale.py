@@ -461,7 +461,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hko",
     "hlk_sw16",
     "holiday",
-    "home_connect",
     "homekit",
     "homekit_controller",
     "homematic",
