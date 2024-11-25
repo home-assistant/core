@@ -15,8 +15,9 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from .const import CONF_SERIAL
 from .entity import QbusEntity
-from .qbus import QbusConfigContainer, QbusEntry
+from .qbus import QbusConfigContainer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,38 +45,31 @@ class QbusDataCoordinator:
         self._topic_factory = QbusMqttTopicFactory()
 
         self._hass = hass
-        self._entry = QbusEntry(hass, entry)
+        self._entry = entry
+
         self._platform_register: dict[
             str, tuple[type[QbusEntity], AddEntitiesCallback]
         ] = {}
         self._registered_entity_ids: list[str] = []
         self._device_activated = False
         self._subscribed_to_device_state = False
-        self._qbus_discovery: QbusDiscovery | None
         self._device: QbusMqttDevice | None
 
-        self._entry.state_queue.start()
-
         # Clean up when HA stops
-        self._entry.config_entry.async_on_unload(
-            self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         )
 
         # Subscribe to option updates
-        self._entry.config_entry.async_on_unload(
-            self._entry.config_entry.add_update_listener(self._options_update_listener)
-        )
+        entry.async_on_unload(entry.add_update_listener(self._options_update_listener))
 
     def shutdown(self, event: Event | None = None) -> None:
         """Shutdown Qbus coordinator."""
-        _LOGGER.debug(
-            "Shutting down coordinator for entry %s", self._entry.config_entry.entry_id
-        )
+        _LOGGER.debug("Shutting down coordinator for entry %s", self._entry.entry_id)
 
         self._registered_entity_ids = []
         self._device_activated = False
         self._subscribed_to_device_state = False
-        self._entry.state_queue.close()
 
     def remove(self) -> None:
         """Remove Qbus coordinator."""
@@ -95,7 +89,7 @@ class QbusDataCoordinator:
 
     async def config_received(self, msg: ReceiveMessage) -> None:
         """Handle the received MQTT message containing the Qbus config."""
-        _LOGGER.debug("Receiving config in entry %s", self._entry.config_entry.entry_id)
+        _LOGGER.debug("Receiving config in entry %s", self._entry.entry_id)
 
         config = self._message_factory.parse_discovery(msg.payload)
 
@@ -105,11 +99,11 @@ class QbusDataCoordinator:
 
     async def async_update_config(self, config: QbusDiscovery) -> None:
         """Process the new config."""
-        self._qbus_discovery = config
-        device = config.get_device_by_serial(self._entry.serial)
+        serial = self._entry.data.get(CONF_SERIAL, "")
+        device = config.get_device_by_serial(serial)
 
         if device is None:
-            _LOGGER.warning("Device with serial %s not found", self._entry.serial)
+            _LOGGER.warning("Device with serial %s not found", serial)
             return
 
         self._device = device
@@ -118,7 +112,7 @@ class QbusDataCoordinator:
         if self._subscribed_to_device_state is False:
             _LOGGER.debug("Subscribing to %s", device_state_topic)
             self._subscribed_to_device_state = True
-            self._entry.config_entry.async_on_unload(
+            self._entry.async_on_unload(
                 await mqtt.async_subscribe(
                     self._hass,
                     device_state_topic,
@@ -172,7 +166,7 @@ class QbusDataCoordinator:
             self._registered_entity_ids.append(output.id)
 
             entity_class = self._platform_register[qbusType][0]
-            entity = entity_class.create(output, self._entry)
+            entity = entity_class.create(output)
             items.setdefault(qbusType, []).append(entity)
 
         # Add entities to HA

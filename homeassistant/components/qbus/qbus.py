@@ -2,18 +2,15 @@
 
 import asyncio
 import logging
-import queue
-import threading
 from typing import Final
 
 from qbusmqttapi.discovery import QbusDiscovery
-from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
+from qbusmqttapi.factory import QbusMqttTopicFactory
 
 from homeassistant.components.mqtt import async_wait_for_mqtt_client, client as mqtt
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERIAL, DATA_QBUS_CONFIG, DATA_QBUS_CONFIG_EVENT, DOMAIN
+from .const import DATA_QBUS_CONFIG, DATA_QBUS_CONFIG_EVENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,102 +76,3 @@ class QbusConfigContainer:
         if isinstance(event, asyncio.Event) and not event.is_set():
             _LOGGER.debug("Mark config event as finished")
             event.set()
-
-
-class QbusStateQueue:
-    """Qbus queue."""
-
-    _WAIT_TIME: Final[int] = 2
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize Qbus queue."""
-
-        self._hass = hass
-        self._items: queue.SimpleQueue[str] = queue.SimpleQueue()
-
-        self._kill: threading.Event | None = None
-        self._throttle: threading.Thread | None = None
-        self._started = False
-
-        self._message_factory = QbusMqttMessageFactory()
-
-    def start(self) -> None:
-        """Start Qbus queue."""
-
-        if self._started:
-            return
-
-        self._kill = threading.Event()
-
-        self._throttle = threading.Thread(target=self._process_queue)
-        self._throttle.start()
-        self._started = True
-        _LOGGER.debug("Queue %s started", self._throttle.native_id)
-
-    def close(self) -> None:
-        """Close Qbus queue."""
-        if self._throttle:
-            _LOGGER.debug("Killing queue %s", self._throttle.native_id)
-            if self._kill:
-                self._kill.set()
-                self._started = False
-
-    def add(self, qbus_id: str) -> None:
-        """Add a Qbus id to the queue."""
-        self._items.put(qbus_id)
-
-    def _process_queue(self) -> None:
-        if self._kill:
-            self._kill.wait(self._WAIT_TIME)
-
-        while True:
-            size = self._items.qsize()
-            entity_ids = []
-
-            try:
-                for _ in range(size):
-                    item = self._items.get()
-
-                    if item not in entity_ids:
-                        entity_ids.append(item)
-            except queue.Empty:
-                pass
-
-            # Publish to MQTT
-            if len(entity_ids) > 0:
-                _LOGGER.debug("Requesting state for %s", entity_ids)
-                request = self._message_factory.create_state_request(entity_ids)
-                mqtt.publish(self._hass, request.topic, request.payload)
-
-            # If no kill signal is set, sleep for the interval.
-            # If kill signal comes in while sleeping, immediately wake up and handle.
-            if self._kill:
-                is_killed = self._kill.wait(self._WAIT_TIME)
-
-            if is_killed:
-                break
-
-
-class QbusEntry:
-    """Qbus Config Entry wrapper."""
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the Qbus Config Entry wrapper."""
-        self._hass = hass
-        self._config_entry = entry
-        self._state_queue = QbusStateQueue(hass)
-
-    @property
-    def config_entry(self) -> ConfigEntry:
-        """Return the Config Entry."""
-        return self._config_entry
-
-    @property
-    def state_queue(self) -> QbusStateQueue:
-        """Return the Qbus State Queue."""
-        return self._state_queue
-
-    @property
-    def serial(self) -> str:
-        """Return the device serial."""
-        return self._config_entry.data.get(CONF_SERIAL, "")

@@ -12,7 +12,6 @@ from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .qbus import QbusEntry
 
 _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
 
@@ -37,7 +36,6 @@ class QbusEntity(Entity, ABC):
     def __init__(
         self,
         mqtt_output: QbusMqttOutput,
-        qbus_entry: QbusEntry,
         entity_id_format: str,
         *,
         id_suffix: str | None = None,
@@ -72,8 +70,6 @@ class QbusEntity(Entity, ABC):
         }
 
         self._mqtt_output = mqtt_output
-        self._qbus_entry = qbus_entry
-
         self._state_topic = self._topic_factory.get_output_state_topic(
             mqtt_output.device.id, mqtt_output.id
         )
@@ -82,7 +78,6 @@ class QbusEntity(Entity, ABC):
     def create(
         cls,
         mqtt_output: QbusMqttOutput,
-        qbus_entry: QbusEntry,
     ) -> "QbusEntity":
         """Create an instance."""
         raise NotImplementedError("Must be implemented by derived class.")

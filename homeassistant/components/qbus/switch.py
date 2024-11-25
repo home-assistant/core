@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity
-from .qbus import QbusEntry
 
 PARALLEL_UPDATES = 0
 
@@ -36,11 +35,10 @@ class QbusSwitch(QbusEntity, SwitchEntity):
     def __init__(
         self,
         mqtt_output: QbusMqttOutput,
-        qbus_entry: QbusEntry,
     ) -> None:
         """Initialize switch entity."""
 
-        super().__init__(mqtt_output, qbus_entry, ENTITY_ID_FORMAT)
+        super().__init__(mqtt_output, ENTITY_ID_FORMAT)
 
         self._is_on = False
 
@@ -48,10 +46,9 @@ class QbusSwitch(QbusEntity, SwitchEntity):
     def create(
         cls,
         mqtt_output: QbusMqttOutput,
-        qbus_entry: QbusEntry,
     ) -> "QbusSwitch":
         """Create an instance."""
-        return QbusSwitch(mqtt_output, qbus_entry)
+        return QbusSwitch(mqtt_output)
 
     @property
     def is_on(self) -> bool:
