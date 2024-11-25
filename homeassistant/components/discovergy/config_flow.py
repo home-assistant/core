@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -58,8 +57,6 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _existing_entry: ConfigEntry
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -76,14 +73,12 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reconfigure step."""
-        self._existing_entry = self._get_reconfigure_entry()
         return await self._validate_and_save(user_input, "reconfigure")
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._existing_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -114,9 +109,17 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
-                if self.source in [SOURCE_REAUTH, SOURCE_RECONFIGURE]:
+                if self.source is SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        entry=self._existing_entry,
+                        entry=self._get_reauth_entry(),
+                        data={
+                            CONF_EMAIL: user_input[CONF_EMAIL],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                    )
+                if self.source is SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        entry=self._get_reconfigure_entry(),
                         data={
                             CONF_EMAIL: user_input[CONF_EMAIL],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -135,7 +138,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA,
-                self._existing_entry.data
+                self._get_reauth_entry().data
                 if self.source == SOURCE_REAUTH
                 else user_input,
             ),
