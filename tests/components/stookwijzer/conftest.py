@@ -62,6 +62,10 @@ def mock_stookwijzer() -> Generator[MagicMock]:
             autospec=True,
         ) as stookwijzer_mock,
         patch(
+            "homeassistant.components.stookwijzer.coordinator.Stookwijzer",
+            new=stookwijzer_mock,
+        ),
+        patch(
             "homeassistant.components.stookwijzer.config_flow.Stookwijzer",
             new=stookwijzer_mock,
         ),
