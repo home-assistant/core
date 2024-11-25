@@ -490,7 +490,7 @@
         "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -529,7 +529,7 @@
         "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
           "alwayson": "Always on"
         }
@@ -539,7 +539,15 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "Auto"
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+        }
+      },
+      "binning_mode": {
+        "name": "Binning mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
         }
       },
       "hub_alarm_ringtone": {
