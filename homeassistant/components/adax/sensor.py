@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities(
         (
             AdaxEnergySensor(adax_data_handler, room)
-            for room in adax_data_handler.get_rooms()
+            for room in await adax_data_handler.async_update()
         ),
         True,
     )
@@ -39,9 +39,10 @@ async def async_setup_entry(
 class AdaxEnergySensor(SensorEntity):
     """Representation of an Adax Energy Sensor."""
 
-    def __init__(self, adax_data_handler: AdaxDataHandler, room: Any) -> None:
+    def __init__(self, adax_data_handler: AdaxDataHandler, room: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._adax_data_handler = adax_data_handler
+        self._device_id = room["id"]
         self._heater_data = room
         self._last_reset = None
         self._state = None
@@ -72,8 +73,11 @@ class AdaxEnergySensor(SensorEntity):
         _LOGGER.debug(
             "Updating AdaxEnergySensor for room ID %s", self._heater_data["id"]
         )
-        room = self._adax_data_handler.get_room(self._heater_data["id"])
-        if room:
+        for room in await self._adax_data_handler.async_update():
+            if room is None:
+                continue
+            if room["id"] != self._device_id:
+                continue
             if self._state is not None:
                 old_state = float(self._state)
             else:
@@ -83,7 +87,3 @@ class AdaxEnergySensor(SensorEntity):
             _LOGGER.debug("Updated state: %s kWh", self._state)
             if int(self._state * 1000) < int(old_state * 1000):
                 self._last_reset = datetime.now(UTC)
-        else:
-            _LOGGER.warning(
-                "Room ID %s not found in data handler", self._heater_data["id"]
-            )

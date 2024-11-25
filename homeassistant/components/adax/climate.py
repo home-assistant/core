@@ -38,7 +38,7 @@ async def async_setup_entry(
         return
 
     async_add_entities(
-        (AdaxDevice(room, adax_data_handler) for room in adax_data_handler.get_rooms()),
+        (AdaxDevice(room, adax_data_handler) for room in await adax_data_handler.async_update()),
         True,
     )
 
@@ -98,8 +98,7 @@ class AdaxDevice(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest data."""
-        await self._adax_data_handler.async_update()
-        for room in self._adax_data_handler.get_rooms():
+        for room in await self._adax_data_handler.async_update():
             if room is None:
                 continue
             if room["id"] != self._device_id:
