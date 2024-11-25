@@ -1,6 +1,7 @@
 """Tests for the llm helpers."""
 
 from decimal import Decimal
+from enum import StrEnum
 from unittest.mock import patch
 
 import pytest
@@ -332,6 +333,25 @@ async def test_assist_api_description(
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
+
+
+def test_convert_attributes() -> None:
+    """Test attribute conversion for YAML presentation."""
+
+    class MyEnum(StrEnum):
+        VALUE = "some_value"
+
+    assert llm._convert_attributes(
+        {
+            "list": [1, 2, 3],
+            "nested": {"other_key": 7},
+            "enum": MyEnum.VALUE,
+        }
+    ) == {
+        "list": ["1", "2", "3"],
+        "nested": {"other_key": "7"},
+        "enum": "VALUE",
+    }
 
 
 async def test_assist_api_prompt(

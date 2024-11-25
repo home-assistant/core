@@ -423,6 +423,19 @@ class AssistAPI(API):
         return tools
 
 
+def _convert_attributes(value: Any) -> Any:
+    """Convert value to be YAML-serializable."""
+    if isinstance(value, dict):
+        return {k: _convert_attributes(v) for k, v in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_convert_attributes(v) for v in value]
+    if isinstance(value, Enum):
+        return value.name
+    if isinstance(value, (Decimal, int)):
+        return str(value)
+    return value
+
+
 def _get_exposed_entities(
     hass: HomeAssistant, assistant: str
 ) -> dict[str, dict[str, Any]]:
@@ -435,6 +448,10 @@ def _get_exposed_entities(
         "current_temperature",
         "temperature_unit",
         "brightness",
+        "color_temp_kelvin",
+        "rgb_color",
+        "color_mode",
+        "supported_color_modes",
         "humidity",
         "unit_of_measurement",
         "device_class",
@@ -494,13 +511,13 @@ def _get_exposed_entities(
         if area_names:
             info["areas"] = ", ".join(area_names)
 
-        if attributes := {
-            attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal, int))
-            else attr_value
-            for attr_name, attr_value in state.attributes.items()
-            if attr_name in interesting_attributes
-        }:
+        if attributes := _convert_attributes(
+            {
+                attr_name: str(attr_value)
+                for attr_name, attr_value in state.attributes.items()
+                if attr_name in interesting_attributes
+            }
+        ):
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
