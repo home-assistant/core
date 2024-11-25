@@ -29,7 +29,11 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions: done
+  action-exceptions:
+     docs-actions: 
+     status: exempt
+     comment: |
+        No custom action.
   reauthentication-flow: done
   parallel-updates: 
       status: exempt
