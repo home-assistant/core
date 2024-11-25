@@ -44,6 +44,7 @@ async def test_create_repair_issues_at_startup_if_logged_in(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we create repair issue at startup if we are logged in."""
     aioclient_mock.get(
@@ -65,6 +66,7 @@ async def test_create_repair_issues_at_startup_if_logged_in(
 async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we delete the legacy subscription issue if no longer legacy."""
     async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
@@ -84,6 +86,7 @@ async def test_legacy_subscription_repair_flow(
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test desired flow of the fix flow for legacy subscription."""
     aioclient_mock.get(
@@ -169,6 +172,7 @@ async def test_legacy_subscription_repair_flow_timeout(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test timeout flow of the fix flow for legacy subscription."""
     aioclient_mock.post(
