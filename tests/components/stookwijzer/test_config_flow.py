@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,7 +15,6 @@ async def test_full_user_flow(
     hass: HomeAssistant,
     mock_stookwijzer: MagicMock,
     mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -26,13 +24,17 @@ async def test_full_user_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {CONF_LATITUDE: 1.0, CONF_LONGITUDE: 1.1}},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2 == snapshot
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Stookwijzer"
+    assert result["data"] == {
+        CONF_LATITUDE: 200000.123456789,
+        CONF_LONGITUDE: 450000.123456789,
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1
@@ -54,20 +56,20 @@ async def test_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {CONF_LATITUDE: 1.0, CONF_LONGITUDE: 1.1}},
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
     # Ensure we can continue the flow, when it now works
     mock_stookwijzer.async_transform_coordinates.return_value = original_return_value
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {CONF_LATITUDE: 1.0, CONF_LONGITUDE: 1.1}},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
