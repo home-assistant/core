@@ -1,4 +1,5 @@
 {
+  "success": true,
   "data": {
     "api_user": "test-api-user",
     "profile": { "name": "test-user" },
@@ -45,8 +46,8 @@
           "shield": "shield_warrior_5",
           "back": "heroicAureole",
           "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
-          "eyewear": "plagueDoctorMask",
-          "body": "aetherAmulet"
+          "eyewear": "eyewear_armoire_plagueDoctorMask",
+          "body": "body_special_aetherAmulet"
         }
       }
     }
