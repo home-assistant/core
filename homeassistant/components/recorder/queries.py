@@ -608,6 +608,7 @@ def delete_recorder_runs_rows(
     """Delete recorder_runs rows."""
     return lambda_stmt(
         lambda: delete(RecorderRuns)
+        .filter(RecorderRuns.end.is_not(None))
         .filter(RecorderRuns.end < purge_before)
         .filter(RecorderRuns.run_id != current_run_id)
         .execution_options(synchronize_session=False)
