@@ -32,7 +32,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
 
 
 class AsyncConfigFlowAuth(AbstractAuth):
-    """Provide Automower authentication tied to an OAuth2 based config entry."""
+    """Provide Automower AbstractAuth for the config flow."""
 
     def __init__(self, websession: ClientSession, token: dict) -> None:
         """Initialize Husqvarna Automower auth."""
