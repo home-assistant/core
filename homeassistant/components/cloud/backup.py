@@ -10,6 +10,7 @@ from typing import Any
 from aiohttp import ClientResponseError
 from hass_nabucasa import Cloud
 from hass_nabucasa.cloud_api import (
+    async_files_delete_file,
     async_files_download_details,
     async_files_list,
     async_files_upload_details,
@@ -150,8 +151,14 @@ class CloudBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        # TODO: Implement this method
-        raise NotImplementedError
+        if not await self.async_get_backup(backup_id):
+            raise BackupAgentError("Backup not found")
+
+        await async_files_delete_file(
+            self._cloud,
+            storage_type=_STORAGE_BACKUP,
+            filename=self._get_backup_filename(),
+        )
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
