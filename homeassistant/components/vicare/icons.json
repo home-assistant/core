@@ -84,6 +84,15 @@
       },
       "compressor_phase": {
         "default": "mdi:information"
+      },
+      "ventilation_level": {
+        "default": "mdi:fan",
+        "state": {
+          "standby": "mdi:fan-off",
+          "levelone": "mdi:fan-speed-1",
+          "leveltwo": "mdi:fan-speed-2",
+          "levelthree": "mdi:fan-speed-3"
+        }
       }
     }
   },
