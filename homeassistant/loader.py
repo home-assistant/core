@@ -1560,14 +1560,12 @@ class Components:
         from .helpers.frame import ReportBehavior, report_usage
 
         report_usage(
-            (
-                f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.3, it"
-                f" should be updated to import functions used from {comp_name} directly"
-            ),
+            f"accesses hass.components.{comp_name}, which"
+            f" should be updated to import functions used from {comp_name} directly",
             core_behavior=ReportBehavior.IGNORE,
             core_integration_behavior=ReportBehavior.IGNORE,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.3",
         )
 
         wrapped = ModuleWrapper(self._hass, component)
@@ -1592,13 +1590,13 @@ class Helpers:
 
         report_usage(
             (
-                f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.5, it"
+                f"accesses hass.helpers.{helper_name}, which"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             core_behavior=ReportBehavior.IGNORE,
             core_integration_behavior=ReportBehavior.IGNORE,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         wrapped = ModuleWrapper(self._hass, helper)
