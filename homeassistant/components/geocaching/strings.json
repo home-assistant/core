@@ -35,6 +35,18 @@
       "nearby_caches": { "name": "Nearby caches" },
       "total_tracked_distance_traveled": {
         "name": "Total tracked distance traveled"
+      },
+      "cache_location": {
+        "name": "Location"
+      },
+      "cache_find_count": {
+        "name": "Find count"
+      },
+      "cache_favorite_points": {
+        "name": "Favorite points"
+      },
+      "cache_hide_date": {
+        "name": "Hide date"
       }
     }
   }

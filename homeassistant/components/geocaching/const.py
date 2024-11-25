@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import Final
 
@@ -30,7 +31,14 @@ ENVIRONMENT_URLS = {
 
 ENVIRONMENT = GeocachingApiEnvironment.Production
 
+
+class GeocacheCategory(Enum):
+    """Geocaching cache categories."""
+
+    TRACKED = "tracked"
+    NEARBY = "nearby"
+
+
 GEOCACHING_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
-NEARBY_CACHE_ID_SENSOR_FORMAT = DOMAIN + ".nearby_{}"
-TRACKED_CACHE_ID_SENSOR_FORMAT = DOMAIN + ".tracked_{}"
+CACHE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}_{}"
 TRACKED_TRACKABLE_ID_SENSOR_FORMAT = DOMAIN + ".trackable_{}"

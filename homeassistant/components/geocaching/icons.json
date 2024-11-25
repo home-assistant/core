@@ -21,6 +21,18 @@
       },
       "total_tracked_distance_traveled": {
         "default": "mdi:map-marker-distance"
+      },
+      "cache_location": {
+        "default": "mdi:map-marker"
+      },
+      "cache_find_count": {
+        "default": "mdi:eye-check-outline"
+      },
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
+      },
+      "cache_hide_date": {
+        "default": "mdi:calendar-range"
       }
     }
   }
