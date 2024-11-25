@@ -2,11 +2,14 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -53,3 +56,44 @@ async def test_entry_migration_failure(
     assert issue_registry.async_get_issue(DOMAIN, "location_migration_failed")
 
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_stookwijzer")
+async def test_entity_entry_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test successful migration of entry data."""
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id="advice",
+        disabled_by=None,
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+    )
+
+    assert entity.unique_id == mock_config_entry.entry_id
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            mock_config_entry.entry_id,
+        )
+        is None
+    )
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{mock_config_entry.entry_id}_advice",
+        )
+        == "sensor.advice"
+    )

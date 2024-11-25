@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'advice',
-    'unique_id': '12345',
+    'unique_id': '12345_advice',
     'unit_of_measurement': None,
   })
 # ---
