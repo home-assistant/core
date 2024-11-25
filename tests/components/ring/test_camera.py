@@ -385,7 +385,7 @@ async def test_camera_webrtc(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test initiating a WebRTC stream with offer and answer."""
+    """Test WebRTC interactions."""
     caplog.set_level(logging.ERROR)
     await setup_platform(hass, Platform.CAMERA)
     client = await hass_ws_client(hass)

@@ -142,9 +142,6 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
 
     if has_capability(RingCapability.VIDEO):
         mock_device.async_recording_url = AsyncMock(return_value="http://dummy.url")
-        mock_device.generate_async_webrtc_stream = AsyncMock()
-        mock_device.on_webrtc_candidate = AsyncMock()
-        mock_device.sync_close_webrtc_stream = MagicMock()
 
     if has_capability(RingCapability.MOTION_DETECTION):
         mock_device.configure_mock(
