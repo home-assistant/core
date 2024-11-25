@@ -85,7 +85,7 @@ from . import (
 )
 from .deprecation import deprecated_function
 from .singleton import singleton
-from .translation import async_translate_state
+from .translation import async_get_cached_translations, async_translate_state
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -1043,6 +1043,20 @@ class TemplateStateBase(State):
         if self._collect and (render_info := _render_info.get()):
             render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
+    def _get_translated_unit_of_measurement(self, language: str) -> str | None:
+        entry = entity_registry.async_get(self._hass).async_get(self.entity_id)
+        if entry is None:
+            return None
+        platform = entry.platform
+        translation_key = entry.translation_key
+        if platform is None or translation_key is None:
+            return None
+        localize_key = f"component.{platform}.entity.{self._state.domain}.{translation_key}.unit_of_measurement"
+        translations = async_get_cached_translations(self._hass, language, "entity")
+        if localize_key not in translations:
+            return None
+        return translations[localize_key]
+
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
     def __getitem__(self, item: str) -> Any:
@@ -1139,8 +1153,12 @@ class TemplateStateBase(State):
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if with_unit and (
+            (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+            or (unit := self._get_translated_unit_of_measurement("en"))
+        ):
             return f"{state} {unit}"
+
         return state
 
     def __eq__(self, other: object) -> bool:

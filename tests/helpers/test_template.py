@@ -4930,7 +4930,9 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
     assert test_template.async_render() == "another value"
 
 
-def test_state_with_unit(hass: HomeAssistant) -> None:
+def test_state_with_unit(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the state_with_unit property helper."""
     hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "wow")
@@ -4952,6 +4954,36 @@ def test_state_with_unit(hass: HomeAssistant) -> None:
     tpl = template.Template("{{ states.sensor.non_existing.state_with_unit }}", hass)
 
     assert tpl.async_render() == ""
+
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "3",
+        config_entry=config_entry,
+        translation_key="translation_key",
+    )
+    hass.states.async_set("sensor.test_3", "10", attributes={})
+
+    def mock_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        category: str,
+        _integrations: Iterable[str] | None = None,
+    ):
+        if category == "entity":
+            return {
+                "component.test.entity.sensor.translation_key.unit_of_measurement": "tests",
+            }
+        return {}
+
+    with patch(
+        "homeassistant.helpers.template.async_get_cached_translations",
+        side_effect=mock_get_cached_translations,
+    ):
+        tpl = template.Template("{{ states.sensor.test_3.state_with_unit }}", hass)
+
+        assert tpl.async_render() == "10 tests"
 
 
 def test_state_with_unit_and_rounding(
