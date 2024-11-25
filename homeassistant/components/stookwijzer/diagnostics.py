@@ -16,4 +16,6 @@ async def async_get_config_entry_diagnostics(
     client = entry.runtime_data.client
     return {
         "advice": client.advice,
+        "air_quality_index": client.lki,
+        "windspeed_ms": client.windspeed_ms,
     }
