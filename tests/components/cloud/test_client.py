@@ -461,6 +461,7 @@ async def test_async_create_repair_issue_known(
     mock_cloud_setup: None,
     issue_registry: ir.IssueRegistry,
     translation_key: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test create repair issue for known repairs."""
     identifier = f"test_identifier_{translation_key}"
