@@ -85,7 +85,6 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -1191,28 +1190,15 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def translations_once() -> Generator[_patch]:
+def translations_once() -> Generator[None]:
     """Only load translations once per session."""
-    cache = _TranslationsCacheData({}, {})
-    patcher = patch(
-        "homeassistant.helpers.translation._TranslationsCacheData",
-        return_value=cache,
-    )
-    patcher.start()
-    try:
-        yield patcher
-    finally:
-        patcher.stop()
+    return
 
 
 @pytest.fixture
-def disable_translations_once(
-    translations_once: _patch,
-) -> Generator[None]:
+def disable_translations_once() -> Generator[None]:
     """Override loading translations once."""
-    translations_once.stop()
-    yield
-    translations_once.start()
+    return
 
 
 @pytest.fixture
