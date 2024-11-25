@@ -24,12 +24,74 @@ rules:
   brands: done
   # Silver
   config-entry-unloading: done
-  # log-when-unavailable:
-  # entity-unavailable:
-  # action-exceptions:
-  # reauthentication-flow:
-  # parallel-updates:
-  # test-coverage:
-  # integration-owner:
-  # docs-installation-parameters:
-  # docs-configuration-parameters:
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not need any authentication
+  parallel-updates:
+    status: todo
+    comment: Parallel updates should not be limited, so they should be set to 0
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does provide configuration options
+  # Gold
+  entity-translations:
+    status: exempt
+    comment: This integration does not provide any entities that are suitable for translations. The media_player entity's name is simply the friendly name of the device.
+  entity-device: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only provides a single entity that is enabled by default
+  discovery: done
+  stale-devices:
+    status: exempt
+    comment: No devices should be removed at this point.
+  diagnostics:
+    status: todo
+    comment: Needs to be implemented
+  exception-translations: done
+  icon-translations:
+    status: todo
+    comment: Is defined in media_player and not in icons.json, but should be removed.
+  reconfiguration-flow:
+    status: exempt
+    comment: Reconfiguration not necessary.
+  dynamic-devices:
+    status: exempt
+    comment: No devices are dynamically added at this point.
+  discovery-update: done
+  repair-issues:
+    status: exempt
+    comment: Not necessary at this point.
+  docs-use-cases:
+    status: todo
+    comment: Could be better.
+  docs-supported-devices:
+    status: todo
+    comment: This is currently done, but should maybe also refer to the specific platform. (https://support.bang-olufsen.com/hc/en-us/articles/24766979863441-Which-platform-is-my-Connected-Audio-product-based-on)
+  docs-supported-functions:
+    status: todo
+    comment: Could be better.
+  docs-data-update:
+    status: todo
+    comment: Is currently not described.
+  docs-known-limitations:
+    status: todo
+    comment: Is currently not described.
+  docs-troubleshooting:
+    status: todo
+    comment: Is currently not described, but may not be necessary?
+  docs-examples:
+    status: todo
+    comment: Action examples are provided but not any blueprints.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
