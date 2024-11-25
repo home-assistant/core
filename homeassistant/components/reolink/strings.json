@@ -665,7 +665,7 @@
       },
       "sub_bit_rate": {
         "name": "Fluent bit rate"
-      },
+      }
     },
     "sensor": {
       "wifi_signal": {
