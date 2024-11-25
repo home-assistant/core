@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Literal, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,10 +25,12 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "binary_sensor"
+DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -217,7 +220,7 @@ _DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN] = EntityComponent[BinarySensorEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BinarySensorEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -227,14 +230,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):

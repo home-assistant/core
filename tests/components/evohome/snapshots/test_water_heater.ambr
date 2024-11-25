@@ -1,0 +1,105 @@
+# serializer version: 1
+# name: test_set_operation_mode[default]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_setup_platform[botched][water_heater.domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'on',
+      'current_temperature': 23,
+      'friendly_name': 'Domestic Hot Water',
+      'icon': 'mdi:thermometer-lines',
+      'max_temp': 60,
+      'min_temp': 43,
+      'operation_list': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+      'operation_mode': 'off',
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'dhw_id': '3933910',
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T13:00:00+01:00',
+          'next_sp_state': 'Off',
+          'this_sp_from': '2024-07-10T12:00:00+01:00',
+          'this_sp_state': 'On',
+        }),
+        'state_status': dict({
+          'mode': 'PermanentOverride',
+          'state': 'Off',
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 23.0,
+        }),
+      }),
+      'supported_features': <WaterHeaterEntityFeature: 6>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[default][water_heater.domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'on',
+      'current_temperature': 23,
+      'friendly_name': 'Domestic Hot Water',
+      'icon': 'mdi:thermometer-lines',
+      'max_temp': 60,
+      'min_temp': 43,
+      'operation_list': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+      'operation_mode': 'off',
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'dhw_id': '3933910',
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T13:00:00+01:00',
+          'next_sp_state': 'Off',
+          'this_sp_from': '2024-07-10T12:00:00+01:00',
+          'this_sp_state': 'On',
+        }),
+        'state_status': dict({
+          'mode': 'PermanentOverride',
+          'state': 'Off',
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 23.0,
+        }),
+      }),
+      'supported_features': <WaterHeaterEntityFeature: 6>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

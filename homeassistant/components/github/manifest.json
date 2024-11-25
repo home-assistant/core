@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/github",
   "iot_class": "cloud_polling",
   "loggers": ["aiogithubapi"],
-  "requirements": ["aiogithubapi==23.11.0"]
+  "requirements": ["aiogithubapi==24.6.0"]
 }

@@ -6,9 +6,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 
 
 async def async_setup_entry(

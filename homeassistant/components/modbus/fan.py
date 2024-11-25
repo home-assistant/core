@@ -11,8 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BaseSwitch
 from .const import CONF_FANS
+from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1

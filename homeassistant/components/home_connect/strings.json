@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirmed": "Confirmed",
+    "present": "Present"
+  },
   "config": {
     "step": {
       "pick_implementation": {
@@ -15,6 +19,56 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "exceptions": {
+    "turn_on_light": {
+      "message": "Error while trying to turn on {entity_id}: {description}"
+    },
+    "turn_off_light": {
+      "message": "Error while trying to turn off {entity_id}: {description}"
+    },
+    "set_light_brightness": {
+      "message": "Error while trying to set brightness of {entity_id}: {description}"
+    },
+    "select_light_custom_color": {
+      "message": "Error while trying to select custom color of {entity_id}: {description}"
+    },
+    "set_light_color": {
+      "message": "Error while trying to set color of {entity_id}: {description}"
+    },
+    "set_setting": {
+      "message": "Error while trying to assign the value \"{value}\" to the setting \"{setting_key}\" for {entity_id}: {description}"
+    },
+    "turn_on": {
+      "message": "Error while trying to turn on {entity_id} ({setting_key}): {description}"
+    },
+    "turn_off": {
+      "message": "Error while trying to turn off {entity_id} ({setting_key}): {description}"
+    },
+    "start_program": {
+      "message": "Error while trying to start program {program}: {description}"
+    },
+    "stop_program": {
+      "message": "Error while trying to stop program {program}: {description}"
+    },
+    "power_on": {
+      "message": "Error while trying to turn on {appliance_name}: {description}"
+    },
+    "power_off": {
+      "message": "Error while trying to turn off {appliance_name} with value \"{value}\": {description}"
+    },
+    "turn_off_not_supported": {
+      "message": "{appliance_name} does not support turning off or entering standby mode."
+    },
+    "unable_to_retrieve_turn_off": {
+      "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
+    }
+  },
+  "issues": {
+    "deprecated_binary_common_door_sensor": {
+      "title": "Deprecated binary door sensor detected in some automations or scripts",
+      "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
     }
   },
   "services": {
@@ -127,6 +181,281 @@
         },
         "key": { "name": "Key", "description": "Key of the setting." },
         "value": { "name": "Value", "description": "Value of the setting." }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "local_control": {
+        "name": "Local control"
+      },
+      "battery_charging_state": {
+        "name": "Battery charging state"
+      },
+      "charging_connection": {
+        "name": "Charging connection"
+      },
+      "dust_box_inserted": {
+        "name": "Dust box",
+        "state": {
+          "on": "Inserted",
+          "off": "Not inserted"
+        }
+      },
+      "lifted": {
+        "name": "Lifted"
+      },
+      "lost": {
+        "name": "Lost"
+      },
+      "chiller_door": {
+        "name": "Chiller door"
+      },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "refrigerator_door": {
+        "name": "Refrigerator door"
+      }
+    },
+    "light": {
+      "cooking_lighting": {
+        "name": "Functional light"
+      },
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "external_light": {
+        "name": "External light"
+      },
+      "internal_light": {
+        "name": "Internal light"
+      }
+    },
+    "number": {
+      "refrigerator_setpoint_temperature": {
+        "name": "Refrigerator temperature"
+      },
+      "freezer_setpoint_temperature": {
+        "name": "Freezer temperature"
+      },
+      "bottle_cooler_setpoint_temperature": {
+        "name": "Bottle cooler temperature"
+      },
+      "chiller_left_setpoint_temperature": {
+        "name": "Chiller left temperature"
+      },
+      "chiller_setpoint_temperature": {
+        "name": "Chiller temperature"
+      },
+      "chiller_right_setpoint_temperature": {
+        "name": "Chiller right temperature"
+      },
+      "wine_compartment_setpoint_temperature": {
+        "name": "Wine compartment temperature"
+      },
+      "wine_compartment_2_setpoint_temperature": {
+        "name": "Wine compartment 2 temperature"
+      },
+      "wine_compartment_3_setpoint_temperature": {
+        "name": "Wine compartment 3 temperature"
+      }
+    },
+    "sensor": {
+      "program_progress": {
+        "name": "Program progress"
+      },
+      "program_finish_time": {
+        "name": "Program finish time"
+      },
+      "operation_state": {
+        "name": "Operation state",
+        "state": {
+          "inactive": "Inactive",
+          "ready": "Ready",
+          "delayedstart": "Delayed start",
+          "run": "Run",
+          "pause": "[%key:common::state::paused%]",
+          "actionrequired": "Action required",
+          "finished": "Finished",
+          "error": "Error",
+          "aborting": "Aborting"
+        }
+      },
+      "door": {
+        "name": "Door",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "locked": "[%key:common::state::locked%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "coffee_counter": {
+        "name": "Coffees"
+      },
+      "powder_coffee_counter": {
+        "name": "Powder coffees"
+      },
+      "hot_water_counter": {
+        "name": "Hot water"
+      },
+      "hot_water_cups_counter": {
+        "name": "Hot water cups"
+      },
+      "hot_milk_counter": {
+        "name": "Hot milk cups"
+      },
+      "frothy_milk_counter": {
+        "name": "Frothy milk cups"
+      },
+      "milk_counter": {
+        "name": "Milk cups"
+      },
+      "coffee_and_milk_counter": {
+        "name": "Coffee and milk cups"
+      },
+      "ristretto_espresso_counter": {
+        "name": "Ristretto espresso cups"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "camera_state": {
+        "name": "Camera state",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "sleeping": "Sleeping",
+          "ready": "Ready",
+          "streaminglocal": "Streaming local",
+          "streamingcloud": "Streaming cloud",
+          "streaminglocal_and_cloud": "Streaming local and cloud",
+          "error": "Error"
+        }
+      },
+      "last_selected_map": {
+        "name": "Last selected map",
+        "state": {
+          "tempmap": "Temporary map",
+          "map1": "Map 1",
+          "map2": "Map 2",
+          "map3": "Map 3"
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "bean_container_empty": {
+        "name": "Bean container empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "water_tank_empty": {
+        "name": "Water tank empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "drip_tray_full": {
+        "name": "Drip tray full",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "cup_warmer": {
+        "name": "Cup warmer"
+      },
+      "refrigerator_super_mode": {
+        "name": "Refrigerator super mode"
+      },
+      "freezer_super_mode": {
+        "name": "Freezer super mode"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
+      },
+      "vacation_mode": {
+        "name": "Vacation mode"
+      },
+      "fresh_mode": {
+        "name": "Fresh mode"
+      },
+      "dispenser_enabled": {
+        "name": "Dispenser",
+        "state": {
+          "off": "[%key:common::state::disabled%]",
+          "on": "[%key:common::state::enabled%]"
+        }
+      },
+      "door_assistant_fridge": {
+        "name": "Fridge door assistant"
+      },
+      "door_assistant_freezer": {
+        "name": "Freezer door assistant"
+      }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
       }
     }
   }

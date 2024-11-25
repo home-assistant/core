@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.gs01234_auto_on_off_os2oswx',
+    'entity_id': 'switch.gs012345_auto_on_off_os2oswx',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
-    'unique_id': 'GS01234_auto_on_off_Os2OswX',
+    'unique_id': 'GS012345_auto_on_off_Os2OswX',
     'unit_of_measurement': None,
   })
 # ---
@@ -44,7 +44,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.gs01234_auto_on_off_axfz5bj',
+    'entity_id': 'switch.gs012345_auto_on_off_axfz5bj',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -61,17 +61,17 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
-    'unique_id': 'GS01234_auto_on_off_aXFz5bJ',
+    'unique_id': 'GS012345_auto_on_off_aXFz5bJ',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_auto_on_off_switches[state.auto_on_off_Os2OswX]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Auto on/off (Os2OswX)',
+      'friendly_name': 'GS012345 Auto on/off (Os2OswX)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.gs01234_auto_on_off_os2oswx',
+    'entity_id': 'switch.gs012345_auto_on_off_os2oswx',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -81,10 +81,10 @@
 # name: test_auto_on_off_switches[state.auto_on_off_aXFz5bJ]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Auto on/off (aXFz5bJ)',
+      'friendly_name': 'GS012345 Auto on/off (aXFz5bJ)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.gs01234_auto_on_off_axfz5bj',
+    'entity_id': 'switch.gs012345_auto_on_off_axfz5bj',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -105,7 +105,7 @@
     'identifiers': set({
       tuple(
         'lamarzocco',
-        'GS01234',
+        'GS012345',
       ),
     }),
     'is_new': False,
@@ -113,30 +113,30 @@
     }),
     'manufacturer': 'La Marzocco',
     'model': <MachineModel.GS3_AV: 'GS3 AV'>,
-    'model_id': None,
-    'name': 'GS01234',
+    'model_id': <MachineModel.GS3_AV: 'GS3 AV'>,
+    'name': 'GS012345',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'GS01234',
+    'serial_number': 'GS012345',
     'suggested_area': None,
     'sw_version': '1.40',
     'via_device_id': None,
   })
 # ---
-# name: test_switches[-set_power]
+# name: test_switches[-set_power-kwargs0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234',
+      'friendly_name': 'GS012345',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.gs01234',
+    'entity_id': 'switch.gs012345',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[-set_power].1
+# name: test_switches[-set_power-kwargs0].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.gs01234',
+    'entity_id': 'switch.gs012345',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,24 +165,70 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'main',
-    'unique_id': 'GS01234_main',
+    'unique_id': 'GS012345_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[_steam_boiler-set_steam]
+# name: test_switches[_smart_standby_enabled-set_smart_standby-kwargs2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Steam boiler',
+      'friendly_name': 'GS012345 Smart standby enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.gs01234_steam_boiler',
+    'entity_id': 'switch.gs012345_smart_standby_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[_steam_boiler-set_steam].1
+# name: test_switches[_smart_standby_enabled-set_smart_standby-kwargs2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.gs012345_smart_standby_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart standby enabled',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_enabled',
+    'unique_id': 'GS012345_smart_standby_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[_steam_boiler-set_steam-kwargs1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345 Steam boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs012345_steam_boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[_steam_boiler-set_steam-kwargs1].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -194,7 +240,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.gs01234_steam_boiler',
+    'entity_id': 'switch.gs012345_steam_boiler',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -211,7 +257,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'steam_boiler',
-    'unique_id': 'GS01234_steam_boiler_enable',
+    'unique_id': 'GS012345_steam_boiler_enable',
     'unit_of_measurement': None,
   })
 # ---

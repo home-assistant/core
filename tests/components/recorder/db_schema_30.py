@@ -9,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-import time
 from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
@@ -381,7 +380,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(
-        TIMESTAMP_TYPE, default=time.time, index=True
+        TIMESTAMP_TYPE, index=True
     )  # *** Not originally in v30, only added for recorder to startup ok
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(

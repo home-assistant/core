@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes

@@ -77,3 +77,12 @@ async def test_adam_select_regulation_mode(
         "heating",
         "on",
     )
+
+
+async def test_legacy_anna_select_entities(
+    hass: HomeAssistant,
+    mock_smile_legacy_anna: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test not creating a select-entity for a legacy Anna without a thermostat-schedule."""
+    assert not hass.states.get("select.anna_thermostat_schedule")

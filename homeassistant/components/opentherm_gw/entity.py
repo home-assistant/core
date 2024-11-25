@@ -52,6 +52,15 @@ class OpenThermEntity(Entity):
             },
         )
 
+    @property
+    def available(self) -> bool:
+        """Return connection status of the hub to indicate availability."""
+        return self._gateway.connected
+
+
+class OpenThermStatusEntity(OpenThermEntity):
+    """Represent an OpenTherm entity that receives status updates."""
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
         self.async_on_remove(
@@ -59,11 +68,6 @@ class OpenThermEntity(Entity):
                 self.hass, self._gateway.update_signal, self.receive_report
             )
         )
-
-    @property
-    def available(self) -> bool:
-        """Return connection status of the hub to indicate availability."""
-        return self._gateway.connected
 
     @callback
     def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:

@@ -6,7 +6,7 @@
       }
     },
     "create_entry": {
-      "default": "To finish setting up the integration, use the Ecowitt App (on your phone) or access the Ecowitt WebUI in a browser at the station IP address.\n\nPick your station -> Menu Others -> DIY Upload Servers. Hit next and select 'Customized'\n\n- Server IP: `{server}`\n- Path: `{path}`\n- Port: `{port}`\n\nClick on 'Save'."
+      "default": "To finish setting up the integration, use the Ecowitt App (on your phone) or access the Ecowitt WebUI in a browser at the station IP address.\n\nPick your station -> Menu Others -> DIY Upload Servers. Hit next and select 'Customized'\n\n- Server IP: `{server}`\n- Path: `{path}`\n- Port: `{port}`\n\nSelect **Save**."
     }
   }
 }

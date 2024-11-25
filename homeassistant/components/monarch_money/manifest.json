@@ -1,0 +1,9 @@
+{
+  "domain": "monarch_money",
+  "name": "Monarch Money",
+  "codeowners": ["@jeeftor"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/monarchmoney",
+  "iot_class": "cloud_polling",
+  "requirements": ["typedmonarchmoney==0.3.1"]
+}

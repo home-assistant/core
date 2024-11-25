@@ -1,4 +1,4 @@
-"""Test the Ruckus Unleashed config flow."""
+"""Test the config flow."""
 
 from copy import deepcopy
 from datetime import timedelta

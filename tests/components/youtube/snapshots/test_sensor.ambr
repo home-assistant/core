@@ -30,6 +30,21 @@
     'state': '2290000',
   })
 # ---
+# name: test_sensor.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      'friendly_name': 'Google for Developers Views',
+      'unit_of_measurement': 'views',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_views',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '214141263',
+  })
+# ---
 # name: test_sensor_without_uploaded_video
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -56,5 +71,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2290000',
+  })
+# ---
+# name: test_sensor_without_uploaded_video.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      'friendly_name': 'Google for Developers Views',
+      'unit_of_measurement': 'views',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_views',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '214141263',
   })
 # ---

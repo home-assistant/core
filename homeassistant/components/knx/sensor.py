@@ -34,8 +34,8 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
 from . import KNXModule
-from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxYamlEntity
+from .const import ATTR_SOURCE, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -115,13 +115,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     entities: list[SensorEntity] = []
     entities.extend(
         KNXSystemSensor(knx_module, description)
         for description in SYSTEM_ENTITY_DESCRIPTIONS
     )
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG].get(Platform.SENSOR)
+    config: list[ConfigType] | None = knx_module.config_yaml.get(Platform.SENSOR)
     if config:
         entities.extend(
             KNXSensor(knx_module, entity_config) for entity_config in config

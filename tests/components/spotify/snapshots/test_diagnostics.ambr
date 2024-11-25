@@ -1,0 +1,432 @@
+# serializer version: 1
+# name: test_diagnostics_polling_instance
+  dict({
+    'devices': list([
+      dict({
+        'device_id': '21dac6b0e0a1f181870fdc9749b2656466557666',
+        'device_type': 'Computer',
+        'is_active': False,
+        'is_private_session': False,
+        'is_restricted': False,
+        'name': 'DESKTOP-BKC5SIK',
+        'supports_volume': True,
+        'volume_percent': 69,
+      }),
+    ]),
+    'playback': dict({
+      'audio_features': dict({
+        'acousticness': 0.011,
+        'danceability': 0.696,
+        'energy': 0.905,
+        'instrumentalness': 0.000905,
+        'key': 3,
+        'liveness': 0.302,
+        'loudness': -2.743,
+        'mode': 1,
+        'speechiness': 0.103,
+        'tempo': 114.944,
+        'time_signature': 4,
+        'valence': 0.625,
+      }),
+      'current_playback': dict({
+        'context': dict({
+          'context_type': 'playlist',
+          'external_urls': dict({
+            'spotify': 'https://open.spotify.com/playlist/2r35vbe6hHl6yDSMfjKgmm',
+          }),
+          'href': 'https://api.spotify.com/v1/playlists/2r35vbe6hHl6yDSMfjKgmm',
+          'uri': 'spotify:user:rushofficial:playlist:2r35vbe6hHl6yDSMfjKgmm',
+        }),
+        'currently_playing_type': 'track',
+        'device': dict({
+          'device_id': 'a19f7a03a25aff3e43f457a328a8ba67a8c44789',
+          'device_type': 'Speaker',
+          'is_active': True,
+          'is_private_session': False,
+          'is_restricted': False,
+          'name': 'Master Bathroom Speaker',
+          'supports_volume': True,
+          'volume_percent': 25,
+        }),
+        'is_playing': True,
+        'item': dict({
+          'album': dict({
+            'album_id': '3nUNxSh2szhmN7iifAKv5i',
+            'album_type': 'album',
+            'artists': list([
+              dict({
+                'artist_id': '2Hkut4rAAyrQxRdof7FVJq',
+                'name': 'Rush',
+                'uri': 'spotify:artist:2Hkut4rAAyrQxRdof7FVJq',
+              }),
+            ]),
+            'images': list([
+              dict({
+                'height': 640,
+                'url': 'https://i.scdn.co/image/ab67616d0000b27306c0d7ebcabad0c39b566983',
+                'width': 640,
+              }),
+              dict({
+                'height': 300,
+                'url': 'https://i.scdn.co/image/ab67616d00001e0206c0d7ebcabad0c39b566983',
+                'width': 300,
+              }),
+              dict({
+                'height': 64,
+                'url': 'https://i.scdn.co/image/ab67616d0000485106c0d7ebcabad0c39b566983',
+                'width': 64,
+              }),
+            ]),
+            'name': 'Permanent Waves',
+            'release_date': '1980-01-01',
+            'release_date_precision': 'day',
+            'total_tracks': 6,
+            'uri': 'spotify:album:3nUNxSh2szhmN7iifAKv5i',
+          }),
+          'artists': list([
+            dict({
+              'artist_id': '2Hkut4rAAyrQxRdof7FVJq',
+              'name': 'Rush',
+              'uri': 'spotify:artist:2Hkut4rAAyrQxRdof7FVJq',
+            }),
+          ]),
+          'disc_number': 1,
+          'duration_ms': 296466,
+          'explicit': False,
+          'external_urls': dict({
+            'spotify': 'https://open.spotify.com/track/4e9hUiLsN4mx61ARosFi7p',
+          }),
+          'href': 'https://api.spotify.com/v1/tracks/4e9hUiLsN4mx61ARosFi7p',
+          'is_local': False,
+          'name': 'The Spirit Of Radio',
+          'track_id': '4e9hUiLsN4mx61ARosFi7p',
+          'track_number': 1,
+          'type': 'track',
+          'uri': 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
+        }),
+        'progress_ms': 249367,
+        'repeat_mode': 'off',
+        'shuffle': False,
+      }),
+      'dj_playlist': False,
+      'playlist': dict({
+        'collaborative': False,
+        'description': 'A playlist for testing pourposes',
+        'external_urls': dict({
+          'spotify': 'https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n',
+        }),
+        'images': list([
+          dict({
+            'height': None,
+            'url': 'https://i.scdn.co/image/ab67706c0000da848d0ce13d55f634e290f744ba',
+            'width': None,
+          }),
+        ]),
+        'name': 'Spotify Web API Testing playlist',
+        'object_type': 'playlist',
+        'owner': dict({
+          'display_name': 'JMPerez²',
+          'external_urls': dict({
+            'spotify': 'https://open.spotify.com/user/jmperezperez',
+          }),
+          'href': 'https://api.spotify.com/v1/users/jmperezperez',
+          'object_type': 'user',
+          'owner_id': 'jmperezperez',
+          'uri': 'spotify:user:jmperezperez',
+        }),
+        'playlist_id': '3cEYpjA9oz9GiPac4AsH4n',
+        'public': True,
+        'tracks': dict({
+          'items': list([
+            dict({
+              'track': dict({
+                'album': dict({
+                  'album_id': '2pANdqPvxInB0YvcDiw4ko',
+                  'album_type': 'compilation',
+                  'artists': list([
+                    dict({
+                      'artist_id': '0LyfQWJT6nXafLPZqxe9Of',
+                      'name': 'Various Artists',
+                      'uri': 'spotify:artist:0LyfQWJT6nXafLPZqxe9Of',
+                    }),
+                  ]),
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab67616d0000b273ce6d0eef0c1ce77e5f95bbbc',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67616d00001e02ce6d0eef0c1ce77e5f95bbbc',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab67616d00004851ce6d0eef0c1ce77e5f95bbbc',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'Progressive Psy Trance Picks Vol.8',
+                  'release_date': '2012-04-02',
+                  'release_date_precision': 'day',
+                  'total_tracks': 20,
+                  'uri': 'spotify:album:2pANdqPvxInB0YvcDiw4ko',
+                }),
+                'artists': list([
+                  dict({
+                    'artist_id': '6eSdhw46riw2OUHgMwR8B5',
+                    'name': 'Odiseo',
+                    'uri': 'spotify:artist:6eSdhw46riw2OUHgMwR8B5',
+                  }),
+                ]),
+                'disc_number': 1,
+                'duration_ms': 376000,
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/track/4rzfv0JLZfVhOhbSQ8o5jZ',
+                }),
+                'href': 'https://api.spotify.com/v1/tracks/4rzfv0JLZfVhOhbSQ8o5jZ',
+                'is_local': False,
+                'name': 'Api',
+                'track_id': '4rzfv0JLZfVhOhbSQ8o5jZ',
+                'track_number': 10,
+                'type': 'track',
+                'uri': 'spotify:track:4rzfv0JLZfVhOhbSQ8o5jZ',
+              }),
+            }),
+            dict({
+              'track': dict({
+                'album': dict({
+                  'album_id': '6nlfkk5GoXRL1nktlATNsy',
+                  'album_type': 'compilation',
+                  'artists': list([
+                    dict({
+                      'artist_id': '0LyfQWJT6nXafLPZqxe9Of',
+                      'name': 'Various Artists',
+                      'uri': 'spotify:artist:0LyfQWJT6nXafLPZqxe9Of',
+                    }),
+                  ]),
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab67616d0000b273aa2ff29970d9a63a49dfaeb2',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67616d00001e02aa2ff29970d9a63a49dfaeb2',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab67616d00004851aa2ff29970d9a63a49dfaeb2',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'Wellness & Dreaming Source',
+                  'release_date': '2015-01-09',
+                  'release_date_precision': 'day',
+                  'total_tracks': 25,
+                  'uri': 'spotify:album:6nlfkk5GoXRL1nktlATNsy',
+                }),
+                'artists': list([
+                  dict({
+                    'artist_id': '5VQE4WOzPu9h3HnGLuBoA6',
+                    'name': 'Vlasta Marek',
+                    'uri': 'spotify:artist:5VQE4WOzPu9h3HnGLuBoA6',
+                  }),
+                ]),
+                'disc_number': 1,
+                'duration_ms': 730066,
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/track/5o3jMYOSbaVz3tkgwhELSV',
+                }),
+                'href': 'https://api.spotify.com/v1/tracks/5o3jMYOSbaVz3tkgwhELSV',
+                'is_local': False,
+                'name': 'Is',
+                'track_id': '5o3jMYOSbaVz3tkgwhELSV',
+                'track_number': 21,
+                'type': 'track',
+                'uri': 'spotify:track:5o3jMYOSbaVz3tkgwhELSV',
+              }),
+            }),
+            dict({
+              'track': dict({
+                'album': dict({
+                  'album_id': '4hnqM0JK4CM1phwfq1Ldyz',
+                  'album_type': 'album',
+                  'artists': list([
+                    dict({
+                      'artist_id': '066X20Nz7iquqkkCW6Jxy6',
+                      'name': 'LCD Soundsystem',
+                      'uri': 'spotify:artist:066X20Nz7iquqkkCW6Jxy6',
+                    }),
+                  ]),
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab67616d0000b273ee0d0dce888c6c8a70db6e8b',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67616d00001e02ee0d0dce888c6c8a70db6e8b',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab67616d00004851ee0d0dce888c6c8a70db6e8b',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'This Is Happening',
+                  'release_date': '2010-05-17',
+                  'release_date_precision': 'day',
+                  'total_tracks': 9,
+                  'uri': 'spotify:album:4hnqM0JK4CM1phwfq1Ldyz',
+                }),
+                'artists': list([
+                  dict({
+                    'artist_id': '066X20Nz7iquqkkCW6Jxy6',
+                    'name': 'LCD Soundsystem',
+                    'uri': 'spotify:artist:066X20Nz7iquqkkCW6Jxy6',
+                  }),
+                ]),
+                'disc_number': 1,
+                'duration_ms': 401440,
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/track/4Cy0NHJ8Gh0xMdwyM9RkQm',
+                }),
+                'href': 'https://api.spotify.com/v1/tracks/4Cy0NHJ8Gh0xMdwyM9RkQm',
+                'is_local': False,
+                'name': 'All I Want',
+                'track_id': '4Cy0NHJ8Gh0xMdwyM9RkQm',
+                'track_number': 4,
+                'type': 'track',
+                'uri': 'spotify:track:4Cy0NHJ8Gh0xMdwyM9RkQm',
+              }),
+            }),
+            dict({
+              'track': dict({
+                'album': dict({
+                  'album_id': '2usKFntxa98WHMcyW6xJBz',
+                  'album_type': 'album',
+                  'artists': list([
+                    dict({
+                      'artist_id': '272ArH9SUAlslQqsSgPJA2',
+                      'name': 'Glenn Horiuchi Trio',
+                      'uri': 'spotify:artist:272ArH9SUAlslQqsSgPJA2',
+                    }),
+                  ]),
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab67616d0000b2738b7447ac3daa1da18811cf7b',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67616d00001e028b7447ac3daa1da18811cf7b',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab67616d000048518b7447ac3daa1da18811cf7b',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'Glenn Horiuchi Trio / Gelenn Horiuchi Quartet: Mercy / Jump Start / Endpoints / Curl Out / Earthworks / Mind Probe / Null Set / Another Space (A)',
+                  'release_date': '2011-04-01',
+                  'release_date_precision': 'day',
+                  'total_tracks': 8,
+                  'uri': 'spotify:album:2usKFntxa98WHMcyW6xJBz',
+                }),
+                'artists': list([
+                  dict({
+                    'artist_id': '272ArH9SUAlslQqsSgPJA2',
+                    'name': 'Glenn Horiuchi Trio',
+                    'uri': 'spotify:artist:272ArH9SUAlslQqsSgPJA2',
+                  }),
+                ]),
+                'disc_number': 1,
+                'duration_ms': 358760,
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/track/6hvFrZNocdt2FcKGCSY5NI',
+                }),
+                'href': 'https://api.spotify.com/v1/tracks/6hvFrZNocdt2FcKGCSY5NI',
+                'is_local': False,
+                'name': 'Endpoints',
+                'track_id': '6hvFrZNocdt2FcKGCSY5NI',
+                'track_number': 2,
+                'type': 'track',
+                'uri': 'spotify:track:6hvFrZNocdt2FcKGCSY5NI',
+              }),
+            }),
+            dict({
+              'track': dict({
+                'album': dict({
+                  'album_id': '0ivM6kSawaug0j3tZVusG2',
+                  'album_type': 'album',
+                  'artists': list([
+                    dict({
+                      'artist_id': '2KftmGt9sk1yLjsAoloC3M',
+                      'name': 'Zucchero',
+                      'uri': 'spotify:artist:2KftmGt9sk1yLjsAoloC3M',
+                    }),
+                  ]),
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab67616d0000b27304e57d181ff062f8339d6c71',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67616d00001e0204e57d181ff062f8339d6c71',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab67616d0000485104e57d181ff062f8339d6c71',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'All The Best (Spanish Version)',
+                  'release_date': '2007-01-01',
+                  'release_date_precision': 'day',
+                  'total_tracks': 18,
+                  'uri': 'spotify:album:0ivM6kSawaug0j3tZVusG2',
+                }),
+                'artists': list([
+                  dict({
+                    'artist_id': '2KftmGt9sk1yLjsAoloC3M',
+                    'name': 'Zucchero',
+                    'uri': 'spotify:artist:2KftmGt9sk1yLjsAoloC3M',
+                  }),
+                ]),
+                'disc_number': 1,
+                'duration_ms': 176093,
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/track/2E2znCPaS8anQe21GLxcvJ',
+                }),
+                'href': 'https://api.spotify.com/v1/tracks/2E2znCPaS8anQe21GLxcvJ',
+                'is_local': False,
+                'name': 'You Are So Beautiful',
+                'track_id': '2E2znCPaS8anQe21GLxcvJ',
+                'track_number': 18,
+                'type': 'track',
+                'uri': 'spotify:track:2E2znCPaS8anQe21GLxcvJ',
+              }),
+            }),
+          ]),
+        }),
+        'uri': 'spotify:playlist:3cEYpjA9oz9GiPac4AsH4n',
+      }),
+    }),
+  })
+# ---

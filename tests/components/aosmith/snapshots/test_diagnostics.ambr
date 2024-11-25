@@ -43,7 +43,7 @@
           'error': '',
           'firmwareVersion': '2.14',
           'heaterSsid': '**REDACTED**',
-          'hotWaterStatus': 'HIGH',
+          'hotWaterStatus': 10,
           'isAdvancedLoadUpMore': False,
           'isCtaUcmPresent': False,
           'isDemandResponsePaused': False,

@@ -98,18 +98,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(codeowners_path)) as fp:
-        if fp.read().strip() != content:
-            config.add_error(
-                "codeowners",
-                "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if codeowners_path.read_text() != content + "\n":
+        config.add_error(
+            "codeowners",
+            "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
-    with open(str(codeowners_path), "w") as fp:
-        fp.write(f"{config.cache['codeowners']}\n")
+    codeowners_path.write_text(f"{config.cache['codeowners']}\n")

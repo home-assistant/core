@@ -10,8 +10,9 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiEntity, NukiEntryData
-from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
+from . import NukiEntryData
+from .const import DOMAIN as NUKI_DOMAIN
+from .entity import NukiEntity
 
 
 async def async_setup_entry(
@@ -37,12 +38,6 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_level"
-
-    # Deprecated, can be removed in 2024.10
-    @property
-    def extra_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {ATTR_NUKI_ID: self._nuki_device.nuki_id}
 
     @property
     def native_value(self) -> float:

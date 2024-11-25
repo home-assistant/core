@@ -3,6 +3,9 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
+from linkplay.exceptions import LinkPlayRequestException
+import pytest
+
 from homeassistant.components.linkplay.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -47,10 +50,9 @@ ZEROCONF_DISCOVERY_RE_ENTRY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge", "mock_setup_entry")
 async def test_user_flow(
     hass: HomeAssistant,
-    mock_linkplay_factory_bridge: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user setup config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -74,10 +76,9 @@ async def test_user_flow(
     assert result["result"].unique_id == UUID
 
 
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge")
 async def test_user_flow_re_entry(
     hass: HomeAssistant,
-    mock_linkplay_factory_bridge: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user setup config flow when an entry with the same unique id already exists."""
 
@@ -105,10 +106,9 @@ async def test_user_flow_re_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge", "mock_setup_entry")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
-    mock_linkplay_factory_bridge: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test Zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -133,10 +133,9 @@ async def test_zeroconf_flow(
     assert result["result"].unique_id == UUID
 
 
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge")
 async def test_zeroconf_flow_re_entry(
     hass: HomeAssistant,
-    mock_linkplay_factory_bridge: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test Zeroconf flow when an entry with the same unique id already exists."""
 
@@ -160,16 +159,35 @@ async def test_zeroconf_flow_re_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_errors(
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
-    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow when the device discovered through Zeroconf cannot be reached."""
+
+    # Temporarily make the mock_linkplay_factory_bridge throw an exception
+    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_errors(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
 ) -> None:
     """Test flow when the device cannot be reached."""
 
-    # Temporarily store bridge in a separate variable and set factory to return None
-    bridge = mock_linkplay_factory_bridge.return_value
-    mock_linkplay_factory_bridge.return_value = None
+    # Temporarily make the mock_linkplay_factory_bridge throw an exception
+    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -188,8 +206,8 @@ async def test_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Make linkplay_factory_bridge return a mock bridge again
-    mock_linkplay_factory_bridge.return_value = bridge
+    # Make mock_linkplay_factory_bridge_exception no longer throw an exception
+    mock_linkplay_factory_bridge.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

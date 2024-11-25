@@ -1,7 +1,7 @@
 {
   "domain": "home_connect",
   "name": "Home Connect",
-  "codeowners": ["@DavidMStraub"],
+  "codeowners": ["@DavidMStraub", "@Diegorro98"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",

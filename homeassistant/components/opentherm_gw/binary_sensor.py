@@ -22,7 +22,7 @@ from .const import (
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
-from .entity import OpenThermEntity, OpenThermEntityDescription
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -404,7 +404,7 @@ async def async_setup_entry(
     )
 
 
-class OpenThermBinarySensor(OpenThermEntity, BinarySensorEntity):
+class OpenThermBinarySensor(OpenThermStatusEntity, BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC

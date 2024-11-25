@@ -9,7 +9,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_CAMERA_ARMED
-from .coordinator import BlinkUpdateCoordinator
+from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -30,11 +29,11 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config_entry: BlinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Blink switches."""
-    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         BlinkSwitch(coordinator, camera, description)

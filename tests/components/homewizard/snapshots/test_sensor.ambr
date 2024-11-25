@@ -1,37 +1,4 @@
 # serializer version: 1
-# name: test_gas_meter_migrated[sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'homewizard',
-    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'homewizard_gas_meter_01FFEEDDCCBBAA99887766554433221100',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

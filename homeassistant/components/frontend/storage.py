@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 

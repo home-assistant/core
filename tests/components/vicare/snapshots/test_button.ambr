@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'activate_onetimecharge',
-    'unique_id': 'gateway0-activate_onetimecharge',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-activate_onetimecharge',
     'unit_of_measurement': None,
   })
 # ---

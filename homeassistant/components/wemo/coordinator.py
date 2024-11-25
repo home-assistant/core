@@ -275,6 +275,7 @@ def _device_info(wemo: WeMoDevice) -> DeviceInfo:
         identifiers={(DOMAIN, wemo.serial_number)},
         manufacturer="Belkin",
         model=wemo.model_name,
+        model_id=wemo.model,
         name=wemo.name,
         sw_version=wemo.firmware_version,
     )

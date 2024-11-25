@@ -1,0 +1,14 @@
+{
+  "summary": [
+    {
+      "summary": {
+        "sumIncome": 15000.0,
+        "sumExpense": -9000.0,
+        "savings": 6000.0,
+        "savingsRate": 0.4,
+        "__typename": "TransactionsSummary"
+      },
+      "__typename": "AggregateData"
+    }
+  ]
+}

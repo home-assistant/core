@@ -21,7 +21,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy"),
+    ["envoy_metered_batt_relay", "envoy_eu_batt"],
+    indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number(
@@ -60,19 +62,24 @@ async def test_no_number(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_number_operation_storage(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
+    use_serial: bool,
 ) -> None:
     """Test enphase_envoy number storage entities operation."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
-    sn = mock_envoy.data.enpower.serial_number
-    test_entity = f"{Platform.NUMBER}.enpower_{sn}_reserve_battery_level"
+    test_entity = f"{Platform.NUMBER}.{use_serial}_reserve_battery_level"
 
     assert (entity_state := hass.states.get(test_entity))
     assert mock_envoy.data.tariff.storage_settings.reserved_soc == float(

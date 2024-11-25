@@ -30,8 +30,8 @@ SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.template,
-        vol.Optional(ATTR_TITLE): cv.template,
+        vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_TITLE): cv.string,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_DATA): dict,
     }

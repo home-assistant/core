@@ -22,6 +22,7 @@ from homeassistant.helpers.service import async_register_admin_service
 from .const import (
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
     SERVICE_KNX_ATTR_PAYLOAD,
     SERVICE_KNX_ATTR_REMOVE,
     SERVICE_KNX_ATTR_RESPONSE,
@@ -85,7 +86,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
 def get_knx_module(hass: HomeAssistant) -> KNXModule:
     """Return KNXModule instance."""
     try:
-        return hass.data[DOMAIN]  # type: ignore[no-any-return]
+        return hass.data[KNX_MODULE_KEY]
     except KeyError as err:
         raise HomeAssistantError("KNX entry not loaded") from err
 

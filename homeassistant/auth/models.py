@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from functools import cached_property
+from ipaddress import IPv4Address, IPv6Address
 import secrets
 from typing import Any, NamedTuple
 import uuid
@@ -11,9 +11,10 @@ import uuid
 import attr
 from attr import Attribute
 from attr.setters import validate
+from propcache import cached_property
 
 from homeassistant.const import __version__
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowContext, FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
@@ -23,7 +24,16 @@ TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 
-AuthFlowResult = FlowResult[tuple[str, str]]
+
+class AuthFlowContext(FlowContext, total=False):
+    """Typed context dict for auth flow."""
+
+    credential_only: bool
+    ip_address: IPv4Address | IPv6Address
+    redirect_uri: str
+
+
+AuthFlowResult = FlowResult[AuthFlowContext, tuple[str, str]]
 
 
 @attr.s(slots=True)

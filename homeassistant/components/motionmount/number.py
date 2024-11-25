@@ -1,11 +1,14 @@
 """Support for MotionMount numeric control."""
 
+import socket
+
 import motionmount
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -46,7 +49,13 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
-        await self.mm.set_extension(int(value))
+        try:
+            await self.mm.set_extension(int(value))
+        except (TimeoutError, socket.gaierror) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
 
 
 class MotionMountTurn(MotionMountEntity, NumberEntity):
@@ -69,4 +78,10 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
-        await self.mm.set_turn(int(value * -1))
+        try:
+            await self.mm.set_turn(int(value * -1))
+        except (TimeoutError, socket.gaierror) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex

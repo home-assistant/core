@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -46,8 +47,6 @@ from .const import (
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
-    CONF_READ_PRECISION,
-    CONF_SET_PRECISION,
     CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -70,6 +69,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# *_SCHEMA required for deprecated import from configuration.yaml, can be removed in 2025.4.0
 CLIMATE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRECISION): vol.In(
@@ -92,7 +92,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -108,17 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     gateway = OpenThermGatewayHub(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
-
-    if config_entry.options.get(CONF_PRECISION):
-        migrate_options = dict(config_entry.options)
-        migrate_options.update(
-            {
-                CONF_READ_PRECISION: config_entry.options[CONF_PRECISION],
-                CONF_SET_PRECISION: config_entry.options[CONF_PRECISION],
-            }
-        )
-        del migrate_options[CONF_PRECISION]
-        hass.config_entries.async_update_entry(config_entry, options=migrate_options)
 
     # Migration can be removed in 2025.4.0
     dev_reg = dr.async_get(hass)
@@ -166,8 +162,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
+# Deprecated import from configuration.yaml, can be removed in 2025.4.0
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OpenTherm Gateway component."""
+    if DOMAIN in config:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_import_from_configuration_yaml",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_import_from_configuration_yaml",
+        )
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         conf = config[DOMAIN]
         for device_id, device_config in conf.items():

@@ -33,7 +33,7 @@ async def test_create_service(
     await setup_backup_integration(hass)
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.generate_backup",
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
     ) as generate_backup:
         await hass.services.async_call(
             DOMAIN,

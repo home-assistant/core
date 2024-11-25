@@ -23,8 +23,10 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch(
-        "homeassistant.components.lektrico.CHARGERS_PLATFORMS", [Platform.SENSOR]
+    with patch.multiple(
+        "homeassistant.components.lektrico",
+        CHARGERS_PLATFORMS=[Platform.SENSOR],
+        LB_DEVICES_PLATFORMS=[Platform.SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
 

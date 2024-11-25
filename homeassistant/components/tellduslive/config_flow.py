@@ -35,14 +35,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _session: Session
+
     def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
-        self._session = None
         self._scan_interval = SCAN_INTERVAL
 
-    def _get_auth_url(self):
+    def _get_auth_url(self) -> str | None:
         self._session = Session(
             public_key=PUBLIC_KEY,
             private_key=NOT_SO_PRIVATE_KEY,
@@ -70,7 +71,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the submitted configuration."""
         errors = {}
         if user_input is not None:
@@ -114,13 +117,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_discovery(
+        self,
+        discovery_info: list[str],  # type: ignore[override]
+    ) -> ConfigFlowResult:
         """Run when a Tellstick is discovered."""
         await self._async_handle_discovery_without_unique_id()
 
-        _LOGGER.info("Discovered tellstick device: %s", discovery_info)
+        _LOGGER.debug("Discovered tellstick device: %s", discovery_info)
         if supports_local_api(discovery_info[1]):
-            _LOGGER.info("%s support local API", discovery_info[1])
+            _LOGGER.debug("%s support local API", discovery_info[1])
             self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()

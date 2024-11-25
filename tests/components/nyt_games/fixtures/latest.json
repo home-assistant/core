@@ -1,0 +1,69 @@
+{
+  "states": [],
+  "user_id": 218886794,
+  "player": {
+    "user_id": 218886794,
+    "last_updated": 1726831978,
+    "stats": {
+      "spelling_bee": {
+        "puzzles_started": 87,
+        "total_words": 362,
+        "total_pangrams": 15,
+        "longest_word": {
+          "word": "checkable",
+          "center_letter": "b",
+          "print_date": "2024-07-27"
+        },
+        "ranks": {
+          "Beginner": 23,
+          "Good": 21,
+          "Good Start": 14,
+          "Moving Up": 16,
+          "Nice": 4,
+          "Solid": 9
+        }
+      },
+      "wordle": {
+        "legacyStats": {
+          "gamesPlayed": 70,
+          "gamesWon": 51,
+          "guesses": {
+            "1": 0,
+            "2": 1,
+            "3": 7,
+            "4": 11,
+            "5": 20,
+            "6": 12,
+            "fail": 19
+          },
+          "currentStreak": 1,
+          "maxStreak": 5,
+          "lastWonDayOffset": 1189,
+          "hasPlayed": true,
+          "autoOptInTimestamp": 1708273168957,
+          "hasMadeStatsChoice": false,
+          "timestamp": 1726831978
+        },
+        "calculatedStats": {
+          "gamesPlayed": 33,
+          "gamesWon": 26,
+          "guesses": {
+            "1": 0,
+            "2": 1,
+            "3": 4,
+            "4": 7,
+            "5": 10,
+            "6": 4,
+            "fail": 7
+          },
+          "currentStreak": 1,
+          "maxStreak": 5,
+          "lastWonPrintDate": "2024-09-20",
+          "lastCompletedPrintDate": "2024-09-20",
+          "hasPlayed": true,
+          "generation": 1
+        }
+      }
+    }
+  }
+}

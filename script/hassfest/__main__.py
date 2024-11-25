@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from operator import attrgetter
-import pathlib
+from pathlib import Path
 import sys
 from time import monotonic
 
@@ -23,6 +23,7 @@ from . import (
     metadata,
     mqtt,
     mypy_config,
+    quality_scale,
     requirements,
     services,
     ssdp,
@@ -43,6 +44,7 @@ INTEGRATION_PLUGINS = [
     json,
     manifest,
     mqtt,
+    quality_scale,
     requirements,
     services,
     ssdp,
@@ -63,9 +65,9 @@ ALL_PLUGIN_NAMES = [
 ]
 
 
-def valid_integration_path(integration_path: pathlib.Path | str) -> pathlib.Path:
+def valid_integration_path(integration_path: Path | str) -> Path:
     """Test if it's a valid integration."""
-    path = pathlib.Path(integration_path)
+    path = Path(integration_path)
     if not path.is_dir():
         raise argparse.ArgumentTypeError(f"{integration_path} is not a directory.")
 
@@ -109,8 +111,8 @@ def get_config() -> Config:
     )
     parser.add_argument(
         "--core-integrations-path",
-        type=pathlib.Path,
-        default=pathlib.Path("homeassistant/components"),
+        type=Path,
+        default=Path("homeassistant/components"),
         help="Path to core integrations",
     )
     parsed = parser.parse_args()
@@ -123,14 +125,11 @@ def get_config() -> Config:
             "Generate is not allowed when limiting to specific integrations"
         )
 
-    if (
-        not parsed.integration_path
-        and not pathlib.Path("requirements_all.txt").is_file()
-    ):
+    if not parsed.integration_path and not Path("requirements_all.txt").is_file():
         raise RuntimeError("Run from Home Assistant root")
 
     return Config(
-        root=pathlib.Path(".").absolute(),
+        root=Path().absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
         requirements=parsed.requirements,

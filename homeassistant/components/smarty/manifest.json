@@ -2,9 +2,10 @@
   "domain": "smarty",
   "name": "Salda Smarty",
   "codeowners": ["@z0mbieprocess"],
-  "disabled": "Dependencies not compatible with the new pip resolver",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarty",
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pymodbus", "pysmarty"],
-  "requirements": ["pysmarty==0.8"]
+  "loggers": ["pymodbus", "pysmarty2"],
+  "requirements": ["pysmarty2==0.10.1"]
 }

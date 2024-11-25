@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def handle_connected_changed(connected: bool, reason: str) -> None:
         if connected:
-            _LOGGER.info("Connected")
+            _LOGGER.debug("Connected")
         else:
             _LOGGER.warning("Disconnected %s", reason)
 

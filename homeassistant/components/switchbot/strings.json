@@ -54,7 +54,8 @@
     "step": {
       "init": {
         "data": {
-          "retry_count": "Retry count"
+          "retry_count": "Retry count",
+          "lock_force_nightlatch": "Force Nightlatch operation mode"
         }
       }
     }

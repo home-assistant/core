@@ -34,7 +34,7 @@ from .const import (
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
-from .entity import OpenThermEntity, OpenThermEntityDescription
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(ents)
 
 
-class OpenThermClimate(OpenThermEntity, ClimateEntity):
+class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
     """Representation of a climate device."""
 
     _attr_supported_features = (

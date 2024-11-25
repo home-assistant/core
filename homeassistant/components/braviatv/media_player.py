@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.media_player import (
     BrowseError,
+    BrowseMedia,
     MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -14,7 +15,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

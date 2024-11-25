@@ -16,8 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_EVENT_ID
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
-from .entity import EventEntityMixin, ProtectDeviceEntity
-from .models import ProtectEventMixin
+from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

@@ -194,7 +194,7 @@ async def async_setup_scanner(  # noqa: C901
 
         if track_new:
             if mac not in devs_to_track and mac not in devs_no_track:
-                _LOGGER.info("Discovered Bluetooth LE device %s", mac)
+                _LOGGER.debug("Discovered Bluetooth LE device %s", mac)
                 hass.async_create_task(
                     async_see_device(mac, service_info.name, new_device=True)
                 )

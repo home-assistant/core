@@ -14,9 +14,9 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.google_translate.const import CONF_TLD, DOMAIN
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry

@@ -48,6 +48,12 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="fan_sleep_mode",
     ),
+    TPLinkSwitchEntityDescription(
+        key="child_lock",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="pir_enabled",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
@@ -64,7 +70,8 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        device,
+        hass=hass,
+        device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Switch,
         entity_class=TPLinkSwitch,

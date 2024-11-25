@@ -262,7 +262,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             _LOGGER.debug("Argument `temperature` is missing in set_temperature")
             return
 
-        await self._control(temp=temp)
+        await self._control(setpoint=SetpointControl.CHANGE_SETPOINT, temp=temp)
 
 
 class Airtouch5Zone(Airtouch5ClimateEntity):

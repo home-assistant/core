@@ -69,6 +69,11 @@ async def mock_envoy(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
+    new_token = jwt.encode(
+        payload={"name": "envoy", "exp": 2007837780},
+        key="secret",
+        algorithm="HS256",
+    )
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
@@ -77,6 +82,10 @@ async def mock_envoy(
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
             new=mock_client,
+        ),
+        patch(
+            "pyenphase.auth.EnvoyTokenAuth._obtain_token",
+            return_value=new_token,
         ),
     ):
         mock_envoy = mock_client.return_value
@@ -141,6 +150,8 @@ def _load_json_2_production_data(
     """Fill envoy production data from fixture."""
     if item := json_fixture["data"].get("system_consumption"):
         mocked_data.system_consumption = EnvoySystemConsumption(**item)
+    if item := json_fixture["data"].get("system_net_consumption"):
+        mocked_data.system_net_consumption = EnvoySystemConsumption(**item)
     if item := json_fixture["data"].get("system_production"):
         mocked_data.system_production = EnvoySystemProduction(**item)
     if item := json_fixture["data"].get("system_consumption_phases"):
@@ -148,6 +159,12 @@ def _load_json_2_production_data(
         for sub_item, item_data in item.items():
             mocked_data.system_consumption_phases[sub_item] = EnvoySystemConsumption(
                 **item_data
+            )
+    if item := json_fixture["data"].get("system_net_consumption_phases"):
+        mocked_data.system_net_consumption_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.system_net_consumption_phases[sub_item] = (
+                EnvoySystemConsumption(**item_data)
             )
     if item := json_fixture["data"].get("system_production_phases"):
         mocked_data.system_production_phases = {}

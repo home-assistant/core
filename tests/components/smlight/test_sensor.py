@@ -1,9 +1,12 @@
 """Tests for the SMLIGHT sensor platform."""
 
+from unittest.mock import MagicMock
+
+from pysmlight import Sensors
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -25,6 +28,7 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-07-01 00:00:00+00:00")
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -46,9 +50,26 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default SMLIGHT sensors."""
     await setup_integration(hass, mock_config_entry)
 
-    for sensor in ("ram_usage", "filesystem_usage"):
+    for sensor in ("core_uptime", "filesystem_usage", "ram_usage", "zigbee_uptime"):
         assert not hass.states.get(f"sensor.mock_title_{sensor}")
 
         assert (entry := entity_registry.async_get(f"sensor.mock_title_{sensor}"))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_zigbee_uptime_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test for uptime when zigbee socket is disconnected.
+
+    In this case zigbee uptime state should be unknown.
+    """
+    mock_smlight_client.get_sensors.return_value = Sensors(socket_uptime=0)
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.mock_title_zigbee_uptime")
+    assert state.state == STATE_UNKNOWN

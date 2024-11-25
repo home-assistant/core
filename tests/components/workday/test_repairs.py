@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from http import HTTPStatus
+import pytest
 
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
 from homeassistant.components.workday.const import CONF_REMOVE_HOLIDAYS, DOMAIN
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
@@ -23,6 +19,7 @@ from . import (
 )
 
 from tests.common import ANY
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -52,24 +49,15 @@ async def test_bad_country(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "bad_country"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
     assert data["step_id"] == "country"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"country": "DE"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={"country": "DE"})
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"province": "HB"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={"province": "HB"})
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -114,24 +102,15 @@ async def test_bad_country_none(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "bad_country"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
     assert data["step_id"] == "country"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"country": "DE"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={"country": "DE"})
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={})
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -176,19 +155,13 @@ async def test_bad_country_no_province(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "bad_country"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
     assert data["step_id"] == "country"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"country": "SE"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={"country": "SE"})
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -233,10 +206,7 @@ async def test_bad_province(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "bad_province"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_province")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -245,10 +215,7 @@ async def test_bad_province(
     }
     assert data["step_id"] == "province"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"province": "BW"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={"province": "BW"})
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -293,10 +260,7 @@ async def test_bad_province_none(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "bad_province"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_province")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -305,10 +269,7 @@ async def test_bad_province_none(
     }
     assert data["step_id"] == "province"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id, json={})
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -359,13 +320,9 @@ async def test_bad_named_holiday(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(
-        url,
-        json={"handler": DOMAIN, "issue_id": "bad_named_holiday-1-not_a_holiday"},
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "bad_named_holiday-1-not_a_holiday"
     )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -375,23 +332,17 @@ async def test_bad_named_holiday(
     }
     assert data["step_id"] == "fix_remove_holiday"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(
-        url, json={"remove_holidays": ["Christmas", "Not exist 2"]}
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"remove_holidays": ["Christmas", "Not exist 2"]}
     )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
 
     assert data["errors"] == {
         CONF_REMOVE_HOLIDAYS: "remove_holiday_error",
     }
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(
-        url, json={"remove_holidays": ["Christmas", "Thanksgiving"]}
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"remove_holidays": ["Christmas", "Thanksgiving"]}
     )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -442,13 +393,7 @@ async def test_bad_date_holiday(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(
-        url,
-        json={"handler": DOMAIN, "issue_id": "bad_date_holiday-1-2024_02_05"},
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_date_holiday-1-2024_02_05")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -458,10 +403,9 @@ async def test_bad_date_holiday(
     }
     assert data["step_id"] == "fix_remove_holiday"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"remove_holidays": ["2024-02-06"]})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"remove_holidays": ["2024-02-06"]}
+    )
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -485,6 +429,10 @@ async def test_bad_date_holiday(
     assert issue
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.workday.issues.issue_1.title"],
+)
 async def test_other_fixable_issues(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -543,18 +491,12 @@ async def test_other_fixable_issues(
         "ignored": False,
     } in results
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "issue_1"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "issue_1")
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()

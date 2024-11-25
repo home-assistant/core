@@ -77,7 +77,7 @@ async def async_setup_platform(
     token = config[CONF_TOKEN]
 
     # Create handler
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     # The Chuang Mi IR Remote Controller wants to be re-discovered every
     # 5 minutes. As long as polling is disabled the device should be
@@ -89,7 +89,7 @@ async def async_setup_platform(
         device_info = await hass.async_add_executor_job(device.info)
         model = device_info.model
         unique_id = f"{model}-{device_info.mac_address}"
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s %s %s detected",
             model,
             device_info.firmware_version,

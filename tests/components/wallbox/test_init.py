@@ -1,7 +1,5 @@
 """Test Wallbox Init Component."""
 
-import json
-
 import requests_mock
 
 from homeassistant.components.wallbox.const import (
@@ -90,7 +88,7 @@ async def test_wallbox_refresh_failed_invalid_auth(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=403,
         )
 

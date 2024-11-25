@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.const import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_LAST_CHANGED,

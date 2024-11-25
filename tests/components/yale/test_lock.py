@@ -8,21 +8,14 @@ import pytest
 from syrupy import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    STATE_JAMMED,
-    STATE_LOCKING,
-    STATE_UNLOCKING,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -62,7 +55,7 @@ async def test_lock_changed_by(hass: HomeAssistant) -> None:
     await _create_yale_with_devices(hass, [lock_one], activities=activities)
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
     assert lock_state.attributes["changed_by"] == "Your favorite elven princess"
 
 
@@ -73,7 +66,7 @@ async def test_state_locking(hass: HomeAssistant) -> None:
     activities = await _mock_activities_from_fixture(hass, "get_activity.locking.json")
     await _create_yale_with_devices(hass, [lock_one], activities=activities)
 
-    assert hass.states.get("lock.online_with_doorsense_name").state == STATE_LOCKING
+    assert hass.states.get("lock.online_with_doorsense_name").state == LockState.LOCKING
 
 
 async def test_state_unlocking(hass: HomeAssistant) -> None:
@@ -87,7 +80,7 @@ async def test_state_unlocking(hass: HomeAssistant) -> None:
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
 
-    assert lock_online_with_doorsense_name.state == STATE_UNLOCKING
+    assert lock_online_with_doorsense_name.state == LockState.UNLOCKING
 
 
 async def test_state_jammed(hass: HomeAssistant) -> None:
@@ -97,7 +90,7 @@ async def test_state_jammed(hass: HomeAssistant) -> None:
     activities = await _mock_activities_from_fixture(hass, "get_activity.jammed.json")
     await _create_yale_with_devices(hass, [lock_one], activities=activities)
 
-    assert hass.states.get("lock.online_with_doorsense_name").state == STATE_JAMMED
+    assert hass.states.get("lock.online_with_doorsense_name").state == LockState.JAMMED
 
 
 async def test_one_lock_operation(
@@ -109,7 +102,7 @@ async def test_one_lock_operation(
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
 
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
 
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
@@ -118,7 +111,7 @@ async def test_one_lock_operation(
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_UNLOCKED
+    assert lock_state.state == LockState.UNLOCKED
 
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
@@ -126,7 +119,7 @@ async def test_one_lock_operation(
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
 
     # No activity means it will be unavailable until the activity feed has data
     assert entity_registry.async_get("sensor.online_with_doorsense_name_operator")
@@ -139,12 +132,12 @@ async def test_open_lock_operation(hass: HomeAssistant) -> None:
     lock_with_unlatch = await _mock_lock_with_unlatch(hass)
     await _create_yale_with_devices(hass, [lock_with_unlatch])
 
-    assert hass.states.get("lock.online_with_unlatch_name").state == STATE_LOCKED
+    assert hass.states.get("lock.online_with_unlatch_name").state == LockState.LOCKED
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
 
-    assert hass.states.get("lock.online_with_unlatch_name").state == STATE_UNLOCKED
+    assert hass.states.get("lock.online_with_unlatch_name").state == LockState.UNLOCKED
 
 
 async def test_open_lock_operation_socketio_connected(
@@ -159,7 +152,7 @@ async def test_open_lock_operation_socketio_connected(
     _, socketio = await _create_yale_with_devices(hass, [lock_with_unlatch])
     socketio.connected = True
 
-    assert hass.states.get("lock.online_with_unlatch_name").state == STATE_LOCKED
+    assert hass.states.get("lock.online_with_unlatch_name").state == LockState.LOCKED
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
@@ -176,7 +169,7 @@ async def test_open_lock_operation_socketio_connected(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert hass.states.get("lock.online_with_unlatch_name").state == STATE_UNLOCKED
+    assert hass.states.get("lock.online_with_unlatch_name").state == LockState.UNLOCKED
     await hass.async_block_till_done()
 
 
@@ -194,7 +187,7 @@ async def test_one_lock_operation_socketio_connected(
     socketio.connected = True
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
@@ -214,7 +207,7 @@ async def test_one_lock_operation_socketio_connected(
     await hass.async_block_till_done()
 
     lock_state = states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_UNLOCKED
+    assert lock_state.state == LockState.UNLOCKED
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
@@ -231,7 +224,7 @@ async def test_one_lock_operation_socketio_connected(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKED
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKED
 
     # No activity means it will be unavailable until the activity feed has data
     assert entity_registry.async_get("sensor.online_with_doorsense_name_operator")
@@ -251,7 +244,7 @@ async def test_one_lock_operation_socketio_connected(
 
     await hass.async_block_till_done()
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_UNLOCKED
+    assert states.get("lock.online_with_doorsense_name").state == LockState.UNLOCKED
 
 
 async def test_lock_jammed(hass: HomeAssistant) -> None:
@@ -271,14 +264,14 @@ async def test_lock_jammed(hass: HomeAssistant) -> None:
 
     states = hass.states
     lock_state = states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_JAMMED
+    assert states.get("lock.online_with_doorsense_name").state == LockState.JAMMED
 
 
 async def test_lock_throws_exception_on_unknown_status_code(
@@ -299,7 +292,7 @@ async def test_lock_throws_exception_on_unknown_status_code(
     )
 
     lock_state = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_state.state == STATE_LOCKED
+    assert lock_state.state == LockState.LOCKED
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
@@ -342,7 +335,7 @@ async def test_lock_bridge_online(hass: HomeAssistant) -> None:
     await _create_yale_with_devices(hass, [lock_one], activities=activities)
 
     states = hass.states
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKED
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKED
 
 
 async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
@@ -357,7 +350,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     socketio.connected = True
     states = hass.states
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKED
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKED
 
     listener = list(socketio._listeners)[0]
     listener(
@@ -371,7 +364,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_UNLOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.UNLOCKING
 
     listener(
         lock_one.device_id,
@@ -384,21 +377,21 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKING
 
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKING
 
     socketio.connected = True
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKING
 
     # Ensure socketio status is always preserved
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
     await hass.async_block_till_done()
-    assert states.get("lock.online_with_doorsense_name").state == STATE_LOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.LOCKING
 
     listener(
         lock_one.device_id,
@@ -411,11 +404,11 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert states.get("lock.online_with_doorsense_name").state == STATE_UNLOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.UNLOCKING
 
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
     await hass.async_block_till_done()
-    assert states.get("lock.online_with_doorsense_name").state == STATE_UNLOCKING
+    assert states.get("lock.online_with_doorsense_name").state == LockState.UNLOCKING
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -377,7 +377,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     device.api.check_frequency
                 )
                 if is_found:
-                    _LOGGER.info("Radiofrequency detected: %s MHz", frequency)
+                    _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
                 await device.async_request(device.api.cancel_sweep_frequency)
