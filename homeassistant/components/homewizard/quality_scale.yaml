@@ -8,10 +8,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      The data_descriptions are missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -19,7 +16,7 @@ rules:
       The integration does not provide any additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -38,7 +35,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -55,13 +52,13 @@ rules:
       The integration doesn't update the device info based on DHCP discovery
       of known existing devices.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -70,12 +67,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: |
-      While the integration provides some of the exception translations, the
-      translation for the error raised in the update error of the coordinator
-      is missing.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:

@@ -24,7 +24,6 @@ RULES = {
         "dependency-transparency",
         "docs-actions",
         "docs-high-level-description",
-        "docs-installation-parameters",
         "docs-installation-instructions",
         "docs-removal-instructions",
         "entity-event-setup",
@@ -151,7 +150,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aurora",
     "aurora_abb_powerone",
     "aussie_broadband",
-    "autarco",
     "avea",
     "avion",
     "awair",
@@ -262,7 +260,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "directv",
     "discogs",
     "discord",
-    "discovergy",
     "dlib_face_detect",
     "dlib_face_identify",
     "dlink",
@@ -307,7 +304,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "electrasmart",
     "electric_kiwi",
     "elevenlabs",
-    "elgato",
     "eliqonline",
     "elkm1",
     "elmax",
@@ -470,7 +466,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "homekit_controller",
     "homematic",
     "homematicip_cloud",
-    "homewizard",
     "homeworks",
     "honeywell",
     "horizon",
@@ -498,7 +493,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iglo",
     "ign_sismologia",
     "ihc",
-    "imap",
     "imgw_pib",
     "improv_ble",
     "incomfort",
@@ -557,7 +551,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kwb",
     "lacrosse",
     "lacrosse_view",
-    "lamarzocco",
     "lametric",
     "landisgyr_heat_meter",
     "lannouncer",
@@ -665,7 +658,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "motioneye",
     "motionmount",
     "mpd",
-    "mqtt",
     "mqtt_eventstream",
     "mqtt_json",
     "mqtt_room",
@@ -770,7 +762,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ovo_energy",
     "owntracks",
     "p1_monitor",
-    "palazzetti",
     "panasonic_bluray",
     "panasonic_viera",
     "pandora",
@@ -833,7 +824,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "radarr",
     "radio_browser",
     "radiotherm",
-    "rainbird",
     "raincloud",
     "rainforest_eagle",
     "rainforest_raven",
@@ -1017,7 +1007,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tcp",
     "technove",
     "ted5000",
-    "tedee",
     "telegram",
     "telegram_bot",
     "tellduslive",
@@ -1109,7 +1098,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "version",
     "vesync",
     "viaggiatreno",
-    "vicare",
     "vilfo",
     "vivotek",
     "vizio",
@@ -1325,7 +1313,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     if integration.domain in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE:
         integration.add_error(
             "quality_scale",
-            "Quality scale file found! Please remove from quality_scale.py",
+            "Quality scale file found! Please remove from script/hassfest/quality_scale.py",
         )
         return
     name = str(iqs_file)
@@ -1359,7 +1347,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             break
         required_rules = set(RULES[scale])
         if missing_rules := (required_rules - rules_met):
-            friendly_rule_str = "\n".join(f"  {rule}: todo" for rule in missing_rules)
+            friendly_rule_str = "\n".join(
+                f"  {rule}: todo" for rule in sorted(missing_rules)
+            )
             integration.add_error(
                 "quality_scale",
                 f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
