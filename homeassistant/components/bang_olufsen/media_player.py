@@ -86,6 +86,8 @@ from .const import (
 from .entity import BangOlufsenEntity
 from .util import get_serial_number_from_jid
 
+PARALLEL_UPDATES = 0
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
