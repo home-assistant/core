@@ -15,6 +15,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import create_empty_config_entry, setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -147,6 +149,16 @@ def mock_empty_discovery_information():
         ),
     ):
         yield
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry() -> MockConfigEntry:
+    """Create Onkyo entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Yamaha Receiver",
+        data={},
+    )
 
 
 # User Flows
@@ -364,3 +376,32 @@ async def test_ssdp_discovery_existing_device_update(
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_entry.data["model"] == "MC20"
+
+
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test options flow."""
+
+    config_entry = create_empty_config_entry()
+    fake_rxv = Mock()
+    fake_rxv.inputs = lambda: {"Napster": "Napster", "AV1": None, "AV2": None}
+    config_entry.runtime_data = fake_rxv
+    await setup_integration(hass, config_entry)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "AV1": "Projector",
+            "AV2": "TV",
+            "source_ignore": ["Napster"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "source_ignore": ["Napster"],
+        "source_names": {"AV1": "Projector", "AV2": "TV"},
+    }
