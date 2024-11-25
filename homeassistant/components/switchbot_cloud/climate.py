@@ -86,7 +86,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
         self,
         hvac_mode: HVACMode | None = None,
         fan_mode: str | None = None,
-        temperature: float | None = None,
+        temperature: int | None = None,
     ) -> None:
         new_temperature = temperature or self._attr_target_temperature
         new_mode = _SWITCHBOT_HVAC_MODES.get(
