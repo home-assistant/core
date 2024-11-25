@@ -181,7 +181,7 @@ SELECT_ENTITIES = (
         translation_key="main_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: api.frame_rate_list(ch, "main"),
+        get_options=lambda api, ch: [f"{v} Hz" for v in api.frame_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
         value=lambda api, ch: f"{api.frame_rate(ch, 'main')} Hz",
         method=lambda api, ch, value: (
@@ -194,11 +194,11 @@ SELECT_ENTITIES = (
         translation_key="sub_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: api.frame_rate_list(ch, "sub"),
+        get_options=lambda api, ch: [f"{v} Hz" for v in api.frame_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
-        value=lambda api, ch: str(api.frame_rate(ch, "sub")),
+        value=lambda api, ch: f"{api.frame_rate(ch, 'sub')} Hz",
         method=lambda api, ch, value: (
-            api.set_frame_rate(ch, int(value), "sub")
+            api.set_frame_rate(ch, int(value.split(" ")[0]), "sub")
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -207,11 +207,11 @@ SELECT_ENTITIES = (
         translation_key="main_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: api.bit_rate_list(ch, "main"),
+        get_options=lambda api, ch: [f"{v} kb/s" for v in api.bit_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: str(api.bit_rate(ch, "main")),
+        value=lambda api, ch: f"{api.bit_rate(ch, 'main')} kb/s",
         method=lambda api, ch, value: (
-            api.set_bit_rate(ch, int(value), "main")
+            api.set_bit_rate(ch, int(value.split(" ")[0]), "main")
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -220,11 +220,11 @@ SELECT_ENTITIES = (
         translation_key="sub_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: api.bit_rate_list(ch, "sub"),
+        get_options=lambda api, ch: [f"{v} kb/s" for v in api.bit_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: str(api.bit_rate(ch, "sub")),
+        value=lambda api, ch: f"{api.bit_rate(ch, 'sub')} kb/s",
         method=lambda api, ch, value: (
-            api.set_bit_rate(ch, int(value), "sub")
+            api.set_bit_rate(ch, int(value.split(" ")[0]), "sub")
         ),
     ),
 )
