@@ -151,7 +151,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "nfc_card_scanned": "Card scanned"
+              "scanned": "scanned"
             }
           }
         }
@@ -161,8 +161,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "fingerprint_identified": "Finger identified",
-              "fingerprint_not_identified": "Finger not identified"
+              "identified": "identified",
+              "not_identified": "not identified"
             }
           }
         }
