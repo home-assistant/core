@@ -185,7 +185,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bond",
     "bosch_shc",
     "braviatv",
-    "bring",
     "broadlink",
     "brother",
     "brottsplatskartan",
