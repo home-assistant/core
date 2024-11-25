@@ -9,7 +9,6 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
-from uiprotect import NvrError
 from uiprotect.data import Camera, Event
 from uiprotect.exceptions import ClientError
 
@@ -61,7 +60,10 @@ def async_generate_event_video_url(event: Event) -> str:
 
 
 @callback
-def async_generate_proxy_event_video_url(event_id: str, nvr_id: str) -> str:
+def async_generate_proxy_event_video_url(
+    nvr_id: str,
+    event_id: str,
+) -> str:
     """Generate proxy URL for event video."""
 
     url_format = VideoEventProxyView.url or "{nvr_id}/{event_id}"
@@ -241,10 +243,10 @@ class VideoEventProxyView(ProtectProxyView):
     """View to proxy video clips for events from UniFi Protect."""
 
     url = "/api/unifiprotect/video/{nvr_id}/{event_id}"
-    name = "api:unifiprotect_thumbnail"
+    name = "api:unifiprotect_videoEventView"
 
     async def get(
-        self, request: web.Request, nvr_id: str, camera_id: str, event_id: str
+        self, request: web.Request, nvr_id: str, event_id: str
     ) -> web.StreamResponse:
         """Get Camera Video clip for an event."""
 
@@ -254,13 +256,13 @@ class VideoEventProxyView(ProtectProxyView):
 
         try:
             event = await data.api.get_event(event_id)
-        except NvrError:
+        except ClientError:
             return _404(f"Invalid event ID: {event_id}")
         if event.start is None or event.end is None:
             return _400("Event is still ongoing")
         camera = self._async_get_camera(data, str(event.camera_id))
         if camera is None:
-            return _404(f"Invalid camera ID: {camera_id}")
+            return _404(f"Invalid camera ID: {event.camera_id}")
         if not camera.can_read_media(data.api.bootstrap.auth_user):
             return _403(f"User cannot read media from camera: {camera.id}")
 
