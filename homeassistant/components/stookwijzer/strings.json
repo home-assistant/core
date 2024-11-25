@@ -5,6 +5,9 @@
         "description": "Select the location you want to recieve the Stookwijzer information for.",
         "data": {
           "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Use the map to set the location for Stookwijzer."
         }
       }
     },
