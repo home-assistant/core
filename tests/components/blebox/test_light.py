@@ -1,13 +1,15 @@
 """BleBox light entities tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.blebox.const import LIGHT_MAX_MIREDS, LIGHT_MIN_MIREDS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -329,6 +331,32 @@ def wlightbox_fixture():
     return (feature, "light.wlightbox_color")
 
 
+@pytest.fixture(name="wlightbox_ctx2")
+def wlightbox_ctx2_fixture() -> tuple[MagicMock, str]:
+    """Return a default light entity mock."""
+
+    feature = mock_feature(
+        "lights",
+        blebox_uniapi.light.Light,
+        unique_id="BleBox-wLightBox-1afe34e750b8-color",
+        full_name="wLightBox-ctx2",
+        device_class=None,
+        is_on=None,
+        supports_color=True,
+        supports_white=True,
+        white_value=None,
+        rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.CTx2,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
+        # color_temp=3,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My wLightBox")
+    type(product).model = PropertyMock(return_value="wLightBox")
+    return feature, "light.wlightbox_ctx2"
+
+
 async def test_wlightbox_init(
     wlightbox, hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -423,6 +451,53 @@ async def test_wlightbox_on_rgbw(wlightbox, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_RGBW_COLOR] == (0xC1, 0xD2, 0xF3, 0xC7)
+
+
+# note: it is a good idea to test wide range of values including those
+# outside of the operating range to make sure that bounds are properly
+# corrected
+@pytest.mark.parametrize("temp_requested", [1, 100, 150, 200, 300, 400])
+async def test_wlightbox_on_temp(
+    hass: HomeAssistant, wlightbox_ctx2: tuple[MagicMock, str], temp_requested: int
+) -> None:
+    """Test light on with temperature change."""
+
+    feature_mock, entity_id = wlightbox_ctx2
+
+    # note: testing color temperature modification is tricky as neither
+    # blebox_uniapi nor blebox devices operate on color_temperature concept.
+    # Instead, it uses a mixture of brightness and temperature value encoded
+    # with known formula that is exposed by return_color_temp_with_brightness()
+    # method. To make testing simpler let's hijack the requested value
+    # with transient nonlocal value.
+    transient_temp: int = -1
+
+    def return_color_temp_with_brightness(value, brightness):
+        nonlocal transient_temp
+        transient_temp = value
+        return [0x00, 0x39, 0xB0, 0xFF]
+
+    def turn_on(_):
+        feature_mock.is_on = True
+        feature_mock.color_temp = transient_temp
+
+    feature_mock.return_color_temp_with_brightness = return_color_temp_with_brightness
+    feature_mock.async_on = AsyncMock(side_effect=turn_on)
+
+    await async_setup_entity(hass, entity_id)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, ATTR_COLOR_TEMP: temp_requested},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    mired_temp = state.attributes[ATTR_COLOR_TEMP]
+    assert state.state == STATE_ON
+    assert LIGHT_MIN_MIREDS <= mired_temp <= LIGHT_MAX_MIREDS
+    assert mired_temp == max(min(mired_temp, LIGHT_MAX_MIREDS), LIGHT_MIN_MIREDS)
+    assert 0 <= transient_temp <= 255
 
 
 async def test_wlightbox_on_to_last_color(wlightbox, hass: HomeAssistant) -> None:
