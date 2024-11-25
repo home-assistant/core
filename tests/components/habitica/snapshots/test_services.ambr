@@ -384,6 +384,10 @@
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
         'reminders': list([
+          dict({
+            'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+            'time': '2024-09-22T20:00:00.0000Z',
+          }),
         ]),
         'repeat': dict({
           'f': True,
@@ -1125,6 +1129,10 @@
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
         'reminders': list([
+          dict({
+            'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+            'time': '2024-09-22T20:00:00.0000Z',
+          }),
         ]),
         'repeat': dict({
           'f': True,
@@ -1722,6 +1730,10 @@
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
         'reminders': list([
+          dict({
+            'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+            'time': '2024-09-22T20:00:00.0000Z',
+          }),
         ]),
         'repeat': dict({
           'f': True,
@@ -2437,6 +2449,10 @@
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
         'reminders': list([
+          dict({
+            'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+            'time': '2024-09-22T20:00:00.0000Z',
+          }),
         ]),
         'repeat': dict({
           'f': True,
@@ -2768,6 +2784,10 @@
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
         'reminders': list([
+          dict({
+            'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+            'time': '2024-09-22T20:00:00.0000Z',
+          }),
         ]),
         'repeat': dict({
           'f': True,
