@@ -776,6 +776,7 @@ async def check_translations(
                 eager_start=True,
             )
         )
+        self.hass.block_till_done()
         return result
 
     async def _service_registry_async_call(
