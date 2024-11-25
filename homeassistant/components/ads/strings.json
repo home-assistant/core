@@ -1,4 +1,22 @@
 {
+  "config": {
+    "flow_title": "Add ADS Integration",
+    "step": {
+      "user": {
+        "title": "Configure ADS Connection",
+        "description": "Please enter the details to connect to your ADS device.",
+        "data": {
+          "device": "AMS Net ID",
+          "port": "Port",
+          "ip_address": "IP Address"
+        }
+      }
+    },
+    "error": {
+      "invalid_ams_net_id": "Invalid AMS Net ID. Valid format: 192.168.1.10.1.1",
+      "invalid_port": "Must be between 1-65535. Usually 801 for TwinCAT 2 / 851 for TwinCAT 3"
+    }
+  },
   "services": {
     "write_data_by_name": {
       "name": "Write data by name",

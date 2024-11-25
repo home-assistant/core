@@ -1,6 +1,7 @@
 """Support for Automation Device Specification (ADS)."""
 
 from collections import namedtuple
+import concurrent.futures
 import ctypes
 import logging
 import struct
@@ -28,6 +29,36 @@ class AdsHub:
         self._devices = []
         self._notification_items = {}
         self._lock = threading.Lock()
+
+    def test_connection(self, timeout=5):
+        """Test the ADS connection by opening and closing the client connection with a timeout."""
+        try:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(self._try_open_and_check_connection)
+                return future.result(timeout=timeout)
+        except concurrent.futures.TimeoutError:
+            _LOGGER.error(
+                "Connection test timed out. IP address may be invalid or unreachable"
+            )
+            return False
+
+    def _try_open_and_check_connection(self):
+        """Try opening the connection and performing a simple check."""
+        try:
+            self._client.open()
+            if self._client.is_open:
+                # Perform a simple check (e.g., read state) to confirm the AMS Net ID is valid
+                try:
+                    self._client.read_state()
+                    return True  # noqa: TRY300
+                except pyads.ADSError as err:
+                    _LOGGER.error("AMS Net ID validation failed: %s", err)
+                finally:
+                    self._client.close()
+            return False  # noqa: TRY300
+        except pyads.ADSError as err:
+            _LOGGER.error("Connection attempt failed: %s", err)
+            return False
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
