@@ -18,10 +18,9 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     Selector,
@@ -31,10 +30,10 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import get_upnp_serial_and_model
+from . import get_upnp_desc
 from .const import (
-    CONF_MODEL,
     CONF_SERIAL,
+    CONF_UPNP_DESC,
     DEFAULT_NAME,
     DOMAIN,
     OPTION_INPUT_SOURCES,
@@ -51,8 +50,8 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     serial_number: str | None = None
-    model: str | None = None
     host: str
+    upnp_description: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,21 +63,19 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         host = user_input[CONF_HOST]
         serial_number = None
-        model = None
 
         errors = {}
         # Check if device is a Yamaha receiver
         try:
-            info = YamahaConfigInfo(host)
-            await self.hass.async_add_executor_job(rxv.RXV, info.ctrl_url)
-            serial_number, model = await get_upnp_serial_and_model(self.hass, host)
+            upnp_desc: str = await get_upnp_desc(self.hass, host)
+            info = await YamahaConfigInfo.get_rxv_details(upnp_desc, self.hass)
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if serial_number is None:
+            if info is None or (serial_number := info.serial_number) is None:
                 errors["base"] = "no_yamaha_device"
 
         if not errors:
@@ -86,12 +83,11 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=model or DEFAULT_NAME,
+                title=DEFAULT_NAME,
                 data={
                     CONF_HOST: host,
-                    CONF_MODEL: model,
                     CONF_SERIAL: serial_number,
-                    CONF_NAME: user_input.get(CONF_NAME) or DEFAULT_NAME,
+                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
                 },
                 options={
                     OPTION_INPUT_SOURCES_IGNORE: user_input.get(
@@ -118,11 +114,11 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle ssdp discoveries."""
         assert discovery_info.ssdp_location is not None
         if not await YamahaConfigInfo.check_yamaha_ssdp(
-            discovery_info.ssdp_location, async_get_clientsession(self.hass)
+            discovery_info.ssdp_location, self.hass
         ):
             return self.async_abort(reason="yxc_control_url_missing")
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
-        self.model = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+        self.upnp_description = discovery_info.ssdp_location
 
         # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
         self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
@@ -131,7 +127,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             {
                 CONF_HOST: self.host,
-                CONF_NAME: self.model,
+                CONF_UPNP_DESC: self.upnp_description,
             }
         )
         self.context.update(
@@ -152,12 +148,11 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.model or DEFAULT_NAME,
+                title=DEFAULT_NAME,
                 data={
                     CONF_HOST: self.host,
-                    CONF_MODEL: self.model,
                     CONF_SERIAL: self.serial_number,
-                    CONF_NAME: DEFAULT_NAME,
+                    CONF_UPNP_DESC: self.upnp_description,
                 },
                 options={
                     OPTION_INPUT_SOURCES_IGNORE: user_input.get(
@@ -208,8 +203,8 @@ class YamahaOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        yamaha = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        inputs = await self.hass.async_add_executor_job(yamaha.inputs)
+        yamaha: rxv.RXV = self.config_entry.runtime_data
+        inputs: dict[str, str] = await self.hass.async_add_executor_job(yamaha.inputs)
 
         if user_input is not None:
             sources_store: dict[str, str] = {

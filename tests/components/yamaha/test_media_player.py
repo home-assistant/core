@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
+from rxv.ssdp import RxvDetails
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.yamaha import media_player as yamaha
@@ -48,8 +49,14 @@ def device_fixture(main_zone):
     with (
         patch("rxv.RXV", return_value=device),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
-            return_value=("1234567890", "MC20"),
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            return_value=RxvDetails(
+                model_name="MC20",
+                ctrl_url=None,
+                unit_desc_url=None,
+                friendly_name=None,
+                serial_number="1234567890",
+            ),
         ),
     ):
         yield device
@@ -64,8 +71,14 @@ def device2_fixture(main_zone):
     with (
         patch("rxv.RXV", return_value=device),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
-            return_value=("0987654321", "AX100"),
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            return_value=RxvDetails(
+                model_name="AX100",
+                ctrl_url=None,
+                unit_desc_url=None,
+                friendly_name=None,
+                serial_number="0987654321",
+            ),
         ),
     ):
         yield device

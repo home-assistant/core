@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import ConnectionError
+from rxv.ssdp import RxvDetails
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -54,8 +55,8 @@ def mock_get_device_info_invalid():
     with (
         patch("rxv.RXV", return_value=None),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
-            return_value=(None, None),
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            return_value=None,
         ),
     ):
         yield
@@ -94,22 +95,34 @@ def mock_ssdp_no_yamaha():
 @pytest.fixture
 def mock_valid_discovery_information():
     """Mock that the ssdp scanner returns a useful upnp description."""
-    with patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        return_value=[
-            ssdp.SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_st="mock_st",
-                ssdp_location="http://127.0.0.1:9000/MediaRenderer/desc.xml",
-                ssdp_headers={
-                    "_host": "127.0.0.1",
-                },
-                upnp={
-                    ssdp.ATTR_UPNP_SERIAL: "1234567890",
-                    ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-                },
-            )
-        ],
+    with (
+        patch(
+            "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+            return_value=[
+                ssdp.SsdpServiceInfo(
+                    ssdp_usn="mock_usn",
+                    ssdp_st="mock_st",
+                    ssdp_location="http://127.0.0.1:9000/MediaRenderer/desc.xml",
+                    ssdp_headers={
+                        "_host": "127.0.0.1",
+                    },
+                    upnp={
+                        ssdp.ATTR_UPNP_SERIAL: "1234567890",
+                        ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
+                    },
+                )
+            ],
+        ),
+        patch(
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            return_value=RxvDetails(
+                model_name="MC20",
+                ctrl_url=None,
+                unit_desc_url=None,
+                friendly_name=None,
+                serial_number="1234567890",
+            ),
+        ),
     ):
         yield
 
@@ -123,8 +136,14 @@ def mock_empty_discovery_information():
             return_value=[],
         ),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_upnp_serial_and_model",
-            return_value=("1234567890", "MC20"),
+            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            return_value=RxvDetails(
+                model_name="MC20",
+                ctrl_url=None,
+                unit_desc_url=None,
+                friendly_name=None,
+                serial_number="1234567890",
+            ),
         ),
     ):
         yield
@@ -229,9 +248,8 @@ async def test_user_input_device_found(
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "model": "MC20",
         "serial": "1234567890",
-        "name": "Yamaha Receiver",
+        "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
     }
 
 
@@ -255,9 +273,8 @@ async def test_user_input_device_found_no_ssdp(
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "model": "MC20",
         "serial": "1234567890",
-        "name": "Yamaha Receiver",
+        "upnp_description": "http://127.0.0.1:49154/MediaRenderer/desc.xml",
     }
 
 
@@ -315,9 +332,8 @@ async def test_ssdp_discovery_successful_add_device(
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "model": "MC20",
         "serial": "1234567890",
-        "name": "Yamaha Receiver",
+        "upnp_description": "http://127.0.0.1/desc.xml",
     }
 
 

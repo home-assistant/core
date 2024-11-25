@@ -28,6 +28,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     BRAND,
+    CONF_SOURCE_IGNORE,
+    CONF_SOURCE_NAMES,
+    CONF_ZONE_IGNORE,
+    CONF_ZONE_NAMES,
     CURSOR_TYPE_DOWN,
     CURSOR_TYPE_LEFT,
     CURSOR_TYPE_RETURN,
@@ -74,6 +78,14 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+        vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
     }
 )
 
