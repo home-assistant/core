@@ -55,7 +55,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if not Path(image_filename).exists():
                 raise HomeAssistantError(f"`{image_filename}` does not exist")
             mime_type, _ = mimetypes.guess_type(image_filename)
-            if mime_type is None or not mime_type.startswith("image"):
+            if mime_type is None or (
+                not mime_type.startswith("image") and mime_type != "application/pdf"
+            ):
                 raise HomeAssistantError(f"`{image_filename}` is not an image")
             prompt_parts.append(
                 {
