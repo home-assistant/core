@@ -63,11 +63,11 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         try:
                             s.connect((data[CONF_HOST], data[CONF_PORT]))
                             s.close()
-                        except ConnectionRefusedError as _:
+                        except ConnectionRefusedError:
                             errors["base"] = "connection_refused"
-                        except TimeoutError as _:
+                        except TimeoutError:
                             errors["base"] = "timeout"
-                        except socket.gaierror as _:
+                        except socket.gaierror:
                             errors["base"] = "cannot_connect"
 
                 data[CONF_MAC] = format_mac(user_input[CONF_MAC])
