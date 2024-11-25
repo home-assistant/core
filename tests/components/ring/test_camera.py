@@ -459,7 +459,11 @@ async def test_camera_webrtc(
     )
     response = await client.receive_json()
     assert response
-    assert "The sdp_m_line_index is required for ring webrtc streaming" in caplog.text
+    assert response.get("success") is False
+    assert response["error"]["code"] == "invalid_format"
+    msg = "The sdp_m_line_index is required for ring webrtc streaming"
+    assert msg in response["error"].get("message")
+    assert msg in caplog.text
     front_camera_mock.on_webrtc_candidate.assert_called_once()
 
     # Answer message
