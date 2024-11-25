@@ -19,7 +19,6 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
     RTCIceCandidateInit,
-    StreamType,
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCError,
@@ -116,7 +115,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = device.motion_detection
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
-            self._attr_frontend_stream_type = StreamType.WEB_RTC
 
     @callback
     def _handle_coordinator_update(self) -> None:
