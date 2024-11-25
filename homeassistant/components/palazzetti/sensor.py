@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PalazzettiConfigEntry
-from .const import STATUSES
+from .const import STATUS_TO_HA
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
@@ -34,8 +34,8 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
         client_property="status",
-        property_map=STATUSES,
-        options=list(STATUSES.values()),
+        property_map=STATUS_TO_HA,
+        options=list(STATUS_TO_HA.values()),
     ),
     PropertySensorEntityDescription(
         key="pellet_quantity",

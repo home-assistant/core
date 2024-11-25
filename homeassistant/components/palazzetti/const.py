@@ -4,6 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Final
 
+from homeassistant.helpers.typing import StateType
+
 DOMAIN: Final = "palazzetti"
 PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
@@ -18,7 +20,7 @@ FAN_HIGH: Final = "high"
 FAN_AUTO: Final = "auto"
 FAN_MODES: Final = [FAN_SILENT, "1", "2", "3", "4", "5", FAN_HIGH, FAN_AUTO]
 
-STATUSES: Final[dict[str | int | float | None, str]] = {
+STATUS_TO_HA: Final[dict[StateType, str]] = {
     0: "off",
     1: "off_timer",
     2: "test_fire",
