@@ -655,16 +655,16 @@
         }
       },
       "main_frame_rate": {
-        "name": "Clear frame rate",
+        "name": "Clear frame rate"
       },
       "sub_frame_rate": {
-        "name": "Fluent frame rate",
+        "name": "Fluent frame rate"
       },
       "main_bit_rate": {
-        "name": "Clear bit rate",
+        "name": "Clear bit rate"
       },
       "sub_bit_rate": {
-        "name": "Fluent bit rate",
+        "name": "Fluent bit rate"
       },
     },
     "sensor": {
