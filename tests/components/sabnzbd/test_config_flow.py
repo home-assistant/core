@@ -82,7 +82,7 @@ async def test_reconfigure_successful(
     result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -104,7 +104,7 @@ async def test_reconfigure_error(
     result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
 
     # set side effect and check if error is handled
     sabnzbd.check_available.side_effect = SabnzbdApiException("Some error")
@@ -114,7 +114,7 @@ async def test_reconfigure_error(
         user_input={CONF_URL: "http://10.10.10.10:8080", CONF_API_KEY: "new_key"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
     # reset side effect and check if we can recover

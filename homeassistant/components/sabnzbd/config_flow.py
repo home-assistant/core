@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -46,12 +45,16 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _existing_entry: ConfigEntry
-
-    async def _async_validate_and_save(
-        self, user_input: dict[str, Any] | None, step: str
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Validate user input and create/update config entry."""
+        """Handle reconfiguration flow."""
+        return await self.async_step_user(user_input)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
@@ -61,7 +64,7 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
-                        self._existing_entry, data_updates=user_input
+                        self._get_reconfigure_entry(), data_updates=user_input
                     )
 
                 return self.async_create_entry(
@@ -69,20 +72,7 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id=step,
+            step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration flow."""
-        self._existing_entry = self._get_reconfigure_entry()
-        return await self._async_validate_and_save(user_input, "reconfigure")
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        return await self._async_validate_and_save(user_input, "user")
