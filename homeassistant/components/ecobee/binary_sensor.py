@@ -21,16 +21,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up ecobee binary (occupancy) sensors."""
     data = hass.data[DOMAIN]
-    dev = []
-    for index in range(len(data.ecobee.thermostats)):
-        for sensor in data.ecobee.get_remote_sensors(index):
-            for item in sensor["capability"]:
-                if item["type"] != "occupancy":
-                    continue
 
-                dev.append(EcobeeBinarySensor(data, sensor["name"], index))
+    assert data is not None
 
-    async_add_entities(dev, True)
+    async_add_entities(
+        (
+            EcobeeBinarySensor(data, sensor["name"], index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            for sensor in data.ecobee.get_remote_sensors(index)
+            for item in sensor["capability"]
+            if item["type"] == "occupancy"
+        ),
+        True,
+    )
 
 
 class EcobeeBinarySensor(BinarySensorEntity):
