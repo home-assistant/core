@@ -190,6 +190,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:car-electric',
@@ -523,6 +526,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:stove',
@@ -688,14 +694,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Bill Energy',
+    'original_name': 'Bill energy',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_usage',
     'unique_id': '12345-bill-usage',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -705,7 +714,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Bill Energy',
+      'friendly_name': 'Sense 12345 Bill energy',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -741,14 +750,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Bill From Grid',
+    'original_name': 'Bill from grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_from_grid',
     'unique_id': '12345-bill-from_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -758,7 +770,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Bill From Grid',
+      'friendly_name': 'Sense 12345 Bill from grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -794,14 +806,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Bill Net Production',
+    'original_name': 'Bill net production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_net_production',
     'unique_id': '12345-bill-net_production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -811,7 +826,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Bill Net Production',
+      'friendly_name': 'Sense 12345 Bill net production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -824,7 +839,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_bill_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -836,7 +851,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_bill_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_bill_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -845,27 +860,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bill Net Production Percentage',
+    'original_name': 'Bill net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_production_pct',
     'unique_id': '12345-bill-production_pct',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_bill_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Bill Net Production Percentage',
+      'friendly_name': 'Sense 12345 Bill net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_bill_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_bill_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -895,14 +913,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Bill Production',
+    'original_name': 'Bill production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_production',
     'unique_id': '12345-bill-production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -912,7 +933,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Bill Production',
+      'friendly_name': 'Sense 12345 Bill production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -925,7 +946,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_bill_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -937,7 +958,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_bill_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_bill_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -946,27 +967,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bill Solar Powered Percentage',
+    'original_name': 'Bill solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_solar_powered',
     'unique_id': '12345-bill-solar_powered',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_bill_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Bill Solar Powered Percentage',
+      'friendly_name': 'Sense 12345 Bill solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_bill_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_bill_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -996,14 +1020,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Bill To Grid',
+    'original_name': 'Bill to grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_to_grid',
     'unique_id': '12345-bill-to_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1013,7 +1040,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Bill To Grid',
+      'friendly_name': 'Sense 12345 Bill to grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1049,14 +1076,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Daily Energy',
+    'original_name': 'Daily energy',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_usage',
     'unique_id': '12345-daily-usage',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1066,7 +1096,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Daily Energy',
+      'friendly_name': 'Sense 12345 Daily energy',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1102,14 +1132,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Daily From Grid',
+    'original_name': 'Daily from grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_from_grid',
     'unique_id': '12345-daily-from_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1119,7 +1152,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Daily From Grid',
+      'friendly_name': 'Sense 12345 Daily from grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1155,14 +1188,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Daily Net Production',
+    'original_name': 'Daily net production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_net_production',
     'unique_id': '12345-daily-net_production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1172,7 +1208,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Daily Net Production',
+      'friendly_name': 'Sense 12345 Daily net production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1185,7 +1221,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_daily_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1197,7 +1233,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_daily_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_daily_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1206,27 +1242,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Daily Net Production Percentage',
+    'original_name': 'Daily net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_production_pct',
     'unique_id': '12345-daily-production_pct',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_daily_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Daily Net Production Percentage',
+      'friendly_name': 'Sense 12345 Daily net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_daily_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_daily_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1256,14 +1295,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Daily Production',
+    'original_name': 'Daily production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_production',
     'unique_id': '12345-daily-production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1273,7 +1315,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Daily Production',
+      'friendly_name': 'Sense 12345 Daily production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1286,7 +1328,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_daily_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1298,7 +1340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_daily_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_daily_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1307,27 +1349,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Daily Solar Powered Percentage',
+    'original_name': 'Daily solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_solar_powered',
     'unique_id': '12345-daily-solar_powered',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_daily_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Daily Solar Powered Percentage',
+      'friendly_name': 'Sense 12345 Daily solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_daily_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_daily_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1357,14 +1402,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Daily To Grid',
+    'original_name': 'Daily to grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_to_grid',
     'unique_id': '12345-daily-to_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1374,7 +1422,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Daily To Grid',
+      'friendly_name': 'Sense 12345 Daily to grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1410,6 +1458,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -1417,7 +1468,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'active_usage',
     'unique_id': '12345-active-usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1462,14 +1513,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'L1 Voltage',
+    'original_name': 'L1 voltage',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage_0',
     'unique_id': '12345-L1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1479,7 +1533,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'voltage',
-      'friendly_name': 'Sense 12345 L1 Voltage',
+      'friendly_name': 'Sense 12345 L1 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -1514,14 +1568,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'L2 Voltage',
+    'original_name': 'L2 voltage',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage_1',
     'unique_id': '12345-L2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1531,7 +1588,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'voltage',
-      'friendly_name': 'Sense 12345 L2 Voltage',
+      'friendly_name': 'Sense 12345 L2 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -1566,14 +1623,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Monthly Energy',
+    'original_name': 'Monthly energy',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_usage',
     'unique_id': '12345-monthly-usage',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1583,7 +1643,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Monthly Energy',
+      'friendly_name': 'Sense 12345 Monthly energy',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1619,14 +1679,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Monthly From Grid',
+    'original_name': 'Monthly from grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_from_grid',
     'unique_id': '12345-monthly-from_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1636,7 +1699,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Monthly From Grid',
+      'friendly_name': 'Sense 12345 Monthly from grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1672,14 +1735,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Monthly Net Production',
+    'original_name': 'Monthly net production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_net_production',
     'unique_id': '12345-monthly-net_production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1689,7 +1755,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Monthly Net Production',
+      'friendly_name': 'Sense 12345 Monthly net production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1702,7 +1768,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_monthly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1714,7 +1780,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_monthly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1723,27 +1789,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monthly Net Production Percentage',
+    'original_name': 'Monthly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_production_pct',
     'unique_id': '12345-monthly-production_pct',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_monthly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Monthly Net Production Percentage',
+      'friendly_name': 'Sense 12345 Monthly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_monthly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1773,14 +1842,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Monthly Production',
+    'original_name': 'Monthly production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_production',
     'unique_id': '12345-monthly-production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1790,7 +1862,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Monthly Production',
+      'friendly_name': 'Sense 12345 Monthly production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1803,7 +1875,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_monthly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1815,7 +1887,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_monthly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1824,27 +1896,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monthly Solar Powered Percentage',
+    'original_name': 'Monthly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_solar_powered',
     'unique_id': '12345-monthly-solar_powered',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_monthly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Monthly Solar Powered Percentage',
+      'friendly_name': 'Sense 12345 Monthly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_monthly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1874,14 +1949,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Monthly To Grid',
+    'original_name': 'Monthly to grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_to_grid',
     'unique_id': '12345-monthly-to_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1891,7 +1969,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Monthly To Grid',
+      'friendly_name': 'Sense 12345 Monthly to grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1927,6 +2005,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -1934,7 +2015,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'active_production',
     'unique_id': '12345-active-production',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1979,14 +2060,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Weekly Energy',
+    'original_name': 'Weekly energy',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_usage',
     'unique_id': '12345-weekly-usage',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1996,7 +2080,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Weekly Energy',
+      'friendly_name': 'Sense 12345 Weekly energy',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2032,14 +2116,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Weekly From Grid',
+    'original_name': 'Weekly from grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_from_grid',
     'unique_id': '12345-weekly-from_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2049,7 +2136,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Weekly From Grid',
+      'friendly_name': 'Sense 12345 Weekly from grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2085,14 +2172,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Weekly Net Production',
+    'original_name': 'Weekly net production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_net_production',
     'unique_id': '12345-weekly-net_production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2102,7 +2192,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Weekly Net Production',
+      'friendly_name': 'Sense 12345 Weekly net production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2115,7 +2205,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_weekly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2127,7 +2217,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_weekly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2136,27 +2226,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weekly Net Production Percentage',
+    'original_name': 'Weekly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_production_pct',
     'unique_id': '12345-weekly-production_pct',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_weekly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Weekly Net Production Percentage',
+      'friendly_name': 'Sense 12345 Weekly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_weekly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2186,14 +2279,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Weekly Production',
+    'original_name': 'Weekly production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_production',
     'unique_id': '12345-weekly-production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2203,7 +2299,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Weekly Production',
+      'friendly_name': 'Sense 12345 Weekly production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2216,7 +2312,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_weekly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2228,7 +2324,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_weekly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2237,27 +2333,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weekly Solar Powered Percentage',
+    'original_name': 'Weekly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_solar_powered',
     'unique_id': '12345-weekly-solar_powered',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_weekly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Weekly Solar Powered Percentage',
+      'friendly_name': 'Sense 12345 Weekly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_weekly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2287,14 +2386,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Weekly To Grid',
+    'original_name': 'Weekly to grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_to_grid',
     'unique_id': '12345-weekly-to_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2304,7 +2406,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Weekly To Grid',
+      'friendly_name': 'Sense 12345 Weekly to grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2340,14 +2442,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Yearly Energy',
+    'original_name': 'Yearly energy',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_usage',
     'unique_id': '12345-yearly-usage',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2357,7 +2462,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Yearly Energy',
+      'friendly_name': 'Sense 12345 Yearly energy',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2393,14 +2498,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Yearly From Grid',
+    'original_name': 'Yearly from grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_from_grid',
     'unique_id': '12345-yearly-from_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2410,7 +2518,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Yearly From Grid',
+      'friendly_name': 'Sense 12345 Yearly from grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2446,14 +2554,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Yearly Net Production',
+    'original_name': 'Yearly net production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_net_production',
     'unique_id': '12345-yearly-net_production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2463,7 +2574,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Yearly Net Production',
+      'friendly_name': 'Sense 12345 Yearly net production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2476,7 +2587,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_yearly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2488,7 +2599,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_yearly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2497,27 +2608,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Yearly Net Production Percentage',
+    'original_name': 'Yearly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_production_pct',
     'unique_id': '12345-yearly-production_pct',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_yearly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Yearly Net Production Percentage',
+      'friendly_name': 'Sense 12345 Yearly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_yearly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2547,14 +2661,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Yearly Production',
+    'original_name': 'Yearly production',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_production',
     'unique_id': '12345-yearly-production',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2564,7 +2681,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Yearly Production',
+      'friendly_name': 'Sense 12345 Yearly production',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2577,7 +2694,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_yearly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2589,7 +2706,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_yearly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2598,27 +2715,30 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Yearly Solar Powered Percentage',
+    'original_name': 'Yearly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_solar_powered',
     'unique_id': '12345-yearly-solar_powered',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_yearly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Yearly Solar Powered Percentage',
+      'friendly_name': 'Sense 12345 Yearly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_yearly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2648,14 +2768,17 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Yearly To Grid',
+    'original_name': 'Yearly to grid',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_to_grid',
     'unique_id': '12345-yearly-to_grid',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2665,7 +2788,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
-      'friendly_name': 'Sense 12345 Yearly To Grid',
+      'friendly_name': 'Sense 12345 Yearly to grid',
       'last_reset': '2024-01-01T01:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,

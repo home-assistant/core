@@ -49,6 +49,123 @@
       },
       "bill_energy": {
         "name": "Bill energy"
+      },
+      "voltage_0": {
+        "name": "L1 voltage"
+      },
+      "voltage_1": {
+        "name": "L2 voltage"
+      },
+      "active_usage": {
+        "name": "Energy"
+      },
+      "active_production": {
+        "name": "Production"
+      },
+      "daily_production": {
+        "name": "Daily production"
+      },
+      "weekly_production": {
+        "name": "Weekly production"
+      },
+      "monthly_production": {
+        "name": "Monthly production"
+      },
+      "yearly_production": {
+        "name": "Yearly production"
+      },
+      "bill_production": {
+        "name": "Bill production"
+      },
+      "daily_usage": {
+        "name": "Daily energy"
+      },
+      "weekly_usage": {
+        "name": "Weekly energy"
+      },
+      "monthly_usage": {
+        "name": "Monthly energy"
+      },
+      "yearly_usage": {
+        "name": "Yearly energy"
+      },
+      "bill_usage": {
+        "name": "Bill energy"
+      },
+      "daily_net_production": {
+        "name": "Daily net production"
+      },
+      "weekly_net_production": {
+        "name": "Weekly net production"
+      },
+      "monthly_net_production": {
+        "name": "Monthly net production"
+      },
+      "yearly_net_production": {
+        "name": "Yearly net production"
+      },
+      "bill_net_production": {
+        "name": "Bill net production"
+      },
+      "daily_from_grid": {
+        "name": "Daily from grid"
+      },
+      "weekly_from_grid": {
+        "name": "Weekly from grid"
+      },
+      "monthly_from_grid": {
+        "name": "Monthly from grid"
+      },
+      "yearly_from_grid": {
+        "name": "Yearly from grid"
+      },
+      "bill_from_grid": {
+        "name": "Bill from grid"
+      },
+      "daily_to_grid": {
+        "name": "Daily to grid"
+      },
+      "weekly_to_grid": {
+        "name": "Weekly to grid"
+      },
+      "monthly_to_grid": {
+        "name": "Monthly to grid"
+      },
+      "yearly_to_grid": {
+        "name": "Yearly to grid"
+      },
+      "bill_to_grid": {
+        "name": "Bill to grid"
+      },
+      "daily_production_pct": {
+        "name": "Daily net production ratio"
+      },
+      "weekly_production_pct": {
+        "name": "Weekly net production ratio"
+      },
+      "monthly_production_pct": {
+        "name": "Monthly net production ratio"
+      },
+      "yearly_production_pct": {
+        "name": "Yearly net production ratio"
+      },
+      "bill_production_pct": {
+        "name": "Bill net production ratio"
+      },
+      "daily_solar_powered": {
+        "name": "Daily solar powered ratio"
+      },
+      "weekly_solar_powered": {
+        "name": "Weekly solar powered ratio"
+      },
+      "monthly_solar_powered": {
+        "name": "Monthly solar powered ratio"
+      },
+      "yearly_solar_powered": {
+        "name": "Yearly solar powered ratio"
+      },
+      "bill_solar_powered": {
+        "name": "Bill solar powered ratio"
       }
     }
   }
