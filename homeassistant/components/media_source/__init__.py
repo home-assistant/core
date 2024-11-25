@@ -55,12 +55,6 @@ __all__ = [
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-MEDIA_SOURCE_BROWSE_MEDIA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
-    }
-)
-
 
 class MediaSourceProtocol(Protocol):
     """Define the format of media_source platforms."""
@@ -94,15 +88,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
     )
-
-    hass.services.async_register(
-        DOMAIN,
-        "browse_media",
-        async_browse_media,
-        MEDIA_SOURCE_BROWSE_MEDIA_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-
     return True
 
 
