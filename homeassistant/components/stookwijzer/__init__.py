@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from stookwijzer import Stookwijzer
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -17,6 +19,8 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> bool:
     """Set up Stookwijzer from a config entry."""
+    await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
+
     coordinator = StookwijzerCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -71,3 +75,16 @@ async def async_migrate_entry(
         LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
+
+
+@callback
+def async_migrate_entity_entry(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+    """Migrate Stookwijzer entity entries.
+
+    - Migrates unique ID for the old Stookwijzer sensors to the new unique ID.
+    """
+    if entity_entry.unique_id == entity_entry.config_entry_id:
+        return {"new_unique_id": f"{entity_entry.config_entry_id}_advice"}
+
+    # No migration needed
+    return None
