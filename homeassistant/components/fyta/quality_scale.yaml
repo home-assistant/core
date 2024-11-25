@@ -58,7 +58,10 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Solar-Log device cannot be discovered
-  repair-issues: done
+  repair-issues:
+     status: exempt
+     comment: |
+        No issues/repairs.
   docs-use-cases: todo
   docs-supported-devices: done
   docs-supported-functions: done
