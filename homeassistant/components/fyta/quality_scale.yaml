@@ -31,7 +31,11 @@ rules:
   entity-unavailable: done
   action-exceptions: done
   reauthentication-flow: done
-  parallel-updates: done
+  parallel-updates: 
+      status: exempt
+      comment: |
+          Coordinator and only sensor platform
+  
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
