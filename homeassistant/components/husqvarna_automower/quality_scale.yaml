@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure:
+    status: todo
+    comment: waiting for PR to get merged
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup:
+    status: done
+    comment: We check if we can get an access token
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: no subscription required, coordinator handles callbacks
+  dependency-transparency: done
+  action-setup:
+    status: todo
+    comment: actions are setup in async_setup_entry and not removed at all
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-actions: done
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: todo
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration options
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: no discovery possible
+  discovery:
+    status: exempt
+    comment: no discovery possible
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: we only remove devices on reload
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: todo
+    comment: remove number of collision sensor
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: no configuration possible
+  repair-issues: done
+  stale-devices:
+    status: todo
+    comment: we only remove devices on reload
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
