@@ -370,3 +370,86 @@ async def test_reauth_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_not_enabled"}
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # original entry
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "1.0.0.127",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "1.0.0.127"
+
+
+async def test_reconfigure_nochange(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration without changing values."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # original entry
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "127.0.0.1",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+
+
+async def test_reconfigure_wrongdevice(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entering ip of other device and prevent changing it based on serial."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # simulate different serial number, as if user entered wrong IP
+    mock_homewizardenergy.device.return_value.serial = "not_5c2fafabcdef"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "1.0.0.127",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+
+    # entry should still be original entry
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"

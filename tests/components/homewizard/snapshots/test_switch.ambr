@@ -41,7 +41,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -123,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -206,7 +206,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
@@ -288,7 +288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -370,7 +370,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': '5c2fafabcdef_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -453,7 +453,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
@@ -535,7 +535,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -617,7 +617,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': '5c2fafabcdef_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -699,7 +699,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -781,7 +781,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -863,7 +863,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': '5c2fafabcdef_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
