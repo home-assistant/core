@@ -45,7 +45,10 @@ rules:
   entity-device-class: done
   devices: done
   entity-category: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+      status: exempt
+     comment: |
+        No noisy entities.
   discovery:
     status: exempt
     comment: Solar-Log device cannot be discovered
