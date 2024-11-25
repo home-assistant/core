@@ -366,7 +366,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.6
+aiostreammagic==2.10.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==5.0.0
@@ -628,7 +628,7 @@ dbus-fast==2.24.3
 debugpy==1.8.6
 
 # homeassistant.components.ecovacs
-deebot-client==8.4.1
+deebot-client==9.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.1
+uiprotect==6.6.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
