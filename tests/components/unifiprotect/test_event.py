@@ -207,7 +207,7 @@ async def test_doorbell_nfc_scanned(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
-    assert state.attributes.get("nfc_id") == "test_nfc_id"
+    assert state.attributes["nfc_id"] == "test_nfc_id"
 
     unsub()
 
@@ -265,7 +265,7 @@ async def test_doorbell_fingerprint_identified(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
-    assert state.attributes.get("ulp_id") == "test_ulp_id"
+    assert state.attributes["ulp_id"] == "test_ulp_id"
 
     unsub()
 
@@ -323,6 +323,6 @@ async def test_doorbell_fingerprint_not_identified(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
-    assert state.attributes.get("ulp_id") == ""
+    assert state.attributes["ulp_id"] == ""
 
     unsub()
