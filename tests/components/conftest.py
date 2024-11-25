@@ -728,7 +728,7 @@ async def check_translations(
 
     translation_errors = {k: "unused" for k in ignore_translations}
 
-    translation_tasks = set()
+    translation_coros = set()
 
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
@@ -750,14 +750,10 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        translation_tasks.add(
-            self.hass.async_create_task(
-                _check_create_issue_translations(self, result, translation_errors),
-                "Check issue translation",
-                eager_start=True,
-            )
+        # This causes a race condition in cloud integration
+        translation_coros.add(
+            _check_create_issue_translations(self, result, translation_errors)
         )
-        self.hass.block_till_done()
         return result
 
     # Use override functions
@@ -773,7 +769,7 @@ async def check_translations(
     ):
         yield
 
-    await asyncio.gather(*translation_tasks)
+    await asyncio.gather(*translation_coros)
 
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
