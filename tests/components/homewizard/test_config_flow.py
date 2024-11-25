@@ -262,27 +262,74 @@ async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_api_version"
 
+    
+async def test_dhcp_discovery_updates_entry(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery updates config entries."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="1.0.0.127",
+            hostname="HW-p1meter-aabbcc",
+            macaddress="5c2fafabcdef",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "1.0.0.127"
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_discovery_dhcp_updates_host(
+@pytest.mark.parametrize(
+    ("exception"),
+    [(DisabledError), (RequestError)],
+)
+async def test_dhcp_discovery_updates_entry_fails(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
 ) -> None:
-    """Test dhcp discovery updates host and aborts."""
+    """Test DHCP discovery updates config entries, but fails to connect."""
+    mock_homewizardenergy.device.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
 
-    service_info = dhcp.DhcpServiceInfo(
-        ip="127.0.0.1",
-        hostname="HW-p1meter-aabbcc",
-        macaddress="5c2fafabcdef",
-    )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="1.0.0.127",
+            hostname="HW-p1meter-aabbcc",
+            macaddress="5c2fafabcdef",
+        ),
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+    
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unknown"
+    
+async def test_dhcp_discovery_ignores_unknown(hass: HomeAssistant, mock_homewizardenergy: MagicMock,) -> None:
+    """Test DHCP discovery is only used for updates.
 
+    Anything else will just abort the flow.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="127.0.0.1",
+            hostname="HW-p1meter-aabbcc",
+            macaddress="5c2fafabcdef",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unknown"
 
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(

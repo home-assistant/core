@@ -66,7 +66,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -240,7 +240,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -327,7 +327,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -414,7 +414,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -504,7 +504,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -591,7 +591,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -678,7 +678,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -765,7 +765,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -850,7 +850,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -934,7 +934,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1020,7 +1020,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1107,7 +1107,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l1_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1194,7 +1194,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l2_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1281,7 +1281,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l3_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1368,7 +1368,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1455,7 +1455,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1542,7 +1542,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1629,7 +1629,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1716,7 +1716,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1803,7 +1803,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1890,7 +1890,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -1980,7 +1980,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2067,7 +2067,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l1',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2154,7 +2154,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l2',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2241,7 +2241,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2331,7 +2331,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2421,7 +2421,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2511,7 +2511,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2598,7 +2598,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2685,7 +2685,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l1_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2772,7 +2772,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l2_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2859,7 +2859,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l3_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2946,7 +2946,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3033,7 +3033,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3120,7 +3120,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3205,7 +3205,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -3289,7 +3289,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3373,7 +3373,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': '5c2fafabcdef_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3459,7 +3459,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3546,7 +3546,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3633,7 +3633,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3718,7 +3718,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
-    'unique_id': '5c2fafabcdef_smr_version',
+    'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -3802,7 +3802,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3889,7 +3889,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3976,7 +3976,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4063,7 +4063,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4150,7 +4150,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4237,7 +4237,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4324,7 +4324,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4411,7 +4411,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4498,7 +4498,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4585,7 +4585,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4672,7 +4672,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -4757,7 +4757,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': '5c2fafabcdef_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -4839,7 +4839,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
-    'unique_id': '5c2fafabcdef_monthly_power_peak_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -4928,7 +4928,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5013,7 +5013,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': '5c2fafabcdef_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -5100,7 +5100,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5190,7 +5190,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5280,7 +5280,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5365,7 +5365,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
-    'unique_id': '5c2fafabcdef_unique_meter_id',
+    'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -5447,7 +5447,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
-    'unique_id': '5c2fafabcdef_meter_model',
+    'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
     'unit_of_measurement': None,
   })
 # ---
@@ -5536,7 +5536,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
-    'unique_id': '5c2fafabcdef_active_tariff',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
     'unit_of_measurement': None,
   })
 # ---
@@ -5627,7 +5627,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': '5c2fafabcdef_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -5714,7 +5714,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5801,7 +5801,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5888,7 +5888,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5973,7 +5973,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6055,7 +6055,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6137,7 +6137,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6219,7 +6219,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6301,7 +6301,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6383,7 +6383,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6467,7 +6467,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': '5c2fafabcdef_active_liter_lpm',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
     'unit_of_measurement': 'l/min',
   })
 # ---
@@ -6551,7 +6551,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -6635,7 +6635,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -7133,7 +7133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': '5c2fafabcdef_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -7219,7 +7219,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7306,7 +7306,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7393,7 +7393,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7478,7 +7478,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
-    'unique_id': '5c2fafabcdef_smr_version',
+    'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -7562,7 +7562,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7649,7 +7649,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7736,7 +7736,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7823,7 +7823,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7910,7 +7910,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7997,7 +7997,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8084,7 +8084,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8171,7 +8171,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8258,7 +8258,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8345,7 +8345,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8432,7 +8432,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -8517,7 +8517,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': '5c2fafabcdef_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -8599,7 +8599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
-    'unique_id': '5c2fafabcdef_monthly_power_peak_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8688,7 +8688,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8773,7 +8773,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': '5c2fafabcdef_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -8860,7 +8860,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8950,7 +8950,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -9040,7 +9040,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -9125,7 +9125,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
-    'unique_id': '5c2fafabcdef_unique_meter_id',
+    'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -9207,7 +9207,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
-    'unique_id': '5c2fafabcdef_meter_model',
+    'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
     'unit_of_measurement': None,
   })
 # ---
@@ -9296,7 +9296,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
-    'unique_id': '5c2fafabcdef_active_tariff',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
     'unit_of_measurement': None,
   })
 # ---
@@ -9387,7 +9387,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': '5c2fafabcdef_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -9474,7 +9474,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9561,7 +9561,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9648,7 +9648,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9733,7 +9733,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9815,7 +9815,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9897,7 +9897,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9979,7 +9979,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10061,7 +10061,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10143,7 +10143,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10227,7 +10227,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': '5c2fafabcdef_active_liter_lpm',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
     'unit_of_measurement': 'l/min',
   })
 # ---
@@ -10311,7 +10311,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -10395,7 +10395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -10893,7 +10893,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': '5c2fafabcdef_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -10979,7 +10979,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11066,7 +11066,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11153,7 +11153,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11240,7 +11240,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11327,7 +11327,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11414,7 +11414,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11501,7 +11501,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11588,7 +11588,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11675,7 +11675,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11762,7 +11762,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11849,7 +11849,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11936,7 +11936,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12023,7 +12023,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12110,7 +12110,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -12195,7 +12195,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': '5c2fafabcdef_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -12282,7 +12282,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12367,7 +12367,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': '5c2fafabcdef_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -12454,7 +12454,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12544,7 +12544,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12634,7 +12634,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12721,7 +12721,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': '5c2fafabcdef_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -12808,7 +12808,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12895,7 +12895,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12982,7 +12982,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -13067,7 +13067,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13149,7 +13149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13231,7 +13231,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13313,7 +13313,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13395,7 +13395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13477,7 +13477,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': '5c2fafabcdef_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13561,7 +13561,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': '5c2fafabcdef_active_liter_lpm',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
     'unit_of_measurement': 'l/min',
   })
 # ---
@@ -13647,7 +13647,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -13734,7 +13734,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -13824,7 +13824,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -13914,7 +13914,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -13999,7 +13999,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -14083,7 +14083,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -14169,7 +14169,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -14256,7 +14256,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -14343,7 +14343,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -14430,7 +14430,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -14517,7 +14517,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -14607,7 +14607,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -14694,7 +14694,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -14784,7 +14784,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -14871,7 +14871,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -14958,7 +14958,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -15043,7 +15043,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -15127,7 +15127,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -15213,7 +15213,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': '5c2fafabcdef_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -15300,7 +15300,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': '5c2fafabcdef_active_liter_lpm',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
     'unit_of_measurement': 'l/min',
   })
 # ---
@@ -15384,7 +15384,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -15468,7 +15468,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -15554,7 +15554,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -15641,7 +15641,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -15728,7 +15728,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -15815,7 +15815,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -15902,7 +15902,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -15992,7 +15992,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -16079,7 +16079,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -16166,7 +16166,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -16253,7 +16253,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -16338,7 +16338,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -16422,7 +16422,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -16508,7 +16508,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16595,7 +16595,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l1_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16682,7 +16682,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l2_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16769,7 +16769,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': '5c2fafabcdef_active_apparent_power_l3_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16856,7 +16856,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -16943,7 +16943,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17030,7 +17030,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17117,7 +17117,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': '5c2fafabcdef_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17204,7 +17204,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': '5c2fafabcdef_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -17291,7 +17291,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': '5c2fafabcdef_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -17378,7 +17378,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -17468,7 +17468,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17555,7 +17555,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l1',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17642,7 +17642,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l2',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17729,7 +17729,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': '5c2fafabcdef_active_power_factor_l3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17819,7 +17819,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17909,7 +17909,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17999,7 +17999,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': '5c2fafabcdef_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -18086,7 +18086,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '5c2fafabcdef_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18173,7 +18173,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l1_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18260,7 +18260,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l2_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18347,7 +18347,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': '5c2fafabcdef_active_reactive_power_l3_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18434,7 +18434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18521,7 +18521,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18608,7 +18608,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': '5c2fafabcdef_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18693,7 +18693,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': '5c2fafabcdef_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -18777,7 +18777,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': '5c2fafabcdef_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---

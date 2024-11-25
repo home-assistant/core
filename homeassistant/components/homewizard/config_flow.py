@@ -11,11 +11,13 @@ from homewizard_energy.errors import DisabledError, RequestError, UnsupportedErr
 from homewizard_energy.v1.models import Device
 from voluptuous import Required, Schema
 
-from homeassistant.components import dhcp, onboarding, zeroconf
+from homeassistant.components import onboarding, zeroconf
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_API_ENABLED,
@@ -111,36 +113,28 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle discovery via dhcp."""
-        _LOGGER.warning("1")
-        self.discovered_conf = {CONF_IP_ADDRESS: discovery_info.ip}
-        self.context["title_placeholders"] = {
-            CONF_IP_ADDRESS: f"HomeWizard {discovery_info.ip}"
-        }
-        _LOGGER.warning("2")
-        _LOGGER.info(
-            "Discovered HomeWizard at %s %s",
-            discovery_info.ip,
-            discovery_info.macaddress,
-        )
-        _LOGGER.warning("3")
+        """Handle dhcp discovery to update existing entries.
+
+        This flow is triggered only by DHCP discovery of known devices.
+        """
         try:
-            device_info = await self._async_try_connect(discovery_info.ip)
-            _LOGGER.warning("4")
+            device = await self._async_try_connect(discovery_info.ip)
         except RecoverableError as ex:
             _LOGGER.error(ex)
-            _LOGGER.warning("5")
-            # errors = {"base": ex.error_code}
-        else:
-            _LOGGER.warning("6")
-            await self.async_set_unique_id(device_info.serial)
-            self._abort_if_unique_id_configured(
-                updates={CONF_IP_ADDRESS: discovery_info.ip}
-            )
-        _LOGGER.warning("7")
-        return await self.async_step_user()
+            return self.async_abort(reason="unknown")
+        
+        await self.async_set_unique_id(
+            f"{device.product_type}_{discovery_info.macaddress}"
+        )
+        
+        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: discovery_info.ip})
+
+        # This situation should never happen, as Home Assistant will only
+        # send updates for existing entries. In case it does, we'll just
+        # abort the flow with an unknown error.
+        return self.async_abort(reason="unknown")
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
