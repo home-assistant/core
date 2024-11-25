@@ -205,7 +205,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 )
 
         return await self._device.generate_async_webrtc_stream(
-            offer_sdp, session_id, message_wrapper
+            offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
     async def async_on_webrtc_candidate(
