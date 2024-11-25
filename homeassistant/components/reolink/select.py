@@ -185,7 +185,9 @@ SELECT_ENTITIES = (
         get_options=[method.name for method in BinningModeEnum],
         supported=lambda api, ch: api.supported(ch, "binning_mode"),
         value=lambda api, ch: BinningModeEnum(api.binning_mode(ch)).name,
-        method=lambda api, ch, name: api.set_binning_mode(ch, BinningModeEnum[name].value),
+        method=lambda api, ch, name: api.set_binning_mode(
+            ch, BinningModeEnum[name].value
+        ),
     ),
 )
 
