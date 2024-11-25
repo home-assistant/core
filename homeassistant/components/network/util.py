@@ -137,9 +137,19 @@ def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
 
 
 @callback
+def async_get_source_ip_v6(target_ip: str) -> str | None:
+    """Return the source IPv6 address that will reach target_ip."""
+    return _async_get_source_ip(target_ip, socket.AF_INET6)
+
+
+@callback
 def async_get_source_ip(target_ip: str) -> str | None:
-    """Return the source ip that will reach target_ip."""
-    test_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    """Return the source IPV4 address that will reach target_ip."""
+    return _async_get_source_ip(target_ip, socket.AF_INET)
+
+
+def _async_get_source_ip(target_ip: str, af: socket.AddressFamily) -> str | None:
+    test_sock = socket.socket(af, socket.SOCK_DGRAM)
     test_sock.setblocking(False)  # must be non-blocking for async
     try:
         test_sock.connect((target_ip, 1))
