@@ -19,7 +19,10 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-actions: done
+  docs-actions: 
+     status: exempt
+     comment: |
+        No custom action.
   brands: done
 
   # Silver
