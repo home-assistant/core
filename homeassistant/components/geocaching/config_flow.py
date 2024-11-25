@@ -22,6 +22,15 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 1
 
+    Geocaches = "Geocaches"
+    Trackable = "Trackable"
+
+    def __init__(self) -> None:
+        """Initialize the flow handler."""
+        super().__init__()
+        self.data: dict[str, Any]
+        self.title: str
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -58,17 +67,14 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-
+        self.data = data
+        self.title = status.user.username
         # Create the final config entry
-        return await self.async_step_additional_config(
-            None, title=status.user.username, data=data
-        )
+        return await self.async_step_additional_config(None)
 
     async def async_step_additional_config(
         self,
         user_input: dict[str, Any] | None,
-        title: str,
-        data: Mapping[str, Any],
     ) -> ConfigFlowResult:
         """Handle additional user input after authentication."""
         # Check for existing entry and update or create a new entry
@@ -79,12 +85,18 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 step_id="additional_config",
                 data_schema=vol.Schema(
                     {
-                        vol.Required("setting_1"): str,
-                        vol.Required("setting_2"): str,
+                        vol.Optional(self.Geocaches): str,
+                        vol.Optional(self.Trackable): str,
                     }
                 ),
                 # description_placeholders={"username": self.data["username"]},
             )
-        # Combine OAuth data with user-provided additional settings
-        # self.update(user_input)
-        return self.async_create_entry(title=title, data=data)
+
+        # Check if user has entered anything
+        if user_input.get(self.Geocaches):
+            self.data[self.Geocaches] = user_input[self.Geocaches]
+
+        if user_input.get(self.Trackable):
+            self.data[self.Trackable] = user_input[self.Trackable]
+
+        return self.async_create_entry(title=self.title, data=self.data)
