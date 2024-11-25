@@ -28,10 +28,8 @@ rules:
   log-when-unavailable: done
   entity-unavailable: done
   action-exceptions:
-    docs-actions:
     status: exempt
-    comment: |
-      No custom action.
+    comment: No custom action.
   reauthentication-flow: done
   parallel-updates:
     status: exempt
