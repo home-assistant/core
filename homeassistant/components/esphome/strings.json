@@ -86,9 +86,9 @@
         }
       },
       "wake_word": {
-        "name": "[%key:component::assist_satellite::entity::select::wake_word::name%]",
+        "name": "Wake word",
         "state": {
-          "okay_nabu": "[%key:component::assist_satellite::entity::select::wake_word::state::okay_nabu%]"
+          "okay_nabu": "Okay Nabu"
         }
       }
     },

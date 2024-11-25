@@ -152,17 +152,6 @@ class EsphomeAssistSatellite(
             f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
         )
 
-    @property
-    def wake_word_entity_id(self) -> str | None:
-        """Return the entity ID of the wake word select."""
-        assert self.entry_data.device_info is not None
-        ent_reg = er.async_get(self.hass)
-        return ent_reg.async_get_entity_id(
-            Platform.SELECT,
-            DOMAIN,
-            f"{self.entry_data.device_info.mac_address}-wake_word",
-        )
-
     @callback
     def async_get_configuration(
         self,

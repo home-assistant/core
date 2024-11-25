@@ -8,9 +8,11 @@ from homeassistant.components.assist_pipeline.select import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
-from homeassistant.components.assist_satellite import select as assist_satellite_select
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -94,16 +96,29 @@ class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):
 
 
 class EsphomeAssistSatelliteWakeWordSelect(
-    EsphomeAssistEntity, assist_satellite_select.WakeWordSelect
+    EsphomeAssistEntity, SelectEntity, restore_state.RestoreEntity
 ):
     """Wake word selector for esphome devices."""
+
+    entity_description = SelectEntityDescription(
+        key="wake_word",
+        translation_key="wake_word",
+        entity_category=EntityCategory.CONFIG,
+    )
+    _attr_should_poll = False
+    _attr_current_option: str = "Okay Nabu"
+    _attr_options: list[str] = ["Okay Nabu"]
 
     def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
         """Initialize a wake word selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
-        assist_satellite_select.WakeWordSelect.__init__(
-            self, hass, self._device_info.mac_address
-        )
+
+        unique_id_prefix = self._device_info.mac_address
+        self._attr_unique_id = f"{unique_id_prefix}-wake_word"
+        self.hass = hass
+
+        # name -> id
+        self._wake_words: dict[str, str] = {}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -116,6 +131,33 @@ class EsphomeAssistSatelliteWakeWordSelect(
             )
         )
 
-    def async_set_wake_word(self, wake_word_id: str) -> None:
-        """Set the selected wake word on the satellite."""
-        self._entry_data.async_assist_satellite_set_wake_word(wake_word_id)
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        if wake_word_id := self._wake_words.get(option):
+            self._entry_data.async_assist_satellite_set_wake_word(wake_word_id)
+
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+    def async_satellite_config_updated(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Update options with available wake words."""
+        if not config.available_wake_words:
+            self._wake_words.clear()
+            return
+
+        self._wake_words = {w.wake_word: w.id for w in config.available_wake_words}
+        self._attr_options = sorted(self._wake_words)
+
+        if config.active_wake_words:
+            # Select first active wake word
+            wake_word_id = config.active_wake_words[0]
+            for wake_word in config.available_wake_words:
+                if wake_word.id == wake_word_id:
+                    self._attr_current_option = wake_word.wake_word
+        else:
+            # Select first available wake word
+            self._attr_current_option = config.available_wake_words[0].wake_word
+
+        self.async_write_ha_state()
