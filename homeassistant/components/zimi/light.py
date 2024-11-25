@@ -56,7 +56,6 @@ class ZimiLight(LightEntity):
             suggested_area=self._light.room,
             via_device=(DOMAIN, api.mac),
         )
-        self.update()
         _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
 
     @property
