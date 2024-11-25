@@ -76,6 +76,9 @@ def mock_stookwijzer() -> Generator[MagicMock]:
         )
 
         client = stookwijzer_mock.return_value
+        client.lki = 2
+        client.windspeed_ms = 2.5
+        client.windspeed_bft = 2
         client.advice = "code_yellow"
 
         yield stookwijzer_mock
