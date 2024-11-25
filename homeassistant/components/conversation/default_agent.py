@@ -14,8 +14,14 @@ import re
 import time
 from typing import IO, Any, cast
 
-from hassil.expression import Expression, ListReference, Sequence
-from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
+from hassil.expression import Expression, ListReference, Sequence, TextChunk
+from hassil.intents import (
+    Intents,
+    SlotList,
+    TextSlotList,
+    TextSlotValue,
+    WildcardSlotList,
+)
 from hassil.recognize import (
     MISSING_ENTITY,
     RecognizeResult,
@@ -311,14 +317,12 @@ class DefaultAgent(ConversationEntity):
 
         if self._exposed_names_trie is not None:
             # Filter by input string
-            slot_lists["name"] = TextSlotList.from_tuples(
-                (
-                    result[2]
-                    for result in self._exposed_names_trie.find(
-                        user_input.text.strip().lower()
-                    )
-                ),
-                allow_template=False,
+            text_lower = user_input.text.strip().lower()
+            slot_lists["name"] = TextSlotList(
+                name="name",
+                values=[
+                    result[2] for result in self._exposed_names_trie.find(text_lower)
+                ],
             )
 
         start = time.monotonic()
@@ -735,21 +739,23 @@ class DefaultAgent(ConversationEntity):
                             continue
 
                         self._unexposed_names_trie.insert(
-                            alias.lower(), (alias, alias, context)
+                            alias.lower(),
+                            TextSlotValue.from_tuple((alias, alias, context)),
                         )
 
                 # Default name
                 self._unexposed_names_trie.insert(
-                    state.name.strip().lower(), (state.name, state.name, context)
+                    state.name.strip().lower(),
+                    TextSlotValue.from_tuple((state.name, state.name, context)),
                 )
 
         # Build filtered slot list
-        return TextSlotList.from_tuples(
-            (
-                result[2]
-                for result in self._unexposed_names_trie.find(text.strip().lower())
-            ),
-            allow_template=False,
+        text_lower = text.strip().lower()
+        return TextSlotList(
+            name="name",
+            values=[
+                result[2] for result in self._unexposed_names_trie.find(text_lower)
+            ],
         )
 
     def _recognize_strict(
@@ -1093,12 +1099,10 @@ class DefaultAgent(ConversationEntity):
 
                     alias_tuple = (alias, alias, context)
                     exposed_entity_names.append(alias_tuple)
-                    self._exposed_names_trie.insert(alias.lower(), alias_tuple)
 
             # Default name
             name_tuple = (state.name, state.name, context)
             exposed_entity_names.append(name_tuple)
-            self._exposed_names_trie.insert(state.name.lower(), name_tuple)
 
         _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
@@ -1132,11 +1136,15 @@ class DefaultAgent(ConversationEntity):
 
                 floor_names.append((alias, floor.name))
 
+        name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
+        for name_value in name_list.values:
+            assert isinstance(name_value.text_in, TextChunk)
+            name_text = name_value.text_in.text.strip().lower()
+            self._exposed_names_trie.insert(name_text, name_value)
+
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
-            "name": TextSlotList.from_tuples(
-                exposed_entity_names, allow_template=False
-            ),
+            "name": name_list,
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
