@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_TYPE
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
