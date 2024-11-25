@@ -904,6 +904,27 @@ async def test_options_only_stream(
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
 
+@respx.mock
+@pytest.mark.usefixtures("fakeimg_png")
+async def test_form_options_stream_worker_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test we handle a StreamWorkerError and pass the message through."""
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.generic.config_flow.create_stream",
+        side_effect=StreamWorkerError("Some message"),
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            TESTDATA,
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"stream_source": "unknown_with_details"}
+    assert result2["description_placeholders"] == {"error": "Some message"}
+
+
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the generic IP Camera entry."""

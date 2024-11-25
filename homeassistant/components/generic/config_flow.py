@@ -489,6 +489,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 True,
                 self.show_advanced_options,
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
