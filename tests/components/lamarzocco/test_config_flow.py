@@ -501,6 +501,8 @@ async def test_dhcp_already_configured_and_update(
 ) -> None:
     """Test discovered IP address change."""
     old_ip = mock_config_entry.data[CONF_HOST]
+    old_address = mock_config_entry.data[CONF_ADDRESS]
+
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -516,6 +518,9 @@ async def test_dhcp_already_configured_and_update(
 
     assert mock_config_entry.data[CONF_HOST] != old_ip
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.42"
+
+    assert mock_config_entry.data[CONF_ADDRESS] != old_address
+    assert mock_config_entry.data[CONF_ADDRESS] == "aa:bb:cc:dd:ee:ff"
 
 
 async def test_options_flow(
