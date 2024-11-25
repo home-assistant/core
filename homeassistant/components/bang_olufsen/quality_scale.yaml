@@ -43,7 +43,7 @@ rules:
   entity-translations:
     status: exempt
     comment: This integration does not provide any entities that are suitable for translations. The media_player entity's name is simply the friendly name of the device.
-  entity-device: done
+  entity-device-class: done
   devices: done
   entity-category: done
   entity-disabled-by-default:
@@ -66,7 +66,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: No devices are dynamically added at this point.
-  discovery-update: done
+  discovery-update-info: done
   repair-issues:
     status: exempt
     comment: Not necessary at this point.
