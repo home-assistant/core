@@ -42,7 +42,7 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders: dict[str, str] = {}
 
             try:
-                if user_input[CONF_HOST] == "":
+                if not user_input[CONF_HOST]:
                     try:
                         description = await ControlPointDiscoveryService().discover()
                     except ControlPointError as _:
