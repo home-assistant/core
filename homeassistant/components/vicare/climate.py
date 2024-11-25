@@ -167,7 +167,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         try:
             _room_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
-                _room_temperature = self._api.getRoomTemperature()
+                self._attributes["room_temperature"] = _room_temperature = (
+                    self._api.getRoomTemperature()
+                )
 
             _supply_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
@@ -181,20 +183,17 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 self._attr_current_temperature = None
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._current_program = self._api.getActiveProgram()
+                self._attributes["active_vicare_program"] = self._current_program = (
+                    self._api.getActiveProgram()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_target_temperature = self._api.getCurrentDesiredTemperature()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._current_mode = self._api.getActiveMode()
-
-            # Update the generic device attributes
-            self._attributes = {
-                "room_temperature": _room_temperature,
-                "active_vicare_program": self._current_program,
-                "active_vicare_mode": self._current_mode,
-            }
+                self._attributes["active_vicare_mode"] = self._current_mode = (
+                    self._api.getActiveMode()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["heating_curve_slope"] = (

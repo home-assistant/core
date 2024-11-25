@@ -5,15 +5,26 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import trigger_subscription_callback
+from .common import snapshot_matter_entities, trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_events(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test events."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
+
+
 @pytest.mark.parametrize("node_fixture", ["generic_switch"])
 async def test_generic_switch_node(
     hass: HomeAssistant,
@@ -53,8 +64,6 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["generic_switch_multi"])
 async def test_generic_switch_multi_node(
     hass: HomeAssistant,

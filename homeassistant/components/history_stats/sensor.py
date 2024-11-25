@@ -104,7 +104,7 @@ async def async_setup_platform(
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
-    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
+    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception

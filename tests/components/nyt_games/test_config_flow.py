@@ -37,6 +37,27 @@ async def test_full_flow(
     assert result["result"].unique_id == "218886794"
 
 
+async def test_stripping_token(
+    hass: HomeAssistant,
+    mock_nyt_games_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test stripping token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: " token "},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TOKEN: "token"}
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [

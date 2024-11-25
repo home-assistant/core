@@ -29,6 +29,20 @@ class AnalyticsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[AnalyticsData], StateType]
 
 
+def get_addon_entity_description(
+    name_slug: str,
+) -> AnalyticsSensorEntityDescription:
+    """Get addon entity description."""
+    return AnalyticsSensorEntityDescription(
+        key=f"addon_{name_slug}_active_installations",
+        translation_key="addons",
+        name=name_slug,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.addons.get(name_slug),
+    )
+
+
 def get_core_integration_entity_description(
     domain: str, name: str
 ) -> AnalyticsSensorEntityDescription:
@@ -57,6 +71,26 @@ def get_custom_integration_entity_description(
     )
 
 
+GENERAL_SENSORS = [
+    AnalyticsSensorEntityDescription(
+        key="total_active_installations",
+        translation_key="total_active_installations",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.active_installations,
+    ),
+    AnalyticsSensorEntityDescription(
+        key="total_reports_integrations",
+        translation_key="total_reports_integrations",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.reports_integrations,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AnalyticsInsightsConfigEntry,
@@ -69,6 +103,13 @@ async def async_setup_entry(
         analytics_data.coordinator
     )
     entities: list[HomeassistantAnalyticsSensor] = []
+    entities.extend(
+        HomeassistantAnalyticsSensor(
+            coordinator,
+            get_addon_entity_description(addon_name_slug),
+        )
+        for addon_name_slug in coordinator.data.addons
+    )
     entities.extend(
         HomeassistantAnalyticsSensor(
             coordinator,
@@ -85,6 +126,12 @@ async def async_setup_entry(
         )
         for integration_domain in coordinator.data.custom_integrations
     )
+
+    entities.extend(
+        HomeassistantAnalyticsSensor(coordinator, entity_description)
+        for entity_description in GENERAL_SENSORS
+    )
+
     async_add_entities(entities)
 
 

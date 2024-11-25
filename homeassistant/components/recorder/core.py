@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 import queue
 import sqlite3
@@ -15,6 +14,7 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any, cast
 
+from propcache import cached_property
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
@@ -78,16 +78,8 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .migration import (
-    EntityIDMigration,
-    EventIDPostMigration,
-    EventsContextIDMigration,
-    EventTypeIDMigration,
-    StatesContextIDMigration,
-)
 from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
-from .queries import get_migration_changes
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.recorder_runs import RecorderRunsManager
@@ -120,7 +112,6 @@ from .util import (
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
-    execute_stmt_lambda_element,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -570,9 +561,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_clear_statistics(self, statistic_ids: list[str]) -> None:
+    def async_clear_statistics(
+        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+    ) -> None:
         """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(statistic_ids))
+        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
 
     @callback
     def async_update_statistics_metadata(
@@ -581,11 +574,12 @@ class Recorder(threading.Thread):
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
         new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
         self.queue_task(
             UpdateStatisticsMetadataTask(
-                statistic_id, new_statistic_id, new_unit_of_measurement
+                on_done, statistic_id, new_statistic_id, new_unit_of_measurement
             )
         )
 
@@ -737,12 +731,17 @@ class Recorder(threading.Thread):
 
         # First do non-live migration steps, if needed
         if schema_status.migration_needed:
+            # Do non-live schema migration
             result, schema_status = self._migrate_schema_offline(schema_status)
             if not result:
                 self._notify_migration_failed()
                 self.migration_in_progress = False
                 return
             self.schema_version = schema_status.current_version
+
+            # Do non-live data migration
+            migration.migrate_data_non_live(self, self.get_session, schema_status)
+
             # Non-live migration is now completed, remaining steps are live
             self.migration_is_live = True
 
@@ -798,20 +797,7 @@ class Recorder(threading.Thread):
             # there are a lot of statistics graphs on the frontend.
             self.statistics_meta_manager.load(session)
 
-            migration_changes: dict[str, int] = {
-                row[0]: row[1]
-                for row in execute_stmt_lambda_element(session, get_migration_changes())
-            }
-
-            for migrator_cls in (
-                StatesContextIDMigration,
-                EventsContextIDMigration,
-                EventTypeIDMigration,
-                EntityIDMigration,
-                EventIDPostMigration,
-            ):
-                migrator = migrator_cls(schema_status.start_version, migration_changes)
-                migrator.do_migrate(self, session)
+        migration.migrate_data_live(self, self.get_session, schema_status)
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -978,6 +964,7 @@ class Recorder(threading.Thread):
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
                     migration_needed=False,
+                    non_live_data_migration_needed=False,
                     schema_errors=set(),
                     start_version=SCHEMA_VERSION,
                 )

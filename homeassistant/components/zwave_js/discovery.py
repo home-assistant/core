@@ -969,12 +969,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    # binary switches without color support
-    ZWaveDiscoverySchema(
-        platform=Platform.SWITCH,
-        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
-        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
-    ),
     # switch for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
@@ -1062,12 +1056,41 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # lights
-    # primary value is the currentValue (brightness)
-    # catch any device with multilevel CC as light
-    # NOTE: keep this at the bottom of the discovery scheme,
-    # to handle all others that need the multilevel CC first
+    # Handle the different combinations of Binary Switch, Multilevel Switch and Color Switch
+    # to create switches and/or (colored) lights. The goal is to:
+    # - couple Color Switch CC with Multilevel Switch CC if possible
+    # - couple Color Switch CC with Binary Switch CC as the first fallback
+    # - use Color Switch CC standalone as the last fallback
     #
+    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable light with or without color support.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Binary Switch CC when Multilevel Switch and Color Switch CC exist ->
+    # On/Off switch, assign color to light entity instead
+    ZWaveDiscoverySchema(
+        platform=Platform.SWITCH,
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # Binary Switch CC and Color Switch CC ->
+    # Colored light that uses Binary Switch CC for turning on/off.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    # Binary Switch CC without Color Switch CC -> On/Off switch
+    ZWaveDiscoverySchema(
+        platform=Platform.SWITCH,
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
     # Colored light (legacy device) that can only be controlled through Color Switch CC.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
@@ -1077,18 +1100,6 @@ DISCOVERY_SCHEMAS = [
             SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
             SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         ],
-    ),
-    # Colored light that can be turned on or off with the Binary Switch CC.
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="color_onoff",
-        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
-        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
-    ),
-    # Dimmable light with or without color support.
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # light for Basic CC with target
     ZWaveDiscoverySchema(
@@ -1314,14 +1325,20 @@ def async_discover_single_value(
 
         # check additional required values
         if schema.required_values is not None and not all(
-            any(check_value(val, val_scheme) for val in value.node.values.values())
+            any(
+                check_value(val, val_scheme, primary_value=value)
+                for val in value.node.values.values()
+            )
             for val_scheme in schema.required_values
         ):
             continue
 
         # check for values that may not be present
         if schema.absent_values is not None and any(
-            any(check_value(val, val_scheme) for val in value.node.values.values())
+            any(
+                check_value(val, val_scheme, primary_value=value)
+                for val in value.node.values.values()
+            )
             for val_scheme in schema.absent_values
         ):
             continue
@@ -1362,6 +1379,9 @@ def async_discover_single_value(
         # prevent re-discovery of the (primary) value if not allowed
         if not schema.allow_multi:
             discovered_value_ids[device.id].add(value.value_id)
+
+    # prevent re-discovery of the (primary) value after all schemas have been checked
+    discovered_value_ids[device.id].add(value.value_id)
 
     if value.command_class == CommandClass.CONFIGURATION:
         yield from async_discover_single_configuration_value(
@@ -1437,7 +1457,11 @@ def async_discover_single_configuration_value(
 
 
 @callback
-def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
+def check_value(
+    value: ZwaveValue,
+    schema: ZWaveValueDiscoverySchema,
+    primary_value: ZwaveValue | None = None,
+) -> bool:
     """Check if value matches scheme."""
     # check command_class
     if (
@@ -1447,6 +1471,14 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check endpoint
     if schema.endpoint is not None and value.endpoint not in schema.endpoint:
+        return False
+    # If the schema does not require an endpoint, make sure the value is on the
+    # same endpoint as the primary value
+    if (
+        schema.endpoint is None
+        and primary_value is not None
+        and value.endpoint != primary_value.endpoint
+    ):
         return False
     # check property
     if schema.property is not None and value.property_ not in schema.property:

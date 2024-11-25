@@ -14,6 +14,8 @@ from .coordinator import OmadaCoordinator
 class OmadaDeviceEntity[_T: OmadaCoordinator[Any]](CoordinatorEntity[_T]):
     """Common base class for all entities associated with Omada SDN Devices."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: _T, device: OmadaDevice) -> None:
         """Initialize the device."""
         super().__init__(coordinator)

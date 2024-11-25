@@ -1,9 +1,10 @@
 """The tests for the MQTT client."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import socket
 import ssl
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -296,10 +297,13 @@ async def test_subscribe_mqtt_config_entry_disabled(
     mqtt_mock.connected = True
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.NOT_LOADED
 
     await hass.config_entries.async_set_disabled_by(
         mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
@@ -1279,7 +1283,7 @@ async def test_handle_message_callback(
         callbacks.append(args)
 
     msg = ReceiveMessage(
-        "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
+        "some-topic", b"test-payload", 1, False, "some-topic", time.monotonic()
     )
     mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "some-topic", _callback)
@@ -1710,6 +1714,97 @@ async def test_mqtt_subscribes_topics_on_connect(
     assert ("topic/test", 0) in subscribe_calls
     assert ("home/sensor", 2) in subscribe_calls
     assert ("still/pending", 1) in subscribe_calls
+
+
+@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test subscription to wildcard topics on connect in the order of subscription."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+
+    mock_debouncer.clear()
+    await mqtt.async_subscribe(hass, "integration/test#", record_calls)
+    await mqtt.async_subscribe(hass, "integration/kitchen_sink#", record_calls)
+    await mock_debouncer.wait()
+
+    def _assert_subscription_order():
+        discovery_subscribes = [
+            f"homeassistant/{platform}/+/config" for platform in SUPPORTED_COMPONENTS
+        ]
+        discovery_subscribes.extend(
+            [
+                f"homeassistant/{platform}/+/+/config"
+                for platform in SUPPORTED_COMPONENTS
+            ]
+        )
+        discovery_subscribes.extend(
+            ["homeassistant/device/+/config", "homeassistant/device/+/+/config"]
+        )
+        discovery_subscribes.extend(["integration/test#", "integration/kitchen_sink#"])
+
+        expected_discovery_subscribes = discovery_subscribes.copy()
+
+        # Assert we see the expected subscribes and in the correct order
+        actual_subscribes = [
+            discovery_subscribes.pop(0)
+            for call in help_all_subscribe_calls(mqtt_client_mock)
+            if discovery_subscribes and discovery_subscribes[0] == call[0]
+        ]
+
+        # Assert we have processed all items and that they are in the correct order
+        assert len(discovery_subscribes) == 0
+        assert actual_subscribes == expected_discovery_subscribes
+
+    # Assert the initial wildcard topic subscription order
+    _assert_subscription_order()
+
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+
+    mqtt_client_mock.reset_mock()
+
+    mock_debouncer.clear()
+    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    await mock_debouncer.wait()
+
+    # Assert the wildcard topic subscription order after a reconnect
+    _assert_subscription_order()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [ENTRY_DEFAULT_BIRTH_MESSAGE | {mqtt.CONF_DISCOVERY: False}],
+)
+async def test_mqtt_discovery_not_subscribes_when_disabled(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test discovery subscriptions not performend when discovery is disabled."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+
+    await mock_debouncer.wait()
+
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
+
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+
+    mqtt_client_mock.reset_mock()
+
+    mock_debouncer.clear()
+    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    await mock_debouncer.wait()
+
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
 
 
 @pytest.mark.parametrize(

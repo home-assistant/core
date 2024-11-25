@@ -39,16 +39,21 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-def write_tls_asset(hass: HomeAssistant, filename: str, asset: bytes) -> None:
+def write_tls_asset(
+    hass: HomeAssistant, folder: str, filename: str, asset: bytes
+) -> None:
     """Write the tls assets to disk."""
-    makedirs(hass.config.path(DOMAIN), exist_ok=True)
-    with open(hass.config.path(DOMAIN, filename), "w", encoding="utf8") as file_handle:
+    makedirs(hass.config.path(DOMAIN, folder), exist_ok=True)
+    with open(
+        hass.config.path(DOMAIN, folder, filename), "w", encoding="utf8"
+    ) as file_handle:
         file_handle.write(asset.decode("utf-8"))
 
 
 def create_credentials_and_validate(
     hass: HomeAssistant,
     host: str,
+    unique_id: str,
     user_input: dict[str, Any],
     zeroconf_instance: zeroconf.HaZeroconf,
 ) -> dict[str, Any] | None:
@@ -57,13 +62,15 @@ def create_credentials_and_validate(
     result = helper.register(host, "HomeAssistant")
 
     if result is not None:
-        write_tls_asset(hass, CONF_SHC_CERT, result["cert"])
-        write_tls_asset(hass, CONF_SHC_KEY, result["key"])
+        # Save key/certificate pair for each registered host separately
+        # otherwise only the last registered host is accessible.
+        write_tls_asset(hass, unique_id, CONF_SHC_CERT, result["cert"])
+        write_tls_asset(hass, unique_id, CONF_SHC_KEY, result["key"])
 
         session = SHCSession(
             host,
-            hass.config.path(DOMAIN, CONF_SHC_CERT),
-            hass.config.path(DOMAIN, CONF_SHC_KEY),
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_CERT),
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_KEY),
             True,
             zeroconf_instance,
         )
@@ -143,11 +150,16 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+            # unique_id uniquely identifies the registered controller and is used
+            # to save the key/certificate pair for each controller separately
+            unique_id = self.info["unique_id"]
+            assert unique_id
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
                     self.hass,
                     self.host,
+                    unique_id,
                     user_input,
                     zeroconf_instance,
                 )
@@ -167,20 +179,23 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 assert result
                 entry_data = {
-                    CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
-                    CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                    # Each host has its own key/certificate pair
+                    CONF_SSL_CERTIFICATE: self.hass.config.path(
+                        DOMAIN, unique_id, CONF_SHC_CERT
+                    ),
+                    CONF_SSL_KEY: self.hass.config.path(
+                        DOMAIN, unique_id, CONF_SHC_KEY
+                    ),
                     CONF_HOST: self.host,
                     CONF_TOKEN: result["token"],
                     CONF_HOSTNAME: result["token"].split(":", 1)[1],
                 }
-                existing_entry = await self.async_set_unique_id(self.info["unique_id"])
+                existing_entry = await self.async_set_unique_id(unique_id)
                 if existing_entry:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         existing_entry,
                         data=entry_data,
                     )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=cast(str, self.info["title"]),

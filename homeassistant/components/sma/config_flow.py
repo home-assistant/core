@@ -40,6 +40,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -76,7 +77,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(device_info["serial"])
+                await self.async_set_unique_id(str(device_info["serial"]))
                 self._abort_if_unique_id_configured(updates=self._data)
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data

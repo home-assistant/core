@@ -36,6 +36,7 @@ CONNECTIONS = [
         "transfers": 0,
         "duration": "10",
         "delay": 0,
+        "line": "T10",
     },
     {
         "departure": "2024-01-06T18:04:00+0100",
@@ -44,6 +45,7 @@ CONNECTIONS = [
         "transfers": 0,
         "duration": "10",
         "delay": 0,
+        "line": "T10",
     },
     {
         "departure": "2024-01-06T18:05:00+0100",
@@ -52,6 +54,7 @@ CONNECTIONS = [
         "transfers": 0,
         "duration": "10",
         "delay": 0,
+        "line": "T10",
     },
 ]
 

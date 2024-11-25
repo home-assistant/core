@@ -36,7 +36,7 @@ from homeassistant.components.intent import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -108,9 +108,7 @@ class EsphomeAssistSatellite(
     """Satellite running ESPHome."""
 
     entity_description = assist_satellite.AssistSatelliteEntityDescription(
-        key="assist_satellite",
-        translation_key="assist_satellite",
-        entity_category=EntityCategory.CONFIG,
+        key="assist_satellite", translation_key="assist_satellite"
     )
 
     def __init__(
@@ -133,7 +131,7 @@ class EsphomeAssistSatellite(
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=0
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
     @property
@@ -179,7 +177,13 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
-        config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
+        try:
+            config = await self.cli.get_voice_assistant_configuration(
+                _CONFIG_TIMEOUT_SEC
+            )
+        except TimeoutError:
+            # Placeholder config will be used
+            return
 
         # Update available/active wake words
         self._satellite_config.available_wake_words = [
@@ -206,7 +210,7 @@ class EsphomeAssistSatellite(
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
             # TCP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -216,7 +220,7 @@ class EsphomeAssistSatellite(
             )
         else:
             # UDP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -229,7 +233,7 @@ class EsphomeAssistSatellite(
             assert (self.registry_entry is not None) and (
                 self.registry_entry.device_id is not None
             )
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 async_register_timer_handler(
                     self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
@@ -241,14 +245,14 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
+            # Block until config is retrieved.
+            # If the device supports announcements, it will return a config.
+            _LOGGER.debug("Waiting for satellite configuration")
+            await self._update_satellite_config()
+
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
             self._update_tts_format()
-
-        # Fetch latest config in the background
-        self.config_entry.async_create_background_task(
-            self.hass, self._update_satellite_config(), "esphome_voice_assistant_config"
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""

@@ -28,12 +28,13 @@
     "error": {
       "cannot_connect": "Cannot connect: {reason}",
       "invalid_auth": "Invalid authentication: {reason}",
-      "unexpected_envoy": "Unexpected Envoy: {reason}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
     }
   },
   "options": {
@@ -41,7 +42,8 @@
       "init": {
         "title": "Envoy {serial} {host} options",
         "data": {
-          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again."
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
         }
       }
     }

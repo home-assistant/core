@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async import TedeeLock
+from aiotedee import TedeeLock
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,7 +15,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
+from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
 

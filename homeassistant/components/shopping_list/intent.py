@@ -29,7 +29,7 @@ class AddItemIntent(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()

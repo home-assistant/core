@@ -7,6 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyownet"],
-  "quality_scale": "gold",
   "requirements": ["pyownet==0.10.0.post1"]
 }

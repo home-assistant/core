@@ -15,7 +15,7 @@ from broadlink.exceptions import (
 )
 from typing_extensions import TypeVar
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -200,10 +200,4 @@ class BroadlinkDevice(Generic[_ApiT]):
             self.api.host[0],
         )
 
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data={CONF_NAME: self.name, **self.config.data},
-            )
-        )
+        self.config.async_start_reauth(self.hass, data={CONF_NAME: self.name})

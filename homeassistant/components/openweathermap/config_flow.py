@@ -44,7 +44,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
-        return OpenWeatherMapOptionsFlow(config_entry)
+        return OpenWeatherMapOptionsFlow()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -96,10 +96,6 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OpenWeatherMapOptionsFlow(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""

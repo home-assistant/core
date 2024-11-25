@@ -4,10 +4,10 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import MachineModel, PrebrewMode, SteamLevel
-from lmcloud.exceptions import RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
 from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 STEAM_LEVEL_HA_TO_LM = {
@@ -25,11 +25,7 @@ STEAM_LEVEL_HA_TO_LM = {
     "3": SteamLevel.LEVEL_3,
 }
 
-STEAM_LEVEL_LM_TO_HA = {
-    SteamLevel.LEVEL_1: "1",
-    SteamLevel.LEVEL_2: "2",
-    SteamLevel.LEVEL_3: "3",
-}
+STEAM_LEVEL_LM_TO_HA = {value: key for key, value in STEAM_LEVEL_HA_TO_LM.items()}
 
 PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
@@ -37,11 +33,14 @@ PREBREW_MODE_HA_TO_LM = {
     "preinfusion": PrebrewMode.PREINFUSION,
 }
 
-PREBREW_MODE_LM_TO_HA = {
-    PrebrewMode.DISABLED: "disabled",
-    PrebrewMode.PREBREW: "prebrew",
-    PrebrewMode.PREINFUSION: "preinfusion",
+PREBREW_MODE_LM_TO_HA = {value: key for key, value in PREBREW_MODE_HA_TO_LM.items()}
+
+STANDBY_MODE_HA_TO_LM = {
+    "power_on": SmartStandbyMode.POWER_ON,
+    "last_brewing": SmartStandbyMode.LAST_BREWING,
 }
+
+STANDBY_MODE_LM_TO_HA = {value: key for key, value in STANDBY_MODE_HA_TO_LM.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +81,20 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             MachineModel.LINEA_MICRA,
             MachineModel.LINEA_MINI,
         ),
+    ),
+    LaMarzoccoSelectEntityDescription(
+        key="smart_standby_mode",
+        translation_key="smart_standby_mode",
+        entity_category=EntityCategory.CONFIG,
+        options=["power_on", "last_brewing"],
+        select_option_fn=lambda machine, option: machine.set_smart_standby(
+            enabled=machine.config.smart_standby.enabled,
+            mode=STANDBY_MODE_HA_TO_LM[option],
+            minutes=machine.config.smart_standby.minutes,
+        ),
+        current_option_fn=lambda config: STANDBY_MODE_LM_TO_HA[
+            config.smart_standby.mode
+        ],
     ),
 )
 

@@ -28,7 +28,6 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
-from .data import HarmonyConfigEntry
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -156,7 +155,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def _async_create_entry_from_valid_input(
         self, validated: dict[str, Any], user_input: dict[str, Any]
@@ -185,10 +184,6 @@ def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Harmony."""
-
-    def __init__(self, config_entry: HarmonyConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

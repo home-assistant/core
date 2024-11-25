@@ -33,7 +33,10 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
@@ -63,13 +66,6 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -109,61 +105,42 @@ from .error import ChallengeNeeded, SmartHomeError
 _LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = "action.devices.traits."
-TRAIT_CAMERA_STREAM = f"{PREFIX_TRAITS}CameraStream"
-TRAIT_ONOFF = f"{PREFIX_TRAITS}OnOff"
-TRAIT_DOCK = f"{PREFIX_TRAITS}Dock"
-TRAIT_STARTSTOP = f"{PREFIX_TRAITS}StartStop"
+TRAIT_ARM_DISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_BRIGHTNESS = f"{PREFIX_TRAITS}Brightness"
-TRAIT_COLOR_SETTING = f"{PREFIX_TRAITS}ColorSetting"
-TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
-TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
-TRAIT_TEMPERATURE_CONTROL = f"{PREFIX_TRAITS}TemperatureControl"
-TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
-TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
-TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
-TRAIT_INPUTSELECTOR = f"{PREFIX_TRAITS}InputSelector"
-TRAIT_OBJECTDETECTION = f"{PREFIX_TRAITS}ObjectDetection"
-TRAIT_OPENCLOSE = f"{PREFIX_TRAITS}OpenClose"
-TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
-TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
-TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
-TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
-TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_CAMERA_STREAM = f"{PREFIX_TRAITS}CameraStream"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
+TRAIT_COLOR_SETTING = f"{PREFIX_TRAITS}ColorSetting"
+TRAIT_DOCK = f"{PREFIX_TRAITS}Dock"
+TRAIT_ENERGY_STORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_FAN_SPEED = f"{PREFIX_TRAITS}FanSpeed"
+TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
+TRAIT_INPUT_SELECTOR = f"{PREFIX_TRAITS}InputSelector"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
-TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_LOCK_UNLOCK = f"{PREFIX_TRAITS}LockUnlock"
+TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
+TRAIT_OBJECT_DETECTION = f"{PREFIX_TRAITS}ObjectDetection"
+TRAIT_ON_OFF = f"{PREFIX_TRAITS}OnOff"
+TRAIT_OPEN_CLOSE = f"{PREFIX_TRAITS}OpenClose"
+TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
 TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
+TRAIT_START_STOP = f"{PREFIX_TRAITS}StartStop"
+TRAIT_TEMPERATURE_CONTROL = f"{PREFIX_TRAITS}TemperatureControl"
+TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
+TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
+TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 
 PREFIX_COMMANDS = "action.devices.commands."
-COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
-COMMAND_GET_CAMERA_STREAM = f"{PREFIX_COMMANDS}GetCameraStream"
-COMMAND_DOCK = f"{PREFIX_COMMANDS}Dock"
-COMMAND_STARTSTOP = f"{PREFIX_COMMANDS}StartStop"
-COMMAND_PAUSEUNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
-COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
-COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
 COMMAND_ACTIVATE_SCENE = f"{PREFIX_COMMANDS}ActivateScene"
-COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
-COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
-    f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
-)
-COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
-    f"{PREFIX_COMMANDS}ThermostatTemperatureSetRange"
-)
-COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
-COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
-COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
-COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
-COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
-COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_ARM_DISARM = f"{PREFIX_COMMANDS}ArmDisarm"
+COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
+COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
+COMMAND_DOCK = f"{PREFIX_COMMANDS}Dock"
+COMMAND_GET_CAMERA_STREAM = f"{PREFIX_COMMANDS}GetCameraStream"
+COMMAND_LOCK_UNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
-COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
-COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
-COMMAND_OPENCLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
-COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
-COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
-COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
-COMMAND_ARMDISARM = f"{PREFIX_COMMANDS}ArmDisarm"
 COMMAND_MEDIA_NEXT = f"{PREFIX_COMMANDS}mediaNext"
 COMMAND_MEDIA_PAUSE = f"{PREFIX_COMMANDS}mediaPause"
 COMMAND_MEDIA_PREVIOUS = f"{PREFIX_COMMANDS}mediaPrevious"
@@ -172,11 +149,30 @@ COMMAND_MEDIA_SEEK_RELATIVE = f"{PREFIX_COMMANDS}mediaSeekRelative"
 COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
+COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
+COMMAND_OPEN_CLOSE = f"{PREFIX_COMMANDS}OpenClose"
+COMMAND_ON_OFF = f"{PREFIX_COMMANDS}OnOff"
+COMMAND_OPEN_CLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
+COMMAND_PAUSE_UNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
 COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
-COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
+COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
-COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
-COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
+COMMAND_SET_FAN_SPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
+COMMAND_SET_FAN_SPEED_RELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
+COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
+COMMAND_SET_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_SET_MODES = f"{PREFIX_COMMANDS}SetModes"
+COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
+COMMAND_START_STOP = f"{PREFIX_COMMANDS}StartStop"
+COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
+COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
+    f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
+)
+COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
+    f"{PREFIX_COMMANDS}ThermostatTemperatureSetRange"
+)
+COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
 
 TRAITS: list[type[_Trait]] = []
 
@@ -415,7 +411,7 @@ class ObjectDetection(_Trait):
     https://developers.google.com/actions/smarthome/traits/objectdetection
     """
 
-    name = TRAIT_OBJECTDETECTION
+    name = TRAIT_OBJECT_DETECTION
     commands = []
 
     @staticmethod
@@ -473,8 +469,8 @@ class OnOffTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/onoff
     """
 
-    name = TRAIT_ONOFF
-    commands = [COMMAND_ONOFF]
+    name = TRAIT_ON_OFF
+    commands = [COMMAND_ON_OFF]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -793,7 +789,7 @@ class EnergyStorageTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/energystorage
     """
 
-    name = TRAIT_ENERGYSTORAGE
+    name = TRAIT_ENERGY_STORAGE
     commands = [COMMAND_CHARGE]
 
     @staticmethod
@@ -848,8 +844,8 @@ class StartStopTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/startstop
     """
 
-    name = TRAIT_STARTSTOP
-    commands = [COMMAND_STARTSTOP, COMMAND_PAUSEUNPAUSE]
+    name = TRAIT_START_STOP
+    commands = [COMMAND_START_STOP, COMMAND_PAUSE_UNPAUSE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -913,7 +909,7 @@ class StartStopTrait(_Trait):
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
-        if command == COMMAND_STARTSTOP:
+        if command == COMMAND_START_STOP:
             if params["start"]:
                 await self.hass.services.async_call(
                     self.state.domain,
@@ -930,7 +926,7 @@ class StartStopTrait(_Trait):
                     blocking=not self.config.should_report_state,
                     context=data.context,
                 )
-        elif command == COMMAND_PAUSEUNPAUSE:
+        elif command == COMMAND_PAUSE_UNPAUSE:
             if params["pause"]:
                 await self.hass.services.async_call(
                     self.state.domain,
@@ -951,7 +947,7 @@ class StartStopTrait(_Trait):
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
-        if command == COMMAND_STARTSTOP:
+        if command == COMMAND_START_STOP:
             if params["start"] is False:
                 if self.state.state in (
                     COVER_VALVE_STATES[domain]["closing"],
@@ -1504,8 +1500,8 @@ class LockUnlockTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/lockunlock
     """
 
-    name = TRAIT_LOCKUNLOCK
-    commands = [COMMAND_LOCKUNLOCK]
+    name = TRAIT_LOCK_UNLOCK
+    commands = [COMMAND_LOCK_UNLOCK]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1553,23 +1549,23 @@ class ArmDisArmTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/armdisarm
     """
 
-    name = TRAIT_ARMDISARM
-    commands = [COMMAND_ARMDISARM]
+    name = TRAIT_ARM_DISARM
+    commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-        STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
-        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
-        STATE_ALARM_ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: SERVICE_ALARM_TRIGGER,
     }
 
     state_to_support = {
-        STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-        STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
-        STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-        STATE_ALARM_TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
 
@@ -1595,8 +1591,8 @@ class ArmDisArmTrait(_Trait):
     def _default_arm_state(self):
         states = self._supported_states()
 
-        if STATE_ALARM_TRIGGERED in states:
-            states.remove(STATE_ALARM_TRIGGERED)
+        if AlarmControlPanelState.TRIGGERED in states:
+            states.remove(AlarmControlPanelState.TRIGGERED)
 
         if not states:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
@@ -1611,7 +1607,7 @@ class ArmDisArmTrait(_Trait):
             # level synonyms are generated from state names
             # 'armed_away' becomes 'armed away' or 'away'
             level_synonym = [state.replace("_", " ")]
-            if state != STATE_ALARM_TRIGGERED:
+            if state != AlarmControlPanelState.TRIGGERED:
                 level_synonym.append(state.split("_")[1])
 
             level = {
@@ -1652,11 +1648,11 @@ class ArmDisArmTrait(_Trait):
         elif (
             params["arm"]
             and params.get("cancel")
-            and self.state.state == STATE_ALARM_PENDING
+            and self.state.state == AlarmControlPanelState.PENDING
         ):
             service = SERVICE_ALARM_DISARM
         else:
-            if self.state.state == STATE_ALARM_DISARMED:
+            if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM
@@ -1694,8 +1690,8 @@ class FanSpeedTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/fanspeed
     """
 
-    name = TRAIT_FANSPEED
-    commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
+    name = TRAIT_FAN_SPEED
+    commands = [COMMAND_SET_FAN_SPEED, COMMAND_REVERSE]
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
@@ -1840,7 +1836,7 @@ class FanSpeedTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a smart home command."""
-        if command == COMMAND_FANSPEED:
+        if command == COMMAND_SET_FAN_SPEED:
             await self.execute_fanspeed(data, params)
         elif command == COMMAND_REVERSE:
             await self.execute_reverse(data, params)
@@ -1854,7 +1850,7 @@ class ModesTrait(_Trait):
     """
 
     name = TRAIT_MODES
-    commands = [COMMAND_MODES]
+    commands = [COMMAND_SET_MODES]
 
     SYNONYMS = {
         "preset mode": ["preset mode", "mode", "preset"],
@@ -2088,8 +2084,8 @@ class InputSelectorTrait(_Trait):
     https://developers.google.com/assistant/smarthome/traits/inputselector
     """
 
-    name = TRAIT_INPUTSELECTOR
-    commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
+    name = TRAIT_INPUT_SELECTOR
+    commands = [COMMAND_SET_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
     SYNONYMS: dict[str, list[str]] = {}
 
@@ -2124,7 +2120,7 @@ class InputSelectorTrait(_Trait):
         sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
         source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
 
-        if command == COMMAND_INPUT:
+        if command == COMMAND_SET_INPUT:
             requested_source = params.get("newInput")
         elif command == COMMAND_NEXT_INPUT:
             requested_source = _next_selected(sources, source)
@@ -2162,8 +2158,8 @@ class OpenCloseTrait(_Trait):
         cover.CoverDeviceClass.GATE,
     )
 
-    name = TRAIT_OPENCLOSE
-    commands = [COMMAND_OPENCLOSE, COMMAND_OPENCLOSE_RELATIVE]
+    name = TRAIT_OPEN_CLOSE
+    commands = [COMMAND_OPEN_CLOSE, COMMAND_OPEN_CLOSE_RELATIVE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -2263,7 +2259,7 @@ class OpenCloseTrait(_Trait):
         if domain in COVER_VALVE_DOMAINS:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
             should_verify = False
-            if command == COMMAND_OPENCLOSE_RELATIVE:
+            if command == COMMAND_OPEN_CLOSE_RELATIVE:
                 position = self.state.attributes.get(
                     COVER_VALVE_CURRENT_POSITION[domain]
                 )
@@ -2710,6 +2706,21 @@ class SensorStateTrait(_Trait):
         ),
     }
 
+    binary_sensor_types = {
+        binary_sensor.BinarySensorDeviceClass.CO: (
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.SMOKE: (
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.MOISTURE: (
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    }
+
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
@@ -2732,24 +2743,37 @@ class SensorStateTrait(_Trait):
     @classmethod
     def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+        return (domain == sensor.DOMAIN and device_class in cls.sensor_types) or (
+            domain == binary_sensor.DOMAIN and device_class in cls.binary_sensor_types
+        )
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
-            return {}
+        def create_sensor_state(
+            name: str,
+            raw_value_unit: str | None = None,
+            available_states: list[str] | None = None,
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+            }
+            if raw_value_unit:
+                sensor_state["numericCapabilities"] = {"rawValueUnit": raw_value_unit}
+            if available_states:
+                sensor_state["descriptiveCapabilities"] = {
+                    "availableStates": available_states
+                }
+            return {"sensorStatesSupported": [sensor_state]}
 
-        sensor_state = {
-            "name": data[0],
-            "numericCapabilities": {"rawValueUnit": data[1]},
-        }
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_state["descriptiveCapabilities"] = {
-                "availableStates": [
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            available_states: list[str] | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                available_states = [
                     "healthy",
                     "moderate",
                     "unhealthy for sensitive groups",
@@ -2757,30 +2781,53 @@ class SensorStateTrait(_Trait):
                     "very unhealthy",
                     "hazardous",
                     "unknown",
-                ],
-            }
-
-        return {"sensorStatesSupported": [sensor_state]}
+                ]
+            return create_sensor_state(sensor_data[0], sensor_data[1], available_states)
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
+            return {}
+        return create_sensor_state(
+            binary_sensor_data[0], available_states=binary_sensor_data[1]
+        )
 
     def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
+        def create_sensor_state(
+            name: str, raw_value: float | None = None, current_state: str | None = None
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+                "rawValue": raw_value,
+            }
+            if current_state:
+                sensor_state["currentSensorState"] = current_state
+            return {"currentSensorStateData": [sensor_state]}
+
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            try:
+                value = float(self.state.state)
+            except ValueError:
+                value = None
+            if self.state.state == STATE_UNKNOWN:
+                value = None
+            current_state: str | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                current_state = self._air_quality_description_for_aqi(value)
+            return create_sensor_state(sensor_data[0], value, current_state)
+
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
             return {}
-
-        try:
-            value = float(self.state.state)
-        except ValueError:
-            value = None
-        if self.state.state == STATE_UNKNOWN:
-            value = None
-        sensor_data = {"name": data[0], "rawValue": value}
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                value
-            )
-
-        return {"currentSensorStateData": [sensor_data]}
+        value = {
+            STATE_ON: 0,
+            STATE_OFF: 1,
+            STATE_UNKNOWN: 2,
+        }[self.state.state]
+        return create_sensor_state(
+            binary_sensor_data[0], current_state=binary_sensor_data[1][value]
+        )

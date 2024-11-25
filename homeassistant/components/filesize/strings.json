@@ -26,6 +26,9 @@
       },
       "last_updated": {
         "name": "Last updated"
+      },
+      "created": {
+        "name": "Created"
       }
     }
   }
