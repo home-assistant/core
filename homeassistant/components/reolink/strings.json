@@ -654,6 +654,18 @@
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       }
+      "main_frame_rate": {
+        "name": "Clear frame rate",
+      },
+      "sub_frame_rate": {
+        "name": "Fluent frame rate",
+      },
+      "main_bit_rate": {
+        "name": "Clear bit rate",
+      },
+      "sub_bit_rate": {
+        "name": "Fluent bit rate",
+      },
     },
     "sensor": {
       "wifi_signal": {

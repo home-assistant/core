@@ -175,6 +175,58 @@ SELECT_ENTITIES = (
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
     ),
+    ReolinkSelectEntityDescription(
+        key="main_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="main_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.frame_rate_list(ch, "main"),
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: api.frame_rate(ch, "main"),
+        method=lambda api, ch, value: (
+            api.set_frame_rate(ch, value, "main")
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.frame_rate_list(ch, "sub"),
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: api.frame_rate(ch, "sub"),
+        method=lambda api, ch, value: (
+            api.set_frame_rate(ch, value, "sub")
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="main_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="main_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.bit_rate_list(ch, "main"),
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: api.bit_rate(ch, "main"),
+        method=lambda api, ch, value: (
+            api.set_bit_rate(ch, value, "main")
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.bit_rate_list(ch, "sub"),
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: api.bit_rate(ch, "sub"),
+        method=lambda api, ch, value: (
+            api.set_bit_rate(ch, value, "sub")
+        ),
+    ),
 )
 
 CHIME_SELECT_ENTITIES = (
