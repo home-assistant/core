@@ -97,7 +97,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
-                if self.source is SOURCE_REAUTH:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=self._get_reauth_entry(),
                         data={
@@ -105,7 +105,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
                         },
                     )
-                if self.source is SOURCE_RECONFIGURE:
+                if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
                         entry=self._get_reconfigure_entry(),
                         data={
