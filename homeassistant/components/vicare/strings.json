@@ -447,6 +447,7 @@
         "name": "Ventilation reason",
         "state": {
           "standby": "Standby",
+          "permanent": "Permanent",
           "schedule": "Schedule",
           "sensordriven": "Sensor-driven",
           "silent": "Silent",
