@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -71,6 +72,13 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_save(user_input)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure step."""
+        self._existing_entry = self._get_reconfigure_entry()
+        return await self._validate_and_save(user_input, "reconfigure")
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -106,7 +114,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
+                if self.source in [SOURCE_REAUTH, SOURCE_RECONFIGURE]:
                     return self.async_update_reload_and_abort(
                         entry=self._existing_entry,
                         data={

@@ -111,3 +111,33 @@ async def test_form_fail(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert "errors" not in result
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant, config_entry: MockConfigEntry, discovergy: AsyncMock
+) -> None:
+    """Test reconfigure flow."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.discovergy.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test2@example.com",
+                CONF_PASSWORD: "test-new-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_EMAIL: "test2@example.com",
+        CONF_PASSWORD: "test-new-password",
+    }

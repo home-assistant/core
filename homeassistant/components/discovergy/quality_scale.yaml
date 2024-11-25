@@ -80,7 +80,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
