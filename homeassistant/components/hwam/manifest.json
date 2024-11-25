@@ -1,0 +1,12 @@
+{
+  "domain": "hwam",
+  "name": "HWAM® SmartControl™",
+  "codeowners": ["@lordyavin"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/hwam",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["pystove==0.3a1"],
+  "ssdp": []
+}
