@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import fields
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -127,28 +128,17 @@ def get_attribute_points(
 ) -> dict[str, float]:
     """Get modifiers contributing to strength attribute."""
 
-    gear_set = {
-        "weapon",
-        "armor",
-        "head",
-        "shield",
-        "back",
-        "headAccessory",
-        "eyewear",
-        "body",
-    }
-
     equipment = sum(
         getattr(stats, attribute)
-        for gear in gear_set
-        if (equipped := getattr(user.items.gear.equipped, gear))
+        for gear in fields(user.items.gear.equipped)
+        if (equipped := getattr(user.items.gear.equipped, gear.name))
         and (stats := content.gear.flat[equipped])
     )
 
     class_bonus = sum(
         getattr(stats, attribute) / 2
-        for gear in gear_set
-        if (equipped := getattr(user.items.gear.equipped, gear))
+        for gear in fields(user.items.gear.equipped)
+        if (equipped := getattr(user.items.gear.equipped, gear.name))
         and (stats := content.gear.flat[equipped])
         and stats.klass == user.stats.Class
     )
