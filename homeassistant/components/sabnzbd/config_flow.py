@@ -73,6 +73,11 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=USER_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                USER_SCHEMA,
+                self._get_reconfigure_entry().data
+                if self.source == SOURCE_RECONFIGURE
+                else user_input,
+            ),
             errors=errors,
         )
