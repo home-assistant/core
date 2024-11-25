@@ -183,9 +183,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         get_options=lambda api, ch: api.frame_rate_list(ch, "main"),
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
-        value=lambda api, ch: api.frame_rate(ch, "main"),
+        value=lambda api, ch: f"{api.frame_rate(ch, 'main')} Hz",
         method=lambda api, ch, value: (
-            api.set_frame_rate(ch, value, "main")
+            api.set_frame_rate(ch, int(value.split(" ")[0]), "main")
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -196,9 +196,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         get_options=lambda api, ch: api.frame_rate_list(ch, "sub"),
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
-        value=lambda api, ch: api.frame_rate(ch, "sub"),
+        value=lambda api, ch: str(api.frame_rate(ch, "sub")),
         method=lambda api, ch, value: (
-            api.set_frame_rate(ch, value, "sub")
+            api.set_frame_rate(ch, int(value), "sub")
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -209,9 +209,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         get_options=lambda api, ch: api.bit_rate_list(ch, "main"),
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: api.bit_rate(ch, "main"),
+        value=lambda api, ch: str(api.bit_rate(ch, "main")),
         method=lambda api, ch, value: (
-            api.set_bit_rate(ch, value, "main")
+            api.set_bit_rate(ch, int(value), "main")
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -222,9 +222,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         get_options=lambda api, ch: api.bit_rate_list(ch, "sub"),
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: api.bit_rate(ch, "sub"),
+        value=lambda api, ch: str(api.bit_rate(ch, "sub")),
         method=lambda api, ch, value: (
-            api.set_bit_rate(ch, value, "sub")
+            api.set_bit_rate(ch, int(value), "sub")
         ),
     ),
 )
