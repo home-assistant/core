@@ -708,45 +708,10 @@ class DefaultAgent(ConversationEntity):
         if self._unexposed_names_trie is None:
             # Build trie
             self._unexposed_names_trie = Trie()
-            entity_registry = er.async_get(self.hass)
-
-            for state in self.hass.states.async_all():
-                if async_should_expose(self.hass, DOMAIN, state.entity_id):
-                    continue
-
-                context = {"domain": state.domain}
-                if state.attributes:
-                    # Include some attributes
-                    for attr in DEFAULT_EXPOSED_ATTRIBUTES:
-                        if attr not in state.attributes:
-                            continue
-                        context[attr] = state.attributes[attr]
-
-                entity = entity_registry.async_get(state.entity_id)
-
-                # Skip config/hidden entities
-                if (entity is not None) and (
-                    (entity.entity_category is not None)
-                    or (entity.hidden_by is not None)
-                ):
-                    continue
-
-                if (entity is not None) and entity.aliases:
-                    # Also add aliases
-                    for alias in entity.aliases:
-                        alias = alias.strip()
-                        if not alias:
-                            continue
-
-                        self._unexposed_names_trie.insert(
-                            alias.lower(),
-                            TextSlotValue.from_tuple((alias, alias, context)),
-                        )
-
-                # Default name
+            for name_tuple in self._get_entity_name_tuples(exposed=False):
                 self._unexposed_names_trie.insert(
-                    state.name.strip().lower(),
-                    TextSlotValue.from_tuple((state.name, state.name, context)),
+                    name_tuple[0].lower(),
+                    TextSlotValue.from_tuple(name_tuple),
                 )
 
         # Build filtered slot list
@@ -757,6 +722,44 @@ class DefaultAgent(ConversationEntity):
                 result[2] for result in self._unexposed_names_trie.find(text_lower)
             ],
         )
+
+    def _get_entity_name_tuples(
+        self, exposed: bool
+    ) -> Iterable[tuple[str, str, dict[str, Any]]]:
+        """Yield (input name, output name, context) tuples for entities."""
+        entity_registry = er.async_get(self.hass)
+
+        for state in self.hass.states.async_all():
+            entity_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
+            if exposed and (not entity_exposed):
+                # Required exposed, entity is not
+                continue
+
+            if (not exposed) and entity_exposed:
+                # Required not exposed, entity is
+                continue
+
+            # Checked against "requires_context" and "excludes_context" in hassil
+            context = {"domain": state.domain}
+            if state.attributes:
+                # Include some attributes
+                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                    if attr not in state.attributes:
+                        continue
+                    context[attr] = state.attributes[attr]
+
+            if (
+                entity := entity_registry.async_get(state.entity_id)
+            ) and entity.aliases:
+                for alias in entity.aliases:
+                    alias = alias.strip()
+                    if not alias:
+                        continue
+
+                    yield (alias, alias, context)
+
+            # Default name
+            yield (state.name, state.name, context)
 
     def _recognize_strict(
         self,
@@ -1065,8 +1068,6 @@ class DefaultAgent(ConversationEntity):
 
         start = time.monotonic()
 
-        entity_registry = er.async_get(self.hass)
-
         # Gather entity names, keeping track of exposed names.
         # We try intent recognition with only exposed names first, then all names.
         #
@@ -1074,36 +1075,7 @@ class DefaultAgent(ConversationEntity):
         # have the same name. The intent matcher doesn't gather all matching
         # values for a list, just the first. So we will need to match by name no
         # matter what.
-        exposed_entity_names = []
-        self._exposed_names_trie = Trie()
-        for state in self.hass.states.async_all():
-            if not async_should_expose(self.hass, DOMAIN, state.entity_id):
-                continue
-
-            # Checked against "requires_context" and "excludes_context" in hassil
-            context = {"domain": state.domain}
-            if state.attributes:
-                # Include some attributes
-                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
-                    if attr not in state.attributes:
-                        continue
-                    context[attr] = state.attributes[attr]
-
-            if (
-                entity := entity_registry.async_get(state.entity_id)
-            ) and entity.aliases:
-                for alias in entity.aliases:
-                    alias = alias.strip()
-                    if not alias:
-                        continue
-
-                    alias_tuple = (alias, alias, context)
-                    exposed_entity_names.append(alias_tuple)
-
-            # Default name
-            name_tuple = (state.name, state.name, context)
-            exposed_entity_names.append(name_tuple)
-
+        exposed_entity_names = list(self._get_entity_name_tuples(exposed=True))
         _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
         # Expose all areas.
@@ -1136,6 +1108,8 @@ class DefaultAgent(ConversationEntity):
 
                 floor_names.append((alias, floor.name))
 
+        # Build trie
+        self._exposed_names_trie = Trie()
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
         for name_value in name_list.values:
             assert isinstance(name_value.text_in, TextChunk)
