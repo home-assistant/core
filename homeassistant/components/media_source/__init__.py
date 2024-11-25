@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import (
@@ -121,7 +121,7 @@ def _get_media_item(
 @bind_hass
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_id: str | None = None,
+    media_content_id: str | None,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
 ) -> BrowseMediaSource:
