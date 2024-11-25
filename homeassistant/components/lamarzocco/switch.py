@@ -108,7 +108,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_error",
-                translation_placeholders={"name": self.entity_description.key},
+                translation_placeholders={"key": self.entity_description.key},
             ) from exc
         self.async_write_ha_state()
 

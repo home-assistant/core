@@ -38,13 +38,13 @@
       "message": "Error while trying to set color of {entity_id}: {description}"
     },
     "set_setting": {
-      "message": "Error while trying to assign the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
+      "message": "Error while trying to assign the value \"{value}\" to the setting \"{setting_key}\" for {entity_id}: {description}"
     },
     "turn_on": {
-      "message": "Error while trying to turn on {entity_id} ({key}): {description}"
+      "message": "Error while trying to turn on {entity_id} ({setting_key}): {description}"
     },
     "turn_off": {
-      "message": "Error while trying to turn off {entity_id} ({key}): {description}"
+      "message": "Error while trying to turn off {entity_id} ({setting_key}): {description}"
     },
     "start_program": {
       "message": "Error while trying to start program {program}: {description}"
