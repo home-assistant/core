@@ -1,4 +1,4 @@
-"""Support for the Bang & Olufsen diagnostics."""
+"""Support for Bang & Olufsen diagnostics."""
 
 from __future__ import annotations
 
@@ -15,6 +15,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
 
     return {
-        "websocket_connection_state": config_entry.runtime_data.client.websocket_connected,
+        "websocket_connected": config_entry.runtime_data.client.websocket_connected,
         "config_entry": config_entry.as_dict(),
     }
