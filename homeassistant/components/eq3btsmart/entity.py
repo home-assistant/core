@@ -24,7 +24,11 @@ class Eq3Entity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: Eq3ConfigEntry, unique_id_key: str | None = None) -> None:
+    def __init__(
+        self,
+        entry: Eq3ConfigEntry,
+        unique_id_key: str | None = None,
+    ) -> None:
         """Initialize the eq3 entity."""
 
         self._eq3_config = entry.runtime_data.eq3_config
@@ -81,3 +85,9 @@ class Eq3Entity(Entity):
 
         self._attr_available = True
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available."""
+
+        return self._thermostat.status is not None and self._attr_available

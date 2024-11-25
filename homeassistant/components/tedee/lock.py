@@ -13,6 +13,8 @@ from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 from .entity import TedeeEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

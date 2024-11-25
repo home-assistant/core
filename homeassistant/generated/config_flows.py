@@ -24,6 +24,7 @@ FLOWS = {
     ],
     "integration": [
         "abode",
+        "acaia",
         "accuweather",
         "acmeda",
         "adax",
@@ -538,6 +539,7 @@ FLOWS = {
         "simplefin",
         "simplepush",
         "simplisafe",
+        "sky_remote",
         "skybell",
         "slack",
         "sleepiq",

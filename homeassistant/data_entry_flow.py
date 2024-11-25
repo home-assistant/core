@@ -155,7 +155,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     context: _FlowContextT
     data_schema: vol.Schema | None
     data: Mapping[str, Any]
-    description_placeholders: Mapping[str, str | None] | None
+    description_placeholders: Mapping[str, str] | None
     description: str | None
     errors: dict[str, str] | None
     extra: str
@@ -531,11 +531,9 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report_usage(
-                (
-                    "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2025.1"
-                ),
+                "does not use FlowResultType enum for data entry flow result type",
                 core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.1",
             )
 
         if (
@@ -705,7 +703,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
