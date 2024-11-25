@@ -653,7 +653,7 @@
           "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
-      }
+      },
       "main_frame_rate": {
         "name": "Clear frame rate",
       },
