@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_API_ENABLED,
@@ -124,12 +123,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         except RecoverableError as ex:
             _LOGGER.error(ex)
             return self.async_abort(reason="unknown")
-        
+
         await self.async_set_unique_id(
             f"{device.product_type}_{discovery_info.macaddress}"
         )
-        
-        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: discovery_info.ip})
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
+        )
 
         # This situation should never happen, as Home Assistant will only
         # send updates for existing entries. In case it does, we'll just
