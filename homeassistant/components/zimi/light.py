@@ -30,9 +30,7 @@ async def async_setup_entry(
 
     api: ControlPoint = config_entry.runtime_data
 
-    entities = [ZimiLight(device, api) for device in api.lights]
-
-    async_add_entities(entities)
+    async_add_entities(ZimiLight(device, api) for device in api.lights)
 
 
 class ZimiLight(LightEntity):
