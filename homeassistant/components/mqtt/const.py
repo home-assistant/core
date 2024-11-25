@@ -90,6 +90,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
+CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options
@@ -159,7 +160,7 @@ MQTT_CONNECTION_STATE = "mqtt_connection_state"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-RELOADABLE_PLATFORMS = [
+ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -190,7 +191,7 @@ RELOADABLE_PLATFORMS = [
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
 
-SUPPORTED_COMPONENTS = {
+SUPPORTED_COMPONENTS = (
     "alarm_control_panel",
     "binary_sensor",
     "button",
@@ -219,4 +220,4 @@ SUPPORTED_COMPONENTS = {
     "vacuum",
     "valve",
     "water_heater",
-}
+)

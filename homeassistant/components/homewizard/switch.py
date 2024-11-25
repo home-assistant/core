@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homewizard_energy import HomeWizardEnergy
+from homewizard_energy import HomeWizardEnergyV1
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -31,7 +31,7 @@ class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     available_fn: Callable[[DeviceResponseEntry], bool]
     create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
     is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
+    set_fn: Callable[[HomeWizardEnergyV1, bool], Awaitable[Any]]
 
 
 SWITCHES = [

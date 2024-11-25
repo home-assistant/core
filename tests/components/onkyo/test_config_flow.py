@@ -8,13 +8,22 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.onkyo import InputSource
 from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
-from homeassistant.components.onkyo.const import DOMAIN
+from homeassistant.components.onkyo.const import (
+    DOMAIN,
+    OPTION_MAX_VOLUME,
+    OPTION_VOLUME_RESOLUTION,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from . import create_empty_config_entry, create_receiver_info, setup_integration
+from . import (
+    create_config_entry_from_info,
+    create_empty_config_entry,
+    create_receiver_info,
+    setup_integration,
+)
 
 from tests.common import Mock, MockConfigEntry
 
@@ -240,7 +249,7 @@ async def test_configure_empty_source_list(hass: HomeAssistant) -> None:
 
         configure_result = await hass.config_entries.flow.async_configure(
             select_result["flow_id"],
-            user_input={"input_sources": []},
+            user_input={"volume_resolution": 200, "input_sources": []},
         )
 
         assert configure_result["errors"] == {
@@ -273,13 +282,11 @@ async def test_configure_no_resolution(hass: HomeAssistant) -> None:
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-        configure_result = await hass.config_entries.flow.async_configure(
-            select_result["flow_id"],
-            user_input={"input_sources": ["TV"]},
-        )
-
-        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["options"]["volume_resolution"] == 50
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                select_result["flow_id"],
+                user_input={"input_sources": ["TV"]},
+            )
 
 
 async def test_configure_resolution_set(hass: HomeAssistant) -> None:
@@ -295,25 +302,24 @@ async def test_configure_resolution_set(hass: HomeAssistant) -> None:
         {"next_step_id": "manual"},
     )
 
-    mock_info = Mock()
-    mock_info.identifier = "mock_id"
+    receiver_info = create_receiver_info(1)
 
     with patch(
         "homeassistant.components.onkyo.config_flow.async_interview",
-        return_value=mock_info,
+        return_value=receiver_info,
     ):
         select_result = await hass.config_entries.flow.async_configure(
             form_result["flow_id"],
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-        configure_result = await hass.config_entries.flow.async_configure(
-            select_result["flow_id"],
-            user_input={"volume_resolution": 200, "input_sources": ["TV"]},
-        )
+    configure_result = await hass.config_entries.flow.async_configure(
+        select_result["flow_id"],
+        user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+    )
 
-        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["options"]["volume_resolution"] == 200
+    assert configure_result["type"] is FlowResultType.CREATE_ENTRY
+    assert configure_result["options"]["volume_resolution"] == 200
 
 
 async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
@@ -346,6 +352,73 @@ async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
                 select_result["flow_id"],
                 user_input={"volume_resolution": 42, "input_sources": ["TV"]},
             )
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test the reconfigure config flow."""
+    receiver_info = create_receiver_info(1)
+    config_entry = create_config_entry_from_info(receiver_info)
+    await setup_integration(hass, config_entry, receiver_info)
+
+    old_host = config_entry.data[CONF_HOST]
+    old_max_volume = config_entry.options[OPTION_MAX_VOLUME]
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=receiver_info,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"host": receiver_info.host}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "configure_receiver"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={"volume_resolution": 200, "input_sources": ["TUNER"]},
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+    assert config_entry.data[CONF_HOST] == old_host
+    assert config_entry.options[OPTION_VOLUME_RESOLUTION] == 200
+    assert config_entry.options[OPTION_MAX_VOLUME] == old_max_volume
+
+
+async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
+    """Test the reconfigure config flow with new device."""
+    receiver_info = create_receiver_info(1)
+    config_entry = create_config_entry_from_info(receiver_info)
+    await setup_integration(hass, config_entry, receiver_info)
+
+    old_unique_id = receiver_info.identifier
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    receiver_info_2 = create_receiver_info(2)
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=receiver_info_2,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"host": receiver_info_2.host}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+
+    # unique id should remain unchanged
+    assert config_entry.unique_id == old_unique_id
 
 
 @pytest.mark.parametrize(

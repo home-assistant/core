@@ -4,13 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
-from freezegun.api import FrozenDateTimeFactory
-from pytedee_async import TedeeLock, TedeeLockState
-from pytedee_async.exception import (
+from aiotedee import TedeeLock, TedeeLockState
+from aiotedee.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

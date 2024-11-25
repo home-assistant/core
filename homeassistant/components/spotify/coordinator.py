@@ -75,7 +75,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             raise UpdateFailed("Error communicating with Spotify API") from err
 
     async def _async_update_data(self) -> SpotifyCoordinatorData:
-        current = await self.client.get_playback()
+        try:
+            current = await self.client.get_playback()
+        except SpotifyConnectionError as err:
+            raise UpdateFailed("Error communicating with Spotify API") from err
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,
@@ -90,8 +93,17 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         audio_features: AudioFeatures | None = None
         if (item := current.item) is not None and item.type == ItemType.TRACK:
             if item.uri != self._currently_loaded_track:
-                self._currently_loaded_track = item.uri
-                audio_features = await self.client.get_audio_features(item.uri)
+                try:
+                    audio_features = await self.client.get_audio_features(item.uri)
+                except SpotifyConnectionError:
+                    _LOGGER.debug(
+                        "Unable to load audio features for track '%s'. "
+                        "Continuing without audio features",
+                        item.uri,
+                    )
+                    audio_features = None
+                else:
+                    self._currently_loaded_track = item.uri
             else:
                 audio_features = self.data.audio_features
         dj_playlist = False

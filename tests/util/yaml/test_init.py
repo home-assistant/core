@@ -494,31 +494,6 @@ def mock_integration_frame() -> Generator[Mock]:
         yield correct_frame
 
 
-@pytest.mark.parametrize(
-    ("loader_class", "message"),
-    [
-        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
-        (
-            yaml.loader.SafeLineLoader,
-            "'SafeLineLoader' instead of 'PythonSafeLoader'",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_deprecated_loaders(
-    caplog: pytest.LogCaptureFixture,
-    loader_class: type,
-    message: str,
-) -> None:
-    """Test instantiating the deprecated yaml loaders logs a warning."""
-    with (
-        pytest.raises(TypeError),
-        patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()),
-    ):
-        loader_class()
-    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
-
-
 @pytest.mark.usefixtures("try_both_loaders")
 def test_string_annotated() -> None:
     """Test strings are annotated with file + line."""

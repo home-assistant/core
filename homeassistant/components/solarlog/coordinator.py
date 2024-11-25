@@ -19,6 +19,7 @@ from solarlog_cli.solarlog_models import SolarlogData
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
@@ -58,6 +59,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             self.host,
             tz=hass.config.time_zone,
             password=password,
+            session=async_get_clientsession(hass),
         )
 
     async def _async_setup(self) -> None:
@@ -65,7 +67,8 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         _LOGGER.debug("Start async_setup")
         logged_in = False
         if self.solarlog.password != "":
-            logged_in = await self.renew_authentication()
+            if logged_in := await self.renew_authentication():
+                await self.solarlog.test_extended_data_available()
         if logged_in or await self.solarlog.test_extended_data_available():
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices({key: True for key in device_list})
