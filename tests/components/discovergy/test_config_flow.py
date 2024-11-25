@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
@@ -51,7 +51,7 @@ async def test_reauth(
     config_entry.add_to_hass(hass)
     init_result = await config_entry.start_reauth_flow(hass)
     assert init_result["type"] is FlowResultType.FORM
-    assert init_result["step_id"] == "reauth_confirm"
+    assert init_result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
@@ -121,7 +121,7 @@ async def test_reconfigure_successful(
 
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",

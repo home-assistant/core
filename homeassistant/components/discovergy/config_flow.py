@@ -57,23 +57,11 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=CONFIG_SCHEMA,
-            )
-
-        return await self._validate_and_save(user_input)
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reconfigure step."""
-        return await self._validate_and_save(user_input, "reconfigure")
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -85,10 +73,10 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reauth step."""
-        return await self._validate_and_save(user_input, step_id="reauth_confirm")
+        return await self.async_step_user(user_input)
 
-    async def _validate_and_save(
-        self, user_input: Mapping[str, Any] | None = None, step_id: str = "user"
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate user input and create config entry."""
         errors = {}
@@ -134,13 +122,17 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_EMAIL], data=user_input
                 )
 
+        suggested_values = None
+        if self.source == SOURCE_REAUTH:
+            suggested_values = self._get_reauth_entry().data
+        if self.source == SOURCE_RECONFIGURE:
+            suggested_values = self._get_reconfigure_entry().data
+
         return self.async_show_form(
-            step_id=step_id,
+            step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA,
-                self._get_reauth_entry().data
-                if self.source == SOURCE_REAUTH
-                else user_input,
+                suggested_values if suggested_values else user_input,
             ),
             errors=errors,
         )
