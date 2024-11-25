@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from odp_amsterdam import ODPAmsterdam, VehicleType
+from odp_amsterdam import Garage, ODPAmsterdam, VehicleType
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 
-class GaragesAmsterdamDataUpdateCoordinator(DataUpdateCoordinator):
+class GaragesAmsterdamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Garage]]):
     """Class to manage fetching Garages Amsterdam data from single endpoint."""
 
     def __init__(
@@ -27,7 +27,7 @@ class GaragesAmsterdamDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.client = client
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Garage]:
         return {
             garage.garage_name: garage
             for garage in await self.client.all_garages(vehicle=VehicleType.CAR)
