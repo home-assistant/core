@@ -8,7 +8,7 @@ from importlib.util import find_spec
 from pathlib import Path
 import string
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, _patch, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
@@ -584,14 +584,6 @@ async def _validate_translation(
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
     translations = await async_get_translations(hass, "en", category, [component])
-    if component == "cloud":
-        # Attempt to debug flaky tests in cloud
-        import logging  # pylint: disable=import-outside-toplevel
-
-        logging.getLogger(__name__).warning(
-            "Translation for %s (%s): %s", component, category, translations
-        )
-
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -724,8 +716,6 @@ async def _check_create_issue_translations(
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
-    # ensure translations are not loaded before the final checks
-    translations_once: _patch,
 ) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
