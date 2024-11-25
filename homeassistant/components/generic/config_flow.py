@@ -593,6 +593,8 @@ class PreviewStream:
     {
         vol.Required("type"): "generic_camera/start_preview",
         vol.Required("flow_id"): str,
+        vol.Optional("flow_type"): vol.Any("config_flow"),
+        vol.Optional("user_input"): dict,
     }
 )
 @websocket_api.async_response
