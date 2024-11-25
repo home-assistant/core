@@ -27,7 +27,7 @@
   "issues": {
     "deprecated": {
       "title": "The RTSPtoWebRTC integration is deprecated",
-      "description": "The RTSPtoWebRTC integration is deprecated and will be removed. Please use the {go2rtc} integration instead, which provides a better expercience."
+      "description": "The RTSPtoWebRTC integration is deprecated and will be removed. Please use the {go2rtc} integration instead, which provides a better experience."
     }
   },
   "options": {
