@@ -77,8 +77,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle additional user input after authentication."""
-        # Check for existing entry and update or create a new entry
-
         if user_input is None:
             # Show the form to collect additional input
             return self.async_show_form(
@@ -89,7 +87,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                         vol.Optional(self.Trackable): str,
                     }
                 ),
-                # description_placeholders={"username": self.data["username"]},
             )
 
         # Check if user has entered anything
