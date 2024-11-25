@@ -11,7 +11,7 @@ from homewizard_energy.errors import DisabledError, RequestError, UnsupportedErr
 from homewizard_energy.v1.models import Device
 from voluptuous import Required, Schema
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import dhcp, onboarding, zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
@@ -109,6 +109,38 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_discovery_confirm()
+
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via dhcp."""
+        _LOGGER.warning("1")
+        self.discovered_conf = {CONF_IP_ADDRESS: discovery_info.ip}
+        self.context["title_placeholders"] = {
+            CONF_IP_ADDRESS: f"HomeWizard {discovery_info.ip}"
+        }
+        _LOGGER.warning("2")
+        _LOGGER.info(
+            "Discovered HomeWizard at %s %s",
+            discovery_info.ip,
+            discovery_info.macaddress,
+        )
+        _LOGGER.warning("3")
+        try:
+            device_info = await self._async_try_connect(discovery_info.ip)
+            _LOGGER.warning("4")
+        except RecoverableError as ex:
+            _LOGGER.error(ex)
+            _LOGGER.warning("5")
+            # errors = {"base": ex.error_code}
+        else:
+            _LOGGER.warning("6")
+            await self.async_set_unique_id(device_info.serial)
+            self._abort_if_unique_id_configured(
+                updates={CONF_IP_ADDRESS: discovery_info.ip}
+            )
+        _LOGGER.warning("7")
+        return await self.async_step_user()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None

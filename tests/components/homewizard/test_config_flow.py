@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -261,6 +261,27 @@ async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_api_version"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_dhcp_updates_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test dhcp discovery updates host and aborts."""
+
+    service_info = dhcp.DhcpServiceInfo(
+        ip="127.0.0.1",
+        hostname="HW-p1meter-aabbcc",
+        macaddress="5c2fafabcdef",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

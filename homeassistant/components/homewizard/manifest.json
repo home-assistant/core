@@ -7,5 +7,42 @@
   "iot_class": "local_polling",
   "loggers": ["homewizard_energy"],
   "requirements": ["python-homewizard-energy==v7.0.0"],
-  "zeroconf": ["_hwenergy._tcp.local."]
+  "zeroconf": ["_hwenergy._tcp.local."],
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "HW-p1meter-*",
+      "macaddress": "3c39e72*"
+    },
+    {
+      "hostname": "HW-p1meter-*",
+      "macaddress": "5c2faf*"
+    },
+    {
+      "hostname": "HW-energysocket-*",
+      "macaddress": "3c39e72*"
+    },
+    {
+      "hostname": "HW-energysocket-*",
+      "macaddress": "5c2faf*"
+    },
+    {
+      "hostname": "HW-energymeter-*",
+      "macaddress": "3c39e72*"
+    },
+    {
+      "hostname": "HW-energymeter-*",
+      "macaddress": "5c2faf*"
+    },
+    {
+      "hostname": "HW-watermeter-*",
+      "macaddress": "3c39e72*"
+    },
+    {
+      "hostname": "HW-watermeter-*",
+      "macaddress": "5c2faf*"
+    }
+  ]
 }
