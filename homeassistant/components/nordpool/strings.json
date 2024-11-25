@@ -61,5 +61,10 @@
         "name": "Daily average"
       }
     }
+  },
+  "exceptions": {
+    "initial_update_failed": {
+      "message": "Initial update failed on startup with error {error}"
+    }
   }
 }
