@@ -151,7 +151,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "scanned": "scanned"
+              "scanned": "Scanned"
             }
           }
         }
@@ -161,8 +161,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "identified": "identified",
-              "not_identified": "not identified"
+              "identified": "Identified",
+              "not_identified": "Not identified"
             }
           }
         }
