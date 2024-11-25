@@ -59,7 +59,7 @@ rules:
     comment: Solar-Log device cannot be discovered.
   stale-devices: done
   diagnostics: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: exempt
@@ -72,13 +72,19 @@ rules:
     status: exempt
     comment: |
       No issues/repairs.
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
-  docs-troubleshooting: todo
-  docs-examples: todo
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      No known issues that could be resolved by the user.
+  docs-examples:
+    status: exempt
+    comment: |
+      As only sensors are provided, no examples deemed necessary/appropriate.
 
   # Platinum
   async-dependency: done
