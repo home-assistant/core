@@ -45,7 +45,7 @@ rules:
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   action-exceptions: todo
   docs-installation-parameters: todo
   integration-owner: todo
