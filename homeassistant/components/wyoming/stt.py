@@ -11,6 +11,7 @@ from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .data import WyomingService
@@ -130,6 +131,10 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
             _LOGGER.exception("Error processing audio stream")
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
+        finally:
+            self._SpeechToTextEntity__last_processed = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
+        
         return stt.SpeechResult(
             text,
             stt.SpeechResultState.SUCCESS,
