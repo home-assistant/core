@@ -40,14 +40,14 @@ def create_disabled_camera_entities(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
-):
+) -> None:
     """Create the entity so it is not ignored by the deprecation check."""
     mock_config_entry.add_to_hass(hass)
 
     def create_entry(
-        device_name,
-        description,
-        device_id,
+        device_name: str,
+        description: str,
+        device_id: int,
     ):
         unique_id = f"{device_id}-{description}"
         entity_registry.async_get_or_create(
@@ -64,13 +64,13 @@ def create_disabled_camera_entities(
     create_entry("internal", desc, INTERNAL_DEVICE_ID)
 
 
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_states(
     hass: HomeAssistant,
     mock_ring_client: Mock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    create_disabled_camera_entities,
 ) -> None:
     """Test states."""
     # Patch getrandbits so the access_token doesn't change on camera attributes
@@ -87,13 +87,13 @@ async def test_states(
     ],
     ids=["On", "Off"],
 )
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_camera_motion_detection_state_reports_correctly(
     hass: HomeAssistant,
     mock_ring_client,
     entity_name,
     expected_state,
     friendly_name,
-    create_disabled_camera_entities,
 ) -> None:
     """Tests that the initial state of a device that should be off is correct."""
     await setup_platform(hass, Platform.CAMERA)
@@ -103,10 +103,10 @@ async def test_camera_motion_detection_state_reports_correctly(
     assert state.attributes.get("friendly_name") == friendly_name
 
 
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_camera_motion_detection_can_be_turned_on_and_off(
     hass: HomeAssistant,
     mock_ring_client,
-    create_disabled_camera_entities,
 ) -> None:
     """Tests the siren turns on correctly."""
     await setup_platform(hass, Platform.CAMERA)
@@ -139,11 +139,11 @@ async def test_camera_motion_detection_can_be_turned_on_and_off(
     assert state.attributes.get("motion_detection") is None
 
 
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_camera_motion_detection_not_supported(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
-    create_disabled_camera_entities,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests the siren turns on correctly."""
@@ -187,11 +187,11 @@ async def test_camera_motion_detection_not_supported(
     ],
     ids=["Authentication", "Timeout", "Other"],
 )
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_motion_detection_errors_when_turned_on(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
-    create_disabled_camera_entities,
     exception_type,
     reauth_expected,
 ) -> None:
@@ -223,12 +223,12 @@ async def test_motion_detection_errors_when_turned_on(
     )
 
 
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_camera_handle_mjpeg_stream(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
     freezer: FrozenDateTimeFactory,
-    create_disabled_camera_entities,
 ) -> None:
     """Test camera returns handle mjpeg stream when available."""
     await setup_platform(hass, Platform.CAMERA)
@@ -348,13 +348,13 @@ async def test_camera_image(
         assert image.content == SMALLEST_VALID_JPEG_BYTES
 
 
+@pytest.mark.usefixtures("create_disabled_camera_entities")
 async def test_camera_stream_attributes(
     hass: HomeAssistant,
     mock_ring_client: Mock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    create_disabled_camera_entities,
 ) -> None:
     """Test stream attributes."""
     await setup_platform(hass, Platform.CAMERA)
@@ -379,9 +379,7 @@ async def test_camera_webrtc(
     mock_ring_client: Mock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     mock_ring_devices,
-    create_disabled_camera_entities,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -460,7 +458,7 @@ async def test_camera_webrtc(
     response = await client.receive_json()
     assert response
     assert response.get("success") is False
-    assert response["error"]["code"] == "invalid_format"
+    assert response["error"]["code"] == "home_assistant_error"
     msg = "The sdp_m_line_index is required for ring webrtc streaming"
     assert msg in response["error"].get("message")
     assert msg in caplog.text

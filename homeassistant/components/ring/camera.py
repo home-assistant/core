@@ -12,7 +12,6 @@ from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from ring_doorbell import RingDoorBell
 from ring_doorbell.webrtcstream import RingWebRtcMessage
-import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -26,6 +25,7 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -215,7 +215,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         """Handle a WebRTC candidate."""
         if candidate.sdp_m_line_index is None:
             msg = "The sdp_m_line_index is required for ring webrtc streaming"
-            raise vol.Invalid(msg)
+            raise HomeAssistantError(msg)
         await self._device.on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )
