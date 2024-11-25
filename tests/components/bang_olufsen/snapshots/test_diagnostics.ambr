@@ -22,6 +22,23 @@
       'unique_id': '11111111',
       'version': 1,
     }),
+    'media_player': dict({
+      'capabilities': dict({
+        'sound_mode_list': list([
+          'Test Listening Mode (123)',
+          'Test Listening Mode (234)',
+          'Test Listening Mode 2 (345)',
+        ]),
+        'source_list': list([
+          'Tidal',
+          'Line-In',
+          'HDMI A',
+        ]),
+      }),
+      'entity_id': 'media_player.beosound_balance_11111111',
+      'name': None,
+      'unique_id': '11111111',
+    }),
     'websocket_connected': False,
   })
 # ---
