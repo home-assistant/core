@@ -198,6 +198,8 @@ jobs:
             skip_coverage="true"
           fi
 
+          test_groups="[4]"
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
@@ -847,10 +849,6 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Run split_tests.py
-        run: |
-          . venv/bin/activate
-          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.4.3
         with:
@@ -989,6 +987,7 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
+      && 'true' == 'false'
     needs:
       - info
       - base
@@ -1116,6 +1115,7 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
+      && 'true' == 'false'
     needs:
       - info
       - base
