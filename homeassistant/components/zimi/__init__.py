@@ -32,28 +32,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Initiation failed: %s", error)
         raise ConfigEntryNotReady(error) from error
 
-    if api:
-        _LOGGER.debug("\n%s", api.describe())
-
-        entry.runtime_data = api
-
-        device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, api.mac)},
-            manufacturer=api.brand,
-            name=f"Zimi({api.host}:{api.port})",
-            model=api.product,
-            model_id="Zimi Cloud Connect",
-            hw_version=f"{api.mac}",
-            sw_version=f"{api.firmware_version} (API {api.api_version})",
-        )
-
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    else:
+    if not api:
         msg = "Zimi setup failed: not ready"
         _LOGGER.error(msg=msg)
         raise ConfigEntryNotReady(msg)
+
+    _LOGGER.debug("\n%s", api.describe())
+
+    entry.runtime_data = api
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, api.mac)},
+        manufacturer=api.brand,
+        name=f"Zimi({api.host}:{api.port})",
+        model=api.product,
+        model_id="Zimi Cloud Connect",
+        hw_version=f"{api.mac}",
+        sw_version=f"{api.firmware_version} (API {api.api_version})",
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.debug("Zimi setup complete")
 
