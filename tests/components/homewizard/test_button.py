@@ -79,7 +79,7 @@ async def test_identify_button(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             button.DOMAIN,
