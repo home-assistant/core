@@ -209,7 +209,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
                 [
                     r
                     for r in data.tasks
-                    if r.Type == TaskType.DAILY
+                    if r.Type is TaskType.DAILY
                     and r.isDue is True
                     and r.completed is False
                 ]
