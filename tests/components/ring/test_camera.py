@@ -1,11 +1,13 @@
 """The tests for the Ring switch platform."""
 
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import ring_doorbell
+from ring_doorbell.webrtcstream import RingWebRtcMessage
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
@@ -23,6 +25,7 @@ from .common import MockConfigEntry, setup_platform
 from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INTERNAL_DEVICE_ID
 
 from tests.common import async_fire_time_changed, snapshot_platform
+from tests.typing import WebSocketGenerator
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
@@ -225,6 +228,7 @@ async def test_camera_handle_mjpeg_stream(
     mock_ring_client,
     mock_ring_devices,
     freezer: FrozenDateTimeFactory,
+    create_disabled_camera_entities,
 ) -> None:
     """Test camera returns handle mjpeg stream when available."""
     await setup_platform(hass, Platform.CAMERA)
@@ -232,7 +236,7 @@ async def test_camera_handle_mjpeg_stream(
     front_camera_mock = mock_ring_devices.get_device(765432)
     front_camera_mock.async_recording_url.return_value = None
 
-    state = hass.states.get("camera.front_live_view")
+    state = hass.states.get("camera.front_last_recording")
     assert state is not None
 
     mock_request = make_mocked_request("GET", "/", headers={"token": "x"})
@@ -241,7 +245,7 @@ async def test_camera_handle_mjpeg_stream(
     front_camera_mock.async_history.assert_not_called()
     front_camera_mock.async_recording_url.assert_not_called()
     stream = await camera.async_get_mjpeg_stream(
-        hass, mock_request, "camera.front_live_view"
+        hass, mock_request, "camera.front_last_recording"
     )
     assert stream is None
 
@@ -253,7 +257,7 @@ async def test_camera_handle_mjpeg_stream(
     front_camera_mock.async_recording_url.assert_called()
 
     stream = await camera.async_get_mjpeg_stream(
-        hass, mock_request, "camera.front_live_view"
+        hass, mock_request, "camera.front_last_recording"
     )
     assert stream is None
 
@@ -263,9 +267,9 @@ async def test_camera_handle_mjpeg_stream(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.async_recording_url.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called()
     stream = await camera.async_get_mjpeg_stream(
-        hass, mock_request, "camera.front_live_view"
+        hass, mock_request, "camera.front_last_recording"
     )
     assert stream is None
 
@@ -279,14 +283,14 @@ async def test_camera_handle_mjpeg_stream(
     front_camera_mock.async_recording_url.assert_not_called()
 
     stream = await camera.async_get_mjpeg_stream(
-        hass, mock_request, "camera.front_live_view"
+        hass, mock_request, "camera.front_last_recording"
     )
     assert stream is None
 
     freezer.tick(FORCE_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.async_recording_url.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called()
 
     # Now the stream should be returned
     stream_reader = MockStreamReader(SMALLEST_VALID_JPEG_BYTES)
@@ -296,7 +300,7 @@ async def test_camera_handle_mjpeg_stream(
         mock_camera.return_value.close = AsyncMock()
 
         stream = await camera.async_get_mjpeg_stream(
-            hass, mock_request, "camera.front_live_view"
+            hass, mock_request, "camera.front_last_recording"
         )
         assert stream is not None
         # Check the stream has been read
@@ -342,3 +346,141 @@ async def test_camera_image(
     ):
         image = await camera.async_get_image(hass, "camera.front_live_view")
         assert image.content == SMALLEST_VALID_JPEG_BYTES
+
+
+async def test_camera_stream_attributes(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    create_disabled_camera_entities,
+) -> None:
+    """Test stream attributes."""
+    await setup_platform(hass, Platform.CAMERA)
+
+    # Live view
+    state = hass.states.get("camera.front_live_view")
+    stream_type = state.attributes.get("frontend_stream_type")
+    assert stream_type is camera.StreamType.WEB_RTC
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features is camera.CameraEntityFeature.STREAM
+
+    # Last recording
+    state = hass.states.get("camera.front_last_recording")
+    stream_type = state.attributes.get("frontend_stream_type")
+    assert stream_type is None
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features is camera.CameraEntityFeature(0)
+
+
+async def test_camera_webrtc(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_ring_devices,
+    create_disabled_camera_entities,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test initiating a WebRTC stream with offer and answer."""
+    caplog.set_level(logging.ERROR)
+    await setup_platform(hass, Platform.CAMERA)
+    client = await hass_ws_client(hass)
+
+    # sdp offer
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/offer",
+            "entity_id": "camera.front_live_view",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+    assert response
+    assert response.get("success") is True
+    subscription_id = response["id"]
+    assert caplog.text == ""
+
+    front_camera_mock = mock_ring_devices.get_device(FRONT_DEVICE_ID)
+    front_camera_mock.generate_async_webrtc_stream.assert_called_once()
+    args = front_camera_mock.generate_async_webrtc_stream.call_args.args
+    session_id = args[1]
+    on_message = args[2]
+
+    # receive session
+    response = await client.receive_json()
+    event = response.get("event")
+    assert event
+    assert event.get("type") == "session"
+    assert caplog.text == ""
+
+    # Ring candidate
+    on_message(RingWebRtcMessage(candidate="candidate", sdp_m_line_index=1))
+    response = await client.receive_json()
+    event = response.get("event")
+    assert event
+    assert event.get("type") == "candidate"
+    assert caplog.text == ""
+
+    # Error message
+    on_message(RingWebRtcMessage(error_code=1, error_message="error"))
+    response = await client.receive_json()
+    event = response.get("event")
+    assert event
+    assert event.get("type") == "error"
+    assert caplog.text == ""
+
+    # frontend candidate
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/candidate",
+            "entity_id": "camera.front_live_view",
+            "session_id": session_id,
+            "candidate": {"candidate": "candidate", "sdpMLineIndex": 1},
+        }
+    )
+    response = await client.receive_json()
+    assert response
+    assert response.get("success") is True
+    assert caplog.text == ""
+    front_camera_mock.on_webrtc_candidate.assert_called_once()
+
+    # Invalid frontend candidate
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/candidate",
+            "entity_id": "camera.front_live_view",
+            "session_id": session_id,
+            "candidate": {"candidate": "candidate", "sdpMid": "1"},
+        }
+    )
+    response = await client.receive_json()
+    assert response
+    assert "The sdp_m_line_index is required for ring webrtc streaming" in caplog.text
+    front_camera_mock.on_webrtc_candidate.assert_called_once()
+
+    # Answer message
+    caplog.clear()
+    on_message(RingWebRtcMessage(answer="v=0\r\n"))
+    response = await client.receive_json()
+    event = response.get("event")
+    assert event
+    assert event.get("type") == "answer"
+    assert caplog.text == ""
+
+    # Unsubscribe/Close session
+    front_camera_mock.sync_close_webrtc_stream.assert_not_called()
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": subscription_id,
+        }
+    )
+
+    response = await client.receive_json()
+    assert response
+    assert response.get("success") is True
+    front_camera_mock.sync_close_webrtc_stream.assert_called_once()
