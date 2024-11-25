@@ -233,7 +233,30 @@ async def async_api_turn_off(
 
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
-        service = cover.SERVICE_CLOSE_COVER
+        open_and_close = cover.CoverEntityFeature.OPEN | cover.CoverEntityFeature.CLOSE
+
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        # Alexa translates "stop" to a turn off command (most of the time), so we
+        # interpret this as a stop for covers if possible.
+        #
+        # Only actually use the stop_cover service if the following conditions are met:
+        # AND:
+        #  - the cover has the STOP feature
+        #  - OR:
+        #    - the cover has open AND close
+        #    - the cover has set_position
+        #
+        # This ensures that the cover does not get stuck (although calling close for a cover
+        # which does not support closing could still result in an error)
+        # See https://github.com/home-assistant/core/pull/125851
+        if supported & cover.CoverEntityFeature.STOP and (
+            (supported & open_and_close == open_and_close)
+            or (supported & cover.CoverEntityFeature.SET_POSITION)
+        ):
+            service = cover.SERVICE_STOP_COVER
+        else:
+            service = cover.SERVICE_CLOSE_COVER
     elif domain == climate.DOMAIN:
         service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
