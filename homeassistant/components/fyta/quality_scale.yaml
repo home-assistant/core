@@ -11,7 +11,10 @@ rules:
   has-entity-name: done
   entity-event-setup: done
   dependency-transparency: done
-  action-setup: done
+  action-setup: 
+     status: exempt
+     comment: |
+        No custom action.
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
