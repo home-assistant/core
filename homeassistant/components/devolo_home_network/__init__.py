@@ -83,7 +83,6 @@ async def async_setup_entry(
         )
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}",
             translation_domain=DOMAIN,
             translation_key="connection_failed",
             translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
@@ -131,7 +130,7 @@ async def async_setup_entry(
             ) from err
         except DevicePasswordProtected as err:
             raise ConfigEntryAuthFailed(
-                err, translation_domain=DOMAIN, translation_key="password_wrong"
+                translation_domain=DOMAIN, translation_key="password_wrong"
             ) from err
 
     async def async_update_led_status() -> bool:
@@ -161,7 +160,7 @@ async def async_setup_entry(
             ) from err
         except DevicePasswordProtected as err:
             raise ConfigEntryAuthFailed(
-                err, translation_domain=DOMAIN, translation_key="password_wrong"
+                translation_domain=DOMAIN, translation_key="password_wrong"
             ) from err
 
     async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
