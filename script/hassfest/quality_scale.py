@@ -78,7 +78,6 @@ RULES = {
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "acaia",
     "accuweather",
     "acer_projector",
     "acmeda",
