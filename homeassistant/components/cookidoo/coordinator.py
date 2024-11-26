@@ -53,8 +53,6 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         self.cookidoo = cookidoo
 
     async def _async_setup(self) -> None:
-        _LOGGER.info("SETUP")
-        await super()._async_setup()
         try:
             await self.cookidoo.login()
         except CookidooRequestException as e:

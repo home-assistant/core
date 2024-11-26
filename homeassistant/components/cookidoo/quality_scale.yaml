@@ -29,8 +29,12 @@ rules:
 
   # Silver
   config-entry-unloading: done
-  log-when-unavailable: done
-  entity-unavailable: done
+  log-when-unavailable:
+    status: done
+    comment: Offloaded to coordinator
+  entity-unavailable:
+    status: done
+    comment: Offloaded to coordinator
   action-exceptions:
     status: exempt
     comment: No service actions implemented
@@ -39,11 +43,15 @@ rules:
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow
 
   # Gold
   entity-translations: done
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: currently no platform with device classes
   devices: done
   entity-category: done
   entity-disabled-by-default:
@@ -65,13 +73,15 @@ rules:
   discovery-update-info:
     status: exempt
     comment: No discoverable entities implemented
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: No issues/repairs
   docs-use-cases: todo
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-data-update: done
   docs-known-limitations: done
-  docs-troubleshooting: done
+  docs-troubleshooting: todo
   docs-examples: todo
 
   # Platinum
