@@ -202,6 +202,10 @@ class _TranslationCache:
         """Load resources into the cache and return them."""
         await self.async_load(language, components)
 
+        if "cloud" in components:
+            if not self.get_cached(language, "issues", {"cloud"}):
+                raise ValueError("Cloud component not loaded")
+
         return self.get_cached(language, category, components)
 
     def get_cached(
