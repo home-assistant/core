@@ -53,6 +53,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .lock import CONF_LOCK, CONF_OPTIMISTIC, CONF_UNLOCK
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -138,6 +139,15 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.LOCK:
+        schema |= {
+            vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Required(CONF_LOCK): selector.ActionSelector(),
+            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
+            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            vol.Optional(CONF_OPTIMISTIC): selector.BooleanSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -305,6 +315,7 @@ TEMPLATE_TYPES = [
     "binary_sensor",
     "button",
     "image",
+    "lock",
     "number",
     "select",
     "sensor",
@@ -329,6 +340,10 @@ CONFIG_FLOW = {
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        config_schema(Platform.LOCK),
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -370,6 +385,10 @@ OPTIONS_FLOW = {
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        options_schema(Platform.LOCK),
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
