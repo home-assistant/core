@@ -73,8 +73,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         except NotAuthorizedError as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"account": self.config_entry.title},
+                translation_key="authentication_failed",
             ) from e
         except TooManyRequestsError as e:
             raise ConfigEntryNotReady(
