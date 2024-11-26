@@ -21,7 +21,7 @@ from reolink_aio.api import (
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -181,14 +181,11 @@ SELECT_ENTITIES = (
         translation_key="main_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: [
-            f"{v} Hz" for v in api.frame_rate_list(ch, "main")
-        ],
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
-        value=lambda api, ch: f"{api.frame_rate(ch, 'main')} Hz",
-        method=lambda api, ch, value: (
-            api.set_frame_rate(ch, int(value.split(" ")[0]), "main")
-        ),
+        value=lambda api, ch: str(api.frame_rate(ch, 'main')),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "main"),
     ),
     ReolinkSelectEntityDescription(
         key="sub_frame_rate",
@@ -196,12 +193,11 @@ SELECT_ENTITIES = (
         translation_key="sub_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: [f"{v} Hz" for v in api.frame_rate_list(ch, "sub")],
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "sub")],
         supported=lambda api, ch: api.supported(ch, "frame_rate"),
-        value=lambda api, ch: f"{api.frame_rate(ch, 'sub')} Hz",
-        method=lambda api, ch, value: (
-            api.set_frame_rate(ch, int(value.split(" ")[0]), "sub")
-        ),
+        value=lambda api, ch: str(api.frame_rate(ch, 'sub')),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "sub"),
     ),
     ReolinkSelectEntityDescription(
         key="main_bit_rate",
@@ -209,14 +205,11 @@ SELECT_ENTITIES = (
         translation_key="main_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: [
-            f"{v} kb/s" for v in api.bit_rate_list(ch, "main")
-        ],
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "main")],
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: f"{api.bit_rate(ch, 'main')} kb/s",
-        method=lambda api, ch, value: (
-            api.set_bit_rate(ch, int(value.split(" ")[0]), "main")
-        ),
+        value=lambda api, ch: str(api.bit_rate(ch, 'main')),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "main"),
     ),
     ReolinkSelectEntityDescription(
         key="sub_bit_rate",
@@ -224,12 +217,11 @@ SELECT_ENTITIES = (
         translation_key="sub_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        get_options=lambda api, ch: [f"{v} kb/s" for v in api.bit_rate_list(ch, "sub")],
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "sub")],
         supported=lambda api, ch: api.supported(ch, "bit_rate"),
-        value=lambda api, ch: f"{api.bit_rate(ch, 'sub')} kb/s",
-        method=lambda api, ch, value: (
-            api.set_bit_rate(ch, int(value.split(" ")[0]), "sub")
-        ),
+        value=lambda api, ch: str(api.bit_rate(ch, 'sub')),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
 )
 
