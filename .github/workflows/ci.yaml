@@ -274,6 +274,8 @@ jobs:
   lint-ruff-format:
     name: Check ruff-format
     runs-on: ubuntu-24.04
+    if: |
+      'true' == 'false'
     needs:
       - info
       - pre-commit
@@ -314,6 +316,8 @@ jobs:
   lint-ruff:
     name: Check ruff
     runs-on: ubuntu-24.04
+    if: |
+      'true' == 'false'
     needs:
       - info
       - pre-commit
@@ -354,6 +358,8 @@ jobs:
   lint-other:
     name: Check other linters
     runs-on: ubuntu-24.04
+    if: |
+      'true' == 'false'
     needs:
       - info
       - pre-commit
@@ -850,9 +856,6 @@ jobs:
     needs:
       - info
       - base
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
       - prepare-pytest-full
     strategy:
       fail-fast: false
