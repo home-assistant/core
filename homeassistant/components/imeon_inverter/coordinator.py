@@ -21,7 +21,7 @@ type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 
 # HUB CREATION #
-class InverterCoordinator(DataUpdateCoordinator):
+class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Abstract representation of an inverter.
 
     A HUB or a data update coordinator is a HASS Object that automatically polls
@@ -38,7 +38,6 @@ class InverterCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         entry: InverterConfigEntry,
-        user_input: dict[str, Any] | None = None,
     ) -> None:
         """Initialize data update coordinator."""
         super().__init__(
@@ -52,13 +51,9 @@ class InverterCoordinator(DataUpdateCoordinator):
             config_entry=entry,
         )
 
-        if user_input is None:
-            raise ValueError("user_input cannot be None")
-
-        self.api = Inverter(user_input["address"])  # API calls
-        self.username = user_input["username"]
-        self.password = user_input["password"]
-        self.friendly_name = entry.title
+        self.api = Inverter(entry.data["address"])  # API calls
+        self.username = entry.data["username"]
+        self.password = entry.data["password"]
 
         # unique ID
         self.__id = entry.entry_id
@@ -68,11 +63,11 @@ class InverterCoordinator(DataUpdateCoordinator):
         self.data = {}
         self.first_call = True
 
-    def update(self, user_input: dict[str, Any]) -> None:
+    def update(self, entry: InverterConfigEntry) -> None:
         """Update HUB data based on user input."""
-        self.api = Inverter(user_input["address"])
-        self.username = user_input["username"]
-        self.password = user_input["password"]
+        self.api = Inverter(entry.data["address"])
+        self.username = entry.data["username"]
+        self.password = entry.data["password"]
         self.first_call = True
 
     @property
@@ -98,30 +93,13 @@ class InverterCoordinator(DataUpdateCoordinator):
             else:  # Timeline is a list not a dict
                 self.data[key] = entity_dict[key]
 
-    def get_storage(self) -> dict[str, Any]:
-        """Get all the value from the API."""
-        return {
-            "battery": self.api.battery,
-            "grid": self.api.grid,
-            "pv": self.api.pv,
-            "input": self.api.input,
-            "output": self.api.output,
-            "meter": self.api.meter,
-            "temp": self.api.temp,
-            "monitoring": self.api.monitoring,
-            "manager": self.api.manager,
-            "inverter": self.api.inverter,
-            "timeline": self.api.timeline,
-            "smartload": {},
-        }
-
-    async def init_and_store(self) -> dict:
+    async def init_and_store(self) -> dict[str, Any]:
         """Init API and store the data provided."""
         await self.api.init()
-        self.store_data(self.get_storage())
+        self.store_data(self.api.storage)
         return self.data
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and store newest data from API.
 
         This is the place to where entities can get their data.
@@ -143,12 +121,11 @@ class InverterCoordinator(DataUpdateCoordinator):
                 await self.api.update()
 
                 # Store in data for entities to use
-                self.store_data(self.get_storage())
+                self.store_data(self.api.storage)
 
         except TimeoutError:
             _LOGGER.error(
                 "%s | Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection",
-                self.friendly_name,
             )
 
         return self.data  # send stored data so entities can poll it
