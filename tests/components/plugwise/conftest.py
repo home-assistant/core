@@ -356,7 +356,7 @@ def mock_stretch() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.1.11")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile

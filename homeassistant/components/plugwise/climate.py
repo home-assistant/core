@@ -39,19 +39,18 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        gateway_name = coordinator.data.gateway[SMILE_NAME]
-        for device_id in coordinator.new_devices:
-            device = coordinator.data.devices[device_id]
-            if gateway_name == "Adam":
-                async_add_entities(
-                    PlugwiseClimateEntity(coordinator, device_id)
-                    if device["dev_class"] == "climate"
+        if coordinator.data.gateway["smile_name"] == "Adam":
+            async_add_entities(
+                PlugwiseClimateEntity(coordinator, device_id)
+                for device_id in coordinator.new_devices
+                if coordinator.data.devices[device_id]["dev_class"]  == "climate"
                 )
-            else:
-                async_add_entities(
-                    PlugwiseClimateEntity(coordinator, device_id)
-                    if device["dev_class"] in MASTER_THERMOSTATS
-                )
+        else:
+            async_add_entities(
+                PlugwiseClimateEntity(coordinator, device_id)
+                for device_id in coordinator.new_devices
+                if coordinator.data.devices[device_id]["dev_class"] in MASTER_THERMOSTATS
+            )
 
     _add_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
