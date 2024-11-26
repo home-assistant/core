@@ -291,7 +291,7 @@ class OpenUvGraphSensor(OpenUvEntity, SensorEntity):
 
         """
         value = self.entity_description.value_fn(self.coordinator.data)
-        return value if isinstance(value, int) else 0
+        return value if isinstance(value, (int, float)) else 0
 
     async def async_update(self) -> None:
         """Fetch data dynamically and update the UV Index and hourly forecast.
