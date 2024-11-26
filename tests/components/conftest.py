@@ -769,7 +769,6 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        # This causes a race condition in cloud integration
         translation_coros.add(
             _check_create_issue_translations(self, result, translation_errors)
         )
