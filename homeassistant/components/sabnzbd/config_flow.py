@@ -64,6 +64,13 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
             if not sab_api:
                 errors["base"] = "cannot_connect"
             else:
+                self._async_abort_entries_match(
+                    {
+                        CONF_URL: user_input[CONF_URL],
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    }
+                )
+
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(), data_updates=user_input
