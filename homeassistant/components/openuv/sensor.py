@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -36,8 +35,6 @@ from .const import (
 )
 from .coordinator import OpenUvCoordinator
 from .entity import OpenUvEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAX_UV_TIME = "time"
 

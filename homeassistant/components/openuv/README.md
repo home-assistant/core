@@ -153,13 +153,3 @@ After pasting the YAML code, click Save to add the graph to your dashboard.
 The dashboard will now display the UV index graph with the color-coded thresholds applied.
 
 ---
-
-### Step 5: Verifying the Graph
-Ensure that the graph updates dynamically based on the UV index from the sensor.current_uv_index_with_graph entity.
-Confirm that the colors correspond correctly to the UV index thresholds.    
-
----
-
-## 5. Testing and Validation
-Ensure the graph reflects the color-coded thresholds accurately.
-Verify the current_uv_index_with_graph entity updates in real time to match the UV index data provided by the openuv component.
