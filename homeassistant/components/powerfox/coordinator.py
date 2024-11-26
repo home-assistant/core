@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from powerfox import Device, Powerfox, Poweropti
 
 
-class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
+class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Powerfox data from the API."""
 
     config_entry: ConfigEntry
@@ -37,4 +37,4 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
 
     async def _async_update_data(self) -> Poweropti:
         """Fetch data from Powerfox API."""
-        return await self.client.device(device_id=self.device.device_id)
+        return await self.client.device(device_id=self.device.id)

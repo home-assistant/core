@@ -1,4 +1,4 @@
-"""Sensors flor for Powerfox integration."""
+"""Sensors for Powerfox integration."""
 
 from __future__ import annotations
 
@@ -136,12 +136,13 @@ class PowerfoxPowerSensorEntity(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id}_{description.key}"
+        self._attr_unique_id = f"{device.id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id)},
-            serial_number=device.device_id,
+            identifiers={(DOMAIN, device.id)},
             manufacturer="Powerfox",
+            model=device.type.human_readable,
             name=device.name,
+            serial_number=device.id,
         )
 
     @property
@@ -169,12 +170,13 @@ class PowerfoxWaterSensorEntity(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id}_{description.key}"
+        self._attr_unique_id = f"{device.id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id)},
-            serial_number=device.device_id,
+            identifiers={(DOMAIN, device.id)},
             manufacturer="Powerfox",
+            model=device.type.human_readable,
             name=device.name,
+            serial_number=device.id,
         )
 
     @property
