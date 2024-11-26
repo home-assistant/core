@@ -1194,9 +1194,9 @@ def mock_get_source_ip() -> Generator[_patch]:
 def translations_once() -> Generator[_patch]:
     """Only load translations once per module.
 
-    Having this as a session fixture causes issues with tests that create
+    Having this as a session fixture would cause issues with tests that create
     mock integrations, overriding the real integration translations
-    with empty ones
+    with empty ones (see #131628)
     """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
