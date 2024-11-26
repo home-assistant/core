@@ -28,9 +28,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: This integration does not need any authentication
-  parallel-updates:
-    status: todo
-    comment: Parallel updates should not be limited, so they should be set to 0
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
@@ -55,9 +53,7 @@ rules:
     status: todo
     comment: Needs to be implemented
   exception-translations: done
-  icon-translations:
-    status: todo
-    comment: Is defined in media_player and not in icons.json, but should be removed.
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: Reconfiguration not necessary.
