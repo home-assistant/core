@@ -4,7 +4,7 @@ rules:
     status: done
     comment: Integration uses an OAuth config flow.
   brands: done
-  dependency-transparency: done
+  dependency-transparency: todo
   common-modules: done
   has-entity-name: done
   action-setup:
@@ -12,25 +12,14 @@ rules:
     comment: |
       Actions are current setup in `async_setup_entry` and need to be moved
       to `async_setup`.
-  appropriate-polling:
-    status: done
-    comment: |
-      Integration uses a coordinator that polls the calendar API every 15
-      minutes to sync down changes.
-  test-before-configure:
-    status: done
-    comment: |
-      The config flow tests the connection and determines the primary calendar
-      in the config flow.
+  appropriate-polling: done
+  test-before-configure: done
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to events.
   unique-config-entry: done
   entity-unique-id: done
-  docs-installation-instructions:
-    status: done
-    comment: |
-      There integration instructions have many details about OAuth requirements.
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   test-before-setup:
     status: todo
