@@ -69,11 +69,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "cwwsq": (
         NumberEntityDescription(
             key=DPCode.MANUAL_FEED,
-            translation_key="feed",
+            translation_key="manual_feed",
         ),
         NumberEntityDescription(
             key=DPCode.VOICE_TIMES,
             translation_key="voice_times",
+        ),
+        NumberEntityDescription(
+            key=DPCode.MEAL_PLAN,
+            translation_key="meal_plan",  # byte64 of meal_plan
         ),
     ),
     # Human Presence Sensor

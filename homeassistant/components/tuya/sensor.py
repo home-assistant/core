@@ -273,6 +273,29 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            translation_key="battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.MEAL_PLAN,
+            translation_key="meal_plan",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_REPORT,
+            translation_key="feed_report",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
     # Air Quality Monitor
     # https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv

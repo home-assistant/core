@@ -307,6 +307,11 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        SelectEntityDescription(key=DPCode.FEED_STATE, translation_key="feed_state"),
+    ),
 }
 
 # Socket (duplicate of `kg`)

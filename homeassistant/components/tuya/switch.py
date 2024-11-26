@@ -79,6 +79,10 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="slow_feed",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="power",
+        ),
     ),
     # Pet Water Feeder
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
