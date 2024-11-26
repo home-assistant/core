@@ -1,145 +1,101 @@
 """Test the Powerfox config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from homeassistant import config_entries
-from homeassistant.components.powerfox.config_flow import CannotConnect, InvalidAuth
+from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+import pytest
+
 from homeassistant.components.powerfox.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.powerfox.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+from tests.common import MockConfigEntry
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_full_user_flow(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.powerfox.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
+    )
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.powerfox.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "test@powerfox.test"
+    assert result.get("data") == {
+        CONF_EMAIL: "test@powerfox.test",
         CONF_PASSWORD: "test-password",
     }
+    assert len(mock_powerfox_client.all_devices.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_powerfox_client: AsyncMock,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test abort when setting up duplicate entry."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.powerfox.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    assert result.get("type") is FlowResultType.FORM
+    assert not result.get("errors")
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
+    )
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
-    with patch(
-        "homeassistant.components.powerfox.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (PowerfoxConnectionError, "cannot_connect"),
+        (PowerfoxAuthenticationError, "invalid_auth"),
+    ],
+)
+async def test_exceptions(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test exceptions during config flow."""
+    mock_powerfox_client.all_devices.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+    mock_powerfox_client.all_devices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
