@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Generic
 
 from powerfox import Device, PowerMeter, WaterMeter
 
@@ -19,19 +20,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PowerfoxConfigEntry
-from .coordinator import PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxDataUpdateCoordinator, T
 from .entity import PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class PowerfoxPowerSensorEntityDescription(SensorEntityDescription):
-    """Describes Poweropti power sensor entity."""
+class PowerfoxSensorEntityDescription(Generic[T], SensorEntityDescription):
+    """Describes Poweropti sensor entity."""
 
-    value_fn: Callable[[PowerMeter], StateType]
+    value_fn: Callable[[T], StateType]
 
 
-SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
-    PowerfoxPowerSensorEntityDescription(
+SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
+    PowerfoxSensorEntityDescription[PowerMeter](
         key="power",
         translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -39,7 +40,7 @@ SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda meter: meter.power,
     ),
-    PowerfoxPowerSensorEntityDescription(
+    PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_usage",
         translation_key="energy_usage",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -47,7 +48,7 @@ SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda meter: meter.energy_usage,
     ),
-    PowerfoxPowerSensorEntityDescription(
+    PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_usage_low_tariff",
         translation_key="energy_usage_low_tariff",
         entity_registry_enabled_default=False,
@@ -56,7 +57,7 @@ SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda meter: meter.energy_usage_low_tariff,
     ),
-    PowerfoxPowerSensorEntityDescription(
+    PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_usage_high_tariff",
         translation_key="energy_usage_high_tariff",
         entity_registry_enabled_default=False,
@@ -65,7 +66,7 @@ SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda meter: meter.energy_usage_high_tariff,
     ),
-    PowerfoxPowerSensorEntityDescription(
+    PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_return",
         translation_key="energy_return",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -76,14 +77,7 @@ SENSORS_POWER: tuple[PowerfoxPowerSensorEntityDescription, ...] = (
 )
 
 
-@dataclass(frozen=True, kw_only=True)
-class PowerfoxWaterSensorEntityDescription(SensorEntityDescription):
-    """Describes Poweropti water sensor entity."""
-
-    value_fn: Callable[[WaterMeter], StateType]
-
-
-SENSORS_WATER: tuple[PowerfoxWaterSensorEntityDescription, ...] = ()
+SENSORS_WATER: tuple[PowerfoxSensorEntityDescription, ...] = ()
 
 
 async def async_setup_entry(
@@ -96,7 +90,7 @@ async def async_setup_entry(
     for coordinator in entry.runtime_data:
         if isinstance(coordinator.data, PowerMeter):
             entities.extend(
-                PowerfoxPowerSensorEntity(
+                PowerfoxSensorEntity(
                     coordinator=coordinator,
                     description=description,
                     device=coordinator.device,
@@ -105,7 +99,7 @@ async def async_setup_entry(
             )
         if isinstance(coordinator.data, WaterMeter):
             entities.extend(
-                PowerfoxWaterSensorEntity(
+                PowerfoxSensorEntity(
                     coordinator=coordinator,
                     description=description,
                     device=coordinator.device,
@@ -115,42 +109,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerfoxPowerSensorEntity(PowerfoxEntity, SensorEntity):
+class PowerfoxSensorEntity(PowerfoxEntity, SensorEntity):
     """Defines a powerfox power meter sensor."""
 
-    entity_description: PowerfoxPowerSensorEntityDescription
+    entity_description: PowerfoxSensorEntityDescription
 
     def __init__(
         self,
         *,
         coordinator: PowerfoxDataUpdateCoordinator,
         device: Device,
-        description: PowerfoxPowerSensorEntityDescription,
+        description: PowerfoxSensorEntityDescription,
     ) -> None:
         """Initialize Powerfox power meter sensor."""
-        super().__init__(coordinator, device)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
-        return self.entity_description.value_fn(self.coordinator.data)
-
-
-class PowerfoxWaterSensorEntity(PowerfoxEntity, SensorEntity):
-    """Defines a powerfox water meter sensor."""
-
-    entity_description: PowerfoxWaterSensorEntityDescription
-
-    def __init__(
-        self,
-        *,
-        coordinator: PowerfoxDataUpdateCoordinator,
-        device: Device,
-        description: PowerfoxWaterSensorEntityDescription,
-    ) -> None:
-        """Initialize Powerfox water meter sensor."""
         super().__init__(coordinator, device)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}_{description.key}"
