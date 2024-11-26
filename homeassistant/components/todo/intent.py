@@ -34,7 +34,7 @@ class ListAddItemIntent(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None

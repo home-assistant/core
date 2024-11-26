@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The host name or the IP address of the Palazzetti CBox"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add {name} ({host}) to Home Assistant?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "exceptions": {
+    "on_off_not_available": {
+      "message": "The appliance cannot be turned on or off."
+    },
+    "invalid_fan_mode": {
+      "message": "Fan mode {value} is invalid."
+    },
+    "invalid_target_temperature": {
+      "message": "Target temperature {value} is invalid."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the device."
+    }
+  },
+  "entity": {
+    "climate": {
+      "palazzetti": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "silent": "Silent",
+              "auto": "Auto",
+              "high": "High"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "pellet_quantity": {
+        "name": "Pellet quantity"
+      },
+      "pellet_level": {
+        "name": "Pellet level"
+      },
+      "air_outlet_temperature": {
+        "name": "Air outlet temperature"
+      },
+      "wood_combustion_temperature": {
+        "name": "Wood combustion temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "return_water_temperature": {
+        "name": "Return water temperature"
+      },
+      "tank_water_temperature": {
+        "name": "Tank water temperature"
+      },
+      "t1_hydro": {
+        "name": "Hydro temperature 1"
+      },
+      "t2_hydro": {
+        "name": "Hydro temperature 2"
+      }
+    }
+  }
+}

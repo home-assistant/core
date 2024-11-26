@@ -161,19 +161,19 @@
     },
     "set_temperature": {
       "name": "Set target temperature",
-      "description": "Sets target temperature.",
+      "description": "Sets the temperature setpoint.",
       "fields": {
         "temperature": {
-          "name": "Temperature",
-          "description": "Target temperature."
+          "name": "Target temperature",
+          "description": "The temperature setpoint."
         },
         "target_temp_high": {
-          "name": "Target temperature high",
-          "description": "High target temperature."
+          "name": "Upper target temperature",
+          "description": "The max temperature setpoint."
         },
         "target_temp_low": {
-          "name": "Target temperature low",
-          "description": "Low target temperature."
+          "name": "Lower target temperature",
+          "description": "The min temperature setpoint."
         },
         "hvac_mode": {
           "name": "HVAC mode",

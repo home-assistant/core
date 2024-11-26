@@ -14,10 +14,12 @@ from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -33,15 +35,28 @@ async def setup_homeassistant(hass: HomeAssistant):
     await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.mark.usefixtures("rtsp_to_webrtc_client")
 async def test_setup_success(
-    hass: HomeAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test successful setup and unload."""
-    await setup_integration()
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated")
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "deprecated")
 
 
 @pytest.mark.parametrize("config_entry_data", [{}])
@@ -86,12 +101,11 @@ async def test_setup_communication_failure(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_for_stream_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test successful response from RTSPtoWebRTC server."""
@@ -103,21 +117,33 @@ async def test_offer_for_stream_source(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
-            "type": "camera/web_rtc_offer",
+            "type": "camera/webrtc/offer",
             "entity_id": "camera.demo_camera",
             "offer": OFFER_SDP,
         }
     )
+
     response = await client.receive_json()
-    assert response.get("id") == 1
-    assert response.get("type") == TYPE_RESULT
-    assert response.get("success")
-    assert "result" in response
-    assert response["result"].get("answer") == ANSWER_SDP
-    assert "error" not in response
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    subscription_id = response["id"]
+
+    # Session id
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"]["type"] == "session"
+
+    # Answer
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"] == {
+        "type": "answer",
+        "answer": ANSWER_SDP,
+    }
 
     # Validate request parameters were sent correctly
     assert len(aioclient_mock.mock_calls) == 1
@@ -127,12 +153,11 @@ async def test_offer_for_stream_source(
     }
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test a transient failure talking to RTSPtoWebRTC server."""
@@ -144,20 +169,31 @@ async def test_offer_failure(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
-            "type": "camera/web_rtc_offer",
+            "type": "camera/webrtc/offer",
             "entity_id": "camera.demo_camera",
             "offer": OFFER_SDP,
         }
     )
+
     response = await client.receive_json()
-    assert response.get("id") == 2
-    assert response.get("type") == TYPE_RESULT
-    assert "success" in response
-    assert not response.get("success")
-    assert "error" in response
-    assert response["error"].get("code") == "web_rtc_offer_failed"
-    assert "message" in response["error"]
-    assert "RTSPtoWebRTC server communication failure" in response["error"]["message"]
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    subscription_id = response["id"]
+
+    # Session id
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"]["type"] == "session"
+
+    # Answer
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"] == {
+        "type": "error",
+        "code": "webrtc_offer_failed",
+        "message": "RTSPtoWebRTC server communication failure: ",
+    }

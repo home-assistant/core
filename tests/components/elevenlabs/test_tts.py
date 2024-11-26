@@ -32,9 +32,9 @@ from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
 
 from .const import MOCK_MODELS, MOCK_VOICES
 

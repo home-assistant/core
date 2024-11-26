@@ -103,7 +103,7 @@ async def test_user_connection_bad_key(
     assert len(mock_entry_setup.mock_calls) == 0
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"security_code": "invalid_security_code"}
+    assert result["errors"] == {"base": "invalid_security_code"}
 
 
 async def test_discovery_connection(

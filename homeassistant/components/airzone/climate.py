@@ -275,12 +275,18 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
-        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if (
+            self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+        ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_COOL_TEMP_SET
             )
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+            self._attr_target_temperature = None
         else:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
             self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

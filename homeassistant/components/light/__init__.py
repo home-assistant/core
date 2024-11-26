@@ -408,7 +408,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     def preprocess_data(data: dict[str, Any]) -> VolDictType:
         """Preprocess the service data."""
         base: VolDictType = {
-            entity_field: data.pop(entity_field)
+            entity_field: data.pop(entity_field)  # type: ignore[arg-type]
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
         }

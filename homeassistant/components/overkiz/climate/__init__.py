@@ -96,7 +96,7 @@ async def async_setup_entry(
     # ie Atlantic APC
     entities_based_on_widget_and_controllable: list[Entity] = [
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
-            device.controllable_name
+            device.controllable_name  # type: ignore[index]
         ](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY

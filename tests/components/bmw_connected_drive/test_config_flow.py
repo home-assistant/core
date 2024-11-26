@@ -4,8 +4,13 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from bimmer_connected.models import (
+    MyBMWAPIError,
+    MyBMWAuthError,
+    MyBMWCaptchaMissingError,
+)
 from httpx import RequestError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
@@ -311,3 +316,31 @@ async def test_reconfigure_unique_id_abort(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "account_mismatch"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_captcha_flow_not_set(hass: HomeAssistant) -> None:
+    """Test the external flow with captcha failing once and succeeding the second time."""
+
+    TEST_REGION = "north_america"
+
+    # Start flow and open form
+    # Start flow and open form
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Add login data
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication._login_row_na",
+        side_effect=MyBMWCaptchaMissingError(
+            "Missing hCaptcha token for North America login"
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**FIXTURE_USER_INPUT, CONF_REGION: TEST_REGION},
+        )
+        assert result["errors"]["base"] == "missing_captcha"

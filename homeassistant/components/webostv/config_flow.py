@@ -47,7 +47,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str = ""
         self._name: str = ""
         self._uuid: str | None = None
-        self._entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -144,15 +143,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon an WebOsTvPairError."""
         self._host = entry_data[CONF_HOST]
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self._entry is not None
-
         if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
@@ -161,8 +157,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except WEBOSTV_EXCEPTIONS:
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            update_client_key(self.hass, self._entry, client)
-            await self.hass.config_entries.async_reload(self._entry.entry_id)
+            reauth_entry = self._get_reauth_entry()
+            update_client_key(self.hass, reauth_entry, client)
+            await self.hass.config_entries.async_reload(reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(step_id="reauth_confirm")
@@ -173,8 +170,6 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = config_entry.options
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
 
@@ -191,7 +186,8 @@ class OptionsFlowHandler(OptionsFlow):
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 
-        sources = [s for s in self.options.get(CONF_SOURCES, []) if s in sources_list]
+        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
+        sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
 

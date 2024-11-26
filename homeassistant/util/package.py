@@ -104,6 +104,8 @@ def install_package(
     _LOGGER.info("Attempting install of %s", package)
     env = os.environ.copy()
     args = [
+        sys.executable,
+        "-m",
         "uv",
         "pip",
         "install",

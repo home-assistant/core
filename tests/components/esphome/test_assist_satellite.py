@@ -1448,6 +1448,7 @@ async def test_get_set_configuration(
         states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
         },
     )
     await hass.async_block_till_done()
