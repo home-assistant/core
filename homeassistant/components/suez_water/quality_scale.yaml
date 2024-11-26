@@ -3,7 +3,7 @@ rules:
   config-flow: todo
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   runtime-data:
     status: todo
     comment: coordinator is created during setup, should be stored in runtime_data
@@ -55,7 +55,7 @@ rules:
   entity-disabled-by-default: todo
   discovery:
     status: exempt
-    comment: api setup required
+    comment: api only, nothing on local network to discover services
   stale-devices:
     status: exempt
     comment: one device only
