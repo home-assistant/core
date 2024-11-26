@@ -586,7 +586,7 @@ async def test_move_credentials_hash_auth_error(
     in async_setup_entry.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(),
+        **DEVICE_CONFIG_DICT_KLAP,
         "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
@@ -629,7 +629,7 @@ async def test_move_credentials_hash_other_error(
     at the end of the test.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(),
+        **DEVICE_CONFIG_DICT_KLAP,
         "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
