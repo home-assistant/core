@@ -52,12 +52,6 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self._validate_and_save(user_input)
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -68,9 +62,9 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reauth step."""
-        return await self._validate_and_save(user_input)
+        return await self.async_step_user()
 
-    async def _validate_and_save(
+    async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate user input and create config entry."""
