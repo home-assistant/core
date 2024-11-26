@@ -53,6 +53,17 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .fan import (
+    CONF_DIRECTION,
+    CONF_OSCILLATING,
+    CONF_PERCENTAGE,
+    CONF_PRESET_MODE,
+    CONF_SET_DIRECTION_ACTION,
+    CONF_SET_OSCILLATING_ACTION,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+    CONF_SPEED_COUNT,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -133,6 +144,26 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.FAN:
+        schema |= {
+            vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_PRESET_MODE): selector.TemplateSelector(),
+            vol.Optional(CONF_OSCILLATING): selector.TemplateSelector(),
+            vol.Optional(CONF_DIRECTION): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SET_DIRECTION_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=100, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+        }
 
     if domain == Platform.IMAGE:
         schema |= {
@@ -304,6 +335,7 @@ TEMPLATE_TYPES = [
     "alarm_control_panel",
     "binary_sensor",
     "button",
+    "fan",
     "image",
     "number",
     "select",
@@ -325,6 +357,10 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        config_schema(Platform.FAN),
+        validate_user_input=validate_user_input(Platform.FAN),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -366,6 +402,10 @@ OPTIONS_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        options_schema(Platform.FAN),
+        validate_user_input=validate_user_input(Platform.FAN),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),

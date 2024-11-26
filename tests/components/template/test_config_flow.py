@@ -92,6 +92,46 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {
+                "turn_on": [
+                    {
+                        "action": "input_boolean.turn_on",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+                "turn_off": [
+                    {
+                        "action": "input_boolean.turn_off",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "turn_on": [
+                    {
+                        "action": "input_boolean.turn_on",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+                "turn_off": [
+                    {
+                        "action": "input_boolean.turn_off",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
             "image",
             {"url": "{{ states('sensor.one') }}"},
             "2024-07-09T00:00:00+00:00",
