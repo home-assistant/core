@@ -23,7 +23,9 @@ def fetch_data(
 ) -> Forecast:
     """Fetch weather and forecast from Datapoint API."""
     try:
-        return connection.get_forecast(latitude, longitude, frequency)
+        return connection.get_forecast(
+            latitude, longitude, frequency, convert_weather_code=False
+        )
     except (ValueError, datapoint.exceptions.APIException) as err:
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err

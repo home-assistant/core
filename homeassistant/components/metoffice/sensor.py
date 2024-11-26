@@ -33,8 +33,8 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
+    CONDITION_MAP,
     DOMAIN,
-    HOURLY_CONDITION_MAP,
     METOFFICE_COORDINATES,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
@@ -218,7 +218,7 @@ class MetOfficeCurrentSensor(
         value = get_attribute(self.coordinator.data.now(), self.entity_description.key)
 
         if self.entity_description.key == "significantWeatherCode" and value:
-            value = HOURLY_CONDITION_MAP.get(value)
+            value = CONDITION_MAP.get(value)
 
         return value
 

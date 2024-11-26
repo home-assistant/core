@@ -34,7 +34,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     connection = datapoint.Manager.Manager(api_key=api_key)
 
     forecast = await hass.async_add_executor_job(
-        connection.get_forecast, latitude, longitude, "daily"
+        connection.get_forecast,
+        latitude,
+        longitude,
+        "daily",
+        False,
     )
 
     if forecast is None:

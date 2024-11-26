@@ -40,9 +40,8 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
-    DAILY_CONDITION_MAP,
+    CONDITION_MAP,
     DOMAIN,
-    HOURLY_CONDITION_MAP,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
@@ -82,7 +81,7 @@ def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
     weather_code = get_attribute(timestep, "significantWeatherCode")
     if weather_code:
-        data[ATTR_FORECAST_CONDITION] = HOURLY_CONDITION_MAP.get(weather_code)
+        data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
 
     data[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_attribute(
         timestep, "feelsLikeTemperature"
@@ -106,19 +105,23 @@ def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
 def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
     data[ATTR_FORECAST_IS_DAYTIME] = abs(timestep["time"].hour - 12) <= 1
-    weather_code = get_attribute(timestep, "SignificantWeatherCode")
+    weather_code = get_attribute(timestep, "significantWeatherCode")
     if weather_code:
-        data[ATTR_FORECAST_CONDITION] = DAILY_CONDITION_MAP.get(weather_code)
+        data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
 
     data[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_attribute(
-        timestep, "MaxFeelsLikeTemp"
-    )
-    data[ATTR_FORECAST_NATIVE_PRESSURE] = get_attribute(timestep, "Mslp")
-    data[ATTR_FORECAST_NATIVE_TEMP] = get_attribute(timestep, "UpperBoundMaxTemp")
+        timestep, "maxFeelsLikeTemp"
+    ) or get_attribute(timestep, "minFeelsLikeTemp")
+    data[ATTR_FORECAST_NATIVE_PRESSURE] = get_attribute(timestep, "mslp")
+    data[ATTR_FORECAST_NATIVE_TEMP] = get_attribute(
+        timestep, "upperBoundMaxTemp"
+    ) or get_attribute(timestep, "upperBoundMinTemp")
     data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = get_attribute(
-        timestep, "ProbabilityOfPrecipitation"
+        timestep, "probabilityOfPrecipitation"
     )
-    data[ATTR_FORECAST_TEMP_LOW] = get_attribute(timestep, "LowerBoundMaxTemp")
+    data[ATTR_FORECAST_TEMP_LOW] = get_attribute(
+        timestep, "lowerBoundMaxTemp"
+    ) or get_attribute(timestep, "lowerBoundMinTemp")
     data[ATTR_FORECAST_UV_INDEX] = get_attribute(timestep, "maxUvIndex")
     data[ATTR_FORECAST_WIND_BEARING] = get_attribute(timestep, "10MWindDirection")
     data[ATTR_FORECAST_NATIVE_WIND_SPEED] = get_attribute(timestep, "10MWindSpeed")
@@ -173,7 +176,7 @@ class MetOfficeWeather(
         value = get_attribute(weather_now, "significantWeatherCode")
 
         if value:
-            return HOURLY_CONDITION_MAP.get(value)
+            return CONDITION_MAP.get(value)
         return None
 
     @property

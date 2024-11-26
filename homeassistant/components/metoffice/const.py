@@ -33,36 +33,7 @@ METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
 METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
-# See mapping here: https://github.com/EJEP/datapoint-python/blob/master/src/datapoint/weather_codes.py
-HOURLY_CONDITION_CLASSES: dict[str, list[str]] = {
-    ATTR_CONDITION_CLEAR_NIGHT: ["Clear night"],
-    ATTR_CONDITION_CLOUDY: ["Cloudy", "Overcast"],
-    ATTR_CONDITION_FOG: ["Mist", "Fog"],
-    ATTR_CONDITION_HAIL: ["Hail shower", "Hail"],
-    ATTR_CONDITION_LIGHTNING: ["Thunder"],
-    ATTR_CONDITION_LIGHTNING_RAINY: ["Thunder shower"],
-    ATTR_CONDITION_PARTLYCLOUDY: ["Partly cloudy"],
-    ATTR_CONDITION_POURING: ["Heavy rain shower", "Heavy rain"],
-    ATTR_CONDITION_RAINY: ["Light rain shower", "Drizzle", "Light rain"],
-    ATTR_CONDITION_SNOWY: [
-        "Light snow shower",
-        "Light snow",
-        "Heavy snow shower",
-        "Heavy snow",
-    ],
-    ATTR_CONDITION_SNOWY_RAINY: ["Sleet shower", "Sleet"],
-    ATTR_CONDITION_SUNNY: ["Sunny day"],
-    ATTR_CONDITION_WINDY: [],
-    ATTR_CONDITION_WINDY_VARIANT: [],
-    ATTR_CONDITION_EXCEPTIONAL: [],
-}
-HOURLY_CONDITION_MAP = {
-    cond_code: cond_ha
-    for cond_ha, cond_codes in HOURLY_CONDITION_CLASSES.items()
-    for cond_code in cond_codes
-}
-
-DAILY_CONDITION_CLASSES: dict[str, list[int]] = {
+CONDITION_CLASSES: dict[str, list[int]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [0],
     ATTR_CONDITION_CLOUDY: [7, 8],
     ATTR_CONDITION_FOG: [5, 6],
@@ -79,8 +50,8 @@ DAILY_CONDITION_CLASSES: dict[str, list[int]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
-DAILY_CONDITION_MAP = {
+CONDITION_MAP = {
     cond_code: cond_ha
-    for cond_ha, cond_codes in DAILY_CONDITION_CLASSES.items()
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
