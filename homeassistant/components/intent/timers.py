@@ -908,7 +908,11 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
             canceled += 1
 
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"canceled": canceled})
+        speech_slots = {"canceled": canceled}
+        if "area" in slots:
+            speech_slots["area"] = slots["area"]["value"]
+
+        response.async_set_speech_slots(speech_slots)
 
         return response
 

@@ -1741,6 +1741,7 @@ async def test_cancel_all_timers_area(
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.speech_slots.get("canceled", 0) == 1
+    assert result.speech_slots.get("area") == "kitchen"
 
     # No timers should be running in kitchen
     result = await intent.async_handle(
