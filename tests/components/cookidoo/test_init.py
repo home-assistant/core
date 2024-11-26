@@ -102,7 +102,7 @@ async def test_config_entry_not_ready(
 @pytest.mark.parametrize(
     ("exception", "status"),
     [
-        (None, ConfigEntryState.SETUP_RETRY),
+        (None, ConfigEntryState.LOADED),
         (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
         (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
     ],
