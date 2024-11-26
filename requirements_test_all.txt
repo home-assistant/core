@@ -1889,7 +1889,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.7
+python-kasa[speedups]==0.8.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.20
