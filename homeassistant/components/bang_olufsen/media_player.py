@@ -1013,7 +1013,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             )
 
         # The API endpoint will not be ready immediatetly after sending the join request
-        # and will throw an exception. Wait for a result to be available (around 1 second).
+        # and will throw an exception. Wait for a result to be available (~ 50ms to 2s ).
         if request:
             async with asyncio.timeout(5):
                 while result is None:
