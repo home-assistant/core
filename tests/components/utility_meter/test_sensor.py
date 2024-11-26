@@ -1773,7 +1773,6 @@ async def test_tz_changes(hass: HomeAssistant) -> None:
         hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
     )
     state = hass.states.get("sensor.energy_bill")
-
     assert state.attributes.get("next_reset") == "2024-10-28T00:00:00+01:00"
 
     await hass.config.async_update(time_zone="Pacific/Fiji")
