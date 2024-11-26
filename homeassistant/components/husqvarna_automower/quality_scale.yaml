@@ -7,19 +7,18 @@ rules:
   unique-config-entry: done
   config-flow-test-coverage: done
   runtime-data: done
-  test-before-setup:
-    status: done
-    comment: We check if we can get an access token
+  test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
   entity-event-setup:
     status: exempt
-    comment: no subscription required, coordinator handles callbacks
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
   dependency-transparency: done
   action-setup:
     status: todo
-    comment: actions are setup in async_setup_entry and not removed at all
+    comment: Actions are setup in async_setup_entry and not removed at all
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
