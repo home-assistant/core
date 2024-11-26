@@ -17,7 +17,7 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
     def __init__(self, coordinator: TouchlineSLModuleCoordinator, zone_id: int) -> None:
         """Initialize touchline entity."""
         super().__init__(coordinator)
-        self.zone_id: int = zone_id
+        self.zone_id = zone_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(zone_id))},
             name=self.zone.name,

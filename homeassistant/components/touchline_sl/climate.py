@@ -50,7 +50,6 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
     def __init__(self, coordinator: TouchlineSLModuleCoordinator, zone_id: int) -> None:
         """Construct a Touchline SL climate zone."""
         super().__init__(coordinator, zone_id)
-        self.zone_id: int = zone_id
 
         self._attr_unique_id = (
             f"module-{self.coordinator.data.module.id}-zone-{self.zone_id}"
