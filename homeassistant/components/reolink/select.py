@@ -188,6 +188,7 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_binning_mode(
             ch, BinningModeEnum[name].value
         ),
+    ),
     ReolinkSelectEntityDescription(
         key="main_frame_rate",
         cmd_key="GetEnc",
