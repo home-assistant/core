@@ -30,11 +30,11 @@ async def async_get_config_entry_diagnostics(
     if entity_id := entity_registry.async_get_entity_id(
         MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
     ):
-        if media_player_state := hass.states.get(entity_id):
-            media_player_dict = media_player_state.as_dict()
+        if state := hass.states.get(entity_id):
+            state_dict = dict(state.as_dict())
 
             # Remove context as it is not relevant
-            media_player_dict.pop("context")
-            data["media_player"] = media_player_dict
+            state_dict.pop("context")
+            data["media_player"] = state_dict
 
     return data

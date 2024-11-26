@@ -60,10 +60,6 @@
         ]),
         'supported_features': 2095933,
       }),
-      'context': dict({
-        'parent_id': None,
-        'user_id': None,
-      }),
       'entity_id': 'media_player.beosound_balance_11111111',
       'state': 'playing',
     }),
