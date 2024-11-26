@@ -2,9 +2,7 @@
 # name: test_diagnostics
   dict({
     'config_entry_data': dict({
-      'api_key': '**REDACTED**',
-      'api_user': '**REDACTED**',
-      'name': 'test-user',
+      'api_user': 'test-api-user',
       'url': 'https://habitica.com',
     }),
     'habitica_data': dict({
