@@ -917,7 +917,6 @@ jobs:
 
           echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
-            -x \
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
