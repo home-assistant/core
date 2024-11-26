@@ -16,12 +16,7 @@ from hass_nabucasa.cloud_api import (
     async_files_upload_details,
 )
 
-from homeassistant.components.backup import (
-    AgentBackup,
-    BackupAgent,
-    BackupAgentError,
-    read_backup,
-)
+from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
 
 from .client import CloudClient
@@ -95,10 +90,6 @@ class CloudBackupAgent(BackupAgent):
         file = await self._hass.async_add_executor_job(path.open, "wb")
         async for chunk, _ in resp.content.iter_chunks():
             await self._hass.async_add_executor_job(file.write, chunk)
-
-        metadata = await self._hass.async_add_executor_job(read_backup, path)
-        if metadata.backup_id != backup_id:
-            raise BackupAgentError("Backup not found")
 
     async def async_upload_backup(
         self,
