@@ -10,22 +10,19 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   entity-event-setup:
-      status: exempt
-      comment: |
-          No explicit event subscriptions
+    status: exempt
+    comment: No explicit event subscriptions.
   dependency-transparency: done
   action-setup:
-     status: exempt
-     comment: |
-        No custom action.
+    status: exempt
+    comment: No custom action.
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-actions:
-     status: exempt
-     comment: |
-        No custom action.
+    status: exempt
+    comment: No custom action.
   brands: done
 
   # Silver
@@ -33,21 +30,18 @@ rules:
   log-when-unavailable: done
   entity-unavailable: done
   action-exceptions:
-     status: exempt
-     comment: |
-        No custom action.
+    status: exempt
+    comment: No custom action.
   reauthentication-flow: done
-  parallel-updates: 
-     status: exempt
-     comment: |
-        Coordinator and sensor only platform.
+  parallel-updates:
+    status: exempt
+    comment: Coordinator and sensor only platform.
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters:
-     status: exempt
-     comment: |
-        No options flow.
+    status: exempt
+    comment: No options flow.
 
   # Gold
   entity-translations: done
@@ -57,7 +51,7 @@ rules:
   entity-disabled-by-default: done
   discovery:
     status: exempt
-    comment: Solar-Log device cannot be discovered
+    comment: Solar-Log device cannot be discovered.
   stale-devices: done
   diagnostics: done
   exception-translations: done
@@ -66,7 +60,7 @@ rules:
   dynamic-devices: done
   discovery-update-info:
     status: exempt
-    comment: Solar-Log device cannot be discovered
+    comment: Solar-Log device cannot be discovered.
   repair-issues:
     status: exempt
     comment: |
