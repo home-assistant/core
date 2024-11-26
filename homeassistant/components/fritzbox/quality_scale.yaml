@@ -27,8 +27,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: no actions/services are implemented
+    status: todo
+    comment: add exception handling to entity cations
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
