@@ -17,9 +17,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: Nothing special has to be done, but I will look at it
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   # Silver
