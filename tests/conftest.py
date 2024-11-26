@@ -1231,11 +1231,11 @@ def translations_count(translations_once: _patch) -> Generator[None]:
         _end_loaded = _count_keys(cache.loaded)
         _end_cache = _count_keys(cache.cache)
 
-        if _start_loaded == _end_loaded:
+        if _start_loaded > _end_loaded:
             pytest.fail(
                 f"Size of loaded translations was reduced from {_start_loaded} to {_end_loaded}"
             )
-        if _start_cache == _end_cache:
+        if _start_cache > _end_cache:
             pytest.fail(
                 f"Size of cache translations was reduced from {_start_cache} to {_end_cache}"
             )
