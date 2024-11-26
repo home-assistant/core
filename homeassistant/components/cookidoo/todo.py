@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TODO_ADDITIONAL_ITEMS, TODO_INGREDIENTS
+from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .entity import CookidooBaseEntity
 
@@ -62,7 +62,7 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
                     else TodoItemStatus.NEEDS_ACTION
                 ),
             )
-            for item in self.coordinator.data[TODO_INGREDIENTS]
+            for item in self.coordinator.data["ingredient_items"]
         ]
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
@@ -124,7 +124,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                     else TodoItemStatus.NEEDS_ACTION
                 ),
             )
-            for item in self.coordinator.data[TODO_ADDITIONAL_ITEMS]
+            for item in self.coordinator.data["additional_items"]
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:

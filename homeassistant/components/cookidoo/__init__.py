@@ -2,20 +2,13 @@
 
 from __future__ import annotations
 
-from cookidoo_api import (
-    DEFAULT_COOKIDOO_CONFIG,
-    Cookidoo,
-    CookidooAuthException,
-    CookidooRequestException,
-    get_localization_options,
-)
+from cookidoo_api import DEFAULT_COOKIDOO_CONFIG, Cookidoo, get_localization_options
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LOCALIZATION, DOMAIN
+from .const import CONF_LOCALIZATION
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .helpers import cookidoo_localization_for_key
 
@@ -40,21 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
         },
     )
 
-    try:
-        await cookidoo.login()
-    except CookidooRequestException as e:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="setup_request_exception",
-        ) from e
-    except CookidooAuthException as e:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="setup_authentication_exception",
-            translation_placeholders={CONF_EMAIL: email},
-        ) from e
-
-    coordinator = CookidooDataUpdateCoordinator(hass, cookidoo)
+    coordinator = CookidooDataUpdateCoordinator(hass, cookidoo, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
