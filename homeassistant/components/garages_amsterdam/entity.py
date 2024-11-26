@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,12 +18,12 @@ class GaragesAmsterdamEntity(CoordinatorEntity[GaragesAmsterdamDataUpdateCoordin
 
     def __init__(
         self,
-        coordinator: GaragesAmsterdamDataUpdateCoordinator,
+        entry: ConfigEntry,
         garage_name: str,
         info_type: str,
     ) -> None:
         """Initialize garages amsterdam entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator=entry.runtime_data)
         self._attr_unique_id = f"{garage_name}-{info_type}"
         self._garage_name = garage_name
         self._info_type = info_type

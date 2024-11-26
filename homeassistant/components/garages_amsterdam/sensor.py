@@ -7,8 +7,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import GaragesAmsterdamDataUpdateCoordinator
 from .entity import GaragesAmsterdamEntity
 
 SENSORS = {
@@ -25,14 +23,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: GaragesAmsterdamDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
 
     async_add_entities(
-        GaragesAmsterdamSensor(coordinator, entry.data["garage_name"], info_type)
+        GaragesAmsterdamSensor(entry, entry.data["garage_name"], info_type)
         for info_type in SENSORS
-        if getattr(coordinator.data[entry.data["garage_name"]], info_type) != ""
+        if getattr(entry.data[entry.data["garage_name"]], info_type) != ""
     )
 
 
@@ -43,12 +38,12 @@ class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: GaragesAmsterdamDataUpdateCoordinator,
+        entry: ConfigEntry,
         garage_name: str,
         info_type: str,
     ) -> None:
         """Initialize garages amsterdam sensor."""
-        super().__init__(coordinator, garage_name, info_type)
+        super().__init__(entry, garage_name, info_type)
         self._attr_translation_key = info_type
 
     @property
