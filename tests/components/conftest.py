@@ -777,9 +777,6 @@ async def check_translations(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
-    for key, description in translation_errors.items():
-        if key.startswith("component.cloud.issues."):
-            # cloud tests are flaky
-            continue
+    for description in translation_errors.values():
         if description not in {"used", "unused"}:
             pytest.fail(description)
