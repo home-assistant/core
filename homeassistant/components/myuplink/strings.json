@@ -41,5 +41,16 @@
         "name": "Status"
       }
     }
+  },
+  "exceptions": {
+    "set_number_error": {
+      "message": "Failed to set new value {value} for {point}/{entity}"
+    },
+    "set_select_error": {
+      "message": "Failed to set new option {option} for {point}/{entity}"
+    },
+    "set_switch_error": {
+      "message": "Failed to set state for {entity}"
+    }
   }
 }
