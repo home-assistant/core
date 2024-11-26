@@ -87,7 +87,6 @@ async def test_invalid_auth(
 
 async def test_v1_migration(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
 ) -> None:
