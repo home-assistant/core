@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
@@ -15,6 +16,8 @@ from mozart_api.exceptions import ApiException, NotFoundException
 from mozart_api.models import (
     Action,
     Art,
+    BeolinkJoinRequest,
+    BeolinkJoinResult,
     BeolinkLeader,
     ListeningModeProps,
     ListeningModeRef,
@@ -54,7 +57,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -68,6 +71,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.util.dt import utcnow
+from tests.common import ServiceResponse
 
 from . import BangOlufsenConfigEntry
 from .const import (
@@ -140,6 +144,7 @@ async def async_setup_entry(
             vol.Optional("source_id"): str,
         },
         func="async_beolink_join",
+        supports_response=SupportsResponse.ONLY,
     )
 
     platform.async_register_entity_service(
@@ -990,17 +995,38 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     # Custom actions:
     async def async_beolink_join(
         self, beolink_jid: str | None = None, source_id: str | None = None
-    ) -> None:
+    ) -> ServiceResponse:
         """Join a Beolink multi-room experience."""
+        request: BeolinkJoinRequest | None = None
+        result: BeolinkJoinResult | None = None
+
         # Touch to join
         if beolink_jid is None:
-            await self._client.join_latest_beolink_experience()
+            request = await self._client.join_latest_beolink_experience()
         # Join a peer
         elif beolink_jid and source_id is None:
-            await self._client.join_beolink_peer(jid=beolink_jid)
+            request = await self._client.join_beolink_peer(jid=beolink_jid)
         # Join a peer and select specific source
         elif beolink_jid and source_id:
-            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
+            request = await self._client.join_beolink_peer(
+                jid=beolink_jid, source=source_id
+            )
+
+        # The API endpoint will not be ready immediatetly after sending the join request
+        # and will throw an exception. Wait for a result to be available (around 1 second).
+        if request:
+            async with asyncio.timeout(5):
+                while result is None:
+                    with contextlib.suppress(ApiException):
+                        result = await self._client.get_beolink_join_result(
+                            id=request.request_id
+                        )
+                        # Will only reach this point if a result has been received.
+                        return result.dict()
+
+                    await asyncio.sleep(0)
+
+        return None
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
