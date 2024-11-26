@@ -15,26 +15,39 @@
     },
     "step": {
       "user": {
+        "title": "Habitica - Gamify your life",
         "menu_options": {
           "login": "Login to Habitica",
           "advanced": "Login to other instances"
         },
-        "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks."
+        "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
       "login": {
+        "title": "[%key:component::habitica::config::step::user::menu_options::login%]",
         "data": {
           "username": "Email or username (case-sensitive)",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "data_description": {
+          "username": "Email or username (case-sensitive) to connect Home Assistant to your Habitica account",
+          "password": "Password for the account to connect Home Assistant to Habitica"
+        },
+        "description": "Enter your login details to start using Habitica with Home Assistant\n\n[Forgot your password?]({forgot_password})"
       },
       "advanced": {
+        "title": "[%key:component::habitica::config::step::user::menu_options::advanced%]",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_user": "User ID",
           "api_key": "API Token",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
-        "description": "You can retrieve your `User ID` and `API Token` from **Settings -> Site Data** on Habitica or the instance you want to connect to"
+        "data_description": {
+          "url": "URL of the Habitica installation to connect to. Defaults to `{default_url}`",
+          "api_user": "User ID of your Habitica account",
+          "api_key": "API Token of the Habitica account"
+        },
+        "description": "You can retrieve your `User ID` and `API Token` from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to"
       }
     }
   },

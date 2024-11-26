@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import get_coordinator
+from . import GaragesAmsterdamConfigEntry
+from .coordinator import GaragesAmsterdamDataUpdateCoordinator
 from .entity import GaragesAmsterdamEntity
 
 SENSORS = {
@@ -21,16 +20,16 @@ SENSORS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: GaragesAmsterdamConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass)
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GaragesAmsterdamSensor(coordinator, config_entry.data["garage_name"], info_type)
+        GaragesAmsterdamSensor(coordinator, entry.data["garage_name"], info_type)
         for info_type in SENSORS
-        if getattr(coordinator.data[config_entry.data["garage_name"]], info_type) != ""
+        if getattr(coordinator.data[entry.data["garage_name"]], info_type) is not None
     )
 
 
@@ -40,7 +39,10 @@ class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):
     _attr_native_unit_of_measurement = "cars"
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, garage_name: str, info_type: str
+        self,
+        coordinator: GaragesAmsterdamDataUpdateCoordinator,
+        garage_name: str,
+        info_type: str,
     ) -> None:
         """Initialize garages amsterdam sensor."""
         super().__init__(coordinator, garage_name, info_type)
