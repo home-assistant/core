@@ -93,7 +93,7 @@ class CloudBackupAgent(BackupAgent):
         )
 
         file = await self._hass.async_add_executor_job(path.open, "wb")
-        async for chunk in resp.content.iter_any():
+        async for chunk, _ in resp.content.iter_chunks():
             await self._hass.async_add_executor_job(file.write, chunk)
 
         metadata = await self._hass.async_add_executor_job(read_backup, path)
