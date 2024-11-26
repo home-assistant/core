@@ -16,7 +16,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -37,10 +37,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  parallel-updates:
-    status: exempt
-    comment: |
-      This integration uses a push API. No parallel poll APIs necessary.
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
@@ -62,7 +59,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -72,10 +69,10 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-known-limitations: done
   docs-troubleshooting: done
   docs-examples: done
