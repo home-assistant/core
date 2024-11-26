@@ -11,7 +11,6 @@ from homeassistant.components.cloud import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.conftest import AiohttpClientMocker
 from tests.typing import MagicMock, WebSocketGenerator
 
 
@@ -225,4 +224,3 @@ async def test_agents_download_not_found(
         "code": "backup_agents_download",
         "message": "Backup not found",
     }
-
