@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities(
         GaragesAmsterdamSensor(entry, entry.data["garage_name"], info_type)
         for info_type in SENSORS
-        if getattr(entry.data[entry.data["garage_name"]], info_type) != ""
+        if getattr(entry.runtime_data.data[entry.data["garage_name"]], info_type) != ""
     )
 
 
