@@ -429,7 +429,7 @@ airtouch5py==0.2.11
 amberelectric==2.0.12
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.73
+androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.1.2
@@ -1889,7 +1889,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.7
+python-kasa[speedups]==0.8.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.20
