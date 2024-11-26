@@ -91,7 +91,7 @@ UV_LABEL_DEFINITIONS = (
 )
 
 
-def get_uv_label_and_color(uv_index: int) -> tuple[str, str]:
+def get_uv_label(uv_index: int) -> tuple[str, str]:
     """Return the UV label for the UV index."""
     label = next(
         label for label in UV_LABEL_DEFINITIONS if uv_index >= label.minimum_index
@@ -126,7 +126,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="current_uv_level",
         device_class=SensorDeviceClass.ENUM,
         options=[label.value for label in UV_LABEL_DEFINITIONS],
-        value_fn=lambda data: get_uv_label_and_color(data["uv"])[0],
+        value_fn=lambda data: get_uv_label(data["uv"])[0],
     ),
     OpenUvSensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX_WITH_GRAPH,
@@ -278,7 +278,7 @@ class OpenUvGraphSensor(OpenUvEntity, SensorEntity):
         uv_index = self.native_value
         if uv_index is not None and isinstance(uv_index, int):
             # Get the corresponding risk label and color for the UV Index
-            label, color = get_uv_label_and_color(uv_index)
+            label, color = get_uv_label(uv_index)
             attrs["color"] = color  # Add color to attributes (e.g., "green", "yellow")
             attrs["uv_label"] = label  # Add risk level label (e.g., "low", "moderate")
 
