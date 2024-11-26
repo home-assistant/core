@@ -1790,7 +1790,7 @@ pyrympro==0.0.8
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2024.8.0
+pyschlage==2024.11.0
 
 # homeassistant.components.sensibo
 pysensibo==1.1.0
