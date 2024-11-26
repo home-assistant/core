@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from powerfox import Powerfox, Poweropti
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,7 +10,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[???]):
+if TYPE_CHECKING:
+    from powerfox import Device, Powerfox, Poweropti
+
+
+class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
     """Class to manage fetching Powerfox data from the API."""
 
     config_entry: ConfigEntry
@@ -19,7 +23,7 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[???]):
         self,
         hass: HomeAssistant,
         client: Powerfox,
-        device: ???,
+        device: Device,
     ) -> None:
         """Initialize global Powerfox data updater."""
         super().__init__(
@@ -31,6 +35,6 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[???]):
         self.client = client
         self.device = device
 
-    async def _async_update_data(self) -> ???:
+    async def _async_update_data(self) -> Poweropti:
         """Fetch data from Powerfox API."""
-        return await self.client.device(devic_id=self.device.device_id)
+        return await self.client.device(device_id=self.device.device_id)

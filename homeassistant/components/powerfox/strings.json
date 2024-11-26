@@ -20,5 +20,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "energy_usage": {
+        "name": "Energy usage"
+      },
+      "energy_usage_low_tariff": {
+        "name": "Energy usage low tariff"
+      },
+      "energy_usage_high_tariff": {
+        "name": "Energy usage high tariff"
+      },
+      "energy_return": {
+        "name": "Energy return"
+      }
+    }
   }
 }
