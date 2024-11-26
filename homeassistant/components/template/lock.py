@@ -184,6 +184,8 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
         self._raise_template_error_if_available()
 
         if self._optimistic:
@@ -198,6 +200,8 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
         self._raise_template_error_if_available()
 
         if self._optimistic:
@@ -212,6 +216,8 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
         self._raise_template_error_if_available()
 
         if self._optimistic:
@@ -225,6 +231,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         )
 
     def _raise_template_error_if_available(self):
+        """Raise an error if the rendered code format is not valid."""
         if self._code_format_template_error is not None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
