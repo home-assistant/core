@@ -180,7 +180,6 @@ async def async_setup_entry(
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_icon = "mdi:speaker-wireless"
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
