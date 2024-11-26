@@ -29,7 +29,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "ingress_url": "Ingress URL's are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie add-on.",
+      "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie add-on.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
     },
