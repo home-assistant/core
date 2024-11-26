@@ -245,6 +245,11 @@ class _TranslationCache:
             self.hass, languages, components, integrations
         )
 
+        if "cloud" in components:
+            _print_stdout(
+                f"Translation translation_by_language_strings: {translation_by_language_strings}"
+            )
+
         # English is always the fallback language so we load them first
         self._build_category_cache(
             language, components, translation_by_language_strings[LOCALE_EN]
