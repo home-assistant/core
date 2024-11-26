@@ -261,7 +261,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_program_switch",
             translation_placeholders={
-                "entity": self.entity_id,
+                "entity_id": self.entity_id,
                 "items": "\n".join(items_list),
             },
         )
