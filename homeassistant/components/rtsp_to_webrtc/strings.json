@@ -24,6 +24,12 @@
       "server_unreachable": "[%key:component::rtsp_to_webrtc::config::error::server_unreachable%]"
     }
   },
+  "issues": {
+    "deprecated": {
+      "title": "The RTSPtoWebRTC integration is deprecated",
+      "description": "The RTSPtoWebRTC integration is deprecated and will be removed. Please use the {go2rtc} integration instead,  which is enabled by default and provides a better experience. You only need to remove the RTSPtoWebRTC config entry."
+    }
+  },
   "options": {
     "step": {
       "init": {

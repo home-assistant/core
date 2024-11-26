@@ -49,7 +49,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
@@ -119,20 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
 
-    if DOMAIN in config and CONF_PROJECT_ID not in config[DOMAIN]:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "legacy_nest_deprecated",
-            breaks_in_ha_version="2023.8.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_nest_removed",
-            translation_placeholders={
-                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
-            },
-        )
-        return False
     return True
 
 

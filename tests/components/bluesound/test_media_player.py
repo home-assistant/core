@@ -345,3 +345,31 @@ async def test_attr_bluesound_group(
     ).attributes.get("bluesound_group")
 
     assert attr_bluesound_group == ["player-name1111", "player-name2222"]
+
+
+async def test_volume_up_from_6_to_7(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media player volume up from 6 to 7.
+
+    This fails if if rounding is not done correctly. See https://github.com/home-assistant/core/issues/129956 for more details.
+    """
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(), volume=6
+        )
+    )
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        blocking=True,
+    )
+
+    player_mocks.player_data.player.volume.assert_called_once_with(level=7)
