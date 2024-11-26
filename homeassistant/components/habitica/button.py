@@ -41,7 +41,7 @@ class HabiticaButtonEntityDescription(ButtonEntityDescription):
 
     press_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
     available_fn: Callable[[HabiticaData], bool]
-    class_needed: str | None = None
+    class_needed: HabiticaClass | None = None
     entity_picture: str | None = None
 
 
