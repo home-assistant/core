@@ -5,7 +5,7 @@ run-name: "${{ github.event_name == 'workflow_dispatch' && format('CI: {0}', git
 on:
   push:
     branches:
-      - dev
+      - dev_debug_translation_issue
       - rc
       - master
   pull_request: ~
@@ -197,6 +197,8 @@ jobs:
           then
             skip_coverage="true"
           fi
+
+          test_groups="[4]"
 
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
@@ -658,6 +660,7 @@ jobs:
     if: |
       github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && 'true' == 'false'
       || github.event.inputs.pylint-only == 'true'
     needs:
       - info
@@ -704,6 +707,7 @@ jobs:
     if: |
       (github.event.inputs.mypy-only != 'true'
         && github.event.inputs.audit-licenses-only != 'true'
+        && 'true' == 'false'
         || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
@@ -821,36 +825,8 @@ jobs:
       - base
     name: Split tests for full run
     steps:
-      - name: Install additional OS dependencies
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
-          sudo apt-get -y install \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.3.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.1.2
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Run split_tests.py
-        run: |
-          . venv/bin/activate
-          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.4.3
         with:
@@ -941,11 +917,10 @@ jobs:
 
           echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
-            -qq \
+            -x \
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
-            --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -989,6 +964,7 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
+      && 'true' == 'false'
     needs:
       - info
       - base
@@ -1116,6 +1092,7 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
+      && 'true' == 'false'
     needs:
       - info
       - base
