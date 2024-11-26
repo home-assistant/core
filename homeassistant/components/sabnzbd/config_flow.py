@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+import yarl
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -18,6 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .helpers import get_client
@@ -67,8 +69,9 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reconfigure_entry(), data_updates=user_input
                     )
 
+                parsed_url = yarl.URL(user_input[CONF_URL])
                 return self.async_create_entry(
-                    title=user_input[CONF_API_KEY][:12], data=user_input
+                    title=slugify(parsed_url.host), data=user_input
                 )
 
         return self.async_show_form(

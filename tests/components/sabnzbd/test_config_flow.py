@@ -37,7 +37,7 @@ async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "edc3eee7330e"
+    assert result["title"] == "localhost"
     assert result["data"] == {
         CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_URL: "http://localhost:8080",
@@ -68,7 +68,7 @@ async def test_auth_error(hass: HomeAssistant, sabnzbd: AsyncMock) -> None:
 
     assert "errors" not in result
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "edc3eee7330e"
+    assert result["title"] == "localhost"
     assert result["data"] == {
         CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_URL: "http://localhost:8080",
