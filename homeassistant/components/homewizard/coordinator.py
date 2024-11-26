@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE
+from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.models import Device
+from homewizard_energy.v1.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE
+from homewizard_energy.v1.models import Device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: HomeWizardEnergy
+    api: HomeWizardEnergyV1
     api_disabled: bool = False
 
     _unsupported_error: bool = False
@@ -36,7 +36,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     ) -> None:
         """Initialize update coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-        self.api = HomeWizardEnergy(
+        self.api = HomeWizardEnergyV1(
             self.config_entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),
         )
@@ -66,7 +66,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                     )
 
         except RequestError as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                ex, translation_domain=DOMAIN, translation_key="communication_error"
+            ) from ex
 
         except DisabledError as ex:
             if not self.api_disabled:
@@ -79,7 +81,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                         self.config_entry.entry_id
                     )
 
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                ex, translation_domain=DOMAIN, translation_key="api_disabled"
+            ) from ex
 
         self.api_disabled = False
 

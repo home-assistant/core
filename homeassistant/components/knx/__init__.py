@@ -29,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -102,20 +101,6 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            # deprecated since 2021.12
-            cv.deprecated(CONF_KNX_STATE_UPDATER),
-            cv.deprecated(CONF_KNX_RATE_LIMIT),
-            cv.deprecated(CONF_KNX_ROUTING),
-            cv.deprecated(CONF_KNX_TUNNELING),
-            cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
-            cv.deprecated(CONF_KNX_MCAST_GRP),
-            cv.deprecated(CONF_KNX_MCAST_PORT),
-            cv.deprecated("event_filter"),
-            # deprecated since 2021.4
-            cv.deprecated("config_file"),
-            # deprecated since 2021.2
-            cv.deprecated("fire_event"),
-            cv.deprecated("fire_event_filter"),
             vol.Schema(
                 {
                     **EventSchema.SCHEMA,

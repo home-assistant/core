@@ -45,17 +45,19 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data", "responses", "config_entry_state"),
+    ("config_entry_data", "responses", "config_entry_state", "config_flow_steps"),
     [
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -64,6 +66,7 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -72,6 +75,13 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        (
+            CONFIG_ENTRY_DATA,
+            [mock_response_error(HTTPStatus.FORBIDDEN)],
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
         ),
     ],
     ids=[
@@ -79,16 +89,21 @@ async def test_init_success(
         "server-error",
         "coordinator-unavailable",
         "coordinator-server-error",
+        "forbidden",
     ],
 )
 async def test_communication_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_entry_state: list[ConfigEntryState],
+    config_flow_steps: list[str],
 ) -> None:
     """Test unable to talk to device on startup, which fails setup."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == config_entry_state
+
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["step_id"] for flow in flows] == config_flow_steps
 
 
 @pytest.mark.parametrize(

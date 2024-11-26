@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import get_coordinator
+from .const import DOMAIN
+from .coordinator import GaragesAmsterdamDataUpdateCoordinator
 from .entity import GaragesAmsterdamEntity
 
 BINARY_SENSORS = {
@@ -20,16 +21,16 @@ BINARY_SENSORS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass)
+    coordinator: GaragesAmsterdamDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
     async_add_entities(
-        GaragesAmsterdamBinarySensor(
-            coordinator, config_entry.data["garage_name"], info_type
-        )
+        GaragesAmsterdamBinarySensor(coordinator, entry.data["garage_name"], info_type)
         for info_type in BINARY_SENSORS
     )
 

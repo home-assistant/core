@@ -70,21 +70,24 @@ async def test_pipeline_from_audio_stream_auto(
         yield make_10ms_chunk(b"part2")
         yield b""
 
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider_entity.received) == 2
@@ -133,23 +136,26 @@ async def test_pipeline_from_audio_stream_legacy(
     assert msg["success"]
     pipeline_id = msg["result"]["id"]
 
-    # Use the created pipeline
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="en-UK",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        # Use the created pipeline
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            pipeline_id=pipeline_id,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider.received) == 2
@@ -198,23 +204,26 @@ async def test_pipeline_from_audio_stream_entity(
     assert msg["success"]
     pipeline_id = msg["result"]["id"]
 
-    # Use the created pipeline
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="en-UK",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        # Use the created pipeline
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            pipeline_id=pipeline_id,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider_entity.received) == 2
@@ -362,25 +371,28 @@ async def test_pipeline_from_audio_stream_wake_word(
 
         yield b""
 
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-        wake_word_settings=assist_pipeline.WakeWordSettings(
-            audio_seconds_to_buffer=1.5
-        ),
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            wake_word_settings=assist_pipeline.WakeWordSettings(
+                audio_seconds_to_buffer=1.5
+            ),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
 

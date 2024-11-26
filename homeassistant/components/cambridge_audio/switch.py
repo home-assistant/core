@@ -12,7 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import CambridgeAudioEntity
+from .entity import CambridgeAudioEntity, command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -73,10 +75,12 @@ class CambridgeAudioSwitch(CambridgeAudioEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.entity_description.value_fn(self.client)
 
+    @command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_value_fn(self.client, True)
 
+    @command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_value_fn(self.client, False)

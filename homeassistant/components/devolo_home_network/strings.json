@@ -94,6 +94,9 @@
     },
     "password_wrong": {
       "message": "The used password is wrong"
+    },
+    "update_failed": {
+      "message": "Error while updating the data: {error}"
     }
   }
 }

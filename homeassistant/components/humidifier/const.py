@@ -57,7 +57,7 @@ SERVICE_SET_HUMIDITY = "set_humidity"
 
 
 class HumidifierEntityFeature(IntFlag):
-    """Supported features of the alarm control panel entity."""
+    """Supported features of the humidifier entity."""
 
     MODES = 1
 

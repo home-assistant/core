@@ -12,7 +12,6 @@ from thinqconnect.integration import ExtendedProperty
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    FAN_OFF,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -37,7 +36,7 @@ class ThinQClimateEntityDescription(ClimateEntityDescription):
     step: float | None = None
 
 
-DEVIE_TYPE_CLIMATE_MAP: dict[DeviceType, tuple[ThinQClimateEntityDescription, ...]] = {
+DEVICE_TYPE_CLIMATE_MAP: dict[DeviceType, tuple[ThinQClimateEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
         ThinQClimateEntityDescription(
             key=ExtendedProperty.CLIMATE_AIR_CONDITIONER,
@@ -86,7 +85,7 @@ async def async_setup_entry(
     entities: list[ThinQClimateEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
         if (
-            descriptions := DEVIE_TYPE_CLIMATE_MAP.get(
+            descriptions := DEVICE_TYPE_CLIMATE_MAP.get(
                 coordinator.api.device.device_type
             )
         ) is not None:
@@ -149,10 +148,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         super()._update_status()
 
         # Update fan, hvac and preset mode.
+        if self.supported_features & ClimateEntityFeature.FAN_MODE:
+            self._attr_fan_mode = self.data.fan_mode
         if self.data.is_on:
-            if self.supported_features & ClimateEntityFeature.FAN_MODE:
-                self._attr_fan_mode = self.data.fan_mode
-
             hvac_mode = self._requested_hvac_mode or self.data.hvac_mode
             if hvac_mode in STR_TO_HVAC:
                 self._attr_hvac_mode = STR_TO_HVAC.get(hvac_mode)
@@ -160,9 +158,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             elif hvac_mode in THINQ_PRESET_MODE:
                 self._attr_preset_mode = hvac_mode
         else:
-            if self.supported_features & ClimateEntityFeature.FAN_MODE:
-                self._attr_fan_mode = FAN_OFF
-
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_preset_mode = None
 
@@ -170,6 +165,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_current_humidity = self.data.humidity
         self._attr_current_temperature = self.data.current_temp
 
+        # Update min, max and step.
         if (max_temp := self.entity_description.max_temp) is not None or (
             max_temp := self.data.max
         ) is not None:
@@ -184,26 +180,18 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_target_temperature_step = step
 
         # Update target temperatures.
-        if (
-            self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            and self.hvac_mode == HVACMode.AUTO
-        ):
-            self._attr_target_temperature = None
-            self._attr_target_temperature_high = self.data.target_temp_high
-            self._attr_target_temperature_low = self.data.target_temp_low
-        else:
-            self._attr_target_temperature = self.data.target_temp
-            self._attr_target_temperature_high = None
-            self._attr_target_temperature_low = None
+        self._attr_target_temperature = self.data.target_temp
+        self._attr_target_temperature_high = self.data.target_temp_high
+        self._attr_target_temperature_low = self.data.target_temp_low
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s/%s -> %s/%s, hvac:%s, unit:%s, step:%s",
+            "[%s:%s] update status: c:%s, t:%s, l:%s, h:%s, hvac:%s, unit:%s, step:%s",
             self.coordinator.device_name,
             self.property_id,
-            self.data.current_temp,
-            self.data.target_temp,
             self.current_temperature,
             self.target_temperature,
+            self.target_temperature_low,
+            self.target_temperature_high,
             self.hvac_mode,
             self.temperature_unit,
             self.target_temperature_step,

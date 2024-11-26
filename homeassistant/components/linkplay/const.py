@@ -8,5 +8,5 @@ from homeassistant.util.hass_dict import HassKey
 DOMAIN = "linkplay"
 CONTROLLER = "controller"
 CONTROLLER_KEY: HassKey[LinkPlayController] = HassKey(CONTROLLER)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 DATA_SESSION = "session"

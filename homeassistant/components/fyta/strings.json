@@ -7,6 +7,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username to login to your FYTA account.",
+          "password": "The password to login to your FYTA account."
         }
       },
       "reauth_confirm": {
@@ -14,6 +18,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::fyta::config::step::user::data_description::username%]",
+          "password": "[%key:component::fyta::config::step::user::data_description::password%]"
         }
       }
     },
@@ -92,6 +100,17 @@
       "salinity": {
         "name": "Salinity"
       }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error while updating data from the API."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the config entry."
+    },
+    "auth_failed": {
+      "message": "Error while logging in to the API."
     }
   }
 }

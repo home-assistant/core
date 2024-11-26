@@ -352,6 +352,8 @@ async def test_purge_old_recorder_runs(
     with session_scope(hass=hass) as session:
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
+        # Make sure we have a run that is not closed
+        assert sum(run.end is None for run in recorder_runs) == 1
 
     purge_before = dt_util.utcnow()
 
@@ -376,7 +378,9 @@ async def test_purge_old_recorder_runs(
 
     with session_scope(hass=hass) as session:
         recorder_runs = session.query(RecorderRuns)
-        assert recorder_runs.count() == 1
+        assert recorder_runs.count() == 3
+        # Make sure we did not purge the unclosed run
+        assert sum(run.end is None for run in recorder_runs) == 1
 
 
 async def test_purge_old_statistics_runs(

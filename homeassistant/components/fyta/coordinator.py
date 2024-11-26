@@ -61,7 +61,9 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
         try:
             data = await self.fyta.update_all_plants()
         except (FytaConnectionError, FytaPlantError) as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_error"
+            ) from err
         _LOGGER.debug("Data successfully updated")
 
         # data must be assigned before _async_add_remove_devices, as it is uses to set-up possible new devices
@@ -122,9 +124,14 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
         try:
             credentials = await self.fyta.login()
         except FytaConnectionError as ex:
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="config_entry_not_ready"
+            ) from ex
         except (FytaAuthentificationError, FytaPasswordError) as ex:
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
 
         new_config_entry = {**self.config_entry.data}
         new_config_entry[CONF_ACCESS_TOKEN] = credentials.access_token

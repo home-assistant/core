@@ -56,19 +56,24 @@
     },
     "sensor": {
       "recipes": {
-        "name": "Recipes"
+        "name": "Recipes",
+        "unit_of_measurement": "recipes"
       },
       "users": {
-        "name": "Users"
+        "name": "Users",
+        "unit_of_measurement": "users"
       },
       "categories": {
-        "name": "Categories"
+        "name": "Categories",
+        "unit_of_measurement": "categories"
       },
       "tags": {
-        "name": "Tags"
+        "name": "Tags",
+        "unit_of_measurement": "tags"
       },
       "tools": {
-        "name": "Tools"
+        "name": "Tools",
+        "unit_of_measurement": "tools"
       }
     }
   },
