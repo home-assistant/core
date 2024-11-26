@@ -37,6 +37,12 @@
       },
       "energy_return": {
         "name": "Energy return"
+      },
+      "cold_water": {
+        "name": "Cold water"
+      },
+      "warm_water": {
+        "name": "Warm water"
       }
     }
   }

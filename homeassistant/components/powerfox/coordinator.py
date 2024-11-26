@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from powerfox import Device, Powerfox, PowerMeter, WaterMeter
+from powerfox import Device, Powerfox, PowerfoxConnectionError, PowerMeter, WaterMeter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
@@ -38,4 +38,7 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[T]):
 
     async def _async_update_data(self) -> T:
         """Fetch data from Powerfox API."""
-        return await self.client.device(device_id=self.device.id)
+        try:
+            return await self.client.device(device_id=self.device.id)
+        except PowerfoxConnectionError as error:
+            raise UpdateFailed(error) from error

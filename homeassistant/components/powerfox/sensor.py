@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -51,7 +51,6 @@ SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
     PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_usage_low_tariff",
         translation_key="energy_usage_low_tariff",
-        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -60,7 +59,6 @@ SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
     PowerfoxSensorEntityDescription[PowerMeter](
         key="energy_usage_high_tariff",
         translation_key="energy_usage_high_tariff",
-        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -77,7 +75,24 @@ SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
 )
 
 
-SENSORS_WATER: tuple[PowerfoxSensorEntityDescription, ...] = ()
+SENSORS_WATER: tuple[PowerfoxSensorEntityDescription, ...] = (
+    PowerfoxSensorEntityDescription[WaterMeter](
+        key="cold_water",
+        translation_key="cold_water",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda meter: meter.cold_water,
+    ),
+    PowerfoxSensorEntityDescription[WaterMeter](
+        key="warm_water",
+        translation_key="warm_water",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda meter: meter.warm_water,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -96,6 +111,7 @@ async def async_setup_entry(
                     device=coordinator.device,
                 )
                 for description in SENSORS_POWER
+                if description.value_fn(coordinator.data) is not None
             )
         if isinstance(coordinator.data, WaterMeter):
             entities.extend(
