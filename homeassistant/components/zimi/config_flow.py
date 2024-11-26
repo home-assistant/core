@@ -45,7 +45,7 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not user_input[CONF_HOST]:
                     try:
                         description = await ControlPointDiscoveryService().discover()
-                    except ControlPointError as _:
+                    except ControlPointError:
                         errors["base"] = "discovery_failure"
                     data[CONF_HOST] = description.host
                     data[CONF_PORT] = description.port
