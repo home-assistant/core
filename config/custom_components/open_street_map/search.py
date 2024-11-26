@@ -1,6 +1,5 @@
 """Module to search for addresses or coordinates using the OpenStreetMap API."""
 
-
 import requests
 
 from homeassistant.components.http import HomeAssistantView
@@ -19,6 +18,7 @@ def search_address(query: str):
         dict: A dictionary containing the search results or an error message.
 
     """
+
     params = {"q": query, "format": "json"}
     try:
         response = requests.get(NOMINATIM_URL, params=params, timeout=5)
@@ -30,8 +30,52 @@ def search_address(query: str):
         return {"error": f"Request failed: {error}"}
 
 
+def get_Coordinates(json_data):
+    """Extract coordinates from Json file."""
+
+    try:
+        # Get the first result's latitude and longitude
+        latitude = float(json_data[0]["lat"])
+        longitude = float(json_data[0]["lon"])
+    except (IndexError, KeyError, ValueError):
+        return {"error": "Coordinates could not be extracted"}
+    else:
+        return [latitude, longitude]
+
+
+def get_address_coordinates(query: str):
+    """Combine search_address and get_coordinates to return coordinates directly.
+
+    Args:
+        query (str): The address to search for.
+
+    Returns:
+        list: A list containing longitude and latitude as floats, or an error message.
+
+    """
+    json_response = search_address(query)
+
+    if "error" in json_response:
+        return {"error": json_response["error"]}
+
+    return get_Coordinates(json_response)
+
+
 class AddressSearchView(HomeAssistantView):
-    """View to handle address search requests."""
+    """View to handle address search requests.
+
+    Args:
+        HomeAssistantView: Base class for Home Assistant views.
+
+    Attributes:
+        url (str): The URL endpoint for this view. Requests to this endpoint will invoke the view.
+        name (str): The unique name of the view.
+        requires_auth (bool): Indicates if authentication is required for this view.
+
+    Returns:
+    JSON: A JSON response containing search results or an error message.
+
+    """
 
     url = "/search/search_address"
     name = "search:search_address"
