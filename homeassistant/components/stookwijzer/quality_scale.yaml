@@ -42,7 +42,8 @@ rules:
   parallel-updates:
     status: exempt
     comment: |
-      This integration is read-only and doesn't provide any actions.
+      This integration is read-only and doesn't provide any actions. Querying
+      the service for data is handled centrally using a data update coordinator.
   reauthentication-flow:
     status: exempt
     comment: |
