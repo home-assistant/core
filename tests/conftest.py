@@ -1239,6 +1239,10 @@ def translations_count(translations_once: _patch) -> Generator[None]:
             pytest.fail(
                 f"Size of cache translations was reduced from {_start_cache} to {_end_cache}"
             )
+        if "cloud" in cache.loaded.get("en", set()) and not cache.cache.get(
+            "en", {}
+        ).get("issues", {}).get("cloud"):
+            pytest.fail(f"Cloud is marked as loaded, but empty: {cache.loaded}")
 
 
 @pytest.fixture
