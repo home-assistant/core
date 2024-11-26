@@ -1190,6 +1190,21 @@ def mock_get_source_ip() -> Generator[_patch]:
         patcher.stop()
 
 
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[_patch]:
+    """Only load translations once per session."""
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
 def _count_keys(dict_, counter=0):
     for each_key in dict_:
         if isinstance(dict_[each_key], dict):
@@ -1200,24 +1215,30 @@ def _count_keys(dict_, counter=0):
     return counter
 
 
-@pytest.fixture(autouse=True, scope="session")
-def translations_once() -> Generator[_patch]:
+@pytest.fixture(autouse=True)
+def translations_count(translations_once: _patch) -> Generator[None]:
     """Only load translations once per session."""
-    cache = _TranslationsCacheData({}, {})
-    patcher = patch(
-        "homeassistant.helpers.translation._TranslationsCacheData",
-        return_value=cache,
-    )
-    patcher.start()
-    _start = _count_keys(cache)
-    try:
-        yield patcher
-    finally:
-        _end = _count_keys(cache)
-        patcher.stop()
+    # pylint: disable-next=import-outside-toplevel,reimported
+    from homeassistant.helpers.translation import _TranslationsCacheData
 
-        if _start < _end:
-            pytest.fail("Size of translations was reduced")
+    cache = _TranslationsCacheData()
+
+    _start_loaded = _count_keys(cache.loaded)
+    _start_cache = _count_keys(cache.cache)
+    try:
+        yield
+    finally:
+        _end_loaded = _count_keys(cache.loaded)
+        _end_cache = _count_keys(cache.cache)
+
+        if _start_loaded == _end_loaded:
+            pytest.fail(
+                f"Size of loaded translations was reduced from {_start_loaded} to {_end_loaded}"
+            )
+        if _start_cache == _end_cache:
+            pytest.fail(
+                f"Size of cache translations was reduced from {_start_cache} to {_end_cache}"
+            )
 
 
 @pytest.fixture
