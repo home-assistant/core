@@ -2,8 +2,6 @@
 
 import requests
 
-from homeassistant.components.http import HomeAssistantView
-
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
 
@@ -59,35 +57,3 @@ def get_address_coordinates(query: str):
         return {"error": json_response["error"]}
 
     return get_Coordinates(json_response)
-
-
-class AddressSearchView(HomeAssistantView):
-    """View to handle address search requests.
-
-    Args:
-        HomeAssistantView: Base class for Home Assistant views.
-
-    Attributes:
-        url (str): The URL endpoint for this view. Requests to this endpoint will invoke the view.
-        name (str): The unique name of the view.
-        requires_auth (bool): Indicates if authentication is required for this view.
-
-    Returns:
-    JSON: A JSON response containing search results or an error message.
-
-    """
-
-    url = "/search/search_address"
-    name = "search:search_address"
-    requires_auth = False  # Set to True if you want to require authentication
-
-    async def get(self, request):
-        """Handle GET requests to search for an address."""
-        query = request.query.get("q")
-
-        if not query:
-            return self.json_message("Query parameter 'q' is required", status_code=400)
-
-        # Perform the address search using the OpenStreetMap API
-        results = await self.hass.async_add_executor_job(search_address, query)
-        return self.json(results)
