@@ -1,18 +1,15 @@
 rules:
   # Bronze
-  action-setup:
-    status: done
-    comment: |
-      Legacy Notify platform can't be created within async-setup.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: done
+  config-flow: done
+  dependency-transparency:
+    status: todo
     comment: |
-      YAML flow deprecated and will be removed in 2025.2.0
-  dependency-transparency: done
+      Mastodon.py does not have CI build/publish.
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -30,9 +27,9 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
+    status: todo
     comment: |
-      Legacy Notify platform is not an action.
+      Legacy Notify needs rewriting once Notify architecture stabalizes.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -50,7 +47,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Legacy Notify needs rewriting once Notify architecture stabalises.
+      Legacy Notify needs rewriting once Notify architecture stabalizes.
 
   # Gold
   devices: done
@@ -65,10 +62,7 @@ rules:
       Web service does not support discovery.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: exempt
-    comment: |
-      There are no known limitations.
+  docs-known-limitations: todo
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: todo
@@ -86,17 +80,14 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: |
-      Waiting to move to oAuth.
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration does not raise any repairable issues.
+      Waiting to move to OAuth.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
       Web service does not go stale.
 
   # Platinum
-  async-dependency: done
+  async-dependency: todo
   inject-websession: todo
   strict-typing: done
