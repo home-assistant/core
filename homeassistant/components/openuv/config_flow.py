@@ -134,6 +134,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_LATITUDE: data.latitude,
             CONF_LONGITUDE: data.longitude,
             CONF_ELEVATION: data.elevation,
+            "skin_type": data.skintype,
         }
 
         if existing_entry := await self.async_set_unique_id(data.unique_id):
@@ -170,13 +171,13 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_LONGITUDE: self._reauth_data[CONF_LONGITUDE],
                 },
             )
-
+        skin_type = user_input.get("skin_type", "None")
         data = OpenUvData(
             user_input[CONF_API_KEY],
             self._reauth_data[CONF_LATITUDE],
             self._reauth_data[CONF_LONGITUDE],
             self._reauth_data[CONF_ELEVATION],
-            user_input["skin_type"],
+            skin_type,
         )
 
         return await self._async_verify(data, "reauth_confirm", STEP_REAUTH_SCHEMA)
@@ -190,14 +191,14 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=self.step_user_schema
             )
 
-        user_input["skin_type"] = user_input.get("skin_type", "None")
+        skin_type = user_input.get("skin_type", "None")
 
         data = OpenUvData(
             user_input[CONF_API_KEY],
             user_input[CONF_LATITUDE],
             user_input[CONF_LONGITUDE],
             user_input[CONF_ELEVATION],
-            user_input["skin_type"],
+            skin_type,
         )
 
         await self.async_set_unique_id(data.unique_id)

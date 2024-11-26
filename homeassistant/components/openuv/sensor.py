@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
@@ -36,6 +38,9 @@ from .const import (
 from .coordinator import OpenUvCoordinator
 from .entity import OpenUvEntity
 
+# Set up a logger for your component
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_MAX_UV_TIME = "time"
 
 EXPOSURE_TYPE_MAP = {
@@ -46,6 +51,8 @@ EXPOSURE_TYPE_MAP = {
     TYPE_SAFE_EXPOSURE_TIME_5: "st5",
     TYPE_SAFE_EXPOSURE_TIME_6: "st6",
 }
+# Roman numeral to integer mapping for skin types
+roman_to_int = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6}
 
 
 @dataclass
@@ -169,19 +176,133 @@ SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up a OpenUV sensor based on a config entry."""
+    """Set up OpenUV sensors based on a config entry."""
     entry_data = dict(entry.data)
 
     async_add_entities([SkinTypeSensor(entry_data, entry=entry)])
 
     coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
+    skin_type = entry.options.get("skin_type", None) or entry_data.get(
+        "skin_type", "None"
+    )
+
     async_add_entities(
         [
             OpenUvSensor(coordinators[DATA_UV], description)
             for description in SENSOR_DESCRIPTIONS
+            if description.translation_key
+            and "safe_exposure_time" not in description.translation_key
         ]
     )
+
+    existing_entities = set(hass.states.async_entity_ids("sensor"))
+
+    if skin_type == "None":
+        add_all_safe_exposure_sensors(
+            existing_entities, async_add_entities, coordinators
+        )
+    else:
+        add_specific_safe_exposure_sensor(
+            skin_type, existing_entities, async_add_entities, coordinators
+        )
+
+    # When setting the update listener, pass `async_add_entities` correctly.
+    entry.async_on_unload(
+        entry.add_update_listener(
+            lambda hass, entry: options_update_listener(hass, entry, async_add_entities)
+        )
+    )
+
+
+def add_all_safe_exposure_sensors(
+    existing_entities: set, async_add_entities: AddEntitiesCallback, coordinators: dict
+) -> None:
+    """Add all safe exposure time sensors (for skin types I–VI) if they don't already exist."""
+    for i in range(1, 7):
+        if f"sensor.type_safe_exposure_time_{i}" not in existing_entities:
+            sensor_description = get_sensor_description_for_skin_type(i)
+            sensor = OpenUvSensor(coordinators[DATA_UV], sensor_description)
+            async_add_entities([sensor], update_before_add=True)
+
+
+def add_specific_safe_exposure_sensor(
+    skin_type: str,
+    existing_entities: set,
+    async_add_entities: AddEntitiesCallback,
+    coordinators: dict,
+) -> None:
+    """Add a specific safe exposure time sensor based on the selected skin type."""
+    roman_part = skin_type.split(" ")[-1]
+    selected_type = roman_to_int.get(roman_part)
+
+    if selected_type:
+        if f"sensor.type_safe_exposure_time_{selected_type}" not in existing_entities:
+            # Reference the existing sensor description instead of creating one dynamically
+            sensor_description = get_sensor_description_for_skin_type(selected_type)
+            sensor = OpenUvSensor(coordinators[DATA_UV], sensor_description)
+            async_add_entities([sensor], update_before_add=True)
+    else:
+        _LOGGER.warning("Invalid skin type")
+
+
+def get_sensor_description_for_skin_type(
+    skin_type_number: int,
+) -> OpenUvSensorEntityDescription:
+    """Retrieve the predefined sensor description for a given skin type."""
+    for description in SENSOR_DESCRIPTIONS:
+        if (
+            description.translation_key
+            == f"skin_type_{skin_type_number}_safe_exposure_time"
+        ):
+            return description
+    raise ValueError(f"Sensor description for skin type {skin_type_number} not found")
+
+
+async def options_update_listener(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Handle options update for skin type changes."""
+
+    skin_type = entry.options.get("skin_type", "None")
+    coordinators = hass.data[DOMAIN][entry.entry_id]
+    entity_registry = er.async_get(hass)
+
+    if skin_type == "None":
+        for i in range(1, 7):
+            entity_id = f"sensor.openuv_skin_type_{i}_safe_exposure_time"
+            if not entity_registry.async_is_registered(entity_id):
+                sensordescription = get_safe_exposure_sensor(coordinators, i)
+                async_add_entities([sensordescription])
+    else:
+        roman_part = skin_type.split(" ")[-1]
+        selected_type = roman_to_int.get(roman_part)
+
+        if selected_type:
+            entity_id = f"sensor.openuv_skin_type_{selected_type}_safe_exposure_time"
+            if not entity_registry.async_is_registered(entity_id):
+                sensordescription = get_safe_exposure_sensor(
+                    coordinators, selected_type
+                )
+                async_add_entities([sensordescription])
+
+            # Remove all other safe exposure sensors
+            for i in range(1, 7):
+                if i != selected_type:
+                    other_entity_id = f"sensor.openuv_skin_type_{i}_safe_exposure_time"
+                    if entity_registry.async_is_registered(other_entity_id):
+                        entity_registry.async_remove(other_entity_id)
+        else:
+            _LOGGER.warning("Invalid skin type")
+
+
+def get_safe_exposure_sensor(
+    coordinators: dict,
+    skin_type_number: int,
+) -> OpenUvSensor:
+    """Add a safe exposure sensor for a given skin type."""
+    sensor_description = get_sensor_description_for_skin_type(skin_type_number)
+    return OpenUvSensor(coordinators[DATA_UV], sensor_description)
 
 
 class OpenUvSensor(OpenUvEntity, SensorEntity):
