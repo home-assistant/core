@@ -198,7 +198,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bthome",
     "buienradar",
     "caldav",
-    "cambridge_audio",
     "canary",
     "cast",
     "ccm15",
