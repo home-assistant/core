@@ -54,7 +54,7 @@ rules:
     comment: No noisy entities.
   discovery:
     status: exempt
-    comment: Solar-Log device cannot be discovered.
+    comment: Fyta device cannot be discovered.
   stale-devices: done
   diagnostics: done
   exception-translations: todo
