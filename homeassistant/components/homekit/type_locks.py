@@ -89,7 +89,6 @@ class Lock(HomeAccessory):
             value=HASS_TO_HOMEKIT_CURRENT[LockState.LOCKED.value],
             setter_callback=self.set_state,
         )
-        
         self.async_update_state(state)
         self.init_doorbell(self)
 

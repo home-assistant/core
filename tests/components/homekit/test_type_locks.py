@@ -13,7 +13,7 @@ from homeassistant.const import (
     SERV_DOORBELL,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
 
