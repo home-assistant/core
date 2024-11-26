@@ -498,6 +498,15 @@ def siren_neo_coolcam_state_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="aeotec_smart_switch_7_state")
+def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Aeotec Smart Switch 7."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("aeotec_smart_switch_7_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -1210,5 +1219,15 @@ def siren_neo_coolcam_fixture(
 ) -> Node:
     """Load node for neo coolcam siren."""
     node = Node(client, siren_neo_coolcam_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_smart_switch_7")
+def aeotec_smart_switch_7_fixture(
+    client: MagicMock, aeotec_smart_switch_7_state: NodeDataType
+) -> Node:
+    """Load node for Aeotec Smart Switch 7."""
+    node = Node(client, aeotec_smart_switch_7_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

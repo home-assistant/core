@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "connection_error": "Could not connect to the controller.",
       "credentials_needed": "The controller needs credentials.",
@@ -22,7 +25,7 @@
           "name": "[%key:component::homeworks::config::step::user::data_description::name%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -45,8 +48,8 @@
         },
         "data_description": {
           "name": "A unique name identifying the Lutron Homeworks controller",
-          "password": "[%key:component::homeworks::config::step::reconfigure_confirm::data_description::password%]",
-          "username": "[%key:component::homeworks::config::step::reconfigure_confirm::data_description::username%]"
+          "password": "[%key:component::homeworks::config::step::reconfigure::data_description::password%]",
+          "username": "[%key:component::homeworks::config::step::reconfigure::data_description::username%]"
         },
         "description": "Add a Lutron Homeworks controller"
       }

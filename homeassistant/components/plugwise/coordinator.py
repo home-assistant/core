@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from packaging.version import Version
 from plugwise import PlugwiseData, Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
@@ -53,7 +54,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
             password=self.config_entry.data[CONF_PASSWORD],
             port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
-            timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
         self._current_devices: set[str] = set()
@@ -61,8 +61,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
-        self._connected = await self.api.connect()
-        self.api.get_all_devices()
+        version = await self.api.connect()
+        self._connected = isinstance(version, Version)
+        if self._connected:
+            self.api.get_all_devices()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""

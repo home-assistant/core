@@ -207,7 +207,7 @@ async def test_reconfigure_flow(
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # test with all data provided
     result = await hass.config_entries.flow.async_configure(

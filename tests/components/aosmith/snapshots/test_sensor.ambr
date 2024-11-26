@@ -58,13 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -81,7 +75,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hot water availability',
     'platform': 'aosmith',
@@ -89,25 +83,20 @@
     'supported_features': 0,
     'translation_key': 'hot_water_availability',
     'unique_id': 'hot_water_availability_junctionId',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_state[sensor.my_water_heater_hot_water_availability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'My water heater Hot water availability',
-      'options': list([
-        'low',
-        'medium',
-        'high',
-      ]),
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_water_heater_hot_water_availability',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': '90',
   })
 # ---

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -12,6 +11,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
+from propcache import cached_property
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -45,6 +45,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _platform_translation_key: str | None = None
 
     def __init__(
         self,
@@ -83,6 +84,8 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
+            if self._platform_translation_key and not self.translation_key:
+                self._attr_translation_key = self._platform_translation_key
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
