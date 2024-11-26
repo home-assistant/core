@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from reolink_aio.api import (
+    BinningModeEnum,
     Chime,
     ChimeToneEnum,
     DayNightEnum,
@@ -174,6 +175,19 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "HDR"),
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="binning_mode",
+        cmd_key="GetIsp",
+        translation_key="binning_mode",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in BinningModeEnum],
+        supported=lambda api, ch: api.supported(ch, "binning_mode"),
+        value=lambda api, ch: BinningModeEnum(api.binning_mode(ch)).name,
+        method=lambda api, ch, name: api.set_binning_mode(
+            ch, BinningModeEnum[name].value
+        ),
     ),
     ReolinkSelectEntityDescription(
         key="main_frame_rate",
