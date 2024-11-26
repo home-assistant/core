@@ -73,15 +73,11 @@ rules:
   docs-use-cases:
     status: todo
     comment: Could be better.
-  docs-supported-devices:
-    status: todo
-    comment: This is currently done, but should maybe also refer to the specific platform. (https://support.bang-olufsen.com/hc/en-us/articles/24766979863441-Which-platform-is-my-Connected-Audio-product-based-on)
+  docs-supported-devices: done
   docs-supported-functions:
     status: todo
     comment: Could be better.
-  docs-data-update:
-    status: todo
-    comment: Is currently not described.
+  docs-data-update: done
   docs-known-limitations:
     status: todo
     comment: Is currently not described.
