@@ -510,7 +510,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ipp",
     "iqvia",
     "irish_rail_transport",
-    "iron_os",
     "isal",
     "iskra",
     "islamic_prayer_times",
