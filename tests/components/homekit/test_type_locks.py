@@ -1,21 +1,34 @@
 """Test different accessory types: Locks."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from homeassistant.components.homekit.const import ATTR_VALUE
-from homeassistant.components.homekit.type_locks import Lock
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
+from homeassistant.components import lock
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_LINKED_DOORBELL_SENSOR,
     SERV_DOORBELL,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
+)
+from homeassistant.components.homekit.type_locks import Lock
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
@@ -141,10 +154,9 @@ async def test_no_code(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_lock_with_linked_doorbell_sensor(
-    hass: HomeAssistant, run_driver
-) -> None:
+async def test_lock_with_linked_doorbell_sensor(hass: HomeAssistant, hk_driver) -> None:
     """Test a lock with a linked doorbell sensor can update."""
+    code = "1234"
     await async_setup_component(hass, lock.DOMAIN, {lock.DOMAIN: {"platform": "demo"}})
     await hass.async_block_till_done()
     doorbell_entity_id = "binary_sensor.doorbell"
@@ -159,7 +171,6 @@ async def test_lock_with_linked_doorbell_sensor(
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    {ATTR_CODE: code}
     acc = Lock(
         hass,
         hk_driver,
@@ -171,7 +182,7 @@ async def test_lock_with_linked_doorbell_sensor(
             CONF_LINKED_DOORBELL_SENSOR: doorbell_entity_id,
         },
     )
-    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge = HomeBridge("hass", hk_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
     acc.run()
@@ -252,11 +263,12 @@ async def test_lock_with_linked_doorbell_sensor(
     assert char2.value is None
 
 
-async def test_lock_with_linked_doorbell_event(hass: HomeAssistant, run_driver) -> None:
+async def test_lock_with_linked_doorbell_event(hass: HomeAssistant, hk_driver) -> None:
     """Test a lock with a linked doorbell event can update."""
     await async_setup_component(hass, lock.DOMAIN, {lock.DOMAIN: {"platform": "demo"}})
     await hass.async_block_till_done()
     doorbell_entity_id = "event.doorbell"
+    code = "1234"
 
     hass.states.async_set(
         doorbell_entity_id,
@@ -279,7 +291,7 @@ async def test_lock_with_linked_doorbell_event(hass: HomeAssistant, run_driver) 
             CONF_LINKED_DOORBELL_SENSOR: doorbell_entity_id,
         },
     )
-    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge = HomeBridge("hass", hk_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
     acc.run()
@@ -391,11 +403,12 @@ async def test_lock_with_linked_doorbell_event(hass: HomeAssistant, run_driver) 
 
 
 async def test_lock_with_a_missing_linked_doorbell_sensor(
-    hass: HomeAssistant, run_driver
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test a lock with a configured linked doorbell sensor that is missing."""
     await async_setup_component(hass, lock.DOMAIN, {lock.DOMAIN: {"platform": "demo"}})
     await hass.async_block_till_done()
+    code = "1234"
     doorbell_entity_id = "binary_sensor.doorbell"
     entity_id = "lock.demo_lock"
     hass.states.async_set(entity_id, None)
@@ -411,7 +424,7 @@ async def test_lock_with_a_missing_linked_doorbell_sensor(
             CONF_LINKED_DOORBELL_SENSOR: doorbell_entity_id,
         },
     )
-    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge = HomeBridge("hass", hk_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
     acc.run()

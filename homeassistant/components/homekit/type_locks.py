@@ -3,13 +3,14 @@
 import logging
 from typing import Any
 
+import DoorbellMixin
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import State, callback
 
-from .accessories import TYPES, DoorbellMixin
+from .accessories import TYPES
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ STATE_TO_SERVICE = {
 
 
 @TYPES.register("Lock")
-class Lock(DoorbellMixin):
+class Lock(DoorbellMixin):  # type: ignore[misc]
     """Generate a Lock accessory for a lock entity.
 
     The lock entity must support: unlock and lock.
@@ -76,15 +77,6 @@ class Lock(DoorbellMixin):
             setter_callback=self.set_state,
         )
         self.async_update_state(state)
-
-    @pyhap_callback  # type: ignore[misc]
-    @callback
-    def run(self) -> None:
-        """Handle accessory driver started event.
-
-        Run inside the Home Assistant event loop.
-        """
-        super().run()
 
     def set_state(self, value: int) -> None:
         """Set lock state to value if call came from HomeKit."""

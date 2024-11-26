@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+import DoorbellMixin
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
@@ -31,7 +32,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .accessories import TYPES, DoorbellMixin, HomeDriver
+from .accessories import TYPES, HomeDriver
 from .const import (
     CHAR_MOTION_DETECTED,
     CONF_AUDIO_CODEC,
