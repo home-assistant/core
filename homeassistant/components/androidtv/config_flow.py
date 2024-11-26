@@ -235,7 +235,7 @@ class OptionsFlowHandler(OptionsFlow):
             SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
         ]
         rules = [RULES_NEW_ID, *self._state_det_rules]
-        options = self.options
+        options = self.config_entry.options
 
         data_schema = vol.Schema(
             {

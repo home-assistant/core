@@ -343,7 +343,9 @@ class OnkyoOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(
                 data={
-                    OPTION_VOLUME_RESOLUTION: self.options[OPTION_VOLUME_RESOLUTION],
+                    OPTION_VOLUME_RESOLUTION: self.config_entry.options[
+                        OPTION_VOLUME_RESOLUTION
+                    ],
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
                     OPTION_INPUT_SOURCES: sources_store,
                 }
@@ -351,7 +353,7 @@ class OnkyoOptionsFlowHandler(OptionsFlow):
 
         schema_dict: dict[Any, Selector] = {}
 
-        max_volume: float = self.options[OPTION_MAX_VOLUME]
+        max_volume: float = self.config_entry.options[OPTION_MAX_VOLUME]
         schema_dict[vol.Required(OPTION_MAX_VOLUME, default=max_volume)] = (
             NumberSelector(
                 NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)

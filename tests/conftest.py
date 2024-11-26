@@ -510,30 +510,31 @@ def aiohttp_client(
     clients = []
 
     async def go(
-        __param: Application | BaseTestServer,
+        param: Application | BaseTestServer,
+        /,
         *args: Any,
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
-            __param, (Application, BaseTestServer)
+        if isinstance(param, Callable) and not isinstance(  # type: ignore[arg-type]
+            param, (Application, BaseTestServer)
         ):
-            __param = __param(loop, *args, **kwargs)
+            param = param(loop, *args, **kwargs)
             kwargs = {}
         else:
             assert not args, "args should be empty"
 
         client: TestClient
-        if isinstance(__param, Application):
+        if isinstance(param, Application):
             server_kwargs = server_kwargs or {}
-            server = TestServer(__param, loop=loop, **server_kwargs)
+            server = TestServer(param, loop=loop, **server_kwargs)
             # Registering a view after starting the server should still work.
             server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
-        elif isinstance(__param, BaseTestServer):
-            client = TestClient(__param, loop=loop, **kwargs)
+        elif isinstance(param, BaseTestServer):
+            client = TestClient(param, loop=loop, **kwargs)
         else:
-            raise TypeError(f"Unknown argument type: {type(__param)!r}")
+            raise TypeError(f"Unknown argument type: {type(param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -1772,10 +1773,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )

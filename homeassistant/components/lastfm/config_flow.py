@@ -163,24 +163,25 @@ class LastFmOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Initialize form."""
         errors: dict[str, str] = {}
+        options = self.config_entry.options
         if user_input is not None:
             users, errors = validate_lastfm_users(
-                self.options[CONF_API_KEY], user_input[CONF_USERS]
+                options[CONF_API_KEY], user_input[CONF_USERS]
             )
             user_input[CONF_USERS] = users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **self.options,
+                        **options,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
-        if self.options[CONF_MAIN_USER]:
+        if options[CONF_MAIN_USER]:
             try:
                 main_user, _ = get_lastfm_user(
-                    self.options[CONF_API_KEY],
-                    self.options[CONF_MAIN_USER],
+                    options[CONF_API_KEY],
+                    options[CONF_MAIN_USER],
                 )
                 friends_response = await self.hass.async_add_executor_job(
                     main_user.get_friends
@@ -206,6 +207,6 @@ class LastFmOptionsFlowHandler(OptionsFlow):
                         ),
                     }
                 ),
-                user_input or self.options,
+                user_input or options,
             ),
         )
