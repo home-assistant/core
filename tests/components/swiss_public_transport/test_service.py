@@ -228,9 +228,9 @@ async def test_service_call_load_unload(
 @pytest.mark.parametrize(
     ("index", "expected"),
     [
-        (0, {"remaining_time": "-40 seconds", "line": "T10"}),
-        (1, {"remaining_time": "20 seconds", "line": None}),
-        (2, {"remaining_time": "1 minute 20 seconds", "line": "T10"}),
+        (0, {"remaining_time": -40, "line": "T10"}),
+        (1, {"remaining_time": 20, "line": None}),
+        (2, {"remaining_time": 80, "line": "T10"}),
     ],
 )
 async def test_service_call_fetch_connections_mapping(
@@ -255,7 +255,7 @@ async def test_service_call_fetch_connections_mapping(
             return_value=AsyncMock(),
         ) as mock,
         patch(
-            "homeassistant.util.dt.now",
+            "homeassistant.util.dt.utcnow",
             return_value=datetime.fromisoformat("2024-01-06T18:03:40+0100"),
         ),
     ):
