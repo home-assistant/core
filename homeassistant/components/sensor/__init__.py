@@ -544,9 +544,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Fourth priority: Unit translation
         if (translation_key := self._unit_of_measurement_translation_key) and (
-            unit_of_measurement := self.platform.platform_translations.get(
-                translation_key
-            )
+            unit_of_measurement
+            := self.platform.default_language_platform_translations.get(translation_key)
         ):
             return unit_of_measurement
 
