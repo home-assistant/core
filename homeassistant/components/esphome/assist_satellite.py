@@ -484,6 +484,7 @@ class EsphomeAssistSatellite(
         """Handle announcement finished message (also sent for TTS)."""
         self.tts_response_finished()
 
+    @callback
     def async_set_wake_word(self, wake_word_id: str) -> None:
         """Set active wake word and update config on satellite."""
         self._satellite_config.active_wake_words = [wake_word_id]

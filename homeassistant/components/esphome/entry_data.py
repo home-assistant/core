@@ -519,18 +519,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when the Assist satellite's configuration is updated."""
         self.assist_satellite_config_update_callbacks.append(callback_)
-        return partial(
-            self._async_unsubscribe_assist_satellite_config_updated,
-            callback_,
-        )
-
-    @callback
-    def _async_unsubscribe_assist_satellite_config_updated(
-        self,
-        callback_: Callable[[AssistSatelliteConfiguration], None],
-    ) -> None:
-        """Unsubscribe to Assist satellite configuration updates."""
-        self.assist_satellite_config_update_callbacks.remove(callback_)
+        return lambda: self.assist_satellite_config_update_callbacks.remove(callback_)
 
     @callback
     def async_assist_satellite_config_updated(
@@ -547,18 +536,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when the Assist satellite's wake word is set."""
         self.assist_satellite_set_wake_word_callbacks.append(callback_)
-        return partial(
-            self._async_unsubscribe_assist_satellite_set_wake_word,
-            callback_,
-        )
-
-    @callback
-    def _async_unsubscribe_assist_satellite_set_wake_word(
-        self,
-        callback_: Callable[[str], None],
-    ) -> None:
-        """Unsubscribe to Assist satellite wake word setting."""
-        self.assist_satellite_set_wake_word_callbacks.remove(callback_)
+        return lambda: self.assist_satellite_set_wake_word_callbacks.remove(callback_)
 
     @callback
     def async_assist_satellite_set_wake_word(self, wake_word_id: str) -> None:
