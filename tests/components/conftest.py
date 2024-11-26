@@ -716,7 +716,7 @@ async def _check_create_issue_translations(
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
-    # Add translations_once fixture to ensure setup/teardown
+    # Add translations_once fixture to ensure setup/teardown order
     # does not cause flaky tests
     translations_once: _patch,
 ) -> AsyncGenerator[None]:
