@@ -44,7 +44,7 @@ rules:
   discovery:
     status: exempt
     comment: Integration represents a service
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
