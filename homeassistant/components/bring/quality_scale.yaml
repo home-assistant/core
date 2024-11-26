@@ -1,8 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: todo
-    comment: The integration registers an entity service. Rule is unclear about this.
+    status: exempt
+    comment: Only entity services
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -30,7 +30,9 @@ rules:
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: done
+    comment: handled by coordinator
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
@@ -61,9 +63,11 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      no repairs
   stale-devices: todo
-
   # Platinum
   async-dependency: done
   inject-websession: done
