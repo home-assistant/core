@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,6 +31,8 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def velbus_connect_task(
