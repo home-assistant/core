@@ -144,9 +144,9 @@ async def test_on_all_notifications_raw(
         )
     )
     raw_notification_full = {
-        **raw_notification,
         "device_id": device.id,
         "serial_number": int(mock_config_entry.unique_id),
+        **raw_notification,
     }
 
     caplog.set_level(logging.DEBUG)

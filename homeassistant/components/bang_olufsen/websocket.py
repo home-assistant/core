@@ -205,9 +205,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
     def on_all_notifications_raw(self, notification: BaseWebSocketResponse) -> None:
         """Receive all notifications."""
         debug_notification = {
-            **notification,
             "device_id": self._device.id,
             "serial_number": int(self._unique_id),
+            **notification,
         }
 
         _LOGGER.debug("%s", debug_notification)
