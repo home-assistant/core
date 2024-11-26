@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
+from typing import Generic, TypeVar
 
 from powerfox import Device, PowerMeter, WaterMeter
 
@@ -20,8 +20,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PowerfoxConfigEntry
-from .coordinator import PowerfoxDataUpdateCoordinator, T
+from .coordinator import PowerfoxDataUpdateCoordinator
 from .entity import PowerfoxEntity
+
+T = TypeVar("T", PowerMeter, WaterMeter)
 
 
 @dataclass(frozen=True, kw_only=True)
