@@ -125,25 +125,41 @@ async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[st
 async def async_handle_get_coordinates(
     hass: HomeAssistant, call: ServiceCall
 ) -> dict[str, str]:
-    """Handle the service call for extracting coordinates from JSON."""
+    """Handle the service call for extracting coordinates from JSON.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        call (ServiceCall): The service call object containing the data payload.
+
+    Returns:
+        dict[str, str]: A dictionary containing the search results if json_data, or an error message.
+
+    """
     json_data = call.data.get("json_data")
     if not json_data:
         _LOGGER.error("No JSON data provided")
         return {"error": "No JSON data provided"}
 
-    result = get_Coordinates(json_data)
-    return result
+    return get_Coordinates(json_data)
 
 
 # Service handler for getting coordinates from an address
 async def async_handle_get_address_coordinates(
     hass: HomeAssistant, call: ServiceCall
 ) -> dict[str, str]:
-    """Handle the service call to get coordinates from an address query."""
+    """Handle the service call to get coordinates from an address query.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        call (ServiceCall): The service call object containing the data payload.
+
+    Returns:
+        dict[str, str]: A dictionary containing the search results if json_data, or an error message.
+
+    """
     query = call.data.get("query")
     if not query:
         _LOGGER.error("No query provided")
         return {"error": "No query provided"}
 
-    result = get_address_coordinates(query)
-    return result
+    return get_address_coordinates(query)
