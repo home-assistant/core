@@ -6,19 +6,11 @@ from typing import Any
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import State, callback
 
 from .accessories import TYPES, DoorbellMixin
-from .const import (
-    CHAR_LOCK_CURRENT_STATE,
-    CHAR_LOCK_TARGET_STATE,
-    SERV_LOCK,
-)
+from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 

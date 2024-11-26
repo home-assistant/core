@@ -292,6 +292,7 @@ class Camera(DoorbellMixin, PyhapCamera):  # type: ignore[misc]
             self.entity_id,
             self.linked_motion_sensor,
             detected,
+        )
         
     @callback
     def async_update_state(self, new_state: State | None) -> None:

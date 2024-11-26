@@ -3,11 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State, callback
 
 from .accessories import HomeAccessory
@@ -25,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 DOORBELL_SINGLE_PRESS = 0
 DOORBELL_DOUBLE_PRESS = 1
 DOORBELL_LONG_PRESS = 2
-
 
 class DoorbellMixin(HomeAccessory):
     def __init__(self, *args: Any) -> None:
