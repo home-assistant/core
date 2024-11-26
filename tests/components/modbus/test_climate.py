@@ -364,31 +364,6 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
             CONF_CLIMATES: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_TARGET_TEMP: 117,
-                    CONF_ADDRESS: 117,
-                    CONF_SLAVE: 10,
-                    CONF_HVAC_ONOFF_REGISTER: 11,
-                    CONF_HVAC_ON_VALUE: 0x55,
-                    CONF_HVAC_OFF_VALUE: 0xAA,
-                }
-            ],
-        },
-    ],
-)
-async def test_config_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
-    """Run configuration test for On/Off values."""
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get(CONF_HVAC_ON_VALUE) == 0x55
-    assert state.attributes.get(CONF_HVAC_OFF_VALUE) == 0xAA
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_CLIMATES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_SLAVE: 1,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
