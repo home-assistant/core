@@ -343,6 +343,7 @@ class OpenUvGraphSensor(OpenUvEntity, SensorEntity):
                 # Append the time and UV Index as a dictionary to the hourly forecast
                 self._hourly_forecast.append({"time": time, "uv_index": uv_index})
 
+
 class SkinTypeSensor(SensorEntity):
     """Define a sensor that reflects the user's selected skin type."""
 
