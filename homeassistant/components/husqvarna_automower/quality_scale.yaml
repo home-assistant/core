@@ -17,8 +17,9 @@ rules:
       Entities of this integration does not explicitly subscribe to events.
   dependency-transparency: done
   action-setup:
-    status: todo
-    comment: Actions are setup in async_setup_entry and not removed at all
+    status: done
+    comment: |
+      The integration only has an entity service, registered in the platform.
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
