@@ -164,8 +164,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_MODE_REGISTER in config:
             mode_config = config[CONF_HVAC_MODE_REGISTER]
             self._hvac_mode_register = mode_config[CONF_ADDRESS]
-            self._hvac_on_value = config[CONF_HVAC_ON_VALUE]
-            self._hvac_off_value = config[CONF_HVAC_OFF_VALUE]
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
@@ -256,6 +254,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
             self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
+            self._hvac_on_value = config[CONF_HVAC_ON_VALUE]
+            self._hvac_off_value = config[CONF_HVAC_OFF_VALUE]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
