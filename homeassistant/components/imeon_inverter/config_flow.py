@@ -22,7 +22,6 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user step for creating a new configuration entry."""
         schema = vol.Schema(
             {
-                vol.Required("inverter"): str,
                 vol.Required(CONF_ADDRESS): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -33,26 +32,13 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=schema)
 
         # Check if entry already exists
-        existing_entry = self._find_existing_entry(
-            user_input[CONF_ADDRESS], user_input["inverter"]
-        )
-
-        if existing_entry:
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(user_input[CONF_ADDRESS])
+        self._abort_if_unique_id_configured()
 
         data = {
-            "address": user_input["address"],
-            "username": user_input["username"],
-            "password": user_input["password"],
+            "address": user_input[CONF_ADDRESS],
+            "username": user_input[CONF_USERNAME],
+            "password": user_input[CONF_PASSWORD],
         }
 
-        return self.async_create_entry(title=user_input["inverter"], data=data)
-
-    def _find_existing_entry(
-        self, address: str, inverter_name: str
-    ) -> config_entries.ConfigEntry | None:
-        """Check if an entry with the same address or inverter name already exists."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_ADDRESS] == address or entry.title == inverter_name:
-                return entry
-        return None
+        return self.async_create_entry(title=user_input[CONF_ADDRESS], data=data)
