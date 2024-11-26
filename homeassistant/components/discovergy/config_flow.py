@@ -97,6 +97,9 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+                self._abort_if_unique_id_configured()
+
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=self._get_reauth_entry(),
@@ -113,10 +116,6 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
                         },
                     )
-
-                # set unique id to title which is the account email
-                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
