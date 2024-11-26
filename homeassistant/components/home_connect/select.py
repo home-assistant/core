@@ -1,4 +1,4 @@
-"""Provides a selector for Home Connect."""
+"""Provides a select platform for Home Connect."""
 
 import contextlib
 import logging
@@ -191,6 +191,17 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
+PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
+    SelectEntityDescription(
+        key=BSH_ACTIVE_PROGRAM,
+        translation_key="active_program",
+    ),
+    SelectEntityDescription(
+        key=BSH_SELECTED_PROGRAM,
+        translation_key="selected_program",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -212,16 +223,14 @@ async def async_setup_entry(
                             if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
                                 programs.remove(program)
                                 if program not in programs_not_found:
-                                    _LOGGER.warning(
+                                    _LOGGER.info(
                                         'The program "%s" is not part of the official Home Connect API specification',
                                         program,
                                     )
                                     programs_not_found.add(program)
                         entities.extend(
-                            HomeConnectProgramSelectEntity(
-                                device, programs, start_on_select
-                            )
-                            for start_on_select in (True, False)
+                            HomeConnectProgramSelectEntity(device, programs, desc)
+                            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
                         )
         return entities
 
@@ -232,22 +241,20 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     """Select class for Home Connect programs."""
 
     def __init__(
-        self, device: HomeConnectDevice, programs: list[str], start_on_select: bool
+        self,
+        device: HomeConnectDevice,
+        programs: list[str],
+        desc: SelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
             device,
-            SelectEntityDescription(
-                key=BSH_ACTIVE_PROGRAM if start_on_select else BSH_SELECTED_PROGRAM,
-                translation_key="active_program"
-                if start_on_select
-                else "selected_program",
-            ),
+            desc,
         )
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program] for program in programs
         ]
-        self.start_on_select = start_on_select
+        self.start_on_select = desc.key == BSH_ACTIVE_PROGRAM
 
     async def async_update(self) -> None:
         """Update the program selection status."""
@@ -268,18 +275,20 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Select new program."""
         bsh_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
         _LOGGER.debug(
-            "Tried to start program: %s"
-            if self.start_on_select
-            else "Tried to select program: %s",
+            "Starting program: %s" if self.start_on_select else "Selecting program: %s",
             bsh_key,
         )
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.start_program
-                if self.start_on_select
-                else self.device.appliance.select_program,
-                bsh_key,
-            )
+            if self.start_on_select:
+                await self.hass.async_add_executor_job(
+                    self.device.appliance.start_program,
+                    bsh_key,
+                )
+            else:
+                await self.hass.async_add_executor_job(
+                    self.device.appliance.select_program,
+                    bsh_key,
+                )
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
