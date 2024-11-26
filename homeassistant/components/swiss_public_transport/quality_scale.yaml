@@ -9,12 +9,12 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: todo
+  config-flow: done
   dependency-transparency: todo
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: No events implemented
@@ -37,13 +37,11 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: No authentication needed
-  parallel-updates: todo
-  test-coverage: todo
+  parallel-updates: done
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
-  docs-configuration-parameters:
-    status: exempt
-    comment: no options flow
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: done
@@ -76,8 +74,8 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
+  docs-known-limitations: done
+  docs-troubleshooting: done
   docs-examples: todo
 
   # Platinum
