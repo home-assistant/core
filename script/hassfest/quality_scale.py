@@ -874,7 +874,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ruuvi_gateway",
     "ruuvitag_ble",
     "rympro",
-    "sabnzbd",
     "saj",
     "samsungtv",
     "sanix",
