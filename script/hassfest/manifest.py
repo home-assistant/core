@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum, StrEnum, auto
+from enum import StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -20,21 +20,12 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
-
-
-class ScaledQualityScaleTiers(IntEnum):
-    """Supported manifest quality scales."""
-
-    BRONZE = 1
-    SILVER = 2
-    GOLD = 3
-    PLATINUM = 4
 
 
 class NonScaledQualityScaleTiers(StrEnum):

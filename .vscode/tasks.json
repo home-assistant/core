@@ -88,6 +88,22 @@
       "problemMatcher": []
     },
     {
+      "label": "Update syrupy snapshots",
+      "detail": "Update syrupy snapshots for a given integration.",
+      "type": "shell",
+      "command": "python3 -m pytest ./tests/components/${input:integrationName} --snapshot-update",
+      "dependsOn": ["Compile English translations"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Generate Requirements",
       "type": "shell",
       "command": "./script/gen_requirements_all.py",

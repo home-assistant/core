@@ -666,12 +666,15 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
+        / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 
 

@@ -5,11 +5,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from websockets.protocol import State
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -80,20 +88,22 @@ async def test_invalid_auth(
 
 async def test_v1_migration(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test v1 -> v2 Migration."""
+    common_data = {
+        **USER_INPUT,
+        CONF_HOST: "host",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    }
     entry_v1 = MockConfigEntry(
         domain=DOMAIN,
         version=1,
         unique_id=mock_lamarzocco.serial_number,
         data={
-            **USER_INPUT,
-            CONF_HOST: "host",
+            **common_data,
             CONF_MACHINE: mock_lamarzocco.serial_number,
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
         },
     )
 
@@ -102,8 +112,11 @@ async def test_v1_migration(
     await hass.async_block_till_done()
 
     assert entry_v1.version == 2
-    assert dict(entry_v1.data) == dict(mock_config_entry.data) | {
-        CONF_MAC: "aa:bb:cc:dd:ee:ff"
+    assert dict(entry_v1.data) == {
+        **common_data,
+        CONF_NAME: "GS3",
+        CONF_MODEL: mock_lamarzocco.model,
+        CONF_TOKEN: "token",
     }
 
 
@@ -182,7 +195,7 @@ async def test_websocket_closed_on_unload(
     ) as local_client:
         client = local_client.return_value
         client.websocket = AsyncMock()
-        client.websocket.connected = True
+        client.websocket.state = State.OPEN
         await async_init_integration(hass, mock_config_entry)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
