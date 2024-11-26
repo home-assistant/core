@@ -10,7 +10,7 @@ This entity resides in the core of Home Assistant, and after its creation, it be
 ## 2. Installing and Configuring HACS (Home Assistant Community Store)
 
 ### Step 1: Download and Install HACS
-1. **Download the .zip file** containing the latest HACS release from [HACS GitHub Releases](https://github.com/hacs/releases).
+1. **Download the .zip file** containing the latest HACS release from [HACS GitHub Releases](https://github.com/hacs/integration/releases).
 2. **Extract the downloaded file**.
 3. Navigate to the `config` directory in your Home Assistant instance and check for the `custom_components` folder:
    - If it does not exist, create a folder named `custom_components` under `core/config/`.
