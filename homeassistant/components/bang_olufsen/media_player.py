@@ -135,7 +135,10 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={vol.Optional("beolink_jid"): jid_regex},
+        schema={
+            vol.Optional("beolink_jid"): jid_regex,
+            vol.Optional("source_id"): str,
+        },
         func="async_beolink_join",
     )
 
@@ -985,12 +988,19 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self.async_beolink_leave()
 
     # Custom actions:
-    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
+    async def async_beolink_join(
+        self, beolink_jid: str | None = None, source_id: str | None = None
+    ) -> None:
         """Join a Beolink multi-room experience."""
+        # Touch to join
         if beolink_jid is None:
             await self._client.join_latest_beolink_experience()
-        else:
+        # Join a peer
+        elif beolink_jid and source_id is None:
             await self._client.join_beolink_peer(jid=beolink_jid)
+        # Join a peer and select specific source
+        elif beolink_jid and source_id:
+            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False

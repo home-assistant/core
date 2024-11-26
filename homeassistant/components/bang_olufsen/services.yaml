@@ -48,6 +48,11 @@ beolink_join:
           example: 1111.2222222.33333333@products.bang-olufsen.com
           selector:
             text:
+        source_id:
+          required: false
+          example: tidal
+          selector:
+            text:
 
 beolink_leave:
   target:
