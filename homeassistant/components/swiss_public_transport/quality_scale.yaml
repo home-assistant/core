@@ -41,7 +41,9 @@ rules:
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no options flow
 
   # Gold
   entity-translations: done
@@ -75,7 +77,7 @@ rules:
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
-  docs-troubleshooting: done
+  docs-troubleshooting: todo
   docs-examples: todo
 
   # Platinum
