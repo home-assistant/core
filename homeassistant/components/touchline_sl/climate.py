@@ -65,11 +65,6 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         self.set_attr()
         super()._handle_coordinator_update()
 
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.zone_id in self.coordinator.data.zones
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:

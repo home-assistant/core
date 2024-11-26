@@ -31,3 +31,8 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
     def zone(self) -> Zone:
         """Return the device object from the coordinator data."""
         return self.coordinator.data.zones[self.zone_id]
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.zone_id in self.coordinator.data.zones
