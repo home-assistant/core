@@ -720,7 +720,6 @@ async def _check_exception_translation(
     translation_errors: dict[str, str],
 ) -> None:
     if exception.translation_key is None:
-        # `translation_key` is only None on dismissed issues
         return
     await _validate_translation(
         hass,
