@@ -98,7 +98,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_check_firmware_available()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update_connected_plc_devices() -> LogicalNetwork:
         """Fetch data from API endpoint."""
@@ -107,7 +111,11 @@ async def async_setup_entry(
         try:
             return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update_guest_wifi_status() -> WifiGuestAccessGet:
         """Fetch data from API endpoint."""
@@ -116,7 +124,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except DevicePasswordProtected as err:
             raise ConfigEntryAuthFailed(
                 err, translation_domain=DOMAIN, translation_key="password_wrong"
@@ -129,7 +141,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update_last_restart() -> int:
         """Fetch data from API endpoint."""
@@ -138,7 +154,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_uptime()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except DevicePasswordProtected as err:
             raise ConfigEntryAuthFailed(
                 err, translation_domain=DOMAIN, translation_key="password_wrong"
@@ -151,7 +171,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update_wifi_neighbor_access_points() -> list[NeighborAPInfo]:
         """Fetch data from API endpoint."""
@@ -160,7 +184,11 @@ async def async_setup_entry(
         try:
             return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def disconnect(event: Event) -> None:
         """Disconnect from device."""
