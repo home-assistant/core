@@ -8,6 +8,7 @@ from importlib.util import find_spec
 import logging
 from pathlib import Path
 import string
+import sys
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -587,9 +588,11 @@ async def _validate_translation(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
-    _LOGGER.debug("Validating translation for %s", full_key)
+    _print_stdout(component, f"Validating translation for {full_key}")
     translations = await async_get_translations(hass, "en", category, [component])
-    _LOGGER.debug("Got translations for %s.%s: %s", component, category, translations)
+    _print_stdout(
+        component, f"Got translations for {component}.{category}: {translations}"
+    )
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -736,6 +739,12 @@ async def _check_exception_translation(
     )
 
 
+def _print_stdout(domain: str, msg: str) -> None:
+    _LOGGER.debug(msg)
+    if domain == "cloud":
+        print(msg, file=sys.stdout)  # noqa: T201
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
@@ -774,7 +783,7 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        _LOGGER.debug("Translation check needed for %s, %s", domain, issue_id)
+        _print_stdout(domain, f"Translation check needed for {domain}, {issue_id}")
         translation_coros.add(
             _check_create_issue_translations(self, result, translation_errors)
         )
