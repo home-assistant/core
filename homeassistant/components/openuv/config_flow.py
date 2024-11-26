@@ -38,6 +38,16 @@ STEP_REAUTH_SCHEMA = vol.Schema(
     }
 )
 
+FITZPATRICK_TYPES = {
+    "None": "Choose/Change your Skin Type",
+    "Skin Type I": "Type I: Pale, always burns, never tans",
+    "Skin Type II": "Type II: Fair, usually burns, tans minimally",
+    "Skin Type III": "Type III: Medium, burns moderately, tans gradually",
+    "Skin Type IV": "Type IV: Olive, rarely burns, tans easily",
+    "Skin Type V": "Type V: Brown, very rarely burns, tans very easily",
+    "Skin Type VI": "Type VI: Dark Brown/Black, never burns, deeply pigmented",
+}
+
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(
@@ -46,6 +56,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
         ): vol.Coerce(float),
+        vol.Optional("skin_type", default="None"): vol.In(FITZPATRICK_TYPES),
     }
 )
 
@@ -62,6 +73,7 @@ class OpenUvData:
     latitude: float
     longitude: float
     elevation: float
+    skintype: str
 
     @property
     def unique_id(self) -> str:
@@ -93,6 +105,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_ELEVATION, default=self.hass.config.elevation
                 ): vol.Coerce(float),
+                vol.Optional("skin_type", default="None"): vol.In(FITZPATRICK_TYPES),
             }
         )
 
@@ -163,6 +176,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
             self._reauth_data[CONF_LATITUDE],
             self._reauth_data[CONF_LONGITUDE],
             self._reauth_data[CONF_ELEVATION],
+            user_input["skin_type"],
         )
 
         return await self._async_verify(data, "reauth_confirm", STEP_REAUTH_SCHEMA)
@@ -176,11 +190,14 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=self.step_user_schema
             )
 
+        user_input["skin_type"] = user_input.get("skin_type", "None")
+
         data = OpenUvData(
             user_input[CONF_API_KEY],
             user_input[CONF_LATITUDE],
             user_input[CONF_LONGITUDE],
             user_input[CONF_ELEVATION],
+            user_input["skin_type"],
         )
 
         await self.async_set_unique_id(data.unique_id)

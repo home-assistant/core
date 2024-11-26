@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
@@ -46,6 +47,30 @@ EXPOSURE_TYPE_MAP = {
     TYPE_SAFE_EXPOSURE_TIME_5: "st5",
     TYPE_SAFE_EXPOSURE_TIME_6: "st6",
 }
+
+SKIN_TYPE_TRANSLATION: dict[str, int | None] = {
+    "Skin Type I": 0,
+    "Skin Type II": 1,
+    "Skin Type III": 2,
+    "Skin Type IV": 3,
+    "Skin Type V": 4,
+    "Skin Type VI": 5,
+}
+UV_INDEX_LABEL_TRANSLATION: dict[str, int] = {
+    "low": 0,
+    "moderate": 1,
+    "high": 2,
+    "very_high": 3,
+    "extreme": 4,
+}
+
+SUN_EXPOSURE: list[list[tuple[int, int] | None]] = [
+    [(15, 20), (20, 30), (30, 40), (40, 60), (60, 80), None],
+    [(10, 15), (15, 20), (20, 30), (30, 40), (40, 60), (60, 80)],
+    [(5, 10), (10, 15), (15, 20), (20, 30), (30, 40), (40, 60)],
+    [(2, 8), (5, 10), (10, 15), (15, 20), (20, 30), (30, 40)],
+    [(1, 5), (2, 8), (5, 10), (10, 15), (15, 20), (20, 30)],
+]
 
 
 @dataclass
@@ -177,9 +202,13 @@ SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up OpenUV sensors based on a config entry."""
-    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    """Set up a OpenUV sensor based on a config entry."""
+    entry_data = dict(entry.data)
 
+    async_add_entities([SkinTypeSensor(entry_data, entry=entry)])
+
+    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([VitaminDSensor(coordinators[DATA_UV])])
     async_add_entities(
         [
             OpenUvGraphSensor(coordinators[DATA_UV], description)
@@ -313,3 +342,83 @@ class OpenUvGraphSensor(OpenUvEntity, SensorEntity):
                 uv_index = entry.get("uv", 0)
                 # Append the time and UV Index as a dictionary to the hourly forecast
                 self._hourly_forecast.append({"time": time, "uv_index": uv_index})
+
+class SkinTypeSensor(SensorEntity):
+    """Define a sensor that reflects the user's selected skin type."""
+
+    def __init__(self, entry_data: dict, entry: ConfigEntry) -> None:
+        """Initialize the Skin Type sensor."""
+        self._attr_name = "Skin Type"
+        self._attr_unique_id = (
+            f"skin_type_{entry_data['latitude']}_{entry_data['longitude']}"
+        )
+        self._entry_data = dict(entry_data)
+        self.entry = entry
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{entry_data['latitude']}_{entry_data['longitude']}")
+            },
+            name="OpenUV",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> str:
+        """Return the current state of the skin type sensor."""
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is None:
+            skin_type = self._entry_data.get("skin_type", "None")
+        return str(skin_type)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return extra state attributes."""
+        return {
+            "skin_type": self._entry_data.get("skin_type", "None"),
+        }
+
+    async def async_update(self) -> None:
+        """Update the sensor state from the configuration."""
+        skin_type = self.entry.options.get("skin_type", None)
+        if skin_type is not None:
+            self._entry_data["skin_type"] = skin_type
+        self.async_write_ha_state()
+
+
+class VitaminDSensor(SensorEntity):
+    "Define a sensor for vitamin D intake."
+
+    def __init__(self, coordinator: OpenUvCoordinator) -> None:
+        "Initialize the Vitamin D sensor."
+        self._attr_name = "Vitamin D Intake Sun Exposure"
+        self._attr_unique_id = (
+            f"vitamin_d_{coordinator.latitude}_{coordinator.longitude}"
+        )
+        self.coordinator = coordinator
+        super().__init__()
+
+    @property
+    def native_value(self) -> str:
+        """Get the value for vitamin D intake."""
+        skin_type = self.coordinator.config_entry.options.get("skin_type", "None")
+        current_uv_index_label = get_uv_label(self.coordinator.data["uv"])
+        return self.get_sun_exposure(skin_type, current_uv_index_label)
+
+    async def async_update(self) -> None:
+        "Update the sensor data."
+        self.async_write_ha_state()
+
+    def get_sun_exposure(self, skin_type: str, current_uv_index: str) -> str:
+        "Get recommended sun exposure to reach vitamin D intake."
+        skin_type_translated: int | None = SKIN_TYPE_TRANSLATION.get(skin_type)
+        uv_index_label_translated: int = UV_INDEX_LABEL_TRANSLATION.get(
+            current_uv_index, 0
+        )
+        if skin_type_translated is None:
+            return "Set your skin type"
+        sun_exposure_interval: tuple[int, int] | None = SUN_EXPOSURE[
+            uv_index_label_translated
+        ][skin_type_translated]
+        if sun_exposure_interval is None:
+            return "-"
+        return f"{sun_exposure_interval[0]} - {sun_exposure_interval[1]} min"
