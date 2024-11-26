@@ -337,6 +337,42 @@ async def test_dhcp_discovery_ignores_unknown(
     assert result.get("reason") == "unknown"
 
 
+async def test_discovery_flow_updates_new_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery setup updates new config data."""
+    mock_config_entry.add_to_hass(hass)
+
+    # preflight check, see if the ip address is already in use
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.0.0.127"),
+            ip_addresses=[ip_address("1.0.0.127")],
+            port=80,
+            hostname="p1meter-ddeeff.local.",
+            type="",
+            name="",
+            properties={
+                "api_enabled": "1",
+                "path": "/api/v1",
+                "product_name": "P1 Meter",
+                "product_type": "HWE-P1",
+                "serial": "5c2fafabcdef",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == "1.0.0.127"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "reason"),
