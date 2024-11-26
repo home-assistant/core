@@ -172,8 +172,7 @@ class _TranslationCache:
         components: set[str],
     ) -> None:
         """Load resources into the cache."""
-        if "cloud" in components:
-            _print_stdout(f"Translation async_load: {language} {components}")
+        _print_stdout(f"Translation async_load: {language} {components}")
         loaded = self.cache_data.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
             # Translations are never unloaded so if there are no components to load
@@ -185,6 +184,14 @@ class _TranslationCache:
                 # them while we were waiting for the lock.
                 if components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
+                else:
+                    _print_stdout(
+                        f"Translation async_load (locked cache hit): {language} {components}"
+                    )
+        else:
+            _print_stdout(
+                f"Translation async_load (cache hit): {language} {components}"
+            )
 
     async def async_fetch(
         self,
@@ -209,7 +216,9 @@ class _TranslationCache:
         # to avoid merging the dictionaries and keeping additional
         # copies of the same data in memory.
         if "cloud" in components:
-            _print_stdout(f"Translation get_cached: {language} {components}")
+            _print_stdout(
+                f"Translation get_cached ({language} {category}): {category_cache}"
+            )
         if len(components) == 1 and (component := next(iter(components))):
             return category_cache.get(component, {})
 
@@ -407,9 +416,8 @@ def async_setup(hass: HomeAssistant) -> None:
 
     Listeners load translations for every loaded component and after config change.
     """
-    cache = _TranslationCache(hass)
     current_language = hass.config.language
-    _async_get_translations_cache(hass)
+    cache = _async_get_translations_cache(hass)
 
     @callback
     def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
