@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from powerfox import Powerfox, Device
+from powerfox import Device, Powerfox
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
     coordinators: list[PowerfoxDataUpdateCoordinator] = [
         PowerfoxDataUpdateCoordinator(hass, client, device) for device in devices
     ]
-    
+
     await asyncio.gather(
         *[
             coordinator.async_config_entry_first_refresh()

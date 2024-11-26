@@ -1340,6 +1340,9 @@ plumlightpad==0.0.11
 # homeassistant.components.poolsense
 poolsense==0.0.8
 
+# homeassistant.components.powerfox
+powerfox==1.0.0
+
 # homeassistant.components.reddit
 praw==7.5.0
 
