@@ -29,7 +29,7 @@ rules:
   action-exceptions:
     status: todo
     comment: |
-      Legacy Notify needs rewriting once Notify architecture stabalizes.
+      Legacy Notify needs rewriting once Notify architecture stabilizes.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -47,7 +47,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Legacy Notify needs rewriting once Notify architecture stabalizes.
+      Legacy Notify needs rewriting once Notify architecture stabilizes.
 
   # Gold
   devices: done
