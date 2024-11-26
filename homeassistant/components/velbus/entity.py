@@ -32,12 +32,7 @@ class VelbusEntity(Entity):
         self._attr_name = channel.get_name()
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (
-                    DOMAIN,
-                    str(channel.get_module_address())
-                    if not channel.is_sub_device()
-                    else f"{channel.get_module_address()}-{channel.get_channel_number()}",
-                ),
+                (DOMAIN, self._get_identifier()),
             },
             manufacturer="Velleman",
             model=channel.get_module_type_name(),
@@ -45,12 +40,24 @@ class VelbusEntity(Entity):
             name=channel.get_full_name(),
             sw_version=channel.get_module_sw_version(),
             serial_number=channel.get_module_serial(),
-            via_device=(DOMAIN, str(channel.get_module_address()))
-            if channel.is_sub_device()
-            else ("", ""),
+            via_device=self._get_via_device(),
         )
         serial = channel.get_module_serial() or str(channel.get_module_address())
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+
+    def _get_identifier(self) -> str:
+        """Return the identifier of the entity."""
+        if not self._channel.is_sub_device():
+            return str(self._channel.get_module_address())
+        return (
+            f"{self._channel.get_module_address()}-{self._channel.get_channel_number()}"
+        )
+
+    def _get_via_device(self) -> tuple[str, str]:
+        """Return the via device tuple."""
+        if self._channel.is_sub_device():
+            return (DOMAIN, str(self._channel.get_module_address()))
+        return ("", "")
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
