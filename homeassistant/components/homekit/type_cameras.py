@@ -293,7 +293,7 @@ class Camera(DoorbellMixin, PyhapCamera):  # type: ignore[misc]
             self.linked_motion_sensor,
             detected,
         )
-        
+
     @callback
     def async_update_state(self, new_state: State | None) -> None:
         """Handle state change to update HomeKit value."""
