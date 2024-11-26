@@ -37,7 +37,10 @@ rules:
      comment: |
         No custom action.
   reauthentication-flow: done
-  parallel-updates: done
+  parallel-updates: 
+     status: exempt
+     comment: |
+        Coordinator and sensor only platform.
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
