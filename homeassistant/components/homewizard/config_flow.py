@@ -12,6 +12,7 @@ from homewizard_energy.v1.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
@@ -109,6 +110,32 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_discovery_confirm()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle dhcp discovery to update existing entries.
+
+        This flow is triggered only by DHCP discovery of known devices.
+        """
+        try:
+            device = await self._async_try_connect(discovery_info.ip)
+        except RecoverableError as ex:
+            _LOGGER.error(ex)
+            return self.async_abort(reason="unknown")
+
+        await self.async_set_unique_id(
+            f"{device.product_type}_{discovery_info.macaddress}"
+        )
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
+        )
+
+        # This situation should never happen, as Home Assistant will only
+        # send updates for existing entries. In case it does, we'll just
+        # abort the flow with an unknown error.
+        return self.async_abort(reason="unknown")
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
