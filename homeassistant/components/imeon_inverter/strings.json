@@ -21,8 +21,158 @@
   },
   "entity": {
     "sensor": {
+      "battery_autonomy": {
+        "name": "Battery Autonomy"
+      },
+      "battery_charge_time": {
+        "name": "Battery Charge Time"
+      },
+      "battery_power": {
+        "name": "Battery Power"
+      },
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_stored": {
+        "name": "Battery Stored"
+      },
+      "grid_current_l1": {
+        "name": "Grid Current L1"
+      },
+      "grid_current_l2": {
+        "name": "Grid Current L2"
+      },
+      "grid_current_l3": {
+        "name": "Grid Current L3"
+      },
+      "grid_frequency": {
+        "name": "Grid Frequency"
+      },
+      "grid_voltage_l1": {
+        "name": "Grid Voltage L1"
+      },
+      "grid_voltage_l2": {
+        "name": "Grid Voltage L1"
+      },
+      "grid_voltage_l3": {
+        "name": "Grid Voltage L1"
+      },
+      "input_power_l1": {
+        "name": "Input Power L1"
+      },
+      "input_power_l2": {
+        "name": "Input Power L2"
+      },
+      "input_power_l3": {
+        "name": "Input Power L3"
+      },
+      "input_power_total": {
+        "name": "Input Power Total"
+      },
+      "inverter_charging_current_limit": {
+        "name": "Charging Current Limit"
+      },
+      "inverter_injection_power_limit": {
+        "name": "Injection Power Limit"
+      },
       "meter_power": {
         "name": "Meter Power"
+      },
+      "meter_power_protocol": {
+        "name": "Meter Power Protocol"
+      },
+      "output_current_l1": {
+        "name": "Output Current L1"
+      },
+      "output_current_l2": {
+        "name": "Output Current L2"
+      },
+      "output_current_l3": {
+        "name": "Output Current L3"
+      },
+      "output_frequency": {
+        "name": "Output Frequency"
+      },
+      "output_power_l1": {
+        "name": "Output Power L1"
+      },
+      "output_power_l2": {
+        "name": "Output Power L2"
+      },
+      "output_power_l3": {
+        "name": "Output Power L3"
+      },
+      "output_power_total": {
+        "name": "Output Power Total"
+      },
+      "output_voltage_l1": {
+        "name": "Output Voltage L1"
+      },
+      "output_voltage_l2": {
+        "name": "Output Voltage L2"
+      },
+      "output_voltage_l3": {
+        "name": "Output Voltage L3"
+      },
+      "pv_consumed": {
+        "name": "PV Consumed"
+      },
+      "pv_injected": {
+        "name": "PV Injected"
+      },
+      "pv_power_1": {
+        "name": "PV Power 1"
+      },
+      "pv_power_2": {
+        "name": "PV Power 2"
+      },
+      "pv_power_total": {
+        "name": "PV Power Total"
+      },
+      "temp_air_temperature": {
+        "name": "Air Temperature"
+      },
+      "temp_component_temperature": {
+        "name": "Component Temperature"
+      },
+      "monitoring_building_consumption": {
+        "name": "Monitoring Building Consumption"
+      },
+      "monitoring_economy_factor": {
+        "name": "Monitoring Economy Factor"
+      },
+      "monitoring_grid_consumption": {
+        "name": "Monitoring Grid Consumption"
+      },
+      "monitoring_grid_injection": {
+        "name": "Monitoring Grid Injection"
+      },
+      "monitoring_grid_power_flow": {
+        "name": "Monitoring Grid Power Flow"
+      },
+      "monitoring_self_consumption": {
+        "name": "Monitoring Self Consumption"
+      },
+      "monitoring_self_sufficiency": {
+        "name": "Monitoring Self Suffiency"
+      },
+      "monitoring_solar_production": {
+        "name": "Monitoring Solar Production"
+      },
+      "monitoring_minute_building_consumption": {
+        "name": "Monitoring Building Consumption (minute)"
+      },
+      "monitoring_minute_grid_consumption": {
+        "name": "Monitoring Grid Consumption (minute)"
+      },
+      "monitoring_minute_grid_injection": {
+        "name": "Monitoring Grid Injection (minute)"
+      },
+      "monitoring_minute_grid_power_flow": {
+        "name": "Monitoring Grid Power Flow (minute)"
+      },
+      "monitoring_minute_solar_production": {
+        "name": "Monitoring Solar Production (minute)"
       }
     }
   }
