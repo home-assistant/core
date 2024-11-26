@@ -3,22 +3,23 @@
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
+from .coordinator import GaragesAmsterdamDataUpdateCoordinator
 
 
-class GaragesAmsterdamEntity(CoordinatorEntity):
+class GaragesAmsterdamEntity(CoordinatorEntity[GaragesAmsterdamDataUpdateCoordinator]):
     """Base Entity for garages amsterdam data."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, garage_name: str, info_type: str
+        self,
+        coordinator: GaragesAmsterdamDataUpdateCoordinator,
+        garage_name: str,
+        info_type: str,
     ) -> None:
         """Initialize garages amsterdam entity."""
         super().__init__(coordinator)

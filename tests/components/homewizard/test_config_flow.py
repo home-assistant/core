@@ -66,7 +66,7 @@ async def test_discovery_flow_works(
                 "path": "/api/v1",
                 "product_name": "Energy Socket",
                 "product_type": "HWE-SKT",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
@@ -112,7 +112,7 @@ async def test_discovery_flow_during_onboarding(
                 "path": "/api/v1",
                 "product_name": "P1 meter",
                 "product_type": "HWE-P1",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
@@ -149,7 +149,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
                 "path": "/api/v1",
                 "product_name": "P1 meter",
                 "product_type": "HWE-P1",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
@@ -193,7 +193,7 @@ async def test_discovery_disabled_api(
                 "path": "/api/v1",
                 "product_name": "P1 meter",
                 "product_type": "HWE-P1",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
@@ -228,7 +228,7 @@ async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> No
                 "path": "/api/v1",
                 "product_name": "P1 meter",
                 "product_type": "HWE-P1",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
@@ -254,7 +254,7 @@ async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
                 "path": "/api/not_v1",
                 "product_name": "P1 meter",
                 "product_type": "HWE-P1",
-                "serial": "aabbccddeeff",
+                "serial": "5c2fafabcdef",
             },
         ),
     )
