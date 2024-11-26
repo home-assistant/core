@@ -55,11 +55,13 @@ from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
+    deprecated_function,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -466,6 +468,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
+    # Deprecated in 2024.12. Remove in 2025.6
     _attr_frontend_stream_type: StreamType | None
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
@@ -497,6 +500,16 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
         )
+        self._deprecate_attr_frontend_stream_type_logged = False
+        if type(self).frontend_stream_type != Camera.frontend_stream_type:
+            report_usage(
+                (
+                    f"is overwriting the 'frontend_stream_type' property in the {type(self).__name__} class,"
+                    " which is deprecated and will be removed in Home Assistant 2025.6, "
+                ),
+                core_integration_behavior=ReportBehavior.ERROR,
+                exclude_integrations={DOMAIN},
+            )
 
     @cached_property
     def entity_picture(self) -> str:
@@ -566,11 +579,29 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         frontend which camera attributes and player to use. The default type
         is to use HLS, and components can override to change the type.
         """
+        # Deprecated in 2024.12. Remove in 2025.6
+        # Use the camera_capabilities instead
         if hasattr(self, "_attr_frontend_stream_type"):
+            if not self._deprecate_attr_frontend_stream_type_logged:
+                report_usage(
+                    (
+                        f"is setting the '_attr_frontend_stream_type' attribute in the {type(self).__name__} class,"
+                        " which is deprecated and will be removed in Home Assistant 2025.6, "
+                    ),
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    exclude_integrations={DOMAIN},
+                )
+
+                self._deprecate_attr_frontend_stream_type_logged = True
             return self._attr_frontend_stream_type
         if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
-        if self._webrtc_provider or self._legacy_webrtc_provider:
+        if (
+            self._webrtc_provider
+            or self._legacy_webrtc_provider
+            or self._supports_native_sync_webrtc
+            or self._supports_native_async_webrtc
+        ):
             return StreamType.WEB_RTC
         return StreamType.HLS
 
@@ -628,14 +659,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Async means that it could take some time to process the offer and responses/message
         will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM and StreamType.WEB_RTC.
+        This method is used by cameras with CameraEntityFeature.STREAM.
         An integration overriding this method must also implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
         """
         if self._supports_native_sync_webrtc:
             try:
-                answer = await self.async_handle_web_rtc_offer(offer_sdp)
+                answer = await deprecated_function(
+                    "async_handle_async_webrtc_offer",
+                    breaks_in_ha_version="2025.6",
+                )(self.async_handle_web_rtc_offer)(offer_sdp)
             except ValueError as ex:
                 _LOGGER.error("Error handling WebRTC offer: %s", ex)
                 send_message(
