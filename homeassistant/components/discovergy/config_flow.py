@@ -58,12 +58,6 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         return await self.async_step_user()
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the reauth step."""
-        return await self.async_step_user()
-
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
