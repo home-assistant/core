@@ -17,22 +17,24 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
+    data: dict = {
+        "config_entry": config_entry.as_dict(),
+        "websocket_connected": config_entry.runtime_data.client.websocket_connected,
+    }
+
     if TYPE_CHECKING:
         assert config_entry.unique_id
 
-    # Get media_player entity's state
+    # Add media_player entity's state
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
+    if entity_id := entity_registry.async_get_entity_id(
         MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
-    )
+    ):
+        if media_player_state := hass.states.get(entity_id):
+            media_player_dict = media_player_state.as_dict()
 
-    if TYPE_CHECKING:
-        assert entity_id
+            # Remove context as it is not relevant
+            media_player_dict.pop("context")
+            data["media_player"] = media_player_dict
 
-    media_player_state = hass.states.get(entity_id)
-
-    return {
-        "config_entry": config_entry.as_dict(),
-        "media_player": media_player_state,
-        "websocket_connected": config_entry.runtime_data.client.websocket_connected,
-    }
+    return data
