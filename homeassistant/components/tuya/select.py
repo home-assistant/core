@@ -307,6 +307,35 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Moes Smart Control Panel Mini
+    # Not documented
+    "dgnzk": (
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="light_mode"
+        ),
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="panel_relay_status"
+        ),
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS_1,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="panel_relay_status_1"
+        ),
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS_2,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="panel_relay_status_2"
+        ),
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS_3,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="panel_relay_status_3"
+        )
+    ),
 }
 
 # Socket (duplicate of `kg`)

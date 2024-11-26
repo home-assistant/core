@@ -193,6 +193,9 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
       }
     },
     "select": {
@@ -444,6 +447,38 @@
           "120h": "120h",
           "144h": "144h",
           "168h": "168h"
+        }
+      },
+      "panel_relay_status": {
+        "name": "Overall relay behavior",
+        "state": {
+          "memory": "Remember last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "panel_relay_status_1": {
+        "name": "Relay 1 behavior",
+        "state": {
+          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
+        }
+      },
+      "panel_relay_status_2": {
+        "name": "Relay 2 behavior",
+        "state": {
+          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
+        }
+      },
+      "panel_relay_status_3": {
+        "name": "Relay 3 behavior",
+        "state": {
+          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
         }
       }
     },
@@ -822,6 +857,9 @@
       },
       "voice": {
         "name": "Voice"
+      },
+      "voice_bt_play": {
+        "name": "Voice BT Play"
       },
       "anion": {
         "name": "Anion"
