@@ -30,9 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
     localization = cookidoo_localization_for_key(
         await get_localization_options(), entry.data[CONF_LOCALIZATION]
     )
-    session = async_get_clientsession(hass)
     cookidoo = Cookidoo(
-        session,
+        async_get_clientsession(hass),
         {
             **DEFAULT_COOKIDOO_CONFIG,
             "localization": localization,
