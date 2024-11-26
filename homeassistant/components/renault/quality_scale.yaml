@@ -4,7 +4,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Tests are not asserting the unique id
   config-flow: done
   dependency-transparency: done
   docs-actions: done
