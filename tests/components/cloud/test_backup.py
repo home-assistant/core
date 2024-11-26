@@ -47,36 +47,13 @@ async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     cloud: MagicMock,
+    mock_list_files: Mock,
 ) -> None:
     """Test agent list backups."""
     client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.backup.async_files_list", spec_set=True
-    ) as list_files:
-        list_files.return_value = [
-            {
-                "Key": "462e16810d6841228828d9dd2f9e341e.tar",
-                "LastModified": "2024-11-22T10:49:01.182Z",
-                "Size": 34519040,
-                "Metadata": {
-                    "addons": [],
-                    "backup_id": "23e64aec",
-                    "date": "2024-11-22T11:48:48.727189+01:00",
-                    "database_included": True,
-                    "folders": [],
-                    "homeassistant_included": True,
-                    "homeassistant_version": "2024.12.0.dev0",
-                    "name": "Core 2024.12.0.dev0",
-                    "protected": False,
-                    "size": 34519040,
-                    "storage-type": "backup",
-                },
-            }
-        ]
-        await client.send_json_auto_id({"type": "backup/info"})
-        response = await client.receive_json()
-        list_files.assert_called_once_with(cloud, storage_type="backup")
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+    mock_list_files.assert_called_once_with(cloud, storage_type="backup")
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
