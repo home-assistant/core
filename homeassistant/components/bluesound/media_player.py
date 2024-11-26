@@ -619,29 +619,27 @@ class BluesoundPlayer(MediaPlayerEntity):
         player_entities: list[BluesoundPlayer] = self.hass.data[DATA_BLUESOUND]
 
         leader_sync_status: SyncStatus | None = None
-        match self.sync_status.master:
-            case None:
-                leader_sync_status = self.sync_status
-            case paired_player:
-                leader_sync_status_list = [
-                    x.sync_status
-                    for x in player_entities
-                    if x.sync_status.id == f"{paired_player.ip}:{paired_player.port}"
-                ]
-                if leader_sync_status_list:
-                    leader_sync_status = leader_sync_status_list[0]
+        if self.sync_status.master is None:
+            leader_sync_status = self.sync_status
+        else:
+            for x in player_entities:
+                if (
+                    x.sync_status.id
+                    == f"{self.sync_status.master.ip}:{self.sync_status.master.port}"
+                ):
+                    leader_sync_status = x.sync_status
+                    break
 
         if leader_sync_status is None or leader_sync_status.slaves is None:
             return []
 
         follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.slaves]
-        follower_names = [
-            x.sync_status.name
-            for x in player_entities
-            if x.sync_status.id in follower_ids
-        ]
+        names = [leader_sync_status.name]
+        for x in player_entities:
+            if x.sync_status.id in follower_ids:
+                names.extend([x.sync_status.name])
 
-        return [leader_sync_status.name, *follower_names]
+        return names
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
