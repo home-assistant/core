@@ -219,3 +219,36 @@ class Lock(HomeAccessory):
                 self.linked_doorbell_sensor,
                 DOORBELL_SINGLE_PRESS,
             )
+
+    @callback
+    def async_update_doorbell_state_event(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle state change event listener callback."""
+        if not state_changed_event_is_same_state(event) and (
+            new_state := event.data["new_state"]
+        ):
+            self.async_update_doorbell_state(event.data["old_state"], new_state)
+
+    @callback
+    def async_update_doorbell_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
+        """Handle link doorbell sensor state change to update HomeKit value."""
+        assert self.char_doorbell_detected
+        assert self.char_doorbell_detected_switch
+        state = new_state.state
+        if state == STATE_ON or (
+            self.doorbell_is_event
+            and old_state is not None
+            and old_state.state != STATE_UNAVAILABLE
+            and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            self.char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self.char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
+            _LOGGER.debug(
+                "%s: Set linked doorbell %s sensor to %d",
+                self.entity_id,
+                self.linked_doorbell_sensor,
+                DOORBELL_SINGLE_PRESS,
+            )
