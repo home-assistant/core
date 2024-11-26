@@ -8,7 +8,7 @@ from importlib.util import find_spec
 from pathlib import Path
 import string
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, _patch, patch
 
 from aiohasupervisor.models import (
     Discovery,
@@ -716,6 +716,9 @@ async def _check_create_issue_translations(
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
+    # Add translations_once fixture to ensure setup/teardown
+    # does not cause flaky tests
+    translations_once: _patch,
 ) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
