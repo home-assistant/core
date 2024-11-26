@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeconnect.api import HomeConnectAppliance
+from homeconnect.api import HomeConnectAppliance, HomeConnectError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -14,9 +14,24 @@ from .api import HomeConnectDevice
 
 
 def _generate_appliance_diagnostics(appliance: HomeConnectAppliance) -> dict[str, Any]:
+    try:
+        programs = appliance.get_programs_available()
+        connection_status = "online"
+    except HomeConnectError as err:
+        programs = []
+        if (
+            err.args
+            and isinstance(err.args[0], dict)
+            and err.args[0].get("key")
+            == "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+        ):
+            connection_status = "offline"
+        else:
+            connection_status = "unknown"
     return {
+        "connection_status": connection_status,
         "status": appliance.status,
-        "programs": appliance.get_programs_available(),
+        "programs": programs,
     }
 
 
