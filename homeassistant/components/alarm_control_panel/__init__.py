@@ -202,12 +202,13 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         Integrations should implement alarm_state instead of using state directly.
         """
         report_usage(
-            "is setting state directly which will stop working."
+            "is setting state directly."
             f" Entity {self.entity_id} ({type(self)}) should implement the 'alarm_state'"
-            " property and return its state using the AlarmControlPanelState enum.",
+            " property and return its state using theg AlarmControlPanelState enum",
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.LOG,
             breaks_in_ha_version="2025.11",
+            integration_domain=self.platform.platform_name if self.platform else None,
         )
 
     @final
