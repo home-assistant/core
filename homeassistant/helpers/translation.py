@@ -208,6 +208,8 @@ class _TranslationCache:
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
         # copies of the same data in memory.
+        if "cloud" in components:
+            _print_stdout(f"Translation get_cached: {language} {components}")
         if len(components) == 1 and (component := next(iter(components))):
             return category_cache.get(component, {})
 
