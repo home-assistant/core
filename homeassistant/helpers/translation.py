@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import logging
 import pathlib
 import string
+import sys
 from typing import Any
 
 from homeassistant.const import (
@@ -31,6 +32,11 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
+
+
+def _print_stdout(msg: str) -> None:
+    _LOGGER.debug(msg)
+    print(msg, file=sys.stdout)  # noqa: T201
 
 
 def recursive_flatten(
@@ -166,6 +172,8 @@ class _TranslationCache:
         components: set[str],
     ) -> None:
         """Load resources into the cache."""
+        if "cloud" in components:
+            _print_stdout(f"Translation async_load: {language} {components}")
         loaded = self.cache_data.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
             # Translations are never unloaded so if there are no components to load
@@ -216,6 +224,10 @@ class _TranslationCache:
             language,
             components,
         )
+        if "cloud" in components:
+            _print_stdout(
+                f"Translation _async_load (cache miss): {language} {components}"
+            )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
