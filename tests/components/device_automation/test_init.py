@@ -27,7 +27,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration, mock_pla
 from tests.typing import WebSocketGenerator
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class MockDeviceEntry(dr.DeviceEntry):
     """Device Registry Entry with fixed UUID."""
 

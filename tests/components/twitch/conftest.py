@@ -111,8 +111,8 @@ def twitch_mock() -> Generator[AsyncMock]:
         mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
             "get_followed_channels.json", FollowedChannel
         )
-        mock_client.return_value.get_streams.return_value = get_generator(
-            "get_streams.json", Stream
+        mock_client.return_value.get_followed_streams.return_value = get_generator(
+            "get_followed_streams.json", Stream
         )
         mock_client.return_value.check_user_subscription.return_value = (
             UserSubscription(

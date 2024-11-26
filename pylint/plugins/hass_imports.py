@@ -19,6 +19,12 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "functools": [
+        ObsoleteImportMatch(
+            reason="replaced by propcache.cached_property",
+            constant=re.compile(r"^cached_property$"),
+        ),
+    ],
     "homeassistant.backports.enum": [
         ObsoleteImportMatch(
             reason="We can now use the Python 3.11 provided enum.StrEnum instead",
@@ -27,10 +33,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.backports.functools": [
         ObsoleteImportMatch(
-            reason=(
-                "We can now use the Python 3.12 provided "
-                "functools.cached_property instead"
-            ),
+            reason="replaced by propcache.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],

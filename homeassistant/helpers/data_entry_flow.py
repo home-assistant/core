@@ -18,7 +18,7 @@ from . import config_validation as cv
 
 _FlowManagerT = TypeVar(
     "_FlowManagerT",
-    bound=data_entry_flow.FlowManager[Any],
+    bound=data_entry_flow.FlowManager[Any, Any],
     default=data_entry_flow.FlowManager,
 )
 

@@ -608,7 +608,8 @@ def delete_recorder_runs_rows(
     """Delete recorder_runs rows."""
     return lambda_stmt(
         lambda: delete(RecorderRuns)
-        .filter(RecorderRuns.start < purge_before)
+        .filter(RecorderRuns.end.is_not(None))
+        .filter(RecorderRuns.end < purge_before)
         .filter(RecorderRuns.run_id != current_run_id)
         .execution_options(synchronize_session=False)
     )
@@ -760,6 +761,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
             )
         )
         .values(entity_id=None)
+    )
+
+
+def has_used_states_entity_ids() -> StatementLambdaElement:
+    """Check if there are used entity_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.entity_id.isnot(None)).limit(1)
     )
 
 

@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "162f0bbe-a097-4a06-b4f4-8fbeed85d2ba",
+      "completed": true,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Wocheneinkauf erledigen",
+      "notes": "Lebensmittel und Haushaltsbedarf für die Woche einkaufen.",
+      "tags": ["64235347-55d0-4ba1-a86a-3428dcfdf319"],
+      "value": 1,
+      "priority": 1.5,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:19:10.919Z",
+      "updatedAt": "2024-09-21T22:19:15.484Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "dateCompleted": "2024-09-21T22:19:15.478Z",
+      "id": "162f0bbe-a097-4a06-b4f4-8fbeed85d2ba"
+    },
+    {
+      "_id": "3fa06743-aa0f-472b-af1a-f27c755e329c",
+      "completed": true,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Wohnung aufräumen",
+      "notes": "Wohnzimmer und Küche gründlich aufräumen.",
+      "tags": ["64235347-55d0-4ba1-a86a-3428dcfdf319"],
+      "value": 1,
+      "priority": 2,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:18:30.646Z",
+      "updatedAt": "2024-09-21T22:18:34.663Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "dateCompleted": "2024-09-21T22:18:34.660Z",
+      "id": "3fa06743-aa0f-472b-af1a-f27c755e329c"
+    }
+  ],
+  "notifications": [
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_orca_mount",
+        "title": "Orcas for Summer Splash!",
+        "text": "To celebrate Summer Splash, we've given you an Orca Mount!",
+        "destination": "stable"
+      },
+      "seen": true,
+      "id": "b7a85df1-06ed-4ab1-b56d-43418fc6a5e5"
+    },
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 2
+      },
+      "seen": true,
+      "id": "bc3f8a69-231f-4eb1-ba48-a00b6c0e0f37"
+    }
+  ],
+  "userV": 584,
+  "appVersion": "5.28.6"
+}

@@ -3,10 +3,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import FirmwareType
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import CONF_ADDRESS
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,9 +44,21 @@ class LaMarzoccoBaseEntity(
             name=device.name,
             manufacturer="La Marzocco",
             model=device.full_model_name,
+            model_id=device.model,
             serial_number=device.serial_number,
             sw_version=device.firmware[FirmwareType.MACHINE].current_version,
         )
+        if coordinator.config_entry.data.get(CONF_ADDRESS):
+            self._attr_device_info.update(
+                DeviceInfo(
+                    connections={
+                        (
+                            CONNECTION_NETWORK_MAC,
+                            coordinator.config_entry.data[CONF_ADDRESS],
+                        )
+                    }
+                )
+            )
 
 
 class LaMarzoccoEntity(LaMarzoccoBaseEntity):

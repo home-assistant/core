@@ -26,6 +26,8 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 
+type AwairConfigEntry = ConfigEntry[AwairDataUpdateCoordinator]
+
 
 @dataclass
 class AwairResult:

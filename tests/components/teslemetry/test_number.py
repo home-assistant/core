@@ -1,9 +1,9 @@
 """Test the Teslemetry number platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.number import (
@@ -33,7 +33,7 @@ async def test_number(
 
 async def test_number_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the number entities are correct when offline."""
 
@@ -44,7 +44,9 @@ async def test_number_offline(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_number_services(hass: HomeAssistant, mock_vehicle_data) -> None:
+async def test_number_services(
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock
+) -> None:
     """Tests that the number services work."""
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     await setup_platform(hass, [Platform.NUMBER])
