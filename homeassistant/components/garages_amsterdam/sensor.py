@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import GaragesAmsterdamConfigEntry
 from .coordinator import GaragesAmsterdamDataUpdateCoordinator
 from .entity import GaragesAmsterdamEntity
 
@@ -21,13 +20,11 @@ SENSORS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GaragesAmsterdamConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: GaragesAmsterdamDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         GaragesAmsterdamSensor(coordinator, entry.data["garage_name"], info_type)
