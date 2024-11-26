@@ -1,0 +1,18 @@
+blueprint:
+  name: Bayesian Numeric Probability Sensor
+  description: Creates a sensor which holds the numeric probability value from a bayesian binary_sensor
+  domain: template
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/bayesian/blueprints/bayesian_numeric_probability_sensor.yaml
+  input:
+    bayesian_binary_sensor:
+      name: Bayesian sensor
+      description: The binary_sensor to have its probability monitored
+      selector:
+        entity:
+          domain: bayesian
+variables:
+  bayesian_binary_sensor: !input bayesian_binary_sensor
+sensor:
+  state: >
+    {{ state_attr(bayesian_binary_sensor, 'probability') | float }}
+  availability: "{{ states(bayesian_binary_sensor) not in ('unknown', 'unavailable') }}"
