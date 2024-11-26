@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import PlatformNotReady, TemplateError
 from homeassistant.helpers import selector, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -192,6 +192,11 @@ async def async_setup_platform(
             )
         )
         return
+
+    if "coordinator" in discovery_info:
+        raise PlatformNotReady(
+            "The template fan platform doesn't support trigger entities"
+        )
 
     async_add_entities(
         await _async_create_entities(
