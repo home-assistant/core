@@ -104,7 +104,9 @@ def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
 
 def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
-    data[ATTR_FORECAST_IS_DAYTIME] = abs(timestep["time"].hour - 12) <= 1
+
+    # day and night forecasts have slightly different format
+    data[ATTR_FORECAST_IS_DAYTIME] = "upperBoundMaxTemp" in timestep
     weather_code = get_attribute(timestep, "significantWeatherCode")
     if weather_code:
         data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
