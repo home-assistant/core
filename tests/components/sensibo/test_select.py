@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -14,24 +15,30 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SELECT]],
+)
 async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo select."""
 
-    state1 = hass.states.get("select.hallway_horizontal_swing")
-    assert state1.state == "stopped"
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     monkeypatch.setattr(
         get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
