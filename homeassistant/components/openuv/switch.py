@@ -1,6 +1,5 @@
 """Support for OpenUV switch."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -11,9 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SunscreenReminder
 from .const import SUNSCREEN_DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -23,7 +19,6 @@ async def async_setup_entry(
     """Set up the Sunscreen Reminder switch."""
     reminder = hass.data.get(SUNSCREEN_DOMAIN)
     if not isinstance(reminder, SunscreenReminder):
-        _LOGGER.error("Reminder instance is not available or incorrect type")
         return
 
     async_add_entities([SunscreenReminderSwitch(reminder)])
