@@ -109,11 +109,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -229,12 +235,12 @@ async def test_browsing(
     reolink_connect.model = TEST_HOST_MODEL
 
 
-async def test_browsing_unsupported_encoding(
+async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test browsing a Reolink camera with unsupported stream encoding."""
+    """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -243,7 +249,6 @@ async def test_browsing_unsupported_encoding(
 
     browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
 
-    # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
@@ -254,6 +259,18 @@ async def test_browsing_unsupported_encoding(
     reolink_connect.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
+
+    browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME}"
+    assert browse.identifier == browse_resolution_id
+    assert browse.children[0].identifier == browse_res_sub_id
+    assert browse.children[1].identifier == browse_res_main_id
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
     browse_day_0_id = (

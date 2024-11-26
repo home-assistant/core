@@ -6,18 +6,18 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DATA_DEVICE_INFO, DOMAIN
+from .const import DOMAIN
+from .coordinator import TwinklyConfigEntry
 
 TO_REDACT = [CONF_HOST, CONF_IP_ADDRESS, CONF_MAC]
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: TwinklyConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a Twinkly config entry."""
     attributes = None
@@ -34,8 +34,8 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "device_info": hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_INFO],
-            ATTR_SW_VERSION: hass.data[DOMAIN][entry.entry_id][ATTR_SW_VERSION],
+            "device_info": entry.runtime_data.data.device_info,
+            ATTR_SW_VERSION: entry.runtime_data.software_version,
             "attributes": attributes,
         },
         TO_REDACT,

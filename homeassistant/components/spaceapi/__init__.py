@@ -1,9 +1,11 @@
 """Support for the SpaceAPI."""
 
 from contextlib import suppress
+import math
 
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,11 +22,10 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_URL,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
@@ -254,7 +255,17 @@ class APISpaceApiView(HomeAssistantView):
         """Get data from a sensor."""
         if not (sensor_state := hass.states.get(sensor)):
             return None
-        sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
+
+        # SpaceAPI sensor values must be numbers
+        try:
+            state = float(sensor_state.state)
+        except ValueError:
+            state = math.nan
+        sensor_data = {
+            ATTR_NAME: sensor_state.name,
+            ATTR_VALUE: state,
+        }
+
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
             sensor_data[ATTR_LOCATION] = sensor_state.attributes[ATTR_SENSOR_LOCATION]
         else:

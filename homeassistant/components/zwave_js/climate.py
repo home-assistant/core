@@ -35,7 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DATA_CLIENT, DOMAIN
@@ -97,7 +97,7 @@ ATTR_FAN_STATE = "fan_state"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave climate from config entry."""
     client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
@@ -128,7 +128,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
     _attr_precision = PRECISION_TENTHS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo

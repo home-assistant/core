@@ -19,7 +19,6 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
 )
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
     SOURCE_USB,
     ConfigEntriesFlowManager,
@@ -39,6 +38,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
 from . import disconnect_client
@@ -405,9 +406,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
@@ -671,7 +670,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.context["source"] == SOURCE_USB:
+        if not self.unique_id or self.source == SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(

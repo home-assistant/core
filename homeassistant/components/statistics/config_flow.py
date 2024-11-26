@@ -57,9 +57,9 @@ async def get_state_characteristics(handler: SchemaCommonFlowHandler) -> vol.Sch
         split_entity_id(handler.options[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
     )
     if is_binary:
-        options = STATS_BINARY_SUPPORT
+        options = list(STATS_BINARY_SUPPORT)
     else:
-        options = STATS_NUMERIC_SUPPORT
+        options = list(STATS_NUMERIC_SUPPORT)
 
     return vol.Schema(
         {

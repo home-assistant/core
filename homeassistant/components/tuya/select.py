@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
@@ -97,6 +97,40 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
+        SelectEntityDescription(
+            key=DPCode.IPC_WORK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="ipc_work_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DECIBEL_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="decibel_sensitivity",
+        ),
+        SelectEntityDescription(
+            key=DPCode.RECORD_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="record_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_NIGHTVISION,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_nightvision",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_ANTI_FLICKER,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_anti_flicker",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOTION_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="motion_sensitivity",
+        ),
+    ),
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
+    "dghsxj": (
         SelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,
             entity_category=EntityCategory.CONFIG,
@@ -307,6 +341,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -319,7 +362,9 @@ SELECTS["pc"] = SELECTS["kg"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya select dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

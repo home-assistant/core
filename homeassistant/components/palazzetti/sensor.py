@@ -10,11 +10,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfLength, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import PalazzettiConfigEntry
-from .coordinator import PalazzettiDataUpdateCoordinator
+from .const import STATUS_TO_HA
+from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
 
@@ -23,10 +23,19 @@ class PropertySensorEntityDescription(SensorEntityDescription):
     """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
 
     client_property: str
+    property_map: dict[StateType, str] | None = None
     presence_flag: None | str = None
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
+    PropertySensorEntityDescription(
+        key="status",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="status",
+        client_property="status",
+        property_map=STATUS_TO_HA,
+        options=list(STATUS_TO_HA.values()),
+    ),
     PropertySensorEntityDescription(
         key="pellet_quantity",
         device_class=SensorDeviceClass.WEIGHT,
@@ -50,7 +59,7 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PalazzettiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Palazzetti sensor entities based on a config entry."""
 
@@ -103,4 +112,11 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
 
-        return getattr(self.coordinator.client, self.entity_description.client_property)
+        raw_value = getattr(
+            self.coordinator.client, self.entity_description.client_property
+        )
+
+        if self.entity_description.property_map:
+            return self.entity_description.property_map[raw_value]
+
+        return raw_value

@@ -25,7 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -65,14 +65,15 @@ _LOGGER = logging.getLogger(__name__)
 # This list can be extended by calling async_register_preload_platform
 #
 BASE_PRELOAD_PLATFORMS = [
+    "backup",
     "config",
     "config_flow",
     "diagnostics",
     "energy",
     "group",
-    "logbook",
     "hardware",
     "intent",
+    "logbook",
     "media_source",
     "recorder",
     "repairs",
@@ -830,6 +831,9 @@ class Integration:
     @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
+        # Custom integrations default to "custom" quality scale.
+        if not self.is_built_in or self.overwrites_built_in:
+            return "custom"
         return self.manifest.get("quality_scale")
 
     @cached_property
@@ -1560,14 +1564,12 @@ class Components:
         from .helpers.frame import ReportBehavior, report_usage
 
         report_usage(
-            (
-                f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.3, it"
-                f" should be updated to import functions used from {comp_name} directly"
-            ),
+            f"accesses hass.components.{comp_name}, which"
+            f" should be updated to import functions used from {comp_name} directly",
             core_behavior=ReportBehavior.IGNORE,
             core_integration_behavior=ReportBehavior.IGNORE,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.3",
         )
 
         wrapped = ModuleWrapper(self._hass, component)
@@ -1592,13 +1594,13 @@ class Helpers:
 
         report_usage(
             (
-                f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.5, it"
+                f"accesses hass.helpers.{helper_name}, which"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             core_behavior=ReportBehavior.IGNORE,
             core_integration_behavior=ReportBehavior.IGNORE,
             custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         wrapped = ModuleWrapper(self._hass, helper)
@@ -1763,8 +1765,7 @@ def async_suggest_report_issue(
         if not integration_domain:
             return "report it to the custom integration author"
         return (
-            f"report it to the author of the '{integration_domain}' "
-            "custom integration"
+            f"report it to the author of the '{integration_domain}' custom integration"
         )
 
     return f"create a bug report at {issue_tracker}"

@@ -9,12 +9,7 @@ from spotifyaio.models import (
     Album,
     Artist,
     ArtistResponse,
-    AudioFeatures,
-    CategoriesResponse,
-    Category,
-    CategoryPlaylistResponse,
     Devices,
-    FeaturedPlaylistResponse,
     NewReleasesResponse,
     NewReleasesResponseInner,
     PlaybackState,
@@ -135,12 +130,10 @@ def mock_spotify() -> Generator[AsyncMock]:
                 PlaybackState,
             ),
             ("current_user.json", "get_current_user", UserProfile),
-            ("category.json", "get_category", Category),
             ("playlist.json", "get_playlist", Playlist),
             ("album.json", "get_album", Album),
             ("artist.json", "get_artist", Artist),
             ("show.json", "get_show", Show),
-            ("audio_features.json", "get_audio_features", AudioFeatures),
         ):
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
@@ -148,15 +141,6 @@ def mock_spotify() -> Generator[AsyncMock]:
         client.get_followed_artists.return_value = ArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
-        client.get_featured_playlists.return_value = FeaturedPlaylistResponse.from_json(
-            load_fixture("featured_playlists.json", DOMAIN)
-        ).playlists.items
-        client.get_categories.return_value = CategoriesResponse.from_json(
-            load_fixture("categories.json", DOMAIN)
-        ).categories.items
-        client.get_category_playlists.return_value = CategoryPlaylistResponse.from_json(
-            load_fixture("category_playlists.json", DOMAIN)
-        ).playlists.items
         client.get_new_releases.return_value = NewReleasesResponse.from_json(
             load_fixture("new_releases.json", DOMAIN)
         ).albums.items

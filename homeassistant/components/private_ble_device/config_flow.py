@@ -20,8 +20,7 @@ CONF_IRK = "irk"
 
 
 def _parse_irk(irk: str) -> bytes | None:
-    if irk.startswith("irk:"):
-        irk = irk[4:]
+    irk = irk.removeprefix("irk:")
 
     if irk.endswith("="):
         try:

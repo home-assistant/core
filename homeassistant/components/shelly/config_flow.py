@@ -17,7 +17,6 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -34,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_BLE_SCANNER_MODE,
@@ -164,7 +164,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(self.info[CONF_MAC])
+                await self.async_set_unique_id(
+                    self.info[CONF_MAC], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 self.port = port

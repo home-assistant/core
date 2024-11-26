@@ -11,9 +11,10 @@ from homeassistant.components.siren import (
     SirenEntityDescription,
     SirenEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode
@@ -43,11 +44,28 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
             key=DPCode.SIREN_SWITCH,
         ),
     ),
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
+    "dghsxj": (
+        SirenEntityDescription(
+            key=DPCode.SIREN_SWITCH,
+        ),
+    ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya siren dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

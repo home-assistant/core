@@ -68,7 +68,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 
 _SENTINEL = object()
 
-DISCOVERY_COUNT = len(MQTT)
+DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())
 DEVICE_DISCOVERY_COUNT = 2
 
 type _MqttMessageType = list[tuple[str, str]]
@@ -1854,9 +1854,14 @@ async def help_test_reload_with_config(
 ) -> None:
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(config)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    def _write_yaml_config() -> None:
+        new_yaml_config = yaml.dump(config)
+        new_yaml_config_file.write_text(new_yaml_config)
+        assert new_yaml_config_file.read_text() == new_yaml_config
+        return new_yaml_config
+
+    await hass.async_add_executor_job(_write_yaml_config)
 
     with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         await hass.services.async_call(
@@ -1887,7 +1892,12 @@ async def help_test_reloadable(
         mqtt.DOMAIN: {domain: [old_config_1, old_config_2]},
     }
     # Start the MQTT entry with the old config
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value=old_config):

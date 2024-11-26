@@ -14,11 +14,11 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice, DeconzSceneMixin
 from .hub import DeconzHub
 
@@ -46,11 +46,11 @@ ENTITY_DESCRIPTIONS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ button entity."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[BUTTON_DOMAIN] = set()
 
     @callback

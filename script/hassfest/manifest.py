@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum, StrEnum, auto
+from enum import StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -20,21 +20,14 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
-
-class ScaledQualityScaleTiers(IntEnum):
-    """Supported manifest quality scales."""
-
-    BRONZE = 1
-    SILVER = 2
-    GOLD = 3
-    PLATINUM = 4
+_CORE_DOCUMENTATION_BASE = "https://www.home-assistant.io/integrations"
 
 
 class NonScaledQualityScaleTiers(StrEnum):
@@ -126,19 +119,26 @@ NO_IOT_CLASS = [
 ]
 
 
-def documentation_url(value: str) -> str:
+def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
+    if not value.startswith(_CORE_DOCUMENTATION_BASE):
+        raise vol.Invalid(
+            f"Documentation URL does not begin with {_CORE_DOCUMENTATION_BASE}"
+        )
 
+    return value
+
+
+def custom_documentation_url(value: str) -> str:
+    """Validate that a custom integration documentation url is correct."""
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
-    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
-        DOCUMENTATION_URL_PATH_PREFIX
-    ):
+    if value.startswith(_CORE_DOCUMENTATION_BASE):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation URL should point to the custom integration documentation"
         )
 
     return value
@@ -267,7 +267,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -302,6 +302,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
+        vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
         vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,

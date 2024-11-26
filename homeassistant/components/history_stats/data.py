@@ -4,15 +4,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
+import logging
+import math
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers.template import Template
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
 
 MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -114,9 +118,7 @@ class HistoryStats:
                     <= current_period_end_timestamp
                 ):
                     self._history_current_period.append(
-                        HistoryState(
-                            new_state.state, new_state.last_changed.timestamp()
-                        )
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
                     new_data = True
             if not new_data and current_period_end_timestamp < now_timestamp:
@@ -127,6 +129,16 @@ class HistoryStats:
             await self._async_history_from_db(
                 current_period_start_timestamp, current_period_end_timestamp
             )
+            if event and (new_state := event.data["new_state"]) is not None:
+                if (
+                    current_period_start_timestamp
+                    <= floored_timestamp(new_state.last_changed)
+                    <= current_period_end_timestamp
+                ):
+                    self._history_current_period.append(
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
+                    )
+
             self._previous_run_before_start = False
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
@@ -186,8 +198,13 @@ class HistoryStats:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
 
-            if state_change_timestamp > now_timestamp:
+            if math.floor(state_change_timestamp) > now_timestamp:
                 # Shouldn't count states that are in the future
+                _LOGGER.debug(
+                    "Skipping future timestamp %s (now %s)",
+                    state_change_timestamp,
+                    now_timestamp,
+                )
                 continue
 
             if previous_state_matches:

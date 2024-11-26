@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MelCloudDevice
 from .const import (
@@ -76,7 +76,9 @@ ATW_ZONE_HVAC_ACTION_LOOKUP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
@@ -115,7 +117,6 @@ class MelCloudClimate(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""

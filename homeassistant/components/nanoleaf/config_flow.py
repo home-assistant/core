@@ -10,11 +10,15 @@ from typing import Any, Final, cast
 from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.util.json import JsonObjectType, JsonValueType, load_json_object
 
 from .const import DOMAIN
@@ -86,31 +90,31 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf Homekit discovery."""
         _LOGGER.debug("Homekit discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
     async def _async_homekit_zeroconf_discovery_handler(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf Homekit and Zeroconf discovery."""
         return await self._async_discovery_handler(
             discovery_info.host,
             discovery_info.name.replace(f".{discovery_info.type}", ""),
-            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID],
+            discovery_info.properties[ATTR_PROPERTIES_ID],
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf SSDP discovery."""
         _LOGGER.debug("SSDP discovered: %s", discovery_info)

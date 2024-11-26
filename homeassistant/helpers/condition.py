@@ -56,8 +56,8 @@ from homeassistant.exceptions import (
     TemplateError,
 )
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
@@ -821,9 +821,15 @@ def time(
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
             )
-        elif after_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
+        elif after_entity.domain == "time" and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
+        elif (
+            after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -845,9 +851,15 @@ def time(
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
             )
-        elif before_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
+        elif before_entity.domain == "time":
+            try:
+                before = datetime.strptime(before_entity.state, "%H:%M:%S").time()
+            except ValueError:
+                return False
+        elif (
+            before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -872,10 +884,8 @@ def time(
 
         condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
-            isinstance(weekday, str)
-            and weekday != now_weekday
-            or now_weekday not in weekday
-        ):
+            isinstance(weekday, str) and weekday != now_weekday
+        ) or now_weekday not in weekday:
             return False
 
     return True

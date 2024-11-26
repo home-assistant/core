@@ -9,7 +9,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 
@@ -36,6 +36,16 @@ async def test_vad_sensitivity_select(
     state = hass.states.get("select.test_finished_speaking_detection")
     assert state is not None
     assert state.state == "default"
+
+
+async def test_wake_word_select(
+    hass: HomeAssistant,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test that wake word select is unavailable initially."""
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_select_generic_entity(

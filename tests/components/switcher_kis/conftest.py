@@ -60,19 +60,11 @@ def mock_api():
 
     patchers = [
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherApi.connect",
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.connect",
             new=api_mock,
         ),
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherApi.disconnect",
-            new=api_mock,
-        ),
-        patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherApi.connect",
-            new=api_mock,
-        ),
-        patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherApi.disconnect",
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.disconnect",
             new=api_mock,
         ),
     ]

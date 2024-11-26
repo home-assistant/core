@@ -61,6 +61,14 @@
           }
         }
       }
+    },
+    "humidifier": {
+      "humidifier": {
+        "name": "[%key:component::humidifier::title%]"
+      },
+      "dehumidifier": {
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
+      }
     }
   },
   "exceptions": {

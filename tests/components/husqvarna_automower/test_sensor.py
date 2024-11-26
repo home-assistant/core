@@ -111,6 +111,7 @@ async def test_work_area_sensor(
     assert state.state == "my_lawn"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("sensor_to_test"),
     [
@@ -167,6 +168,7 @@ async def test_error_sensor(
         assert state.state == expected_state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

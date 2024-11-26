@@ -18,11 +18,13 @@ from soco.data_structures import (
 )
 from soco.events_base import Event as SonosEvent
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
@@ -108,7 +110,7 @@ class SonosMockEvent:
 @pytest.fixture
 def zeroconf_payload():
     """Return a default zeroconf payload."""
-    return zeroconf.ZeroconfServiceInfo(
+    return ZeroconfServiceInfo(
         ip_address=ip_address("192.168.4.2"),
         ip_addresses=[ip_address("192.168.4.2")],
         hostname="Sonos-aaa",
@@ -335,17 +337,17 @@ def discover_fixture(soco):
     def do_callback(
         hass: HomeAssistant,
         callback: Callable[
-            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+            [SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
         ],
         match_dict: dict[str, str] | None = None,
     ) -> MagicMock:
         callback(
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
                 ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
                 ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
                 upnp={
-                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                    ATTR_UPNP_UDN: f"uuid:{soco.uid}",
                 },
             ),
             ssdp.SsdpChange.ALIVE,
@@ -578,13 +580,19 @@ def alarm_clock_fixture_extended():
     return alarm_clock
 
 
+@pytest.fixture(name="speaker_model")
+def speaker_model_fixture(request: pytest.FixtureRequest):
+    """Create fixture for the speaker model."""
+    return getattr(request, "param", "Model Name")
+
+
 @pytest.fixture(name="speaker_info")
-def speaker_info_fixture():
+def speaker_info_fixture(speaker_model):
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
         "uid": "RINCON_test",
-        "model_name": "Model Name",
+        "model_name": speaker_model,
         "model_number": "S12",
         "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",

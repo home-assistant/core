@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/heatmiser",
   "iot_class": "local_polling",
   "loggers": ["heatmiserV3"],
+  "quality_scale": "legacy",
   "requirements": ["heatmiserV3==2.0.3"]
 }

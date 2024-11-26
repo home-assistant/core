@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property, under_cached_property
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
@@ -55,6 +55,7 @@ from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
+    deprecated_function,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -66,9 +67,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STREAM_TYPE_HLS,
-    _DEPRECATED_STREAM_TYPE_WEB_RTC,
+from .const import (
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -132,16 +131,6 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Pleease use the CameraEntityFeature enum instead.
-_DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.ON_OFF, "2025.1"
-)
-_DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.STREAM, "2025.1"
-)
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -534,7 +523,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
+        if type(features) is int:
             new_features = CameraEntityFeature(features)
             self._report_deprecated_supported_features_values(new_features)
             return new_features
@@ -665,7 +654,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if self._supports_native_sync_webrtc:
             try:
-                answer = await self.async_handle_web_rtc_offer(offer_sdp)
+                answer = await deprecated_function(
+                    "async_handle_async_webrtc_offer",
+                    breaks_in_ha_version="2025.6",
+                )(self.async_handle_web_rtc_offer)(offer_sdp)
             except ValueError as ex:
                 _LOGGER.error("Error handling WebRTC offer: %s", ex)
                 send_message(
@@ -1183,12 +1175,17 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
-        image = (
-            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-            if camera.use_stream_for_stills
-            else await camera.async_camera_image()
-        )
+    try:
+        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+            image = (
+                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                if camera.use_stream_for_stills
+                else await camera.async_camera_image()
+            )
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
+        ) from err
 
     if image is None:
         return
@@ -1202,7 +1199,7 @@ async def async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        _LOGGER.error("Can't write image to file: %s", err)
+        raise HomeAssistantError(f"Can't write image to file: {err}") from err
 
 
 async def async_handle_play_stream_service(

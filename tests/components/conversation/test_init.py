@@ -236,12 +236,17 @@ async def test_prepare_agent(
     assert len(mock_prepare.mock_calls) == 1
 
 
-async def test_async_handle_sentence_triggers(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("response_template", "expected_response"),
+    [("response {{ trigger.device_id }}", "response 1234"), ("", "")],
+)
+async def test_async_handle_sentence_triggers(
+    hass: HomeAssistant, response_template: str, expected_response: str
+) -> None:
     """Test handling sentence triggers with async_handle_sentence_triggers."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
-    response_template = "response {{ trigger.device_id }}"
     assert await async_setup_component(
         hass,
         "automation",
@@ -260,13 +265,13 @@ async def test_async_handle_sentence_triggers(hass: HomeAssistant) -> None:
 
     # Device id will be available in response template
     device_id = "1234"
-    expected_response = f"response {device_id}"
     actual_response = await async_handle_sentence_triggers(
         hass,
         ConversationInput(
             text="my trigger",
             context=Context(),
             conversation_id=None,
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             device_id=device_id,
             language=hass.config.language,
         ),
@@ -302,6 +307,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         ConversationInput(
             text="I'd like to order a stout",
             context=Context(),
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             conversation_id=None,
             device_id=None,
             language=hass.config.language,
@@ -317,6 +323,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         hass,
         ConversationInput(
             text="this sentence does not exist",
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             context=Context(),
             conversation_id=None,
             device_id=None,

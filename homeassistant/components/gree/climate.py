@@ -40,7 +40,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     COORDINATORS,
@@ -88,7 +88,7 @@ SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
 
@@ -126,7 +126,6 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""

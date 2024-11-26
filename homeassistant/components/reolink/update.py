@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DEVICE_UPDATE_INTERVAL
+from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -74,7 +75,7 @@ HOST_UPDATE_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Reolink component."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -196,7 +197,9 @@ class ReolinkUpdateBaseEntity(
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
             raise HomeAssistantError(
-                f"Error trying to update Reolink firmware: {err}"
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"err": str(err)},
             ) from err
         finally:
             self.async_write_ha_state()

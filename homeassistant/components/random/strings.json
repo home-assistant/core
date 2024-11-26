@@ -25,7 +25,7 @@
           "binary_sensor": "Random binary sensor",
           "sensor": "Random sensor"
         },
-        "title": "Random helper"
+        "title": "Create Random helper"
       }
     }
   },
