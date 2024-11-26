@@ -16,7 +16,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type GaragesAmsterdamConfigEntry = ConfigEntry[GaragesAmsterdamDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GaragesAmsterdamConfigEntry
+) -> bool:
     """Set up Garages Amsterdam from a config entry."""
     client = ODPAmsterdam(session=async_get_clientsession(hass))
     coordinator = GaragesAmsterdamDataUpdateCoordinator(hass, client)
@@ -29,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GaragesAmsterdamConfigEntry
+) -> bool:
     """Unload Garages Amsterdam config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
