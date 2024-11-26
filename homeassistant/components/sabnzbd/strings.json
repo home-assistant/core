@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "warnings": {
+        "name": "Warnings"
+      }
+    },
     "button": {
       "pause": {
         "name": "[%key:common::action::pause%]"
