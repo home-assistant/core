@@ -879,7 +879,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "samsungtv",
     "sanix",
     "satel_integra",
-    "schlage",
     "schluter",
     "scrape",
     "screenlogic",
