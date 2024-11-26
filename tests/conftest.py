@@ -1193,16 +1193,8 @@ def mock_get_source_ip() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session."""
-    cache = _TranslationsCacheData({}, {})
-    patcher = patch(
-        "homeassistant.helpers.translation._TranslationsCacheData",
-        return_value=cache,
-    )
-    patcher.start()
-    try:
-        yield patcher
-    finally:
-        patcher.stop()
+    _TranslationsCacheData({}, {})
+    return
 
 
 @pytest.fixture
@@ -1210,9 +1202,7 @@ def disable_translations_once(
     translations_once: _patch,
 ) -> Generator[None]:
     """Override loading translations once."""
-    translations_once.stop()
-    yield
-    translations_once.start()
+    return
 
 
 @pytest.fixture
