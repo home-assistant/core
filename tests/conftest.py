@@ -1214,15 +1214,15 @@ def translations_once() -> Generator[_patch]:
         return_value=cache,
     )
     patcher.start()
-    _start = _count_keys(cache)
     try:
         yield patcher
     finally:
-        _end = _count_keys(cache)
         patcher.stop()
 
-        if _start < _end:
-            pytest.fail("Size of translations was reduced")
+        if "cloud" in cache.loaded.get("en", set()) and not cache.cache.get(
+            "en", {}
+        ).get("issues", {}).get("cloud"):
+            pytest.fail(f"Cloud is marked as loaded, but empty: {cache.loaded}")
 
 
 @pytest.fixture
