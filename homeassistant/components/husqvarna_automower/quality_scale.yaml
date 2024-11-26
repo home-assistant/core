@@ -1,9 +1,7 @@
 rules:
   # Bronze
   config-flow: done
-  test-before-configure:
-    status: todo
-    comment: waiting for PR to get merged
+  test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
   runtime-data: done
