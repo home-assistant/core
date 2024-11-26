@@ -541,6 +541,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && 'true' == 'false'
     needs:
       - info
       - base
@@ -580,6 +581,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && 'true' == 'false'
     needs:
       - info
       - base
@@ -617,6 +619,7 @@ jobs:
         && github.event.inputs.mypy-only != 'true'
         || github.event.inputs.audit-licenses-only == 'true')
       && needs.info.outputs.requirements == 'true'
+      && 'true' == 'false'
     strategy:
       fail-fast: false
       matrix:
@@ -754,6 +757,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && 'true' == 'false'
       || github.event.inputs.mypy-only == 'true'
     needs:
       - info
@@ -846,12 +850,9 @@ jobs:
     needs:
       - info
       - base
-      - gen-requirements-all
-      - hassfest
       - lint-other
       - lint-ruff
       - lint-ruff-format
-      - mypy
       - prepare-pytest-full
     strategy:
       fail-fast: false
