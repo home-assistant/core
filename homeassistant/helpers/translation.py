@@ -388,9 +388,8 @@ def async_setup(hass: HomeAssistant) -> None:
 
     Listeners load translations for every loaded component and after config change.
     """
-    cache = _TranslationCache(hass)
     current_language = hass.config.language
-    _async_get_translations_cache(hass)
+    cache = _async_get_translations_cache(hass)
 
     @callback
     def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
