@@ -239,6 +239,9 @@
       },
       "air_quality_index": {
         "default": "mdi:air-filter"
+      },
+      "ph": {
+        "default": "mdi:ph"
       }
     },
     "switch": {

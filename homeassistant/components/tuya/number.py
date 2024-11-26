@@ -9,7 +9,16 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfConductivity,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,6 +37,136 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             translation_key="time",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_WARN_MAX,
+            translation_key="temperature_warning_max",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_WARN_MIN,
+            translation_key="temperature_warning_min",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.PH_WARN_MAX,
+            translation_key="ph_warning_max",
+            device_class=NumberDeviceClass.PH,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.PH_WARN_MIN,
+            translation_key="ph_warning_min",
+            device_class=NumberDeviceClass.PH,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TDS_WARN_MAX,
+            translation_key="tds_warning_max",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TDS_WARN_MIN,
+            translation_key="tds_warning_min",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.EC_WARN_MAX,
+            translation_key="ec_warning_max",
+            device_class=NumberDeviceClass.CONDUCTIVITY,
+            native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TDS_WARN_MIN,
+            translation_key="ec_warning_min",
+            device_class=NumberDeviceClass.CONDUCTIVITY,
+            native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SALINITY_WARN_MAX,
+            translation_key="salinity_warning_max",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SALINITY_WARN_MIN,
+            translation_key="salinity_warning_min",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SG_WARN_MAX,
+            translation_key="specific_gravity_warning_max",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SG_WARN_MIN,
+            translation_key="specific_gravity_warning_min",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ORP_WARN_MAX,
+            translation_key="orp_warning_max",
+            device_class=NumberDeviceClass.VOLTAGE,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ORP_WARN_MIN,
+            translation_key="orp_warning_min",
+            device_class=NumberDeviceClass.VOLTAGE,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CF_WARN_MAX,
+            translation_key="cf_warning_max",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CF_WARN_MIN,
+            translation_key="cf_warning_min",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Early Product "QT" device (for Pool Chlorinator)
+    "qt": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME,
+            translation_key="volume",
+            device_class=NumberDeviceClass.VOLUME_STORAGE,
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CHLORINATE,
+            translation_key="chlorinate_time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.REVERSE,
+            translation_key="reverse_time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.OUTPUT_SET,
+            translation_key="output_set",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
     ),

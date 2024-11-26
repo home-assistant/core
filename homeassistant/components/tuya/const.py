@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -118,6 +119,7 @@ class DPCode(StrEnum):
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
+    BOOST_MODE = "boost_mode"
     BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
@@ -132,11 +134,15 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CF_CURRENT = "cf_current"  # Calcium Factor (1 CF:1 PPM)
+    CF_WARN_MAX = "cf_warn_max"
+    CF_WARN_MIN = "cf_warn_min"
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CHLORINATE = "clorinate"  # Hours to run the chlorination cycle
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
@@ -170,6 +176,7 @@ class DPCode(StrEnum):
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DATA_TIP = "data_tip"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
@@ -180,6 +187,9 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
+    EC_CURRENT = "ec_current"  # Electrical Conductivity
+    EC_WARN_MAX = "ec_warn_max"
+    EC_WARN_MIN = "ec_warn_min"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
@@ -206,6 +216,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HEALTH = "hp"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
@@ -235,6 +246,12 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    ORP_CURRENT = "orp_current"  # Oxygen Reducing Potential
+    ORP_WARN_MAX = "orp_warn_max"
+    ORP_WARN_MIN = "orp_warn_min"
+    OUTPUT = "output"
+    OUTPUT_SET = "set_output"
+    OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -243,6 +260,9 @@ class DPCode(StrEnum):
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
     POSITION = "position"
+    PH_CURRENT = "ph_current"
+    PH_WARN_MAX = "ph_warn_max"
+    PH_WARN_MIN = "ph_warn_min"
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
@@ -261,7 +281,6 @@ class DPCode(StrEnum):
     PRESSURE_VALUE = "pressure_value"
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
-    OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -271,8 +290,14 @@ class DPCode(StrEnum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    REVERSE = "reverse"
     REVERSE_ENERGY_TOTAL = "reverse_energy_total"
     ROLL_BRUSH = "roll_brush"
+    SALINITY = "salinity"
+    SALINITY_CURRENT = "salinity_current"
+    SALINITY_WARN_MAX = "salinity_warn_max"
+    SALINITY_WARN_MIN = "salinity_warn_min"
+    SALT_DOSAGE = "salt_dosage"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
@@ -290,6 +315,11 @@ class DPCode(StrEnum):
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     SPRAY_MODE = "spray_mode"  # Spraying mode
+    SG_CURRENT = (
+        "pro_current"  # Proportion/Specific Gravity relative to distilled water
+    )
+    SG_WARN_MAX = "pro_warn_max"
+    SG_WARN_MIN = "pro_warn_min"
     START = "start"  # Start
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
@@ -327,6 +357,9 @@ class DPCode(StrEnum):
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
+    TDS_CURRENT = "tds_current" # Total Dissolved Solids current reading
+    TDS_WARN_MAX = "tds_warn_max" # Total Dissolved Solids warning max
+    TDS_WARN_MIN = "tds_warn_min" # Total Dissolved Solids warning min
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
@@ -339,9 +372,12 @@ class DPCode(StrEnum):
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_WARN_MAX = "temp_warn_max"
+    TEMP_WARN_MIN = "temp_warn_min"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
+    TIP_SHOW = "tip_show"
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
@@ -349,6 +385,7 @@ class DPCode(StrEnum):
     TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
+    TOTAL_RUNNING_TIME = "total_running_time"
     TVOC = "tvoc"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -360,12 +397,14 @@ class DPCode(StrEnum):
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
     VOICE_TIMES = "voice_times"
+    VOLUME = "volume"
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATER_TEMPERATURE = "water_temp"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
@@ -455,12 +494,20 @@ UNITS = (
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_FEET,
         aliases={"ft3"},
-        device_classes={SensorDeviceClass.GAS},
+        device_classes={
+            SensorDeviceClass.GAS,
+            SensorDeviceClass.VOLUME,
+            SensorDeviceClass.VOLUME_STORAGE,
+        },
     ),
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
-        device_classes={SensorDeviceClass.GAS},
+        device_classes={
+            SensorDeviceClass.GAS,
+            SensorDeviceClass.VOLUME,
+            SensorDeviceClass.VOLUME_STORAGE,
+        },
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
@@ -567,6 +614,10 @@ UNITS = (
         device_classes={SensorDeviceClass.VOLTAGE},
         conversion_unit=UnitOfElectricPotential.VOLT,
         conversion_fn=lambda x: x / 1000,
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfConductivity.MICROSIEMENS,
+        device_classes={SensorDeviceClass.CONDUCTIVITY},
     ),
 )
 
