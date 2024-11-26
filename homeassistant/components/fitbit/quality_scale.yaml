@@ -3,28 +3,17 @@ rules:
   action-setup:
     status: exempt
     comment: The integration has no actions.
-  appropriate-polling:
-    status: done
-    comment: |
-      The integration uses polling to get data from Fitbit API every 30 minutes.
+  appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
-    comment: Coordinator is in coordinator.py and there is no base entity.
-  config-flow:
-    status: done
-    comment: The integration uses an OAuth flow setup from the UI.
+  common-modules: done
+  config-flow: done
   config-flow-test-coverage: done
-  dependency-transparency: done
+  dependency-transparency: todo
   docs-actions:
     status: exempt
     comment: There are no actions in Fitbit integration.
   docs-high-level-description: done
-  docs-installation-instructions:
-    status: done
-    comment: |
-      Documentation includes all necessary steps to set up application
-      credentials.
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
