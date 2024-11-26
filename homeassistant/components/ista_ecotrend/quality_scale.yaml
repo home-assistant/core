@@ -14,9 +14,9 @@ rules:
   docs-actions:
     status: exempt
     comment: The integration registers no actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: The integration registers no events.
@@ -35,9 +35,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no configuration parameters
-  docs-installation-parameters:
-    status: todo
-    comment: PR awaiting approval
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -56,11 +54,11 @@ rules:
     comment: The integration is a web service, there are no discoverable devices.
   docs-data-update: todo
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category:
     status: done
