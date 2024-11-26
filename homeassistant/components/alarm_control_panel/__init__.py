@@ -209,6 +209,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             custom_integration_behavior=ReportBehavior.LOG,
             breaks_in_ha_version="2025.11",
             integration_domain=self.platform.platform_name if self.platform else None,
+            exclude_integrations={DOMAIN},
         )
 
     @final
