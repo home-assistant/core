@@ -86,6 +86,8 @@ from .const import (
 from .entity import BangOlufsenEntity
 from .util import get_serial_number_from_jid
 
+PARALLEL_UPDATES = 0
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +182,6 @@ async def async_setup_entry(
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_icon = "mdi:speaker-wireless"
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 

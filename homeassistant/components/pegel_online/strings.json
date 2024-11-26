@@ -48,5 +48,10 @@
         "name": "Water temperature"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with API: {error}"
+    }
   }
 }

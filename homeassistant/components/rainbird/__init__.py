@@ -7,7 +7,7 @@ from typing import Any
 
 import aiohttp
 from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
-from pyrainbird.exceptions import RainbirdApiException
+from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 
@@ -91,6 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         model_info = await controller.get_model_and_version()
+    except RainbirdAuthException as err:
+        raise ConfigEntryAuthFailed from err
     except RainbirdApiException as err:
         raise ConfigEntryNotReady from err
 

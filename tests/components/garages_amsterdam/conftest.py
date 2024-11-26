@@ -1,12 +1,28 @@
-"""Test helpers."""
+"""Fixtures for Garages Amsterdam integration tests."""
 
 from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.garages_amsterdam.const import DOMAIN
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="monitor",
+        domain=DOMAIN,
+        data={},
+        unique_id="unique_thingy",
+        version=1,
+    )
+
 
 @pytest.fixture(autouse=True)
-def mock_cases():
+def mock_garages_amsterdam():
     """Mock garages_amsterdam garages."""
     with patch(
         "odp_amsterdam.ODPAmsterdam.all_garages",

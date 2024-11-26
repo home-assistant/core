@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/russound_rnet",
   "iot_class": "local_polling",
   "loggers": ["russound"],
+  "quality_scale": "legacy",
   "requirements": ["russound==0.2.0"]
 }

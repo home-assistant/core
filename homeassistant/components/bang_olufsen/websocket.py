@@ -15,7 +15,7 @@ from mozart_api.models import (
     VolumeState,
     WebsocketNotificationTag,
 )
-from mozart_api.mozart_client import MozartClient
+from mozart_api.mozart_client import BaseWebSocketResponse, MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -202,12 +202,15 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 sw_version=software_status.software_version,
             )
 
-    def on_all_notifications_raw(self, notification: dict) -> None:
+    def on_all_notifications_raw(self, notification: BaseWebSocketResponse) -> None:
         """Receive all notifications."""
 
-        # Add the device_id and serial_number to the notification
-        notification["device_id"] = self._device.id
-        notification["serial_number"] = int(self._unique_id)
-
         _LOGGER.debug("%s", notification)
-        self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, notification)
+        self.hass.bus.async_fire(
+            BANG_OLUFSEN_WEBSOCKET_EVENT,
+            {
+                "device_id": self._device.id,
+                "serial_number": int(self._unique_id),
+                **notification,
+            },
+        )

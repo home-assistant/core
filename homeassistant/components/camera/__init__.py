@@ -55,6 +55,7 @@ from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
+    deprecated_function,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -665,7 +666,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if self._supports_native_sync_webrtc:
             try:
-                answer = await self.async_handle_web_rtc_offer(offer_sdp)
+                answer = await deprecated_function(
+                    "async_handle_async_webrtc_offer",
+                    breaks_in_ha_version="2025.6",
+                )(self.async_handle_web_rtc_offer)(offer_sdp)
             except ValueError as ex:
                 _LOGGER.error("Error handling WebRTC offer: %s", ex)
                 send_message(

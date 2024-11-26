@@ -3,7 +3,7 @@
 import logging
 
 from aemet_opendata.exceptions import AemetError, TownNotFound
-from aemet_opendata.interface import AEMET, ConnectionOptions
+from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -23,9 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
-    station_updates = entry.options.get(CONF_STATION_UPDATES, True)
+    update_features: int = UpdateFeature.FORECAST
+    if entry.options.get(CONF_STATION_UPDATES, True):
+        update_features |= UpdateFeature.STATION
 
-    options = ConnectionOptions(api_key, station_updates)
+    options = ConnectionOptions(api_key, update_features)
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
     try:
         await aemet.select_coordinates(latitude, longitude)

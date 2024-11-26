@@ -27,4 +27,5 @@ class SabnzbdEntity(CoordinatorEntity[SabnzbdUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
+            sw_version=coordinator.data["version"],
         )

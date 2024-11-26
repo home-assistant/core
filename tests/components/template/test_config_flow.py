@@ -222,8 +222,8 @@ async def test_config_flow(
 
     state = hass.states.get(f"{template_type}.my_template")
     assert state.state == template_state
-    for key in extra_attrs:
-        assert state.attributes[key] == extra_attrs[key]
+    for key, value in extra_attrs.items():
+        assert state.attributes[key] == value
 
 
 @pytest.mark.parametrize(

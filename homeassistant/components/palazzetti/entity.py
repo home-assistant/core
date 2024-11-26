@@ -25,3 +25,8 @@ class PalazzettiEntity(CoordinatorEntity[PalazzettiDataUpdateCoordinator]):
             sw_version=client.sw_version,
             hw_version=client.hw_version,
         )
+
+    @property
+    def available(self) -> bool:
+        """Is the entity available."""
+        return super().available and self.coordinator.client.connected

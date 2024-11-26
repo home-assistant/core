@@ -314,14 +314,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
     _enable_turn_on_off_backwards_compatibility: bool = True
 
-    def __getattribute__(self, __name: str) -> Any:
+    def __getattribute__(self, name: str, /) -> Any:
         """Get attribute.
 
         Modify return of `supported_features` to
         include `_mod_supported_features` if attribute is set.
         """
-        if __name != "supported_features":
-            return super().__getattribute__(__name)
+        if name != "supported_features":
+            return super().__getattribute__(name)
 
         # Convert the supported features to ClimateEntityFeature.
         # Remove this compatibility shim in 2025.1 or later.

@@ -6,9 +6,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, NamedTuple
 
-from homewizard_energy import HomeWizardEnergy
+from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.models import Device
+from homewizard_energy.v1.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
@@ -177,7 +177,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         Make connection with device to test the connection
         and to get info for unique_id.
         """
-        energy_api = HomeWizardEnergy(ip_address)
+        energy_api = HomeWizardEnergyV1(ip_address)
         try:
             return await energy_api.device()
 

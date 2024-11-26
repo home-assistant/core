@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mycroft",
   "iot_class": "local_push",
   "loggers": ["mycroftapi"],
+  "quality_scale": "legacy",
   "requirements": ["mycroftapi==2.0"]
 }

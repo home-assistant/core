@@ -85,7 +85,7 @@ async def test_number_entities(
     mock_homewizardenergy.state_set.side_effect = DisabledError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             number.DOMAIN,

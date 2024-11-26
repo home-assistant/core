@@ -31,7 +31,7 @@
     'supported_features': 0,
     'translation_key': 'doh3_queries',
     'unique_id': 'xyz12_doh3_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_http_3_queries-state]
@@ -39,7 +39,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS-over-HTTP/3 queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_over_http_3_queries',
@@ -131,7 +130,7 @@
     'supported_features': 0,
     'translation_key': 'doh_queries',
     'unique_id': 'xyz12_doh_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_https_queries-state]
@@ -139,7 +138,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS-over-HTTPS queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_over_https_queries',
@@ -231,7 +229,7 @@
     'supported_features': 0,
     'translation_key': 'doq_queries',
     'unique_id': 'xyz12_doq_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_quic_queries-state]
@@ -239,7 +237,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS-over-QUIC queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_over_quic_queries',
@@ -331,7 +328,7 @@
     'supported_features': 0,
     'translation_key': 'dot_queries',
     'unique_id': 'xyz12_dot_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_tls_queries-state]
@@ -339,7 +336,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS-over-TLS queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_over_tls_queries',
@@ -431,7 +427,7 @@
     'supported_features': 0,
     'translation_key': 'all_queries',
     'unique_id': 'xyz12_all_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries-state]
@@ -439,7 +435,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_queries',
@@ -481,7 +476,7 @@
     'supported_features': 0,
     'translation_key': 'blocked_queries',
     'unique_id': 'xyz12_blocked_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries_blocked-state]
@@ -489,7 +484,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS queries blocked',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_queries_blocked',
@@ -581,7 +575,7 @@
     'supported_features': 0,
     'translation_key': 'relayed_queries',
     'unique_id': 'xyz12_relayed_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries_relayed-state]
@@ -589,7 +583,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNS queries relayed',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dns_queries_relayed',
@@ -631,7 +624,7 @@
     'supported_features': 0,
     'translation_key': 'not_validated_queries',
     'unique_id': 'xyz12_not_validated_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dnssec_not_validated_queries-state]
@@ -639,7 +632,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNSSEC not validated queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dnssec_not_validated_queries',
@@ -681,7 +673,7 @@
     'supported_features': 0,
     'translation_key': 'validated_queries',
     'unique_id': 'xyz12_validated_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_dnssec_validated_queries-state]
@@ -689,7 +681,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile DNSSEC validated queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_dnssec_validated_queries',
@@ -781,7 +772,7 @@
     'supported_features': 0,
     'translation_key': 'encrypted_queries',
     'unique_id': 'xyz12_encrypted_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_encrypted_queries-state]
@@ -789,7 +780,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile Encrypted queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_encrypted_queries',
@@ -881,7 +871,7 @@
     'supported_features': 0,
     'translation_key': 'ipv4_queries',
     'unique_id': 'xyz12_ipv4_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_ipv4_queries-state]
@@ -889,7 +879,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile IPv4 queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_ipv4_queries',
@@ -931,7 +920,7 @@
     'supported_features': 0,
     'translation_key': 'ipv6_queries',
     'unique_id': 'xyz12_ipv6_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_ipv6_queries-state]
@@ -939,7 +928,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile IPv6 queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_ipv6_queries',
@@ -1031,7 +1019,7 @@
     'supported_features': 0,
     'translation_key': 'tcp_queries',
     'unique_id': 'xyz12_tcp_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_tcp_queries-state]
@@ -1039,7 +1027,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile TCP queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_tcp_queries',
@@ -1131,7 +1118,7 @@
     'supported_features': 0,
     'translation_key': 'udp_queries',
     'unique_id': 'xyz12_udp_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_udp_queries-state]
@@ -1139,7 +1126,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile UDP queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_udp_queries',
@@ -1231,7 +1217,7 @@
     'supported_features': 0,
     'translation_key': 'unencrypted_queries',
     'unique_id': 'xyz12_unencrypted_queries',
-    'unit_of_measurement': 'queries',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.fake_profile_unencrypted_queries-state]
@@ -1239,7 +1225,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake Profile Unencrypted queries',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fake_profile_unencrypted_queries',
