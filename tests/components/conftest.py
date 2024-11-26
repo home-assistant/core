@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from importlib.util import find_spec
+import logging
 from pathlib import Path
 import string
 from typing import TYPE_CHECKING, Any
@@ -46,6 +47,8 @@ if TYPE_CHECKING:
     from .light.common import MockLight
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
@@ -584,7 +587,9 @@ async def _validate_translation(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
+    _LOGGER.debug("Validating translation for %s", full_key)
     translations = await async_get_translations(hass, "en", category, [component])
+    _LOGGER.debug("Got translations for %s.%s: %s", component, category, translations)
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -769,6 +774,7 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
+        _LOGGER.debug("Translation check needed for %s, %s", domain, issue_id)
         translation_coros.add(
             _check_create_issue_translations(self, result, translation_errors)
         )
