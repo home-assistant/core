@@ -504,7 +504,6 @@ async def test_translated_unit(
         entity0.entity_description = SensorEntityDescription(
             "test",
             translation_key="test_translation_key",
-            native_unit_of_measurement="ignored_unit",
         )
         setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
@@ -516,6 +515,37 @@ async def test_translated_unit(
         entity_id = entity0.entity_id
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+
+
+async def test_translated_unit_with_native_unit_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = MockSensor(
+            name="Test",
+            native_value="123",
+            unique_id="very_unique",
+        )
+        entity0.entity_description = SensorEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="bad_unit",
+        )
+        setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        # Setup fails so entity_id is None
+        assert entity0.entity_id is None
 
 
 @pytest.mark.parametrize(

@@ -547,6 +547,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             unit_of_measurement
             := self.platform.default_language_platform_translations.get(translation_key)
         ):
+            if native_unit_of_measurement is not None:
+                raise ValueError(
+                    f"Sensor {type(self)} has a translation key for "
+                    f"unit_of_measurement '{unit_of_measurement}', but also has a "
+                    f"native_unit_of_measurement '{native_unit_of_measurement}'"
+                )
             return unit_of_measurement
 
         # Lowest priority: Native unit
