@@ -15,14 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PowerfoxConfigEntry
-from .const import DOMAIN
 from .coordinator import PowerfoxDataUpdateCoordinator
+from .entity import PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -117,13 +115,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerfoxPowerSensorEntity(
-    CoordinatorEntity[PowerfoxDataUpdateCoordinator], SensorEntity
-):
+class PowerfoxPowerSensorEntity(PowerfoxEntity, SensorEntity):
     """Defines a powerfox power meter sensor."""
 
     entity_description: PowerfoxPowerSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -133,17 +128,9 @@ class PowerfoxPowerSensorEntity(
         description: PowerfoxPowerSensorEntityDescription,
     ) -> None:
         """Initialize Powerfox power meter sensor."""
-        super().__init__(coordinator)
-
+        super().__init__(coordinator, device)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Powerfox",
-            model=device.type.human_readable,
-            name=device.name,
-            serial_number=device.id,
-        )
 
     @property
     def native_value(self) -> StateType:
@@ -151,13 +138,10 @@ class PowerfoxPowerSensorEntity(
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class PowerfoxWaterSensorEntity(
-    CoordinatorEntity[PowerfoxDataUpdateCoordinator], SensorEntity
-):
+class PowerfoxWaterSensorEntity(PowerfoxEntity, SensorEntity):
     """Defines a powerfox water meter sensor."""
 
     entity_description: PowerfoxWaterSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -167,17 +151,9 @@ class PowerfoxWaterSensorEntity(
         description: PowerfoxWaterSensorEntityDescription,
     ) -> None:
         """Initialize Powerfox water meter sensor."""
-        super().__init__(coordinator)
-
+        super().__init__(coordinator, device)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Powerfox",
-            model=device.type.human_readable,
-            name=device.name,
-            serial_number=device.id,
-        )
 
     @property
     def native_value(self) -> StateType:
