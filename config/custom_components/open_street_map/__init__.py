@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# from homeassistant import config_entries
 # from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -9,7 +10,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .search import search_address  # imports search function from search.py
+from .search import (
+    AddressSearchView,
+    search_address,  # imports search function from search.py
+)
 
 # TODO List the platforms that you want to support. # pylint: disable=fixme
 # For your initial PR, limit it to 1 platform.
@@ -33,6 +37,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register the search service
     hass.services.async_register(DOMAIN, "search", async_handle_search)
+
+    hass.http.register_view(AddressSearchView())
 
     return True
 
