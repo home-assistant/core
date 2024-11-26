@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
-from .const import LOCATION, SelectOptionsType, SelectType
+from .const import SelectOptionsType, SelectType
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command

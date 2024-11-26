@@ -43,13 +43,14 @@ async def async_setup_entry(
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
-                if coordinator.data.devices[device_id]["dev_class"]  == "climate"
-                )
+                if coordinator.data.devices[device_id]["dev_class"] == "climate"
+            )
         else:
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
-                if coordinator.data.devices[device_id]["dev_class"] in MASTER_THERMOSTATS
+                if coordinator.data.devices[device_id]["dev_class"]
+                in MASTER_THERMOSTATS
             )
 
     _add_entities()
