@@ -201,9 +201,6 @@ class FFmpegConvertResponse(web.StreamResponse):
         write_task = self.hass.async_create_background_task(
             self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
         )
-        self.hass.async_create_background_task(
-            self._dump_ffmpeg_stdout(proc), "ESPHome media proxy dump stderr"
-        )
         await write_task
 
     async def _write_ffmpeg_data(
@@ -214,6 +211,10 @@ class FFmpegConvertResponse(web.StreamResponse):
     ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
+
+        stderr_task = self.hass.async_create_background_task(
+            self._dump_ffmpeg_stderr(proc), "ESPHome media proxy dump stderr"
+        )
 
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
@@ -233,17 +234,13 @@ class FFmpegConvertResponse(web.StreamResponse):
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
-
-            # Process did not exit successfully
-            stderr_text = ""
-            while line := await proc.stderr.readline():
-                stderr_text += line.decode()
-            _LOGGER.error("FFmpeg output: %s", stderr_text)
-
             raise
         finally:
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
+
+            # stop dumping ffmpeg stderr task
+            stderr_task.cancel()
 
             # Terminate hangs, so kill is used
             if proc.returncode is None:
@@ -253,7 +250,7 @@ class FFmpegConvertResponse(web.StreamResponse):
             if request.transport and not request.transport.is_closing():
                 await writer.write_eof()
 
-    async def _dump_ffmpeg_stdout(
+    async def _dump_ffmpeg_stderr(
         self,
         proc: asyncio.subprocess.Process,
     ) -> None:
