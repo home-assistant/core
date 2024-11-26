@@ -429,7 +429,7 @@ airtouch5py==0.2.11
 amberelectric==2.0.12
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.73
+androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.1.2

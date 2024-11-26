@@ -453,7 +453,7 @@ amberelectric==2.0.12
 amcrest==1.9.8
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.73
+androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.1.2
