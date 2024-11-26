@@ -180,9 +180,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         unless already reported.
         """
         if name == "_attr_state":
-            if self.__alarm_legacy_state_reported is not True:
-                self._report_deprecated_alarm_state_handling()
-            self.__alarm_legacy_state_reported = True
+            self._report_deprecated_alarm_state_handling()
         return super().__setattr__(name, value)
 
     @callback
