@@ -99,7 +99,6 @@ async def async_setup_entry(
             return await device.device.async_check_firmware_available()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -113,7 +112,6 @@ async def async_setup_entry(
             return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -127,7 +125,6 @@ async def async_setup_entry(
             return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -145,7 +142,6 @@ async def async_setup_entry(
             return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -159,7 +155,6 @@ async def async_setup_entry(
             return await device.device.async_uptime()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -177,7 +172,6 @@ async def async_setup_entry(
             return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
@@ -191,7 +185,6 @@ async def async_setup_entry(
             return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
             raise UpdateFailed(
-                err,
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
