@@ -278,6 +278,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "lamarzocco",
+        "registered_devices": True,
+    },
+    {
+        "domain": "lamarzocco",
         "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
     },
     {
