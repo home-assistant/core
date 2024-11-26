@@ -6,11 +6,12 @@ import logging
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityDescription,
     MediaPlayerState,
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlaystationNetworkCoordinator
@@ -52,18 +53,17 @@ async def async_setup_entry(
 class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     """Media player entity representing currently playing game."""
 
-    device_class = MediaPlayerDeviceClass.TV
+    entity_description = MediaPlayerEntityDescription(
+        key="console",
+        translation_key="console",
+        device_class=MediaPlayerDeviceClass.TV,
+    )
 
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
         self.psn: PlaystationNetworkData = self.coordinator.data
-        self._attr_has_entity_name = True
-
-    @property
-    def icon(self) -> str:
-        """Icon Getter."""
-        return "mdi:sony-playstation"
+        _attr_translation_key = "spotify"
 
     @property
     def media_image_remotely_accessible(self) -> bool:
@@ -128,12 +128,6 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
         return None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Is user available on the Playstation Network."""
         return self.psn.available is True
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-
-        self.async_write_ha_state()

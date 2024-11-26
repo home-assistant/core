@@ -3,34 +3,38 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
+from typing import Any
 
 from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError
+from psnawp_api.models.user import User
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DEVICE_SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
 class PlaystationNetworkData:
     """Dataclass representing data retrieved from the Playstation Network api."""
 
-    presence: dict
+    presence: dict[str, Any]
     username: str
     account_id: str
     available: bool
-    title_metadata: dict
+    title_metadata: dict[str, Any]
     platform: dict
 
 
 class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData]):
     """Data update coordinator for PSN."""
 
-    def __init__(self, hass: HomeAssistant, user) -> None:
+    def __init__(self, hass: HomeAssistant, user: User) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,

@@ -8,7 +8,7 @@ from psnawp_api.psnawp import PSNAWP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import PlaystationNetworkCoordinator
 
@@ -26,14 +26,14 @@ async def async_setup_entry(
     try:
         psn = PSNAWP(entry.data["npsso"])
     except PSNAWPAuthenticationError as error:
-        raise ConfigEntryAuthFailed(error) from error
+        raise ConfigEntryNotReady(error) from error
     except Exception as ex:
         raise ConfigEntryNotReady(ex) from ex
 
     try:
         user = await hass.async_add_executor_job(lambda: psn.user(online_id="me"))
     except PSNAWPAuthenticationError as error:
-        raise ConfigEntryAuthFailed(error) from error
+        raise ConfigEntryNotReady(error) from error
     except Exception as ex:
         raise ConfigEntryNotReady(ex) from ex
 
