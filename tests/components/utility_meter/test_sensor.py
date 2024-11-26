@@ -1765,7 +1765,7 @@ async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
 
 
 async def test_tz_changes(hass: HomeAssistant) -> None:
-    """Test a config change changes the scheduler."""
+    """Test that a timezone change changes the scheduler."""
 
     await hass.config.async_update(time_zone="Europe/Prague")
 
