@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import hashlib
 import io
@@ -36,13 +35,6 @@ BUF_SIZE = 2**20 * 4  # 4MB
 
 
 @dataclass(slots=True)
-class NewBackup:
-    """New backup class."""
-
-    slug: str
-
-
-@dataclass(slots=True)
 class Backup:
     """Backup class."""
 
@@ -55,15 +47,6 @@ class Backup:
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
         return {**asdict(self), "path": self.path.as_posix()}
-
-
-@dataclass(slots=True)
-class BackupProgress:
-    """Backup progress class."""
-
-    done: bool
-    stage: str | None
-    success: bool | None
 
 
 class BackupPlatformProtocol(Protocol):
@@ -82,7 +65,7 @@ class BaseBackupManager(abc.ABC):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_task: asyncio.Task | None = None
+        self.backing_up = False
         self.backups: dict[str, Backup] = {}
         self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
@@ -150,12 +133,7 @@ class BaseBackupManager(abc.ABC):
         """Restore a backup."""
 
     @abc.abstractmethod
-    async def async_create_backup(
-        self,
-        *,
-        on_progress: Callable[[BackupProgress], None] | None,
-        **kwargs: Any,
-    ) -> NewBackup:
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""
 
     @abc.abstractmethod
@@ -314,36 +292,17 @@ class BackupManager(BaseBackupManager):
         await self.hass.async_add_executor_job(_move_and_cleanup)
         await self.load_backups()
 
-    async def async_create_backup(
-        self,
-        *,
-        on_progress: Callable[[BackupProgress], None] | None,
-        **kwargs: Any,
-    ) -> NewBackup:
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""
-        if self.backup_task:
+        if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
-        backup_name = f"Core {HAVERSION}"
-        date_str = dt_util.now().isoformat()
-        slug = _generate_slug(date_str, backup_name)
-        self.backup_task = self.hass.async_create_task(
-            self._async_create_backup(backup_name, date_str, slug, on_progress),
-            name="backup_manager_create_backup",
-            eager_start=False,  # To ensure the task is not started before we return
-        )
-        return NewBackup(slug=slug)
 
-    async def _async_create_backup(
-        self,
-        backup_name: str,
-        date_str: str,
-        slug: str,
-        on_progress: Callable[[BackupProgress], None] | None,
-    ) -> Backup:
-        """Generate a backup."""
-        success = False
         try:
+            self.backing_up = True
             await self.async_pre_backup_actions()
+            backup_name = f"Core {HAVERSION}"
+            date_str = dt_util.now().isoformat()
+            slug = _generate_slug(date_str, backup_name)
 
             backup_data = {
                 "slug": slug,
@@ -370,12 +329,9 @@ class BackupManager(BaseBackupManager):
             if self.loaded_backups:
                 self.backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
-            success = True
             return backup
         finally:
-            if on_progress:
-                on_progress(BackupProgress(done=True, stage=None, success=success))
-            self.backup_task = None
+            self.backing_up = False
             await self.async_post_backup_actions()
 
     def _mkdir_and_generate_backup_contents(
