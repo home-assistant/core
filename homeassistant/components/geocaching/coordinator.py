@@ -17,7 +17,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
+from .const import (
+    CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    CONFIG_FLOW_TRACKABLES_SECTION_ID,
+    DOMAIN,
+    ENVIRONMENT,
+    LOGGER,
+    UPDATE_INTERVAL,
+    USE_TEST_CONFIG,
+)
 
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
@@ -50,11 +58,24 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                 radiusKm=3,
             )
         )
-        # TODO: Read this from the config | pylint: disable=fixme
-        settings.set_trackables(["TB89YPV"])
 
-        # TODO: Read this from the config | pylint: disable=fixme
-        settings.set_caches(["GC1DQPM", "GC9P6FN"])
+        # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
+        trackable_codes: list[str] = (
+            ["TB89YPV"]
+            if USE_TEST_CONFIG
+            else self.entry.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]
+        )
+        # TODO: Validate the trackable reference codes | pylint: disable=fixme
+        settings.set_trackables(trackable_codes)
+
+        # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
+        geocache_codes: list[str] = (
+            ["GC1DQPM", "GC9P6FN"]
+            if USE_TEST_CONFIG
+            else self.entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]
+        )
+        # TODO: Validate the geocache reference codes | pylint: disable=fixme
+        settings.set_caches(geocache_codes)
 
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,

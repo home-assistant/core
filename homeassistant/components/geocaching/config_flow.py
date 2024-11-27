@@ -9,11 +9,19 @@ from typing import Any
 from geocachingapi.geocachingapi import GeocachingApi
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.selector import TextSelector, TextSelectorType
 
-from .const import DOMAIN, ENVIRONMENT
+from .const import (
+    CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    CONFIG_FLOW_TRACKABLES_SECTION_ID,
+    DOMAIN,
+    ENVIRONMENT,
+    USE_TEST_CONFIG,
+)
 
 
 class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -21,9 +29,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
     VERSION = 1
-
-    Geocaches = "Geocaches"
-    Trackable = "Trackable"
 
     def __init__(self) -> None:
         """Initialize the flow handler."""
@@ -77,23 +82,58 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle additional user input after authentication."""
+
+        CACHES_SINGLE_TITLE = "Cache Reference Code"
+        TRACKABLES_SINGLE_TITLE = "Trackable Reference Code"
+
+        # Returns a schema for entering a list of strings
+        def string_list_schema(single_entry_title: str) -> vol.Schema:
+            return vol.Schema(
+                {
+                    single_entry_title: TextSelector(
+                        {"multiple": True, "type": TextSelectorType.TEXT}
+                    )
+                }
+            )
+
+        # TODO: Remove this temporary override, only used during development | pylint: disable=fixme
+        if USE_TEST_CONFIG:
+            user_input = {}
+
         if user_input is None:
             # Show the form to collect additional input
             return self.async_show_form(
                 step_id="additional_config",
                 data_schema=vol.Schema(
                     {
-                        vol.Optional(self.Geocaches): str,
-                        vol.Optional(self.Trackable): str,
+                        vol.Required(
+                            CONFIG_FLOW_GEOCACHES_SECTION_ID
+                        ): data_entry_flow.section(
+                            string_list_schema(CACHES_SINGLE_TITLE),
+                            {"collapsed": False},
+                        ),
+                        vol.Required(
+                            CONFIG_FLOW_TRACKABLES_SECTION_ID
+                        ): data_entry_flow.section(
+                            string_list_schema(TRACKABLES_SINGLE_TITLE),
+                            {"collapsed": False},
+                        ),
                     }
                 ),
             )
 
-        # Check if user has entered anything
-        if user_input.get(self.Geocaches):
-            self.data[self.Geocaches] = user_input[self.Geocaches]
+        # Store the provided tracked caches
+        self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = (
+            user_input[CONFIG_FLOW_GEOCACHES_SECTION_ID][CACHES_SINGLE_TITLE]
+            if user_input.get(CONFIG_FLOW_GEOCACHES_SECTION_ID)
+            else []
+        )
 
-        if user_input.get(self.Trackable):
-            self.data[self.Trackable] = user_input[self.Trackable]
+        # Store the provided tracked trackables
+        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = (
+            user_input[CONFIG_FLOW_TRACKABLES_SECTION_ID][TRACKABLES_SINGLE_TITLE]
+            if user_input.get(CONFIG_FLOW_TRACKABLES_SECTION_ID)
+            else []
+        )
 
         return self.async_create_entry(title=self.title, data=self.data)
