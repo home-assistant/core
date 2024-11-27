@@ -24,6 +24,13 @@ ENTITY_KEY_WINDOW = "window"
 ENTITY_KEY_LOCK = "lock"
 ENTITY_KEY_BOOST = "boost"
 ENTITY_KEY_AWAY = "away"
+ENTITY_KEY_COMFORT = "comfort"
+ENTITY_KEY_ECO = "eco"
+ENTITY_KEY_OFFSET = "offset"
+ENTITY_KEY_WINDOW_OPEN_TEMPERATURE = "window_open_temperature"
+ENTITY_KEY_WINDOW_OPEN_TIMEOUT = "window_open_timeout"
+ENTITY_KEY_VALVE = "valve"
+ENTITY_KEY_AWAY_UNTIL = "away_until"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
@@ -77,3 +84,5 @@ DEFAULT_SCAN_INTERVAL = 10  # seconds
 
 SIGNAL_THERMOSTAT_DISCONNECTED = f"{DOMAIN}.thermostat_disconnected"
 SIGNAL_THERMOSTAT_CONNECTED = f"{DOMAIN}.thermostat_connected"
+
+EQ3BT_STEP = 0.5

@@ -24,6 +24,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
 from homeassistant.util.dt import utcnow
 
@@ -43,7 +44,7 @@ _DataUpdateCoordinatorT = TypeVar(
 )
 
 
-class UpdateFailed(Exception):
+class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
 
@@ -288,8 +289,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if self.config_entry is None:
             report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry and will stop working in "
-                "Home Assistant 2025.11"
+                "for coordinators with a config entry",
+                breaks_in_ha_version="2025.11",
             )
         elif (
             self.config_entry.state
@@ -298,8 +299,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
                 f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}, "
-                "This will stop working in Home Assistant 2025.11",
+                f"but it is in state {self.config_entry.state}",
+                breaks_in_ha_version="2025.11",
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(

@@ -43,6 +43,7 @@ from homeassistant.util.dt import utc_from_timestamp
 from . import MusicAssistantConfigEntry
 from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
 from .entity import MusicAssistantEntity
+from .media_browser import async_browse_media
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -152,6 +153,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_supported_features = SUPPORTED_FEATURES
         if PlayerFeature.SYNC in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
+        if PlayerFeature.VOLUME_MUTE in self.player.supported_features:
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
 
@@ -219,7 +222,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     )
                 )
             ]
-        self._attr_group_members = group_members_entity_ids
+        # NOTE: we sort the group_members for now,
+        # until the MA API returns them sorted (group_childs is now a set)
+        self._attr_group_members = sorted(group_members_entity_ids)
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
         )
@@ -436,10 +441,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
+        return await async_browse_media(
             self.hass,
+            self.mass,
             media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+            media_content_type,
         )
 
     def _update_media_image_url(
