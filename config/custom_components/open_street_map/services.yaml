@@ -1,0 +1,13 @@
+search:
+  description: "Search for an address or place using OpenStreetMap."
+  fields:
+    query:
+      description: "The search term (address, coordinates, etc.)."
+      example: "Korsvägen 1, Gothenburg"
+
+get_address_coordinates:
+  description: "Get the latitude and longitude for a given address or place."
+  fields:
+    query:
+      description: "The search term (address, coordinates, etc.)."
+      example: "Korsvägen 1, Gothenburg"
