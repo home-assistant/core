@@ -37,7 +37,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: No authentication needed
-  parallel-updates: done
+  parallel-updates: todo
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: todo
