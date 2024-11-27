@@ -89,8 +89,6 @@ FILTERS: Registry[str, type[Filter]] = Registry()
 
 ICON = "mdi:chart-line-variant"
 
-SCAN_INTERVAL = timedelta(minutes=3)
-
 FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
@@ -269,10 +267,10 @@ class SensorFilter(SensorEntity):
         _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data["new_state"])
 
-    def update(self):
+    def update(self) -> None:
         """Update TimeSMAFilter value."""
-        _LOGGER.debug("Update filter: %s", self._state)
-        self._update_filter_sensor_state(self.hass.states.get(self._entity))
+        temp_state = _State(dt_util.now(), 0)
+        self._run_filters(temp_state, timed_update=True)
 
     @callback
     def _update_filter_sensor_state(
@@ -297,23 +295,10 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        self._attr_available = True
-
         temp_state = _State(new_state.last_updated, new_state.state)
 
         try:
-            for filt in self._filters:
-                filtered_state = filt.filter_state(copy(temp_state))
-                _LOGGER.debug(
-                    "%s(%s=%s) -> %s",
-                    filt.name,
-                    self._entity,
-                    temp_state.state,
-                    "skip" if filt.skip_processing else filtered_state.state,
-                )
-                if filt.skip_processing:
-                    return
-                temp_state = filtered_state
+            self._run_filters(temp_state)
         except ValueError:
             _LOGGER.error(
                 "Could not convert state: %s (%s) to number",
@@ -321,8 +306,6 @@ class SensorFilter(SensorEntity):
                 type(new_state.state),
             )
             return
-
-        self._state = temp_state.state
 
         self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
         self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
@@ -339,6 +322,24 @@ class SensorFilter(SensorEntity):
 
         if update_ha:
             self.async_write_ha_state()
+
+    def _run_filters(self, temp_state: _State, timed_update: bool = False) -> None:
+        self._attr_available = True
+
+        for filt in self._filters:
+            filtered_state = filt.filter_state(copy(temp_state), timed_update)
+            _LOGGER.debug(
+                "%s(%s=%s) -> %s",
+                filt.name,
+                self._entity,
+                temp_state.state,
+                "skip" if filt.skip_processing else filtered_state.state,
+            )
+            if filt.skip_processing:
+                return
+            temp_state = filtered_state
+
+        self._state = temp_state.state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -429,9 +430,10 @@ class FilterState:
 
     state: str | float | int
 
-    def __init__(self, state: _State) -> None:
+    def __init__(self, state: _State, timed_update: bool = False) -> None:
         """Initialize with HA State object."""
         self.timestamp = state.last_updated
+        self.timed_update = timed_update
         try:
             self.state = float(state.state)
         except ValueError:
@@ -517,9 +519,9 @@ class Filter:
         """Implement filter."""
         raise NotImplementedError
 
-    def filter_state(self, new_state: _State) -> _State:
+    def filter_state(self, new_state: _State, timed_update: bool = False) -> _State:
         """Implement a common interface for filters."""
-        fstate = FilterState(new_state)
+        fstate = FilterState(new_state, timed_update)
         if self._only_numbers and not isinstance(fstate.state, Number):
             raise ValueError(f"State <{fstate.state}> is not a Number")
 
@@ -527,7 +529,7 @@ class Filter:
         filtered.set_precision(self.filter_precision)
 
         if self._store_raw:
-            self.states.append(copy(FilterState(new_state)))
+            self.states.append(copy(FilterState(new_state, timed_update)))
         else:
             self.states.append(copy(filtered))
         new_state.state = filtered.state
@@ -707,6 +709,7 @@ class TimeSMAFilter(Filter):
 
     def _leak(self, left_boundary: datetime) -> None:
         """Remove timeouted elements."""
+        _LOGGER.debug("Leaking %s", self.queue)
         while self.queue:
             if self.queue[0].timestamp + self._time_window <= left_boundary:
                 self.last_leak = self.queue.popleft()
@@ -717,7 +720,9 @@ class TimeSMAFilter(Filter):
         """Implement the Simple Moving Average filter."""
 
         self._leak(new_state.timestamp)
-        self.queue.append(copy(new_state))
+        if new_state.timed_update is False:
+            self.queue.append(copy(new_state))
+        _LOGGER.debug("Current queue: %s", self.queue)
 
         moving_sum: float = 0
         start = new_state.timestamp - self._time_window

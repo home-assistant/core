@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant import config as hass_config
@@ -46,7 +47,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -543,6 +549,48 @@ def test_time_sma(values: list[State]) -> None:
     for state in values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21.5
+
+
+async def test_time_sma_by_time(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test if time_sma filter with update_by_timemworks."""
+
+    with freeze_time() as frozen_datetime:
+
+        async def advance(seconds):
+            frozen_datetime.tick(seconds)
+            async_fire_time_changed(hass, dt_util.utcnow())
+            await hass.async_block_till_done(True)
+
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "filter",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "filters": [
+                        {
+                            "filter": "time_simple_moving_average",
+                            "window_size": timedelta(minutes=2),
+                            "update_by_time": True,
+                        },
+                    ],
+                }
+            },
+        )
+        await hass.async_block_till_done(True)
+
+        for value in 20, 19, 18, 21, 22, 0:
+            await advance(60)
+            hass.states.async_set("sensor.test_monitored", value)
+            await hass.async_block_till_done(True)
+
+        assert hass.states.get("sensor.test").state == "21.5"
+        await advance(30)
+        assert hass.states.get("sensor.test").state == "16.25"
+        await advance(30)
+        assert hass.states.get("sensor.test").state == "11.0"
 
 
 async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
