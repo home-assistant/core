@@ -1,7 +1,4 @@
-"""Enforce that the integration has a reconfiguration flow.
-
-
-"""
+"""Enforce that the integration has a reconfiguration flow."""
 
 import ast
 
