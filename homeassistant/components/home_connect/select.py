@@ -278,18 +278,20 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             "Starting program: %s" if self.start_on_select else "Selecting program: %s",
             bsh_key,
         )
+        if self.start_on_select:
+            target = self.device.appliance.start_program
+        else:
+            target = self.device.appliance.select_program
         try:
-            if self.start_on_select:
-                target = self.device.appliance.start_program
-            else:
-                target = self.device.appliance.select_program
             await self.hass.async_add_executor_job(target, bsh_key)
         except HomeConnectError as err:
+            if self.start_on_select:
+                translation_key = "start_program"    
+            else:
+                translation_key = "select_program"
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="start_program"
-                if self.start_on_select
-                else "select_program",
+                translation_key=translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "program": bsh_key,
