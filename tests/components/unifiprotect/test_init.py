@@ -330,13 +330,15 @@ async def test_device_remove_devices_nvr(
     ],
 )
 async def test_async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, mock_entries, expected_result
+    hass: HomeAssistant,
+    mock_entries: list[MockConfigEntry],
+    expected_result: str | None,
 ) -> None:
     """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
 
     for index, entry in enumerate(mock_entries):
         entry.add_to_hass(hass)
-        setattr(entry, "runtime_data", Mock(api=f"mock_api_instance_{index + 1}"))
+        entry.runtime_data = Mock(api=f"mock_api_instance_{index + 1}")
 
     entry_ids = {entry.entry_id for entry in mock_entries}
 
