@@ -25,4 +25,6 @@ TYPE_SAFE_EXPOSURE_TIME_3 = "safe_exposure_time_type_3"
 TYPE_SAFE_EXPOSURE_TIME_4 = "safe_exposure_time_type_4"
 TYPE_SAFE_EXPOSURE_TIME_5 = "safe_exposure_time_type_5"
 TYPE_SAFE_EXPOSURE_TIME_6 = "safe_exposure_time_type_6"
+SUNSCREEN_DOMAIN = "sunscreen_reminder"
 TYPE_CURRENT_UV_INDEX_WITH_GRAPH = "current_uv_index_with_graph"
+
