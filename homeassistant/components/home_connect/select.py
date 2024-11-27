@@ -286,7 +286,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             await self.hass.async_add_executor_job(target, bsh_key)
         except HomeConnectError as err:
             if self.start_on_select:
-                translation_key = "start_program"    
+                translation_key = "start_program"
             else:
                 translation_key = "select_program"
             raise ServiceValidationError(
