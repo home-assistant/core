@@ -13,13 +13,21 @@ from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
-from homeassistant.helpers.selector import TextSelector, TextSelectorType
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorType,
+)
 
 from .const import (
     CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID,
     CONFIG_FLOW_TRACKABLES_SECTION_ID,
     DOMAIN,
     ENVIRONMENT,
+    NEARBY_CACHES_COUNT_TITLE,
+    NEARBY_CACHES_RADIUS_TITLE,
     USE_TEST_CONFIG,
 )
 
@@ -107,6 +115,36 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(
+                            CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID
+                        ): data_entry_flow.section(
+                            vol.Schema(
+                                {
+                                    vol.Required(
+                                        NEARBY_CACHES_COUNT_TITLE
+                                    ): NumberSelector(
+                                        {
+                                            "min": 0,
+                                            "max": 50,
+                                            "step": 1,
+                                            "unit_of_measurement": "count",
+                                            "mode": NumberSelectorMode.SLIDER,
+                                        }
+                                    ),
+                                    vol.Required(
+                                        NEARBY_CACHES_RADIUS_TITLE
+                                    ): NumberSelector(
+                                        {
+                                            "min": 0.1,
+                                            "step": 0.001,
+                                            "unit_of_measurement": "km",
+                                            "mode": NumberSelectorMode.BOX,
+                                        }
+                                    ),
+                                }
+                            ),
+                            {"collapsed": False},
+                        ),
+                        vol.Required(
                             CONFIG_FLOW_GEOCACHES_SECTION_ID
                         ): data_entry_flow.section(
                             string_list_schema(CACHES_SINGLE_TITLE),
@@ -121,6 +159,24 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     }
                 ),
             )
+
+        # Store the provided nearby caches count
+        self.data[NEARBY_CACHES_COUNT_TITLE] = (
+            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
+                NEARBY_CACHES_COUNT_TITLE
+            ]
+            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
+            else 0
+        )
+
+        # Store the provided nearby caches radius
+        self.data[NEARBY_CACHES_RADIUS_TITLE] = (
+            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
+                NEARBY_CACHES_RADIUS_TITLE
+            ]
+            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
+            else 1
+        )
 
         # Store the provided tracked caches
         self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = (

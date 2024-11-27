@@ -23,6 +23,8 @@ from .const import (
     DOMAIN,
     ENVIRONMENT,
     LOGGER,
+    NEARBY_CACHES_COUNT_TITLE,
+    NEARBY_CACHES_RADIUS_TITLE,
     UPDATE_INTERVAL,
     USE_TEST_CONFIG,
 )
@@ -55,7 +57,16 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                         "longitude": hass.config.longitude,
                     }
                 ),
-                radiusKm=3,
+                radiusKm=3
+                if USE_TEST_CONFIG
+                else self.entry.data[
+                    NEARBY_CACHES_RADIUS_TITLE
+                ],  # TODO: Remove the hardcoded default when development is done | pylint: disable=fixme
+                maxCount=3
+                if USE_TEST_CONFIG
+                else self.entry.data[
+                    NEARBY_CACHES_COUNT_TITLE
+                ],  # TODO: Remove the hardcoded default when development is done | pylint: disable=fixme
             )
         )
 

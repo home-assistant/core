@@ -12,6 +12,10 @@
         "title": "Configure tracked objects",
         "description": "The integration can track caches and trackables, for which entities will be generated",
         "sections": {
+          "nearby_settings": {
+            "name": "Nearby Caches Settings",
+            "description": "Configure nearby caches settings"
+          },
           "tracked_geocache_ids": {
             "name": "Tracked Geocaches",
             "description": "Optionally add geocaches to track"

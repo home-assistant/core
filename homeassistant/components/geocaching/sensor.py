@@ -97,7 +97,7 @@ async def async_setup_entry(
     status: GeocachingStatus = await coordinator._async_update_data()  # noqa: SLF001
     entities: list[Entity] = []
     # Add entities for nearby caches
-    for cache in status.nearby_caches[:3]:
+    for cache in status.nearby_caches:
         entities.extend(get_cache_entities(coordinator, cache, GeocacheCategory.NEARBY))
 
     # Add entities for tracked caches
