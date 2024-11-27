@@ -1,5 +1,6 @@
 """Test the habitica config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -34,6 +35,18 @@ MOCK_DATA_ADVANCED_STEP = {
     CONF_API_KEY: TEST_API_KEY,
     CONF_URL: DEFAULT_URL,
     CONF_VERIFY_SSL: True,
+}
+
+USER_INPUT_REAUTH_LOGIN = {
+    "reauth_login": {
+        CONF_USERNAME: "new-email",
+        CONF_PASSWORD: "new-password",
+    },
+    "reauth_api_key": {},
+}
+USER_INPUT_REAUTH_API_KEY = {
+    "reauth_login": {},
+    "reauth_api_key": {CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382"},
 }
 
 
@@ -253,3 +266,128 @@ async def test_form_advanced_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        (USER_INPUT_REAUTH_LOGIN),
+        (USER_INPUT_REAUTH_API_KEY),
+    ],
+    ids=["reauth with login details", "rauth with api key"],
+)
+@pytest.mark.usefixtures("mock_habitica")
+async def test_flow_reauth(
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, Any]
+) -> None:
+    """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {
+        "api_key": "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+        "api_user": "test-api-user",
+        "url": "https://habitica.com",
+    }
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_habitica")
+async def test_flow_reauth_invalid_credentials(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reauth flow with invalid credentials."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "reauth_login": {},
+            "reauth_api_key": {},
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_credentials"}
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "user_input", "text_error"),
+    [
+        (
+            ERROR_BAD_REQUEST,
+            USER_INPUT_REAUTH_LOGIN,
+            "cannot_connect",
+        ),
+        (
+            ERROR_NOT_AUTHORIZED,
+            USER_INPUT_REAUTH_LOGIN,
+            "invalid_auth",
+        ),
+        (IndexError(), USER_INPUT_REAUTH_LOGIN, "unknown"),
+        (
+            ERROR_BAD_REQUEST,
+            USER_INPUT_REAUTH_API_KEY,
+            "cannot_connect",
+        ),
+        (
+            ERROR_NOT_AUTHORIZED,
+            USER_INPUT_REAUTH_API_KEY,
+            "invalid_auth",
+        ),
+        (IndexError(), USER_INPUT_REAUTH_API_KEY, "unknown"),
+        (None, {"reauth_login": {}, "reauth_api_key": {}}, "invalid_credentials"),
+    ],
+    ids=[
+        "login cannot_connect",
+        "login invalid_auth",
+        "login unknown",
+        "api_key cannot_connect",
+        "api_key invalid_auth",
+        "api_key unknown",
+        "invalid_credentials",
+    ],
+)
+async def test_flow_reauth_errors(
+    hass: HomeAssistant,
+    habitica: AsyncMock,
+    config_entry: MockConfigEntry,
+    raise_error: Exception,
+    user_input: dict[str, Any],
+    text_error: str,
+) -> None:
+    """Test reauth flow with invalid credentials."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    habitica.get_user.side_effect = raise_error
+    habitica.login.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
