@@ -59,7 +59,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         "get_address_coordinates",
         async_handle_get_address_coordinates,
-        schema=cv.make_entity_service_schema({vol.Required("query"): str}),
+        schema=vol.Schema({vol.Required("query"): str}),
+        # schema=cv.make_entity_service_schema({vol.Required("query"): str}),
     )
 
     return True
@@ -89,6 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 #     """Unload a config entry."""
 #     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+
 async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[str, str]:
     """Handle a service call to search for an address or coordinates with OpenStreetMap.
 
@@ -117,7 +119,11 @@ async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[st
         hass.states.async_set(f"{DOMAIN}.last_search", f"Error: {results['error']}")
         hass.bus.async_fire(f"{DOMAIN}_event", {"error": results["error"]})
     else:
-        hass.bus.async_fire(f"{DOMAIN}._event", {"query": query, "results": results})
+        hass.bus.async_fire(f"{DOMAIN}._event",
+                            {"type": "search",
+                             "query": query,
+                             "results": results
+                             })
 
     return results
 
@@ -170,6 +176,10 @@ async def async_handle_get_address_coordinates(
         _LOGGER.error(f"Error fetching coordinates: {coordinates['error']}")
         hass.bus.async_fire(f"{DOMAIN}_event", {"error": coordinates["error"]})
     else:
-        hass.bus.async_fire(f"{DOMAIN}_event", {"query": query, "coordinates": coordinates})
+        hass.bus.async_fire(f"{DOMAIN}_event",
+                            {"type": "get_coordinates",
+                             "query": query,
+                             "coordinates": coordinates
+                            })
 
     return coordinates
