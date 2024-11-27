@@ -57,10 +57,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
@@ -88,12 +85,12 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         ):
             return OVERKIZ_TO_HVAC_MODES[cast(str, derogation_activation)]
 
-        return HVACMode.OFF
+        return HVACMode.AUTO
 
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.hvac_mode in [HVACMode.AUTO, HVACMode.OFF]:
+        if self.hvac_mode in HVACMode.AUTO:
             state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
