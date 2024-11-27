@@ -374,9 +374,6 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
                         # Event ends before date range
                         continue
 
-                    if end_date and start > end_date:
-                        # Event starts after date range
-                        continue
                     events.append(
                         CalendarEvent(
                             start=start,
