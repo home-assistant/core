@@ -3,7 +3,10 @@
     "todos": "To-Do's",
     "dailies": "Dailies",
     "config_entry_name": "Select character",
-    "unit_tasks": "tasks"
+    "unit_tasks": "tasks",
+    "unit_health_points": "HP",
+    "unit_mana_points": "MP",
+    "unit_experience_points": "XP"
   },
   "config": {
     "abort": {
@@ -137,27 +140,27 @@
       },
       "health": {
         "name": "Health",
-        "unit_of_measurement": "HP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "health_max": {
         "name": "Max. health",
-        "unit_of_measurement": "HP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
         "name": "Mana",
-        "unit_of_measurement": "MP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "mana_max": {
         "name": "Max. mana",
-        "unit_of_measurement": "MP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "experience": {
         "name": "Experience",
-        "unit_of_measurement": "XP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "experience_max": {
         "name": "Next level",
-        "unit_of_measurement": "XP"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "level": {
         "name": "Level"
