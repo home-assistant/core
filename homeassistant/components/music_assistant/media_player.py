@@ -151,7 +151,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         super().__init__(mass, player_id)
         self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
         self._attr_supported_features = SUPPORTED_FEATURES
-        if PlayerFeature.SYNC in self.player.supported_features:
+        if PlayerFeature.SET_MEMBERS in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
         if PlayerFeature.VOLUME_MUTE in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE

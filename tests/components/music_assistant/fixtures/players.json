@@ -16,7 +16,7 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],
@@ -57,7 +57,7 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],
@@ -109,7 +109,7 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],
