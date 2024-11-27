@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from music_assistant_models.enums import (
     EventType,
@@ -37,7 +37,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -89,7 +89,6 @@ QUEUE_OPTION_MAP = {
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
-SERVICE_GET_QUEUE = "get_queue"
 ATTR_RADIO_MODE = "radio_mode"
 ATTR_MEDIA_ID = "media_id"
 ATTR_MEDIA_TYPE = "media_type"
@@ -179,12 +178,6 @@ async def async_setup_entry(
             vol.Optional(ATTR_AUTO_PLAY): vol.Coerce(bool),
         },
         "_async_handle_transfer_queue",
-    )
-    platform.async_register_entity_service(
-        SERVICE_GET_QUEUE,
-        schema=None,
-        func="_async_handle_get_queue",
-        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -519,13 +512,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.player_queues.transfer_queue(
             source_queue_id, target_queue_id, auto_play
         )
-
-    @catch_musicassistant_error
-    async def _async_handle_get_queue(self) -> ServiceResponse:
-        """Handle get_queue action."""
-        if not self.active_queue:
-            raise HomeAssistantError("No active queue found")
-        return cast(ServiceResponse, self.active_queue.to_dict())
 
     async def async_browse_media(
         self,
