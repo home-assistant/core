@@ -9,12 +9,12 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
-  dependency-transparency: done
+  config-flow: todo
+  dependency-transparency: todo
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
     comment: No events implemented
@@ -38,9 +38,9 @@ rules:
     status: exempt
     comment: No authentication needed
   parallel-updates: done
-  test-coverage: done
+  test-coverage: todo
   integration-owner: done
-  docs-installation-parameters: done
+  docs-installation-parameters: todo
   docs-configuration-parameters:
     status: exempt
     comment: no options flow
@@ -76,7 +76,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
-  docs-known-limitations: done
+  docs-known-limitations: todo
   docs-troubleshooting: todo
   docs-examples: todo
 
