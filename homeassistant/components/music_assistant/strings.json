@@ -119,37 +119,6 @@
         "playlist": "Playlist",
         "radio": "Radio"
       }
-    },
-    "order_by": {
-      "options": {
-        "name": "Name",
-        "name_desc": "Name (desc)",
-        "sort_name": "Sort name",
-        "sort_name_desc": "Sort name (desc)",
-        "timestamp_added": "Added",
-        "timestamp_added_desc": "Added (desc)",
-        "last_played": "Last played",
-        "last_played_desc": "Last played (desc)",
-        "play_count": "Play count",
-        "play_count_desc": "Play count (desc)",
-        "year": "Year",
-        "year_desc": "Year (desc)",
-        "position": "Position",
-        "position_desc": "Position (desc)",
-        "artist_name": "Artist name",
-        "artist_name_desc": "Artist name (desc)",
-        "random": "Random",
-        "random_play_count": "Random + least played"
-      }
-    },
-    "album_type": {
-      "options": {
-        "album": "Album",
-        "single": "Single",
-        "ep": "EP",
-        "compilation": "Compilation",
-        "unknown": "Unknown"
-      }
     }
   }
 }

@@ -22,10 +22,8 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
-from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -45,12 +43,6 @@ class MusicAssistantEntryData:
 
     mass: MusicAssistantClient
     listen_task: asyncio.Task
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Music Assistant component."""
-    register_actions(hass)
-    return True
 
 
 async def async_setup_entry(
