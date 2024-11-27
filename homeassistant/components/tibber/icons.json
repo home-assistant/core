@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "sensor": {
+      "electricity_price_excl_tax": {
+        "default": "mdi:currency-usd"
+      }
+    }
+  },
   "services": {
     "get_prices": {
       "service": "mdi:cash"

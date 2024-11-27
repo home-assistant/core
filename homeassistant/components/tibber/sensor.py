@@ -452,7 +452,6 @@ class TibberSensorElPriceExclTax(TibberSensor):
         self._spread_load_constant = randrange(TWENTY_MINUTES)
 
         self._attr_available = False
-        self._attr_icon = ICON
         self._attr_unique_id = f"{self._tibber_home.home_id}-excl_tax"
         self._model = "Price Sensor excluding tax"
 
