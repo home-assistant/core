@@ -477,8 +477,6 @@ class _ScriptRun:
 
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                # We already consumed the response, do not pass it on
-                err.response = None
                 raise
         except Exception:
             script_execution_set("error")
