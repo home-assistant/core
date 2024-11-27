@@ -1,6 +1,7 @@
 """Class to hold all lock accessories."""
 
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
@@ -59,7 +60,7 @@ class Lock(DoorbellMixin):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, *args: Any) -> None:
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self._code = self.config.get(ATTR_CODE)
