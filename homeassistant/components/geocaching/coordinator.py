@@ -77,7 +77,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             else self.entry.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]
         )
         # TODO: Validate the trackable reference codes | pylint: disable=fixme
-        settings.set_trackables(trackable_codes)
+        settings.set_tracked_trackables(trackable_codes)
 
         # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
         geocache_codes: list[str] = (
@@ -86,7 +86,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             else self.entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]
         )
         # TODO: Validate the geocache reference codes | pylint: disable=fixme
-        settings.set_caches(geocache_codes)
+        settings.set_tracked_caches(geocache_codes)
 
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,

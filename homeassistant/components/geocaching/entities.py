@@ -179,25 +179,25 @@ CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
     GeocachingCacheSensorDescription(
         key="found",
         value_fn=lambda cache: None
-        if cache.foundByUser is None
+        if cache.found_by_user is None
         else "Yes"
-        if cache.foundByUser is True
+        if cache.found_by_user is True
         else "No",
     ),
     GeocachingCacheSensorDescription(
         key="found_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=lambda cache: cache.foundDateTime,
+        value_fn=lambda cache: cache.found_date_time,
     ),
     GeocachingCacheSensorDescription(
         key="favorite_points",
         native_unit_of_measurement="points",
-        value_fn=lambda cache: cache.favoritePoints,
+        value_fn=lambda cache: cache.favorite_points,
     ),
     GeocachingCacheSensorDescription(
-        key="hide_date",
+        key="hidden_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=lambda cache: cache.hiddenDate,
+        value_fn=lambda cache: cache.hidden_date,
     ),
 )
 

@@ -73,8 +73,8 @@
       "cache_favorite_points": {
         "name": "Favorite points"
       },
-      "cache_hide_date": {
-        "name": "Hide date"
+      "cache_hidden_date": {
+        "name": "Hidden date"
       },
       "cache_location": {
         "name": "Location"
