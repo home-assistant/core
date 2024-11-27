@@ -608,9 +608,7 @@ def _get_oldest_possible_ts(
     """
 
     oldest_ts = get_instance(hass).states_manager.oldest_ts
-    if oldest_ts is not None and oldest_ts < dt_util.utc_to_timestamp(
-        utc_point_in_time
-    ):
+    if oldest_ts is not None and oldest_ts < utc_point_in_time.timestamp():
         return oldest_ts
     return None
 
