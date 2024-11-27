@@ -10,6 +10,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Solar-Log device.",
+          "name": "The prefix to be used for your Solar-Log sensors",
           "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device."
         }
       },
@@ -27,6 +28,10 @@
         "data": {
           "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -34,6 +39,10 @@
         "data": {
           "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       }
     },
