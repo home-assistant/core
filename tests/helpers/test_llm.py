@@ -306,6 +306,7 @@ async def test_assist_api_tools(
         "HassSetPosition",
         "HassStartTimer",
         "HassCancelTimer",
+        "HassCancelAllTimers",
         "HassIncreaseTimer",
         "HassDecreaseTimer",
         "HassPauseTimer",
@@ -655,7 +656,10 @@ async def test_script_tool(
             "script": {
                 "test_script": {
                     "description": "This is a test script",
-                    "sequence": [],
+                    "sequence": [
+                        {"variables": {"result": {"drinks": 2}}},
+                        {"stop": True, "response_variable": "result"},
+                    ],
                     "fields": {
                         "beer": {"description": "Number of beers", "required": True},
                         "wine": {"selector": {"number": {"min": 0, "max": 3}}},
@@ -691,7 +695,7 @@ async def test_script_tool(
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
-    assert len(tools) == 1
+    assert len(tools) == 2
 
     tool = tools[0]
     assert tool.name == "test_script"
@@ -718,6 +722,7 @@ async def test_script_tool(
         "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
+    # Test script with response
     tool_input = llm.ToolInput(
         tool_name="test_script",
         tool_args={
@@ -730,26 +735,56 @@ async def test_script_tool(
         },
     )
 
-    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
         response = await api.async_call_tool(tool_input)
 
     mock_service_call.assert_awaited_once_with(
         "script",
-        "turn_on",
+        "test_script",
         {
-            "entity_id": "script.test_script",
-            "variables": {
-                "beer": "3",
-                "wine": 0,
-                "where": area.id,
-                "area_list": [area.id],
-                "floor": floor.floor_id,
-                "floor_list": [floor.floor_id],
-            },
+            "beer": "3",
+            "wine": 0,
+            "where": area.id,
+            "area_list": [area.id],
+            "floor": floor.floor_id,
+            "floor_list": [floor.floor_id],
         },
         context=context,
+        blocking=True,
+        return_response=True,
     )
-    assert response == {"success": True}
+    assert response == {
+        "success": True,
+        "result": {"drinks": 2},
+    }
+
+    # Test script with no response
+    tool_input = llm.ToolInput(
+        tool_name="script_with_no_fields",
+        tool_args={},
+    )
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        response = await api.async_call_tool(tool_input)
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "script_with_no_fields",
+        {},
+        context=context,
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "success": True,
+        "result": {},
+    }
 
     # Test reload script with new parameters
     config = {
@@ -781,7 +816,7 @@ async def test_script_tool(
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
-    assert len(tools) == 1
+    assert len(tools) == 2
 
     tool = tools[0]
     assert tool.name == "test_script"

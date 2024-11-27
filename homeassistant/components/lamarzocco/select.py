@@ -19,6 +19,8 @@ from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
+PARALLEL_UPDATES = 1
+
 STEAM_LEVEL_HA_TO_LM = {
     "1": SteamLevel.LEVEL_1,
     "2": SteamLevel.LEVEL_2,

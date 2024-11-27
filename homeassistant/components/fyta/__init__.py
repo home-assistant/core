@@ -15,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import async_get_time_zone
 
 from .const import CONF_EXPIRATION
@@ -39,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
         entry.data[CONF_EXPIRATION]
     ).astimezone(await async_get_time_zone(tz))
 
-    fyta = FytaConnector(username, password, access_token, expiration, tz)
+    fyta = FytaConnector(
+        username, password, access_token, expiration, tz, async_get_clientsession(hass)
+    )
 
     coordinator = FytaCoordinator(hass, fyta)
 

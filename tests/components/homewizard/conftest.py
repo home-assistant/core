@@ -77,12 +77,12 @@ def mock_config_entry() -> MockConfigEntry:
         title="Device",
         domain=DOMAIN,
         data={
-            "product_name": "Product name",
-            "product_type": "product_type",
-            "serial": "aabbccddeeff",
+            "product_name": "P1 Meter",
+            "product_type": "HWE-P1",
+            "serial": "5c2fafabcdef",
             CONF_IP_ADDRESS: "127.0.0.1",
         },
-        unique_id="aabbccddeeff",
+        unique_id="HWE-P1_5c2fafabcdef",
     )
 
 

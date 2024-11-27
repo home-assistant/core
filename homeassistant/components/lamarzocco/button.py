@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
+PARALLEL_UPDATES = 1
 BACKFLUSH_ENABLED_DURATION = 15
 
 

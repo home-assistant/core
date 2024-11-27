@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -284,7 +285,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         serial = discovery_info.hostname.upper()
 
         await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: discovery_info.ip,
+                CONF_ADDRESS: discovery_info.macaddress,
+            }
+        )
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",
@@ -294,6 +300,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered[CONF_MACHINE] = serial
         self._discovered[CONF_HOST] = discovery_info.ip
+        self._discovered[CONF_ADDRESS] = discovery_info.macaddress
 
         return await self.async_step_user()
 

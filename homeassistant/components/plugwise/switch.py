@@ -93,8 +93,8 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:

@@ -44,11 +44,11 @@
       "fields": {
         "item": {
           "name": "Item name",
-          "description": "The name for the to-do list item."
+          "description": "The current name of the to-do item."
         },
         "rename": {
           "name": "Rename item",
-          "description": "The new name of the to-do item"
+          "description": "The new name for the to-do item"
         },
         "status": {
           "name": "Set status",

@@ -64,11 +64,11 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         version = await self.api.connect()
         self._connected = isinstance(version, Version)
         if self._connected:
-            self.api.get_all_devices()
+            self.api.get_all_gateway_entities()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
-        data = PlugwiseData({}, {})
+        data = PlugwiseData(devices={}, gateway={})
         try:
             if not self._connected:
                 await self._connect()

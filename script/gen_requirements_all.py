@@ -230,6 +230,14 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
+
+# aiofiles keeps getting downgraded by custom components
+# causing newer methods to not be available and breaking
+# some integrations at startup
+# https://github.com/home-assistant/core/issues/127529
+# https://github.com/home-assistant/core/issues/122508
+# https://github.com/home-assistant/core/issues/118004
+aiofiles>=24.1.0
 """
 
 GENERATED_MESSAGE = (
