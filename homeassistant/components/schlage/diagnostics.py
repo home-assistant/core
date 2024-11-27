@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 
 from . import SchlageConfigEntry
-from .coordinator import SchlageDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -15,7 +14,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: SchlageConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     # NOTE: Schlage diagnostics are already redacted.
     return {
         "locks": [ld.lock.get_diagnostics() for ld in coordinator.data.locks.values()]

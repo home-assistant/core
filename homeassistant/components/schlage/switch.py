@@ -60,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     def _add_new_locks(locks: dict[str, LockData]) -> None:
         async_add_entities(
