@@ -2,7 +2,7 @@ rules:
   # Bronze
   config-flow: done
   brands: done
-  dependency-transparency: done
+  dependency-transparency: todo
   common-modules:
     status: done
     comment: |
@@ -36,16 +36,16 @@ rules:
       needs to be moved to `runtime_data`.
 
   # Silver
-  log-when-unavailable: todo
-  config-entry-unloading: todo
-  reauthentication-flow: todo
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
   action-exceptions: todo
   docs-installation-parameters: todo
-  integration-owner: todo
+  integration-owner: done
   parallel-updates: todo
-  test-coverage: todo
+  test-coverage: done
   docs-configuration-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
 
   # Gold
   docs-examples: todo
