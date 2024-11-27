@@ -12,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration, ScaledQualityScaleTiers
+from .quality_scale_validation import RuleValidationProtocol, config_entry_unloading
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
 
@@ -22,6 +23,7 @@ class Rule:
 
     name: str
     tier: ScaledQualityScaleTiers
+    validator: RuleValidationProtocol | None = None
 
 
 ALL_RULES = [
@@ -46,7 +48,9 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
+    Rule(
+        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
+    ),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
@@ -87,6 +91,8 @@ SCALE_RULES = {
     tier: [rule.name for rule in ALL_RULES if rule.tier == tier]
     for tier in ScaledQualityScaleTiers
 }
+
+VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
@@ -1338,17 +1344,24 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
 
-    if declared_quality_scale is None:
-        return
-
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
-        if status in {"done", "exempt"}:
-            rules_met.add(rule_name)
+        if status not in {"done", "exempt"}:
+            continue
+        rules_met.add(rule_name)
+        if (
+            status == "done"
+            and (validator := VALIDATORS.get(rule_name))
+            and (error := validator.validate(integration))
+        ):
+            integration.add_error("quality_scale", f"[{rule_name}] {error}")
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.
+    if declared_quality_scale is None:
+        return
+
     for scale in ScaledQualityScaleTiers:
         if scale > declared_quality_scale:
             break
