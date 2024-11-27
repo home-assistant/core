@@ -632,12 +632,12 @@ class BluesoundPlayer(MediaPlayerEntity):
             return []
 
         follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.slaves]
-        names = [leader_sync_status.name]
-        for x in player_entities:
-            if x.sync_status.id in follower_ids:
-                names.extend([x.sync_status.name])
-
-        return names
+        follower_names = [
+            x.sync_status.name
+            for x in player_entities
+            if x.sync_status.id in follower_ids
+        ]
+        follower_names.insert(0, leader_sync_status.name)
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
