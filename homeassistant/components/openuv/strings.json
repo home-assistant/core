@@ -14,7 +14,8 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "elevation": "[%key:common::config_flow::data::elevation%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "skin_type": "Your Skin Type"
         }
       }
     },
@@ -32,7 +33,8 @@
         "title": "Configure OpenUV",
         "data": {
           "from_window": "Starting UV index for the protection window",
-          "to_window": "Ending UV index for the protection window"
+          "to_window": "Ending UV index for the protection window",
+          "skin_type": "Your Skin Type"
         }
       }
     }
