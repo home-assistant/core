@@ -182,6 +182,13 @@ HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
 )
 
+LOCK_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
+    }
+)
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
@@ -300,6 +307,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "camera":
             config = CAMERA_SCHEMA(config)
+
+        elif domain == "lock":
+            config = LOCK_SCHEMA(config)
 
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
