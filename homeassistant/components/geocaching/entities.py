@@ -154,7 +154,7 @@ class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class GeocachingCacheEntityDescription(SensorEntityDescription):
+class GeocachingCacheSensorDescription(SensorEntityDescription):
     """Define Sensor entity description class."""
 
     value_fn: Callable[[GeocachingCache], StateType | datetime.date]
@@ -167,26 +167,34 @@ class GeocachingTrackableEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingTrackable], StateType | datetime.date]
 
 
-CACHE_SENSORS: tuple[GeocachingCacheEntityDescription, ...] = (
-    GeocachingCacheEntityDescription(
+CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
+    GeocachingCacheSensorDescription(
         key="name",
         value_fn=lambda cache: cache.name,
     ),
-    GeocachingCacheEntityDescription(
+    GeocachingCacheSensorDescription(
         key="owner",
         value_fn=lambda cache: cache.owner.username,
     ),
-    GeocachingCacheEntityDescription(
-        key="find_count",
-        native_unit_of_measurement="finds",
-        value_fn=lambda cache: cache.findCount,
+    GeocachingCacheSensorDescription(
+        key="found",
+        value_fn=lambda cache: None
+        if cache.foundByUser is None
+        else "Yes"
+        if cache.foundByUser is True
+        else "No",
     ),
-    GeocachingCacheEntityDescription(
+    GeocachingCacheSensorDescription(
+        key="found_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda cache: cache.foundDateTime,
+    ),
+    GeocachingCacheSensorDescription(
         key="favorite_points",
         native_unit_of_measurement="points",
         value_fn=lambda cache: cache.favoritePoints,
     ),
-    GeocachingCacheEntityDescription(
+    GeocachingCacheSensorDescription(
         key="hide_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda cache: cache.hiddenDate,
@@ -229,14 +237,14 @@ TRACKABLE_SENSORS: tuple[GeocachingTrackableEntityDescription, ...] = (
 class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
     """Representation of a cache sensor."""
 
-    entity_description: GeocachingCacheEntityDescription
+    entity_description: GeocachingCacheSensorDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
-        description: GeocachingCacheEntityDescription,
+        description: GeocachingCacheSensorDescription,
         category: GeocacheCategory,
     ) -> None:
         """Initialize the Geocaching sensor."""
@@ -290,6 +298,7 @@ def get_cache_entities(
             for description in CACHE_SENSORS
         ]
     )
+
     return entities
 
 
