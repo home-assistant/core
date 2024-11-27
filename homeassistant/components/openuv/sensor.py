@@ -516,6 +516,11 @@ class VitaminDSensor(SensorEntity):
         self._attr_unique_id = (
             f"vitamin_d_{coordinator.latitude}_{coordinator.longitude}"
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.latitude}_{coordinator.longitude}")},
+            name="OpenUV",
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self.coordinator = coordinator
         super().__init__()
 
