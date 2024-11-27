@@ -147,6 +147,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
         if (not config.available_wake_words) or (config.max_active_wake_words < 1):
             self._attr_current_option = None
             self._wake_words.clear()
+            self.async_write_ha_state()
             return
 
         self._wake_words = {w.wake_word: w.id for w in config.available_wake_words}
