@@ -1190,11 +1190,15 @@ def ensure_via_device_exists(
     hass: HomeAssistant, device_info: DeviceInfo | None, config_entry: ConfigEntry
 ) -> None:
     """Ensure the via device is in the device registry."""
-    if device_info is None or CONF_VIA_DEVICE not in device_info:
+    if (
+        device_info is None
+        or CONF_VIA_DEVICE not in device_info
+        or (device_registry := dr.async_get(hass)).async_get_device(
+            identifiers={device_info["via_device"]}
+        )
+    ):
         return
-    device_registry = dr.async_get(hass)
-    if device_registry.async_get_device(identifiers={device_info["via_device"]}):
-        return
+
     # Ensure the via device exists in the device registry
     _LOGGER.debug(
         "Device identifier %s via_device reference from device_info %s "
