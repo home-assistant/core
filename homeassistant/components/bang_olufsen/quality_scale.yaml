@@ -49,9 +49,7 @@ rules:
   stale-devices:
     status: exempt
     comment: No devices should be removed at this point.
-  diagnostics:
-    status: todo
-    comment: Needs to be implemented
+  diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
