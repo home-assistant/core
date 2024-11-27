@@ -89,6 +89,7 @@ FLOWS = {
         "bluetooth",
         "bmw_connected_drive",
         "bond",
+        "borsmarthome",
         "bosch_shc",
         "braviatv",
         "bring",
