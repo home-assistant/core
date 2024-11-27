@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 # from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import _LOGGER, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .search import search_address  # imports search function from search.py
+from .search import (
+    get_address_coordinates,
+    get_Coordinates,
+    # AddressSearchView,
+    search_address,  # imports search function from search.py
+)
 
 # TODO List the platforms that you want to support. # pylint: disable=fixme
 # For your initial PR, limit it to 1 platform.
@@ -32,7 +39,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.states.async_set(f"{DOMAIN}.integration", "loaded")
 
     # Register the search service
-    hass.services.async_register(DOMAIN, "search", async_handle_search)
+    hass.services.async_register(
+        "openstreetmap",
+        "search",
+        async_handle_search,
+        schema=vol.Schema({vol.Required("query"): str}),
+    )
+
+    # Register the get_coordinates service. Not sure if this is needed
+    hass.services.async_register(
+        "openstreetmap",
+        "get_coordinates",
+        async_handle_get_coordinates,
+        schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
+    )
+
+    # Register the get_address_coordinates service
+    hass.services.async_register(
+        "openstreetmap",
+        "get_address_coordinates",
+        async_handle_get_address_coordinates,
+        schema=cv.make_entity_service_schema({vol.Required("query"): str}),
+    )
 
     return True
 
@@ -90,3 +118,46 @@ async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[st
         hass.states.async_set(f"{DOMAIN}.last_search", "Search successful")
 
     return results
+
+
+async def async_handle_get_coordinates(
+    hass: HomeAssistant, call: ServiceCall
+) -> dict[str, str]:
+    """Handle the service call for extracting coordinates from JSON.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        call (ServiceCall): The service call object containing the data payload.
+
+    Returns:
+        dict[str, str]: A dictionary containing the search results if json_data, or an error message.
+
+    """
+    json_data = call.data.get("json_data")
+    if not json_data:
+        _LOGGER.error("No JSON data provided")
+        return {"error": "No JSON data provided"}
+
+    return get_Coordinates(json_data)
+
+
+# Service handler for getting coordinates from an address
+async def async_handle_get_address_coordinates(
+    hass: HomeAssistant, call: ServiceCall
+) -> dict[str, str]:
+    """Handle the service call to get coordinates from an address query.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        call (ServiceCall): The service call object containing the data payload.
+
+    Returns:
+        dict[str, str]: A dictionary containing the search results if json_data, or an error message.
+
+    """
+    query = call.data.get("query")
+    if not query:
+        _LOGGER.error("No query provided")
+        return {"error": "No query provided"}
+
+    return get_address_coordinates(query)
