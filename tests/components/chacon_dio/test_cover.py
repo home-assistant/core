@@ -13,9 +13,7 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
@@ -73,7 +71,7 @@ async def test_update(
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 51
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 async def test_cover_actions(
@@ -95,7 +93,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -105,7 +103,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -115,7 +113,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -125,7 +123,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
 async def test_cover_callbacks(
@@ -161,19 +159,19 @@ async def test_cover_callbacks(
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 79
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await _callback_device_state_function(90, "up")
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     await _callback_device_state_function(60, "down")
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 60
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
 
 async def test_no_cover_found(

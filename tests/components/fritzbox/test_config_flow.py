@@ -198,7 +198,7 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -227,7 +227,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -236,7 +236,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"]["base"] == "no_devices_found"
 
     result = await hass.config_entries.flow.async_configure(

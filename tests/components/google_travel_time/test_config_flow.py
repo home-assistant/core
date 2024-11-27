@@ -200,7 +200,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) ->
     """Test reconfigure flow."""
     reconfigure_result = await mock_config.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
-    assert reconfigure_result["step_id"] == "reconfigure_confirm"
+    assert reconfigure_result["step_id"] == "reconfigure"
 
     await assert_common_reconfigure_steps(hass, reconfigure_result)
 

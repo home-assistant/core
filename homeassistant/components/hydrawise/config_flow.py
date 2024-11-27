@@ -10,7 +10,7 @@ from pydrawise import auth, client
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN, LOGGER
@@ -20,10 +20,6 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hydrawise."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Construct a ConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
 
     async def _create_or_update_entry(
         self,
@@ -49,20 +45,17 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(f"hydrawise-{user.customer_id}")
 
-        if not self.reauth_entry:
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Hydrawise",
                 data={CONF_USERNAME: username, CONF_PASSWORD: password},
             )
 
-        self.hass.config_entries.async_update_entry(
-            self.reauth_entry,
-            data=self.reauth_entry.data
-            | {CONF_USERNAME: username, CONF_PASSWORD: password},
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(),
+            data_updates={CONF_USERNAME: username, CONF_PASSWORD: password},
         )
-        await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -93,7 +86,4 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth after updating config to username/password."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()

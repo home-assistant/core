@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
-from functools import cached_property
 import logging
 
+from propcache import cached_property
 from roborock import HomeDataRoom
 from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
@@ -107,8 +106,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
         try:
-            await asyncio.gather(*(self._update_device_prop(), self.get_rooms()))
+            # Update device props and standard api information
+            await self._update_device_prop()
+            # Set the new map id from the updated device props
             self._set_current_map()
+            # Get the rooms for that map id.
+            await self.get_rooms()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         return self.roborock_device_info.props

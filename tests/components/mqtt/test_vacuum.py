@@ -292,7 +292,7 @@ async def test_command_without_command_topic(
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(hass, "some command", "vacuum.test")
+    await common.async_send_command(hass, "some command", entity_id="vacuum.test")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 

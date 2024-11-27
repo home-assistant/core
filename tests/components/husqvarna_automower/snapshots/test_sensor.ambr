@@ -162,6 +162,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -340,6 +343,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -442,6 +448,103 @@
     'state': 'no_error',
   })
 # ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Front lawn last time completed',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_last_time_completed',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_last_time_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 1 Front lawn last time completed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-12T05:54:29+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front lawn progress',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_progress',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Front lawn progress',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -449,11 +552,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -489,11 +592,11 @@
       'device_class': 'enum',
       'friendly_name': 'Test Mower 1 Mode',
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'context': <ANY>,
@@ -502,6 +605,103 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'main_area',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'My lawn last time completed',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'my_lawn_last_time_completed',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_last_time_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 1 My lawn last time completed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-12T03:07:49+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'My lawn progress',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'my_lawn_progress',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 My lawn progress',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_next_start-entry]
@@ -656,16 +856,16 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'all_work_areas_completed',
-        'daily_limit',
-        'external',
-        'fota',
-        'frost',
-        'none',
-        'not_applicable',
-        'park_override',
-        'sensor',
-        'week_schedule',
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -701,16 +901,16 @@
       'device_class': 'enum',
       'friendly_name': 'Test Mower 1 Restricted reason',
       'options': list([
-        'all_work_areas_completed',
-        'daily_limit',
-        'external',
-        'fota',
-        'frost',
-        'none',
-        'not_applicable',
-        'park_override',
-        'sensor',
-        'week_schedule',
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
       ]),
     }),
     'context': <ANY>,
@@ -1165,6 +1365,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -1343,6 +1546,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -1452,11 +1658,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1492,11 +1698,11 @@
       'device_class': 'enum',
       'friendly_name': 'Test Mower 2 Mode',
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'context': <ANY>,
@@ -1561,16 +1767,16 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'all_work_areas_completed',
-        'daily_limit',
-        'external',
-        'fota',
-        'frost',
-        'none',
-        'not_applicable',
-        'park_override',
-        'sensor',
-        'week_schedule',
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1606,16 +1812,16 @@
       'device_class': 'enum',
       'friendly_name': 'Test Mower 2 Restricted reason',
       'options': list([
-        'all_work_areas_completed',
-        'daily_limit',
-        'external',
-        'fota',
-        'frost',
-        'none',
-        'not_applicable',
-        'park_override',
-        'sensor',
-        'week_schedule',
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
       ]),
     }),
     'context': <ANY>,

@@ -652,13 +652,13 @@ type _FuncOrMethType[**_P, _R] = Callable[_P, _R]
 def retryable_database_job[**_P](
     description: str,
 ) -> Callable[[_FuncType[_P, bool]], _FuncType[_P, bool]]:
-    """Try to execute a database job.
+    """Execute a database job repeatedly until it succeeds.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
     def decorator(job: _FuncType[_P, bool]) -> _FuncType[_P, bool]:
-        return _wrap_func_or_meth(job, description, False)
+        return _wrap_retryable_database_job_func_or_meth(job, description, False)
 
     return decorator
 
@@ -666,18 +666,18 @@ def retryable_database_job[**_P](
 def retryable_database_job_method[_Self, **_P](
     description: str,
 ) -> Callable[[_MethType[_Self, _P, bool]], _MethType[_Self, _P, bool]]:
-    """Try to execute a database job.
+    """Execute a database job repeatedly until it succeeds.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
     def decorator(job: _MethType[_Self, _P, bool]) -> _MethType[_Self, _P, bool]:
-        return _wrap_func_or_meth(job, description, True)
+        return _wrap_retryable_database_job_func_or_meth(job, description, True)
 
     return decorator
 
 
-def _wrap_func_or_meth[**_P](
+def _wrap_retryable_database_job_func_or_meth[**_P](
     job: _FuncOrMethType[_P, bool], description: str, method: bool
 ) -> _FuncOrMethType[_P, bool]:
     recorder_pos = 1 if method else 0
@@ -705,10 +705,10 @@ def _wrap_func_or_meth[**_P](
     return wrapper
 
 
-def database_job_retry_wrapper[**_P](
-    description: str, attempts: int = 5
-) -> Callable[[_FuncType[_P, None]], _FuncType[_P, None]]:
-    """Try to execute a database job multiple times.
+def database_job_retry_wrapper[**_P, _R](
+    description: str, attempts: int
+) -> Callable[[_FuncType[_P, _R]], _FuncType[_P, _R]]:
+    """Execute a database job repeatedly until it succeeds, at most attempts times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
 
@@ -717,30 +717,61 @@ def database_job_retry_wrapper[**_P](
     """
 
     def decorator(
-        job: _FuncType[_P, None],
-    ) -> _FuncType[_P, None]:
-        @functools.wraps(job)
-        def wrapper(instance: Recorder, *args: _P.args, **kwargs: _P.kwargs) -> None:
-            for attempt in range(attempts):
-                try:
-                    job(instance, *args, **kwargs)
-                except OperationalError as err:
-                    if attempt == attempts - 1 or not _is_retryable_error(
-                        instance, err
-                    ):
-                        raise
-                    assert isinstance(err.orig, BaseException)  # noqa: PT017
-                    _LOGGER.info(
-                        "%s; %s failed, retrying", err.orig.args[1], description
-                    )
-                    time.sleep(instance.db_retry_wait)
-                    # Failed with retryable error
-                else:
-                    return
-
-        return wrapper
+        job: _FuncType[_P, _R],
+    ) -> _FuncType[_P, _R]:
+        return _database_job_retry_wrapper_func_or_meth(
+            job, description, attempts, False
+        )
 
     return decorator
+
+
+def database_job_retry_wrapper_method[_Self, **_P, _R](
+    description: str, attempts: int
+) -> Callable[[_MethType[_Self, _P, _R]], _MethType[_Self, _P, _R]]:
+    """Execute a database job repeatedly until it succeeds, at most attempts times.
+
+    This wrapper handles InnoDB deadlocks and lock timeouts.
+
+    This is different from retryable_database_job in that it will retry the job
+    attempts number of times instead of returning False if the job fails.
+    """
+
+    def decorator(
+        job: _MethType[_Self, _P, _R],
+    ) -> _MethType[_Self, _P, _R]:
+        return _database_job_retry_wrapper_func_or_meth(
+            job, description, attempts, True
+        )
+
+    return decorator
+
+
+def _database_job_retry_wrapper_func_or_meth[**_P, _R](
+    job: _FuncOrMethType[_P, _R],
+    description: str,
+    attempts: int,
+    method: bool,
+) -> _FuncOrMethType[_P, _R]:
+    recorder_pos = 1 if method else 0
+
+    @functools.wraps(job)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        instance: Recorder = args[recorder_pos]  # type: ignore[assignment]
+        for attempt in range(attempts):
+            try:
+                return job(*args, **kwargs)
+            except OperationalError as err:
+                # Failed with retryable error
+                if attempt == attempts - 1 or not _is_retryable_error(instance, err):
+                    raise
+                assert isinstance(err.orig, BaseException)  # noqa: PT017
+                _LOGGER.info("%s; %s failed, retrying", err.orig.args[1], description)
+                time.sleep(instance.db_retry_wait)
+
+        raise ValueError("attempts must be a positive integer")
+
+    return wrapper
 
 
 def periodic_db_cleanups(instance: Recorder) -> None:

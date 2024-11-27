@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any, TypedDict, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

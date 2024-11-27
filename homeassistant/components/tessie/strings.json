@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
@@ -62,9 +63,6 @@
       },
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"
-      },
-      "vehicle_state_speed_limit_mode_active": {
-        "name": "Speed limit"
       }
     },
     "media_player": {
@@ -530,41 +528,6 @@
     },
     "command_failed": {
       "message": "Command failed, {message}"
-    }
-  },
-  "issues": {
-    "deprecated_speed_limit_entity": {
-      "title": "Detected Tessie speed limit lock entity usage",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_entity::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then select **Submit** to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_speed_limit_locked": {
-      "title": "Detected Tessie speed limit lock entity locked",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_locked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select **Submit** to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_speed_limit_unlocked": {
-      "title": "Detected Tessie speed limit lock entity unlocked",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_unlocked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select **Submit** to fix this issue."
-          }
-        }
-      }
     }
   }
 }

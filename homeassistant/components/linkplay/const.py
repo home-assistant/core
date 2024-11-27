@@ -1,7 +1,12 @@
 """LinkPlay constants."""
 
+from linkplay.controller import LinkPlayController
+
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "linkplay"
-PLATFORMS = [Platform.MEDIA_PLAYER]
+CONTROLLER = "controller"
+CONTROLLER_KEY: HassKey[LinkPlayController] = HassKey(CONTROLLER)
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 DATA_SESSION = "session"

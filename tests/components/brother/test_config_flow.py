@@ -261,7 +261,7 @@ async def test_reconfigure_successful(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -297,7 +297,7 @@ async def test_reconfigure_not_successful(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     mock_brother_client.async_update.side_effect = exc
 
@@ -307,7 +307,7 @@ async def test_reconfigure_not_successful(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": base_error}
 
     mock_brother_client.async_update.side_effect = None
@@ -336,7 +336,7 @@ async def test_reconfigure_invalid_hostname(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -344,7 +344,7 @@ async def test_reconfigure_invalid_hostname(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
@@ -359,7 +359,7 @@ async def test_reconfigure_not_the_same_device(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     mock_brother_client.serial = "9876543210"
 
@@ -369,5 +369,5 @@ async def test_reconfigure_not_the_same_device(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "another_device"}

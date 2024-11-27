@@ -13,7 +13,7 @@
           "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure madVR Envy",
         "description": "Your device needs to be on in order to reconfigure the integation.",
         "data": {
@@ -28,12 +28,12 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable.",
-      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
     }
   },
   "entity": {

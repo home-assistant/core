@@ -17,7 +17,7 @@ from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -120,11 +120,11 @@ class SystemBridgeConfigFlow(
     VERSION = 1
     MINOR_VERSION = 2
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._name: str | None = None
         self._input: dict[str, Any] = {}
-        self._reauth = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -157,15 +157,13 @@ class SystemBridgeConfigFlow(
             user_input = {**self._input, **user_input}
             errors, info = await _async_get_info(self.hass, user_input)
             if not errors and info is not None:
-                # Check if already configured
-                existing_entry = await self.async_set_unique_id(info["uuid"])
+                await self.async_set_unique_id(info["uuid"])
 
-                if self._reauth and existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=user_input
                     )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
 
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: info["hostname"]}
@@ -212,7 +210,6 @@ class SystemBridgeConfigFlow(
             CONF_HOST: entry_data[CONF_HOST],
             CONF_PORT: entry_data[CONF_PORT],
         }
-        self._reauth = True
         return await self.async_step_authenticate()
 
 
