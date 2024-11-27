@@ -17,6 +17,11 @@
         "data": {
           "from": "Start station",
           "to": "End station",
+          "via": "Via stations"
+        },
+        "data_description": {
+          "from": "The departure station for the start of the connection.",
+          "to": "The arrival station for the end of the connection.",
           "via": "List of up to 5 via stations"
         },
         "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
