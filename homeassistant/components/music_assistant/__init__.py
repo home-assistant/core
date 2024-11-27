@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -28,7 +28,6 @@ from .const import DOMAIN, LOGGER
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
