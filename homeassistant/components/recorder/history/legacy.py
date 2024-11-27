@@ -496,7 +496,6 @@ def _get_rows_with_session(
 
     oldest_ts = get_instance(hass).states_manager.oldest_ts
 
-    # Can we use  the faster dt_util.utc_to_timestamp here?
     if oldest_ts is None or oldest_ts > utc_point_in_time.timestamp():
         # We don't have any states for the requested time
         return []

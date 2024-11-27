@@ -101,7 +101,6 @@ class StatesManager:
             Sequence[Row[Any]],
             execute_stmt_lambda_element(session, find_oldest_state()),
         )
-        # Should we allow a scalar option to execute_stmt_lambda_element?
         if not result:
             ts = None
         else:

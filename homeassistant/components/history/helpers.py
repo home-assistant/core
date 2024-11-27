@@ -30,6 +30,5 @@ def has_states_before(hass: HomeAssistant, run_time: dt) -> bool:
 
     Returns True if there may be such states.
     """
-    # Can we use the faster dt_util.utc_to_timestamp here?
     oldest_ts = get_instance(hass).states_manager.oldest_ts
     return oldest_ts is not None and run_time.timestamp() >= oldest_ts

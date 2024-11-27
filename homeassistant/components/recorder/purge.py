@@ -125,7 +125,6 @@ def purge_old_data(
         _purge_old_recorder_runs(instance, session, purge_before)
     if repack:
         repack_database(instance)
-    # This should maybe instead happen in the PurgeTask?
     instance.states_manager.load_from_db(session)
     return True
 
