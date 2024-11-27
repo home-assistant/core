@@ -56,17 +56,20 @@
       "cache_owner": {
         "name": "Owner"
       },
-      "cache_location": {
-        "name": "Location"
+      "cache_found_date": {
+        "name": "Found date"
       },
-      "cache_find_count": {
-        "name": "Find count"
+      "cache_found": {
+        "name": "Found"
       },
       "cache_favorite_points": {
         "name": "Favorite points"
       },
       "cache_hide_date": {
         "name": "Hide date"
+      },
+      "cache_location": {
+        "name": "Location"
       },
       "trackable_name": {
         "name": "Name"

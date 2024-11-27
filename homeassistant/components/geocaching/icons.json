@@ -28,17 +28,20 @@
       "cache_owner": {
         "default": "mdi:account"
       },
-      "cache_location": {
-        "default": "mdi:map-marker"
+      "cache_found_date": {
+        "default": "mdi:calendar-search"
       },
-      "cache_find_count": {
-        "default": "mdi:eye-check-outline"
+      "cache_found": {
+        "default": "mdi:package-variant-closed-check"
       },
       "cache_favorite_points": {
         "default": "mdi:star-check"
       },
       "cache_hide_date": {
-        "default": "mdi:calendar-range"
+        "default": "mdi:calendar-badge"
+      },
+      "cache_location": {
+        "default": "mdi:map-marker"
       },
       "trackable_name": {
         "default": "mdi:label"
@@ -56,7 +59,7 @@
         "default": "mdi:package-variant-closed"
       },
       "trackable_release_date": {
-        "default": "mdi:calendar-range"
+        "default": "mdi:calendar-badge"
       }
     }
   }
