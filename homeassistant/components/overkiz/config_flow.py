@@ -153,6 +153,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 # for Overkiz API server, the hardware is not supported.
                 if user_input[CONF_HUB] in {
                     Server.ATLANTIC_COZYTOUCH,
+                    Server.SAUTER_COZYTOUCH,
                     Server.THERMOR_COZYTOUCH,
                 } and not isinstance(exception, CozyTouchBadCredentialsException):
                     description_placeholders["unsupported_device"] = "CozyTouch"
