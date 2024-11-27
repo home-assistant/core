@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import translation
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -1988,3 +1989,9 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
+
+    # Reset the `cloud` translations cache
+    translations_cache = translation._async_get_translations_cache(hass)
+    loaded_translations = translations_cache.cache_data.loaded
+    for language in loaded_translations:
+        loaded_translations[language].discard("cloud")
