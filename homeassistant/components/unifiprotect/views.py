@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
 from aiohttp import web
@@ -30,7 +30,9 @@ def async_generate_thumbnail_url(
 ) -> str:
     """Generate URL for event thumbnail."""
 
-    url_format = ThumbnailProxyView.url or "{nvr_id}/{event_id}"
+    url_format = ThumbnailProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
     url = url_format.format(nvr_id=nvr_id, event_id=event_id)
 
     params = {}
@@ -50,7 +52,9 @@ def async_generate_event_video_url(event: Event) -> str:
     if event.start is None or event.end is None:
         raise ValueError("Event is ongoing")
 
-    url_format = VideoProxyView.url or "{nvr_id}/{camera_id}/{start}/{end}"
+    url_format = VideoProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
     return url_format.format(
         nvr_id=event.api.bootstrap.nvr.id,
         camera_id=event.camera_id,
@@ -66,7 +70,9 @@ def async_generate_proxy_event_video_url(
 ) -> str:
     """Generate proxy URL for event video."""
 
-    url_format = VideoEventProxyView.url or "{nvr_id}/{event_id}"
+    url_format = VideoEventProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
     return url_format.format(nvr_id=nvr_id, event_id=event_id)
 
 
