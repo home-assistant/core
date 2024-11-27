@@ -33,7 +33,7 @@ class PowerfoxSensorEntityDescription(Generic[T], SensorEntityDescription):
     value_fn: Callable[[T], StateType]
 
 
-SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
+SENSORS_POWER: tuple[PowerfoxSensorEntityDescription[PowerMeter], ...] = (
     PowerfoxSensorEntityDescription[PowerMeter](
         key="power",
         translation_key="power",
@@ -77,7 +77,7 @@ SENSORS_POWER: tuple[PowerfoxSensorEntityDescription, ...] = (
 )
 
 
-SENSORS_WATER: tuple[PowerfoxSensorEntityDescription, ...] = (
+SENSORS_WATER: tuple[PowerfoxSensorEntityDescription[WaterMeter], ...] = (
     PowerfoxSensorEntityDescription[WaterMeter](
         key="cold_water",
         translation_key="cold_water",
