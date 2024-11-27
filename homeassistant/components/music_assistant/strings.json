@@ -40,7 +40,7 @@
   "services": {
     "play_media": {
       "name": "Play media",
-      "description": "Play media on a Music Assistant player with more fine grained control options.",
+      "description": "Play media on a Music Assistant player with more fine-grained control options.",
       "fields": {
         "media_id": {
           "name": "Media ID(s)",
@@ -48,7 +48,7 @@
         },
         "media_type": {
           "name": "Media type",
-          "description": "The type of the content to play. Such as artist, album, track or playlist. Will be auto determined if omitted."
+          "description": "The type of the content to play. Such as artist, album, track or playlist. Will be auto-determined if omitted."
         },
         "enqueue": {
           "name": "Enqueue",
