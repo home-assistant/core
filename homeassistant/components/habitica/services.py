@@ -19,6 +19,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import (
@@ -26,8 +27,10 @@ from .const import (
     ATTR_CONFIG_ENTRY,
     ATTR_DATA,
     ATTR_DIRECTION,
+    ATTR_ITEM,
     ATTR_PATH,
     ATTR_SKILL,
+    ATTR_TARGET,
     ATTR_TASK,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
@@ -41,6 +44,7 @@ from .const import (
     SERVICE_SCORE_HABIT,
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
+    SERVICE_TRANSFORMATION,
 )
 from .types import HabiticaConfigEntry
 
@@ -76,6 +80,14 @@ SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_ITEM): cv.string,
+        vol.Required(ATTR_TARGET): cv.string,
+    }
+)
+
 
 def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     """Return config entry or raise if not found or not loaded."""
@@ -96,6 +108,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
 
     async def handle_api_call(call: ServiceCall) -> None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_api_call",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_api_call",
+        )
+        _LOGGER.warning(
+            "Deprecated action called: 'habitica.api_call' is deprecated and will be removed in Home Assistant version 2025.6.0"
+        )
+
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
@@ -280,6 +305,83 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             await coordinator.async_request_refresh()
             return response
 
+    async def transformation(call: ServiceCall) -> ServiceResponse:
+        """User a transformation item on a player character."""
+
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        ITEMID_MAP = {
+            "snowball": {"itemId": "snowball"},
+            "spooky_sparkles": {"itemId": "spookySparkles"},
+            "seafoam": {"itemId": "seafoam"},
+            "shiny_seed": {"itemId": "shinySeed"},
+        }
+        # check if target is self
+        if call.data[ATTR_TARGET] in (
+            coordinator.data.user["id"],
+            coordinator.data.user["profile"]["name"],
+            coordinator.data.user["auth"]["local"]["username"],
+        ):
+            target_id = coordinator.data.user["id"]
+        else:
+            # check if target is a party member
+            try:
+                party = await coordinator.api.groups.party.members.get()
+            except ClientResponseError as e:
+                if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                    ) from e
+                if e.status == HTTPStatus.NOT_FOUND:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="party_not_found",
+                    ) from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_call_exception",
+                ) from e
+            try:
+                target_id = next(
+                    member["id"]
+                    for member in party
+                    if call.data[ATTR_TARGET].lower()
+                    in (
+                        member["id"],
+                        member["auth"]["local"]["username"].lower(),
+                        member["profile"]["name"].lower(),
+                    )
+                )
+            except StopIteration as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="target_not_found",
+                    translation_placeholders={"target": f"'{call.data[ATTR_TARGET]}'"},
+                ) from e
+        try:
+            response: dict[str, Any] = await coordinator.api.user.class_.cast[
+                ITEMID_MAP[call.data[ATTR_ITEM]]["itemId"]
+            ].post(targetId=target_id)
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"item": call.data[ATTR_ITEM]},
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        else:
+            return response
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,
@@ -307,5 +409,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         SERVICE_SCORE_REWARD,
         score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TRANSFORMATION,
+        transformation,
+        schema=SERVICE_TRANSFORMATION_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

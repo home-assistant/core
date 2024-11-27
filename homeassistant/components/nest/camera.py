@@ -19,11 +19,11 @@ from google_nest_sdm.camera_traits import (
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
-    StreamType,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
@@ -253,11 +253,6 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
         self._refresh_unsub: dict[str, Callable[[], None]] = {}
 
-    @property
-    def frontend_stream_type(self) -> StreamType | None:
-        """Return the type of stream supported by this camera."""
-        return StreamType.WEB_RTC
-
     async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
         if not (webrtc_stream := self._webrtc_sessions.get(session_id)):
@@ -301,6 +296,12 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             functools.partial(self._async_refresh_stream, session_id),
         )
         self._refresh_unsub[session_id] = refresh.unsub
+
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
+        """Ignore WebRTC candidates for Nest cloud based cameras."""
+        return
 
     @callback
     def close_webrtc_session(self, session_id: str) -> None:

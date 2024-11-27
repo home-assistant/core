@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
@@ -12,6 +13,9 @@ from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     DOMAIN,
+)
+from homeassistant.components.unifiprotect.data import (
+    async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -286,3 +290,63 @@ async def test_device_remove_devices_nvr(
     client = await hass_ws_client(hass)
     response = await client.remove_device(live_device_entry.id, entry_id)
     assert not response["success"]
+
+
+@pytest.mark.parametrize(
+    ("mock_entries", "expected_result"),
+    [
+        pytest.param(
+            [
+                Mock(
+                    spec=ConfigEntry,
+                    domain=DOMAIN,
+                    runtime_data=Mock(api="mock_api_instance_1"),
+                ),
+                Mock(
+                    spec=ConfigEntry,
+                    domain="other_domain",
+                    runtime_data=Mock(api="mock_api_instance_2"),
+                ),
+            ],
+            "mock_api_instance_1",
+            id="one_matching_domain",
+        ),
+        pytest.param(
+            [
+                Mock(
+                    spec=ConfigEntry,
+                    domain="other_domain",
+                    runtime_data=Mock(api="mock_api_instance_1"),
+                ),
+                Mock(
+                    spec=ConfigEntry,
+                    domain="other_domain",
+                    runtime_data=Mock(api="mock_api_instance_2"),
+                ),
+            ],
+            None,
+            id="no_matching_domain",
+        ),
+    ],
+)
+async def test_async_ufp_instance_for_config_entry_ids(
+    mock_entries, expected_result
+) -> None:
+    """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
+
+    hass = Mock(spec=HomeAssistant)
+
+    mock_entry_mapping = {
+        str(index): entry for index, entry in enumerate(mock_entries, start=1)
+    }
+
+    def mock_async_get_entry(entry_id):
+        return mock_entry_mapping.get(entry_id)
+
+    hass.config_entries.async_get_entry = Mock(side_effect=mock_async_get_entry)
+
+    entry_ids = set(mock_entry_mapping.keys())
+
+    result = async_ufp_instance_for_config_entry_ids(hass, entry_ids)
+
+    assert result == expected_result
