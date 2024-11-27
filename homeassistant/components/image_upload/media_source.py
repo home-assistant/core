@@ -32,7 +32,7 @@ class ImageUploadMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        image = self.hass.data[DOMAIN].data.get(item.identifier, None)
+        image = self.hass.data[DOMAIN].data.get(item.identifier)
 
         if not image:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
