@@ -16,6 +16,7 @@ from habiticalib import (
     HabiticaTaskOrderResponse,
     HabiticaTaskResponse,
     HabiticaTasksResponse,
+    HabiticaUserAnonymizedrResponse,
     HabiticaUserResponse,
     NotAuthorizedError,
     NotFoundError,
@@ -134,6 +135,11 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         )
         client.reorder_task.return_value = HabiticaTaskOrderResponse.from_dict(
             {"data": [], "success": True}
+        )
+        client.get_user_anonymized.return_value = (
+            HabiticaUserAnonymizedrResponse.from_json(
+                load_fixture("anonymized.json", DOMAIN)
+            )
         )
         client.habitipy.return_value = {
             "tasks": {
