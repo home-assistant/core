@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from music_assistant_models.enums import MediaType, QueueOption
 from music_assistant_models.media_items import Track
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -21,14 +22,18 @@ from homeassistant.components.music_assistant.media_player import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
     ATTR_ARTIST,
+    ATTR_AUTO_PLAY,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_RADIO_MODE,
+    ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,
+    SERVICE_TRANSFER_QUEUE,
 )
+from homeassistant.config_entries import HomeAssistantError
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -450,4 +455,63 @@ async def test_media_player_play_announcement_action(
         url="http://blah.com/announcement.mp3",
         use_pre_announce=True,
         volume_level=50,
+    )
+
+
+async def test_media_player_transfer_queue_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player transfer_queu action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_TRANSFER_QUEUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_SOURCE_PLAYER: "media_player.my_super_test_player_2",
+            ATTR_AUTO_PLAY: True,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/transfer",
+        source_queue_id="00:00:00:00:00:02",
+        target_queue_id="00:00:00:00:00:01",
+        auto_play=True,
+        require_schema=25,
+    )
+    # test again with invalid source player
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(HomeAssistantError, match="Source player not available."):
+        await hass.services.async_call(
+            MASS_DOMAIN,
+            SERVICE_TRANSFER_QUEUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_SOURCE_PLAYER: "media_player.blah_blah",
+            },
+            blocking=True,
+        )
+    # test again with no source player specified (which picks first playing playerqueue)
+    music_assistant_client.send_command.reset_mock()
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_TRANSFER_QUEUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/transfer",
+        source_queue_id="test_group_player_1",
+        target_queue_id="00:00:00:00:00:01",
+        auto_play=None,
+        require_schema=25,
     )
