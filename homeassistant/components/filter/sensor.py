@@ -69,6 +69,7 @@ CONF_FILTER_WINDOW_SIZE = "window_size"
 CONF_FILTER_PRECISION = "precision"
 CONF_FILTER_RADIUS = "radius"
 CONF_FILTER_TIME_CONSTANT = "time_constant"
+CONF_FILTER_UPDATE_BY_TIME = "update_by_time"
 CONF_FILTER_LOWER_BOUND = "lower_bound"
 CONF_FILTER_UPPER_BOUND = "upper_bound"
 CONF_TIME_SMA_TYPE = "type"
@@ -86,7 +87,7 @@ DEFAULT_FILTER_TIME_CONSTANT = 10
 NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=3)
 
 FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
 
@@ -131,6 +132,7 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
         vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_FILTER_UPDATE_BY_TIME, default=False): cv.boolean,
     }
 )
 
@@ -227,7 +229,7 @@ class SensorFilter(SensorEntity):
 
         self._attr_should_poll = False
         for filt in filters:
-            if isinstance(filt, TimeSMAFilter):
+            if getattr(filt, "update_by_time", False):
                 self._attr_should_poll = True
                 break
 
@@ -661,6 +663,7 @@ class TimeSMAFilter(Filter):
         entity: str,
         type: str,  # pylint: disable=redefined-builtin
         precision: int = DEFAULT_PRECISION,
+        update_by_time: bool = False,
     ) -> None:
         """Initialize Filter.
 
@@ -670,6 +673,7 @@ class TimeSMAFilter(Filter):
             FILTER_NAME_TIME_SMA, window_size, precision=precision, entity=entity
         )
         self._time_window = window_size
+        self.update_by_time = update_by_time
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
 
