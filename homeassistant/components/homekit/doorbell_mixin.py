@@ -10,12 +10,13 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HassJobType,
+    HomeAssistant,
     State,
     callback,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .accessories import HomeAccessory
+from .accessories import HomeAccessory, HomeDriver
 from .const import (
     CHAR_MUTE,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
@@ -36,9 +37,30 @@ DOORBELL_LONG_PRESS = 2
 class DoorbellMixin(HomeAccessory):
     """Base class including doorball event."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+        category: int,
+        **kwargs: Any,
+    ) -> None:
         """Initialize doorbell mixin accessory object."""
-        super().__init__(*args)
+        super().__init__(
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            category,
+            *args,  # noqa: B026
+            **kwargs,
+        )
 
         self.char_doorbell_detected = None
         self.char_doorbell_detected_switch = None

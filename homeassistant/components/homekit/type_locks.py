@@ -1,9 +1,7 @@
 """Class to hold all lock accessories."""
 
 import logging
-from typing import Any
 
-import DoorbellMixin
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -12,6 +10,7 @@ from homeassistant.core import State, callback
 
 from .accessories import TYPES
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
+from .doorbell_mixin import DoorbellMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +53,13 @@ STATE_TO_SERVICE = {
 
 
 @TYPES.register("Lock")
-class Lock(DoorbellMixin):  # type: ignore[misc]
+class Lock(DoorbellMixin):
     """Generate a Lock accessory for a lock entity.
 
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self._code = self.config.get(ATTR_CODE)

@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import DoorbellMixin
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
@@ -64,6 +63,7 @@ from .const import (
     DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_MOTION_SENSOR,
 )
+from .doorbell_mixin import DoorbellMixin
 from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
