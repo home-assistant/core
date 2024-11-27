@@ -39,7 +39,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
+  parallel-updates: todo
   reauthentication-flow:
     status: exempt
     comment: Devices don't require authentication
@@ -56,7 +56,7 @@ rules:
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: done
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
@@ -69,9 +69,11 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Actually exempt, there is nothing that could be reconfigured.
-  repair-issues: todo
+    status: exempt
+    comment: Reconfiguration would force a new config entry
+  repair-issues:
+    status: exempt
+    comment: no repairs/issues
   stale-devices: todo
 
   # Platinum
