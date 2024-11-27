@@ -100,6 +100,7 @@ async def test_reauth(
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""
+    mock_setup_entry.reset_mock()
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
