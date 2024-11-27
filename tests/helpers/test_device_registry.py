@@ -1525,7 +1525,8 @@ async def test_specifying_via_device_create(
         via_device=("hue", "non_existing_123"),
     )
     assert {
-        "Unable to create reference for non existing `via_device` "
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
         '("hue","non_existing_123")' in caplog.text
     }
     assert light_via_nonexisting_parent_device is not None
@@ -1590,7 +1591,8 @@ async def test_specifying_via_device_update(
         via_device=("hue", "non_existing_abc"),
     )
     assert {
-        "Unable to create reference for non existing `via_device` "
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
         '("hue","non_existing_123")' in caplog.text
     }
     # Assert the name was updated correctly

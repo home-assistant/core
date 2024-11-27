@@ -38,6 +38,7 @@ from .deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -822,11 +823,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         if via_device is not None and via_device is not UNDEFINED:
             if (via := self.async_get_device(identifiers={via_device})) is None:
-                _LOGGER.warning(
-                    "Unable to create reference for non existing "
-                    "`via_device` %s in device info %s",
-                    via_device,
-                    device_info,
+                report_usage(
+                    "calls `device_registry.async_get_or_create` referencing a "
+                    f"non existing `via_device` {via_device}, "
+                    f"with device info: {device_info}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2025.12.0",
                 )
 
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
