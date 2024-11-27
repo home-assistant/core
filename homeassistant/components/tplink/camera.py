@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -73,7 +72,7 @@ async def async_setup_entry(
 
 
 class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
-    """Representation of a TPLink thermostat."""
+    """Representation of a TPLink camera."""
 
     _attr_name = None
     _attr_supported_features = CameraEntityFeature.STREAM | CameraEntityFeature.ON_OFF
@@ -88,7 +87,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         parent: Device | None = None,
         ffmpeg_manager: ffmpeg.FFmpegManager,
     ) -> None:
-        """Initialize a Ring Door Bell camera."""
+        """Initialize a TPlink camera."""
         self._description = description
         self._camera_module = camera_module
         super().__init__(device, coordinator, parent=parent)
@@ -108,10 +107,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         self._attr_is_on = self._camera_module.is_on
         self._video_url = self._camera_module.stream_rtsp_url()
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {}
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream."""
+        return self._video_url
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
