@@ -638,6 +638,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             if x.sync_status.id in follower_ids
         ]
         follower_names.insert(0, leader_sync_status.name)
+        return follower_names
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
