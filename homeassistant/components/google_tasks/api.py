@@ -63,6 +63,12 @@ class AsyncConfigEntryAuth:
         result = await self._execute(cmd)
         return result["items"]
 
+    async def delete_task_list(self, task_list_id: str) -> None:
+        """Delete a task list."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasklists().delete(tasklist=task_list_id)
+        await self._execute(cmd)
+
     async def list_tasks(self, task_list_id: str) -> list[dict[str, Any]]:
         """Get all Task resources for the task list."""
         service = await self._get_service()

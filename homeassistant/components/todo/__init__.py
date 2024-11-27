@@ -125,6 +125,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
+        TodoServices.REMOVE_LIST,
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_ITEM): cv.string,
+            }
+        ),
+        _async_remove_list,
+        required_features=[TodoListEntityFeature.REMOVE_LIST],
+    )
+    component.async_register_entity_service(
         TodoServices.ADD_ITEM,
         vol.All(
             cv.make_entity_service_schema(
@@ -320,6 +330,10 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         super()._async_write_ha_state()
         self.async_update_listeners()
 
+    async def async_remove_list(self) -> None:
+        """Remove the To-do list."""
+        raise NotImplementedError
+
 
 @websocket_api.websocket_command(
     {
@@ -472,6 +486,11 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
             },
         )
     )
+
+
+async def _async_remove_list(entity: TodoListEntity, _: ServiceCall) -> None:
+    """Remove the To-do list."""
+    await entity.async_remove_list()
 
 
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:

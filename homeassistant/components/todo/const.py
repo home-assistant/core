@@ -27,6 +27,7 @@ ATTR_STATUS = "status"
 class TodoServices(StrEnum):
     """Services for the To-do integration."""
 
+    REMOVE_LIST = "remove_list"
     ADD_ITEM = "add_item"
     UPDATE_ITEM = "update_item"
     REMOVE_ITEM = "remove_item"
@@ -44,6 +45,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    REMOVE_LIST = 256
 
 
 class TodoItemStatus(StrEnum):
