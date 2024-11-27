@@ -504,6 +504,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.suggested_unit_of_measurement
         return None
 
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
+        )
+
     @final
     @property
     @override
@@ -531,7 +542,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             return self.hass.config.units.temperature_unit
 
-        # Fourth priority: Native unit
+        # Fourth priority: Unit translation
+        if (translation_key := self._unit_of_measurement_translation_key) and (
+            unit_of_measurement
+            := self.platform.default_language_platform_translations.get(translation_key)
+        ):
+            return unit_of_measurement
+
+        # Lowest priority: Native unit
         return native_unit_of_measurement
 
     @final

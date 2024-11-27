@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.53.2
+PySwitchbot==0.54.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -351,7 +351,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.0.1
+aioshelly==12.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1329,7 +1329,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.5.2
+plugwise==1.6.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2086,7 +2086,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.6.0
+samsungtvws[async,encrypted]==2.7.0
 
 # homeassistant.components.sanix
 sanix==1.0.6
@@ -2458,13 +2458,13 @@ yt-dlp[default]==2024.11.04
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.136.0
+zeroconf==0.136.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.39
+zha==0.0.40
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.59.1
