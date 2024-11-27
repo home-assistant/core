@@ -12,15 +12,15 @@ def _has_async_function(module: ast.Module, name: str) -> bool:
     )
 
 
-def validate(integration: Integration) -> str | None:
+def validate(integration: Integration) -> list[str] | None:
     """Validate that the integration has a config flow."""
 
     init_file = integration.path / "__init__.py"
     init = ast.parse(init_file.read_text())
 
     if not _has_async_function(init, "async_unload_entry"):
-        return (
+        return [
             "Integration does not support config entry unloading "
             "(is missing `async_unload_entry` in __init__.py)"
-        )
+        ]
     return None

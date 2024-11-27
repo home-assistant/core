@@ -8,7 +8,7 @@ from script.hassfest.model import Integration
 class RuleValidationProtocol(Protocol):
     """Protocol for rule validation."""
 
-    def validate(self, integration: Integration) -> str | None:
+    def validate(self, integration: Integration) -> list[str] | None:
         """Validate a quality scale rule.
 
         Returns error (if any).
