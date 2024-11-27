@@ -13,8 +13,12 @@
         "description": "The integration can track caches and trackables, for which entities will be generated",
         "sections": {
           "nearby_settings": {
-            "name": "Nearby Caches Settings",
-            "description": "Configure nearby caches settings"
+            "name": "Nearby Geocaches Settings",
+            "description": "Configure nearby geocaches settings. Set the max count to 0 to disable generating entities for nearby geocaches",
+            "data": {
+              "nearby_caches_max_count": "Nearby Geocaches Max Count",
+              "nearby_caches_radius": "Nearby Geocaches Radius"
+            }
           },
           "tracked_geocache_ids": {
             "name": "Tracked Geocaches",
