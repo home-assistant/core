@@ -34,7 +34,7 @@ async def __upload_test_image(
 
         file = await hass.async_add_executor_job(TEST_IMAGE.open, "rb")
         res = await client.post("/api/image/upload", data={"file": file})
-        file.close()
+        hass.async_add_executor_job(file.close)
 
         assert res.status == 200
         item = await res.json()
