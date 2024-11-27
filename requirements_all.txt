@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.53.2
+PySwitchbot==0.54.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -369,7 +369,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.0.1
+aioshelly==12.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -453,7 +453,7 @@ amberelectric==2.0.12
 amcrest==1.9.8
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.73
+androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.1.2
@@ -1130,7 +1130,7 @@ hole==0.8.0
 holidays==0.61
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241106.2
+home-assistant-frontend==20241127.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.11.13
@@ -1622,7 +1622,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.5.2
+plugwise==1.6.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2362,7 +2362,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.7
+python-kasa[speedups]==0.8.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.20
@@ -2610,7 +2610,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.6.0
+samsungtvws[async,encrypted]==2.7.0
 
 # homeassistant.components.sanix
 sanix==1.0.6
@@ -3075,13 +3075,13 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.136.0
+zeroconf==0.136.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.39
+zha==0.0.40
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

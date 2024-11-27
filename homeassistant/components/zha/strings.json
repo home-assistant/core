@@ -600,6 +600,12 @@
       },
       "self_test": {
         "name": "Self-test"
+      },
+      "reset_summation_delivered": {
+        "name": "Reset summation delivered"
+      },
+      "restart_device": {
+        "name": "Restart device"
       }
     },
     "climate": {
@@ -798,6 +804,24 @@
       },
       "off_led_intensity": {
         "name": "Off LED intensity"
+      },
+      "frost_protection_temperature": {
+        "name": "Frost protection temperature"
+      },
+      "valve_opening_degree": {
+        "name": "Valve opening degree"
+      },
+      "valve_closing_degree": {
+        "name": "Valve closing degree"
+      },
+      "siren_time": {
+        "name": "Siren time"
+      },
+      "timer_time_left": {
+        "name": "Timer time left"
+      },
+      "approach_distance": {
+        "name": "Approach distance"
       }
     },
     "select": {
@@ -899,6 +923,9 @@
       },
       "off_led_color": {
         "name": "Off LED color"
+      },
+      "external_trigger_mode": {
+        "name": "External trigger mode"
       }
     },
     "sensor": {
@@ -1096,6 +1123,15 @@
       },
       "valve_status_2": {
         "name": "Status 2"
+      },
+      "timer_state": {
+        "name": "Timer state"
+      },
+      "last_valve_open_duration": {
+        "name": "Last valve open duration"
+      },
+      "motion_distance": {
+        "name": "Motion distance"
       }
     },
     "switch": {
@@ -1209,6 +1245,18 @@
       },
       "double_up_full": {
         "name": "Double tap on - full"
+      },
+      "open_window": {
+        "name": "Open window"
+      },
+      "turbo_mode": {
+        "name": "Turbo mode"
+      },
+      "detach_relay": {
+        "name": "Detach relay"
+      },
+      "enable_siren": {
+        "name": "Enable siren"
       }
     }
   }
