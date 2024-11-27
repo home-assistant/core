@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async import TedeeLock
+from aiotedee import TedeeLock
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

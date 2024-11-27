@@ -1,13 +1,15 @@
 """Config flow for La Marzocco integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -22,9 +24,9 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -124,6 +126,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 return await self.async_step_machine_selection()
 
+        placeholders: dict[str, str] | None = None
+        if self._discovered:
+            self.context["title_placeholders"] = placeholders = {
+                CONF_NAME: self._discovered[CONF_MACHINE]
+            }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -133,6 +141,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_machine_selection(
@@ -276,7 +285,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         serial = discovery_info.hostname.upper()
 
         await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: discovery_info.ip,
+                CONF_ADDRESS: discovery_info.macaddress,
+            }
+        )
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",
@@ -286,6 +300,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered[CONF_MACHINE] = serial
         self._discovered[CONF_HOST] = discovery_info.ip
+        self._discovered[CONF_ADDRESS] = discovery_info.macaddress
 
         return await self.async_step_user()
 
@@ -339,12 +354,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> LmOptionsFlowHandler:
         """Create the options flow."""
-        return LmOptionsFlowHandler(config_entry)
+        return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class LmOptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
     async def async_step_init(
@@ -358,7 +373,7 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_USE_BLUETOOTH,
-                    default=self.options.get(CONF_USE_BLUETOOTH, True),
+                    default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
                 ): cv.boolean,
             }
         )

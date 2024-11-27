@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
+from aiotedee import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 from .entity import TedeeEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

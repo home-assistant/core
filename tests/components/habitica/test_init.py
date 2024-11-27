@@ -165,4 +165,4 @@ async def test_coordinator_rate_limited(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        assert "Currently rate limited, skipping update" in caplog.text
+        assert "Rate limit exceeded, will try again later" in caplog.text

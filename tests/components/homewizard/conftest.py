@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.errors import NotFoundError
-from homewizard_energy.models import Data, Device, State, System
+from homewizard_energy.v1.models import Data, Device, State, System
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -27,11 +27,11 @@ def mock_homewizardenergy(
     """Return a mock bridge."""
     with (
         patch(
-            "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+            "homeassistant.components.homewizard.coordinator.HomeWizardEnergyV1",
             autospec=True,
         ) as homewizard,
         patch(
-            "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+            "homeassistant.components.homewizard.config_flow.HomeWizardEnergyV1",
             new=homewizard,
         ),
     ):
@@ -77,12 +77,12 @@ def mock_config_entry() -> MockConfigEntry:
         title="Device",
         domain=DOMAIN,
         data={
-            "product_name": "Product name",
-            "product_type": "product_type",
-            "serial": "aabbccddeeff",
+            "product_name": "P1 Meter",
+            "product_type": "HWE-P1",
+            "serial": "5c2fafabcdef",
             CONF_IP_ADDRESS: "127.0.0.1",
         },
-        unique_id="aabbccddeeff",
+        unique_id="HWE-P1_5c2fafabcdef",
     )
 
 

@@ -107,7 +107,7 @@ class RecorderOutput(StreamOutput):
             # Create output on first segment
             if not output:
                 container_options: dict[str, str] = {
-                    "video_track_timescale": str(int(1 / source_v.time_base)),
+                    "video_track_timescale": str(int(1 / source_v.time_base)),  # type: ignore[operator]
                     "movflags": "frag_keyframe+empty_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
@@ -132,21 +132,23 @@ class RecorderOutput(StreamOutput):
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
                     (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)
+                    / (av.time_base * source_v.time_base)  # type: ignore[operator]
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
                         (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)
+                        / (av.time_base * source_a.time_base)  # type: ignore[operator]
                     )
 
             # Remux video
             for packet in source.demux():
-                if packet.dts is None:
+                if packet.pts is None:
                     continue
-                packet.pts += pts_adjuster[packet.stream.type]
-                packet.dts += pts_adjuster[packet.stream.type]
-                packet.stream = output_v if packet.stream.type == "video" else output_a
+                packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                stream = output_v if packet.stream.type == "video" else output_a
+                assert stream
+                packet.stream = stream
                 output.mux(packet)
 
             running_duration += source.duration - source.start_time
