@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SchlageConfigEntry
 from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -39,7 +39,7 @@ _DESCRIPTIONS: tuple[SchlageBinarySensorEntityDescription] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SchlageConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary_sensors based on a config entry."""
