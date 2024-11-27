@@ -671,7 +671,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mysensors",
     "mystrom",
     "mythicbeastsdns",
-    "myuplink",
     "nad",
     "nam",
     "namecheapdns",
