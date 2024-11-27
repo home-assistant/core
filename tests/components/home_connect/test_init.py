@@ -32,7 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.issue_registry as ir
-from script.hassfest.translations import RE_TRANSLATION_KEY
 
 from .conftest import (
     CLIENT_ID,
@@ -656,4 +655,4 @@ async def test_bsh_key_transformations() -> None:
     """Test that the key transformations are compatible valid translations keys and can be reversed."""
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
-    assert RE_TRANSLATION_KEY.match(translation_key)
+    assert translation_key == "dishcare_dishwasher_program_eco_50"
