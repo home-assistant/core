@@ -14,7 +14,6 @@ play_media:
       selector:
         object:
     media_type:
-      required: false
       example: "playlist"
       selector:
         select:
@@ -26,17 +25,14 @@ play_media:
             - track
             - radio
     artist:
-      required: false
       example: "Queen"
       selector:
         text:
     album:
-      required: false
       example: "News of the world"
       selector:
         text:
     enqueue:
-      required: false
       selector:
         select:
           options:
@@ -47,7 +43,6 @@ play_media:
             - "add"
           translation_key: enqueue
     radio_mode:
-      required: false
       advanced: true
       selector:
         boolean:
@@ -67,12 +62,10 @@ play_announcement:
       selector:
         text:
     use_pre_announce:
-      required: false
       example: "true"
       selector:
         boolean:
     announce_volume:
-      required: false
       example: 75
       selector:
         number:
@@ -87,13 +80,11 @@ transfer_queue:
       integration: music_assistant
   fields:
     source_player:
-      required: false
       selector:
         entity:
           domain: media_player
           integration: music_assistant
     auto_play:
-      required: false
       example: "true"
       selector:
         boolean:
