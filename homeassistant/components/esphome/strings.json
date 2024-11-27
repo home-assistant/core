@@ -84,6 +84,12 @@
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
         }
+      },
+      "wake_word": {
+        "name": "Wake word",
+        "state": {
+          "okay_nabu": "Okay Nabu"
+        }
       }
     },
     "climate": {
@@ -119,7 +125,7 @@
     },
     "service_calls_not_allowed": {
       "title": "{name} is not permitted to perform Home Assistant actions",
-      "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perfom Home Assistant action, you can enable this functionality in the options flow."
+      "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perform Home Assistant action, you can enable this functionality in the options flow."
     }
   }
 }

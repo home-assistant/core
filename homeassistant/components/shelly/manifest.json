@@ -8,8 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
-  "quality_scale": "platinum",
-  "requirements": ["aioshelly==12.0.1"],
+  "requirements": ["aioshelly==12.1.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
