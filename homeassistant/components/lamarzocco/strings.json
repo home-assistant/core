@@ -67,7 +67,6 @@
     "step": {
       "init": {
         "data": {
-          "title": "Update Configuration",
           "use_bluetooth": "Use Bluetooth"
         },
         "data_description": {
