@@ -123,11 +123,11 @@ def purge_old_data(
             _purge_old_entity_ids(instance, session)
 
         _purge_old_recorder_runs(instance, session, purge_before)
-    if repack:
-        repack_database(instance)
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session(), read_only=True) as session:
         instance.recorder_runs_manager.load_from_db(session)
         instance.states_manager.load_from_db(session)
+    if repack:
+        repack_database(instance)
     return True
 
 
