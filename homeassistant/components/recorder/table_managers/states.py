@@ -58,8 +58,8 @@ class StatesManager:
         recorder thread.
         """
         self._pending[entity_id] = state
-        if self._oldest_ts is None and self._pending:
-            self._oldest_ts = self._pending[next(iter(self._pending))].last_updated_ts
+        if self._oldest_ts is None:
+            self._oldest_ts = state.last_updated_ts
 
     def update_pending_last_reported(
         self, state_id: int, last_reported_timestamp: float
