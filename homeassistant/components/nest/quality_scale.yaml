@@ -20,16 +20,10 @@ rules:
     comment: |
       The integration does a connection test in the configuration flow, however
       it does not fail if the user has ipv6 misconfigured.
-  entity-event-setup:
-    status: done
-    comment: All entities subscribe for updates in `async_added_to_hass`.
+  entity-event-setup: done
   unique-config-entry: done
   entity-unique-id: done
-  docs-installation-instructions:
-    status: done
-    comment: |
-      The integration documentation has complex prerequisites that are
-      thoroughly explained in the documentation, as well as a setup video.
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   test-before-setup:
     status: todo
