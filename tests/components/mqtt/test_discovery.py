@@ -2989,20 +2989,13 @@ async def test_shared_state_topic(
     assert state.state == "New state3"
 
 
-@pytest.mark.parametrize(
-    ("single_configs", "device_discovery_topic", "device_config"),
-    [(TEST_SINGLE_CONFIGS, TEST_DEVICE_DISCOVERY_TOPIC, TEST_DEVICE_CONFIG)],
-)
+@pytest.mark.parametrize("single_configs", [copy.deepcopy(TEST_SINGLE_CONFIGS)])
 async def test_discovery_with_late_via_device_discovery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     single_configs: list[tuple[str, dict[str, Any]]],
-    device_discovery_topic: str,
-    device_config: dict[str, Any],
 ) -> None:
     """Test a via device is available and the discovery of the via device is late."""
     await mqtt_mock_entry()
@@ -3016,9 +3009,8 @@ async def test_discovery_with_late_via_device_discovery(
     assert via_device_entry is None
     # Discovery single config schema
     for discovery_topic, config in single_configs:
-        single_config = config.copy()
-        single_config["device"]["via_device"] = "id_via_very_unique"
-        payload = json.dumps(single_config)
+        config["device"]["via_device"] = "id_via_very_unique"
+        payload = json.dumps(config)
         async_fire_mqtt_message(
             hass,
             discovery_topic,
@@ -3057,20 +3049,13 @@ async def test_discovery_with_late_via_device_discovery(
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
 
-@pytest.mark.parametrize(
-    ("single_configs", "device_discovery_topic", "device_config"),
-    [(TEST_SINGLE_CONFIGS, TEST_DEVICE_DISCOVERY_TOPIC, TEST_DEVICE_CONFIG)],
-)
+@pytest.mark.parametrize("single_configs", [copy.deepcopy(TEST_SINGLE_CONFIGS)])
 async def test_discovery_with_late_via_device_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     single_configs: list[tuple[str, dict[str, Any]]],
-    device_discovery_topic: str,
-    device_config: dict[str, Any],
 ) -> None:
     """Test a via device is available and the discovery of the via device is is set via an update."""
     await mqtt_mock_entry()
@@ -3093,15 +3078,14 @@ async def test_discovery_with_late_via_device_update(
         via_device_entry = device_registry.async_get_device(
             {("mqtt", "id_via_very_unique")}
         )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert via_device_entry is None
-
-    await hass.async_block_till_done()
 
     # Resend the discovery update to set the via device
     for discovery_topic, config in single_configs:
-        single_config = config.copy()
-        single_config["device"]["via_device"] = "id_via_very_unique"
-        payload = json.dumps(single_config)
+        config["device"]["via_device"] = "id_via_very_unique"
+        payload = json.dumps(config)
         async_fire_mqtt_message(
             hass,
             discovery_topic,
@@ -3113,6 +3097,7 @@ async def test_discovery_with_late_via_device_update(
         assert via_device_entry is not None
         assert via_device_entry.name is None
 
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Now discover the via device (a switch)
