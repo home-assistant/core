@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -297,6 +297,7 @@ async def test_alarm_control_panel_with_default_code(
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with("1234")
 
 
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_not_log_deprecated_state_warning(
     hass: HomeAssistant,
     mock_alarm_control_panel_entity: MockAlarmControlPanel,
@@ -305,9 +306,14 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
     """Test correctly using alarm_state doesn't log issue or raise repair."""
     state = hass.states.get(mock_alarm_control_panel_entity.entity_id)
     assert state is not None
-    assert "Entities should implement the 'alarm_state' property and" not in caplog.text
+    assert (
+        "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
+        not in caplog.text
+    )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -332,6 +338,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
         ),
+        built_in=False,
     )
 
     class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
@@ -373,22 +380,26 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
 
-    assert "Entities should implement the 'alarm_state' property and" in caplog.text
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        " Entity None (<class 'tests.components.alarm_control_panel.test_init."
+        "test_alarm_control_panel_log_deprecated_state_warning_using_state_prop.<locals>.MockLegacyAlarmControlPanel'>)"
+        " should implement the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
+        " at test_init.py, line 123: yield. This will stop working in Home Assistant 2025.11, please create a bug report at"
+        in caplog.text
+    )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -453,44 +464,45 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
 
-    assert "Entities should implement the 'alarm_state' property and" not in caplog.text
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        not in caplog.text
+    )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
 
-    assert "Entities should implement the 'alarm_state' property and" in caplog.text
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        " Entity alarm_control_panel.test_alarm_control_panel"
+        " (<class 'tests.components.alarm_control_panel.test_init."
+        "test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr.<locals>.MockLegacyAlarmControlPanel'>)"
+        " should implement the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
+        " at test_init.py, line 123: yield. This will stop working in Home Assistant 2025.11, please create a bug report at"
+        in caplog.text
+    )
     caplog.clear()
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
     # Test we only log once
-    assert "Entities should implement the 'alarm_state' property and" not in caplog.text
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        not in caplog.text
+    )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -556,28 +568,18 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "armed_away"
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
