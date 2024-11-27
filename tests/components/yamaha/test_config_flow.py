@@ -65,6 +65,16 @@ def mock_get_device_info_invalid():
 
 
 @pytest.fixture
+def mock_get_device_info_exception():
+    """Mock raising an unexpected Exception."""
+    with patch(
+        "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+        side_effect=Exception("mocked error"),
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_get_device_info_mc_exception():
     """Mock raising an unexpected Exception."""
     with patch(
@@ -153,7 +163,7 @@ def mock_empty_discovery_information():
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Create Onkyo entry in Home Assistant."""
+    """Create Yamaha entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="Yamaha Receiver",
@@ -178,8 +188,8 @@ async def test_user_input_device_not_found(
         result["flow_id"],
         {"host": "none"},
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
 
 
 async def test_user_input_non_yamaha_device_found(
@@ -196,8 +206,8 @@ async def test_user_input_non_yamaha_device_found(
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_yamaha_device"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
 
 
 async def test_user_input_device_already_existing(
@@ -224,7 +234,9 @@ async def test_user_input_device_already_existing(
     assert result2["reason"] == "already_configured"
 
 
-async def test_user_input_unknown_error(hass: HomeAssistant) -> None:
+async def test_user_input_unknown_error(
+    hass: HomeAssistant, mock_get_device_info_exception
+) -> None:
     """Test when user specifies an existing device, which does not provide the Yamaha API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -236,8 +248,8 @@ async def test_user_input_unknown_error(hass: HomeAssistant) -> None:
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unknown"
 
 
 async def test_user_input_device_found(
@@ -316,7 +328,7 @@ async def test_ssdp_discovery_failed(hass: HomeAssistant, mock_ssdp_no_yamaha) -
 async def test_ssdp_discovery_successful_add_device(
     hass: HomeAssistant, mock_ssdp_yamaha
 ) -> None:
-    """Test when the SSDP discovered device is a musiccast device and the user confirms it."""
+    """Test when the SSDP discovered device is a yamaha device and the user confirms it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},

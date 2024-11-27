@@ -10,6 +10,7 @@ import rxv
 from rxv import RXV
 import voluptuous as vol
 
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
@@ -17,15 +18,19 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.components.ssdp import SsdpServiceInfo
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import YamahaConfigInfo
 from .const import (
     BRAND,
     CONF_SOURCE_IGNORE,
@@ -89,6 +94,8 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     }
 )
 
+ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=yamaha"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -120,25 +127,85 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Yamaha platform."""
-    if config.get(CONF_HOST):
-        if hass.config_entries.async_entries(DOMAIN) and config[CONF_HOST] not in [
-            entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-        ]:
-            _LOGGER.error(
-                "Configuration in configuration.yaml is not supported anymore. "
-                "Please add this device using the config flow: %s",
-                config[CONF_HOST],
-            )
-        else:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-                )
-            )
+    host = config.get(CONF_HOST)
+    results = []
+    if host is not None:
+        _LOGGER.debug("Importing yaml single: %s", host)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        results.append((host, result))
     else:
-        _LOGGER.error(
-            "Configuration in configuration.yaml is not supported anymore. "
-            "Please add this device using the config flow"
+        ssdp_entries: list[SsdpServiceInfo] = await ssdp.async_get_discovery_info_by_st(
+            hass, "upnp:rootdevice"
+        )
+        matches = [
+            w
+            for w in ssdp_entries
+            if w.ssdp_location
+            and await YamahaConfigInfo.check_yamaha_ssdp(w.ssdp_location, hass)
+        ]
+        for entry in matches:
+            host = entry.ssdp_headers.get("_host")
+            _LOGGER.debug("Importing yaml discover: %s", host)
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config | {CONF_HOST: host},
+            )
+            results.append((host, result))
+
+    _LOGGER.debug("Importing yaml results: %s", results)
+    if not results:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_no_discover",
+            breaks_in_ha_version="2025.6",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_no_discover",
+            translation_placeholders={"url": ISSUE_URL_PLACEHOLDER},
+        )
+
+    all_successful = True
+    for host, result in results:
+        if (
+            result.get("type") == FlowResultType.CREATE_ENTRY
+            or result.get("reason") == "already_configured"
+        ):
+            continue
+        if error := result.get("reason"):
+            all_successful = False
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{host}_{error}",
+                breaks_in_ha_version="2025.6",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{error}",
+                translation_placeholders={
+                    "host": host,
+                    "url": ISSUE_URL_PLACEHOLDER,
+                },
+            )
+    if all_successful:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.6",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "yamaha",
+            },
         )
 
     # Register Service 'select_scene'

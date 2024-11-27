@@ -17,12 +17,20 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
-    },
-    "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_yamaha_device": "This device seems to be no Yamaha Device.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_no_discover": {
+      "title": "The Yamaha YAML configuration import failed",
+      "description": "Configuring Yamaha using YAML is being removed but no receivers were discovered when importing your YAML configuration.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Yamaha YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Yamaha YAML configuration import failed",
+      "description": "Configuring Yamaha using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Yamaha YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   },
   "options": {

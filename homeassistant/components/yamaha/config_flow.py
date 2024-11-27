@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     Selector,
@@ -64,41 +63,35 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         serial_number = None
 
-        errors = {}
         # Check if device is a Yamaha receiver
         try:
             upnp_desc: str = await get_upnp_desc(self.hass, host)
             info = await YamahaConfigInfo.get_rxv_details(upnp_desc, self.hass)
         except ConnectionError:
-            errors["base"] = "cannot_connect"
+            return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            return self.async_abort(reason="unknown")
         else:
             if info is None or (serial_number := info.serial_number) is None:
-                errors["base"] = "no_yamaha_device"
+                return self.async_abort(reason="cannot_connect")
 
-        if not errors:
-            await self.async_set_unique_id(serial_number, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(serial_number, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(
-                title=DEFAULT_NAME,
-                data={
-                    CONF_HOST: host,
-                    CONF_SERIAL: serial_number,
-                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
-                },
-                options={
-                    OPTION_INPUT_SOURCES_IGNORE: user_input.get(
-                        OPTION_INPUT_SOURCES_IGNORE
-                    )
-                    or [],
-                    OPTION_INPUT_SOURCES: user_input.get(OPTION_INPUT_SOURCES) or {},
-                },
-            )
-
-        return self._show_setup_form(errors)
+        return self.async_create_entry(
+            title=DEFAULT_NAME,
+            data={
+                CONF_HOST: host,
+                CONF_SERIAL: serial_number,
+                CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
+            },
+            options={
+                OPTION_INPUT_SOURCES_IGNORE: user_input.get(OPTION_INPUT_SOURCES_IGNORE)
+                or [],
+                OPTION_INPUT_SOURCES: user_input.get(OPTION_INPUT_SOURCES) or {},
+            },
+        )
 
     def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
@@ -167,18 +160,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict) -> ConfigFlowResult:
         """Import data from configuration.yaml into the config flow."""
-        res = await self.async_step_user(import_data)
-        if res["type"] == FlowResultType.CREATE_ENTRY:
-            _LOGGER.info(
-                "Successfully imported %s from configuration.yaml",
-                import_data.get(CONF_HOST),
-            )
-        elif res["type"] == FlowResultType.FORM:
-            _LOGGER.error(
-                "Could not import %s from configuration.yaml",
-                import_data.get(CONF_HOST),
-            )
-        return res
+        return await self.async_step_user(import_data)
 
     @staticmethod
     @callback

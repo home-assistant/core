@@ -1,5 +1,6 @@
 """The tests for the Yamaha Media player platform."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
@@ -17,8 +18,9 @@ CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 def _create_zone_mock(name, url):
     zone = MagicMock()
     zone.ctrl_url = url
-    zone.surround_programs = []
+    zone.surround_programs = list
     zone.zone = name
+    zone.model_name = None
     return zone
 
 
@@ -34,6 +36,23 @@ class FakeYamahaDevice:
     def zone_controllers(self):
         """Return controllers for all available zones."""
         return self._zones
+
+
+@pytest.fixture(autouse=True)
+def silent_ssdp_scanner() -> Generator[None]:
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
+    ):
+        yield
 
 
 @pytest.fixture(name="main_zone")
