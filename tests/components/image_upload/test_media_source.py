@@ -32,8 +32,9 @@ async def __upload_test_image(
         assert await async_setup_component(hass, "image_upload", {})
         client: ClientSession = await hass_client()
 
-        with TEST_IMAGE.open("rb") as fp:
-            res = await client.post("/api/image/upload", data={"file": fp})
+        file = await hass.async_add_executor_job(TEST_IMAGE.open, "rb")
+        res = await client.post("/api/image/upload", data={"file": file})
+        file.close()
 
         assert res.status == 200
         item = await res.json()
