@@ -43,14 +43,10 @@ rules:
       needs to be moved to `runtime_data`.
 
   # Silver
-  log-when-unavailable:
-    status: done
-    comment: The integration logging happens from the UpdateCoordinator.
+  log-when-unavailable: done
   config-entry-unloading: done
   reauthentication-flow: done
-  action-exceptions:
-    status: done
-    comment: All rainbird exceptions are re-thrown as HomeAssistantError.
+  action-exceptions: done
   docs-installation-parameters:
     status: todo
     comment: The documentation does not mention installation parameters
@@ -58,15 +54,11 @@ rules:
   parallel-updates:
     status: todo
     comment: The integration does not explicitly set a number of parallel updates.
-  test-coverage:
-    status: done
-    comment: The integration has 99% test coverage.
+  test-coverage: done
   docs-configuration-parameters:
     status: todo
     comment: The documentation for configuration parameters could be improved.
-  entity-unavailable:
-    status: done
-    comment: The integration uses CoordinatorEntity to manage availability.
+  entity-unavailable: done
 
   # Gold
   docs-examples: todo
