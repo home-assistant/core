@@ -2,7 +2,8 @@
   "common": {
     "todos": "To-Do's",
     "dailies": "Dailies",
-    "config_entry_name": "Select character"
+    "config_entry_name": "Select character",
+    "unit_tasks": "tasks"
   },
   "config": {
     "abort": {
@@ -135,31 +136,39 @@
         "name": "Display name"
       },
       "health": {
-        "name": "Health"
+        "name": "Health",
+        "unit_of_measurement": "HP"
       },
       "health_max": {
-        "name": "Max. health"
+        "name": "Max. health",
+        "unit_of_measurement": "HP"
       },
       "mana": {
-        "name": "Mana"
+        "name": "Mana",
+        "unit_of_measurement": "MP"
       },
       "mana_max": {
-        "name": "Max. mana"
+        "name": "Max. mana",
+        "unit_of_measurement": "MP"
       },
       "experience": {
-        "name": "Experience"
+        "name": "Experience",
+        "unit_of_measurement": "XP"
       },
       "experience_max": {
-        "name": "Next level"
+        "name": "Next level",
+        "unit_of_measurement": "XP"
       },
       "level": {
         "name": "Level"
       },
       "gold": {
-        "name": "Gold"
+        "name": "Gold",
+        "unit_of_measurement": "GP"
       },
       "gems": {
-        "name": "Gems"
+        "name": "Gems",
+        "unit_of_measurement": "gems"
       },
       "trinkets": {
         "name": "Mystic hourglasses"
@@ -174,16 +183,20 @@
         }
       },
       "todos": {
-        "name": "[%key:component::habitica::common::todos%]"
+        "name": "[%key:component::habitica::common::todos%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "dailys": {
-        "name": "[%key:component::habitica::common::dailies%]"
+        "name": "[%key:component::habitica::common::dailies%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "habits": {
-        "name": "Habits"
+        "name": "Habits",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "rewards": {
-        "name": "Rewards"
+        "name": "Rewards",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
