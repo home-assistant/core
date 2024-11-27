@@ -43,6 +43,7 @@ from homeassistant.util.dt import utc_from_timestamp
 from . import MusicAssistantConfigEntry
 from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
 from .entity import MusicAssistantEntity
+from .media_browser import async_browse_media
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -440,10 +441,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
+        return await async_browse_media(
             self.hass,
+            self.mass,
             media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+            media_content_type,
         )
 
     def _update_media_image_url(
