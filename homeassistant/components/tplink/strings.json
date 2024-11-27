@@ -102,6 +102,11 @@
         "name": "Stop alarm"
       }
     },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      }
+    },
     "select": {
       "light_preset": {
         "name": "Light preset"

@@ -19,6 +19,7 @@ from kasa import (
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.smart.modules.alarm import Alarm
+from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -425,6 +426,17 @@ def _mocked_alarm_module(device):
     return alarm
 
 
+def _mocked_camera_module(device):
+    camera = MagicMock(auto_spec=Camera, name="Mocked camera")
+    camera.is_on = True
+    camera.set_state = AsyncMock()
+    camera.stream_rtsp_url.return_value = (
+        f"rtsp://user:pass@{device.host}:{LOCAL_STREAMING_PORT}/stream1"
+    )
+
+    return camera
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -492,6 +504,7 @@ MODULE_TO_MOCK_GEN = {
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
+    Module.Camera: _mocked_camera_module,
 }
 
 

@@ -40,8 +40,8 @@ class TPLinkCameraEntityDescription(
 
 CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
     TPLinkCameraEntityDescription(
-        key="live",
-        translation_key="live",
+        key="live_view",
+        translation_key="live_view",
     ),
 )
 
@@ -74,8 +74,9 @@ async def async_setup_entry(
 class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     """Representation of a TPLink camera."""
 
-    _attr_name = None
     _attr_supported_features = CameraEntityFeature.STREAM | CameraEntityFeature.ON_OFF
+
+    entity_description: TPLinkCameraEntityDescription
 
     def __init__(
         self,
@@ -88,18 +89,17 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         ffmpeg_manager: ffmpeg.FFmpegManager,
     ) -> None:
         """Initialize a TPlink camera."""
-        self._description = description
+        self.entity_description = description
         self._camera_module = camera_module
+        self._video_url: str | None = None
+        self._image: bytes | None = None
         super().__init__(device, coordinator, parent=parent)
         Camera.__init__(self)
         self._ffmpeg_manager = ffmpeg_manager
 
-        self._video_url: str | None = None
-        self._image: bytes | None = None
-
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        return f"{legacy_device_id(self._device)}-{self._description}"
+        return f"{legacy_device_id(self._device)}-{self.entity_description}"
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -146,3 +146,11 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
             )
         finally:
             await stream.close()
+
+    async def async_turn_on(self) -> None:
+        """Turn on camera."""
+        await self._camera_module.set_state(True)
+
+    async def async_turn_off(self) -> None:
+        """Turn off camera."""
+        await self._camera_module.set_state(False)
