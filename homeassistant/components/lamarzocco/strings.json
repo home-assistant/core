@@ -69,6 +69,9 @@
         "data": {
           "title": "Update Configuration",
           "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "use_bluetooth": "Should integration try to use Bluetooth to control the machine?"
         }
       }
     }
