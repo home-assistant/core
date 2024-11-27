@@ -622,11 +622,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.sync_status.master is None:
             leader_sync_status = self.sync_status
         else:
+            required_id = f"{self.sync_status.master.ip}:{self.sync_status.master.port}"
             for x in player_entities:
-                if (
-                    x.sync_status.id
-                    == f"{self.sync_status.master.ip}:{self.sync_status.master.port}"
-                ):
+                if x.sync_status.id == required_id:
                     leader_sync_status = x.sync_status
                     break
 
