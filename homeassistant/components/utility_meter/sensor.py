@@ -607,7 +607,9 @@ class UtilityMeterSensor(RestoreSensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        self._current_tz = self.hass.config.time_zone  # track current timezone in case it changes and we need to reconfigure the scheduler
+        # track current timezone in case it changes
+        # and we need to reconfigure the scheduler
+        self._current_tz = self.hass.config.time_zone
 
         await self._program_reset()
 
