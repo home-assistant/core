@@ -112,14 +112,17 @@ async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[st
 
     results = search_address(query)
 
+    # fire event with error or full result
     if "error" in results:
         hass.states.async_set(f"{DOMAIN}.last_search", f"Error: {results['error']}")
+        hass.bus.async_fire(f"{DOMAIN}_event", {"error": results["error"]})
     else:
-        hass.states.async_set(f"{DOMAIN}.last_search", "Search successful")
+        hass.bus.async_fire(f"{DOMAIN}._event", {"query": query, "results": results})
 
     return results
 
 
+# right now, this can't be called from frontend since it does not fire any events
 async def async_handle_get_coordinates(
     hass: HomeAssistant, call: ServiceCall
 ) -> dict[str, str]:
@@ -160,4 +163,13 @@ async def async_handle_get_address_coordinates(
         _LOGGER.error("No query provided")
         return {"error": "No query provided"}
 
-    return get_address_coordinates(query)
+    coordinates = get_address_coordinates(query)
+
+    # Fire event with error or coordinates
+    if "error" in coordinates:
+        _LOGGER.error(f"Error fetching coordinates: {coordinates['error']}")
+        hass.bus.async_fire(f"{DOMAIN}_event", {"error": coordinates["error"]})
+    else:
+        hass.bus.async_fire(f"{DOMAIN}_event", {"query": query, "coordinates": coordinates})
+
+    return coordinates
