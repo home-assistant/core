@@ -54,9 +54,9 @@ rules:
     status: exempt
     comment: |
       Not possible to discover devices on LAN.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-troubleshooting: done
@@ -71,7 +71,10 @@ rules:
   entity-translations:
     status: exempt
     comment: |
-      Cannot do that - yet.
+      Datapoint names are read from the API metadata and used as entity names in HA.
+      It is not feasible to use the API names as translation keys as they can change between
+      firmware and API upgrades and the number of appliance models and firmware releases are huge.
+      Entity names translations are therefore not implemented for the time being.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
