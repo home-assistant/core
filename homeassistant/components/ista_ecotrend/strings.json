@@ -38,10 +38,12 @@
   "entity": {
     "sensor": {
       "heating": {
-        "name": "Heating"
+        "name": "Heating",
+        "unit_of_measurement": "units"
       },
       "heating_cost": {
-        "name": "Heating cost"
+        "name": "Heating cost",
+        "unit_of_measurement": "EUR"
       },
       "heating_energy": {
         "name": "Heating energy"
@@ -50,7 +52,8 @@
         "name": "Hot water"
       },
       "hot_water_cost": {
-        "name": "Hot water cost"
+        "name": "Hot water cost",
+        "unit_of_measurement": "EUR"
       },
       "hot_water_energy": {
         "name": "Hot water energy"
@@ -59,7 +62,8 @@
         "name": "Water"
       },
       "water_cost": {
-        "name": "Water cost"
+        "name": "Water cost",
+        "unit_of_measurement": "EUR"
       }
     }
   },
