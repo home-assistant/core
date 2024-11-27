@@ -821,7 +821,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            via = self.async_get_device(identifiers={via_device})
+            if (via := self.async_get_device(identifiers={via_device})) is None:
+                _LOGGER.warning(
+                    "Unable to create reference for non existing "
+                    "`via_device` %s in device info %s",
+                    via_device,
+                    device_info,
+                )
+
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
