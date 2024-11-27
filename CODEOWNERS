@@ -215,7 +215,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/borsmarthome/ @borile91
-/tests/components/borsmarthome/ @borile91
 /homeassistant/components/bosch_shc/ @tschamm
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed

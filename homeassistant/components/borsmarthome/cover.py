@@ -1,10 +1,11 @@
 import logging
 import random
+from typing import Any
 
 import requests
 
 # import voluptuous as vol
-from homeassistant.components.borsmarthome.hub import Roller
+from homeassistant.components.borsmarthome.hub import RollerShutter
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -19,13 +20,6 @@ from . import HubConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-class AvebusDevice:
-    def __init__(self, name, channel, percentage):
-        self.name = name
-        self.channel = channel
-        self.percentage = percentage
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HubConfigEntry,
@@ -36,27 +30,14 @@ async def async_setup_entry(
     # __init__.async_setup_entry function
     hub = config_entry.runtime_data
 
-    # headers = {"x-api-key": "CNSL1kzyNX0Zaruvvg5P9o2CMiN9IyP2P7kwaAUB"}
-    # response = requests.get(
-    #     "http://192.168.1.10:5001/avebus/rollershutters", headers=headers, timeout=30
-    # )
-    # response.raise_for_status()
-    # data = response.json()
-    # entities: list[AvebusDevice] = [
-    #     AvebusDevice(item["Name"], item["Channel"], item["Percentage"]) for item in data
-    # ]
-
     # Add all entities to HA
-    async_add_entities(TapparellaEntity(roller) for roller in hub.rollers)
+    async_add_entities(TapparellaEntity(roller) for roller in hub.devices)
 
 
 class TapparellaEntity(CoverEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_device_class = CoverDeviceClass.SHUTTER
-    _channel = None
-    _url = "http://192.168.1.10:5001"
-    _headers = {"x-api-key": "CNSL1kzyNX0Zaruvvg5P9o2CMiN9IyP2P7kwaAUB"}
 
     def SetCurrentPosition(self, position: float):
         self.is_closed = position == 0
@@ -67,9 +48,11 @@ class TapparellaEntity(CoverEntity):
         new_state = event.data["new_state"]
         currentPosition = new_state.attributes["current_position"]
         self.SetCurrentPosition(currentPosition)
-        self.is_opening = True
+        self.is_opening = False
+        self.is_closing = False
+        await self._roller.async_publish_updates()
         # await self.async_write_ha_state()
-        await self._roller.stop(currentPosition)
+        # await self._roller.stop()
         # self.async_update_ha_state()
 
     async def async_added_to_hass(self):
@@ -79,7 +62,7 @@ class TapparellaEntity(CoverEntity):
         # unsub()
         self._roller.register_callback(self.async_write_ha_state)
 
-    def __init__(self, roller: Roller):
+    def __init__(self, roller: RollerShutter):
         """Initialize the entity."""
         self._name = roller.name
         self._roller = roller
@@ -110,56 +93,33 @@ class TapparellaEntity(CoverEntity):
             | CoverEntityFeature.SET_POSITION
         )
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any):
         """Apri la tapparella."""
         try:
-            response = requests.post(
-                f"{self._url}/avebus/{self._channel}?percentage=100",
-                headers=self._headers,
-                timeout=30,
-            )
-            response.raise_for_status()
+            await self._roller.async_request_position(100)
             self.is_opening = True
-            self.async_schedule_update_ha_state()
+            await self._roller.async_publish_updates()
         except requests.RequestException as e:
             _LOGGER.error("Errore durante l'apertura della tapparella: %s", e)
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any):
         """Chiudi la tapparella."""
         try:
-            response = requests.post(
-                f"{self._url}/avebus/{self._channel}?percentage=0",
-                headers=self._headers,
-                timeout=30,
-            )
-            response.raise_for_status()
+            await self._roller.async_request_position(0)
             self.is_closing = True
-            self.async_schedule_update_ha_state()
+            await self._roller.async_publish_updates()
         except requests.RequestException as e:
             _LOGGER.error("Errore durante la chiusura della tapparella: %s", e)
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Ferma la tapparella."""
         try:
-            # response = requests.post(
-            #     f"{self._url}/avebus/{self._channel}?command=stop",
-            #     headers=self._headers,
-            #     timeout=30,
-            # )
-            # response.raise_for_status()
-            # data = response.json()
-            # entities = [
-            #     {
-            #         "name": item["name"],
-            #         "channel": item["channel"],
-            #         "percent": item["previousPerc"],
-            #     }
-            #     for item in data
-            # ]
-            perc = random.randrange(0, 100)
-            # perc = entities[0]["percent"]
-            self.SetCurrentPosition(perc)
-            await self._roller.stop(random.randrange(0, 100))
+            await self._roller.async_stop()
+            self.is_closed = self._roller.position == 0
+            self.is_closing = False
+            self.is_opening = False
+            self.current_cover_position = self._roller.position
+            await self._roller.async_publish_updates()
         except requests.RequestException as e:
             _LOGGER.error("Errore durante il fermo della tapparella: %s", e)
 

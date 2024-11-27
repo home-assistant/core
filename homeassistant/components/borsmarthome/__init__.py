@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from . import hub
@@ -17,17 +17,14 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 type HubConfigEntry = ConfigEntry[hub.AveHub]  # noqa: F821
 
 
-# TODO Update entry annotation
 async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     """Set up BorSmartHome from a config entry."""
 
-    # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (and authentication)
-    # TODO 3. Store an API object for your platforms to access
-    # entry.runtime_data = MyAPI(...)
+    entry.runtime_data = avehub = hub.AveHub(
+        hass, entry.data[CONF_HOST], entry.data[CONF_API_TOKEN]
+    )
 
-    # entry.runtime_data = TapparellaEntity("Tapparella test")
-    entry.runtime_data = hub.AveHub(hass, "192.168.1.10")
+    await avehub.async_load_entities()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

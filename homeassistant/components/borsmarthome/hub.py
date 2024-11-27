@@ -7,96 +7,120 @@ from __future__ import annotations
 # See https://developers.home-assistant.io/docs/creating_integration_manifest
 # for more information.
 # This dummy hub always returns 3 rollers.
-import asyncio
-import random
+
+import requests
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import Callable
+
+from aiohttp import ClientSession, ClientResponse
+
+import asyncio
+import aiohttp
 
 
 class AveHub:
     """AVE WebServer hub."""
 
-    manufacturer = "Demonstration Corp"
-
-    def __init__(self, hass: HomeAssistant, host: str) -> None:
-        """Init dummy hub."""
+    def __init__(self, hass: HomeAssistant, host: str, apiKey: str) -> None:
+        """Init AVE hub."""
         self._host = host
+        self._apiKey = apiKey
         self._hass = hass
-        self._name = host
-        self._id = host.lower()
-        self.rollers = [
-            Roller(f"{self._id}_1", f"{self._name} 1", self),
-            Roller(f"{self._id}_2", f"{self._name} 2", self),
-            Roller(f"{self._id}_3", f"{self._name} 3", self),
-        ]
-        self.online = True
+        self._name = "AVE WebServer"
+        self._id = f"avebus_{host.lower()}"
+        self._devices: list[RollerShutter] = []
+
+        self._headers = {"x-api-key": self._apiKey}
+
+    async def async_load_entities(self):
+        session = aiohttp.ClientSession()
+        async with session.get(
+            f"{self._host}/avebus/rollershutters", headers=self._headers
+        ) as r:
+            data = await r.json()
+        await session.close()
+
+        self.devices.extend(
+            [
+                RollerShutter(self, item["Name"], item["Channel"], item["Percentage"])
+                for item in data
+            ]
+        )
 
     @property
     def hub_id(self) -> str:
-        """ID for dummy hub."""
+        """ID for hub."""
         return self._id
 
+    @property
+    def devices(self) -> list[RollerShutter]:
+        """List."""
+        return self._devices
 
-class Roller:
-    """Dummy roller (device for HA) for Hello World example."""
+    @property
+    def host(self) -> str:
+        """Host for hub."""
+        return self._host
 
-    def __init__(self, rollerid: str, name: str, hub: AveHub) -> None:
-        """Init dummy roller."""
-        self._id = rollerid
-        self.hub = hub
-        self.name = name
+    @property
+    def headers(self):
+        """Api key for hub."""
+        return self._headers
+
+
+class RollerShutter:
+    """AVE roller shutter."""
+
+    def __init__(self, hub: AveHub, name, channel, percentage) -> None:
+        """Init ave roller shutter."""
+        self._name = name
+        self._channel = channel
+        self._hub = hub
         self._callbacks = set()
-        self._loop = asyncio.get_event_loop()
-        self._target_position = 100
-        self._current_position = 100
-        # Reports if the roller is moving up or down.
-        # >0 is up, <0 is down. This very much just for demonstration.
-        self.moving = 0
-
-        # Some static information about this device
-        self.firmware_version = f"0.0.{random.randint(1, 9)}"
-        self.model = "Test Device"
+        self._position = percentage
 
     @property
-    def roller_id(self) -> str:
+    def name(self) -> str:
+        """Return name for roller."""
+        return self._name
+
+    @property
+    def channel(self) -> str:
         """Return ID for roller."""
-        return self._id
+        return self._channel
 
     @property
-    def position(self):
+    def position(self) -> float:
         """Return position for roller."""
-        return self._current_position
+        return self._position
 
-    async def stop(self, position: int) -> None:
-        """Set dummy cover to the given position.
+    async def async_request_position(self, position) -> None:
+        """Set posiiton."""
+        session = aiohttp.ClientSession()
+        await session.post(
+            f"{self._hub.host}/avebus/{self._channel}?percentage={position}",
+            headers=self._hub.headers,
+        )
+        await session.close()
 
-        State is announced a random number of seconds later.
-        """
-        # self._target_position = self._current_position = position
+    async def async_stop(self) -> None:
+        """Stop roller."""
+        session = aiohttp.ClientSession()
+        async with session.post(
+            f"{self._hub.host}/avebus/{self._channel}?command=stop",
+            headers=self._hub.headers,
+        ) as r:
+            data = await r.json()
+        await session.close()
 
-        # Update the moving status, and broadcast the update
-        # self.moving = 0
-        await self.publish_updates()
-
-    async def set_position(self, position: int) -> None:
-        """Set dummy cover to the given position.
-
-        State is announced a random number of seconds later.
-        """
-        self._target_position = position
-
-        # Update the moving status, and broadcast the update
-        self.moving = position - 50
-        await self.publish_updates()
-
-        self._loop.create_task(self.delayed_update())
-
-    async def delayed_update(self) -> None:
-        """Publish updates, with a random delay to emulate interaction with device."""
-        await asyncio.sleep(random.randint(1, 10))
-        self.moving = 0
-        await self.publish_updates()
+        entities = [
+            {
+                "percent": item["previousPerc"],
+            }
+            for item in data
+        ]
+        self._position = entities[0]["percent"]
 
     def register_callback(self, callback: Callable[[], None]) -> None:
         """Register callback, called when Roller changes state."""
@@ -108,8 +132,7 @@ class Roller:
 
     # In a real implementation, this library would call it's call backs when it was
     # notified of any state changeds for the relevant device.
-    async def publish_updates(self) -> None:
+    async def async_publish_updates(self) -> None:
         """Schedule call all registered callbacks."""
-        self._current_position = self._target_position
         for callback in self._callbacks:
             callback()
