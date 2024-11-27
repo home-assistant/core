@@ -90,7 +90,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.hvac_mode in HVACMode.AUTO:
+        if self.hvac_mode == HVACMode.AUTO:
             state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
