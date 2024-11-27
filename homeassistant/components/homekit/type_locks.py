@@ -11,7 +11,7 @@ from homeassistant.core import State, callback
 
 from .accessories import TYPES
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
-from .doorbell_mixin import DoorbellMixin
+from .doorbell_accessories import HomeDoorbellAccessory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ STATE_TO_SERVICE = {
 
 
 @TYPES.register("Lock")
-class Lock(DoorbellMixin):
+class Lock(HomeDoorbellAccessory):
     """Generate a Lock accessory for a lock entity.
 
     The lock entity must support: unlock and lock.

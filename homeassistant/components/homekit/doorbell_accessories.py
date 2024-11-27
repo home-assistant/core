@@ -34,7 +34,7 @@ DOORBELL_DOUBLE_PRESS = 1
 DOORBELL_LONG_PRESS = 2
 
 
-class DoorbellMixin(HomeAccessory):
+class HomeDoorbellAccessory(HomeAccessory):
     """Base class including doorball event."""
 
     def __init__(
@@ -62,8 +62,8 @@ class DoorbellMixin(HomeAccessory):
             **kwargs,
         )
 
-        self.char_doorbell_detected = None
-        self.char_doorbell_detected_switch = None
+        self._char_doorbell_detected = None
+        self._char_doorbell_detected_switch = None
         linked_doorbell_sensor: str | None = self.config.get(
             CONF_LINKED_DOORBELL_SENSOR
         )
@@ -76,21 +76,21 @@ class DoorbellMixin(HomeAccessory):
             return
         serv_doorbell = self.add_preload_service(SERV_DOORBELL)
         self.set_primary_service(serv_doorbell)
-        self.char_doorbell_detected = serv_doorbell.configure_char(
+        self._char_doorbell_detected = serv_doorbell.configure_char(
             CHAR_PROGRAMMABLE_SWITCH_EVENT,
             value=0,
         )
         serv_stateless_switch = self.add_preload_service(
             SERV_STATELESS_PROGRAMMABLE_SWITCH
         )
-        self.char_doorbell_detected_switch = serv_stateless_switch.configure_char(
+        self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
             CHAR_PROGRAMMABLE_SWITCH_EVENT,
             value=0,
             valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
         )
         serv_speaker = self.add_preload_service(SERV_SPEAKER)
         serv_speaker.configure_char(CHAR_MUTE, value=0)
-        self.async_update_doorbell_state(None, state)
+        self._async_update_doorbell_state(None, state)
 
     @pyhap_callback  # type: ignore[misc]
     @callback
@@ -99,13 +99,13 @@ class DoorbellMixin(HomeAccessory):
 
         Run inside the Home Assistant event loop.
         """
-        if self.char_doorbell_detected:
+        if self._char_doorbell_detected:
             assert self.linked_doorbell_sensor
             self._subscriptions.append(
                 async_track_state_change_event(
                     self.hass,
                     self.linked_doorbell_sensor,
-                    self.async_update_doorbell_state_event,
+                    self._async_update_doorbell_state_event,
                     job_type=HassJobType.Callback,
                 )
             )
@@ -113,22 +113,22 @@ class DoorbellMixin(HomeAccessory):
         super().run()
 
     @callback
-    def async_update_doorbell_state_event(
+    def _async_update_doorbell_state_event(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         if not state_changed_event_is_same_state(event) and (
             new_state := event.data["new_state"]
         ):
-            self.async_update_doorbell_state(event.data["old_state"], new_state)
+            self._async_update_doorbell_state(event.data["old_state"], new_state)
 
     @callback
-    def async_update_doorbell_state(
+    def _async_update_doorbell_state(
         self, old_state: State | None, new_state: State
     ) -> None:
         """Handle link doorbell sensor state change to update HomeKit value."""
-        assert self.char_doorbell_detected
-        assert self.char_doorbell_detected_switch
+        assert self._char_doorbell_detected
+        assert self._char_doorbell_detected_switch
         state = new_state.state
         if state == STATE_ON or (
             self.doorbell_is_event
@@ -136,8 +136,8 @@ class DoorbellMixin(HomeAccessory):
             and old_state.state != STATE_UNAVAILABLE
             and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            self.char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
-            self.char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
             _LOGGER.debug(
                 "%s: Set linked doorbell %s sensor to %d",
                 self.entity_id,

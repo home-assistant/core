@@ -63,7 +63,7 @@ from .const import (
     DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_MOTION_SENSOR,
 )
-from .doorbell_mixin import DoorbellMixin
+from .doorbell_accessories import HomeDoorbellAccessory
 from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ CONFIG_DEFAULTS = {
 @TYPES.register("Camera")
 # False-positive on pylint, not a CameraEntity
 # pylint: disable-next=hass-enforce-class-module
-class Camera(DoorbellMixin, PyhapCamera):  # type: ignore[misc]
+class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     """Generate a Camera accessory."""
 
     def __init__(
