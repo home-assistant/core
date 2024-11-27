@@ -83,23 +83,25 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return OVERKIZ_TO_HVAC_MODES[
-            cast(
-                str, self.executor.select_state(OverkizState.CORE_DEROGATION_ACTIVATION)
-            )
-        ]
+        if derogation_activation := self.executor.select_state(
+            OverkizState.CORE_DEROGATION_ACTIVATION
+        ):
+            return OVERKIZ_TO_HVAC_MODES[cast(str, derogation_activation)]
+
+        return HVACMode.OFF
 
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode in [HVACMode.AUTO, HVACMode.OFF]:
             state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
 
-        state = cast(str, self.executor.select_state(state_key))
+        if state := self.executor.select_state(state_key):
+            return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(cast(str, state))]
 
-        return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(state)]
+        return PRESET_NONE
 
     @property
     def current_temperature(self) -> float | None:
