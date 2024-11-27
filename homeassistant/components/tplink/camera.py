@@ -10,7 +10,7 @@ from typing import Any
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from kasa import Device, Module
-from kasa.smartcamera.modules import Camera as CameraModule
+from kasa.smartcam.modules import Camera as CameraModule
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
