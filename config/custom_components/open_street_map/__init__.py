@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register the search service
     hass.services.async_register(
-        "openstreetmap",
+        DOMAIN,
         "search",
         async_handle_search,
         schema=vol.Schema({vol.Required("query"): str}),
@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register the get_coordinates service. Not sure if this is needed
     hass.services.async_register(
-        "openstreetmap",
+        DOMAIN,
         "get_coordinates",
         async_handle_get_coordinates,
         schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
@@ -56,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register the get_address_coordinates service
     hass.services.async_register(
-        "openstreetmap",
+        DOMAIN,
         "get_address_coordinates",
         async_handle_get_address_coordinates,
         schema=cv.make_entity_service_schema({vol.Required("query"): str}),
