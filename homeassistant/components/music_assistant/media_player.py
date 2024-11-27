@@ -365,12 +365,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             if (mass_player_id := hass_state.attributes.get("mass_player_id")) is None:
                 continue
             player_ids.append(mass_player_id)
-        await self.mass.players.player_command_sync_many(self.player_id, player_ids)
+        await self.mass.players.player_command_group_many(self.player_id, player_ids)
 
     @catch_musicassistant_error
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.mass.players.player_command_unsync(self.player_id)
+        await self.mass.players.player_command_ungroup(self.player_id)
 
     @catch_musicassistant_error
     async def _async_handle_play_media(
