@@ -52,11 +52,11 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info:
-    status: todo
+    status: exempt
     comment: |
-      I will experiment with this and see if I can get it to work.
+      Unable to discover devices.
   discovery:
-    status: todo
+    status: exempt
     comment: |
       Same as above.
   docs-data-update: todo
