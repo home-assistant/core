@@ -1189,18 +1189,23 @@ def device_info_from_specifications(
 def ensure_via_device_exists(
     hass: HomeAssistant, device_info: DeviceInfo | None, config_entry: ConfigEntry
 ) -> None:
-    """Ensore the via device is in the device registry."""
-    if device_info is None:
+    """Ensure the via device is in the device registry."""
+    if device_info is None or CONF_VIA_DEVICE not in device_info:
         return
     device_registry = dr.async_get(hass)
-    if CONF_VIA_DEVICE in device_info and not device_registry.async_get_device(
-        identifiers={device_info["via_device"]}
-    ):
-        # Ensure the via device exists in the device registry
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={device_info["via_device"]},
-        )
+    if device_registry.async_get_device(identifiers={device_info["via_device"]}):
+        return
+    # Ensure the via device exists in the device registry
+    _LOGGER.debug(
+        "Device identifier %s via_device reference from device_info %s "
+        "not found in the Device Registry, creating new entry",
+        device_info["via_device"],
+        device_info,
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={device_info["via_device"]},
+    )
 
 
 class MqttEntityDeviceInfo(Entity):
