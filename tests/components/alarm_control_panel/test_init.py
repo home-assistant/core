@@ -365,12 +365,13 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
     assert state is not None
 
     assert (
-        "Detected that custom integration 'alarm_control_panel' is setting state directly."
-        " Entity None (<class 'tests.components.alarm_control_panel.test_init."
-        "test_alarm_control_panel_log_deprecated_state_warning_using_state_prop.<locals>.MockLegacyAlarmControlPanel'>)"
-        " should implement the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
-        " at test_init.py, line 123: yield. This will stop working in Home Assistant 2025.11, please create a bug report at"
-        in caplog.text
+        "Detected that custom integration 'alarm_control_panel' is setting state"
+        " directly. Entity None (<class 'tests.components.alarm_control_panel."
+        "test_init.test_alarm_control_panel_log_deprecated_state_warning_using"
+        "_state_prop.<locals>.MockLegacyAlarmControlPanel'>) should implement"
+        " the 'alarm_state' property and return its state using the AlarmControlPanelState"
+        " enum at test_init.py, line 123: yield. This will stop working in Home Assistant"
+        " 2025.11, please create a bug report at" in caplog.text
     )
 
 
@@ -439,10 +440,11 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         "Detected that custom integration 'alarm_control_panel' is setting state directly."
         " Entity alarm_control_panel.test_alarm_control_panel"
         " (<class 'tests.components.alarm_control_panel.test_init."
-        "test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr.<locals>.MockLegacyAlarmControlPanel'>)"
-        " should implement the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
-        " at test_init.py, line 123: yield. This will stop working in Home Assistant 2025.11, please create a bug report at"
-        in caplog.text
+        "test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr."
+        "<locals>.MockLegacyAlarmControlPanel'>) should implement the 'alarm_state' property"
+        " and return its state using the AlarmControlPanelState enum at test_init.py, line 123:"
+        " yield. This will stop working in Home Assistant 2025.11,"
+        " please create a bug report at" in caplog.text
     )
     caplog.clear()
     await help_test_async_alarm_control_panel_service(
