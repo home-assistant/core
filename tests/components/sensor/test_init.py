@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import ModuleType
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -482,6 +483,39 @@ async def test_restore_sensor_restore_state(
     assert entity0.native_value == native_value
     assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
+
+
+async def test_translated_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = MockSensor(
+            name="Test",
+            native_value="123",
+            unique_id="very_unique",
+        )
+        entity0.entity_description = SensorEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="ignored_unit",
+        )
+        setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity0.entity_id
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
 
 
 @pytest.mark.parametrize(
