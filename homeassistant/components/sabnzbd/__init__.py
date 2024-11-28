@@ -25,9 +25,9 @@ from .const import (
     SERVICE_SET_SPEED,
 )
 from .coordinator import SabnzbdUpdateCoordinator
-from .sab import get_client
+from .helpers import get_client
 
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 SERVICES = (
