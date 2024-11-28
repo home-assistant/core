@@ -95,6 +95,7 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             data_schema=STEP_REAUTH_SCHEMA,
             errors=errors,
         )
