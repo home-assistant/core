@@ -13,6 +13,7 @@ from habiticalib import (
     ContentData,
     Habitica,
     HabiticaException,
+    NotAuthorizedError,
     TaskData,
     TaskFilter,
     TooManyRequestsError,
@@ -20,8 +21,13 @@ from habiticalib import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -60,6 +66,37 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         self.habitica = habitica
         self.content: ContentData
 
+    async def _async_setup(self) -> None:
+        """Set up Habitica integration."""
+
+        try:
+            user = await self.habitica.get_user()
+            self.content = (
+                await self.habitica.get_content(user.data.preferences.language)
+            ).data
+        except NotAuthorizedError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"account": self.config_entry.title},
+            ) from e
+        except TooManyRequestsError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+
+        if not self.config_entry.data.get(CONF_NAME):
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_NAME: user.data.profile.name},
+            )
+
     async def _async_update_data(self) -> HabiticaData:
         try:
             user = (await self.habitica.get_user()).data
@@ -67,10 +104,6 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             completed_todos = (
                 await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
             ).data
-            if not getattr(self, "content", None):
-                self.content = (
-                    await self.habitica.get_content(user.preferences.language)
-                ).data
         except TooManyRequestsError:
             _LOGGER.debug("Rate limit exceeded, will try again later")
             return self.data
