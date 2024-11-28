@@ -5,7 +5,7 @@
 # Home Assistant Core
 aiodns==3.2.0
 aiohasupervisor==0.2.1
-aiohttp==3.11.7
+aiohttp==3.11.8
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.2.0
 aiozoneinfo==0.2.1
@@ -30,7 +30,7 @@ cryptography==43.0.1
 Pillow==11.0.0
 propcache==0.2.0
 pyOpenSSL==24.2.1
-orjson==3.10.11
+orjson==3.10.12
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
