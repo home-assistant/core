@@ -1040,7 +1040,7 @@ class PipelineRun:
                     := await conversation.async_handle_sentence_triggers(
                         self.hass, user_input
                     )
-                ):
+                ) is not None:
                     # Sentence trigger matched
                     trigger_response = intent.IntentResponse(
                         self.pipeline.conversation_language
