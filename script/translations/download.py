@@ -10,9 +10,8 @@ import subprocess
 from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
-from .develop import flatten_translations
 from .error import ExitApp
-from .util import get_lokalise_token, load_json_from_path
+from .util import flatten_translations, get_lokalise_token, load_json_from_path
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 DOWNLOAD_DIR = Path("build/translations-download").absolute()
