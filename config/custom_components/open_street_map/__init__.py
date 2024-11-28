@@ -119,7 +119,7 @@ async def async_handle_search(hass: HomeAssistant, call: ServiceCall) -> dict[st
         hass.states.async_set(f"{DOMAIN}.last_search", f"Error: {results['error']}")
         hass.bus.async_fire(f"{DOMAIN}_event", {"error": results["error"]})
     else:
-        hass.bus.async_fire(f"{DOMAIN}._event",
+        hass.bus.async_fire(f"{DOMAIN}_event",
                             {"type": "search",
                              "query": query,
                              "results": results
