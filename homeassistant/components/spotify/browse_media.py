@@ -14,6 +14,7 @@ from spotifyaio import (
     SpotifyClient,
     Track,
 )
+from spotifyaio.models import ItemType, SimplifiedEpisode
 import yarl
 
 from homeassistant.components.media_player import (
@@ -87,6 +88,16 @@ def _get_track_item_payload(
             if show_thumbnails and isinstance(track, Track)
             else None
         ),
+    }
+
+
+def _get_episode_item_payload(episode: SimplifiedEpisode) -> ItemPayload:
+    return {
+        "id": episode.episode_id,
+        "name": episode.name,
+        "type": MediaType.EPISODE,
+        "uri": episode.uri,
+        "thumbnail": fetch_image_url(episode.images),
     }
 
 
@@ -387,10 +398,15 @@ async def build_item_response(  # noqa: C901
         if playlist := await spotify.get_playlist(media_content_id):
             title = playlist.name
             image = playlist.images[0].url if playlist.images else None
-            items = [
-                _get_track_item_payload(playlist_track.track)
-                for playlist_track in playlist.tracks.items
-            ]
+            for playlist_item in playlist.tracks.items:
+                if playlist_item.track.type is ItemType.TRACK:
+                    if TYPE_CHECKING:
+                        assert isinstance(playlist_item.track, Track)
+                    items.append(_get_track_item_payload(playlist_item.track))
+                elif playlist_item.track.type is ItemType.EPISODE:
+                    if TYPE_CHECKING:
+                        assert isinstance(playlist_item.track, SimplifiedEpisode)
+                    items.append(_get_episode_item_payload(playlist_item.track))
     elif media_content_type == MediaType.ALBUM:
         if album := await spotify.get_album(media_content_id):
             title = album.name
@@ -412,16 +428,7 @@ async def build_item_response(  # noqa: C901
         ):
             title = show.name
             image = show.images[0].url if show.images else None
-            items = [
-                {
-                    "id": episode.episode_id,
-                    "name": episode.name,
-                    "type": MediaType.EPISODE,
-                    "uri": episode.uri,
-                    "thumbnail": fetch_image_url(episode.images),
-                }
-                for episode in show_episodes
-            ]
+            items = [_get_episode_item_payload(episode) for episode in show_episodes]
 
     try:
         media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
