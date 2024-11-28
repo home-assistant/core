@@ -506,8 +506,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Set new target hvac mode."""
         self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
 
-    def set_heating_circuit(self, heater=None):
-        #TODO: Convert heater entity ID to water heater SerialNo and find its ID by self._tado.circuits
+    def set_heating_circuit(self, heater:str=None):
         if heater:
             heater = 1
         self._tado.set_zone_heating_circuit(self.zone_id,heater)
