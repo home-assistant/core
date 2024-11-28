@@ -24,7 +24,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from .const import ASSETS_URL, DOMAIN, UNIT_TASKS
+from .const import ASSETS_URL, DOMAIN
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 from .util import entity_used_in, get_attribute_points, get_attributes_total
@@ -84,40 +84,34 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH,
         translation_key=HabitipySensorEntity.HEALTH,
-        native_unit_of_measurement="HP",
         suggested_display_precision=0,
         value_fn=lambda user, _: user.get("stats", {}).get("hp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH_MAX,
         translation_key=HabitipySensorEntity.HEALTH_MAX,
-        native_unit_of_measurement="HP",
         entity_registry_enabled_default=False,
         value_fn=lambda user, _: user.get("stats", {}).get("maxHealth"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA,
         translation_key=HabitipySensorEntity.MANA,
-        native_unit_of_measurement="MP",
         suggested_display_precision=0,
         value_fn=lambda user, _: user.get("stats", {}).get("mp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA_MAX,
         translation_key=HabitipySensorEntity.MANA_MAX,
-        native_unit_of_measurement="MP",
         value_fn=lambda user, _: user.get("stats", {}).get("maxMP"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE,
         translation_key=HabitipySensorEntity.EXPERIENCE,
-        native_unit_of_measurement="XP",
         value_fn=lambda user, _: user.get("stats", {}).get("exp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE_MAX,
         translation_key=HabitipySensorEntity.EXPERIENCE_MAX,
-        native_unit_of_measurement="XP",
         value_fn=lambda user, _: user.get("stats", {}).get("toNextLevel"),
     ),
     HabitipySensorEntityDescription(
@@ -128,7 +122,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GOLD,
         translation_key=HabitipySensorEntity.GOLD,
-        native_unit_of_measurement="GP",
         suggested_display_precision=2,
         value_fn=lambda user, _: user.get("stats", {}).get("gp"),
     ),
@@ -144,7 +137,6 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         translation_key=HabitipySensorEntity.GEMS,
         value_fn=lambda user, _: user.get("balance", 0) * 4,
         suggested_display_precision=0,
-        native_unit_of_measurement="gems",
         entity_picture="shop_gem.png",
     ),
     HabitipySensorEntityDescription(
@@ -229,20 +221,17 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.HABITS,
         translation_key=HabitipySensorEntity.HABITS,
-        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "habit"],
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.DAILIES,
         translation_key=HabitipySensorEntity.DAILIES,
-        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "daily"],
         entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.TODOS,
         translation_key=HabitipySensorEntity.TODOS,
-        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [
             r for r in tasks if r.get("type") == "todo" and not r.get("completed")
         ],
@@ -251,7 +240,6 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.REWARDS,
         translation_key=HabitipySensorEntity.REWARDS,
-        native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "reward"],
     ),
 )
