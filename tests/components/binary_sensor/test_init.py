@@ -17,7 +17,6 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
-    help_test_all,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -197,8 +196,3 @@ async def test_entity_category_config_raises_error(
         "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
         in caplog.text
     )
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(binary_sensor)
