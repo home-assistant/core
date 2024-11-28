@@ -8,10 +8,10 @@ import ast
 from script.hassfest.model import Integration
 
 
-def _has_async_function(module: ast.Module, name: str) -> bool:
-    """Test if the module defines a function."""
+def _has_step_reauth_function(module: ast.Module) -> bool:
+    """Test if the module defines `async_step_reauth` function."""
     return any(
-        type(item) is ast.AsyncFunctionDef and item.name == name
+        type(item) is ast.AsyncFunctionDef and item.name == "async_step_reauth"
         for item in ast.walk(module)
     )
 
@@ -22,7 +22,7 @@ def validate(integration: Integration) -> list[str] | None:
     config_flow_file = integration.path / "config_flow.py"
     config_flow = ast.parse(config_flow_file.read_text())
 
-    if not _has_async_function(config_flow, "async_step_reauth"):
+    if not _has_step_reauth_function(config_flow):
         return [
             "Integration does not support a reauthentication flow "
             f"(is missing `async_step_reauth` in {config_flow_file})"
