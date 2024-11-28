@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -567,10 +566,7 @@ async def test_service_called_with_invalid_host_id(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with (
-        patch.object(MockModuleConnection, "pck") as pck,
-        pytest.raises(ServiceValidationError),
-    ):
+    with patch.object(MockModuleConnection, "pck") as pck, pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
             LcnService.PCK,
