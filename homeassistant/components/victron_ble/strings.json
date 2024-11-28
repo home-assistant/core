@@ -1,0 +1,23 @@
+{
+  "config": {
+    "flow_title": "{title}",
+    "step": {
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "access_token": {
+        "title": "{title}",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}

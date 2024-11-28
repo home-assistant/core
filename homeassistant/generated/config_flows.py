@@ -653,6 +653,7 @@ FLOWS = {
         "version",
         "vesync",
         "vicare",
+        "victron_ble",
         "vilfo",
         "vizio",
         "vlc_telnet",
