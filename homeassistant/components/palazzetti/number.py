@@ -94,7 +94,11 @@ class PalazzettiNumberEntity(PalazzettiEntity, NumberEntity):
             ) from err
         except ValidationError as err:
             raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="on_off_not_available"
+                translation_domain=DOMAIN,
+                translation_key="invalid_combustion_power",
+                translation_placeholders={
+                    "value": str(value),
+                },
             ) from err
 
         await self.coordinator.async_request_refresh()
