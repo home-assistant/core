@@ -1,6 +1,5 @@
 """Test for the alarm control panel const module."""
 
-from types import ModuleType
 from typing import Any
 from unittest.mock import patch
 
@@ -33,7 +32,6 @@ from .conftest import MockAlarmControlPanel
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    help_test_all,
     mock_integration,
     setup_test_component_platform,
 )
@@ -54,15 +52,6 @@ async def help_test_async_alarm_control_panel_service(
         alarm_control_panel.DOMAIN, service, data, blocking=True
     )
     await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    "module",
-    [alarm_control_panel, alarm_control_panel.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
 
 
 def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
