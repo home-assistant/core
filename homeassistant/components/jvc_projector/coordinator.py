@@ -40,8 +40,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         """Get the latest state data."""
         try:
             state_mapping = await self.device.get_state()
-            # Convert Mapping[str, str | None] to dict[str, str]
-            state = {k: v if v is not None else "" for k, v in state_mapping.items()}
+            # Only include non-None values in the final state dict
+            state = {k: v for k, v in state_mapping.items() if v is not None}
         except JvcProjectorConnectError as err:
             raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:
