@@ -44,6 +44,6 @@ def validate(integration: Integration) -> list[str] | None:
     ):
         return [
             "Integration doesn't prevent the same device or service from being "
-            f"set up twice (please review {config_flow_file})"
+            f"set up twice in {config_flow_file}"
         ]
     return None
