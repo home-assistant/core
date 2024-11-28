@@ -35,40 +35,14 @@ JVC_SENSORS = (
         options=const.VAL_POWER,
     ),
     JVCSensorEntityDescription(
-        key=const.KEY_INPUT,
-        translation_key="jvc_hdmi_input",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_FUNCTION_INPUT,
-    ),
-    JVCSensorEntityDescription(
         key=const.KEY_PICTURE_MODE,
         translation_key="jvc_picture_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     JVCSensorEntityDescription(
-        key=const.KEY_INSTALLATION_MODE,
-        translation_key="jvc_installation_mode",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    JVCSensorEntityDescription(
-        key=const.KEY_LASER_DIMMING,
-        translation_key="jvc_laser_dimming_mode",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_LASER_DIMMING,
-    ),
-    JVCSensorEntityDescription(
         key=const.KEY_LASER_VALUE,
         translation_key="jvc_laser_value",
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    JVCSensorEntityDescription(
-        key=const.KEY_LASER_POWER,
-        translation_key="jvc_laser_power",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_LASER_POWER,
     ),
     JVCSensorEntityDescription(
         key=const.KEY_LASER_TIME,
@@ -83,14 +57,6 @@ JVC_SENSORS = (
         options=const.VAL_HDR_CONTENT_TYPE,
     ),
     # niche sensors that are disabled by default
-    JVCSensorEntityDescription(
-        key=const.KEY_ANAMORPHIC,
-        translation_key="jvc_anamorphic_mode",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_ANAMORPHIC,
-        enabled_default=False,
-    ),
     JVCSensorEntityDescription(
         key=const.KEY_HDR,
         translation_key="jvc_hdr_mode",
