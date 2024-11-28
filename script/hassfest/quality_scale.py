@@ -16,9 +16,11 @@ from .quality_scale_validation import (
     RuleValidationProtocol,
     config_entry_unloading,
     config_flow,
+    diagnostics,
     reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
+    strict_typing,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -70,7 +72,7 @@ ALL_RULES = [
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
     Rule("discovery", ScaledQualityScaleTiers.GOLD),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
@@ -93,7 +95,7 @@ ALL_RULES = [
     # PLATINUM
     Rule("async-dependency", ScaledQualityScaleTiers.PLATINUM),
     Rule("inject-websession", ScaledQualityScaleTiers.PLATINUM),
-    Rule("strict-typing", ScaledQualityScaleTiers.PLATINUM),
+    Rule("strict-typing", ScaledQualityScaleTiers.PLATINUM, strict_typing),
 ]
 
 SCALE_RULES = {
