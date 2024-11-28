@@ -6,15 +6,19 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from pypalazzetti.exceptions import CommunicationError, ValidationError
+
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PalazzettiConfigEntry
+from .const import DOMAIN
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
@@ -82,5 +86,15 @@ class PalazzettiNumberEntity(PalazzettiEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
-        await self.entity_description.update_fn(int(value))
+        try:
+            await self.entity_description.update_fn(int(value))
+        except CommunicationError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        except ValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="on_off_not_available"
+            ) from err
+
         await self.coordinator.async_request_refresh()
