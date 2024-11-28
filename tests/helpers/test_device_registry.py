@@ -28,7 +28,6 @@ from tests.common import (
     async_capture_events,
     flush_store,
     help_test_all,
-    import_and_test_deprecated_constant_enum,
 )
 
 
@@ -2907,15 +2906,6 @@ async def test_loading_invalid_configuration_url_from_storage(
 def test_all() -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(dr)
-
-
-@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: dr.DeviceEntryDisabler,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, dr, enum, "DISABLED_", "2025.1")
 
 
 async def test_removing_labels(
