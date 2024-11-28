@@ -54,6 +54,55 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_requires_unique_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_pyschlage_auth: Mock,
+) -> None:
+    """Test we get the form."""
+    data = {
+        "username": "test-username",
+        "password": "test-password",
+    }
+
+    # Create an entry
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["errors"] == {}
+
+    create_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], data
+    )
+    await hass.async_block_till_done()
+
+    mock_pyschlage_auth.authenticate.assert_called_once_with()
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    assert create_result["title"] == "test-username"
+    assert create_result["data"] == data
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    mock_setup_entry.reset_mock()
+    mock_pyschlage_auth.authenticate.reset_mock()
+
+    # Attempt to create the same entry again.
+    init_result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert init_result2["type"] is FlowResultType.FORM
+    assert init_result2["errors"] == {}
+
+    create_result = await hass.config_entries.flow.async_configure(
+        init_result2["flow_id"], data
+    )
+    await hass.async_block_till_done()
+
+    mock_pyschlage_auth.authenticate.assert_called_once_with()
+    assert create_result["type"] is FlowResultType.ABORT
+    assert create_result["reason"] == "already_configured"
+
+
 async def test_form_invalid_auth(
     hass: HomeAssistant, mock_pyschlage_auth: Mock
 ) -> None:
@@ -100,7 +149,6 @@ async def test_reauth(
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""
-    mock_setup_entry.reset_mock()
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
