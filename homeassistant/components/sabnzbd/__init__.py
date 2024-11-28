@@ -27,7 +27,7 @@ from .const import (
 from .coordinator import SabnzbdUpdateCoordinator
 from .helpers import get_client
 
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 SERVICES = (
