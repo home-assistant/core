@@ -17,9 +17,29 @@
         "data": {
           "from": "Start station",
           "to": "End station",
-          "via": "List of up to 5 via stations"
+          "via": "List of up to 5 via stations",
+          "time_station": "Select the relevant station",
+          "time_mode": "Select a time mode"
+        },
+        "data_description": {
+          "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
+          "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
         "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "title": "Swiss Public Transport"
+      },
+      "time_fixed": {
+        "data": {
+          "time_fixed": "Time of day"
+        },
+        "description": "Please select the relevant time for the connection (e.g. 7:12:00 AM every morning).",
+        "title": "Swiss Public Transport"
+      },
+      "time_offset": {
+        "data": {
+          "time_offset": "Time offset"
+        },
+        "description": "Please select the relevant offset to add to the earliest possible connection (e.g. add +00:05:00 offset, taking into account the time to walk to the station)",
         "title": "Swiss Public Transport"
       }
     }
@@ -83,6 +103,21 @@
     },
     "config_entry_not_found": {
       "message": "Swiss public transport integration instance \"{target}\" not found."
+    }
+  },
+  "selector": {
+    "time_station": {
+      "options": {
+        "departure": "Show departure time from start station",
+        "arrival": "Show arrival time at end station"
+      }
+    },
+    "time_mode": {
+      "options": {
+        "now": "Now",
+        "fixed": "At a fixed time of day",
+        "offset": "At an offset from now"
+      }
     }
   }
 }
