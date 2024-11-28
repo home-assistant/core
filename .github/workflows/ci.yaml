@@ -588,14 +588,7 @@ jobs:
       - name: Run hassfest
         run: |
           . venv/bin/activate
-
-          integration_glob="${{ needs.info.outputs.integrations_glob }}"
-          integration_params=()
-          if [[ "${integration_glob}" != "" && "${integration_glob}" != *","* ]]; then
-            integration_params+=(--integration-path homeassistant/components/${integration_glob})
-          fi
-
-          python -m script.hassfest --requirements --action validate ${integration_params[@]}
+          python -m script.hassfest --requirements --action validate
 
   quality-scale:
     name: Check quality scale
