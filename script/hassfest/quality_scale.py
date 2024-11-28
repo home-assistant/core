@@ -16,6 +16,7 @@ from .quality_scale_validation import (
     RuleValidationProtocol,
     config_entry_unloading,
     config_flow,
+    diagnostics,
     reauthentication_flow,
     reconfiguration_flow,
 )
@@ -69,7 +70,7 @@ ALL_RULES = [
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
     Rule("discovery", ScaledQualityScaleTiers.GOLD),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
