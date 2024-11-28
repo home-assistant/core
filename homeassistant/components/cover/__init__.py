@@ -89,6 +89,8 @@ class CoverDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
+DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
+
 
 # mypy: disallow-any-generics
 
