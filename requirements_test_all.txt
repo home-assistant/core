@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==3.0.0
+accuweather==4.0.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -369,7 +369,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.8.5
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.4.0
+aioswitcher==5.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -541,7 +541,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.20.0
+bluetooth-adapters==0.20.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -931,7 +931,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.84.0
 
 # homeassistant.components.conversation
-hassil==2.0.1
+hassil==2.0.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.9
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.5.0
+uiprotect==6.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

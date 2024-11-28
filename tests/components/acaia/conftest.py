@@ -74,7 +74,7 @@ def mock_scale() -> Generator[MagicMock]:
         scale.heartbeat_task = None
         scale.process_queue_task = None
         scale.device_state = AcaiaDeviceState(
-            battery_level=42, units=AcaiaUnitOfMass.GRAMS
+            battery_level=42, units=AcaiaUnitOfMass.OUNCES
         )
         scale.weight = 123.45
         yield scale
