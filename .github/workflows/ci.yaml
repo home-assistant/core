@@ -597,6 +597,52 @@ jobs:
 
           python -m script.hassfest --requirements --action validate ${integration_params[@]}
 
+  quality-scale:
+    name: Check quality scale
+    runs-on: ubuntu-24.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    needs:
+      - info
+      - base
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            libturbojpeg
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.1.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Run quality-scale checks
+        run: |
+          . venv/bin/activate
+
+          integration_glob="${{ needs.info.outputs.integrations_glob }}"
+          integration_params=()
+          if [[ "${integration_glob}" != "" && "${integration_glob}" != *","* ]]; then
+            integration_params+=(--integration-path homeassistant/components/${integration_glob})
+          fi
+
+          python -m script.hassfest -p quality_scale --requirements --action validate ${integration_params[@]}
+
   gen-requirements-all:
     name: Check all requirements
     runs-on: ubuntu-24.04
