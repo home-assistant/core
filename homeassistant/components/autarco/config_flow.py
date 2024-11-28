@@ -21,6 +21,12 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
 
 class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Autarco."""
@@ -70,7 +76,6 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
             client = Autarco(
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
@@ -89,8 +94,6 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA, self._get_reauth_entry().data
-            ),
+            data_schema=STEP_REAUTH_SCHEMA,
             errors=errors,
         )
