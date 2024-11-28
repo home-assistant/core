@@ -19,6 +19,7 @@ from .quality_scale_validation import (
     diagnostics,
     reauthentication_flow,
     reconfiguration_flow,
+    strict_typing,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -93,7 +94,7 @@ ALL_RULES = [
     # PLATINUM
     Rule("async-dependency", ScaledQualityScaleTiers.PLATINUM),
     Rule("inject-websession", ScaledQualityScaleTiers.PLATINUM),
-    Rule("strict-typing", ScaledQualityScaleTiers.PLATINUM),
+    Rule("strict-typing", ScaledQualityScaleTiers.PLATINUM, strict_typing),
 ]
 
 SCALE_RULES = {
