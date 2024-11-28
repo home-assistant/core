@@ -26,16 +26,9 @@ def validate(integration: Integration) -> list[str] | None:
     init_file = integration.path / "__init__.py"
     init = ast.parse(init_file.read_text())
 
-    for item in init.body:
-        if isinstance(item, ast.AsyncFunctionDef) and item.name == "async_setup_entry":
-            if len(item.args.args) != 2:
-                raise ValueError(
-                    f"async_setup_entry in {init_file} has incorrect signature (expected 2 arguments)"
-                )
-            config_entry_arg = item.args.args[1].arg
-            if not _has_attribute_access(item, config_entry_arg, "runtime_data"):
-                return [
-                    "Integration does not use ConfigEntry.runtime_data in async_setup_entry.",
-                ]
+    if not _defines_runtime_data_on_setup(init):
+        return [
+            "Integration does not define entry.runtime_data in async_setup_entry",
+        ]
 
     return None
