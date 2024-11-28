@@ -461,7 +461,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         )
         serv_speaker = self.add_preload_service(SERV_SPEAKER)
         serv_speaker.configure_char(CHAR_MUTE, value=0)
-        self._async_update_doorbell_state(None, state)
+        self.async_update_doorbell_state(None, state)
 
     def _update_available_from_state(self, new_state: State | None) -> None:
         """Update the available property based on the state."""
@@ -494,7 +494,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                 async_track_state_change_event(
                     self.hass,
                     self.linked_doorbell_sensor,
-                    self._async_update_doorbell_state_event,
+                    self.async_update_doorbell_state_event,
                     job_type=HassJobType.Callback,
                 )
             )
@@ -644,6 +644,39 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             )
 
     @ha_callback
+    def async_update_doorbell_state_event(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle state change event listener callback."""
+        if not state_changed_event_is_same_state(event) and (
+            new_state := event.data["new_state"]
+        ):
+            self.async_update_doorbell_state(event.data["old_state"], new_state)
+
+    @ha_callback
+    def async_update_doorbell_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
+        """Handle link doorbell sensor state change to update HomeKit value."""
+        assert self._char_doorbell_detected
+        assert self._char_doorbell_detected_switch
+        state = new_state.state
+        if state == STATE_ON or (
+            self.doorbell_is_event
+            and old_state is not None
+            and old_state.state != STATE_UNAVAILABLE
+            and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
+            _LOGGER.debug(
+                "%s: Set linked doorbell %s sensor to %d",
+                self.entity_id,
+                self.linked_doorbell_sensor,
+                DOORBELL_SINGLE_PRESS,
+            )
+
+    @ha_callback
     def async_update_state(self, new_state: State) -> None:
         """Handle state change to update HomeKit value.
 
@@ -700,39 +733,6 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         it to be a callback to avoid races in reloading accessories.
         """
         self.async_stop()
-
-    @ha_callback
-    def _async_update_doorbell_state_event(
-        self, event: Event[EventStateChangedData]
-    ) -> None:
-        """Handle state change event listener callback."""
-        if not state_changed_event_is_same_state(event) and (
-            new_state := event.data["new_state"]
-        ):
-            self._async_update_doorbell_state(event.data["old_state"], new_state)
-
-    @ha_callback
-    def _async_update_doorbell_state(
-        self, old_state: State | None, new_state: State
-    ) -> None:
-        """Handle link doorbell sensor state change to update HomeKit value."""
-        assert self._char_doorbell_detected
-        assert self._char_doorbell_detected_switch
-        state = new_state.state
-        if state == STATE_ON or (
-            self.doorbell_is_event
-            and old_state is not None
-            and old_state.state != STATE_UNAVAILABLE
-            and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
-            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
-            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
-            _LOGGER.debug(
-                "%s: Set linked doorbell %s sensor to %d",
-                self.entity_id,
-                self.linked_doorbell_sensor,
-                DOORBELL_SINGLE_PRESS,
-            )
 
 
 class HomeBridge(Bridge):  # type: ignore[misc]
