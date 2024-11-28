@@ -37,7 +37,7 @@
       "cache_favorite_points": {
         "default": "mdi:star-check"
       },
-      "cache_hide_date": {
+      "cache_hidden_date": {
         "default": "mdi:calendar-badge"
       },
       "cache_location": {
