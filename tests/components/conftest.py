@@ -5,10 +5,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from importlib.util import find_spec
-import logging
 from pathlib import Path
 import string
-import sys
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -48,8 +46,6 @@ if TYPE_CHECKING:
     from .light.common import MockLight
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
@@ -588,11 +584,7 @@ async def _validate_translation(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
-    _print_stdout(component, f"Validating translation for {full_key}")
     translations = await async_get_translations(hass, "en", category, [component])
-    _print_stdout(
-        component, f"Got translations for {component}.{category}: {translations}"
-    )
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -739,12 +731,6 @@ async def _check_exception_translation(
     )
 
 
-def _print_stdout(domain: str, msg: str) -> None:
-    _LOGGER.debug(msg)
-    if domain == "cloud":
-        print(msg, file=sys.stdout)  # noqa: T201
-
-
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
@@ -783,7 +769,6 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        _print_stdout(domain, f"Translation check needed for {domain}, {issue_id}")
         translation_coros.add(
             _check_create_issue_translations(self, result, translation_errors)
         )
@@ -816,6 +801,17 @@ async def check_translations(
             )
             raise
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    translations_cache = _TranslationsCacheData()
+
+    for loaded_components in translations_cache.loaded.values():
+        loaded_components.discard("cloud")
+    for loaded_categories in translations_cache.cache.values():
+        for loaded_components in loaded_categories.values():
+            loaded_components.pop("cloud", None)
+
     # Use override functions
     with (
         patch(
@@ -845,3 +841,10 @@ async def check_translations(
     for description in translation_errors.values():
         if description not in {"used", "unused"}:
             pytest.fail(description)
+
+    if "cloud" in translations_cache.loaded.get(
+        "en", set()
+    ) and not translations_cache.cache.get("en", {}).get("issues", {}).get("cloud"):
+        pytest.fail(
+            f"Cloud is marked as loaded, but empty: {translations_cache.loaded}"
+        )

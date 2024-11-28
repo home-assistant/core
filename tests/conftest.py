@@ -1190,16 +1190,6 @@ def mock_get_source_ip() -> Generator[_patch]:
         patcher.stop()
 
 
-def _count_keys(dict_, counter=0):
-    for each_key in dict_:
-        if isinstance(dict_[each_key], dict):
-            # Recursive call
-            counter = _count_keys(dict_[each_key], counter + 1)
-        else:
-            counter += 1
-    return counter
-
-
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session.
@@ -1218,11 +1208,6 @@ def translations_once() -> Generator[_patch]:
         yield patcher
     finally:
         patcher.stop()
-
-        if "cloud" in cache.loaded.get("en", set()) and not cache.cache.get(
-            "en", {}
-        ).get("issues", {}).get("cloud"):
-            pytest.fail(f"Cloud is marked as loaded, but empty: {cache.loaded}")
 
 
 @pytest.fixture
