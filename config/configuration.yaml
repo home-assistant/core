@@ -16,7 +16,7 @@ logger:
     homeassistant.components.cloud: debug
 
 # panel for openstreetmap
-open_street_map:
+panel_custom:
   - name: OpenStreetMap-panel
     # url_path needs to be unique for each panel_custom config
     url_path: openstreetmap
@@ -26,3 +26,5 @@ open_street_map:
     config:
       # Data you want to make available to panel
       hello: world
+
+open_street_map:
