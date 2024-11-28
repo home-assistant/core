@@ -36,7 +36,7 @@ rules:
     comment: |
       This integration does not have configuration.
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
@@ -47,7 +47,7 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
