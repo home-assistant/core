@@ -19,7 +19,6 @@ from .quality_scale_validation import (
     reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
-
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}

@@ -1,13 +1,15 @@
 """Enforce that the integration only uses ConfigEntry.runtime_data."""
 
 import ast
-import pathlib
 from collections.abc import Generator
+import pathlib
 
 from script.hassfest.model import Integration
 
 
-def _integration_python_files(integration: Integration) -> Generator[pathlib.Path, None, None]:
+def _integration_python_files(
+    integration: Integration,
+) -> Generator[pathlib.Path, None, None]:
     """Return all python files in the integration."""
     for root, _dirs, files in integration.path.walk():
         for file in files:
@@ -26,6 +28,7 @@ def _has_hass_data(tree: ast.Module) -> bool:
         ):
             return True
     return False
+
 
 def validate(integration: Integration) -> list[str] | None:
     """Validate that the integration does not use hass.data."""
