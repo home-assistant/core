@@ -60,6 +60,9 @@
       },
       "trackable_release_date": {
         "default": "mdi:calendar-badge"
+      },
+      "trackable_location": {
+        "default": "mdi:map-marker"
       }
     }
   }

@@ -2546,6 +2546,9 @@ renson-endura-delta==1.7.1
 # homeassistant.components.reolink
 reolink-aio==0.10.1
 
+# homeassistant.components.geocaching
+reverse_geocode==1.6.5
+
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
 
