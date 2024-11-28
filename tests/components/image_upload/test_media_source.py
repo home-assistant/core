@@ -57,6 +57,7 @@ async def test_browsing(
     assert len(item.children) == 1
     assert item.children[0].media_content_type == "image/png"
     assert item.children[0].identifier == image_id
+    assert item.children[0].thumbnail == f"/api/image/serve/{image_id}/256x256"
 
     with pytest.raises(
         media_source.BrowseError,

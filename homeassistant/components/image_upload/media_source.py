@@ -56,7 +56,7 @@ class ImageUploadMediaSource(MediaSource):
                 media_class=MediaClass.IMAGE,
                 media_content_type=image["content_type"],
                 title=image["name"],
-                thumbnail=f"/api/image/serve/{image['id']}/original",
+                thumbnail=f"/api/image/serve/{image['id']}/256x256",
                 can_play=True,
                 can_expand=False,
             )
