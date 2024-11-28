@@ -70,6 +70,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=self.config_entry.options | user_input)
 
+        section_1 = self.config_entry.options.get("section_1", {})
         return self.async_show_form(
             step_id="options_1",
             data_schema=vol.Schema(
@@ -79,17 +80,36 @@ class OptionsFlowHandler(OptionsFlow):
                             {
                                 vol.Optional(
                                     CONF_BOOLEAN,
-                                    default=self.config_entry.options.get(
-                                        CONF_BOOLEAN, False
-                                    ),
+                                    default=section_1.get(CONF_BOOLEAN, False),
                                 ): bool,
                                 vol.Optional(
                                     CONF_INT,
-                                    default=self.config_entry.options.get(CONF_INT, 10),
+                                    default=section_1.get(CONF_INT, 10),
                                 ): int,
                             }
                         ),
-                        {"collapsed": False},
+                        {
+                            "collapsed": False,
+                        },
+                    ),
+                    vol.Required("section_2"): data_entry_flow.section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    "a",
+                                    default=2,
+                                ): int,
+                                vol.Optional(
+                                    "b",
+                                    default=4,
+                                ): int,
+                            }
+                        ),
+                        {
+                            "collapsed": False,
+                            "multiple": True,
+                            "default": self.config_entry.options.get("section_2", []),
+                        },
                     ),
                 }
             ),

@@ -23,6 +23,14 @@
             },
             "description": "This section allows input of some extra data",
             "name": "Collapsible section"
+          },
+          "section_2": {
+            "data": {
+              "a": "A",
+              "b": "B"
+            },
+            "description": "Some datapoints",
+            "name": "Data point"
           }
         },
         "submit": "Save!"

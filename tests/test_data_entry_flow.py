@@ -1020,6 +1020,36 @@ def test_section_in_serializer() -> None:
             {"name": "option_2", "required": True, "type": "integer"},
         ],
         "type": "expandable",
+        "multiple": False,
+    }
+
+
+def test_section_multiple_in_serializer() -> None:
+    """Test section with multiple with custom_serializer."""
+    assert cv.custom_serializer(
+        data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Optional("option_1", default=False): bool,
+                    vol.Required("option_2"): int,
+                }
+            ),
+            {"collapsed": False, "multiple": True, "default": [{True, 10}]},
+        )
+    ) == {
+        "expanded": True,
+        "schema": [
+            {"default": False, "name": "option_1", "optional": True, "type": "boolean"},
+            {"name": "option_2", "required": True, "type": "integer"},
+        ],
+        "type": "expandable",
+        "multiple": True,
+        "default": [
+            {
+                True,
+                10,
+            },
+        ],
     }
 
 
