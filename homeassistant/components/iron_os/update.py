@@ -15,6 +15,8 @@ from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
 from .coordinator import IronOSFirmwareUpdateCoordinator
 from .entity import IronOSBaseEntity
 
+PARALLEL_UPDATES = 0
+
 UPDATE_DESCRIPTION = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
@@ -92,4 +94,7 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.firmware_update.last_update_success
+        return (
+            self.installed_version is not None
+            and self.firmware_update.last_update_success
+        )

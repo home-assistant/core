@@ -364,7 +364,7 @@ class StatisticsSensor(SensorEntity):
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
-        self.attributes: dict[str, StateType] = {}
+        self._attr_extra_state_attributes = {}
 
         self._state_characteristic_fn: Callable[[], float | int | datetime | None] = (
             self._callable_characteristic_fn(self._state_characteristic)
@@ -462,10 +462,10 @@ class StatisticsSensor(SensorEntity):
         # Here we make a copy the current value, which is okay.
         self._attr_available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
-            self.attributes[STAT_SOURCE_VALUE_VALID] = None
+            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = None
             return
         if new_state.state in (STATE_UNKNOWN, None, ""):
-            self.attributes[STAT_SOURCE_VALUE_VALID] = False
+            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
             return
 
         try:
@@ -475,9 +475,9 @@ class StatisticsSensor(SensorEntity):
             else:
                 self.states.append(float(new_state.state))
             self.ages.append(new_state.last_reported)
-            self.attributes[STAT_SOURCE_VALUE_VALID] = True
+            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
-            self.attributes[STAT_SOURCE_VALUE_VALID] = False
+            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
             _LOGGER.error(
                 "%s: parsing error. Expected number or binary state, but received '%s'",
                 self.entity_id,
@@ -584,13 +584,6 @@ class StatisticsSensor(SensorEntity):
             return None
         return SensorStateClass.MEASUREMENT
 
-    @property
-    def extra_state_attributes(self) -> dict[str, StateType] | None:
-        """Return the state attributes of the sensor."""
-        return {
-            key: value for key, value in self.attributes.items() if value is not None
-        }
-
     def _purge_old_states(self, max_age: timedelta) -> None:
         """Remove states which are older than a given age."""
         now = dt_util.utcnow()
@@ -657,7 +650,7 @@ class StatisticsSensor(SensorEntity):
         if self._samples_max_age is not None:
             self._purge_old_states(self._samples_max_age)
 
-        self._update_attributes()
+        self._update_extra_state_attributes()
         self._update_value()
 
         # If max_age is set, ensure to update again after the defined interval.
@@ -738,22 +731,22 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
-    def _update_attributes(self) -> None:
+    def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
         if self._samples_max_buffer_size is not None:
-            self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
+            self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = round(
                 len(self.states) / self._samples_max_buffer_size, 2
             )
 
         if self._samples_max_age is not None:
             if len(self.states) >= 1:
-                self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
+                self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = round(
                     (self.ages[-1] - self.ages[0]).total_seconds()
                     / self._samples_max_age.total_seconds(),
                     2,
                 )
             else:
-                self.attributes[STAT_AGE_COVERAGE_RATIO] = None
+                self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = 0
 
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.

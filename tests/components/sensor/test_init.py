@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import ModuleType
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -30,6 +31,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
+    UnitOfArea,
     UnitOfDataRate,
     UnitOfEnergy,
     UnitOfLength,
@@ -483,6 +485,69 @@ async def test_restore_sensor_restore_state(
     assert entity0.native_unit_of_measurement == uom
 
 
+async def test_translated_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = MockSensor(
+            name="Test",
+            native_value="123",
+            unique_id="very_unique",
+        )
+        entity0.entity_description = SensorEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+        )
+        setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity0.entity_id
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+
+
+async def test_translated_unit_with_native_unit_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = MockSensor(
+            name="Test",
+            native_value="123",
+            unique_id="very_unique",
+        )
+        entity0.entity_description = SensorEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="bad_unit",
+        )
+        setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        # Setup fails so entity_id is None
+        assert entity0.entity_id is None
+
+
 @pytest.mark.parametrize(
     (
         "device_class",
@@ -651,6 +716,34 @@ async def test_custom_unit(
         "device_class",
     ),
     [
+        # Area
+        (
+            UnitOfArea.SQUARE_KILOMETERS,
+            UnitOfArea.SQUARE_MILES,
+            UnitOfArea.SQUARE_MILES,
+            1000,
+            "1000",
+            "386",
+            SensorDeviceClass.AREA,
+        ),
+        (
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_INCHES,
+            7.24,
+            "7.24",
+            "1.12",
+            SensorDeviceClass.AREA,
+        ),
+        (
+            UnitOfArea.SQUARE_KILOMETERS,
+            "peer_distance",
+            UnitOfArea.SQUARE_KILOMETERS,
+            1000,
+            "1000",
+            "1000",
+            SensorDeviceClass.AREA,
+        ),
         # Distance
         (
             UnitOfLength.KILOMETERS,
@@ -1834,6 +1927,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
     [
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.BATTERY,
         SensorDeviceClass.CO,
@@ -2568,49 +2662,6 @@ def test_deprecated_constants(
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(
         caplog, module, enum, "STATE_CLASS_", "2025.1"
-    )
-
-
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        sensor.SensorDeviceClass.AQI,
-        sensor.SensorDeviceClass.BATTERY,
-        sensor.SensorDeviceClass.CO,
-        sensor.SensorDeviceClass.CO2,
-        sensor.SensorDeviceClass.CURRENT,
-        sensor.SensorDeviceClass.DATE,
-        sensor.SensorDeviceClass.ENERGY,
-        sensor.SensorDeviceClass.FREQUENCY,
-        sensor.SensorDeviceClass.GAS,
-        sensor.SensorDeviceClass.HUMIDITY,
-        sensor.SensorDeviceClass.ILLUMINANCE,
-        sensor.SensorDeviceClass.MONETARY,
-        sensor.SensorDeviceClass.NITROGEN_DIOXIDE,
-        sensor.SensorDeviceClass.NITROGEN_MONOXIDE,
-        sensor.SensorDeviceClass.NITROUS_OXIDE,
-        sensor.SensorDeviceClass.OZONE,
-        sensor.SensorDeviceClass.PM1,
-        sensor.SensorDeviceClass.PM10,
-        sensor.SensorDeviceClass.PM25,
-        sensor.SensorDeviceClass.POWER_FACTOR,
-        sensor.SensorDeviceClass.POWER,
-        sensor.SensorDeviceClass.PRESSURE,
-        sensor.SensorDeviceClass.SIGNAL_STRENGTH,
-        sensor.SensorDeviceClass.SULPHUR_DIOXIDE,
-        sensor.SensorDeviceClass.TEMPERATURE,
-        sensor.SensorDeviceClass.TIMESTAMP,
-        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        sensor.SensorDeviceClass.VOLTAGE,
-    ],
-)
-def test_deprecated_constants_sensor_device_class(
-    caplog: pytest.LogCaptureFixture,
-    enum: sensor.SensorStateClass,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, sensor, enum, "DEVICE_CLASS_", "2025.1"
     )
 
 

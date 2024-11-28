@@ -168,7 +168,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                     vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
-            self.options,
+            self.config_entry.options,
         )
 
     async def async_step_voice_settings(

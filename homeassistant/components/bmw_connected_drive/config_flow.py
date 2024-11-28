@@ -7,7 +7,11 @@ from typing import Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from bimmer_connected.models import (
+    MyBMWAPIError,
+    MyBMWAuthError,
+    MyBMWCaptchaMissingError,
+)
 from httpx import RequestError
 import voluptuous as vol
 
@@ -54,6 +58,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await auth.login()
+    except MyBMWCaptchaMissingError as ex:
+        raise MissingCaptcha from ex
     except MyBMWAuthError as ex:
         raise InvalidAuth from ex
     except (MyBMWAPIError, RequestError) as ex:
@@ -98,6 +104,8 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
                     CONF_GCID: info.get(CONF_GCID),
                 }
+            except MissingCaptcha:
+                errors["base"] = "missing_captcha"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -192,3 +200,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class MissingCaptcha(HomeAssistantError):
+    """Error to indicate the captcha token is missing."""

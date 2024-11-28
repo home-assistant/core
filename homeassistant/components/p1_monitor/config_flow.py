@@ -57,10 +57,13 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): TextSelector(),
-                    vol.Required(CONF_PORT, default=80): NumberSelector(
-                        NumberSelectorConfig(
-                            mode=NumberSelectorMode.BOX,
-                        )
+                    vol.Required(CONF_PORT, default=80): vol.All(
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1, max=65535, mode=NumberSelectorMode.BOX
+                            ),
+                        ),
+                        vol.Coerce(int),
                     ),
                 }
             ),

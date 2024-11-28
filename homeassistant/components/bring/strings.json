@@ -29,13 +29,16 @@
   "entity": {
     "sensor": {
       "urgent": {
-        "name": "Urgent"
+        "name": "Urgent",
+        "unit_of_measurement": "items"
       },
       "convenient": {
-        "name": "On occasion"
+        "name": "On occasion",
+        "unit_of_measurement": "items"
       },
       "discounted": {
-        "name": "Discount only"
+        "name": "Discount only",
+        "unit_of_measurement": "items"
       },
       "list_language": {
         "name": "Region & language",
@@ -66,7 +69,8 @@
         "name": "List access",
         "state": {
           "registered": "Private",
-          "shared": "Shared"
+          "shared": "Shared",
+          "invitation": "Invitation pending"
         }
       }
     }

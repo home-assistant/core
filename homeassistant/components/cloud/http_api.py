@@ -440,16 +440,16 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/update_prefs",
-        vol.Optional(PREF_ENABLE_GOOGLE): bool,
-        vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
+        vol.Optional(PREF_ENABLE_ALEXA): bool,
+        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
+        vol.Optional(PREF_ENABLE_GOOGLE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), validate_language_voice
         ),
-        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
-        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
     }
 )
 @websocket_api.async_response

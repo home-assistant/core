@@ -79,7 +79,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     name: str | None = None
-    blid: str | None = None
+    blid: str
     host: str | None = None
 
     def __init__(self) -> None:
@@ -310,17 +310,18 @@ class RoombaOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_CONTINUOUS,
-                        default=self.options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
+                        default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
                     ): bool,
                     vol.Optional(
                         CONF_DELAY,
-                        default=self.options.get(CONF_DELAY, DEFAULT_DELAY),
+                        default=options.get(CONF_DELAY, DEFAULT_DELAY),
                     ): int,
                 }
             ),

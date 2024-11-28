@@ -143,7 +143,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         config_entry: ConfigEntry,
     ) -> CrownstoneOptionsFlowHandler:
         """Return the Crownstone options."""
-        return CrownstoneOptionsFlowHandler()
+        return CrownstoneOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -210,9 +210,10 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
 class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
     """Handle Crownstone options."""
 
-    def __init__(self) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Crownstone options."""
         super().__init__(OPTIONS_FLOW, self.async_create_new_entry)
+        self.options = config_entry.options.copy()
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
