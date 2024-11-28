@@ -323,6 +323,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
             result = await self._flow_mgr.async_init(
                 handler,
                 context=AuthFlowContext(
+                    headers=request.headers,
                     ip_address=ip_address(request.remote),  # type: ignore[arg-type]
                     credential_only=data.get("type") == "link_user",
                     redirect_uri=redirect_uri,
