@@ -84,7 +84,6 @@ from .exceptions import (
 )
 from .helpers.deprecation import (
     DeferredDeprecatedAlias,
-    DeprecatedConstantEnum,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -175,14 +174,6 @@ class EventStateReportedData(EventStateEventData):
     """
 
     old_last_reported: datetime.datetime
-
-
-# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
-    ConfigSource.DISCOVERED, "2025.1"
-)
-_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 def _deprecated_core_config() -> Any:
