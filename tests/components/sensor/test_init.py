@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from types import ModuleType
 from typing import Any
 from unittest.mock import patch
 
@@ -60,8 +59,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -2641,28 +2638,6 @@ async def test_entity_category_config_raises_error(
     )
 
     assert not hass.states.get("sensor.test")
-
-
-@pytest.mark.parametrize(
-    "module",
-    [sensor, sensor.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
-@pytest.mark.parametrize(("module"), [sensor, sensor.const])
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: sensor.SensorStateClass,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "STATE_CLASS_", "2025.1"
-    )
 
 
 @pytest.mark.parametrize(
