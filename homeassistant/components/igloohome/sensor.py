@@ -3,7 +3,8 @@
 from datetime import timedelta
 import logging
 
-from igloohome_api import Api
+from aiohttp import ClientError
+from igloohome_api import Api, ApiException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -66,7 +67,7 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
         """Update the battery level."""
         try:
             response = await self.api.get_device_info(deviceId=self.device_id)
-        except Exception as e:
+        except (ApiException, ClientError) as e:
             raise HomeAssistantError from e
         else:
             self._attr_native_value = response.batteryLevel
