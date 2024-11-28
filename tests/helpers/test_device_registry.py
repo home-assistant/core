@@ -23,12 +23,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    flush_store,
-    help_test_all,
-)
+from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
 @pytest.fixture
@@ -2901,11 +2896,6 @@ async def test_loading_invalid_configuration_url_from_storage(
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(dr)
 
 
 async def test_removing_labels(
