@@ -819,7 +819,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "plaato",
     "plant",
     "plex",
-    "plugwise",
     "plum_lightpad",
     "pocketcasts",
     "point",

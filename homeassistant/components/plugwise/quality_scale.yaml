@@ -1,0 +1,69 @@
+rules:
+  ## Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup: done
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: Add to docs that one can safely remove (no extra steps needed)
+  docs-actions: done
+  brands: done
+  ## Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not have reauthentication (e.g. fixed authentication for Plugwise Smiles)
+  parallel-updates:
+    status: done
+    comment: Using coordinator
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+  ## Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices: done
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: This integration does not have any reconfiguration steps
+  dynamic-devices: done
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: This integration does not have repairs
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update:
+    status: todo
+    comment: Add to docu
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+  ## Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
