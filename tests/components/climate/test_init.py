@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate
 from homeassistant.components.climate import (
     DOMAIN,
     SET_TEMPERATURE_SCHEMA,
@@ -58,7 +56,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
     mock_integration,
     mock_platform,
     setup_test_component_platform,
@@ -209,15 +206,6 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
             ClimateEntityFeature.SWING_HORIZONTAL_MODE,
         ]
     ]
-
-
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
 
 
 async def test_temperature_features_is_valid(
