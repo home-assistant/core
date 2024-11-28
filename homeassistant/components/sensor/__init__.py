@@ -30,7 +30,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription, EntityPlatformState
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -481,6 +481,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return translation key for unit of measurement."""
         if self.translation_key is None:
             return None
+        if self.platform is None:
+            raise ValueError(
+                f"Sensor {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
         platform = self.platform
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
@@ -535,11 +540,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        if self._platform_state is not EntityPlatformState.ADDED:
-            raise ValueError(
-                f"Cannot access state of entity {self.entity_id} ({type(self)}) "
-                "because it was not added to the entity platform"
-            )
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
