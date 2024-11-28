@@ -722,12 +722,12 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     ]
 
+    async_add_entities(entities)
+
     # create weather data:
     data = BrData(hass, coordinates, timeframe, entities)
     entry.runtime_data[Platform.SENSOR] = data
     await data.async_update()
-
-    async_add_entities(entities)
 
 
 class BrSensor(SensorEntity):
@@ -766,6 +766,9 @@ class BrSensor(SensorEntity):
     def _load_data(self, data):  # noqa: C901
         """Load the sensor with relevant data."""
         # Find sensor
+
+        if not self.enabled:
+            return False
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
