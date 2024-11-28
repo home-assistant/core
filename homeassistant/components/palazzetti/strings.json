@@ -48,6 +48,11 @@
         }
       }
     },
+    "number": {
+      "combustion_power": {
+        "name": "Combustion power"
+      }
+    },
     "sensor": {
       "pellet_quantity": {
         "name": "Pellet quantity"

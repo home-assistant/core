@@ -16,7 +16,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID = "number.stove_power_factor"
+ENTITY_ID = "number.stove_combustion_power"
 
 
 async def test_all_entities(
