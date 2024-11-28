@@ -18,7 +18,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -203,17 +202,3 @@ async def test_entity_category_config_raises_error(
 def test_all() -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(binary_sensor)
-
-
-@pytest.mark.parametrize(
-    "device_class",
-    list(binary_sensor.BinarySensorDeviceClass),
-)
-def test_deprecated_constant_device_class(
-    caplog: pytest.LogCaptureFixture,
-    device_class: binary_sensor.BinarySensorDeviceClass,
-) -> None:
-    """Test deprecated binary sensor device classes."""
-    import_and_test_deprecated_constant_enum(
-        caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
-    )
