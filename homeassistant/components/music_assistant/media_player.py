@@ -193,7 +193,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         super().__init__(mass, player_id)
         self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
         self._attr_supported_features = SUPPORTED_FEATURES
-        if PlayerFeature.SYNC in self.player.supported_features:
+        if PlayerFeature.SET_MEMBERS in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
         if PlayerFeature.VOLUME_MUTE in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
@@ -407,12 +407,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             if (mass_player_id := hass_state.attributes.get("mass_player_id")) is None:
                 continue
             player_ids.append(mass_player_id)
-        await self.mass.players.player_command_sync_many(self.player_id, player_ids)
+        await self.mass.players.player_command_group_many(self.player_id, player_ids)
 
     @catch_musicassistant_error
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.mass.players.player_command_unsync(self.player_id)
+        await self.mass.players.player_command_ungroup(self.player_id)
 
     @catch_musicassistant_error
     async def _async_handle_play_media(
