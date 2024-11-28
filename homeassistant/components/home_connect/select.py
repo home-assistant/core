@@ -265,9 +265,13 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             program_translation_key := PROGRAMS_TRANSLATION_KEYS_MAP.get(program)
         ):
             _LOGGER.debug(
-                'The program "%s" is not part of the official Home Connect API specification',
+                'The program "%s" is not part of the official Home Connect API specification'
+                "and it will not be displayed, if you need to check this program, use `program_key` attribute",
                 program,
             )
+        self._attr_extra_state_attributes = {
+            "program_key": program,
+        }
         self._attr_current_option = program_translation_key
         _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 
