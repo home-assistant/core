@@ -1,4 +1,7 @@
-"""Enforce that the integration only uses ConfigEntry.runtime_data."""
+"""Enforce that the integration only uses ConfigEntry.runtime_data.
+
+https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data
+"""
 
 import ast
 from collections.abc import Generator
