@@ -75,9 +75,10 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication confirmation."""
         errors = {}
 
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             client = Autarco(
-                email=user_input[CONF_EMAIL],
+                email=reauth_entry.data[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 session=async_get_clientsession(self.hass),
             )
@@ -89,7 +90,7 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                    reauth_entry,
                     data_updates=user_input,
                 )
         return self.async_show_form(

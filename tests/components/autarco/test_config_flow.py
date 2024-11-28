@@ -117,7 +117,7 @@ async def test_step_reauth(
     with patch("homeassistant.components.autarco.config_flow.Autarco", autospec=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_EMAIL: "test@autarco.com", CONF_PASSWORD: "new-password"},
+            user_input={CONF_PASSWORD: "new-password"},
         )
 
     assert result.get("type") is FlowResultType.ABORT
@@ -152,7 +152,7 @@ async def test_step_reauth_exceptions(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@autarco.com", CONF_PASSWORD: "new-password"},
+        user_input={CONF_PASSWORD: "new-password"},
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
@@ -162,7 +162,7 @@ async def test_step_reauth_exceptions(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@autarco.com", CONF_PASSWORD: "new-password"},
+        user_input={CONF_PASSWORD: "new-password"},
     )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
