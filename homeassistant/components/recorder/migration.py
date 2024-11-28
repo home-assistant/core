@@ -2486,15 +2486,11 @@ class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate event_type to event_type_ids, return True if completed."""
@@ -2553,11 +2549,6 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 
         _LOGGER.debug("Migrating event_types done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
-
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        _LOGGER.debug("Activating event_types manager as all data is migrated")
-        instance.event_type_manager.active = True
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2764,10 +2755,10 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 NON_LIVE_DATA_MIGRATORS = (
     StatesContextIDMigration,  # Introduced in HA Core 2023.4
     EventsContextIDMigration,  # Introduced in HA Core 2023.4
+    EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
 )
 
 LIVE_DATA_MIGRATORS = (
-    EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
     EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
     EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
 )
