@@ -105,7 +105,7 @@ SCALE_RULES = {
 VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
 
 RULE_URL = (
-    ", please check the documentation at "
+    "Please check the documentation at "
     "https://developers.home-assistant.io/docs/core/"
     "integration-quality-scale/rules/{rule_name}/"
 )
@@ -1372,10 +1372,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             and (errors := validator.validate(integration))
         ):
             for error in errors:
-                integration.add_error(
-                    "quality_scale",
-                    f"[{rule_name}] {error}{RULE_URL.format(rule_name=rule_name)}",
-                )
+                integration.add_error("quality_scale", f"[{rule_name}] {error}")
+            integration.add_error("quality_scale", RULE_URL.format(rule_name=rule_name))
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.
