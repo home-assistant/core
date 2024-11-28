@@ -41,7 +41,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
                 client_secret=user_input[CONF_CLIENT_SECRET],
             )
             try:
-                _ = await auth.async_get_access_token()
+                await auth.async_get_access_token()
             except AuthException:
                 errors["base"] = "invalid_auth"
             except ClientError:
