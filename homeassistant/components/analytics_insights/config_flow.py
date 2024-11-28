@@ -212,6 +212,6 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
                         ),
                     },
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

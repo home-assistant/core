@@ -15,15 +15,10 @@ from .common import get_test_config_dir
     ("side_effect", "content", "expected"),
     [
         (FileNotFoundError, "", None),
-        (None, "", backup_restore.RestoreBackupFileContent(backup_file_path=Path(""))),
+        (None, "", None),
         (
             None,
-            "test;",
-            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
-        ),
-        (
-            None,
-            "test;;;;",
+            '{"path": "test"}',
             backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
         ),
     ],

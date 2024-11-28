@@ -91,15 +91,6 @@ async def async_create_backup(
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
-@bind_hass
-@_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center."""
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/resolution/suggestion/{suggestion_uuid}"
-    return await hassio.send_command(command, timeout=None)
-
-
 @api_data
 async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Green."""
@@ -245,26 +236,6 @@ class HassIO:
         """
         return self.send_command("/ingress/panels", method="get")
 
-    @api_data
-    def get_resolution_info(self) -> Coroutine:
-        """Return data for Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/resolution/info", method="get")
-
-    @api_data
-    def get_suggestions_for_issue(
-        self, issue_id: str
-    ) -> Coroutine[Any, Any, dict[str, Any]]:
-        """Return suggestions for issue from Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            f"/resolution/issue/{issue_id}/suggestions", method="get"
-        )
-
     @_api_bool
     async def update_hass_api(
         self, http_config: dict[str, Any], refresh_token: RefreshToken
@@ -303,14 +274,6 @@ class HassIO:
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
-
-    @_api_bool
-    def apply_suggestion(self, suggestion_uuid: str) -> Coroutine:
-        """Apply a suggestion from supervisor's resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
 
     async def send_command(
         self,
