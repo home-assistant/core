@@ -361,6 +361,8 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         """Select playback device."""
         for device in self.devices.data:
             if device.name == source:
+                if TYPE_CHECKING:
+                    assert device.device_id is not None
                 await self.coordinator.client.transfer_playback(device.device_id)
                 return
 
