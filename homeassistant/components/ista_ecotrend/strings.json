@@ -42,8 +42,7 @@
         "unit_of_measurement": "units"
       },
       "heating_cost": {
-        "name": "Heating cost",
-        "unit_of_measurement": "EUR"
+        "name": "Heating cost"
       },
       "heating_energy": {
         "name": "Heating energy"
@@ -52,8 +51,7 @@
         "name": "Hot water"
       },
       "hot_water_cost": {
-        "name": "Hot water cost",
-        "unit_of_measurement": "EUR"
+        "name": "Hot water cost"
       },
       "hot_water_energy": {
         "name": "Hot water energy"
@@ -62,8 +60,7 @@
         "name": "Water"
       },
       "water_cost": {
-        "name": "Water cost",
-        "unit_of_measurement": "EUR"
+        "name": "Water cost"
       }
     }
   },
