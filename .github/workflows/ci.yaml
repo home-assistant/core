@@ -819,6 +819,12 @@ jobs:
     needs:
       - info
       - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - lint-ruff-format
+      - mypy
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
