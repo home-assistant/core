@@ -589,10 +589,12 @@ jobs:
         run: |
           . venv/bin/activate
 
-          integration_params="${{ needs.info.outputs.integrations_glob }}"
-          integration_params="bring"
-          if [[ "${integration_params}" == *","* ]]; then
-            integration_params=""
+          integration_glob="${{ needs.info.outputs.integrations_glob }}"
+          integration_glob="bring"
+
+          integration_params=""
+          if [[ "${integration_glob}" != "" && "${integration_glob}" != *","* ]]; then
+            integration_params="homeassistant/components/${integration_glob}"
           fi
 
           python -m script.hassfest --requirements --action validate ${integration_params}
