@@ -61,8 +61,6 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication request from Autarco."""
-        self._reauth_email = entry_data[CONF_EMAIL]
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -72,6 +70,7 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
             client = Autarco(
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
@@ -90,11 +89,8 @@ class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_EMAIL, default=self._reauth_email): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, self._get_reauth_entry().data
             ),
             errors=errors,
         )
