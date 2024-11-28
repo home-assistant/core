@@ -92,7 +92,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "voltage": SensorEntityDescription(
         key="voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
