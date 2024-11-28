@@ -56,5 +56,8 @@
         }
       }
     }
-  }
+  },
+  "mounts": [
+    "source=/Users/luojinxia/Local/School_lecture/DAt266/assignment_collabration/frontend,target=/workspaces/frontend,type=bind,consistency=cached"
+  ]
 }
