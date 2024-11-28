@@ -26,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor entities."""
 
-    api: Api = entry.runtime_data
+    api = entry.runtime_data
 
     try:
         devices_response = await api.get_devices()
@@ -34,7 +34,7 @@ async def async_setup_entry(
         raise PlatformNotReady from e
     else:
         async_add_entities(
-            new_entities=(
+            (
                 IgloohomeBatteryEntity(
                     device_id=device.deviceId,
                     device_name=device.deviceName,
