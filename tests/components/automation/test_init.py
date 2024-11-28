@@ -61,7 +61,6 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
-    help_test_all,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -3149,11 +3148,6 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(automation)
 
 
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
