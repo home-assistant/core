@@ -9,7 +9,6 @@ from dataclasses import dataclass
 import logging
 import pathlib
 import string
-import sys
 from typing import Any
 
 from homeassistant.const import (
@@ -32,11 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
-
-
-def _print_stdout(msg: str) -> None:
-    _LOGGER.debug(msg)
-    print(msg, file=sys.stdout)  # noqa: T201
 
 
 def recursive_flatten(
@@ -172,7 +166,6 @@ class _TranslationCache:
         components: set[str],
     ) -> None:
         """Load resources into the cache."""
-        _print_stdout(f"Translation async_load: {language} {components}")
         loaded = self.cache_data.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
             # Translations are never unloaded so if there are no components to load
@@ -184,14 +177,6 @@ class _TranslationCache:
                 # them while we were waiting for the lock.
                 if components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
-                else:
-                    _print_stdout(
-                        f"Translation async_load (locked cache hit): {language} {components}"
-                    )
-        else:
-            _print_stdout(
-                f"Translation async_load (cache hit): {language} {components}"
-            )
 
     async def async_fetch(
         self,
@@ -201,10 +186,6 @@ class _TranslationCache:
     ) -> dict[str, str]:
         """Load resources into the cache and return them."""
         await self.async_load(language, components)
-
-        if "cloud" in components:
-            if not self.get_cached(language, "issues", {"cloud"}):
-                raise ValueError("Cloud component not loaded")
 
         return self.get_cached(language, category, components)
 
@@ -219,10 +200,6 @@ class _TranslationCache:
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
         # copies of the same data in memory.
-        if "cloud" in components:
-            _print_stdout(
-                f"Translation get_cached ({language} {category}): {category_cache}"
-            )
         if len(components) == 1 and (component := next(iter(components))):
             return category_cache.get(component, {})
 
@@ -239,10 +216,6 @@ class _TranslationCache:
             language,
             components,
         )
-        if "cloud" in components:
-            _print_stdout(
-                f"Translation _async_load (cache miss): {language} {components}"
-            )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
@@ -259,11 +232,6 @@ class _TranslationCache:
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
-
-        if "cloud" in components:
-            _print_stdout(
-                f"Translation translation_by_language_strings: {translation_by_language_strings}"
-            )
 
         # English is always the fallback language so we load them first
         self._build_category_cache(
@@ -420,8 +388,9 @@ def async_setup(hass: HomeAssistant) -> None:
 
     Listeners load translations for every loaded component and after config change.
     """
+    cache = _TranslationCache(hass)
     current_language = hass.config.language
-    cache = _async_get_translations_cache(hass)
+    _async_get_translations_cache(hass)
 
     @callback
     def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:

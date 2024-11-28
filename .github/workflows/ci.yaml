@@ -5,7 +5,7 @@ run-name: "${{ github.event_name == 'workflow_dispatch' && format('CI: {0}', git
 on:
   push:
     branches:
-      - dev_debug_translation_issue
+      - dev
       - rc
       - master
   pull_request: ~
