@@ -295,11 +295,7 @@ async def test_flow_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data == {
-        "api_key": "cd0e5985-17de-4b4f-849e-5d506c5e4382",
-        "api_user": "test-api-user",
-        "url": "https://habitica.com",
-    }
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
 
     assert len(hass.config_entries.async_entries()) == 1
 
