@@ -91,12 +91,12 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
-        self.device_id = device_id
-        self.entity_description = description
-        self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
+        self._attr_unique_id = f"{device_id}-{description.key}"
+        self.device_id = device_id
+        self.entity_description = description
 
         native_step = self.device[description.key]["resolution"]
         if description.key != "temperature_offset":

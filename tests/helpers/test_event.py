@@ -4946,7 +4946,8 @@ async def test_async_track_template_no_hass_deprecated(
     """Test async_track_template with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue"
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template(hass, Template("blah"), lambda x, y, z: None)
@@ -4964,7 +4965,8 @@ async def test_async_track_template_result_no_hass_deprecated(
     """Test async_track_template_result with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue"
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template_result(
