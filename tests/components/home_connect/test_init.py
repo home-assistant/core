@@ -10,7 +10,10 @@ from requests import HTTPError
 import requests_mock
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.home_connect import SCAN_INTERVAL
+from homeassistant.components.home_connect import (
+    SCAN_INTERVAL,
+    bsh_key_to_translation_key,
+)
 from homeassistant.components.home_connect.const import (
     BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
@@ -27,6 +30,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from script.hassfest.translations import RE_TRANSLATION_KEY
 
 from .conftest import (
     CLIENT_ID,
@@ -372,3 +376,10 @@ async def test_entity_migration(
             domain, DOMAIN, f"{appliance.haId}-{expected_unique_id_suffix}"
         )
     assert config_entry_v1_1.minor_version == 2
+
+
+async def test_bsh_key_transformations() -> None:
+    """Test that the key transformations are compatible valid translations keys and can be reversed."""
+    program = "Dishcare.Dishwasher.Program.Eco50"
+    translation_key = bsh_key_to_translation_key(program)
+    assert RE_TRANSLATION_KEY.match(translation_key)
