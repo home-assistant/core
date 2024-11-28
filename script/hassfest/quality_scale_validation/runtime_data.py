@@ -1,47 +1,41 @@
-"""Enforce that the integration only uses ConfigEntry.runtime_data.
+"""Enforce that the integration uses ConfigEntry.runtime_data to store runtime data.
 
 https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data
 """
 
 import ast
-from collections.abc import Generator
-import pathlib
 
 from script.hassfest.model import Integration
 
 
-def _integration_python_files(
-    integration: Integration,
-) -> Generator[pathlib.Path, None, None]:
-    """Return all python files in the integration."""
-    for root, _dirs, files in integration.path.walk():
-        for file in files:
-            if file.endswith(".py"):
-                yield root / file
-
-
-def _has_hass_data(tree: ast.Module) -> bool:
-    """Test if the module uses hass.data."""
+def _has_attribute_access(tree: ast.AST, node_name: str, attribute_name: str) -> bool:
+    """Check if a node with the specified attribute is accessed."""
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.Attribute)
             and isinstance(node.value, ast.Name)
-            and node.value.id == "hass"
-            and node.attr == "data"
+            and node.value.id == node_name
+            and node.attr == attribute_name
         ):
             return True
     return False
 
 
 def validate(integration: Integration) -> list[str] | None:
-    """Validate that the integration does not use hass.data."""
-    errors = []
-    for file_path in _integration_python_files(integration):
-        module = ast.parse(file_path.read_text())
-        if _has_hass_data(module):
-            errors.append(
-                "Integration is not exclusively using ConfigEntry.runtime_data "
-                f"(found use of hass.data in {file_path}). You may add an exemption "
-                "to this using hass.data for global storage not specific to a config entry.)",
-            )
-    return errors
+    """Validate that the integration uses ConfigEntry.runtime_data to store runtime data."""
+    init_file = integration.path / "__init__.py"
+    init = ast.parse(init_file.read_text())
+
+    for item in init.body:
+        if isinstance(item, ast.AsyncFunctionDef) and item.name == "async_setup_entry":
+            if len(item.args.args) != 2:
+                raise ValueError(
+                    f"async_setup_entry in {init_file} has incorrect signature (expected 2 arguments)"
+                )
+            config_entry_arg = item.args.args[1].arg
+            if not _has_attribute_access(item, config_entry_arg, "runtime_data"):
+                return [
+                    "Integration does not use ConfigEntry.runtime_data in async_setup_entry.",
+                ]
+
+    return None
