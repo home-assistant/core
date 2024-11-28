@@ -35,13 +35,13 @@ def _has_hass_data(tree: ast.Module) -> bool:
 
 def validate(integration: Integration) -> list[str] | None:
     """Validate that the integration does not use hass.data."""
-    rules = []
+    errors = []
     for file_path in _integration_python_files(integration):
         module = ast.parse(file_path.read_text())
         if _has_hass_data(module):
-            rules.append(
+            errors.append(
                 "Integration is not exclusively using ConfigEntry.runtime_data "
                 f"(found use of hass.data in {file_path}). You may add an exemption "
                 "to this using hass.data for global storage not specific to a config entry.)",
             )
-    return rules
+    return errors
