@@ -20,8 +20,9 @@ from .models import TeslaFleetVehicleData
 PARALLEL_UPDATES = 0
 
 
-async def do_nothing() -> None:
-    """Do nothing."""
+async def do_nothing() -> dict[str, dict[str, bool]]:
+    """Do nothing with a positive result."""
+    return {"response": {"result": True}}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,8 +70,6 @@ async def async_setup_entry(
         for vehicle in entry.runtime_data.vehicles
         for description in DESCRIPTIONS
         if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-        and (not vehicle.signing or description.key == "wake")
-        # Wake doesn't need signing
     )
 
 

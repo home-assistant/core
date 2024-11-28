@@ -44,6 +44,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         super().__init__(
             hass, LOGGER, name=f"{DOMAIN} ({username})", update_interval=UPDATE_INTERVAL
         )
+        self.data = SchlageData(locks={})
         self.api = api
         self.new_locks_callbacks: list[Callable[[dict[str, LockData]], None]] = []
         self.async_add_listener(self._add_remove_locks)
@@ -83,20 +84,25 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     @callback
     def _add_remove_locks(self) -> None:
         """Add newly discovered locks and remove nonexistent locks."""
-        if self.data is None:
-            return
-
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         )
-        previous_locks = {device.id for device in devices}
+        previous_locks = set()
+        previous_locks_by_lock_id = {}
+        for device in devices:
+            for domain, identifier in device.identifiers:
+                if domain == DOMAIN:
+                    previous_locks.add(identifier)
+                    previous_locks_by_lock_id[identifier] = device
+                    continue
         current_locks = set(self.data.locks.keys())
+
         if removed_locks := previous_locks - current_locks:
             LOGGER.debug("Removed locks: %s", ", ".join(removed_locks))
-            for device_id in removed_locks:
+            for lock_id in removed_locks:
                 device_registry.async_update_device(
-                    device_id=device_id,
+                    device_id=previous_locks_by_lock_id[lock_id].id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
 

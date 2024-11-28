@@ -182,13 +182,7 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        value = self._value
-        if value == CLOSED:
-            self._attr_is_closed = True
-        elif value == OPEN:
-            self._attr_is_closed = False
-        else:
-            self._attr_is_closed = None
+        self._attr_is_closed = self._value == CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""

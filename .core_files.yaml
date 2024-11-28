@@ -79,6 +79,7 @@ components: &components
   - homeassistant/components/group/**
   - homeassistant/components/hassio/**
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/homeassistant_hardware/**
   - homeassistant/components/http/**
   - homeassistant/components/image/**
   - homeassistant/components/input_boolean/**
@@ -127,6 +128,7 @@ tests: &tests
   - tests/*.py
   - tests/auth/**
   - tests/backports/**
+  - tests/components/conftest.py
   - tests/components/diagnostics/**
   - tests/components/history/**
   - tests/components/logbook/**

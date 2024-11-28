@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import functools as ft
-from functools import cached_property
 import logging
 from typing import Any, Literal, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -70,6 +70,8 @@ from .const import (  # noqa: F401
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_SWING_HORIZONTAL_MODE,
+    ATTR_SWING_HORIZONTAL_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -101,6 +103,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
@@ -219,6 +222,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_handle_set_swing_mode_service",
         [ClimateEntityFeature.SWING_MODE],
     )
+    component.async_register_entity_service(
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {vol.Required(ATTR_SWING_HORIZONTAL_MODE): cv.string},
+        "async_handle_set_swing_horizontal_mode_service",
+        [ClimateEntityFeature.SWING_HORIZONTAL_MODE],
+    )
 
     return True
 
@@ -256,6 +265,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "fan_modes",
     "swing_mode",
     "swing_modes",
+    "swing_horizontal_mode",
+    "swing_horizontal_modes",
     "supported_features",
     "min_temp",
     "max_temp",
@@ -300,6 +311,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
+    _attr_swing_horizontal_mode: str | None
+    _attr_swing_horizontal_modes: list[str] | None
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
@@ -314,14 +327,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
     _enable_turn_on_off_backwards_compatibility: bool = True
 
-    def __getattribute__(self, __name: str) -> Any:
+    def __getattribute__(self, name: str, /) -> Any:
         """Get attribute.
 
         Modify return of `supported_features` to
         include `_mod_supported_features` if attribute is set.
         """
-        if __name != "supported_features":
-            return super().__getattribute__(__name)
+        if name != "supported_features":
+            return super().__getattribute__(name)
 
         # Convert the supported features to ClimateEntityFeature.
         # Remove this compatibility shim in 2025.1 or later.
@@ -513,6 +526,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODES] = self.swing_modes
 
+        if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
+            data[ATTR_SWING_HORIZONTAL_MODES] = self.swing_horizontal_modes
+
         return data
 
     @final
@@ -563,6 +579,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODE] = self.swing_mode
+
+        if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
+            data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_mode
 
         if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -691,11 +710,27 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_swing_modes
 
+    @cached_property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the horizontal swing setting.
+
+        Requires ClimateEntityFeature.SWING_HORIZONTAL_MODE.
+        """
+        return self._attr_swing_horizontal_mode
+
+    @cached_property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return the list of available horizontal swing modes.
+
+        Requires ClimateEntityFeature.SWING_HORIZONTAL_MODE.
+        """
+        return self._attr_swing_horizontal_modes
+
     @final
     @callback
     def _valid_mode_or_raise(
         self,
-        mode_type: Literal["preset", "swing", "fan", "hvac"],
+        mode_type: Literal["preset", "horizontal_swing", "swing", "fan", "hvac"],
         mode: str | HVACMode,
         modes: list[str] | list[HVACMode] | None,
     ) -> None:
@@ -792,6 +827,26 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         await self.hass.async_add_executor_job(self.set_swing_mode, swing_mode)
+
+    @final
+    async def async_handle_set_swing_horizontal_mode_service(
+        self, swing_horizontal_mode: str
+    ) -> None:
+        """Validate and set new horizontal swing mode."""
+        self._valid_mode_or_raise(
+            "horizontal_swing", swing_horizontal_mode, self.swing_horizontal_modes
+        )
+        await self.async_set_swing_horizontal_mode(swing_horizontal_mode)
+
+    def set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        raise NotImplementedError
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        await self.hass.async_add_executor_job(
+            self.set_swing_horizontal_mode, swing_horizontal_mode
+        )
 
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:

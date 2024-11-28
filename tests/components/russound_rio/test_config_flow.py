@@ -11,7 +11,7 @@ from .const import MOCK_CONFIG, MODEL
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound_client: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -32,13 +32,13 @@ async def test_form(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound_client: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_russound.connect.side_effect = TimeoutError
+    mock_russound_client.connect.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -48,7 +48,7 @@ async def test_form_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Recover with correct information
-    mock_russound.connect.side_effect = None
+    mock_russound_client.connect.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -61,7 +61,7 @@ async def test_form_cannot_connect(
 
 
 async def test_import(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound_client: AsyncMock
 ) -> None:
     """Test we import a config entry."""
     result = await hass.config_entries.flow.async_init(
@@ -77,10 +77,10 @@ async def test_import(
 
 
 async def test_import_cannot_connect(
-    hass: HomeAssistant, mock_russound: AsyncMock
+    hass: HomeAssistant, mock_russound_client: AsyncMock
 ) -> None:
     """Test we handle import cannot connect error."""
-    mock_russound.connect.side_effect = TimeoutError
+    mock_russound_client.connect.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG

@@ -175,13 +175,13 @@ class VlcDevice(MediaPlayerEntity):
 
         # Fall back to filename.
         if data_info := data.get("data"):
-            self._attr_media_title = _get_str(data_info, "filename")
+            media_title = _get_str(data_info, "filename")
 
             # Strip out auth signatures if streaming local media
-            if (media_title := self.media_title) and (
-                pos := media_title.find("?authSig=")
-            ) != -1:
+            if media_title and (pos := media_title.find("?authSig=")) != -1:
                 self._attr_media_title = media_title[:pos]
+            else:
+                self._attr_media_title = media_title
 
     @catch_vlc_errors
     async def async_media_seek(self, position: float) -> None:

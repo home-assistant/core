@@ -78,7 +78,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         self._lock_cfg: ValidatedLockConfig | None = None
-        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -194,9 +193,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_validate()
 
     async def async_step_reauth_validate(
@@ -204,8 +200,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth and validation."""
         errors = {}
-        reauth_entry = self._reauth_entry
-        assert reauth_entry is not None
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             if (
                 device := async_ble_device_from_address(
@@ -222,7 +217,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             ):
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data={**reauth_entry.data, **user_input}
+                    reauth_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
@@ -317,15 +312,11 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> YaleXSBLEOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return YaleXSBLEOptionsFlowHandler(config_entry)
+        return YaleXSBLEOptionsFlowHandler()
 
 
 class YaleXSBLEOptionsFlowHandler(OptionsFlow):
     """Handle YaleXSBLE options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize YaleXSBLE options flow."""
-        self.entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -348,7 +339,9 @@ class YaleXSBLEOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_ALWAYS_CONNECTED,
-                        default=self.entry.options.get(CONF_ALWAYS_CONNECTED, False),
+                        default=self.config_entry.options.get(
+                            CONF_ALWAYS_CONNECTED, False
+                        ),
                     ): bool,
                 }
             ),

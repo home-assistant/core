@@ -159,6 +159,7 @@ async def test_reauthentication(
     setup_credentials: None,
 ) -> None:
     """Test Electric Kiwi reauthentication."""
+    config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -189,6 +190,7 @@ async def test_reauthentication(
     )
 
     await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1

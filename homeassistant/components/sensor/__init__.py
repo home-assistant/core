@@ -8,41 +8,15 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
-from functools import cached_property, partial
+from functools import partial
 import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final, override
 
+from propcache import cached_property
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
-    _DEPRECATED_DEVICE_CLASS_AQI,
-    _DEPRECATED_DEVICE_CLASS_BATTERY,
-    _DEPRECATED_DEVICE_CLASS_CO,
-    _DEPRECATED_DEVICE_CLASS_CO2,
-    _DEPRECATED_DEVICE_CLASS_CURRENT,
-    _DEPRECATED_DEVICE_CLASS_DATE,
-    _DEPRECATED_DEVICE_CLASS_ENERGY,
-    _DEPRECATED_DEVICE_CLASS_FREQUENCY,
-    _DEPRECATED_DEVICE_CLASS_GAS,
-    _DEPRECATED_DEVICE_CLASS_HUMIDITY,
-    _DEPRECATED_DEVICE_CLASS_ILLUMINANCE,
-    _DEPRECATED_DEVICE_CLASS_MONETARY,
-    _DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE,
-    _DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE,
-    _DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE,
-    _DEPRECATED_DEVICE_CLASS_OZONE,
-    _DEPRECATED_DEVICE_CLASS_PM1,
-    _DEPRECATED_DEVICE_CLASS_PM10,
-    _DEPRECATED_DEVICE_CLASS_PM25,
-    _DEPRECATED_DEVICE_CLASS_POWER,
-    _DEPRECATED_DEVICE_CLASS_POWER_FACTOR,
-    _DEPRECATED_DEVICE_CLASS_PRESSURE,
-    _DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH,
-    _DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE,
-    _DEPRECATED_DEVICE_CLASS_TEMPERATURE,
-    _DEPRECATED_DEVICE_CLASS_TIMESTAMP,
-    _DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    _DEPRECATED_DEVICE_CLASS_VOLTAGE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
@@ -502,6 +476,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.suggested_unit_of_measurement
         return None
 
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
+        )
+
     @final
     @property
     @override
@@ -529,7 +514,20 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             return self.hass.config.units.temperature_unit
 
-        # Fourth priority: Native unit
+        # Fourth priority: Unit translation
+        if (translation_key := self._unit_of_measurement_translation_key) and (
+            unit_of_measurement
+            := self.platform.default_language_platform_translations.get(translation_key)
+        ):
+            if native_unit_of_measurement is not None:
+                raise ValueError(
+                    f"Sensor {type(self)} from integration '{self.platform.platform_name}' "
+                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
+                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                )
+            return unit_of_measurement
+
+        # Lowest priority: Native unit
         return native_unit_of_measurement
 
     @final

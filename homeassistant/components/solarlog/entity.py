@@ -38,7 +38,7 @@ class SolarLogCoordinatorEntity(SolarLogBaseEntity):
         """Initialize the SolarLogCoordinator sensor."""
         super().__init__(coordinator, description)
 
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Controller",
@@ -59,8 +59,8 @@ class SolarLogInverterEntity(SolarLogBaseEntity):
     ) -> None:
         """Initialize the SolarLogInverter sensor."""
         super().__init__(coordinator, description)
-        name = f"{coordinator.unique_id}-{slugify(coordinator.solarlog.device_name(device_id))}"
-        self._attr_unique_id = f"{name}-{description.key}"
+        name = f"{coordinator.unique_id}_{slugify(coordinator.solarlog.device_name(device_id))}"
+        self._attr_unique_id = f"{name}_{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Inverter",

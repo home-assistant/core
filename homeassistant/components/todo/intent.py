@@ -34,7 +34,7 @@ class ListAddItemIntent(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None
@@ -62,4 +62,13 @@ class ListAddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_results(
+            [
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=list_name,
+                    id=match_result.states[0].entity_id,
+                )
+            ]
+        )
         return response

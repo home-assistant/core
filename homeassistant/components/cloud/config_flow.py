@@ -18,6 +18,4 @@ class CloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the system step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         return self.async_create_entry(title="Home Assistant Cloud", data={})

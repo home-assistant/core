@@ -111,7 +111,7 @@
   },
   "issues": {
     "deprecated_service_weather_get_forecast": {
-      "title": "Detected use of deprecated service `weather.get_forecast`",
+      "title": "Detected use of deprecated service weather.get_forecast",
       "fix_flow": {
         "step": {
           "confirm": {

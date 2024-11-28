@@ -222,6 +222,16 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      },
+      "island_status": {
+        "default": "mdi:help-circle",
+        "state": {
+          "on_grid": "mdi:transmission-tower",
+          "off_grid": "mdi:transmission-tower-off",
+          "off_grid_unintentional": "mdi:transmission-tower-off",
+          "island_status_unknown": "mdi:help-circle",
+          "off_grid_intentional": "mdi:account-cancel"
+        }
       }
     },
     "switch": {

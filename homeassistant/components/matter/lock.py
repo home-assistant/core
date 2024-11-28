@@ -40,6 +40,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
+    _platform_translation_key = "lock"
 
     @property
     def code_format(self) -> str | None:
@@ -200,7 +201,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
         entity_description=LockEntityDescription(
-            key="MatterLock", translation_key="lock"
+            key="MatterLock",
+            name=None,
         ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),

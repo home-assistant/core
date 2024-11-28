@@ -313,12 +313,24 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "target_temperature", "expected_call_args"),
+    ("service_data", "target_temperature", "current_preset", "expected_call_args"),
     [
-        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, [call(0)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, [call(22)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 18, []),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, []),
+        # mode off always sets target temperature to 0
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, PRESET_COMFORT, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, PRESET_ECO, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, None, [call(0)]),
+        # mode heat sets target temperature based on current scheduled preset,
+        # when not already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_COMFORT, [call(22)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, None, [call(22)]),
+        # mode heat does not set target temperature, when already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, None, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, None, []),
     ],
 )
 async def test_set_hvac_mode(
@@ -326,11 +338,20 @@ async def test_set_hvac_mode(
     fritz: Mock,
     service_data: dict,
     target_temperature: float,
+    current_preset: str,
     expected_call_args: list[_Call],
 ) -> None:
     """Test setting hvac mode."""
     device = FritzDeviceClimateMock()
     device.target_temperature = target_temperature
+
+    if current_preset is PRESET_COMFORT:
+        device.nextchange_temperature = device.eco_temperature
+    elif current_preset is PRESET_ECO:
+        device.nextchange_temperature = device.comfort_temperature
+    else:
+        device.nextchange_endperiod = 0
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )

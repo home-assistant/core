@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
+    BaseProtocol,
     Device,
     DeviceConfig,
     DeviceConnectionParameters,
@@ -17,7 +18,6 @@ from kasa import (
     Module,
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
-from kasa.protocol import BaseProtocol
 from kasa.smart.modules.alarm import Alarm
 from syrupy import SnapshotAssertion
 
@@ -62,7 +62,9 @@ CONN_PARAMS_LEGACY = DeviceConnectionParameters(
     DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
 )
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_LEGACY = {
+    k: v for k, v in DEVICE_CONFIG_LEGACY.to_dict().items() if k != "credentials"
+}
 CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
 CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
@@ -86,8 +88,12 @@ DEVICE_CONFIG_AES = DeviceConfig(
     uses_http=True,
     aes_keys=AES_KEYS,
 )
-DEVICE_CONFIG_DICT_KLAP = DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)
-DEVICE_CONFIG_DICT_AES = DEVICE_CONFIG_AES.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_KLAP = {
+    k: v for k, v in DEVICE_CONFIG_KLAP.to_dict().items() if k != "credentials"
+}
+DEVICE_CONFIG_DICT_AES = {
+    k: v for k, v in DEVICE_CONFIG_AES.to_dict().items() if k != "credentials"
+}
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,
@@ -168,12 +174,18 @@ async def snapshot_platform(
     ), "Please limit the loaded platforms to 1 platform."
 
     translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
+    unique_device_classes = []
     for entity_entry in entity_entries:
         if entity_entry.translation_key:
             key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            single_device_class_translation = False
+            if key not in translations and entity_entry.original_device_class:
+                if entity_entry.original_device_class not in unique_device_classes:
+                    single_device_class_translation = True
+                    unique_device_classes.append(entity_entry.original_device_class)
             assert (
-                key in translations
-            ), f"No translation for entity {entity_entry.unique_id}, expected {key}"
+                (key in translations) or single_device_class_translation
+            ), f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
         assert entity_entry == snapshot(
             name=f"{entity_entry.entity_id}-entry"
         ), f"entity entry snapshot failed for {entity_entry.entity_id}"
