@@ -405,6 +405,7 @@ homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
+homeassistant.components.schlage.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
@@ -438,6 +439,7 @@ homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
+homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
 homeassistant.components.stt.*

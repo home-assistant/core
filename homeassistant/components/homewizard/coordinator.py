@@ -66,7 +66,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                     )
 
         except RequestError as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                ex, translation_domain=DOMAIN, translation_key="communication_error"
+            ) from ex
 
         except DisabledError as ex:
             if not self.api_disabled:
@@ -79,7 +81,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                         self.config_entry.entry_id
                     )
 
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                ex, translation_domain=DOMAIN, translation_key="api_disabled"
+            ) from ex
 
         self.api_disabled = False
 
