@@ -41,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register the search service
     hass.services.async_register(
-        "openstreetmap",
+        DOMAIN,
         "search",
         async_handle_search,
         schema=vol.Schema({vol.Required("query"): str}),
