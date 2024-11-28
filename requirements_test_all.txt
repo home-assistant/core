@@ -200,6 +200,9 @@ aiobafi6==0.9.0
 # homeassistant.components.aws
 aiobotocore==2.13.1
 
+# homeassistant.components.ccl
+aioccl==2024.10
+
 # homeassistant.components.comelit
 aiocomelit==0.9.1
 
