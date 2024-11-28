@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
 from .const import (
+    APPLIANCES_WITH_PROGRAMS,
     ATTR_ALLOWED_VALUES,
     ATTR_CONSTRAINTS,
     ATTR_VALUE,
@@ -35,18 +36,6 @@ from .const import (
 from .entity import HomeConnectDevice, HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-APPLIANCES_WITH_PROGRAMS = (
-    "CleaningRobot",
-    "CoffeeMaker",
-    "Dishwasher",
-    "Dryer",
-    "Hood",
-    "Oven",
-    "WarmingDrawer",
-    "Washer",
-    "WasherDryer",
-)
 
 
 SWITCHES = (

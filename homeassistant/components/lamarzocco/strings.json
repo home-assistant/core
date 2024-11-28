@@ -67,8 +67,10 @@
     "step": {
       "init": {
         "data": {
-          "title": "Update Configuration",
           "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
         }
       }
     }
@@ -199,6 +201,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
     "authentication_failed": {
       "message": "Authentication failed"
     },
