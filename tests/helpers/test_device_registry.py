@@ -1482,7 +1482,9 @@ async def test_removing_area_id(
 
 
 async def test_specifying_via_device_create(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test specifying a via_device and removal of the hub device."""
     config_entry_1 = MockConfigEntry()
@@ -1513,9 +1515,32 @@ async def test_specifying_via_device_create(
     light = device_registry.async_get_device(identifiers={("hue", "456")})
     assert light.via_device_id is None
 
+    # A device with a non existing via_device reference should create
+    light_via_nonexisting_parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections=set(),
+        identifiers={("hue", "789")},
+        manufacturer="manufacturer",
+        model="light",
+        via_device=("hue", "non_existing_123"),
+    )
+    assert {
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
+        '("hue","non_existing_123")' in caplog.text
+    }
+    assert light_via_nonexisting_parent_device is not None
+    assert light_via_nonexisting_parent_device.via_device_id is None
+    nonexisting_parent_device = device_registry.async_get_device(
+        identifiers={("hue", "non_existing_123")}
+    )
+    assert nonexisting_parent_device is None
+
 
 async def test_specifying_via_device_update(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test specifying a via_device and updating."""
     config_entry_1 = MockConfigEntry()
@@ -1529,6 +1554,7 @@ async def test_specifying_via_device_update(
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
         model="light",
+        name="Light",
         via_device=("hue", "0123"),
     )
 
@@ -1552,6 +1578,26 @@ async def test_specifying_via_device_update(
     )
 
     assert light.via_device_id == via.id
+    assert light.name == "Light"
+
+    # Try updating with a non existing via device
+    light = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections=set(),
+        identifiers={("hue", "456")},
+        manufacturer="manufacturer",
+        model="light",
+        name="New light",
+        via_device=("hue", "non_existing_abc"),
+    )
+    assert {
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
+        '("hue","non_existing_123")' in caplog.text
+    }
+    # Assert the name was updated correctly
+    assert light.via_device_id == via.id
+    assert light.name == "New light"
 
 
 async def test_loading_saving_data(
