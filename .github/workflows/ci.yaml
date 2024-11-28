@@ -594,7 +594,7 @@ jobs:
 
           integration_params=""
           if [[ "${integration_glob}" != "" && "${integration_glob}" != *","* ]]; then
-            integration_params="homeassistant/components/${integration_glob}"
+            integration_params="--integration-path homeassistant/components/${integration_glob}"
           fi
 
           python -m script.hassfest --requirements --action validate ${integration_params}
