@@ -101,8 +101,6 @@ class BrowsableMedia(StrEnum):
     CURRENT_USER_RECENTLY_PLAYED = "current_user_recently_played"
     CURRENT_USER_TOP_ARTISTS = "current_user_top_artists"
     CURRENT_USER_TOP_TRACKS = "current_user_top_tracks"
-    CATEGORIES = "categories"
-    FEATURED_PLAYLISTS = "featured_playlists"
     NEW_RELEASES = "new_releases"
 
 
@@ -115,8 +113,6 @@ LIBRARY_MAP = {
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: "Recently played",
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: "Top Artists",
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: "Top Tracks",
-    BrowsableMedia.CATEGORIES.value: "Categories",
-    BrowsableMedia.FEATURED_PLAYLISTS.value: "Featured Playlists",
     BrowsableMedia.NEW_RELEASES.value: "New Releases",
 }
 
@@ -152,18 +148,6 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str, Any] = {
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: {
         "parent": MediaClass.DIRECTORY,
         "children": MediaClass.TRACK,
-    },
-    BrowsableMedia.FEATURED_PLAYLISTS.value: {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.PLAYLIST,
-    },
-    BrowsableMedia.CATEGORIES.value: {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.GENRE,
-    },
-    "category_playlists": {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.PLAYLIST,
     },
     BrowsableMedia.NEW_RELEASES.value: {
         "parent": MediaClass.DIRECTORY,
@@ -354,32 +338,6 @@ async def build_item_response(  # noqa: C901
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
         if top_tracks := await spotify.get_top_tracks():
             items = [_get_track_item_payload(track) for track in top_tracks]
-    elif media_content_type == BrowsableMedia.FEATURED_PLAYLISTS:
-        if featured_playlists := await spotify.get_featured_playlists():
-            items = [
-                _get_playlist_item_payload(playlist) for playlist in featured_playlists
-            ]
-    elif media_content_type == BrowsableMedia.CATEGORIES:
-        if categories := await spotify.get_categories():
-            items = [
-                {
-                    "id": category.category_id,
-                    "name": category.name,
-                    "type": "category_playlists",
-                    "uri": category.category_id,
-                    "thumbnail": category.icons[0].url if category.icons else None,
-                }
-                for category in categories
-            ]
-    elif media_content_type == "category_playlists":
-        if (
-            playlists := await spotify.get_category_playlists(
-                category_id=media_content_id
-            )
-        ) and (category := await spotify.get_category(media_content_id)):
-            title = category.name
-            image = category.icons[0].url if category.icons else None
-            items = [_get_playlist_item_payload(playlist) for playlist in playlists]
     elif media_content_type == BrowsableMedia.NEW_RELEASES:
         if new_releases := await spotify.get_new_releases():
             items = [_get_album_item_payload(album) for album in new_releases]
@@ -428,36 +386,6 @@ async def build_item_response(  # noqa: C901
     except KeyError:
         _LOGGER.debug("Unknown media type received: %s", media_content_type)
         return None
-
-    if media_content_type == BrowsableMedia.CATEGORIES:
-        media_item = BrowseMedia(
-            can_expand=True,
-            can_play=False,
-            children_media_class=media_class["children"],
-            media_class=media_class["parent"],
-            media_content_id=media_content_id,
-            media_content_type=f"{MEDIA_PLAYER_PREFIX}{media_content_type}",
-            title=LIBRARY_MAP.get(media_content_id, "Unknown"),
-        )
-
-        media_item.children = []
-        for item in items:
-            if (item_id := item["id"]) is None:
-                _LOGGER.debug("Missing ID for media item: %s", item)
-                continue
-            media_item.children.append(
-                BrowseMedia(
-                    can_expand=True,
-                    can_play=False,
-                    children_media_class=MediaClass.TRACK,
-                    media_class=MediaClass.PLAYLIST,
-                    media_content_id=item_id,
-                    media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
-                    thumbnail=item["thumbnail"],
-                    title=item["name"],
-                )
-            )
-        return media_item
 
     if title is None:
         title = LIBRARY_MAP.get(media_content_id, "Unknown")
