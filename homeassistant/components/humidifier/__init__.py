@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
 import logging
 from typing import Any, final
 
@@ -22,11 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -34,9 +28,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
-    _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
-    _DEPRECATED_DEVICE_CLASS_HUMIDIFIER,
-    _DEPRECATED_SUPPORT_MODES,
     ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
     ATTR_CURRENT_HUMIDITY,
@@ -314,13 +305,3 @@ async def async_service_humidity_set(
         )
 
     await entity.async_set_humidity(humidity)
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
