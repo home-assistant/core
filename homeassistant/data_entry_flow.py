@@ -99,6 +99,7 @@ class InvalidData(vol.Invalid):
         schema_errors: dict[str, Any],
         **kwargs: Any,
     ) -> None:
+        """Initialize an invalid data exception."""
         super().__init__(message, path, error_message, **kwargs)
         self.schema_errors = schema_errors
 
