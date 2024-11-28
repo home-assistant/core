@@ -35,7 +35,7 @@ from homeassistant.loader import async_get_issue_tracker, async_suggest_report_i
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
