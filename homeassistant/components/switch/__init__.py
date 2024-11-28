@@ -45,6 +45,7 @@ class SwitchDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
+DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 
 
 # mypy: disallow-any-generics
