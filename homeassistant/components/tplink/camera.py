@@ -46,7 +46,7 @@ async def async_setup_entry(
     config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up climate entities."""
+    """Set up camera entities."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
