@@ -75,7 +75,8 @@ class BrData:
 
         # Update all devices
         for dev in self.devices:
-            dev.data_updated(self)
+            if dev.enabled:
+                dev.data_updated(self)
 
     @callback
     def async_schedule_update(self, minute=1):
