@@ -23,12 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -60,21 +54,6 @@ class FanEntityFeature(IntFlag):
     TURN_OFF = 16
     TURN_ON = 32
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the FanEntityFeature enum instead.
-_DEPRECATED_SUPPORT_SET_SPEED = DeprecatedConstantEnum(
-    FanEntityFeature.SET_SPEED, "2025.1"
-)
-_DEPRECATED_SUPPORT_OSCILLATE = DeprecatedConstantEnum(
-    FanEntityFeature.OSCILLATE, "2025.1"
-)
-_DEPRECATED_SUPPORT_DIRECTION = DeprecatedConstantEnum(
-    FanEntityFeature.DIRECTION, "2025.1"
-)
-_DEPRECATED_SUPPORT_PRESET_MODE = DeprecatedConstantEnum(
-    FanEntityFeature.PRESET_MODE, "2025.1"
-)
 
 SERVICE_INCREASE_SPEED = "increase_speed"
 SERVICE_DECREASE_SPEED = "decrease_speed"
@@ -543,11 +522,3 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Requires FanEntityFeature.SET_SPEED.
         """
         return self._attr_preset_modes
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
