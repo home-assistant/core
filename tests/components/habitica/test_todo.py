@@ -217,7 +217,7 @@ async def test_complete_todo_item_exception(
         (
             "todo.test_user_to_do_s",
             "88de7cd9-af2b-49ce-9afd-bf941d87336b",
-            date(day=30, month=7, year=2024),
+            date(2024, 7, 30),
         ),
         (
             "todo.test_user_dailies",
@@ -324,7 +324,7 @@ async def test_add_todo_item(
 
     habitica.create_task.assert_awaited_once_with(
         Task(
-            date=date(day=30, month=7, year=2024),
+            date=date(2024, 7, 30),
             notes="test-description",
             text="test-summary",
             type=TaskType.TODO,

@@ -96,6 +96,25 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     }
 )
 
+SKILL_MAP = {
+    "pickpocket": Skill.PICKPOCKET,
+    "backstab": Skill.BACKSTAB,
+    "smash": Skill.BRUTAL_SMASH,
+    "fireball": Skill.BURST_OF_FLAMES,
+}
+COST_MAP = {
+    "pickpocket": "10 MP",
+    "backstab": "15 MP",
+    "smash": "10 MP",
+    "fireball": "10 MP",
+}
+ITEMID_MAP = {
+    "snowball": Skill.SNOWBALL,
+    "spooky_sparkles": Skill.SPOOKY_SPARKLES,
+    "seafoam": Skill.SEAFOAM,
+    "shiny_seed": Skill.SHINY_SEED,
+}
+
 
 def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     """Return config entry or raise if not found or not loaded."""
@@ -159,18 +178,6 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         """Skill action."""
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
-        SKILL_MAP = {
-            "pickpocket": Skill.PICKPOCKET,
-            "backstab": Skill.BACKSTAB,
-            "smash": Skill.BRUTAL_SMASH,
-            "fireball": Skill.BURST_OF_FLAMES,
-        }
-        COST_MAP = {
-            "pickpocket": "10 MP",
-            "backstab": "15 MP",
-            "smash": "10 MP",
-            "fireball": "10 MP",
-        }
 
         skill = SKILL_MAP[call.data[ATTR_SKILL]]
         cost = COST_MAP[call.data[ATTR_SKILL]]
@@ -334,12 +341,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
-        ITEMID_MAP = {
-            "snowball": Skill.SNOWBALL,
-            "spooky_sparkles": Skill.SPOOKY_SPARKLES,
-            "seafoam": Skill.SEAFOAM,
-            "shiny_seed": Skill.SHINY_SEED,
-        }
+
         item = ITEMID_MAP[call.data[ATTR_ITEM]]
         # check if target is self
         if call.data[ATTR_TARGET] in (
