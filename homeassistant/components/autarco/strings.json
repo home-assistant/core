@@ -13,7 +13,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "[%key:component::autarco::config::step::user::description%]",
+        "description": "The password for {email} is invalid.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
