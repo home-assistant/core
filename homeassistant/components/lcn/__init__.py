@@ -14,6 +14,7 @@ from pypck.connection import (
     PchkLcnNotConnectedError,
     PchkLicenseError,
 )
+from pypck.lcn_defs import LcnEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -124,10 +125,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # register for LCN bus messages
     device_registry = dr.async_get(hass)
+    event_received = partial(async_host_event_received, hass, config_entry)
     input_received = partial(
         async_host_input_received, hass, config_entry, device_registry
     )
 
+    lcn_connection.register_for_events(event_received)
     lcn_connection.register_for_inputs(input_received)
 
     return True
@@ -181,6 +184,31 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         await host[CONNECTION].async_close()
 
     return unload_ok
+
+
+def async_host_event_received(
+    hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
+) -> None:
+    """Process received event from LCN."""
+    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+
+    async def reload_config_entry() -> None:
+        """Close connection and schedule config entry for reload."""
+        await lcn_connection.async_close()
+        hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    if event in (
+        LcnEvent.CONNECTION_LOST,
+        LcnEvent.PING_TIMEOUT,
+    ):
+        _LOGGER.info('The connection to host "%s" has been lost', config_entry.title)
+        hass.async_create_task(reload_config_entry())
+    elif event == LcnEvent.BUS_DISCONNECTED:
+        _LOGGER.info(
+            'The connection to the LCN bus via host "%s" has been disconnected',
+            config_entry.title,
+        )
+        hass.async_create_task(reload_config_entry())
 
 
 def async_host_input_received(
