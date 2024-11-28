@@ -473,11 +473,13 @@ class _ScriptRun:
             script_execution_set("aborted")
         except _StopScript as err:
             script_execution_set("finished", err.response)
-            response = err.response
 
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
                 raise
+
+            response = err.response
+
         except Exception:
             script_execution_set("error")
             raise
