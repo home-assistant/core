@@ -119,6 +119,7 @@ class BinarySensorDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
+DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 
 # mypy: disallow-any-generics
 
