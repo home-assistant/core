@@ -22,9 +22,6 @@ from .const import DOMAIN
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
-MIN_POWER = 1
-MAX_POWER = 5
-
 
 @dataclass(frozen=True, kw_only=True)
 class PalazzettiNumberEntityDescription(NumberEntityDescription):
@@ -40,54 +37,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Palazzetti number platform."""
-    client = config_entry.runtime_data.client
-
-    async_add_entities(
-        [
-            PalazzettiNumberEntity(
-                config_entry.runtime_data,
-                PalazzettiNumberEntityDescription(
-                    key="combustion_power",
-                    translation_key="combustion_power",
-                    device_class=NumberDeviceClass.POWER_FACTOR,
-                    native_min_value=MIN_POWER,
-                    native_max_value=MAX_POWER,
-                    native_step=1,
-                    value_property="power_mode",
-                    update_fn=client.set_power_mode,
-                ),
-                config_entry.entry_id,
-            )
-        ]
-    )
+    async_add_entities([PalazzettiCombustionPowerEntity(config_entry.runtime_data)])
 
 
-class PalazzettiNumberEntity(PalazzettiEntity, NumberEntity):
-    """Representation of Palazzetti number entity."""
+class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
+    """Representation of Palazzetti number entity for Combustion power."""
 
-    entity_description: PalazzettiNumberEntityDescription
+    _attr_translation_key = "combustion_power"
+    _attr_device_class = NumberDeviceClass.POWER_FACTOR
+    _attr_native_min_value = 1
+    _attr_native_max_value = 5
+    _attr_native_step = 1
 
     def __init__(
         self,
         coordinator: PalazzettiDataUpdateCoordinator,
-        description: PalazzettiNumberEntityDescription,
-        entry_id: str,
     ) -> None:
         """Initialize the Palazzetti number entity."""
         super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-combustion_power"
 
     @property
     def native_value(self) -> float:
         """Return the state of the setting entity."""
-        client = self.coordinator.client
-        return getattr(client, self.entity_description.value_property)
+        return self.coordinator.client.power_mode
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         try:
-            await self.entity_description.update_fn(int(value))
+            await self.coordinator.client.set_power_mode(int(value))
         except CommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
