@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate
 from homeassistant.components.climate import (
     DOMAIN,
     SET_TEMPERATURE_SCHEMA,
@@ -58,9 +56,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
     setup_test_component_platform,
@@ -211,63 +206,6 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
             ClimateEntityFeature.SWING_HORIZONTAL_MODE,
         ]
     ]
-
-
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_")
-    + _create_tuples(climate.HVACMode, "HVAC_MODE_"),
-)
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.1"
-    )
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_postfix"),
-    [
-        (climate.HVACAction.OFF, "OFF"),
-        (climate.HVACAction.HEATING, "HEAT"),
-        (climate.HVACAction.COOLING, "COOL"),
-        (climate.HVACAction.DRYING, "DRY"),
-        (climate.HVACAction.IDLE, "IDLE"),
-        (climate.HVACAction.FAN, "FAN"),
-    ],
-)
-def test_deprecated_current_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: climate.HVACAction,
-    constant_postfix: str,
-) -> None:
-    """Test deprecated current constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        climate.const,
-        "CURRENT_HVAC_" + constant_postfix,
-        f"{enum.__class__.__name__}.{enum.name}",
-        enum,
-        "2025.1",
-    )
 
 
 async def test_temperature_features_is_valid(

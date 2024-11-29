@@ -2742,7 +2742,10 @@ class EventIDPostMigration(BaseRunTimeMigration):
 
 
 class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
-    """Migration to remove old entity_id strings from states."""
+    """Migration to remove old entity_id strings from states.
+
+    Introduced in HA Core 2023.4 by PR #89557.
+    """
 
     migration_id = "entity_id_post_migration"
     task = MigrationTask
@@ -2764,9 +2767,9 @@ NON_LIVE_DATA_MIGRATORS = (
 )
 
 LIVE_DATA_MIGRATORS = (
-    EventTypeIDMigration,
-    EntityIDMigration,
-    EventIDPostMigration,
+    EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
+    EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
+    EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
 )
 
 
