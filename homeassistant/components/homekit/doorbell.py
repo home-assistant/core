@@ -110,6 +110,8 @@ class HomeDoorbellAccessory(HomeAccessory):
                 )
             )
 
+        super().run()
+
     @ha_callback
     def async_update_doorbell_state_event(
         self, event: Event[EventStateChangedData]
