@@ -41,6 +41,7 @@ homeassistant.util.unit_system
 # --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
+homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
@@ -405,6 +406,7 @@ homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
+homeassistant.components.schlage.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*

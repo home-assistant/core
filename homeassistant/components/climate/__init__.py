@@ -26,11 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -41,20 +36,6 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
-    _DEPRECATED_HVAC_MODE_AUTO,
-    _DEPRECATED_HVAC_MODE_COOL,
-    _DEPRECATED_HVAC_MODE_DRY,
-    _DEPRECATED_HVAC_MODE_FAN_ONLY,
-    _DEPRECATED_HVAC_MODE_HEAT,
-    _DEPRECATED_HVAC_MODE_HEAT_COOL,
-    _DEPRECATED_HVAC_MODE_OFF,
-    _DEPRECATED_SUPPORT_AUX_HEAT,
-    _DEPRECATED_SUPPORT_FAN_MODE,
-    _DEPRECATED_SUPPORT_PRESET_MODE,
-    _DEPRECATED_SUPPORT_SWING_MODE,
-    _DEPRECATED_SUPPORT_TARGET_HUMIDITY,
-    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE,
-    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE_RANGE,
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -1082,13 +1063,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
