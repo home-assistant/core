@@ -282,97 +282,11 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by local constants",
             constant=re.compile(r"^CONF_UNIT_SYSTEM_(\w+)$"),
         ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^DATA_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by ***DeviceClass enum",
-            constant=re.compile(r"^DEVICE_CLASS_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^ELECTRIC_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^ENERGY_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by EntityCategory enum",
-            constant=re.compile(r"^(ENTITY_CATEGORY_(\w+))|(ENTITY_CATEGORIES)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^FREQUENCY_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^IRRADIATION_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^LENGTH_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^MASS_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^POWER_(?!VOLT_AMPERE_REACTIVE)(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^PRECIPITATION_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^PRESSURE_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^SOUND_PRESSURE_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^SPEED_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^TEMP_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^TIME_(\w+)$"),
-        ),
-        ObsoleteImportMatch(
-            reason="replaced by unit enums",
-            constant=re.compile(r"^VOLUME_(\w+)$"),
-        ),
-    ],
-    "homeassistant.core": [
-        ObsoleteImportMatch(
-            reason="replaced by ConfigSource enum",
-            constant=re.compile(r"^SOURCE_(\w*)$"),
-        ),
-    ],
-    "homeassistant.data_entry_flow": [
-        ObsoleteImportMatch(
-            reason="replaced by FlowResultType enum",
-            constant=re.compile(r"^RESULT_TYPE_(\w*)$"),
-        ),
     ],
     "homeassistant.helpers.config_validation": [
         ObsoleteImportMatch(
             reason="should be imported from homeassistant/components/<platform>",
             constant=re.compile(r"^PLATFORM_SCHEMA(_BASE)?$"),
-        ),
-    ],
-    "homeassistant.helpers.device_registry": [
-        ObsoleteImportMatch(
-            reason="replaced by DeviceEntryDisabler enum",
-            constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
     "homeassistant.helpers.json": [
@@ -381,12 +295,6 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(
                 r"^JSON_DECODE_EXCEPTIONS|JSON_ENCODE_EXCEPTIONS|json_loads$"
             ),
-        ),
-    ],
-    "homeassistant.util": [
-        ObsoleteImportMatch(
-            reason="replaced by unit_conversion.***Converter",
-            constant=re.compile(r"^(distance|pressure|speed|temperature|volume)$"),
         ),
     ],
     "homeassistant.util.unit_system": [
