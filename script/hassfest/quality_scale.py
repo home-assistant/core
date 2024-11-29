@@ -20,6 +20,7 @@ from .quality_scale_validation import (
     reauthentication_flow,
     reconfiguration_flow,
     strict_typing,
+    unique_config_entry,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -53,7 +54,7 @@ ALL_RULES = [
     Rule("runtime-data", ScaledQualityScaleTiers.BRONZE),
     Rule("test-before-configure", ScaledQualityScaleTiers.BRONZE),
     Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE),
-    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE),
+    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
     Rule(
