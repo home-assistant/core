@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -39,6 +40,11 @@ from .const import (
     SERVICE_SELECT_PROGRAM,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
+    SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 
 type HomeConnectConfigEntry = ConfigEntry[api.ConfigEntryAuth]
@@ -158,16 +164,55 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 option[ATTR_UNIT] = option_unit
 
             options.append(option)
-
-        appliance = _get_appliance(hass, device_id)
-        await hass.async_add_executor_job(getattr(appliance, method), program, options)
+        try:
+            appliance = _get_appliance(hass, device_id)
+        except (ValueError, AssertionError) as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+                translation_placeholders={
+                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
+                },
+            ) from err
+        try:
+            await hass.async_add_executor_job(
+                getattr(appliance, method), program, options
+            )
+        except api.HomeConnectError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=method,
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program,
+                },
+            ) from err
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance(hass, device_id)
-        await hass.async_add_executor_job(appliance.execute_command, command)
+        try:
+            appliance = _get_appliance(hass, device_id)
+        except (ValueError, AssertionError) as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+                translation_placeholders={
+                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
+                },
+            ) from err
+        try:
+            await hass.async_add_executor_job(appliance.execute_command, command)
+        except api.HomeConnectError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="execute_command",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "command": command,
+                },
+            ) from err
 
     async def _async_service_key_value(call, method):
         """Execute calls to services taking a key and value."""
@@ -176,20 +221,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unit = call.data.get(ATTR_UNIT)
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance(hass, device_id)
+        try:
+            appliance = _get_appliance(hass, device_id)
+        except (ValueError, AssertionError) as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+                translation_placeholders={
+                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
+                },
+            ) from err
+
+        args = (key, value)
         if unit is not None:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
+            args = (
+                *args,
                 unit,
             )
-        else:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-            )
+
+        try:
+            await hass.async_add_executor_job(getattr(appliance, method), *args)
+        except api.HomeConnectError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=method,
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: key,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                },
+            ) from err
 
     async def async_service_option_active(call):
         """Service for setting an option for an active program."""

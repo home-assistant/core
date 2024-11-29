@@ -30,7 +30,7 @@ from .const import (
     REFRIGERATION_SUPERMODEREFRIGERATOR,
     SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
@@ -140,7 +140,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -164,7 +164,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -230,7 +230,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="stop_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "program": self.program_name,
                 },
             ) from err
         self.async_entity_update()
