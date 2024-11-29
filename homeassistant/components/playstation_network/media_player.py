@@ -1,6 +1,5 @@
 """Media player entity for the Playstation Network Integration."""
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.components.media_player import (
@@ -19,16 +18,6 @@ from .coordinator import PlaystationNetworkData
 from .entity import PlaystationNetworkEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class PSNdata:
-    """PSN dataclass."""
-
-    account = {"id": "", "handle": ""}
-    presence = {"availability": "", "lastAvailableDate": ""}
-    platform = {"status": "", "platform": ""}
-    title = {"name": "", "format": "", "imageURL": None, "playing": False}
 
 
 async def async_setup_entry(
@@ -58,17 +47,18 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
         translation_key="console",
         device_class=MediaPlayerDeviceClass.TV,
     )
+    _attr_media_image_remotely_accessible = True
+    _attr_translation_key = "playstation"
+    _attr_media_content_type = MediaType.GAME
 
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
         self.psn: PlaystationNetworkData = self.coordinator.data
-        _attr_translation_key = "spotify"
-
-    @property
-    def media_image_remotely_accessible(self) -> bool:
-        """Is media image remotely accessible getter."""
-        return True
+        if coordinator.config_entry:
+            self._attr_unique_id = (
+                f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
+            )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -87,19 +77,9 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
                 return MediaPlayerState.OFF
 
     @property
-    def unique_id(self) -> str:
-        """Unique ID Getter."""
-        return f"{self.psn.username.lower()}_{self.psn.platform.get('platform', "").lower()}_console"
-
-    @property
     def name(self) -> str:
         """Name getter."""
         return f"{self.psn.platform.get('platform')} Console"
-
-    @property
-    def media_content_type(self) -> MediaType:
-        """Content type of current playing media."""
-        return MediaType.GAME
 
     @property
     def media_title(self) -> str | None:
@@ -107,13 +87,8 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
         if self.psn.title_metadata.get("npTitleId"):
             return self.psn.title_metadata.get("titleName")
         if self.psn.platform.get("onlineStatus") == "online":
-            return "Browsing the menu"
+            return None
         return None
-
-    @property
-    def app_name(self) -> str:
-        """App name getter."""
-        return ""
 
     @property
     def media_image_url(self) -> str | None:

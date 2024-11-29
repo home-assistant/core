@@ -4,8 +4,8 @@ import logging
 from typing import Any
 
 from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError, PSNAWPException
-from psnawp_api.models import client
-from psnawp_api.psnawp import PSNAWP
+from psnawp_api.models.user import User
+from psnawp_api.psn import PlaystationNetwork
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -27,8 +27,8 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                psn = PSNAWP(user_input.get(CONF_NPSSO, ""))
-                user: client.Client = await self.hass.async_add_executor_job(psn.me)
+                psn = PlaystationNetwork(user_input.get(CONF_NPSSO, ""))
+                user: User = await self.hass.async_add_executor_job(psn.get_user)
             except PSNAWPAuthenticationError:
                 errors["base"] = "invalid_auth"
             except PSNAWPException:

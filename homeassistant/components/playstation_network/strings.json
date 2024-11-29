@@ -3,8 +3,12 @@
     "step": {
       "user": {
         "data": {
-          "npsso": "[%key:common::config_flow::data::pin%]"
-        }
+          "npsso": "NPSSO Token"
+        },
+        "data_description": {
+          "npsso": "Please supply the NPSSO token generated during successful login of your PlayStation Network Account"
+        },
+        "description": "To obtain the NPSSO Token, first login to your playstation account at playstation.com. Then navigate to https://ca.account.sony.com/api/v1/ssocookie to retrieve your npsso token."
       }
     },
     "error": {
