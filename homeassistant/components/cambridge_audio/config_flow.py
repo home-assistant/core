@@ -17,6 +17,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+
 
 class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Cambridge Audio configuration flow."""
@@ -72,12 +74,10 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
         if not user_input:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-                errors=errors,
+                data_schema=DATA_SCHEMA,
             )
         return await self.async_step_user(user_input)
 
@@ -114,6 +114,6 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.disconnect()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
