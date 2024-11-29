@@ -198,7 +198,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         try:
             response = await coordinator.habitica.cast_skill(skill, task_id)
         except TooManyRequestsError as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
             ) from e
@@ -248,7 +248,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         try:
             response = await func()
         except TooManyRequestsError as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
             ) from e
@@ -309,7 +309,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         try:
             response = await coordinator.habitica.update_score(task_id, direction)
         except TooManyRequestsError as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
             ) from e
@@ -385,7 +385,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         try:
             response = await coordinator.habitica.cast_skill(item, target_id)
         except TooManyRequestsError as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
             ) from e

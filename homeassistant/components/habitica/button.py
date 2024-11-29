@@ -332,7 +332,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         try:
             await self.entity_description.press_fn(self.coordinator)
         except TooManyRequestsError as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
             ) from e

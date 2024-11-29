@@ -217,7 +217,7 @@ async def test_button_press(
         (
             ERROR_TOO_MANY_REQUESTS,
             "Rate limit exceeded, try again later",
-            ServiceValidationError,
+            HomeAssistantError,
         ),
         (
             ERROR_BAD_REQUEST,
