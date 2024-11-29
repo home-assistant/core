@@ -57,16 +57,16 @@ class HomeDoorbellAccessory(HomeAccessory):
     ) -> None:
         """Initialize a Accessory object."""
         super().__init__(
-            hass=hass,
-            driver=driver,
-            name=name,
-            entity_id=entity_id,
-            aid=aid,
-            config=config,
-            args=args,
-            category=category,
-            device_id=device_id,
-            kwargs=kwargs,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            *args,
+            category,
+            device_id,
+            **kwargs,
         )
 
         self._char_doorbell_detected = None
