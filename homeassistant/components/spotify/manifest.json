@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/spotify",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["spotipy"],
-  "requirements": ["spotifyaio==0.8.8"],
+  "loggers": ["spotifyaio"],
+  "requirements": ["spotifyaio==0.8.10"],
   "zeroconf": ["_spotify-connect._tcp.local."]
 }

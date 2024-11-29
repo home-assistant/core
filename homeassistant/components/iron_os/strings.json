@@ -5,10 +5,13 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Ensure your device is powered on and within Bluetooth range before continuing"
         }
       },
       "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+        "description": "Do you want to set up {name}?\n\n*Ensure your device is powered on and within Bluetooth range before continuing*"
       }
     },
     "abort": {
