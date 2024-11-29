@@ -43,6 +43,9 @@
     }
   },
   "exceptions": {
+    "incorrect_oauth2_scope": {
+      "message": "Incorrect OAuth2 scope"
+    },
     "set_number_error": {
       "message": "Failed to set new value {value} for {point}/{entity}"
     },

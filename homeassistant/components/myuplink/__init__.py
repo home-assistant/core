@@ -61,7 +61,10 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
 
     if set(config_entry.data["token"]["scope"].split(" ")) != set(OAUTH2_SCOPES):
-        raise ConfigEntryAuthFailed("Incorrect OAuth2 scope")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="incorrect_oauth2_scope",
+        )
 
     # Setup MyUplinkAPI and coordinator for data fetch
     api = MyUplinkAPI(auth)
