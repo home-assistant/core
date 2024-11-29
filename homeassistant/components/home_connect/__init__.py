@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -170,7 +170,7 @@ async def _run_appliance_service[*_Ts](
     try:
         await hass.async_add_executor_job(getattr(appliance, method), args)
     except api.HomeConnectError as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=error_translation_key,
             translation_placeholders={
