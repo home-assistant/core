@@ -2090,7 +2090,7 @@ pymsteams==0.1.12
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==0.2.1
+pynecil==1.0.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -2897,7 +2897,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.3
+uiprotect==6.6.4
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
