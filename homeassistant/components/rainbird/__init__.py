@@ -65,8 +65,6 @@ def _async_register_clientsession_shutdown(
 async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     clientsession = async_create_clientsession()
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 

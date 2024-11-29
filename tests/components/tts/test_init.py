@@ -1990,5 +1990,5 @@ async def test_default_engine_prefer_cloud_entity(
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
 
-    # Reset the `cloud` translations cache
+    # Reset the `cloud` translations cache to avoid flaky translation checks
     reset_translation_cache(hass, ["cloud"])
