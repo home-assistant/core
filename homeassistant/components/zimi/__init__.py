@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from zcc import ControlPointError
+from zcc import ControlPoint, ControlPointError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -18,7 +18,13 @@ from .helpers import async_connect_to_controller
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+class ZimiConfigEntry(ConfigEntry):
+    """Zimi ConfigEntry with correct runtime_data type."""
+
+    runtime_data: ControlPoint
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
     """Connect to Zimi Controller and register device."""
     _LOGGER.debug("Zimi setup starting")
 
@@ -60,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
     """Unload a config entry."""
 
     api = entry.runtime_data
