@@ -297,6 +297,20 @@ async def test_media_player_join_players_action(
         target_player=mass_player_id,
         child_player_ids=["00:00:00:00:00:02"],
     )
+    # test again with invalid source player
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(
+        HomeAssistantError, match="Entity media_player.blah_blah not found"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_GROUP_MEMBERS: ["media_player.blah_blah"],
+            },
+            blocking=True,
+        )
 
 
 async def test_media_player_unjoin_player_action(
