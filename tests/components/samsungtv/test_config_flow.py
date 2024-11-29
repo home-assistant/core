@@ -15,13 +15,8 @@ from samsungtvws.exceptions import (
 )
 from websockets import frames
 
-# WebSocketProtocolError was deprecated in websockets '14.0'
 # pylint: disable-next=no-name-in-module
-from websockets.exceptions import (
-    ConnectionClosedError,
-    WebSocketException,
-    WebSocketProtocolError,
-)
+from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
@@ -404,7 +399,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
     ):
         # websocket device not supported
@@ -787,12 +782,12 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
         ) as remotews,
-        patch.object(remotews, "open", side_effect=WebSocketProtocolError("Boom")),
+        patch.object(remotews, "open", side_effect=WebSocketException("Boom")),
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -1742,7 +1737,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
     ):
         result = await hass.config_entries.flow.async_init(

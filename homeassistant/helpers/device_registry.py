@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import lru_cache, partial
+from functools import lru_cache
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -32,12 +32,6 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
@@ -84,16 +78,6 @@ class DeviceEntryDisabler(StrEnum):
     CONFIG_ENTRY = "config_entry"
     INTEGRATION = "integration"
     USER = "user"
-
-
-# DISABLED_* are deprecated, to be removed in 2022.3
-_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
-    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
-)
-_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
-    DeviceEntryDisabler.INTEGRATION, "2025.1"
-)
-_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -1480,11 +1464,3 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
