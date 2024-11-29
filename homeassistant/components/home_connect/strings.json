@@ -40,11 +40,11 @@
     "set_light_color": {
       "message": "Error while trying to set color of {entity_id}: {description}"
     },
-    "set_setting_entity_id": {
-      "message": "Error while trying to assign the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
+    "set_setting_entity": {
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
     },
     "set_setting": {
-      "message": "Error while trying to assign the value \"{value}\" to the setting \"{key}\": {description}"
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\": {description}"
     },
     "turn_on": {
       "message": "Error while trying to turn on {entity_id} ({key}): {description}"
