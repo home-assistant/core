@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ERROR_BAD_REQUEST, ERROR_TOO_MANY_REQUESTS
@@ -94,7 +94,7 @@ async def test_turn_on_off_toggle(
 @pytest.mark.parametrize(
     ("raise_exception", "expected_exception"),
     [
-        (ERROR_TOO_MANY_REQUESTS, ServiceValidationError),
+        (ERROR_TOO_MANY_REQUESTS, HomeAssistantError),
         (ERROR_BAD_REQUEST, HomeAssistantError),
     ],
 )

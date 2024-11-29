@@ -199,7 +199,7 @@ async def test_cast_skill(
                 ATTR_SKILL: "smash",
             },
             ERROR_TOO_MANY_REQUESTS,
-            ServiceValidationError,
+            HomeAssistantError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
@@ -336,7 +336,7 @@ async def test_handle_quests(
     [
         (
             ERROR_TOO_MANY_REQUESTS,
-            ServiceValidationError,
+            HomeAssistantError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
@@ -502,7 +502,7 @@ async def test_score_task(
                 ATTR_DIRECTION: "up",
             },
             ERROR_TOO_MANY_REQUESTS,
-            ServiceValidationError,
+            HomeAssistantError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
@@ -725,7 +725,7 @@ async def test_transformation(
             },
             None,
             ERROR_TOO_MANY_REQUESTS,
-            ServiceValidationError,
+            HomeAssistantError,
             RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
