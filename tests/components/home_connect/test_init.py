@@ -29,7 +29,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from script.hassfest.translations import RE_TRANSLATION_KEY
 
@@ -306,7 +306,7 @@ async def test_services_exception(
     problematic_appliance: Mock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Raise a ServiceValidationError when there is an API error."""
+    """Raise a HomeAssistantError when there is an API error."""
     get_appliances.return_value = [problematic_appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
@@ -319,7 +319,7 @@ async def test_services_exception(
 
     service_call["service_data"]["device_id"] = device_entry.id
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(**service_call)
 
 
