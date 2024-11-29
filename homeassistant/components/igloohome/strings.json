@@ -7,6 +7,10 @@
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client Secret"
+        },
+        "data_description": {
+          "client_id": "Client ID provided by your iglooaccess account.",
+          "client_secret": "Client Secret provided by your iglooaccess account."
         }
       }
     },
