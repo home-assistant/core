@@ -10,7 +10,6 @@ from requests.exceptions import ConnectionError
 import rxv
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -135,9 +134,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(
-        self, user_input=None
-    ) -> data_entry_flow.ConfigFlowResult:
+    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
