@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 
@@ -60,11 +61,11 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
         """Initialize calendar entity."""
         super().__init__(coordinator, self.entity_description)
 
+    @abstractmethod
     def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
-        """Implement in calendar entities."""
-        raise NotImplementedError
+        """Return events."""
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -80,7 +81,7 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
         return self.get_events(start_date, end_date)
 
     @property
-    def today(self) -> datetime:
+    def start_of_today(self) -> datetime:
         """Habitica daystart."""
         return dt_util.start_of_local_day(
             datetime.fromisoformat(self.coordinator.data.user["lastCron"])
@@ -95,7 +96,7 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
                 start_date, end_date - timedelta(days=1), inc=True
             )
         # if no end_date is given, return only the next recurrence
-        return [recurrences.after(self.today, inc=True)]
+        return [recurrences.after(start_date, inc=True)]
 
 
 class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
@@ -170,7 +171,9 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         if end:
             return recurrence.date() + timedelta(days=1)
         return (
-            dt_util.start_of_local_day() if recurrence == self.today else recurrence
+            dt_util.start_of_local_day()
+            if recurrence == self.start_of_today
+            else recurrence
         ).date() + timedelta(days=1)
 
     def get_events(
@@ -179,9 +182,9 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         """Get dailies and recurrences for a given period or the next upcoming."""
 
         # we only have dailies for today and future recurrences
-        if end_date and end_date < self.today:
+        if end_date and end_date < self.start_of_today:
             return []
-        start_date = max(start_date, self.today)
+        start_date = max(start_date, self.start_of_today)
 
         events = []
         for task in self.coordinator.data.tasks:
@@ -194,8 +197,10 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
                 recurrences, start_date, end_date
             )
             for recurrence in recurrence_dates:
-                is_future_event = recurrence > self.today
-                is_current_event = recurrence <= self.today and not task["completed"]
+                is_future_event = recurrence > self.start_of_today
+                is_current_event = (
+                    recurrence <= self.start_of_today and not task["completed"]
+                )
 
                 if not is_future_event and not is_current_event:
                     continue
@@ -221,13 +226,15 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return next(iter(self.get_events(self.today)), None)
+        return next(iter(self.get_events(self.start_of_today)), None)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | None] | None:
         """Return entity specific state attributes."""
         return {
-            "yesterdaily": self.event.start < self.today.date() if self.event else None
+            "yesterdaily": self.event.start < self.start_of_today.date()
+            if self.event
+            else None
         }
 
 
@@ -315,23 +322,25 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
         """Reminders for dailies."""
 
         events = []
-        if end_date and end_date < self.today:
+        if end_date and end_date < self.start_of_today:
             return []
-        start_date = max(start_date, self.today)
+        start_date = max(start_date, self.start_of_today)
 
         for task in self.coordinator.data.tasks:
             if not (task["type"] == HabiticaTaskType.DAILY and task["everyX"]):
                 continue
 
             recurrences = build_rrule(task)
-            recurrences_start = self.today
+            recurrences_start = self.start_of_today
 
             recurrence_dates = self.get_recurrence_dates(
                 recurrences, recurrences_start, end_date
             )
             for recurrence in recurrence_dates:
-                is_future_event = recurrence > self.today
-                is_current_event = recurrence <= self.today and not task["completed"]
+                is_future_event = recurrence > self.start_of_today
+                is_current_event = (
+                    recurrence <= self.start_of_today and not task["completed"]
+                )
 
                 if not is_future_event and not is_current_event:
                     continue
