@@ -1,0 +1,12 @@
+"""Constants for the F5 TTS Client component."""
+
+DOMAIN = "f5_tts_client"
+DEFAULT_TIMEOUT = 15
+
+# Audio processing
+AUDIO_ENCODING = "utf-8"
+AUDIO_INPUT_FORMAT = "f32le"
+AUDIO_CHANNEL_MODE = "1"  # stereo
+AUDIO_STREAM_CHUNK_SIZE = 4096
+AUDIO_INPUT_RATE = 24000
+AUDIO_STREAM_TERMINATOR = b"END_OF_AUDIO"

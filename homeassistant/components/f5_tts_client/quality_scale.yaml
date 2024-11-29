@@ -1,0 +1,24 @@
+rules:
+  # Bronze
+  action-setup: done # done
+  appropriate-polling: done # done
+  brands: done # done
+  common-modules: done # done
+  config-flow-test-coverage: done # done
+  config-flow: done # done
+  dependency-transparency: done # done
+  docs-actions: done # tbd
+  docs-high-level-description: done # tbd
+  docs-installation-instructions: done # tbd
+  docs-removal-instructions: done
+  entity-event-setup: # done
+    status: exempt
+    comment: >
+      There is no event registering due to the integration being related to TTS
+  entity-unique-id: done # done
+  has-entity-name: done # done
+  runtime-data: done # done
+  test-before-configure: done # done
+  test-before-setup: done # done
+  unique-config-entry: done # done
+

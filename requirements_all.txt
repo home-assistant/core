@@ -896,6 +896,9 @@ fastdotcom==0.0.3
 # homeassistant.components.feedreader
 feedparser==6.0.11
 
+# homeassistant.components.f5_tts_client
+ffmpeg-python==0.2.0
+
 # homeassistant.components.file
 file-read-backwards==2.0.0
 

@@ -447,6 +447,8 @@ build.json @home-assistant/supervisor
 /tests/components/evohome/ @zxdavb
 /homeassistant/components/ezviz/ @RenierM26 @baqs
 /tests/components/ezviz/ @RenierM26 @baqs
+/homeassistant/components/f5_tts_client/ @smickovskid
+/tests/components/f5_tts_client/ @smickovskid
 /homeassistant/components/faa_delays/ @ntilley905
 /tests/components/faa_delays/ @ntilley905
 /homeassistant/components/fan/ @home-assistant/core

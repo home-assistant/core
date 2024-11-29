@@ -1,0 +1,13 @@
+{
+  "domain": "f5_tts_client",
+  "name": "F5 TTS Client",
+  "codeowners": ["@smickovskid"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/f5_tts_client",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["ffmpeg-python==0.2.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

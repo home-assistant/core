@@ -179,6 +179,7 @@ FLOWS = {
         "eufylife_ble",
         "evil_genius_labs",
         "ezviz",
+        "f5_tts_client",
         "faa_delays",
         "fastdotcom",
         "feedreader",
