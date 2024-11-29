@@ -14,7 +14,7 @@ from igloohome_api import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) ->
     api = IgloohomeApi(auth=authentication)
     try:
         devices = (await api.get_devices()).payload
-    except (AuthException, ApiException, ClientError) as e:
+    except AuthException as e:
+        raise ConfigEntryAuthFailed from e
+    except (ApiException, ClientError) as e:
         raise ConfigEntryNotReady from e
     else:
         entry.runtime_data = (api, devices)
