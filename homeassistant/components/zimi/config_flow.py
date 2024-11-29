@@ -36,10 +36,11 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
 
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
         if user_input is not None:
             data: dict[str, Any] = {"title": "ZIMI Controller"}
-            errors: dict[str, str] = {}
-            description_placeholders: dict[str, str] = {}
 
             try:
                 if not user_input[CONF_HOST]:
@@ -100,14 +101,12 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(data[CONF_MAC])
             self._abort_if_unique_id_configured()
 
-            if errors:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA,
-                    errors=errors,
-                    description_placeholders=description_placeholders,
-                )
+            if not errors:
+                return self.async_create_entry(title=data["title"], data=data)
 
-            return self.async_create_entry(title=data["title"], data=data)
-
-        return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
