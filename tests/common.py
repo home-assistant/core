@@ -1837,7 +1837,12 @@ def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
 @lru_cache
 def get_quality_scale(integration: str) -> dict[str, str]:
     """Load quality scale for integration."""
-    raw = load_yaml_dict(f"homeassistant/components/{integration}/quality_scale.yaml")
+    quality_scale_file = pathlib.Path(
+        f"homeassistant/components/{integration}/quality_scale.yaml"
+    )
+    if not quality_scale_file.exists():
+        return {}
+    raw = load_yaml_dict()
     return {
         rule: details if isinstance(details, str) else details["status"]
         for rule, details in raw["rules"].items()
