@@ -601,7 +601,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "State",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: f"device_state-{obj_id}",
         value_fn=async_device_state_value_fn,
