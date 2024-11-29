@@ -54,6 +54,9 @@ if TYPE_CHECKING:
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
 
+# Regex for accessing the integration name from the test path
+RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([a-zA-Z_]*)\/.*")
+
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
 def patch_zeroconf_multiple_catcher() -> Generator[None]:
@@ -802,7 +805,6 @@ async def _check_create_issue_translations(
 
 
 def _get_request_quality_scale(request: pytest.FixtureRequest, rule: str) -> str:
-    RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([a-zA-Z_]*)\/.*")
     if not (match := RE_REQUEST_DOMAIN.match(str(request.path))):
         return "todo"
     integration = match.groups(1)[0]
