@@ -36,7 +36,6 @@
   "entity": {
     "sensor": {
       "device_state": {
-        "name": "State",
         "state": {
           "disconnected": "Disconnected",
           "connected": "Connected",
