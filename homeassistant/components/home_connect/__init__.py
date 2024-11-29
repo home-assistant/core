@@ -145,6 +145,20 @@ def _get_appliance(
     raise ValueError(f"Appliance for device id {device_entry.id} not found")
 
 
+def _get_appliance_or_rise_service_validation_error(device_id, hass):
+    """Return a Home Connect appliance instance or raise a service validation error."""
+    try:
+        return _get_appliance(hass, device_id)
+    except (ValueError, AssertionError) as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+            translation_placeholders={
+                SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
+            },
+        ) from err
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Connect component."""
 
@@ -164,16 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 option[ATTR_UNIT] = option_unit
 
             options.append(option)
-        try:
-            appliance = _get_appliance(hass, device_id)
-        except (ValueError, AssertionError) as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
-                translation_placeholders={
-                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
-                },
-            ) from err
+        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
         try:
             await hass.async_add_executor_job(
                 getattr(appliance, method), program, options
@@ -192,16 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
-        try:
-            appliance = _get_appliance(hass, device_id)
-        except (ValueError, AssertionError) as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
-                translation_placeholders={
-                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
-                },
-            ) from err
+        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
         try:
             await hass.async_add_executor_job(appliance.execute_command, command)
         except api.HomeConnectError as err:
@@ -221,17 +217,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unit = call.data.get(ATTR_UNIT)
         device_id = call.data[ATTR_DEVICE_ID]
 
-        try:
-            appliance = _get_appliance(hass, device_id)
-        except (ValueError, AssertionError) as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
-                translation_placeholders={
-                    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
-                },
-            ) from err
-
+        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
         args = (key, value)
         if unit is not None:
             args = (
