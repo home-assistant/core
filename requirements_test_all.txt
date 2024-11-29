@@ -57,7 +57,7 @@ PyFronius==0.7.3
 PyLoadAPI==1.3.2
 
 # homeassistant.components.met_eireann
-PyMetEireann==2021.8.0
+PyMetEireann==2024.11.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==27.0.2
+aioesphomeapi==27.0.3
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -351,7 +351,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.0.1
+aioshelly==12.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -516,7 +516,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.16.4
+bimmer-connected[china]==0.17.0
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -956,10 +956,10 @@ hole==0.8.0
 holidays==0.61
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241106.2
+home-assistant-frontend==20241127.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.11.13
+home-assistant-intents==2024.11.27
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1178,7 +1178,7 @@ mozart-api==4.1.1.116.3
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.0.5
+music-assistant-client==1.0.8
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -1449,7 +1449,7 @@ pyatag==0.3.5.3
 pyatmo==8.1.0
 
 # homeassistant.components.apple_tv
-pyatv==0.15.1
+pyatv==0.16.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1632,7 +1632,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.11
+pylamarzocco==1.2.12
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2086,7 +2086,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.6.0
+samsungtvws[async,encrypted]==2.7.1
 
 # homeassistant.components.sanix
 sanix==1.0.6
@@ -2171,7 +2171,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==0.8.8
+spotifyaio==0.8.10
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.2
+uiprotect==6.6.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2464,7 +2464,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.40
+zha==0.0.41
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.59.1
