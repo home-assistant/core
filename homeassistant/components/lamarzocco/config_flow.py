@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import re
 from typing import Any
 
 from pylamarzocco.client_cloud import LaMarzoccoCloudClient
@@ -283,14 +282,6 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
 
-        # guard against hostname changes
-        if not re.match(r"^(LM|MR|GS)\d{6}$", discovery_info.hostname):
-            _LOGGER.debug(
-                "Discovered La Marzocco machine with invalid hostname: %s, most likely hostname has been changed",
-                discovery_info.hostname,
-            )
-            return self.async_abort(reason="non_serial_hostname")
-
         serial = discovery_info.hostname.upper()
 
         await self.async_set_unique_id(serial)
@@ -300,6 +291,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: discovery_info.macaddress,
             }
         )
+        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.macaddress})
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",

@@ -507,11 +507,11 @@ async def test_dhcp_discovery_abort_on_hostname_changed(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname="custom_name",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="00:00:00:00:00:00",
         ),
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "non_serial_hostname"
+    assert result["reason"] == "already_configured"
 
 
 async def test_dhcp_already_configured_and_update(
