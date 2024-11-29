@@ -126,7 +126,7 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 def get_attribute_points(
     user: UserData, content: ContentData, attribute: str
 ) -> dict[str, float]:
-    """Get modifiers contributing to strength attribute."""
+    """Get modifiers contributing to STR/INT/CON/PER attributes."""
 
     equipment = sum(
         getattr(stats, attribute)
