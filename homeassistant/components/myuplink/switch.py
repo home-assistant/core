@@ -16,6 +16,8 @@ from .const import F_SERIES
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
+PARALLEL_UPDATES = 1
+
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
     F_SERIES: {
         "50004": SwitchEntityDescription(

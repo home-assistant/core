@@ -29,6 +29,8 @@ from .const import F_SERIES
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
+PARALLEL_UPDATES = 1
+
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
         key="celsius",

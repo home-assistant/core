@@ -16,6 +16,8 @@ from .const import F_SERIES
 from .entity import MyUplinkEntity, MyUplinkSystemEntity
 from .helpers import find_matching_platform, transform_model_series
 
+PARALLEL_UPDATES = 1
+
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
     F_SERIES: {
         "43161": BinarySensorEntityDescription(
