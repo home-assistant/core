@@ -30,14 +30,21 @@ async def async_setup_entry(
 
     api: ControlPoint = config_entry.runtime_data
 
-    async_add_entities(ZimiLight(device, api) for device in api.lights)
+    async_add_entities(
+        ZimiLight(device, api)
+        for device in filter(lambda light: light.type != "dimmer", api.lights)
+    )
+    async_add_entities(
+        ZimiDimmer(device, api)
+        for device in filter(lambda light: light.type == "dimmer", api.lights)
+    )
 
 
 class ZimiLight(LightEntity):
     """Representation of a Zimi Light."""
 
     def __init__(self, light: ControlPointDevice, api: ControlPoint) -> None:
-        """Initialize an ZimiLight."""
+        """Initialize a ZimiLight."""
 
         self._attr_unique_id = light.identifier
         self._attr_name = light.name.strip()
@@ -62,15 +69,6 @@ class ZimiLight(LightEntity):
     def available(self) -> bool:
         """Return True if Home Assistant is able to read the state and control the underlying device."""
         return self._light.is_connected
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-
-        if self._light.type == "dimmer":
-            return self._light.brightness * 255 / 100
-
-        return None
 
     @property
     def is_on(self) -> bool:
@@ -114,3 +112,18 @@ class ZimiLight(LightEntity):
 
     def update(self) -> None:
         """Fetch new state data for this light."""
+
+
+class ZimiDimmer(ZimiLight):
+    """Zimi Light supporting dimming."""
+
+    def __init__(self, light: ControlPointDevice, api: ControlPoint) -> None:
+        """Initialize a ZimiDimmer."""
+        super().__init__(light, api)
+        if self._light.type != "dimmer":
+            raise ValueError("ZimiDimmer needs a dimmable light")
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of the light."""
+        return self._light.brightness * 255 / 100
