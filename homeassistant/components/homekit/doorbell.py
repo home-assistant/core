@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyhap.const import CATEGORY_OTHER
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -13,13 +12,12 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HassJobType,
-    HomeAssistant,
     State,
     callback as ha_callback,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .accessories import HomeAccessory, HomeDriver
+from .accessories import HomeAccessory
 from .const import (
     CHAR_MUTE,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
@@ -42,25 +40,11 @@ class HomeDoorbellAccessory(HomeAccessory):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        driver: HomeDriver,
-        name: str,
-        entity_id: str,
-        aid: int,
-        config: dict[str, Any],
         *args: Any,
-        category: int = CATEGORY_OTHER,
         **kwargs: Any,
     ) -> None:
         """Initialize a Accessory object."""
         super().__init__(
-            hass,
-            driver,
-            name,
-            entity_id,
-            aid,
-            config,
-            category,
             *args,
             **kwargs,
         )
