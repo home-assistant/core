@@ -37,8 +37,12 @@ rules:
     comment: |
       No custom actions are defined.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration parameters
+  docs-installation-parameters:
+    status: exempt
+    comment: No configuration parameters
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -93,4 +97,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo
