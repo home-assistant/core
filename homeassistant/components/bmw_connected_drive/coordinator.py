@@ -84,11 +84,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
-            _LOGGER.debug(
-                "bimmer_connected: refresh token %s > %s",
-                old_refresh_token,
-                self.account.refresh_token,
-            )
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""

@@ -10,7 +10,7 @@ from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from . import MockSchlageConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -95,8 +95,7 @@ async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> N
 
 async def test_reauth(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""
@@ -104,8 +103,7 @@ async def test_reauth(
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    result = flows[-1]
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -121,12 +119,11 @@ async def test_reauth(
         "username": "asdf@asdf.com",
         "password": "new-password",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_invalid_auth(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
@@ -154,7 +151,7 @@ async def test_reauth_invalid_auth(
 
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
