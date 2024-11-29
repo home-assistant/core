@@ -218,15 +218,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         device_id = call.data[ATTR_DEVICE_ID]
 
         appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
-        args = (key, value)
-        if unit is not None:
-            args = (
-                *args,
-                unit,
-            )
-
         try:
-            await hass.async_add_executor_job(getattr(appliance, method), *args)
+            await hass.async_add_executor_job(
+                getattr(appliance, method),
+                *((key, value) if unit is None else (key, value, unit)),
+            )
         except api.HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
