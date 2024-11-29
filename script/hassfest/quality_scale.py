@@ -17,6 +17,7 @@ from .quality_scale_validation import (
     config_entry_unloading,
     config_flow,
     diagnostics,
+    discovery,
     reauthentication_flow,
     reconfiguration_flow,
     strict_typing,
@@ -73,7 +74,7 @@ ALL_RULES = [
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
     Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
-    Rule("discovery", ScaledQualityScaleTiers.GOLD),
+    Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
     Rule("docs-examples", ScaledQualityScaleTiers.GOLD),
