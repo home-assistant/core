@@ -447,7 +447,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 msgtype, context=service.context, **kwargs
             )
 
-        if messages:
+        if service.return_response and messages:
             return {
                 "chats": [
                     {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
