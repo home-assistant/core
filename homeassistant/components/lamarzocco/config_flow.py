@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -163,7 +163,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
                 if not await LaMarzoccoLocalClient.validate_connection(
-                    client=get_async_client(self.hass),
+                    client=async_get_clientsession(self.hass),
                     host=user_input[CONF_HOST],
                     token=selected_device.communication_key,
                 ):

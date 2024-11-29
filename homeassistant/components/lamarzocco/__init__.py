@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=get_async_client(hass),
+        client=async_get_clientsession(hass),
     )
 
     # initialize local API
@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         local_client = LaMarzoccoLocalClient(
             host=host,
             local_bearer=entry.data[CONF_TOKEN],
-            client=get_async_client(hass),
+            client=async_get_clientsession(hass),
         )
 
     # initialize Bluetooth
