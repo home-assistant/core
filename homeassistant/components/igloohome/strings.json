@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Client Credentials",
+        "title": "API Access Credentials",
         "description": "Add a set of client credentials created under your iglooaccess account.",
         "data": {
           "client_id": "Client ID",
