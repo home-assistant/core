@@ -40,8 +40,6 @@ from .const import (
     SERVICE_SELECT_PROGRAM,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
-    SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
-    SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
@@ -145,16 +143,18 @@ def _get_appliance(
     raise ValueError(f"Appliance for device id {device_entry.id} not found")
 
 
-def _get_appliance_or_rise_service_validation_error(device_id, hass):
+def _get_appliance_or_raise_service_validation_error(
+    hass: HomeAssistant, device_id: str
+) -> api.HomeConnectAppliance:
     """Return a Home Connect appliance instance or raise a service validation error."""
     try:
         return _get_appliance(hass, device_id)
     except (ValueError, AssertionError) as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key=SVE_TRANSLATION_KEY_APPLIANCE_NOT_FOUND,
+            translation_key="appliance_not_found",
             translation_placeholders={
-                SVE_TRANSLATION_PLACEHOLDER_DEVICE_ID: device_id,
+                "device_id": device_id,
             },
         ) from err
 
@@ -178,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 option[ATTR_UNIT] = option_unit
 
             options.append(option)
-        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
+        appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
         try:
             await hass.async_add_executor_job(
                 getattr(appliance, method), program, options
@@ -197,7 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
+        appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
         try:
             await hass.async_add_executor_job(appliance.execute_command, command)
         except api.HomeConnectError as err:
@@ -217,7 +217,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unit = call.data.get(ATTR_UNIT)
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_or_rise_service_validation_error(device_id, hass)
+        appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
         args = (key, value)
         if unit is not None:
             args = (
