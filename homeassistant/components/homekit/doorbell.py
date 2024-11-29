@@ -50,7 +50,6 @@ class HomeDoorbellAccessory(HomeAccessory):
         config: dict[str, Any],
         *args: Any,
         category: int = CATEGORY_OTHER,
-        device_id: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a Accessory object."""
@@ -62,7 +61,6 @@ class HomeDoorbellAccessory(HomeAccessory):
             aid,
             config,
             category,
-            device_id,
             *args,
             **kwargs,
         )
