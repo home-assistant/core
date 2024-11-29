@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
-from typing import Any
-
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 
-from homeassistant.components.number import (
-    NumberDeviceClass,
-    NumberEntity,
-    NumberEntityDescription,
-)
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,14 +13,6 @@ from . import PalazzettiConfigEntry
 from .const import DOMAIN
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
-
-
-@dataclass(frozen=True, kw_only=True)
-class PalazzettiNumberEntityDescription(NumberEntityDescription):
-    """Describes Palazzetti number entity."""
-
-    value_property: str
-    update_fn: Callable[[int], Coroutine[Any, Any, None]]
 
 
 async def async_setup_entry(
