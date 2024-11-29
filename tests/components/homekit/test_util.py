@@ -157,12 +157,9 @@ def test_validate_entity_config() -> None:
     }
 
     assert vec({"lock.demo": {}}) == {
-        "lock.demo": {
-            ATTR_CODE: None,
-            CONF_LOW_BATTERY_THRESHOLD: 20,
-            CONF_LINKED_DOORBELL_SENSOR: None,
-        }
+        "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+
     assert vec(
         {
             "lock.demo": {
