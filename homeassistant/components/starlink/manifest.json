@@ -5,6 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starlink",
   "iot_class": "local_polling",
-  "quality_scale": "silver",
-  "requirements": ["starlink-grpc-core==1.1.3"]
+  "requirements": ["starlink-grpc-core==1.2.0"]
 }

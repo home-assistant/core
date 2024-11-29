@@ -1,10 +1,16 @@
 {
+  "common": {
+    "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings."
+  },
   "config": {
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up {name} ({host})?",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]"
         }
       },
       "user": {
@@ -15,7 +21,8 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application."
+          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]"
         }
       }
     },
