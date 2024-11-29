@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlaystationNetworkCoordinator
-from .coordinator import PlaystationNetworkData
 from .entity import PlaystationNetworkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ async def async_setup_entry(
     """Media Player Entity Setup."""
     coordinator: PlaystationNetworkCoordinator = config_entry.runtime_data
 
-    if coordinator.data.platform.get("platform") is None:
+    if coordinator.data.platform is None:
         username = coordinator.data.username
         _LOGGER.warning(
             "No console found associated with account: %s. -- Skipping creation of media player",
@@ -54,7 +53,6 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
-        self.psn: PlaystationNetworkData = self.coordinator.data
         if coordinator.config_entry:
             self._attr_unique_id = (
                 f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
@@ -63,11 +61,12 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
-        match self.psn.platform.get("onlineStatus", ""):
+        match self.coordinator.data.platform.get("onlineStatus", ""):
             case "online":
                 if (
-                    self.psn.available is True
-                    and self.psn.title_metadata.get("npTitleId") is not None
+                    self.coordinator.data.available is True
+                    and self.coordinator.data.title_metadata.get("npTitleId")
+                    is not None
                 ):
                     return MediaPlayerState.PLAYING
                 return MediaPlayerState.ON
@@ -79,22 +78,22 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Name getter."""
-        return f"{self.psn.platform.get('platform')} Console"
+        return f"{self.coordinator.data.platform.get('platform')} Console"
 
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        if self.psn.title_metadata.get("npTitleId"):
-            return self.psn.title_metadata.get("titleName")
-        if self.psn.platform.get("onlineStatus") == "online":
+        if self.coordinator.data.title_metadata.get("npTitleId"):
+            return self.coordinator.data.title_metadata.get("titleName")
+        if self.coordinator.data.platform.get("onlineStatus") == "online":
             return None
         return None
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        if self.psn.title_metadata.get("npTitleId"):
-            title = self.psn.title_metadata
+        if self.coordinator.data.title_metadata.get("npTitleId"):
+            title = self.coordinator.data.title_metadata
             if title.get("format", "").casefold() == "ps5":
                 return title.get("conceptIconUrl")
 
@@ -105,4 +104,4 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     @property
     def is_on(self) -> bool:
         """Is user available on the Playstation Network."""
-        return self.psn.available is True
+        return self.coordinator.data.available is True
