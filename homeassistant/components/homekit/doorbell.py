@@ -36,24 +36,15 @@ DOORBELL_LONG_PRESS = 2
 
 
 class HomeDoorbellAccessory(HomeAccessory):
-    """Adapter class for Accessory."""
+    """Accessory with optional doorbell."""
 
-    def __init__(
-        self,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a Accessory object."""
-        super().__init__(
-            *args,
-            **kwargs,
-        )
-
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize an Accessory object with optional attached doorbell."""
+        super().__init__(*args, **kwargs)
         self._char_doorbell_detected = None
         self._char_doorbell_detected_switch = None
-        linked_doorbell_sensor: str | None = self.config.get(
-            CONF_LINKED_DOORBELL_SENSOR
-        )
+        linked_doorbell_sensor: str | None
+        linked_doorbell_sensor = self.config.get(CONF_LINKED_DOORBELL_SENSOR)
         self.linked_doorbell_sensor = linked_doorbell_sensor
         self.doorbell_is_event = False
         if not linked_doorbell_sensor:
