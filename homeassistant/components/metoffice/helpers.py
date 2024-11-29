@@ -19,7 +19,7 @@ def fetch_data(
     connection: datapoint.Manager,
     latitude: float,
     longitude: float,
-    frequency: Literal["daily", "hourly"],
+    frequency: Literal["daily", "twice-daily", "hourly"],
 ) -> Forecast:
     """Fetch weather and forecast from Datapoint API."""
     try:

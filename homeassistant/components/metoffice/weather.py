@@ -13,11 +13,11 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
@@ -41,11 +41,16 @@ from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_MAP,
+    DAILY_FORECAST_ATTRIBUTE_MAP,
+    DAY_FORECAST_ATTRIBUTE_MAP,
     DOMAIN,
+    HOURLY_FORECAST_ATTRIBUTE_MAP,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
+    NIGHT_FORECAST_ATTRIBUTE_MAP,
 )
 from .helpers import get_attribute
 
@@ -69,6 +74,7 @@ async def async_setup_entry(
         [
             MetOfficeWeather(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
+                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
                 hass_data,
             )
@@ -79,26 +85,7 @@ async def async_setup_entry(
 
 def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
-    weather_code = get_attribute(timestep, "significantWeatherCode")
-    if weather_code:
-        data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
-
-    data[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_attribute(
-        timestep, "feelsLikeTemperature"
-    )
-    data[ATTR_FORECAST_NATIVE_PRESSURE] = get_attribute(timestep, "mslp")
-    data[ATTR_FORECAST_NATIVE_TEMP] = get_attribute(timestep, "screenTemperature")
-    data[ATTR_FORECAST_PRECIPITATION] = get_attribute(timestep, "totalPrecipAmount")
-    data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = get_attribute(
-        timestep, "probOfPrecipitation"
-    )
-    data[ATTR_FORECAST_UV_INDEX] = get_attribute(timestep, "uvIndex")
-    data[ATTR_FORECAST_WIND_BEARING] = get_attribute(timestep, "windDirectionFrom10m")
-    data[ATTR_FORECAST_NATIVE_WIND_SPEED] = get_attribute(timestep, "windSpeed10m")
-    data[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = get_attribute(
-        timestep, "windGustSpeed10m"
-    )
-
+    _populate_forecast_data(data, timestep, HOURLY_FORECAST_ATTRIBUTE_MAP)
     return data
 
 
@@ -106,33 +93,65 @@ def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
 
     # day and night forecasts have slightly different format
-    data[ATTR_FORECAST_IS_DAYTIME] = "upperBoundMaxTemp" in timestep
-    weather_code = get_attribute(timestep, "significantWeatherCode")
-    if weather_code:
-        data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
-
-    data[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_attribute(
-        timestep, "maxFeelsLikeTemp"
-    ) or get_attribute(timestep, "minFeelsLikeTemp")
-    data[ATTR_FORECAST_NATIVE_PRESSURE] = get_attribute(timestep, "mslp")
-    data[ATTR_FORECAST_NATIVE_TEMP] = get_attribute(
-        timestep, "upperBoundMaxTemp"
-    ) or get_attribute(timestep, "upperBoundMinTemp")
-    data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = get_attribute(
-        timestep, "probabilityOfPrecipitation"
-    )
-    data[ATTR_FORECAST_TEMP_LOW] = get_attribute(
-        timestep, "lowerBoundMaxTemp"
-    ) or get_attribute(timestep, "lowerBoundMinTemp")
-    data[ATTR_FORECAST_UV_INDEX] = get_attribute(timestep, "maxUvIndex")
-    data[ATTR_FORECAST_WIND_BEARING] = get_attribute(timestep, "10MWindDirection")
-    data[ATTR_FORECAST_NATIVE_WIND_SPEED] = get_attribute(timestep, "10MWindSpeed")
-    data[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = get_attribute(timestep, "10MWindGust")
+    if "daySignificantWeatherCode" in timestep:
+        data[ATTR_FORECAST_IS_DAYTIME] = True
+        _populate_forecast_data(data, timestep, DAY_FORECAST_ATTRIBUTE_MAP)
+    else:
+        data[ATTR_FORECAST_IS_DAYTIME] = False
+        _populate_forecast_data(data, timestep, NIGHT_FORECAST_ATTRIBUTE_MAP)
     return data
+
+
+def _build_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
+    data = Forecast(datetime=timestep["time"].isoformat())
+    _populate_forecast_data(data, timestep, DAILY_FORECAST_ATTRIBUTE_MAP)
+    return data
+
+
+def _populate_forecast_data(
+    forecast: Forecast, timestep: dict[str, Any], mapping: dict[str, str]
+) -> None:
+    def get_mapped_attribute(attr: str) -> Any:
+        if attr not in mapping:
+            return None
+        return get_attribute(timestep, mapping[attr])
+
+    weather_code = get_mapped_attribute(ATTR_FORECAST_CONDITION)
+    if weather_code is not None:
+        forecast[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
+    forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_APPARENT_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_PRESSURE] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_PRESSURE
+    )
+    forecast[ATTR_FORECAST_NATIVE_TEMP] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_TEMP_LOW] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_TEMP_LOW
+    )
+    forecast[ATTR_FORECAST_PRECIPITATION] = get_mapped_attribute(
+        ATTR_FORECAST_PRECIPITATION
+    )
+    forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = get_mapped_attribute(
+        ATTR_FORECAST_PRECIPITATION_PROBABILITY
+    )
+    forecast[ATTR_FORECAST_UV_INDEX] = get_mapped_attribute(ATTR_FORECAST_UV_INDEX)
+    forecast[ATTR_FORECAST_WIND_BEARING] = get_mapped_attribute(
+        ATTR_FORECAST_WIND_BEARING
+    )
+    forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_WIND_SPEED
+    )
+    forecast[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED
+    )
 
 
 class MetOfficeWeather(
     CoordinatorWeatherEntity[
+        TimestampDataUpdateCoordinator[ForecastData],
         TimestampDataUpdateCoordinator[ForecastData],
         TimestampDataUpdateCoordinator[ForecastData],
     ]
@@ -149,12 +168,15 @@ class MetOfficeWeather(
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        | WeatherEntityFeature.FORECAST_DAILY
     )
 
     def __init__(
         self,
         coordinator_daily: TimestampDataUpdateCoordinator[ForecastData],
+        coordinator_twice_daily: TimestampDataUpdateCoordinator[ForecastData],
         coordinator_hourly: TimestampDataUpdateCoordinator[ForecastData],
         hass_data: dict[str, Any],
     ) -> None:
@@ -163,6 +185,7 @@ class MetOfficeWeather(
         super().__init__(
             observation_coordinator,
             daily_coordinator=coordinator_daily,
+            twice_daily_coordinator=coordinator_twice_daily,
             hourly_coordinator=coordinator_hourly,
         )
 
@@ -238,11 +261,25 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[ForecastData],
+            self.forecast_coordinators["daily"],
+        )
+        timesteps = coordinator.data.timesteps
+        return [
+            _build_daily_forecast_data(timestep)
+            for timestep in timesteps
+            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+        ]
+
+    @callback
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         coordinator = cast(
             TimestampDataUpdateCoordinator[ForecastData],
-            self.forecast_coordinators["daily"],
+            self.forecast_coordinators["twice_daily"],
         )
         timesteps = coordinator.data.timesteps
         return [

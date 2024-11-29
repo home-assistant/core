@@ -18,6 +18,17 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_UV_INDEX,
+    ATTR_FORECAST_WIND_BEARING,
 )
 
 DOMAIN = "metoffice"
@@ -29,6 +40,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
 METOFFICE_COORDINATES = "metoffice_coordinates"
 METOFFICE_HOURLY_COORDINATOR = "metoffice_hourly_coordinator"
+METOFFICE_TWICE_DAILY_COORDINATOR = "metoffice_twice_daily_coordinator"
 METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
 METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
@@ -54,4 +66,55 @@ CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
+}
+
+HOURLY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "significantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "feelsLikeTemperature",
+    ATTR_FORECAST_NATIVE_PRESSURE: "mslp",
+    ATTR_FORECAST_NATIVE_TEMP: "screenTemperature",
+    ATTR_FORECAST_PRECIPITATION: "totalPrecipAmount",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "probOfPrecipitation",
+    ATTR_FORECAST_UV_INDEX: "uvIndex",
+    ATTR_FORECAST_WIND_BEARING: "windDirectionFrom10m",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "windSpeed10m",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "windGustSpeed10m",
+}
+
+DAY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "daySignificantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "dayMaxFeelsLikeTemp",
+    ATTR_FORECAST_NATIVE_PRESSURE: "middayMslp",
+    ATTR_FORECAST_NATIVE_TEMP: "dayUpperBoundMaxTemp",
+    ATTR_FORECAST_NATIVE_TEMP_LOW: "dayLowerBoundMaxTemp",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "dayProbabilityOfPrecipitation",
+    ATTR_FORECAST_UV_INDEX: "maxUvIndex",
+    ATTR_FORECAST_WIND_BEARING: "midday10MWindDirection",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "midday10MWindSpeed",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midday10MWindGust",
+}
+
+NIGHT_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "nightSignificantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "nightMinFeelsLikeTemp",
+    ATTR_FORECAST_NATIVE_PRESSURE: "midnightMslp",
+    ATTR_FORECAST_NATIVE_TEMP: "nightUpperBoundMinTemp",
+    ATTR_FORECAST_NATIVE_TEMP_LOW: "nightLowerBoundMinTemp",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "nightProbabilityOfPrecipitation",
+    ATTR_FORECAST_WIND_BEARING: "midnight10MWindDirection",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "midnight10MWindSpeed",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midnight10MWindGust",
+}
+
+DAILY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "daySignificantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "dayMaxFeelsLikeTemp",
+    ATTR_FORECAST_NATIVE_PRESSURE: "middayMslp",
+    ATTR_FORECAST_NATIVE_TEMP: "dayMaxScreenTemperature",
+    ATTR_FORECAST_NATIVE_TEMP_LOW: "nightMinScreenTemperature",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "dayProbabilityOfPrecipitation",
+    ATTR_FORECAST_UV_INDEX: "maxUvIndex",
+    ATTR_FORECAST_WIND_BEARING: "midday10MWindDirection",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "midday10MWindSpeed",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midday10MWindGust",
 }
