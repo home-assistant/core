@@ -15,9 +15,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: Add to docs that one can safely remove (no extra steps needed)
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   ## Silver
@@ -57,9 +55,7 @@ rules:
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-data-update:
-    status: todo
-    comment: Add to docu
+  docs-data-update: done
   docs-known-limitations: done
   docs-troubleshooting: done
   docs-examples: done
