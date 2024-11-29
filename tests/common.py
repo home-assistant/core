@@ -1842,7 +1842,7 @@ def get_quality_scale(integration: str) -> dict[str, str]:
     )
     if not quality_scale_file.exists():
         return {}
-    raw = load_yaml_dict()
+    raw = load_yaml_dict(quality_scale_file)
     return {
         rule: details if isinstance(details, str) else details["status"]
         for rule, details in raw["rules"].items()
