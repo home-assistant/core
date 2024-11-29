@@ -65,5 +65,4 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
             )
         except (ApiException, ClientError) as e:
             raise HomeAssistantError from e
-        else:
-            self._attr_native_value = response.batteryLevel
+        self._attr_native_value = response.batteryLevel
