@@ -65,13 +65,10 @@ from .const import (
     CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE,
     CHAR_HARDWARE_REVISION,
-    CHAR_MUTE,
-    CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
-    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     EMPTY_MAC,
@@ -86,9 +83,6 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
-    SERV_DOORBELL,
-    SERV_SPEAKER,
-    SERV_STATELESS_PROGRAMMABLE_SWITCH,
     SIGNAL_RELOAD_ENTITIES,
     TYPE_FAUCET,
     TYPE_OUTLET,
@@ -105,7 +99,6 @@ from .util import (
     cleanup_name_for_homekit,
     convert_to_float,
     format_version,
-    state_changed_event_is_same_state,
     validate_media_player_features,
 )
 
@@ -125,10 +118,6 @@ RELOAD_ON_CHANGE_ATTRS = (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
-
-DOORBELL_SINGLE_PRESS = 0
-DOORBELL_DOUBLE_PRESS = 1
-DOORBELL_LONG_PRESS = 2
 
 
 def get_accessory(  # noqa: C901
@@ -433,36 +422,6 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             CHAR_STATUS_LOW_BATTERY, value=0
         )
 
-        self._char_doorbell_detected = None
-        self._char_doorbell_detected_switch = None
-        linked_doorbell_sensor: str | None = self.config.get(
-            CONF_LINKED_DOORBELL_SENSOR
-        )
-        self.linked_doorbell_sensor = linked_doorbell_sensor
-        self.doorbell_is_event = False
-        if not linked_doorbell_sensor:
-            return
-        self.doorbell_is_event = linked_doorbell_sensor.startswith("event.")
-        if not (state := self.hass.states.get(linked_doorbell_sensor)):
-            return
-        serv_doorbell = self.add_preload_service(SERV_DOORBELL)
-        self.set_primary_service(serv_doorbell)
-        self._char_doorbell_detected = serv_doorbell.configure_char(
-            CHAR_PROGRAMMABLE_SWITCH_EVENT,
-            value=0,
-        )
-        serv_stateless_switch = self.add_preload_service(
-            SERV_STATELESS_PROGRAMMABLE_SWITCH
-        )
-        self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
-            CHAR_PROGRAMMABLE_SWITCH_EVENT,
-            value=0,
-            valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
-        )
-        serv_speaker = self.add_preload_service(SERV_SPEAKER)
-        serv_speaker.configure_char(CHAR_MUTE, value=0)
-        self.async_update_doorbell_state(None, state)
-
     def _update_available_from_state(self, new_state: State | None) -> None:
         """Update the available property based on the state."""
         self._available = new_state is not None and new_state.state != STATE_UNAVAILABLE
@@ -487,17 +446,6 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                 job_type=HassJobType.Callback,
             )
         )
-
-        if self._char_doorbell_detected:
-            assert self.linked_doorbell_sensor
-            self._subscriptions.append(
-                async_track_state_change_event(
-                    self.hass,
-                    self.linked_doorbell_sensor,
-                    self.async_update_doorbell_state_event,
-                    job_type=HassJobType.Callback,
-                )
-            )
 
         battery_charging_state = None
         battery_state = None
@@ -641,39 +589,6 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self._char_charging.set_value(hk_charging)
             _LOGGER.debug(
                 "%s: Updated battery charging to %d", self.entity_id, hk_charging
-            )
-
-    @ha_callback
-    def async_update_doorbell_state_event(
-        self, event: Event[EventStateChangedData]
-    ) -> None:
-        """Handle state change event listener callback."""
-        if not state_changed_event_is_same_state(event) and (
-            new_state := event.data["new_state"]
-        ):
-            self.async_update_doorbell_state(event.data["old_state"], new_state)
-
-    @ha_callback
-    def async_update_doorbell_state(
-        self, old_state: State | None, new_state: State
-    ) -> None:
-        """Handle link doorbell sensor state change to update HomeKit value."""
-        assert self._char_doorbell_detected
-        assert self._char_doorbell_detected_switch
-        state = new_state.state
-        if state == STATE_ON or (
-            self.doorbell_is_event
-            and old_state is not None
-            and old_state.state != STATE_UNAVAILABLE
-            and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
-            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
-            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
-            _LOGGER.debug(
-                "%s: Set linked doorbell %s sensor to %d",
-                self.entity_id,
-                self.linked_doorbell_sensor,
-                DOORBELL_SINGLE_PRESS,
             )
 
     @ha_callback

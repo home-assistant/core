@@ -31,7 +31,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .accessories import TYPES, HomeAccessory, HomeDriver
+from .accessories import TYPES, HomeDriver
 from .const import (
     CHAR_MOTION_DETECTED,
     CONF_AUDIO_CODEC,
@@ -63,6 +63,7 @@ from .const import (
     DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_MOTION_SENSOR,
 )
+from .doorbell import HomeDoorbellAccessory
 from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,7 +141,7 @@ CONFIG_DEFAULTS = {
 @TYPES.register("Camera")
 # False-positive on pylint, not a CameraEntity
 # pylint: disable-next=hass-enforce-class-module
-class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
+class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     """Generate a Camera accessory."""
 
     def __init__(
