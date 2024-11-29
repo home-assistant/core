@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from devolo_plc_api.device import Device
-from devolo_plc_api.exceptions.device import DeviceNotFound
+from devolo_plc_api.exceptions.device import DeviceNotFound, DevicePasswordProtected
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -21,7 +21,9 @@ from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD, default=""): str}
+)
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
 
@@ -35,7 +37,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     device = Device(data[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
 
+    device.password = data[CONF_PASSWORD]
+
     await device.async_connect(session_instance=async_client)
+
+    # Try a password protected, non-writing device API call that raises, if the password is wrong.
+    # If only the plcnet API is available, we can continue without trying a password as the plcnet
+    # API does not require a password.
+    if device.device:
+        await device.device.async_uptime()
+
     await device.async_disconnect()
 
     return {
@@ -67,13 +78,14 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DeviceNotFound:
             errors["base"] = "cannot_connect"
+        except DevicePasswordProtected:
+            errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info[SERIAL_NUMBER], raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            user_input[CONF_PASSWORD] = ""
             return self.async_create_entry(title=info[TITLE], data=user_input)
 
         return self.async_show_form(
@@ -108,9 +120,19 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = {
                 CONF_IP_ADDRESS: self.host,
-                CONF_PASSWORD: "",
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
             }
-            return self.async_create_entry(title=title, data=data)
+            try:
+                await validate_input(self.hass, data)
+            except DevicePasswordProtected:
+                return self.async_show_form(
+                    step_id="zeroconf_confirm",
+                    data_schema=STEP_REAUTH_DATA_SCHEMA,
+                    description_placeholders={"host_name": title},
+                    errors={"base": "invalid_auth"},
+                )
+            else:
+                return self.async_create_entry(title=title, data=data)
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"host_name": title},
