@@ -97,9 +97,8 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during configuration steps")
                 errors["base"] = "unknown"
 
-            if await self.async_set_unique_id(data[CONF_MAC]):
-                errors["base"] = "duplicate_entry"
-                description_placeholders["error_detail"] = data[CONF_MAC]
+            await self.async_set_unique_id(data[CONF_MAC])
+            self._abort_if_unique_id_configured()
 
             if errors:
                 return self.async_show_form(
