@@ -4,6 +4,7 @@ import http
 import time
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientConnectionError
 import pytest
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
@@ -66,6 +67,37 @@ async def test_expired_token_refresh_failure(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         status=status,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("expires_at", "expected_state"),
+    [
+        (
+            time.time() - 3600,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+    ids=[
+        "client_connection_error",
+    ],
+)
+async def test_expired_token_refresh_connection_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test failure while refreshing token with a ClientError."""
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        exc=ClientConnectionError(),
     )
 
     await setup_integration(hass, mock_config_entry)
