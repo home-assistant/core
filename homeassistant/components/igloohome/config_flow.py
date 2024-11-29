@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from igloohome_api import Auth, AuthException
+from igloohome_api import Auth as IgloohomeAuth, AuthException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -35,7 +35,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            auth = Auth(
+            auth = IgloohomeAuth(
                 session=async_get_clientsession(self.hass),
                 client_id=user_input[CONF_CLIENT_ID],
                 client_secret=user_input[CONF_CLIENT_SECRET],

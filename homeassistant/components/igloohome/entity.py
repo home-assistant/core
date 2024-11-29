@@ -1,6 +1,6 @@
 """Implementation of a base entity that belongs to all igloohome devices."""
 
-from igloohome_api import Api
+from igloohome_api import Api as IgloohomeApi, GetDeviceInfoResponse
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
@@ -13,18 +13,18 @@ class IgloohomeBaseEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
+    def __init__(
+        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi
+    ) -> None:
         """Initialize the base device class."""
-        self.device_id = device_id
-        self.device_name = device_name
-        self.type = type
         self.api = api
+        self.api_device_info = api_device_info
         # Register the entity as part of a device.
         self._attr_device_info = dr.DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.device_id)
+                (DOMAIN, api_device_info.deviceId)
             },
-            name=self.device_name,
-            model=self.type,
+            name=api_device_info.deviceName,
+            model=api_device_info.type,
         )

@@ -4,11 +4,11 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientError
-from igloohome_api import Api, ApiException
+from igloohome_api import Api as IgloohomeApi, ApiException, GetDeviceInfoResponse
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IgloohomeConfigEntry
@@ -27,26 +27,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor entities."""
 
-    api = entry.runtime_data
+    api = entry.runtime_data[0]
+    devices = entry.runtime_data[1]
 
-    try:
-        devices_response = await api.get_devices()
-    except Exception as e:
-        raise PlatformNotReady from e
-    else:
-        async_add_entities(
-            (
-                IgloohomeBatteryEntity(
-                    device_id=device.deviceId,
-                    device_name=device.deviceName,
-                    type=device.type,
-                    api=api,
-                )
-                for device in devices_response.payload
-                if device.batteryLevel is not None
-            ),
-            update_before_add=True,
-        )
+    async_add_entities(
+        (
+            IgloohomeBatteryEntity(
+                api_device_info=device,
+                api=api,
+            )
+            for device in devices
+            if device.batteryLevel is not None
+        ),
+        update_before_add=True,
+    )
 
 
 class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
@@ -55,18 +49,20 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
     _attr_native_unit_of_measurement = "%"
     _attr_device_class = SensorDeviceClass.BATTERY
 
-    def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
+    def __init__(
+        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi
+    ) -> None:
         """Initialize the class."""
-        super().__init__(
-            device_id=device_id, device_name=device_name, type=type, api=api
-        )
+        super().__init__(api_device_info=api_device_info, api=api)
         # Set the unique ID of the battery entity.
-        self._attr_unique_id = f"battery_{device_id}"
+        self._attr_unique_id = f"battery_{api_device_info.deviceId}"
 
     async def async_update(self) -> None:
         """Update the battery level."""
         try:
-            response = await self.api.get_device_info(deviceId=self.device_id)
+            response = await self.api.get_device_info(
+                deviceId=self.api_device_info.deviceId
+            )
         except (ApiException, ClientError) as e:
             raise HomeAssistantError from e
         else:
