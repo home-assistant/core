@@ -108,7 +108,7 @@ from homeassistant.util.json import (
 from homeassistant.util.signal_type import SignalType
 import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.util.yaml import load_yaml_dict, loader as yaml_loader
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
@@ -1832,3 +1832,13 @@ def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
         for loaded_components in loaded_categories.values():
             for component_to_unload in components:
                 loaded_components.pop(component_to_unload, None)
+
+
+@lru_cache
+def get_quality_scale(integration: str) -> dict[str, str]:
+    """Load quality scale for integration."""
+    raw = load_yaml_dict(f"homeassistant/components/{integration}/quality_scale.yaml")
+    return {
+        rule: details if isinstance(details, str) else details["status"]
+        for rule, details in raw["rules"].items()
+    }
