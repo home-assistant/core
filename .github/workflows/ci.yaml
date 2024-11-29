@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 11
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2024.12"
+  HA_SHORT_VERSION: "2025.1"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
   # 10.3 is the oldest supported version
@@ -819,6 +819,12 @@ jobs:
     needs:
       - info
       - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - lint-ruff-format
+      - mypy
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
