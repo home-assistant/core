@@ -40,8 +40,6 @@ DOORBELL_LONG_PRESS = 2
 class HomeDoorbellAccessory(HomeAccessory):
     """Adapter class for Accessory."""
 
-    driver: HomeDriver
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -63,9 +61,9 @@ class HomeDoorbellAccessory(HomeAccessory):
             entity_id,
             aid,
             config,
-            *args,
             category,
             device_id,
+            *args,
             **kwargs,
         )
 
