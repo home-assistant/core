@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 import socket
+from datetime import timedelta
 
 import pycfdns
 
@@ -96,47 +96,41 @@ async def _async_update_cloudflare(
     old_records = await client.list_dns_records(zone_id=dns_zone["id"])
     _LOGGER.debug("Records: %s", old_records)
 
-    session = async_get_clientsession(hass, family=socket.AF_INET)
-    session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
-
-    location_info = await async_detect_location_info(session)
-    location_info_v6 = await async_detect_location_info(session_ipv6)
-
     records_to_be_updated = []
 
-    if location_info and is_ipv4_address(location_info.ip):
-        _LOGGER.debug("IPv4 address detected: %s", location_info.ip)
-        for record in old_records:
-            if (
-                record["name"] in target_records
-                and record["content"] != location_info.ip
-                and record["type"] == "A"
-            ):
-                _LOGGER.info(
-                    "IPv4 address change detected for record: %s,will DNS entry from %s to %s",
-                    record["name"],
-                    record["content"],
-                    location_info.ip,
-                )
-                record["content"] = location_info.ip
-                records_to_be_updated.append(record)
-
-    if location_info_v6 and is_ipv6_address(location_info_v6.ip):
-        _LOGGER.debug("IPv6 address detected: %s", location_info_v6.ip)
-        for record in old_records:
-            if (
-                record["name"] in target_records
-                and record["content"] != location_info_v6.ip
-                and record["type"] == "AAAA"
-            ):
-                _LOGGER.info(
-                    "IPv6 address change detected for record: %s,will DNS entry from %s to %s",
-                    record["name"],
-                    record["content"],
-                    location_info_v6.ip,
-                )
-                record["content"] = location_info_v6.ip
-                records_to_be_updated.append(record)
+    for record in old_records:
+        if record["name"] not in target_records:
+            continue
+        if record["type"] == "A":
+            _LOGGER.debug("Found target record: %s", record["name"])
+            session = async_get_clientsession(hass, family=socket.AF_INET)
+            location_info = await async_detect_location_info(session)
+            if location_info and is_ipv4_address(location_info.ip):
+                _LOGGER.debug("IPv4 address detected: %s", location_info.ip)
+                if record["content"] != location_info.ip:
+                    _LOGGER.info(
+                        "IPv4 address change detected for record: %s,will DNS entry from %s to %s",
+                        record["name"],
+                        record["content"],
+                        location_info.ip,
+                    )
+                    record["content"] = location_info.ip
+                    records_to_be_updated.append(record)
+        if record["type"] == "AAAA":
+            _LOGGER.debug("Found target record: %s", record["name"])
+            session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
+            location_info_v6 = await async_detect_location_info(session_ipv6)
+            if location_info_v6 and is_ipv6_address(location_info_v6.ip):
+                _LOGGER.debug("IPv6 address detected: %s", location_info_v6.ip)
+                if record["content"] != location_info_v6.ip:
+                    _LOGGER.info(
+                        "IPv6 address change detected for record: %s,will DNS entry from %s to %s",
+                        record["name"],
+                        record["content"],
+                        location_info_v6.ip,
+                    )
+                    record["content"] = location_info_v6.ip
+                    records_to_be_updated.append(record)
 
     if len(records_to_be_updated) == 0:
         _LOGGER.debug("All target records are up to date")
