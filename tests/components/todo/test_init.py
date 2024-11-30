@@ -941,14 +941,15 @@ async def test_unsupported_service(
     payload: dict[str, Any] | None,
 ) -> None:
     """Test a To-do list that does not support features."""
-
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", "")
     entity1 = TodoListEntity()
     entity1.entity_id = "todo.entity1"
     await create_mock_platform(hass, [entity1])
 
     with pytest.raises(
         HomeAssistantError,
-        match="does not support this service",
+        match=f"Entity todo.entity1 does not support action {DOMAIN}.{service_name}",
     ):
         await hass.services.async_call(
             DOMAIN,
