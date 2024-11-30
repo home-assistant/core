@@ -86,91 +86,91 @@
   "entity": {
     "binary_sensor": {
       "active_alert": {
-        "name": "Active Alert"
+        "name": "Active alert"
       },
       "circuit_delay": {
-        "name": "{circuit} Delay"
+        "name": "{circuit} delay"
       },
       "freeze_mode": {
-        "name": "Freeze Mode"
+        "name": "Freeze mode"
       },
       "flow_alarm": {
-        "name": "Flow Alarm"
+        "name": "Flow alarm"
       },
       "chem_high_alarm": {
-        "name": "{chem} HIGH Alarm"
+        "name": "{chem} high alarm"
       },
       "chem_low_alarm": {
-        "name": "{chem} LOW Alarm"
+        "name": "{chem} low alarm"
       },
       "chem_supply_alarm": {
-        "name": "{chem} Supply Alarm"
+        "name": "{chem} supply alarm"
       },
       "probe_fault_alarm": {
-        "name": "Probe Fault"
+        "name": "Probe fault"
       },
       "chem_limit": {
-        "name": "{chem} Dose Limit Reached"
+        "name": "{chem} dose limit reached"
       },
       "ph_lockout": {
-        "name": "pH Lockout"
+        "name": "pH lockout"
       },
       "corosive": {
-        "name": "SI Corrosive"
+        "name": "SI corrosive"
       },
       "scaling": {
-        "name": "SI Scaling"
+        "name": "SI scaling"
       },
       "scg_state": {
-        "name": "Chlorinator"
+        "name": "chlorinator"
       }
     },
     "climate": {
       "body_0": {
-        "name": "Pool Heat"
+        "name": "Pool heat"
       },
       "body_1": {
-        "name": "Spa Heat"
+        "name": "Spa heat"
       }
     },
     "number": {
       "calcium_hardness": {
-        "name": "Calcium Hardness"
+        "name": "Calcium hardness"
       },
       "cya": {
-        "name": "Cyanuric Acid"
+        "name": "Cyanuric acid"
       },
       "total_alkalinity": {
-        "name": "Total Alkalinity"
+        "name": "Total alkalinity"
       },
       "salt_tds_ppm": {
         "name": "Salt/TDS"
       },
       "pool_setpoint": {
-        "name": "Pool Chlorinator Setpoint"
+        "name": "Pool chlorinator setpoint"
       },
       "spa_setpoint": {
-        "name": "Spa Chlorinator Setpoint"
+        "name": "Spa chlorinator setpoint"
       }
     },
     "sensor": {
       "air_temperature": {
-        "name": "Air Temperature"
+        "name": "Air temperature"
       },
       "chem_now": {
-        "name": "{chem} Now"
+        "name": "{chem} now"
       },
       "chem_supply_level": {
-        "name": "{chem} Supply Level"
+        "name": "{chem} supply level"
       },
       "ph_probe_water_temp": {
-        "name": "pH Probe Water Temperature"
+        "name": "pH probe water temperature"
       },
       "saturation": {
-        "name": "Saturation Index"
+        "name": "Saturation index"
       },
       "chem_setpoint": {
-        "name": "{chem} Setpoint"
+        "name": "{chem} setpoint"
       },
       "calcium_hardness": {
         "name": "[%key:component::screenlogic::entity::number::calcium_hardness::name%]"
@@ -185,19 +185,19 @@
         "name": "[%key:component::screenlogic::entity::number::salt_tds_ppm::name%]"
       },
       "chem_dose_state": {
-        "name": "{chem} Dosing State"
+        "name": "{chem} dosing state"
       },
       "chem_last_dose_time": {
-        "name": "{chem} Last Dose Duration"
+        "name": "{chem} last dose duration"
       },
       "chem_last_dose_volume": {
-        "name": "{chem} Last Dose Volume"
+        "name": "{chem} last dose volume"
       },
       "salt_ppm": {
-        "name": "Chlorinator Salt"
+        "name": "Chlorinator salt"
       },
       "super_chlor_timer": {
-        "name": "Super Chlorination Timer"
+        "name": "Super chlorination timer"
       }
     }
   }
