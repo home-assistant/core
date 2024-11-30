@@ -268,6 +268,7 @@ def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("abc ") == "abc"
     assert cleanup_name_for_homekit("a b c") == "a b c"
     assert cleanup_name_for_homekit("ab_c") == "ab c"
     assert (
