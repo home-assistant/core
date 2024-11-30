@@ -114,7 +114,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
-INVALID_END_CHARS = "-_"
+INVALID_END_CHARS = "-_ "
 MAX_VERSION_PART = 2**32 - 1
 
 
