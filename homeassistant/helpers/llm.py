@@ -113,6 +113,10 @@ def async_get_apis(hass: HomeAssistant) -> list[API]:
     return list(_async_get_apis(hass).values())
 
 
+class AbortConversation(HomeAssistantError):
+    """Abort the conversation."""
+
+
 @dataclass(slots=True)
 class LLMContext:
     """Tool input to be processed."""
@@ -168,6 +172,9 @@ class APIInstance:
             ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
+
+        if tool_input.tool_name == intent.INTENT_NEVERMIND:
+            raise AbortConversation("Nevermind intent called")
 
         for tool in self.tools:
             if tool.name == tool_input.tool_name:
@@ -273,7 +280,6 @@ class AssistAPI(API):
         INTENT_OPEN_COVER,  # deprecated
         INTENT_CLOSE_COVER,  # deprecated
         intent.INTENT_GET_STATE,
-        intent.INTENT_NEVERMIND,
         intent.INTENT_TOGGLE,
         intent.INTENT_GET_CURRENT_DATE,
         intent.INTENT_GET_CURRENT_TIME,
