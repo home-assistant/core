@@ -123,7 +123,7 @@ async def test_state(
             2.0,
         ),
         ("number.pinecil_power_limit", CharSetting.POWER_LIMIT, 12.0, 12.0),
-        ("number.pinecil_qick_charge_voltage", CharSetting.QC_IDEAL_VOLTAGE, 9.0, 9.0),
+        ("number.pinecil_quick_charge_voltage", CharSetting.QC_IDEAL_VOLTAGE, 9.0, 9.0),
         (
             "number.pinecil_short_press_temperature_step",
             CharSetting.TEMP_INCREMENT_SHORT,
