@@ -16,7 +16,9 @@ import requests
 
 from homeassistant.config_entries import ConfigEntry
 
-from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+from .const import HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+
+# from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
 from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +30,8 @@ def get_device(
     """Get device for device config."""
     return getattr(
         device_config,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
+        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType.auto],
+        # HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
     )()
 
 
