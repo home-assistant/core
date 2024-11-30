@@ -47,6 +47,9 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_CLIENT_ID]}_{user_input[CONF_CLIENT_SECRET]}"
+                )
                 return self.async_create_entry(
                     title="Client Credentials", data=user_input
                 )
