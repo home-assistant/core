@@ -12,8 +12,8 @@ from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
 
 from .const import (
+    DATA_COMPONENT,
     DATA_DEFAULT_ENTITY,
-    DOMAIN_DATA,
     HOME_ASSISTANT_AGENT,
     OLD_HOME_ASSISTANT_AGENT,
 )
@@ -57,7 +57,7 @@ def async_get_agent(
         return hass.data[DATA_DEFAULT_ENTITY]
 
     if "." in agent_id:
-        return hass.data[DOMAIN_DATA].get_entity(agent_id)
+        return hass.data[DATA_COMPONENT].get_entity(agent_id)
 
     manager = get_agent_manager(hass)
 

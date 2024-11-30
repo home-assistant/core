@@ -6,6 +6,9 @@
         "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your HomeWizard Energy device."
         }
       },
       "discovery_confirm": {
@@ -14,18 +17,30 @@
       },
       "reauth_confirm": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+      },
+      "reconfigure": {
+        "description": "Update configuration for {title}.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::homewizard::config::step::user::data_description::ip_address%]"
+        }
       }
     },
     "error": {
-      "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
+      "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_discovery_parameters": "Detected unsupported API version",
+      "invalid_discovery_parameters": "Invalid discovery parameters",
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "Enabling API was successful"
+      "unsupported_api_version": "Detected unsupported API version",
+      "reauth_successful": "Enabling API was successful",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The configured device is not the same found on this IP address."
     }
   },
   "entity": {
@@ -119,7 +134,7 @@
   },
   "exceptions": {
     "api_disabled": {
-      "message": "The local API of the HomeWizard device is disabled"
+      "message": "The local API is disabled."
     },
     "communication_error": {
       "message": "An error occurred while communicating with HomeWizard device"

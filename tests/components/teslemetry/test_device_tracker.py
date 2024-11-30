@@ -1,6 +1,6 @@
 """Test the Teslemetry device tracker platform."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.const import STATE_UNKNOWN, Platform

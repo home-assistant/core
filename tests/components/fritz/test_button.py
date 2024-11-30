@@ -42,9 +42,6 @@ async def test_button_setup(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    states = hass.states.async_all()
-    assert len(states) == 5
-
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 

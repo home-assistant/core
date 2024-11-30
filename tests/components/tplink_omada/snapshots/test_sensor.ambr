@@ -1,0 +1,333 @@
+# serializer version: 1
+# name: test_entities[sensor.test_poe_switch_cpu_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_poe_switch_cpu_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU usage',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cpu_usage',
+    'unique_id': '54-AF-97-00-00-01_cpu_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entities[sensor.test_poe_switch_cpu_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test PoE Switch CPU usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_poe_switch_cpu_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_entities[sensor.test_poe_switch_device_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disconnected',
+        'connected',
+        'pending',
+        'heartbeat_missed',
+        'isolated',
+        'adopt_failed',
+        'managed_externally',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_poe_switch_device_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device status',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_status',
+    'unique_id': '54-AF-97-00-00-01_device_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.test_poe_switch_device_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test PoE Switch Device status',
+      'options': list([
+        'disconnected',
+        'connected',
+        'pending',
+        'heartbeat_missed',
+        'isolated',
+        'adopt_failed',
+        'managed_externally',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_poe_switch_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
+# name: test_entities[sensor.test_poe_switch_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_poe_switch_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mem_usage',
+    'unique_id': '54-AF-97-00-00-01_mem_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entities[sensor.test_poe_switch_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test PoE Switch Memory usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_poe_switch_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_entities[sensor.test_router_cpu_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_router_cpu_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU usage',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cpu_usage',
+    'unique_id': 'AA-BB-CC-DD-EE-FF_cpu_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entities[sensor.test_router_cpu_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Router CPU usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_router_cpu_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_entities[sensor.test_router_device_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disconnected',
+        'connected',
+        'pending',
+        'heartbeat_missed',
+        'isolated',
+        'adopt_failed',
+        'managed_externally',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_router_device_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device status',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_status',
+    'unique_id': 'AA-BB-CC-DD-EE-FF_device_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.test_router_device_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Router Device status',
+      'options': list([
+        'disconnected',
+        'connected',
+        'pending',
+        'heartbeat_missed',
+        'isolated',
+        'adopt_failed',
+        'managed_externally',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_router_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
+# name: test_entities[sensor.test_router_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_router_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mem_usage',
+    'unique_id': 'AA-BB-CC-DD-EE-FF_mem_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entities[sensor.test_router_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Router Memory usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_router_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47',
+  })
+# ---

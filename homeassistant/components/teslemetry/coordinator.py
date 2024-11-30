@@ -18,6 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslemetryState
+from .helpers import flatten
 
 VEHICLE_INTERVAL = timedelta(seconds=30)
 VEHICLE_WAIT = timedelta(minutes=15)
@@ -35,24 +36,10 @@ ENDPOINTS = [
 ]
 
 
-def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
-    """Flatten the data structure."""
-    result = {}
-    for key, value in data.items():
-        if parent:
-            key = f"{parent}_{key}"
-        if isinstance(value, dict):
-            result.update(flatten(value, key))
-        else:
-            result[key] = value
-    return result
-
-
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     updated_once: bool
-    pre2021: bool
     last_active: datetime
 
     def __init__(

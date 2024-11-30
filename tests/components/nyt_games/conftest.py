@@ -1,16 +1,15 @@
 """NYTGames tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from nyt_games.models import WordleStats
+from nyt_games.models import ConnectionsStats, WordleStats
 import pytest
 
 from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
@@ -41,6 +40,9 @@ def mock_nyt_games_client() -> Generator[AsyncMock]:
             load_fixture("latest.json", DOMAIN)
         ).player.stats
         client.get_user_id.return_value = 218886794
+        client.get_connections.return_value = ConnectionsStats.from_json(
+            load_fixture("connections.json", DOMAIN)
+        ).player.stats
         yield client
 
 

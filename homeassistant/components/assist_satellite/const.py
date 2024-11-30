@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 DOMAIN = "assist_satellite"
 
-DOMAIN_DATA: HassKey[EntityComponent[AssistSatelliteEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[AssistSatelliteEntity]] = HassKey(DOMAIN)
 CONNECTION_TEST_DATA: HassKey[dict[str, asyncio.Event]] = HassKey(
     f"{DOMAIN}_connection_tests"
 )

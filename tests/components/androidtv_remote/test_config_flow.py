@@ -757,6 +757,59 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_flow_already_configured_zeroconf_has_multiple_invalid_ip_addresses(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test we abort the zeroconf flow if already configured and zeroconf has invalid ip addresses."""
+    host = "1.2.3.4"
+    name = "My Android TV"
+    mac = "1A:2B:3C:4D:5E:6F"
+    unique_id = "1a:2b:3c:4d:5e:6f"
+    name_existing = name
+    host_existing = host
+
+    mock_config_entry = MockConfigEntry(
+        title=name,
+        domain=DOMAIN,
+        data={
+            "host": host_existing,
+            "name": name_existing,
+            "mac": mac,
+        },
+        unique_id=unique_id,
+        state=ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.2.3.5"),
+            ip_addresses=[ip_address("1.2.3.5"), ip_address(host)],
+            port=6466,
+            hostname=host,
+            type="mock_type",
+            name=name + "._androidtvremote2._tcp.local.",
+            properties={"bt": mac},
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
+        "host": host,
+        "name": name,
+        "mac": mac,
+    }
+    assert len(mock_unload_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

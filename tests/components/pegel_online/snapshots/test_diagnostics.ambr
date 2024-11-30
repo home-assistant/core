@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'air_temperature': None,
+      'clearance_height': None,
+      'oxygen_level': None,
+      'ph_value': None,
+      'water_flow': dict({
+        'uom': 'm³/s',
+        'value': 88.4,
+      }),
+      'water_level': dict({
+        'uom': 'cm',
+        'value': 62,
+      }),
+      'water_speed': None,
+      'water_temperature': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'station': '70272185-xxxx-xxxx-xxxx-43bea330dcae',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'pegel_online',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '70272185-xxxx-xxxx-xxxx-43bea330dcae',
+      'version': 1,
+    }),
+  })
+# ---

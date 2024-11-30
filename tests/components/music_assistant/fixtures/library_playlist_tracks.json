@@ -1,0 +1,262 @@
+{
+  "library_playlist_tracks": [
+    {
+      "item_id": "77616130",
+      "provider": "tidal--Ah76MuMg",
+      "name": "Won't Get Fooled Again",
+      "version": "",
+      "sort_name": "won't get fooled again",
+      "uri": "tidal--Ah76MuMg://track/77616130",
+      "external_ids": [["isrc", "GBUM71405419"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "77616130",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": true,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 24,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/77616130",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/3496a8ad/ea69/4d7e/bbda/045417ab59e1/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 1971 Polydor Ltd. (UK)",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 30,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": 0,
+      "duration": 516,
+      "artists": [
+        {
+          "item_id": "24915",
+          "provider": "tidal--Ah76MuMg",
+          "name": "The Who",
+          "version": "",
+          "sort_name": "who, the",
+          "uri": "tidal--Ah76MuMg://artist/24915",
+          "external_ids": [],
+          "media_type": "artist",
+          "provider_mappings": [
+            {
+              "item_id": "24915",
+              "provider_domain": "tidal",
+              "provider_instance": "tidal--Ah76MuMg",
+              "available": true,
+              "audio_format": {
+                "content_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": "https://tidal.com/artist/24915",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "https://resources.tidal.com/images/0f782232/18c8/40b7/bb13/91c6039e40e6/750x750.jpg",
+                "provider": "tidal",
+                "remotely_accessible": true
+              }
+            ],
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null
+        }
+      ],
+      "album": {
+        "item_id": "77616121",
+        "provider": "tidal--Ah76MuMg",
+        "name": "Who's Next",
+        "version": "",
+        "sort_name": "who's next",
+        "uri": "tidal--Ah76MuMg://album/77616121",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": null
+      },
+      "disc_number": 1,
+      "track_number": 9
+    },
+    {
+      "item_id": "153795",
+      "provider": "tidal--Ah76MuMg",
+      "name": "We're An American Band",
+      "version": "Remastered 2002",
+      "sort_name": "we're an american band",
+      "uri": "tidal--Ah76MuMg://track/153795",
+      "external_ids": [["isrc", "USCA20200334"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "153795",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": true,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/153795",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/a6d86e02/84c1/41f7/84f5/41be8571fc40/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "℗ 2002 Capitol Records, LLC",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 48,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": 1,
+      "duration": 207,
+      "artists": [
+        {
+          "item_id": "9380",
+          "provider": "tidal--Ah76MuMg",
+          "name": "Grand Funk Railroad",
+          "version": "",
+          "sort_name": "grand funk railroad",
+          "uri": "tidal--Ah76MuMg://artist/9380",
+          "external_ids": [],
+          "media_type": "artist",
+          "provider_mappings": [
+            {
+              "item_id": "9380",
+              "provider_domain": "tidal",
+              "provider_instance": "tidal--Ah76MuMg",
+              "available": true,
+              "audio_format": {
+                "content_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": "https://tidal.com/artist/9380",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "https://resources.tidal.com/images/6535bf95/a06d/4d23/8262/604fa41d8126/750x750.jpg",
+                "provider": "tidal",
+                "remotely_accessible": true
+              }
+            ],
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null
+        }
+      ],
+      "album": {
+        "item_id": "153794",
+        "provider": "tidal--Ah76MuMg",
+        "name": "We're An American Band (Expanded Edition / Remastered 2002)",
+        "version": "",
+        "sort_name": "we're an american band (expanded edition / remastered 2002)",
+        "uri": "tidal--Ah76MuMg://album/153794",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": null
+      },
+      "disc_number": 1,
+      "track_number": 1
+    }
+  ]
+}

@@ -270,6 +270,7 @@
           'climate_state_timestamp': 1705707520649,
           'climate_state_wiper_blade_heater': False,
           'color': None,
+          'drive_state_active_route_destination': 'Home',
           'drive_state_active_route_latitude': '**REDACTED**',
           'drive_state_active_route_longitude': '**REDACTED**',
           'drive_state_active_route_miles_to_arrival': 0.039491,

@@ -125,7 +125,6 @@ async def async_setup_entry(
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
-        await receiver_zone.async_setup()
         entities.append(
             DenonDevice(
                 receiver_zone,

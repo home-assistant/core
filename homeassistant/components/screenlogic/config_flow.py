@@ -81,7 +81,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
-        return ScreenLogicOptionsFlowHandler(config_entry)
+        return ScreenLogicOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -191,10 +191,6 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class ScreenLogicOptionsFlowHandler(OptionsFlow):
     """Handles the options for the ScreenLogic integration."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init the screen logic options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""

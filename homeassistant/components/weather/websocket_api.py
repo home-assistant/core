@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, DOMAIN_DATA, VALID_UNITS, WeatherEntityFeature
+from .const import DATA_COMPONENT, DOMAIN, VALID_UNITS, WeatherEntityFeature
 
 FORECAST_TYPE_TO_FLAG = {
     "daily": WeatherEntityFeature.FORECAST_DAILY,
@@ -58,7 +58,7 @@ async def ws_subscribe_forecast(
     entity_id: str = msg["entity_id"]
     forecast_type: Literal["daily", "hourly", "twice_daily"] = msg["forecast_type"]
 
-    if not (entity := hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(
             msg["id"],
             "invalid_entity_id",

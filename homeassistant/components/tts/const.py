@@ -26,7 +26,7 @@ DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
 
 DOMAIN = "tts"
-DOMAIN_DATA: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 
 DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")
 

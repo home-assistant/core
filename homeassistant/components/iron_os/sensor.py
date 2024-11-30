@@ -107,6 +107,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=OHM,
         value_fn=lambda data: data.tip_resistance,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
@@ -137,7 +138,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
     IronOSSensorEntityDescription(
         key=PinecilSensor.TIP_VOLTAGE,
         translation_key=PinecilSensor.TIP_VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MICROVOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,

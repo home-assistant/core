@@ -193,7 +193,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",

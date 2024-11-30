@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_generic_client"],
-  "requirements": ["aio-geojson-generic-client==0.4"]
+  "requirements": ["aio-geojson-generic-client==0.5"]
 }

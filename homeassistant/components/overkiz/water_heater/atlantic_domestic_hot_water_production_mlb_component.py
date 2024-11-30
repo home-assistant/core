@@ -13,6 +13,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.util import dt as dt_util
 
 from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
@@ -97,9 +98,9 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-        return (
-            self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE)
-            == OverkizCommandParam.ON
+        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE) in (
+            OverkizCommandParam.ON,
+            OverkizCommandParam.PROG,
         )
 
     @property
@@ -151,10 +152,50 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             await self.async_turn_away_mode_on()
 
     async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
+        """Turn away mode on.
+
+        This requires the start date and the end date to be also set, and those dates have to match the device datetime.
+        The API accepts setting dates in the format of the core:DateTimeState state for the DHW
+        {'day': 11, 'hour': 21, 'minute': 12, 'month': 7, 'second': 53, 'weekday': 3, 'year': 2024}
+        The dict is then passed as an actual device date, the away mode start date, and then as an end date,
+        but with the year incremented by 1, so the away mode is getting turned on for the next year.
+        The weekday number seems to have no effect so the calculation of the future date's weekday number is redundant,
+        but possible via homeassistant dt_util to form both start and end dates dictionaries from scratch
+        based on datetime.now() and datetime.timedelta into the future.
+        If you execute `setAbsenceStartDate`, `setAbsenceEndDate` and `setAbsenceMode`,
+        the API answers with "too many requests", as there's a polling update after each command execution,
+        and the device becomes unavailable until the API is available again.
+        With `refresh_afterwards=False` on the first commands, and `refresh_afterwards=True` only the last command,
+        the API is not choking and the transition is smooth without the unavailability state.
+        """
+        now = dt_util.now()
+        now_date = {
+            "month": now.month,
+            "hour": now.hour,
+            "year": now.year,
+            "weekday": now.weekday(),
+            "day": now.day,
+            "minute": now.minute,
+            "second": now.second,
+        }
         await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.ON
+            OverkizCommand.SET_DATE_TIME,
+            now_date,
+            refresh_afterwards=False,
         )
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_ABSENCE_START_DATE, now_date, refresh_afterwards=False
+        )
+        now_date["year"] = now_date["year"] + 1
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_ABSENCE_END_DATE, now_date, refresh_afterwards=False
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_ABSENCE_MODE,
+            OverkizCommandParam.PROG,
+            refresh_afterwards=False,
+        )
+        await self.coordinator.async_refresh()
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""

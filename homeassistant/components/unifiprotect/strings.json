@@ -42,7 +42,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "discovery_started": "Discovery started"
+      "discovery_started": "Discovery started",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -136,10 +137,32 @@
     },
     "event": {
       "doorbell": {
+        "name": "Doorbell",
         "state_attributes": {
           "event_type": {
             "state": {
               "ring": "Ring"
+            }
+          }
+        }
+      },
+      "nfc": {
+        "name": "NFC",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "fingerprint": {
+        "name": "Fingerprint",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "identified": "Identified",
+              "not_identified": "Not identified"
             }
           }
         }
@@ -181,7 +204,7 @@
       "fields": {
         "device_id": {
           "name": "Chime",
-          "description": "The chimes to link to the doorbells to."
+          "description": "The chimes to link to the doorbells."
         },
         "doorbells": {
           "name": "Doorbells",

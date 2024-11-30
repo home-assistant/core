@@ -1,0 +1,197 @@
+# serializer version: 1
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Created',
+    'platform': 'filesize',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'created',
+    'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'mock_file_test_filesize.txt Created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-20T18:19:04+00:00',
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_last_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_last_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last updated',
+    'platform': 'filesize',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_updated',
+    'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-last_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_last_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'mock_file_test_filesize.txt Last updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_last_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-20T18:19:24+00:00',
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Size',
+    'platform': 'filesize',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'size',
+    'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'mock_file_test_filesize.txt Size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size_in_bytes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_size_in_bytes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Size in bytes',
+    'platform': 'filesize',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'size_bytes',
+    'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-bytes',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size_in_bytes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'mock_file_test_filesize.txt Size in bytes',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_file_test_filesize_txt_size_in_bytes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---

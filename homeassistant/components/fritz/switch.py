@@ -46,9 +46,7 @@ async def _async_deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    if (
-        call_deflections := avm_wrapper.data.get("call_deflections")
-    ) is None or not isinstance(call_deflections, dict):
+    if not (call_deflections := avm_wrapper.data["call_deflections"]):
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
@@ -72,7 +70,7 @@ async def _async_port_entities_list(
     # Query port forwardings and setup a switch for each forward for the current device
     resp = await avm_wrapper.async_get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
     port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]

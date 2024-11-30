@@ -1,4 +1,10 @@
 # serializer version: 1
+# name: test_asleep_or_offline[HomeAssistantError]
+  'Timed out trying to wake up vehicle'
+# ---
+# name: test_asleep_or_offline[InvalidCommand]
+  'Failed to wake up vehicle: The data request or command is unknown.'
+# ---
 # name: test_climate[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -498,4 +504,7 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_invalid_error[error]
+  'Command returned exception: The data request or command is unknown.'
 # ---

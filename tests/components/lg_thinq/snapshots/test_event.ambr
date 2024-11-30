@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_all_entities[event.test_air_conditioner_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'water_is_full',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_air_conditioner_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Notification',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <ThinQPropertyEx.NOTIFICATION: 'notification'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[event.test_air_conditioner_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'water_is_full',
+      ]),
+      'friendly_name': 'Test air conditioner Notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_air_conditioner_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

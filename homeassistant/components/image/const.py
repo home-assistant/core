@@ -13,6 +13,6 @@ if TYPE_CHECKING:
 
 
 DOMAIN: Final = "image"
-DOMAIN_DATA: HassKey[EntityComponent[ImageEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[ImageEntity]] = HassKey(DOMAIN)
 
 IMAGE_TIMEOUT: Final = 10

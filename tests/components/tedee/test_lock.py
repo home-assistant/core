@@ -4,13 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
-from freezegun.api import FrozenDateTimeFactory
-from pytedee_async import TedeeLock, TedeeLockState
-from pytedee_async.exception import (
+from aiotedee import TedeeLock, TedeeLockState
+from aiotedee.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -152,7 +152,7 @@ async def test_lock_errors(
 ) -> None:
     """Test event errors."""
     mock_tedee.lock.side_effect = TedeeClientException("Boom")
-    with pytest.raises(HomeAssistantError, match="Failed to lock the door. Lock 12345"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
@@ -161,11 +161,10 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "lock_failed"
 
     mock_tedee.unlock.side_effect = TedeeClientException("Boom")
-    with pytest.raises(
-        HomeAssistantError, match="Failed to unlock the door. Lock 12345"
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
@@ -174,11 +173,10 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "unlock_failed"
 
     mock_tedee.open.side_effect = TedeeClientException("Boom")
-    with pytest.raises(
-        HomeAssistantError, match="Failed to unlatch the door. Lock 12345"
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_OPEN,
@@ -187,6 +185,7 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "open_failed"
 
 
 @pytest.mark.parametrize(

@@ -105,7 +105,7 @@ class MatterModeSelectEntity(MatterSelectEntity):
         )
         modes = {mode.mode: mode.label for mode in cluster.supportedModes}
         self._attr_options = list(modes.values())
-        self._attr_current_option = modes[cluster.currentMode]
+        self._attr_current_option = modes.get(cluster.currentMode)
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
@@ -165,20 +165,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="MatterRvcRunMode",
-            translation_key="mode",
-        ),
-        entity_class=MatterModeSelectEntity,
-        required_attributes=(
-            clusters.RvcRunMode.Attributes.CurrentMode,
-            clusters.RvcRunMode.Attributes.SupportedModes,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
             key="MatterRvcCleanMode",
-            translation_key="mode",
+            translation_key="clean_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(

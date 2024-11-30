@@ -2,8 +2,8 @@
 
 from homeassistant import config_entries
 from homeassistant.components import twilio
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.typing import ClientSessionGenerator

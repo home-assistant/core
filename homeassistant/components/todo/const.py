@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from . import TodoListEntity
 
 DOMAIN = "todo"
-DOMAIN_DATA: HassKey[EntityComponent[TodoListEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[TodoListEntity]] = HassKey(DOMAIN)
 
 ATTR_DUE = "due"
 ATTR_DUE_DATE = "due_date"
