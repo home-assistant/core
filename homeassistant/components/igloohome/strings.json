@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "API Access Credentials",
-        "description": "Add a set of client credentials created under your iglooaccess account.",
+        "title": "Add API Access Credentials",
+        "description": "Set your account's API keys to enable Home Assistant to poll the status of your devices.",
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client Secret"
