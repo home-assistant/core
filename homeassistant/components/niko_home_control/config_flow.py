@@ -8,37 +8,30 @@ from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 
-from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_IP): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        vol.Required(CONF_HOST): str,
     }
 )
 
 
-def test_connection(host: str, port: int) -> str | None:
+def test_connection(host: str) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
     try:
-        if NikoHomeControlConnection(host, port):
-            return None
+        NikoHomeControlConnection(host, 8000)
     except Exception:  # noqa: BLE001
-        return "unknown"
-    else:
         return "cannot_connect"
+    return None
 
 
 class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
     VERSION = 1
-
-    def __init__(self, import_info: dict[str, str] | None = None) -> None:
-        """Initialize the config flow."""
-        self._import_info = import_info
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,13 +40,11 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-            )
-            error = test_connection(user_input[CONF_HOST], user_input[CONF_PORT])
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            error = test_connection(user_input[CONF_HOST])
             if not error:
                 return self.async_create_entry(
-                    title=DOMAIN,
+                    title="Niko Home Control",
                     data=user_input,
                 )
             errors["base"] = error
@@ -64,14 +55,12 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        self._async_abort_entries_match(
-            {CONF_HOST: import_info[CONF_HOST], CONF_PORT: DEFAULT_PORT}
-        )
-        error = test_connection(import_info[CONF_HOST], DEFAULT_PORT)
+        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
+        error = test_connection(import_info[CONF_HOST])
 
         if not error:
             return self.async_create_entry(
-                title=DOMAIN,
-                data={CONF_HOST: import_info[CONF_HOST], CONF_PORT: DEFAULT_PORT},
+                title="Niko Home Control",
+                data={CONF_HOST: import_info[CONF_HOST]},
             )
         return self.async_abort(reason=error)
