@@ -58,6 +58,39 @@
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a chime"
+    },
+    "invalid_parameter": {
+      "message": ""
+    },
+    "api_error": {
+      "message": ""
+    },
+    "invalid_content_type": {
+      "message": ""
+    },
+    "invalid_credentials": {
+      "message": ""
+    },
+    "login_error": {
+      "message": ""
+    },
+    "no_data": {
+      "message": ""
+    },
+    "unexpected_data": {
+      "message": ""
+    },
+    "not_supported": {
+      "message": ""
+    },
+    "subscription_error": {
+      "message": ""
+    },
+    "connection_error": {
+      "message": ""
+    },
+    "timeout": {
+      "message": ""
     }
   },
   "issues": {

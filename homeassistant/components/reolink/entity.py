@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from types import CoroutineType
+from typing import Any
 
 from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 
@@ -128,6 +130,79 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Force full update from the generic entity update service."""
         self._host.last_wake = 0
         await super().async_update()
+
+    async def try_function(self, func: CoroutineType) -> Any:
+        """Try a reolink-aio function and translate any potential errors."""
+        try:
+            await func
+        except InvalidParameterError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_parameter",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except InvalidContentTypeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_content_type",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except CredentialsInvalidError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except LoginError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except NoDataError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except UnexpectedDataError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_data",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except NotSupportedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_supported",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except SubscriptionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="subscription_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
