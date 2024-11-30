@@ -50,6 +50,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     f"{user_input[CONF_CLIENT_ID]}_{user_input[CONF_CLIENT_SECRET]}"
                 )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Client Credentials", data=user_input
                 )
