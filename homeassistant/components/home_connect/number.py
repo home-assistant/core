@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
@@ -118,7 +118,7 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 value,
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
                 translation_placeholders={
