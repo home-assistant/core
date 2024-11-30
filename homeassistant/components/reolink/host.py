@@ -536,6 +536,8 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
+        await self._api.baichuan.check_subscribe_events()
+
         if self._api.baichuan.events_active and self._api.subscribed(SubType.push):
             # TCP push active, unsubscribe from ONVIF push because not needed
             self.unregister_webhook()
