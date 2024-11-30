@@ -15,7 +15,7 @@ from APsystemsEZ1 import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -52,5 +52,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             output_data = await self.api.get_output_data()
             alarm_info = await self.api.get_alarm_info()
         except InverterReturnedError:
-            raise UpdateFailed from None
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="inverter_error"
+            ) from None
         return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)
