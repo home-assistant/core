@@ -148,7 +148,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
     IronOSNumberEntityDescription(
         key=PinecilNumber.SHUTDOWN_TIMEOUT,
         translation_key=PinecilNumber.SHUTDOWN_TIMEOUT,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
         value_fn=lambda _, settings: settings.get("shutdown_time"),
         set_key=CharSetting.SHUTDOWN_TIME,
