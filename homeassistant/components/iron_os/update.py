@@ -15,6 +15,8 @@ from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
 from .coordinator import IronOSFirmwareUpdateCoordinator
 from .entity import IronOSBaseEntity
 
+PARALLEL_UPDATES = 0
+
 UPDATE_DESCRIPTION = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,

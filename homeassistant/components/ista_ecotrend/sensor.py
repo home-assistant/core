@@ -71,7 +71,6 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         translation_key=IstaSensorEntity.HEATING,
         suggested_display_precision=0,
         consumption_type=IstaConsumptionType.HEATING,
-        native_unit_of_measurement="units",
         state_class=SensorStateClass.TOTAL,
     ),
     IstaSensorEntityDescription(

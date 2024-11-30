@@ -25,11 +25,19 @@
         "default": "mdi:timer-refresh"
       }
     },
+    "sensor": {
+      "away_until": {
+        "default": "mdi:home-export-outline"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
+      }
+    },
     "switch": {
       "away": {
         "default": "mdi:home-account",
         "state": {
-          "on": "mdi:home-export"
+          "on": "mdi:home-export-outline"
         }
       },
       "lock": {

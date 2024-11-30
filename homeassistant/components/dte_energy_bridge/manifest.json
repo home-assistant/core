@@ -3,5 +3,6 @@
   "name": "DTE Energy Bridge",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/dte_energy_bridge",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }
