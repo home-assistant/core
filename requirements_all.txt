@@ -752,7 +752,7 @@ deluge-client==1.10.2
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==1.0.0
+denonavr==1.0.1
 
 # homeassistant.components.devialet
 devialet==1.4.5
