@@ -31,7 +31,7 @@ async def binary_sensor_only() -> AsyncGenerator[None]:
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_pynecil", "ble_device"
 )
-async def test_sensors(
+async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,

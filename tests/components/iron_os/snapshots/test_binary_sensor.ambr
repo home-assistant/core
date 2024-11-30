@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[binary_sensor.pinecil_soldering_tip-entry]
+# name: test_binary_sensors[binary_sensor.pinecil_soldering_tip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.pinecil_soldering_tip-state]
+# name: test_binary_sensors[binary_sensor.pinecil_soldering_tip-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
