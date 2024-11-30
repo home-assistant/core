@@ -374,3 +374,43 @@ async def test_cloud_disconnect_retry(
         await hass.async_block_till_done()
 
         assert mock_async_active_subscription.call_count == 8
+
+
+async def test_cloud_reconnect(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MonzoConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test we retry to create webhook connection again after cloud disconnects."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=False),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value="https://hooks.nabu.casa/ABCD",
+        ),
+        patch(
+            "homeassistant.components.monzo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+        ),
+        patch(
+            "homeassistant.components.monzo.webhook_generate_url",
+        ),
+    ):
+        async_mock_cloud_connection_status(hass, False)
+        await setup_integration(hass, polling_config_entry)
+        await hass.async_block_till_done()
+
+        assert WEBHOOK_DOMAIN not in hass.data
+
+        async_mock_cloud_connection_status(hass, True)
+        await hass.async_block_till_done()
+
+        assert len(hass.data[WEBHOOK_DOMAIN]) == len(TEST_ACCOUNTS)
