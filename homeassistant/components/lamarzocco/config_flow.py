@@ -291,6 +291,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: discovery_info.macaddress,
             }
         )
+        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.macaddress})
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",
