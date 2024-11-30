@@ -27,9 +27,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import NikoHomeControlConfigEntry
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
-_LOGGER = logging.getLogger(__name__)
 # delete after 2025.7.0
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
