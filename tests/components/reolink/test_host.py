@@ -97,11 +97,12 @@ async def test_webhook_callback(
     assert config_entry.state is ConfigEntryState.LOADED
 
     webhook_id = config_entry.runtime_data.host.webhook_id
+    unique_id = config_entry.runtime_data.host.unique_id
 
     signal_all = MagicMock()
     signal_ch = MagicMock()
-    async_dispatcher_connect(hass, f"{webhook_id}_all", signal_all)
-    async_dispatcher_connect(hass, f"{webhook_id}_0", signal_ch)
+    async_dispatcher_connect(hass, f"{unique_id}_all", signal_all)
+    async_dispatcher_connect(hass, f"{unique_id}_0", signal_ch)
 
     client = await hass_client_no_auth()
 
