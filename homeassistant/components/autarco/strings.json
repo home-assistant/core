@@ -14,7 +14,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The password for {email} is invalid.",
+        "description": "The password for {email} is no longer valid.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
