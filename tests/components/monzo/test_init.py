@@ -19,7 +19,8 @@ from homeassistant.components.webhook import (
     async_generate_url,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import setup_integration
@@ -87,6 +88,25 @@ async def webhook_setup(
     )
 
     return WebhookSetupData(hass, client, webhook_url, event_listener)
+
+
+async def test_webhook_setup_while_hass_not_running(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MonzoConfigEntry,
+) -> None:
+    """Test webhook setup while HA is not running."""
+    # with patch("HomeAssistant.state") as core_state:
+    #     core_state.get.return_value = CoreState.not_running
+    hass.state = CoreState.not_running
+    await setup_integration(hass, polling_config_entry)
+    await hass.async_block_till_done()
+    assert WEBHOOK_DOMAIN not in hass.data
+
+    hass.state = CoreState.running
+    hass.bus.async_fire_internal(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert WEBHOOK_DOMAIN in hass.data
 
 
 @pytest.mark.usefixtures("current_request_with_host")
