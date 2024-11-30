@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.9
+aioacaia==0.1.10
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -250,7 +250,7 @@ aioharmony==0.2.10
 aiohasupervisor==0.2.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.6
+aiohomekit==3.2.7
 
 # homeassistant.components.hue
 aiohue==4.7.3
@@ -280,7 +280,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.3
+aiomealie==0.9.4
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1222,6 +1222,9 @@ nibe==2.13.0
 # homeassistant.components.nice_go
 nice-go==0.3.10
 
+# homeassistant.components.niko_home_control
+niko-home-control==0.2.1
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -1686,7 +1689,7 @@ pymonoprice==0.4
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==0.2.1
+pynecil==1.0.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -2310,7 +2313,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.3
+uiprotect==6.6.4
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
