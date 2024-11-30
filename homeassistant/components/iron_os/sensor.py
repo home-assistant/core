@@ -107,6 +107,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=OHM,
         value_fn=lambda data: data.tip_resistance,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
