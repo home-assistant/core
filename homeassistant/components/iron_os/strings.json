@@ -31,7 +31,7 @@
         "name": "Sleep timeout"
       },
       "qc_max_voltage": {
-        "name": "Qick Charge voltage"
+        "name": "Quick Charge voltage"
       },
       "pd_timeout": {
         "name": "Power Delivery timeout"
