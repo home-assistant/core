@@ -18,7 +18,7 @@ rules:
     comment: |
       This integration does not provide additional actions.
   docs-high-level-description: done
-  docs-installation-instructions: done
+  docs-installation-instructions: todo
   docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
@@ -40,10 +40,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  parallel-updates:
-    status: exempt
-    comment: |
-      This integration uses a push API. No parallel poll APIs necessary.
+  parallel-updates: todo
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: todo
@@ -61,26 +58,20 @@ rules:
     comment: |
       This integration doesn't have enough / noisy entities that warrant being disabled by default.
   discovery: todo
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration is not a hub and as such only represents a single device.
+  stale-devices: todo
   diagnostics: todo
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration is not a hub and only represents a single device.
+  dynamic-devices: todo
   discovery-update-info: todo
   repair-issues:
     status: exempt
     comment: |
-      This integration doesn't have any cases where raising an issue is needed.
+      This integration raises an issue for importing via deprecated yaml. To be removed in 2025.2.
   docs-use-cases: todo
   docs-supported-devices: done
-  docs-supported-functions: done
+  docs-supported-functions: todo
   docs-data-update: todo
   docs-known-limitations: todo
   docs-troubleshooting: todo
