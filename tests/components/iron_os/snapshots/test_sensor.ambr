@@ -537,7 +537,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -569,6 +571,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Tip resistance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'Ω',
     }),
     'context': <ANY>,
