@@ -424,20 +424,12 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(
-        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
-    )
+    return TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS)
 
 
 def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return (
-        round(
-            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
-            * 2
-        )
-        / 2
-    )
+    return TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
 
 
 def density_to_air_quality(density: float) -> int:
