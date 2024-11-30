@@ -13,7 +13,6 @@ class PlaystationNetworkEntity(CoordinatorEntity[PlaystationNetworkCoordinator])
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN Entity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.user.account_id)},

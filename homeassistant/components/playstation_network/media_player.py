@@ -53,10 +53,9 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
-        if coordinator.config_entry:
-            self._attr_unique_id = (
-                f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
-            )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
+        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -85,8 +84,6 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
         """Media title getter."""
         if self.coordinator.data.title_metadata.get("npTitleId"):
             return self.coordinator.data.title_metadata.get("titleName")
-        if self.coordinator.data.platform.get("onlineStatus") == "online":
-            return None
         return None
 
     @property

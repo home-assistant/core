@@ -42,6 +42,9 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user.online_id,
                     data={CONF_NPSSO: user_input[CONF_NPSSO]},
+                    description_placeholders={
+                        "npsso_link": "https://ca.account.sony.com/api/v1/ssocookie"
+                    },
                 )
 
         return self.async_show_form(
