@@ -8,13 +8,9 @@ from homeassistant.core import HomeAssistant
 
 from . import hub
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.COVER]
 
-# TODO Create ConfigEntry type alias with API object
-# TODO Rename type alias and update all entry annotations
-type HubConfigEntry = ConfigEntry[hub.AveHub]  # noqa: F821
+type HubConfigEntry = ConfigEntry[hub.AveHub]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
@@ -31,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     return True
 
 
-# TODO Update entry annotation
 async def async_unload_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.session.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
