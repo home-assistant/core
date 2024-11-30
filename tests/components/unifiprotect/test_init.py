@@ -297,15 +297,15 @@ async def test_device_remove_devices_nvr(
     [
         pytest.param(
             [
-                Mock(
-                    spec=ConfigEntry,
+                MockConfigEntry(
                     domain=DOMAIN,
-                    runtime_data=Mock(api="mock_api_instance_1"),
+                    entry_id="1",
+                    data={},
                 ),
-                Mock(
-                    spec=ConfigEntry,
+                MockConfigEntry(
                     domain="other_domain",
-                    runtime_data=Mock(api="mock_api_instance_2"),
+                    entry_id="2",
+                    data={},
                 ),
             ],
             "mock_api_instance_1",
@@ -313,15 +313,15 @@ async def test_device_remove_devices_nvr(
         ),
         pytest.param(
             [
-                Mock(
-                    spec=ConfigEntry,
+                MockConfigEntry(
                     domain="other_domain",
-                    runtime_data=Mock(api="mock_api_instance_1"),
+                    entry_id="1",
+                    data={},
                 ),
-                Mock(
-                    spec=ConfigEntry,
+                MockConfigEntry(
                     domain="other_domain",
-                    runtime_data=Mock(api="mock_api_instance_2"),
+                    entry_id="2",
+                    data={},
                 ),
             ],
             None,
@@ -330,22 +330,17 @@ async def test_device_remove_devices_nvr(
     ],
 )
 async def test_async_ufp_instance_for_config_entry_ids(
-    mock_entries, expected_result
+    hass: HomeAssistant,
+    mock_entries: list[MockConfigEntry],
+    expected_result: str | None,
 ) -> None:
     """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
 
-    hass = Mock(spec=HomeAssistant)
+    for index, entry in enumerate(mock_entries):
+        entry.add_to_hass(hass)
+        entry.runtime_data = Mock(api=f"mock_api_instance_{index + 1}")
 
-    mock_entry_mapping = {
-        str(index): entry for index, entry in enumerate(mock_entries, start=1)
-    }
-
-    def mock_async_get_entry(entry_id):
-        return mock_entry_mapping.get(entry_id)
-
-    hass.config_entries.async_get_entry = Mock(side_effect=mock_async_get_entry)
-
-    entry_ids = set(mock_entry_mapping.keys())
+    entry_ids = {entry.entry_id for entry in mock_entries}
 
     result = async_ufp_instance_for_config_entry_ids(hass, entry_ids)
 

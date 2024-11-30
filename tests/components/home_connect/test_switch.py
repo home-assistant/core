@@ -33,7 +33,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -225,7 +225,7 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
@@ -350,7 +350,7 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -508,7 +508,7 @@ async def test_power_switch_service_validation_errors(
 
     appliance.status.update({BSH_POWER_STATE: {"value": BSH_POWER_ON}})
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )

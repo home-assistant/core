@@ -7,7 +7,7 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -140,12 +140,12 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
         "Cooking.Oven.Program.HeatingMode.HotAir80Steam",
         "Cooking.Oven.Program.HeatingMode.HotAir100Steam",
         "Cooking.Oven.Program.HeatingMode.SabbathProgramme",
-        "Cooking.Oven.Program.Microwave90Watt",
-        "Cooking.Oven.Program.Microwave180Watt",
-        "Cooking.Oven.Program.Microwave360Watt",
-        "Cooking.Oven.Program.Microwave600Watt",
-        "Cooking.Oven.Program.Microwave900Watt",
-        "Cooking.Oven.Program.Microwave1000Watt",
+        "Cooking.Oven.Program.Microwave.90Watt",
+        "Cooking.Oven.Program.Microwave.180Watt",
+        "Cooking.Oven.Program.Microwave.360Watt",
+        "Cooking.Oven.Program.Microwave.600Watt",
+        "Cooking.Oven.Program.Microwave.900Watt",
+        "Cooking.Oven.Program.Microwave.1000Watt",
         "Cooking.Oven.Program.Microwave.Max",
         "Cooking.Oven.Program.HeatingMode.WarmingDrawer",
         "LaundryCare.Washer.Program.Cotton",
@@ -289,7 +289,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key = "start_program"
             else:
                 translation_key = "select_program"
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
                 translation_placeholders={

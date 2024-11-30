@@ -23,43 +23,43 @@
   },
   "exceptions": {
     "turn_on_light": {
-      "message": "Error while trying to turn on {entity_id}: {description}"
+      "message": "Error turning on {entity_id}: {description}"
     },
     "turn_off_light": {
-      "message": "Error while trying to turn off {entity_id}: {description}"
+      "message": "Error turning off {entity_id}: {description}"
     },
     "set_light_brightness": {
-      "message": "Error while trying to set brightness of {entity_id}: {description}"
+      "message": "Error setting brightness of {entity_id}: {description}"
     },
     "select_light_custom_color": {
-      "message": "Error while trying to select custom color of {entity_id}: {description}"
+      "message": "Error selecting custom color of {entity_id}: {description}"
     },
     "set_light_color": {
-      "message": "Error while trying to set color of {entity_id}: {description}"
+      "message": "Error setting color of {entity_id}: {description}"
     },
     "set_setting": {
-      "message": "Error while trying to assign the value \"{value}\" to the setting \"{setting_key}\" for {entity_id}: {description}"
+      "message": "Error assigning the value \"{value}\" to the setting \"{setting_key}\" for {entity_id}: {description}"
     },
     "turn_on": {
-      "message": "Error while trying to turn on {entity_id} ({setting_key}): {description}"
+      "message": "Error turning on {entity_id} ({setting_key}): {description}"
     },
     "turn_off": {
-      "message": "Error while trying to turn off {entity_id} ({setting_key}): {description}"
+      "message": "Error turning off {entity_id} ({setting_key}): {description}"
     },
     "select_program": {
-      "message": "Error while trying to select program {program}: {description}"
+      "message": "Error selecting program {program}: {description}"
     },
     "start_program": {
-      "message": "Error while trying to start program {program}: {description}"
+      "message": "Error starting program {program}: {description}"
     },
     "stop_program": {
-      "message": "Error while trying to stop program {program}: {description}"
+      "message": "Error stopping program {program}: {description}"
     },
     "power_on": {
-      "message": "Error while trying to turn on {appliance_name}: {description}"
+      "message": "Error turning on {appliance_name}: {description}"
     },
     "power_off": {
-      "message": "Error while trying to turn off {appliance_name} with value \"{value}\": {description}"
+      "message": "Error turning off {appliance_name} with value \"{value}\": {description}"
     },
     "turn_off_not_supported": {
       "message": "{appliance_name} does not support turning off or entering standby mode."
