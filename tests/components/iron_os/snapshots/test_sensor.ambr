@@ -513,7 +513,7 @@
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_tip_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
   })
 # ---
 # name: test_sensors[sensor.pinecil_raw_tip_voltage-state]
@@ -522,7 +522,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Pinecil Raw tip voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_raw_tip_voltage',
@@ -537,7 +537,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -569,6 +571,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Tip resistance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'Ω',
     }),
     'context': <ANY>,
