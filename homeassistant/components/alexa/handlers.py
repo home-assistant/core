@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -9,6 +10,7 @@ from typing import Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    alarm_control_panel,
     button,
     camera,
     climate,
@@ -21,6 +23,7 @@ from homeassistant.components import (
     light,
     media_player,
     number,
+    remote,
     timer,
     vacuum,
     valve,
@@ -50,7 +53,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_ALARM_DISARMED,
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
@@ -185,6 +187,8 @@ async def async_api_turn_on(
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_ON
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -234,6 +238,8 @@ async def async_api_turn_off(
         service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
@@ -759,9 +765,25 @@ async def async_api_stop(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
-    )
+    if entity.domain == cover.DOMAIN:
+        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        feature_services: dict[int, str] = {
+            cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
+            cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
+        }
+        await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    entity.domain, service, data, blocking=False, context=context
+                )
+                for feature, service in feature_services.items()
+                if feature & supported
+            )
+        )
+    else:
+        await hass.services.async_call(
+            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        )
 
     return directive.response()
 
@@ -1078,7 +1100,13 @@ async def async_api_arm(
     arm_state = directive.payload["armState"]
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.state != STATE_ALARM_DISARMED:
+    # Per Alexa Documentation: users are not allowed to switch from armed_away
+    # directly to another armed state without first disarming the system.
+    # https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-securitypanelcontroller.html#arming
+    if (
+        entity.state == alarm_control_panel.AlarmControlPanelState.ARMED_AWAY
+        and arm_state != "ARMED_AWAY"
+    ):
         msg = "You must disarm the system before you can set the requested arm state."
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 
@@ -1128,7 +1156,7 @@ async def async_api_disarm(
     # Per Alexa Documentation: If you receive a Disarm directive, and the
     # system is already disarmed, respond with a success response,
     # not an error response.
-    if entity.state == STATE_ALARM_DISARMED:
+    if entity.state == alarm_control_panel.AlarmControlPanelState.DISARMED:
         return response
 
     payload = directive.payload
@@ -1196,6 +1224,17 @@ async def async_api_set_mode(
         if mode != PRESET_MODE_NA and modes and mode in modes:
             service = humidifier.SERVICE_SET_MODE
             data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
+    # Remote Activity
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        activity = mode.split(".")[1]
+        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        if activity != PRESET_MODE_NA and activities and activity in activities:
+            service = remote.SERVICE_TURN_ON
+            data[remote.ATTR_ACTIVITY] = activity
         else:
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)
@@ -1497,7 +1536,7 @@ async def async_api_adjust_range(
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
+        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

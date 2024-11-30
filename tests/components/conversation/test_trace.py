@@ -33,7 +33,7 @@ async def test_converation_trace(
     assert traces
     last_trace = traces[-1].as_dict()
     assert last_trace.get("events")
-    assert len(last_trace.get("events")) == 1
+    assert len(last_trace.get("events")) == 2
     trace_event = last_trace["events"][0]
     assert (
         trace_event.get("event_type") == trace.ConversationTraceEventType.ASYNC_PROCESS
@@ -49,6 +49,16 @@ async def test_converation_trace(
         .get("speech")
         == "Added apples"
     )
+
+    trace_event = last_trace["events"][1]
+    assert trace_event.get("event_type") == trace.ConversationTraceEventType.TOOL_CALL
+    assert trace_event.get("data") == {
+        "intent_name": "HassListAddItem",
+        "slots": {
+            "name": "Shopping List",
+            "item": "apples",
+        },
+    }
 
 
 async def test_converation_trace_error(

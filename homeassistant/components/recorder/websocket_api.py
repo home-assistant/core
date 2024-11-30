@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime as dt
 from typing import Any, Literal, cast
 
@@ -15,6 +16,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -42,13 +46,21 @@ from .statistics import (
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
+    update_statistics_issues,
     validate_statistics,
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
+CLEAR_STATISTICS_TIME_OUT = 10
+UPDATE_STATISTICS_METADATA_TIME_OUT = 10
+
 UNIT_SCHEMA = vol.Schema(
     {
-        vol.Optional("conductivity"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
+        vol.Optional("blood_glucose_concentration"): vol.In(
+            BloodGlucoseConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
@@ -79,7 +91,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
-    websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_update_statistics_issues)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
 
@@ -292,6 +304,24 @@ async def ws_validate_statistics(
     connection.send_result(msg["id"], statistic_ids)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_statistics_issues",
+    }
+)
+@websocket_api.async_response
+async def ws_update_statistics_issues(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Update statistics issues."""
+    instance = get_instance(hass)
+    await instance.async_add_executor_job(
+        update_statistics_issues,
+        hass,
+    )
+    connection.send_result(msg["id"])
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -299,8 +329,8 @@ async def ws_validate_statistics(
         vol.Required("statistic_ids"): [str],
     }
 )
-@callback
-def ws_clear_statistics(
+@websocket_api.async_response
+async def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Clear statistics for a list of statistic_ids.
@@ -308,7 +338,23 @@ def ws_clear_statistics(
     Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
     wait until the job is completed.
     """
-    get_instance(hass).async_clear_statistics(msg["statistic_ids"])
+    done_event = asyncio.Event()
+
+    def clear_statistics_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
+    get_instance(hass).async_clear_statistics(
+        msg["statistic_ids"], on_done=clear_statistics_done
+    )
+    try:
+        async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):
+            await done_event.wait()
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
+        )
+        return
+
     connection.send_result(msg["id"])
 
 
@@ -337,17 +383,33 @@ async def ws_get_statistics_metadata(
         vol.Required("unit_of_measurement"): vol.Any(str, None),
     }
 )
-@callback
-def ws_update_statistics_metadata(
+@websocket_api.async_response
+async def ws_update_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
     Only the normalized unit of measurement can be updated.
     """
+    done_event = asyncio.Event()
+
+    def update_statistics_metadata_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
     get_instance(hass).async_update_statistics_metadata(
-        msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
+        msg["statistic_id"],
+        new_unit_of_measurement=msg["unit_of_measurement"],
+        on_done=update_statistics_metadata_done,
     )
+    try:
+        async with asyncio.timeout(UPDATE_STATISTICS_METADATA_TIME_OUT):
+            await done_event.wait()
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "update_statistics_metadata timed out"
+        )
+        return
+
     connection.send_result(msg["id"])
 
 
@@ -475,41 +537,3 @@ def ws_import_statistics(
     else:
         async_add_external_statistics(hass, metadata, stats)
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "recorder/info",
-    }
-)
-@callback
-def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Return status of the recorder."""
-    if instance := get_instance(hass):
-        backlog = instance.backlog
-        migration_in_progress = instance.migration_in_progress
-        migration_is_live = instance.migration_is_live
-        recording = instance.recording
-        # We avoid calling is_alive() as it can block waiting
-        # for the thread state lock which will block the event loop.
-        is_running = instance.is_running
-        max_backlog = instance.max_backlog
-    else:
-        backlog = None
-        migration_in_progress = False
-        migration_is_live = False
-        recording = False
-        is_running = False
-        max_backlog = None
-
-    recorder_info = {
-        "backlog": backlog,
-        "max_backlog": max_backlog,
-        "migration_in_progress": migration_in_progress,
-        "migration_is_live": migration_is_live,
-        "recording": recording,
-        "thread_running": is_running,
-    }
-    connection.send_result(msg["id"], recorder_info)

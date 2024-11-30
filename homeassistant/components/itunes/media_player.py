@@ -135,6 +135,8 @@ class Itunes:
             path = f"/playlists/{playlist['id']}/play"
             return self._request("PUT", path)
 
+        raise ValueError(f"Playlist {playlist_id_or_name} not found")
+
     def artwork_url(self):
         """Return a URL of the current track's album art."""
         return f"{self._base_url}/artwork"

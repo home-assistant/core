@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
@@ -37,7 +38,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import (
     ATTR_GATEWAY_ID,
     ATTR_NODE_ID,
@@ -48,6 +49,7 @@ from .const import (
     DiscoveryInfo,
     NodeDiscoveryInfo,
 )
+from .entity import MySensorNodeEntity, MySensorsChildEntity
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -191,11 +193,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
-        native_unit_of_measurement="var",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
@@ -214,7 +216,7 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors sensor."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.SENSOR,
             discovery_info,
@@ -251,7 +253,7 @@ async def async_setup_entry(
     )
 
 
-class MyBatterySensor(mysensors.device.MySensorNodeEntity, SensorEntity):
+class MyBatterySensor(MySensorNodeEntity, SensorEntity):
     """Battery sensor of MySensors node."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -276,7 +278,7 @@ class MyBatterySensor(mysensors.device.MySensorNodeEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
+class MySensorsSensor(MySensorsChildEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     _attr_force_update = True
@@ -318,9 +320,9 @@ class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
         entity_description = SENSORS.get(set_req(self.value_type).name)
 
         if not entity_description:
-            pres = self.gateway.const.Presentation
+            presentation = self.gateway.const.Presentation
             entity_description = SENSORS.get(
-                f"{set_req(self.value_type).name}_{pres(self.child_type).name}"
+                f"{set_req(self.value_type).name}_{presentation(self.child_type).name}"
             )
 
         return entity_description

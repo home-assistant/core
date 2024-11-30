@@ -35,13 +35,15 @@ def aiohttp_unused_port_factory(
     return unused_tcp_port_factory
 
 
-def get_url(hass):
+def get_url(hass: HomeAssistant) -> str:
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass, aiohttp_unused_port_factory):
+async def setup_image_processing(
+    hass: HomeAssistant, aiohttp_unused_port_factory: Callable[[], int]
+) -> None:
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
@@ -55,7 +57,7 @@ async def setup_image_processing(hass, aiohttp_unused_port_factory):
     await hass.async_block_till_done()
 
 
-async def setup_image_processing_face(hass):
+async def setup_image_processing_face(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
@@ -93,7 +95,7 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
 async def test_get_image_from_camera(
     mock_camera_read,
     hass: HomeAssistant,
-    aiohttp_unused_port_factory,
+    aiohttp_unused_port_factory: Callable[[], int],
 ) -> None:
     """Grab an image from camera entity."""
     await setup_image_processing(hass, aiohttp_unused_port_factory)
@@ -116,7 +118,7 @@ async def test_get_image_from_camera(
 async def test_get_image_without_exists_camera(
     mock_image,
     hass: HomeAssistant,
-    aiohttp_unused_port_factory,
+    aiohttp_unused_port_factory: Callable[[], int],
 ) -> None:
     """Try to get image without exists camera."""
     await setup_image_processing(hass, aiohttp_unused_port_factory)
@@ -191,7 +193,7 @@ async def test_face_event_call_no_confidence(
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_update_missing_camera(
     hass: HomeAssistant,
-    aiohttp_unused_port_factory,
+    aiohttp_unused_port_factory: Callable[[], int],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when entity does not set camera."""

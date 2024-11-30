@@ -17,7 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,7 +41,6 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
-    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -144,11 +143,10 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with a Tailwind device."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -157,10 +155,10 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with a Tailwind device."""
         errors = {}
 
-        if user_input is not None and self.reauth_entry:
+        if user_input is not None:
             try:
                 return await self._async_step_create_entry(
-                    host=self.reauth_entry.data[CONF_HOST],
+                    host=self._get_reauth_entry().data[CONF_HOST],
                     token=user_input[CONF_TOKEN],
                 )
             except TailwindAuthenticationError:
@@ -212,9 +210,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         except TailwindUnsupportedFirmwareVersionError:
             return self.async_abort(reason="unsupported_firmware")
 
-        if self.reauth_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self.reauth_entry,
+                self._get_reauth_entry(),
                 data={
                     CONF_HOST: host,
                     CONF_TOKEN: token,

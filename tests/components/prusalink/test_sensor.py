@@ -101,6 +101,10 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state is not None
     assert state.state == "PLA"
 
+    state = hass.states.get("sensor.mock_title_nozzle_diameter")
+    assert state is not None
+    assert state.state == "0.4"
+
     state = hass.states.get("sensor.mock_title_print_flow")
     assert state is not None
     assert state.state == "100"
@@ -204,6 +208,10 @@ async def test_sensors_idle_job_mk3(
     state = hass.states.get("sensor.mock_title_material")
     assert state is not None
     assert state.state == "PLA"
+
+    state = hass.states.get("sensor.mock_title_nozzle_diameter")
+    assert state is not None
+    assert state.state == "0.4"
 
     state = hass.states.get("sensor.mock_title_print_flow")
     assert state is not None

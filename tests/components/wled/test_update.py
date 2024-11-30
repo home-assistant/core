@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from wled import WLEDError
+from wled import Releases, WLEDError
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -16,6 +17,7 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntityFeature,
 )
+from homeassistant.components.wled.const import RELEASES_SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -31,6 +33,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from tests.common import async_fire_time_changed
+
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
@@ -45,12 +49,12 @@ async def test_update_available(
         state.attributes[ATTR_ENTITY_PICTURE]
         == "https://brands.home-assistant.io/_/wled/icon.png"
     )
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
+    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.12.0"
+        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -64,15 +68,26 @@ async def test_update_available(
     assert entry.entity_category is EntityCategory.CONFIG
 
 
-@pytest.mark.parametrize("device_fixture", ["rgb_no_update"])
 async def test_update_information_available(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_wled_releases: MagicMock,
 ) -> None:
     """Test having no update information available at all."""
+    mock_wled_releases.releases.return_value = Releases(
+        beta=None,
+        stable=None,
+    )
+
+    freezer.tick(RELEASES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
@@ -98,12 +113,12 @@ async def test_no_update_available(
     assert (state := hass.states.get("update.wled_websocket_firmware"))
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.12.0-b2"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0-b2"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.99.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.12.0-b2"
+        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -151,8 +166,8 @@ async def test_update_stay_stable(
     """
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
+    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -161,7 +176,7 @@ async def test_update_stay_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.12.0")
+    mock_wled.upgrade.assert_called_with(version="0.99.0")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
@@ -177,8 +192,8 @@ async def test_update_beta_to_stable(
     """
     assert (state := hass.states.get("update.wled_rgbw_light_firmware"))
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.6b4"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.8.6"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.99.0b1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -187,7 +202,7 @@ async def test_update_beta_to_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.8.6")
+    mock_wled.upgrade.assert_called_with(version="0.99.0")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
@@ -202,8 +217,8 @@ async def test_update_stay_beta(
     """
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.6b1"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.8.6b2"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0b4"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0b5"
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -212,4 +227,4 @@ async def test_update_stay_beta(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.8.6b2")
+    mock_wled.upgrade.assert_called_with(version="1.0.0b5")

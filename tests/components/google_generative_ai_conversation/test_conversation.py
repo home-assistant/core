@@ -1,5 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
@@ -17,8 +18,9 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 )
 from homeassistant.components.google_generative_ai_conversation.conversation import (
     _escape_decode,
+    _format_schema,
 )
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
@@ -38,10 +40,13 @@ def freeze_the_time():
     "agent_id", [None, "conversation.google_generative_ai_conversation"]
 )
 @pytest.mark.parametrize(
-    "config_entry_options",
+    ("config_entry_options", "expected_features"),
     [
-        {},
-        {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+        ({}, 0),
+        (
+            {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+            conversation.ConversationEntityFeature.CONTROL,
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
@@ -51,6 +56,7 @@ async def test_default_prompt(
     snapshot: SnapshotAssertion,
     agent_id: str | None,
     config_entry_options: {},
+    expected_features: conversation.ConversationEntityFeature,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the default prompt works."""
@@ -96,6 +102,9 @@ async def test_default_prompt(
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
     assert mock_get_tools.called == (CONF_LLM_HASS_API in config_entry_options)
+
+    state = hass.states.get("conversation.google_generative_ai_conversation")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected_features
 
 
 @pytest.mark.parametrize(
@@ -185,7 +194,9 @@ async def test_function_call(
         {
             vol.Optional("param1", description="Test parameters"): [
                 vol.All(str, vol.Lower)
-            ]
+            ],
+            vol.Optional("param2"): vol.Any(float, int),
+            vol.Optional("param3"): dict,
         }
     )
 
@@ -201,11 +212,13 @@ async def test_function_call(
             name="test_tool",
             args={
                 "param1": ["test_value", "param1\\'s value"],
-                "param2": "param2\\'s value",
+                "param2": 2.7,
             },
         )
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             return {"result": "Test response"}
@@ -245,7 +258,7 @@ async def test_function_call(
             tool_name="test_tool",
             tool_args={
                 "param1": ["test_value", "param1's value"],
-                "param2": "param2's value",
+                "param2": 2.7,
             },
         ),
         llm.LLMContext(
@@ -267,11 +280,12 @@ async def test_function_call(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
-        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+        trace.ConversationTraceEventType.TOOL_CALL,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "Answer in plain text" in detail_event["data"]["prompt"]
+    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
 
 
 @patch(
@@ -303,7 +317,9 @@ async def test_function_call_without_parameters(
         mock_part = MagicMock()
         mock_part.function_call = FunctionCall(name="test_tool", args={})
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             return {"result": "Test response"}
@@ -389,7 +405,9 @@ async def test_function_exception(
         mock_part = MagicMock()
         mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             raise HomeAssistantError("Test tool exception")
@@ -619,3 +637,61 @@ async def test_escape_decode() -> None:
         "param2": "param2's value",
         "param3": {"param31": "Cheminée", "param32": "Cheminée"},
     }
+
+
+@pytest.mark.parametrize(
+    ("openapi", "protobuf"),
+    [
+        (
+            {"type": "string", "enum": ["a", "b", "c"]},
+            {"type_": "STRING", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "integer", "enum": [1, 2, 3]},
+            {"type_": "STRING", "enum": ["1", "2", "3"]},
+        ),
+        ({"anyOf": [{"type": "integer"}, {"type": "number"}]}, {"type_": "INTEGER"}),
+        (
+            {
+                "anyOf": [
+                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+                ]
+            },
+            {"type_": "INTEGER"},
+        ),
+        ({"type": "string", "format": "lower"}, {"type_": "STRING"}),
+        ({"type": "boolean", "format": "bool"}, {"type_": "BOOLEAN"}),
+        (
+            {"type": "number", "format": "percent"},
+            {"type_": "NUMBER", "format_": "percent"},
+        ),
+        (
+            {
+                "type": "object",
+                "properties": {"var": {"type": "string"}},
+                "required": [],
+            },
+            {
+                "type_": "OBJECT",
+                "properties": {"var": {"type_": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "object", "additionalProperties": True},
+            {
+                "type_": "OBJECT",
+                "properties": {"json": {"type_": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "array", "items": {"type": "string"}},
+            {"type_": "ARRAY", "items": {"type_": "STRING"}},
+        ),
+    ],
+)
+async def test_format_schema(openapi, protobuf) -> None:
+    """Test _format_schema."""
+    assert _format_schema(openapi) == protobuf

@@ -21,6 +21,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lyric",
   "iot_class": "cloud_polling",
   "loggers": ["aiolyric"],
-  "quality_scale": "silver",
-  "requirements": ["aiolyric==1.1.0"]
+  "requirements": ["aiolyric==2.0.1"]
 }

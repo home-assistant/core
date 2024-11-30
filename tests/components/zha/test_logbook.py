@@ -3,10 +3,16 @@
 from unittest.mock import patch
 
 import pytest
+from zha.application.const import ZHA_EVENT
 import zigpy.profiles.zha
 from zigpy.zcl.clusters import general
 
-from homeassistant.components.zha.core.const import ZHA_EVENT
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
+)
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -40,8 +46,12 @@ def sensor_platform_only():
 
 
 @pytest.fixture
-async def mock_devices(hass, zigpy_device_mock, zha_device_joined):
+async def mock_devices(hass: HomeAssistant, setup_zha, zigpy_device_mock):
     """IAS device fixture."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
 
     zigpy_device = zigpy_device_mock(
         {
@@ -54,10 +64,13 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined):
         }
     )
 
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.update_available(True)
-    await hass.async_block_till_done()
-    return zigpy_device, zha_device
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+
+    return zigpy_device, zha_device_proxy
 
 
 async def test_zha_logbook_event_device_with_triggers(
@@ -76,7 +89,7 @@ async def test_zha_logbook_event_device_with_triggers(
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    ieee_address = str(zha_device.ieee)
+    ieee_address = str(zha_device.device.ieee)
 
     reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
@@ -153,7 +166,7 @@ async def test_zha_logbook_event_device_no_triggers(
     """Test ZHA logbook events with device and without triggers."""
 
     zigpy_device, zha_device = mock_devices
-    ieee_address = str(zha_device.ieee)
+    ieee_address = str(zha_device.device.ieee)
     reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     hass.config.components.add("recorder")

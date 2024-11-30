@@ -6,15 +6,14 @@ from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenE
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
     _LOGGER,
-    ATTR_CONFIG_ENTRY_ID,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DATA_HASS_CONFIG,
@@ -72,18 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # The legacy Ecobee notify.notify service is deprecated
-    # was with HA Core 2024.5.0 and will be removed with HA core 2024.11.0
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_NAME: entry.title, ATTR_CONFIG_ENTRY_ID: entry.entry_id},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
 
     return True
 

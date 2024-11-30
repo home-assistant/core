@@ -13,13 +13,3 @@
   dict({
   })
 # ---
-# name: test_listeners
-  dict({
-    'light.kitchen': dict({
-      'should_expose': True,
-    }),
-    'switch.test_unique1': mappingproxy({
-      'should_expose': True,
-    }),
-  })
-# ---

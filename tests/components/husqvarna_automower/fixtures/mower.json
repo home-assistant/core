@@ -6,13 +6,14 @@
       "attributes": {
         "system": {
           "name": "Test Mower 1",
-          "model": "450XH-TEST",
+          "model": "HUSQVARNA AUTOMOWER® 450XH",
           "serialNumber": 123
         },
         "battery": {
           "batteryPercent": 100
         },
         "capabilities": {
+          "canConfirmError": true,
           "headlights": true,
           "workAreas": true,
           "position": true,
@@ -39,7 +40,8 @@
               "thursday": false,
               "friday": true,
               "saturday": false,
-              "sunday": false
+              "sunday": false,
+              "workAreaId": 123456
             },
             {
               "start": 0,
@@ -50,7 +52,32 @@
               "thursday": true,
               "friday": false,
               "saturday": true,
-              "sunday": false
+              "sunday": false,
+              "workAreaId": 123456
+            },
+            {
+              "start": 0,
+              "duration": 480,
+              "monday": false,
+              "tuesday": true,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false,
+              "workAreaId": 654321
+            },
+            {
+              "start": 60,
+              "duration": 480,
+              "monday": true,
+              "tuesday": true,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false,
+              "workAreaId": 654321
             }
           ]
         },
@@ -63,23 +90,30 @@
         },
         "metadata": {
           "connected": true,
-          "statusTimestamp": 1697669932683
+          "statusTimestamp": 1685923200000
         },
         "workAreas": [
           {
             "workAreaId": 123456,
             "name": "Front lawn",
-            "cuttingHeight": 50
+            "cuttingHeight": 50,
+            "enabled": true,
+            "progress": 40,
+            "lastTimeCompleted": 1723449269
           },
           {
             "workAreaId": 654321,
             "name": "Back lawn",
-            "cuttingHeight": 25
+            "cuttingHeight": 25,
+            "enabled": true
           },
           {
             "workAreaId": 0,
             "name": "",
-            "cuttingHeight": 50
+            "cuttingHeight": 50,
+            "enabled": false,
+            "progress": 20,
+            "lastTimeCompleted": 1723439269
           }
         ],
         "positions": [
@@ -171,6 +205,69 @@
             "mode": "EVENING_ONLY"
           }
         }
+      }
+    },
+    {
+      "type": "mower",
+      "id": "1234",
+      "attributes": {
+        "system": {
+          "name": "Test Mower 2",
+          "model": "HUSQVARNA AUTOMOWER® Aspire R4",
+          "serialNumber": 123
+        },
+        "battery": {
+          "batteryPercent": 50
+        },
+        "capabilities": {
+          "canConfirmError": false,
+          "headlights": false,
+          "position": false,
+          "stayOutZones": false,
+          "workAreas": false
+        },
+        "mower": {
+          "mode": "MAIN_AREA",
+          "activity": "PARKED_IN_CS",
+          "inactiveReason": "NONE",
+          "state": "RESTRICTED",
+          "errorCode": 0,
+          "errorCodeTimestamp": 0
+        },
+        "calendar": {
+          "tasks": [
+            {
+              "start": 120,
+              "duration": 49,
+              "monday": true,
+              "tuesday": false,
+              "wednesday": false,
+              "thursday": false,
+              "friday": false,
+              "saturday": false,
+              "sunday": false
+            }
+          ]
+        },
+        "planner": {
+          "nextStartTimestamp": 1685991600000,
+          "override": {
+            "action": "NOT_ACTIVE"
+          },
+          "restrictedReason": "WEEK_SCHEDULE"
+        },
+        "metadata": {
+          "connected": true,
+          "statusTimestamp": 1697669932683
+        },
+        "positions": [],
+        "settings": {
+          "cuttingHeight": null,
+          "headlight": {
+            "mode": null
+          }
+        },
+        "statistics": {}
       }
     }
   ]

@@ -1,24 +1,26 @@
 """Support for HomeWizard buttons."""
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import HomeWizardConfigEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HomeWizardConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Identify button."""
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.supports_identify():
-        async_add_entities([HomeWizardIdentifyButton(coordinator)])
+    if entry.runtime_data.supports_identify():
+        async_add_entities([HomeWizardIdentifyButton(entry.runtime_data)])
 
 
 class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):

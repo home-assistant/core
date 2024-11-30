@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 
-from voip_utils import CallInfo
+from voip_utils import CallInfo, VoipDatagramProtocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -22,6 +22,7 @@ class VoIPDevice:
     device_id: str
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
+    protocol: VoipDatagramProtocol | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
@@ -55,6 +56,18 @@ class VoIPDevice:
             return state.state == "on"
 
         return False
+
+    def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for pipeline select."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id("select", DOMAIN, f"{self.voip_id}-pipeline")
+
+    def get_vad_sensitivity_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD sensitivity."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
+        )
 
 
 class VoIPDevices:

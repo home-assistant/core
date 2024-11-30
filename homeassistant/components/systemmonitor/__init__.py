@@ -73,7 +73,11 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
-    if entry.version == 1:
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 3:
         new_options = {**entry.options}
         if entry.minor_version == 1:
             # Migration copies process sensors to binary sensors
@@ -83,6 +87,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, options=new_options, version=1, minor_version=2
         )
+
+        if entry.minor_version == 2:
+            new_options = {**entry.options}
+            if SENSOR_DOMAIN in new_options:
+                new_options.pop(SENSOR_DOMAIN)
+            hass.config_entries.async_update_entry(
+                entry, options=new_options, version=1, minor_version=3
+            )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version

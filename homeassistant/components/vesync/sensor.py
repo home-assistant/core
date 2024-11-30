@@ -30,8 +30,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity
 from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +72,7 @@ FILTER_LIFE_SUPPORTED = [
     "Core300S",
     "Core400S",
     "Core600S",
+    "EverestAir",
     "Vital100S",
     "Vital200S",
 ]
@@ -83,7 +84,14 @@ AIR_QUALITY_SUPPORTED = [
     "Vital100S",
     "Vital200S",
 ]
-PM25_SUPPORTED = ["Core300S", "Core400S", "Core600S", "Vital100S", "Vital200S"]
+PM25_SUPPORTED = [
+    "Core300S",
+    "Core400S",
+    "Core600S",
+    "EverestAir",
+    "Vital100S",
+    "Vital200S",
+]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(

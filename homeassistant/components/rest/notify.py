@@ -172,7 +172,6 @@ class RestNotificationService(BaseNotificationService):
                     }
                 if not isinstance(value, Template):
                     return value
-                value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
 
             if self._data:

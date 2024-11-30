@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
+from fullykiosk import FullyKioskError
+
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FullyKioskConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the cameras."""
-    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([FullyCameraEntity(coordinator)])
 
 
@@ -36,8 +40,12 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        image_bytes: bytes = await self.coordinator.fully.getCamshot()
-        return image_bytes
+        try:
+            image_bytes: bytes = await self.coordinator.fully.getCamshot()
+        except FullyKioskError as err:
+            raise HomeAssistantError(err) from err
+        else:
+            return image_bytes
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""

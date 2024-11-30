@@ -1,14 +1,16 @@
-"""Fixtures for Tessie."""
+"""Fixtures for Teslemetry."""
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from .const import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
@@ -37,7 +39,7 @@ def mock_products():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_data():
+def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle_data",
@@ -57,7 +59,7 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle():
+def mock_vehicle() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle",
@@ -94,3 +96,22 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        return_value=ENERGY_HISTORY,
+    ) as mock_live_status:
+        yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_listen():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.listen",
+    ) as mock_listen:
+        yield mock_listen

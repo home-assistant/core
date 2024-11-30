@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_all_valves[valve.zone_one-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.zone_one',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '5965394_zone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_valves[valve.zone_one-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'water',
+      'friendly_name': 'Zone One',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.zone_one',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_valves[valve.zone_two-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.zone_two',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '5965395_zone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_valves[valve.zone_two-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'water',
+      'friendly_name': 'Zone Two',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.zone_two',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

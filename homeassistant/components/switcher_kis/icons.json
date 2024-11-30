@@ -20,11 +20,18 @@
       },
       "auto_shutdown": {
         "default": "mdi:progress-clock"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
       }
     }
   },
   "services": {
-    "set_auto_off": "mdi:progress-clock",
-    "turn_on_with_timer": "mdi:timer"
+    "set_auto_off": {
+      "service": "mdi:progress-clock"
+    },
+    "turn_on_with_timer": {
+      "service": "mdi:timer"
+    }
   }
 }

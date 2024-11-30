@@ -300,24 +300,6 @@
 # name: test_sensor[System Monitor Packets out eth1 - state]
   '150'
 # ---
-# name: test_sensor[System Monitor Process pip - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Process pip',
-    'icon': 'mdi:cpu-64-bit',
-  })
-# ---
-# name: test_sensor[System Monitor Process pip - state]
-  'on'
-# ---
-# name: test_sensor[System Monitor Process python3 - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Process python3',
-    'icon': 'mdi:cpu-64-bit',
-  })
-# ---
-# name: test_sensor[System Monitor Process python3 - state]
-  'on'
-# ---
 # name: test_sensor[System Monitor Processor temperature - attributes]
   ReadOnlyDict({
     'device_class': 'temperature',

@@ -1,7 +1,13 @@
 {
   "services": {
-    "set_color_mode": "mdi:palette",
-    "start_super_chlorination": "mdi:pool",
-    "stop_super_chlorination": "mdi:pool"
+    "set_color_mode": {
+      "service": "mdi:palette"
+    },
+    "start_super_chlorination": {
+      "service": "mdi:pool"
+    },
+    "stop_super_chlorination": {
+      "service": "mdi:pool"
+    }
   }
 }

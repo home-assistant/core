@@ -30,13 +30,15 @@
     'config': dict({
       'data': dict({
         'host': '1.2.3.4',
-        'model': 'model',
-        'name': 'name',
+        'model': 'A1234',
+        'name': 'home',
         'password': '**REDACTED**',
         'port': 80,
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'axis',
       'entry_id': '676abe5b73621446e6550a2e86ffe3dd',
       'minor_version': 1,

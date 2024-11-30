@@ -7,14 +7,13 @@ from typing import Any
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OPEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -22,6 +21,7 @@ from .const import (
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
 )
+from .entity import RfxtrxCommandEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         if self._event is None:
             old_state = await self.async_get_last_state()
             if old_state is not None:
-                self._attr_is_closed = old_state.state != STATE_OPEN
+                self._attr_is_closed = old_state.state != CoverState.OPEN
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""

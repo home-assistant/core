@@ -20,7 +20,7 @@
       speech=dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Error preparing LLM API: API non-existing not found',
+          'speech': 'Error preparing LLM API',
         }),
       }),
       speech_slots=dict({

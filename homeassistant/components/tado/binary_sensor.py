@@ -12,16 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConnector
+from . import TadoConfigEntry
 from .const import (
-    DATA,
-    DOMAIN,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_AIR_CONDITIONING,
     TYPE_BATTERY,
@@ -30,6 +27,7 @@ from .const import (
     TYPE_POWER,
 )
 from .entity import TadoDeviceEntity, TadoZoneEntity
+from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +66,9 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
     translation_key="overlay",
     state_fn=lambda data: data.overlay_active,
-    attributes_fn=lambda data: {"termination": data.overlay_termination_type}
-    if data.overlay_active
-    else {},
+    attributes_fn=lambda data: (
+        {"termination": data.overlay_termination_type} if data.overlay_active else {}
+    ),
     device_class=BinarySensorDeviceClass.POWER,
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -119,11 +117,11 @@ ZONE_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado = entry.runtime_data
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []

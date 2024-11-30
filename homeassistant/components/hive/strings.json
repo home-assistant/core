@@ -21,7 +21,7 @@
         "data": {
           "device_name": "Device Name"
         },
-        "description": "Enter your Hive configuration ",
+        "description": "Enter your Hive configuration",
         "title": "Hive Configuration."
       },
       "reauth": {
@@ -97,6 +97,24 @@
         "on_off": {
           "name": "[%key:common::config_flow::data::mode%]",
           "description": "Set the boost function on or off."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heating": {
+        "state": {
+          "manual": "Manual",
+          "off": "[%key:common::state::off%]",
+          "schedule": "Schedule"
+        }
+      },
+      "hot_water": {
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "schedule": "[%key:component::hive::entity::sensor::heating::state::schedule%]"
         }
       }
     }

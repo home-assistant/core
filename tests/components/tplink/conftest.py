@@ -1,9 +1,9 @@
 """tplink conftest."""
 
 from collections.abc import Generator
-import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
+from kasa import DeviceConfig
 import pytest
 
 from homeassistant.components.tplink import DOMAIN
@@ -11,8 +11,10 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     CREATE_ENTRY_DATA_LEGACY,
-    CREDENTIALS_HASH_AUTH,
-    DEVICE_CONFIG_AUTH,
+    CREDENTIALS_HASH_AES,
+    CREDENTIALS_HASH_KLAP,
+    DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
     MAC_ADDRESS,
@@ -30,21 +32,23 @@ def mock_discovery():
         "homeassistant.components.tplink.Discover",
         discover=DEFAULT,
         discover_single=DEFAULT,
+        try_connect_all=DEFAULT,
     ) as mock_discovery:
         device = _mocked_device(
-            device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-            credentials_hash=CREDENTIALS_HASH_AUTH,
-            alias=None,
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+            credentials_hash=CREDENTIALS_HASH_KLAP,
+            alias="My Bulb",
         )
         devices = {
             "127.0.0.1": _mocked_device(
-                device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
                 alias=None,
             )
         }
         mock_discovery["discover"].return_value = devices
         mock_discovery["discover_single"].return_value = device
+        mock_discovery["try_connect_all"].return_value = device
         mock_discovery["mock_device"] = device
         yield mock_discovery
 
@@ -55,12 +59,15 @@ def mock_connect():
     with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
             IP_ADDRESS: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
+                ip_address=IP_ADDRESS,
             ),
             IP_ADDRESS2: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH,
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_AES,
                 mac=MAC_ADDRESS2,
+                ip_address=IP_ADDRESS2,
             ),
         }
 

@@ -170,7 +170,7 @@ class BroadlinkRMUpdateManager(BroadlinkUpdateManager[blk.rm]):
 class BroadlinkSP1UpdateManager(BroadlinkUpdateManager[blk.sp1]):
     """Manages updates for Broadlink SP1 devices."""
 
-    async def async_fetch_data(self) -> None:
+    async def async_fetch_data(self) -> dict[str, Any] | None:
         """Fetch data from the device."""
         return None
 

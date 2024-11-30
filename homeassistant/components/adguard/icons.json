@@ -66,10 +66,20 @@
     }
   },
   "services": {
-    "add_url": "mdi:link-plus",
-    "remove_url": "mdi:link-off",
-    "enable_url": "mdi:link-variant",
-    "disable_url": "mdi:link-variant-off",
-    "refresh": "mdi:refresh"
+    "add_url": {
+      "service": "mdi:link-plus"
+    },
+    "remove_url": {
+      "service": "mdi:link-off"
+    },
+    "enable_url": {
+      "service": "mdi:link-variant"
+    },
+    "disable_url": {
+      "service": "mdi:link-variant-off"
+    },
+    "refresh": {
+      "service": "mdi:refresh"
+    }
   }
 }

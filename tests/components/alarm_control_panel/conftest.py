@@ -1,7 +1,7 @@
 """Fixturs for Alarm Control Panel tests."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.alarm_control_panel.const import CodeFormat
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import MockAlarm
@@ -107,6 +107,22 @@ class MockFlow(ConfigFlow):
     """Test flow."""
 
 
+@pytest.fixture(name="mock_as_custom_component")
+async def mock_frame(hass: HomeAssistant) -> AsyncGenerator[None]:
+    """Mock frame."""
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=frame.IntegrationFrame(
+            custom_integration=True,
+            integration="alarm_control_panel",
+            module="test_init.py",
+            relative_filename="test_init.py",
+            frame=frame.get_current_frame(),
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
@@ -129,7 +145,7 @@ async def code_arm_required() -> bool:
 
 
 @pytest.fixture(name="supported_features")
-async def lock_supported_features() -> AlarmControlPanelEntityFeature:
+async def alarm_control_panel_supported_features() -> AlarmControlPanelEntityFeature:
     """Return the supported features for the test alarm control panel entity."""
     return (
         AlarmControlPanelEntityFeature.ARM_AWAY
@@ -142,7 +158,7 @@ async def lock_supported_features() -> AlarmControlPanelEntityFeature:
 
 
 @pytest.fixture(name="mock_alarm_control_panel_entity")
-async def setup_lock_platform_test_entity(
+async def setup_alarm_control_panel_platform_test_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     code_format: CodeFormat | None,

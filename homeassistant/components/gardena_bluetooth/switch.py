@@ -7,20 +7,22 @@ from typing import Any
 from gardena_bluetooth.const import Valve
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from . import GardenaBluetoothConfigEntry
+from .coordinator import GardenaBluetoothCoordinator
+from .entity import GardenaBluetoothEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GardenaBluetoothConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch based on a config entry."""
-    coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     if GardenaBluetoothValveSwitch.characteristics.issubset(
         coordinator.characteristics
@@ -41,7 +43,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: GardenaBluetoothCoordinator,
     ) -> None:
         """Initialize the switch."""
         super().__init__(

@@ -1,5 +1,6 @@
 """Test the auth script to manage local users."""
 
+import argparse
 from asyncio import AbstractEventLoop
 from collections.abc import Generator
 import logging
@@ -148,7 +149,9 @@ def test_parsing_args(event_loop: AbstractEventLoop) -> None:
     """Test we parse args correctly."""
     called = False
 
-    async def mock_func(hass, provider, args2):
+    async def mock_func(
+        hass: HomeAssistant, provider: hass_auth.AuthProvider, args2: argparse.Namespace
+    ) -> None:
         """Mock function to be called."""
         nonlocal called
         called = True

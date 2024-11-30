@@ -10,8 +10,8 @@ from homeassistant.components.proximity.const import (
     CONF_TRACKED_ENTITIES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -120,42 +120,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test import of yaml configuration."""
-    with patch(
-        "homeassistant.components.proximity.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_NAME: "home",
-                CONF_ZONE: "zone.home",
-                CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
-                CONF_IGNORED_ZONES: ["zone.work"],
-                CONF_TOLERANCE: 10,
-                CONF_UNIT_OF_MEASUREMENT: "km",
-            },
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {
-            CONF_NAME: "home",
-            CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
-            CONF_IGNORED_ZONES: ["zone.work"],
-            CONF_TOLERANCE: 10,
-            CONF_UNIT_OF_MEASUREMENT: "km",
-        }
-
-        zone = hass.states.get("zone.home")
-        assert result["title"] == zone.name
-
-        await hass.async_block_till_done()
-
-    assert mock_setup_entry.called
-
-
 async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
     """Test if we abort on duplicate user input data."""
     DATA = {
@@ -211,7 +175,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             CONF_IGNORED_ZONES: ["zone.work"],
             CONF_TOLERANCE: 10,
         },
-        unique_id=f"{DOMAIN}_home",
+        unique_id=f"{DOMAIN}_home_3",
     ).add_to_hass(hass)
 
     with patch(

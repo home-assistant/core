@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from tailscale import TailscaleAuthenticationError, TailscaleConnectionError
 
 from homeassistant.components.tailscale.const import CONF_TAILNET, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -128,15 +128,7 @@ async def test_reauth_flow(
     """Test the reauthentication configuration flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 
@@ -170,15 +162,7 @@ async def test_reauth_with_authentication_error(
     """
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 
@@ -222,15 +206,7 @@ async def test_reauth_api_error(
     """Test API error during reauthentication."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 

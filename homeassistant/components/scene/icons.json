@@ -5,10 +5,20 @@
     }
   },
   "services": {
-    "turn_on": "mdi:power",
-    "reload": "mdi:reload",
-    "apply": "mdi:check",
-    "create": "mdi:plus",
-    "delete": "mdi:delete"
+    "turn_on": {
+      "service": "mdi:power"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "apply": {
+      "service": "mdi:check"
+    },
+    "create": {
+      "service": "mdi:plus"
+    },
+    "delete": {
+      "service": "mdi:delete"
+    }
   }
 }

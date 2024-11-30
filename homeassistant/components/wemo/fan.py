@@ -67,16 +67,21 @@ async def async_setup_entry(
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
+        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.reset_filter_life.__name__
     )
 
 
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     wemo: Humidifier
     _last_fan_on_mode: FanMode
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""

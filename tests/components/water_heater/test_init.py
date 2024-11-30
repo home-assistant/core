@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_LIST,
     ATTR_OPERATION_MODE,
@@ -22,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -29,8 +29,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
 )
@@ -42,7 +40,7 @@ async def test_set_temp_schema_no_req(
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
@@ -59,7 +57,7 @@ async def test_set_temp_schema(
     """Test the set temperature schema with ok required data."""
     domain = "water_heater"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {
@@ -208,29 +206,6 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(water_heater)
-
-
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
-        WaterHeaterEntityFeature.OPERATION_MODE,
-        WaterHeaterEntityFeature.AWAY_MODE,
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: WaterHeaterEntityFeature,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, water_heater, enum, "SUPPORT_", "2025.1"
-    )
 
 
 def test_deprecated_supported_features_ints(

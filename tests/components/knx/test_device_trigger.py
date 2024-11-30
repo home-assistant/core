@@ -391,7 +391,6 @@ async def test_invalid_device_trigger(
                 ]
             },
         )
-        await hass.async_block_till_done()
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
             "extra keys not allowed @ data['invalid']. Got None"

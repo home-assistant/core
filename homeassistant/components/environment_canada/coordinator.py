@@ -1,7 +1,7 @@
 """Coordinator for the Environment Canada (EC) component."""
 
 import logging
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 
 from env_canada import ec_exc
 
@@ -27,6 +27,6 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
-        except (et.ParseError, ec_exc.UnknownStationId) as ex:
+        except (ET.ParseError, ec_exc.UnknownStationId) as ex:
             raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
         return self.ec_data

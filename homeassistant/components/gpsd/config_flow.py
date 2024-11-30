@@ -27,9 +27,17 @@ class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
+    @staticmethod
+    def test_connection(host: str, port: int) -> bool:
+        """Test socket connection."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((host, port))
+                sock.shutdown(2)
+        except OSError:
+            return False
+        else:
+            return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,11 +46,11 @@ class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                sock.connect((user_input[CONF_HOST], user_input[CONF_PORT]))
-                sock.shutdown(2)
-            except OSError:
+            connected = await self.hass.async_add_executor_job(
+                self.test_connection, user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+
+            if not connected:
                 return self.async_abort(reason="cannot_connect")
 
             port = ""

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from pysensibo.model import MotionSensor, SensiboDevice
+from pysensibo.model import MotionSensor, PureAQI, SensiboDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -97,11 +97,11 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
 PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
-        device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.pm25,
+        translation_key="pm25_pure",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: data.pm25_pure.name.lower() if data.pm25_pure else None,
         extra_fn=None,
+        options=[aqi.name.lower() for aqi in PureAQI],
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
@@ -178,6 +178,7 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         value_fn=lambda data: data.co2,
         extra_fn=None,
     ),
+    *DEVICE_SENSOR_TYPES,
 )
 
 ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (

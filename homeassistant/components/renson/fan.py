@@ -122,7 +122,12 @@ class RensonFan(RensonEntity, FanEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "fan"
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
@@ -137,7 +142,7 @@ class RensonFan(RensonEntity, FanEntity):
             DataType.LEVEL,
         )
 
-        if level == Level.BREEZE:
+        if level == Level.BREEZE.value:
             level = self.api.parse_value(
                 self.api.get_field_value(
                     self.coordinator.data, BREEZE_LEVEL_FIELD.name

@@ -1,6 +1,7 @@
 """Config flow for Samsung SyncThru."""
 
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
@@ -23,7 +24,9 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     url: str
     name: str
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user initiated flow."""
         if user_input is None:
             return await self._async_show_form(step_id="user")
@@ -61,7 +64,9 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: self.name}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery confirmation by user."""
         if user_input is not None:
             return await self._async_check_and_create("confirm", user_input)

@@ -67,5 +67,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "exceptions": {
+    "alarm_operation_failed_generic": {
+      "message": "Failed to {operation} the alarm. An API error occurred."
+    },
+    "invalid_disarm_code": {
+      "message": "Invalid disarm code provided."
+    }
   }
 }

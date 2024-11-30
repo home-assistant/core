@@ -174,8 +174,6 @@ async def async_setup_platform(
         trigger_entity_config[key] = config[key]
 
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])

@@ -112,10 +112,5 @@ def mock_client(
 
 
 @pytest.fixture(autouse=True)
-def enable_all_entities():
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
-    with patch(
-        "homeassistant.components.gardena_bluetooth.coordinator.GardenaBluetoothEntity.entity_registry_enabled_default",
-        new=Mock(return_value=True),
-    ):
-        yield

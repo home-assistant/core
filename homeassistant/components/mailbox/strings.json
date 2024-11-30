@@ -1,9 +1,0 @@
-{
-  "title": "Mailbox",
-  "issues": {
-    "deprecated_mailbox": {
-      "title": "The mailbox platform is being removed",
-      "description": "The mailbox platform is being removed. Please report it to the author of the \"{integration_domain}\" custom integration."
-    }
-  }
-}

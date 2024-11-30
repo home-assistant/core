@@ -48,7 +48,7 @@ class RoonApiMockException(RoonApiMock):
     @property
     def token(self):
         """Throw exception."""
-        raise Exception  # pylint: disable=broad-exception-raised
+        raise Exception  # noqa: TRY002
 
 
 class RoonDiscoveryMock:

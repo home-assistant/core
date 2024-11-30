@@ -29,12 +29,14 @@ from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectEventMixin,
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _KEY_DOOR = "door"
 
@@ -283,7 +285,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         name="Tracking: person",
         icon="mdi:walk",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="is_ptz",
+        ufp_required_field="feature_flags.is_ptz",
         ufp_value="is_person_tracking_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),

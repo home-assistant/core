@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -95,38 +95,6 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import 17Track config from configuration.yaml."""
-
-        client = self._get_client()
-
-        try:
-            login_result = await client.profile.login(
-                import_data[CONF_USERNAME], import_data[CONF_PASSWORD]
-            )
-        except SeventeenTrackError:
-            return self.async_abort(reason="cannot_connect")
-
-        if not login_result:
-            return self.async_abort(reason="invalid_auth")
-
-        account_id = client.profile.account_id
-
-        await self.async_set_unique_id(account_id)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=import_data[CONF_USERNAME],
-            data=import_data,
-            options={
-                CONF_SHOW_ARCHIVED: import_data.get(
-                    CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED
-                ),
-                CONF_SHOW_DELIVERED: import_data.get(
-                    CONF_SHOW_DELIVERED, DEFAULT_SHOW_DELIVERED
-                ),
-            },
         )
 
     @callback

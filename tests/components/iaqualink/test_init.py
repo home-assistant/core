@@ -30,7 +30,7 @@ from .conftest import get_aqualink_device, get_aqualink_system
 from tests.common import async_fire_time_changed
 
 
-async def _ffwd_next_update_interval(hass):
+async def _ffwd_next_update_interval(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
     async_fire_time_changed(hass, now + UPDATE_INTERVAL)
     await hass.async_block_till_done()

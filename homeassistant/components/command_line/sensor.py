@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 import json
 from typing import Any, cast
 
+from jsonpath import jsonpath
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
@@ -25,10 +27,14 @@ from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEnt
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
+from .const import (
+    CONF_COMMAND_TIMEOUT,
+    CONF_JSON_ATTRIBUTES,
+    CONF_JSON_ATTRIBUTES_PATH,
+    LOGGER,
+    TRIGGER_ENTITY_OPTIONS,
+)
 from .utils import async_check_output_or_log
-
-CONF_JSON_ATTRIBUTES = "json_attributes"
 
 DEFAULT_NAME = "Command Sensor"
 
@@ -42,6 +48,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
+    if not discovery_info:
+        return
 
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
@@ -49,11 +57,10 @@ async def async_setup_platform(
     command: str = sensor_config[CONF_COMMAND]
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
+    json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     data = CommandSensorData(hass, command, command_timeout)
-
-    if value_template := sensor_config.get(CONF_VALUE_TEMPLATE):
-        value_template.hass = hass
 
     trigger_entity_config = {
         CONF_NAME: Template(sensor_config[CONF_NAME], hass),
@@ -67,6 +74,7 @@ async def async_setup_platform(
                 trigger_entity_config,
                 value_template,
                 json_attributes,
+                json_attributes_path,
                 scan_interval,
             )
         ]
@@ -84,6 +92,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         config: ConfigType,
         value_template: Template | None,
         json_attributes: list[str] | None,
+        json_attributes_path: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the sensor."""
@@ -91,6 +100,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         self.data = data
         self._attr_extra_state_attributes: dict[str, Any] = {}
         self._json_attributes = json_attributes
+        self._json_attributes_path = json_attributes_path
         self._attr_native_value = None
         self._value_template = value_template
         self._scan_interval = scan_interval
@@ -141,6 +151,13 @@ class CommandSensor(ManualTriggerSensorEntity):
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if self._json_attributes_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attributes_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
                         self._attr_extra_state_attributes = {
                             k: json_dict[k]
@@ -170,13 +187,11 @@ class CommandSensor(ManualTriggerSensorEntity):
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            self._process_manual_data(value)
-            return
-
-        if value is not None:
+        elif value is not None:
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
             )
+
         self._process_manual_data(value)
         self.async_write_ha_state()
 

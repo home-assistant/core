@@ -61,7 +61,9 @@ WEBHOOK_SCHEMA = vol.All(
 )
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Locative."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))

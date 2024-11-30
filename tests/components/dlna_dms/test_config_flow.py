@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator
 import dataclasses
 import logging
 from typing import Final
@@ -68,7 +68,7 @@ MOCK_DISCOVERY: Final = ssdp.SsdpServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Iterable[Mock]:
+def mock_setup_entry() -> Generator[Mock]:
     """Avoid setting up the entire integration."""
     with patch(
         "homeassistant.components.dlna_dms.async_setup_entry",

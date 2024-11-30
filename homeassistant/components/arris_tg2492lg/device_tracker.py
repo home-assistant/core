@@ -7,7 +7,7 @@ from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -31,7 +31,7 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> ArrisDeviceScanner | None:
     """Return the Arris device scanner if successful."""
-    conf = config[DOMAIN]
+    conf = config[DEVICE_TRACKER_DOMAIN]
     url = f"http://{conf[CONF_HOST]}"
     websession = async_get_clientsession(hass)
     connect_box = ConnectBox(websession, url, conf[CONF_PASSWORD])

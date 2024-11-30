@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disarmed',
   })
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_2-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disarmed',
   })
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_3-entry]
@@ -146,6 +146,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disarmed',
   })
 # ---

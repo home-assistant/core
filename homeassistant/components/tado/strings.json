@@ -12,7 +12,7 @@
         },
         "title": "Connect to your Tado account"
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure your Tado",
         "description": "Reconfigure the entry, for your account: `{username}`.",
         "data": {
@@ -152,7 +152,7 @@
   "issues": {
     "water_heater_fallback": {
       "title": "Tado Water Heater entities now support fallback options",
-      "description": "Due to added support for water heaters entities, these entities may use different overlay. Please configure integration entity and tado app water heater zone overlay options."
+      "description": "Due to added support for water heaters entities, these entities may use different overlay. Please configure integration entity and tado app water heater zone overlay options. Otherwise, please configure the integration entity and Tado app water heater zone overlay options (under Settings -> Rooms & Devices -> Hot Water)."
     }
   }
 }

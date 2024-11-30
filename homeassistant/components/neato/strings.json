@@ -42,8 +42,8 @@
   },
   "services": {
     "custom_cleaning": {
-      "name": "Zone cleaning service",
-      "description": "Zone cleaning service call specific to Neato Botvacs.",
+      "name": "Zone cleaning action",
+      "description": "Zone cleaning action specific to Neato Botvacs.",
       "fields": {
         "mode": {
           "name": "Set cleaning mode",

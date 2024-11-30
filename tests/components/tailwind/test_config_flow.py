@@ -14,12 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.tailwind.const import DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_DHCP,
-    SOURCE_REAUTH,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -311,15 +306,7 @@ async def test_reauth_flow(
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data[CONF_TOKEN] == "123456"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 
@@ -354,15 +341,7 @@ async def test_reauth_flow_errors(
     mock_config_entry.add_to_hass(hass)
     mock_tailwind.status.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

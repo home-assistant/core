@@ -5,85 +5,92 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import evohomeasync as ev1
-from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
+from evohomeasync.schema import SZ_ID, SZ_TEMP
 import evohomeasync2 as evo
-
-from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
-
-from .const import (
-    ACCESS_TOKEN,
-    ACCESS_TOKEN_EXPIRES,
-    CONF_LOCATION_IDX,
-    DOMAIN,
-    GWS,
-    REFRESH_TOKEN,
-    TCS,
-    USER_DATA,
-    UTC_OFFSET,
+from evohomeasync2.schema.const import (
+    SZ_GATEWAY_ID,
+    SZ_GATEWAY_INFO,
+    SZ_LOCATION_ID,
+    SZ_LOCATION_INFO,
+    SZ_TIME_ZONE,
 )
-from .helpers import dt_local_to_aware, handle_evo_exception
+
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
+from .helpers import handle_evo_exception
+
+if TYPE_CHECKING:
+    from . import EvoSession
 
 _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 
 
 class EvoBroker:
-    """Container for evohome client and data."""
+    """Broker for evohome client broker."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: evo.EvohomeClient,
-        client_v1: ev1.EvohomeClient | None,
-        store: Store[dict[str, Any]],
-        params: ConfigType,
-    ) -> None:
-        """Initialize the evohome client and its data structure."""
-        self.hass = hass
-        self.client = client
-        self.client_v1 = client_v1
-        self._store = store
-        self.params = params
+    loc_idx: int
+    loc: evo.Location
+    loc_utc_offset: timedelta
+    tcs: evo.ControlSystem
 
-        loc_idx = params[CONF_LOCATION_IDX]
-        self._location: evo.Location = client.locations[loc_idx]
+    def __init__(self, sess: EvoSession) -> None:
+        """Initialize the evohome broker and its data structure."""
 
-        assert isinstance(client.installation_info, list)  # mypy
+        self._sess = sess
+        self.hass = sess.hass
 
-        self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]  # noqa: SLF001
-        self.loc_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
+        assert sess.client_v2 is not None  # mypy
+
+        self.client = sess.client_v2
+        self.client_v1 = sess.client_v1
+
         self.temps: dict[str, float | None] = {}
 
-    async def save_auth_tokens(self) -> None:
-        """Save access tokens and session IDs to the store for later use."""
-        # evohomeasync2 uses naive/local datetimes
-        access_token_expires = dt_local_to_aware(
-            self.client.access_token_expires  # type: ignore[arg-type]
-        )
+    def validate_location(self, loc_idx: int) -> bool:
+        """Get the default TCS of the specified location."""
 
-        app_storage: dict[str, Any] = {
-            CONF_USERNAME: self.client.username,
-            REFRESH_TOKEN: self.client.refresh_token,
-            ACCESS_TOKEN: self.client.access_token,
-            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
-        }
+        self.loc_idx = loc_idx
 
-        if self.client_v1:
-            app_storage[USER_DATA] = {
-                SZ_SESSION_ID: self.client_v1.broker.session_id,
-            }  # this is the schema for STORAGE_VER == 1
-        else:
-            app_storage[USER_DATA] = {}
+        assert self.client.installation_info is not None  # mypy
 
-        await self._store.async_save(app_storage)
+        try:
+            loc_config = self.client.installation_info[loc_idx]
+        except IndexError:
+            _LOGGER.error(
+                (
+                    "Config error: '%s' = %s, but the valid range is 0-%s. "
+                    "Unable to continue. Fix any configuration errors and restart HA"
+                ),
+                CONF_LOCATION_IDX,
+                loc_idx,
+                len(self.client.installation_info) - 1,
+            )
+            return False
+
+        self.loc = self.client.locations[loc_idx]
+        self.loc_utc_offset = timedelta(minutes=self.loc.timeZone[UTC_OFFSET])
+        self.tcs = self.loc._gateways[0]._control_systems[0]  # noqa: SLF001
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            loc_info = {
+                SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
+                SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
+            }
+            gwy_info = {
+                SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
+                TCS: loc_config[GWS][0][TCS],
+            }
+            config = {
+                SZ_LOCATION_INFO: loc_info,
+                GWS: [{SZ_GATEWAY_INFO: gwy_info}],
+            }
+            _LOGGER.debug("Config = %s", config)
+
+        return True
 
     async def call_client_api(
         self,
@@ -99,7 +106,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self.hass, 1, self._update_v2_api_state)
+            await self.hass.data[DOMAIN]["coordinator"].async_request_refresh()
 
         return result
 
@@ -108,11 +115,7 @@ class EvoBroker:
 
         assert self.client_v1 is not None  # mypy check
 
-        def get_session_id(client_v1: ev1.EvohomeClient) -> str | None:
-            user_data = client_v1.user_data if client_v1 else None
-            return user_data.get(SZ_SESSION_ID) if user_data else None  # type: ignore[return-value]
-
-        session_id = get_session_id(self.client_v1)
+        old_session_id = self._sess.session_id
 
         try:
             temps = await self.client_v1.get_temperatures()
@@ -146,7 +149,7 @@ class EvoBroker:
             raise
 
         else:
-            if str(self.client_v1.location_id) != self._location.locationId:
+            if str(self.client_v1.location_id) != self.loc.locationId:
                 _LOGGER.warning(
                     "The v2 API's configured location doesn't match "
                     "the v1 API's default location (there is more than one location), "
@@ -157,8 +160,8 @@ class EvoBroker:
                 self.temps = {str(i[SZ_ID]): i[SZ_TEMP] for i in temps}
 
         finally:
-            if self.client_v1 and session_id != self.client_v1.broker.session_id:
-                await self.save_auth_tokens()
+            if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
+                await self._sess.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
@@ -168,7 +171,7 @@ class EvoBroker:
         access_token = self.client.access_token  # maybe receive a new token?
 
         try:
-            status = await self._location.refresh_status()
+            status = await self.loc.refresh_status()
         except evo.RequestFailed as err:
             handle_evo_exception(err)
         else:
@@ -176,7 +179,7 @@ class EvoBroker:
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
-                await self.save_auth_tokens()
+                await self._sess.save_auth_tokens()
 
     async def async_update(self, *args: Any) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.

@@ -32,27 +32,71 @@
     }
   },
   "services": {
-    "clear_playlist": "mdi:playlist-remove",
-    "join": "mdi:group",
-    "media_next_track": "mdi:skip-next",
-    "media_pause": "mdi:pause",
-    "media_play": "mdi:play",
-    "media_play_pause": "mdi:play-pause",
-    "media_previous_track": "mdi:skip-previous",
-    "media_seek": "mdi:fast-forward",
-    "media_stop": "mdi:stop",
-    "play_media": "mdi:play",
-    "repeat_set": "mdi:repeat",
-    "select_sound_mode": "mdi:surround-sound",
-    "select_source": "mdi:import",
-    "shuffle_set": "mdi:shuffle",
-    "toggle": "mdi:play-pause",
-    "turn_off": "mdi:power",
-    "turn_on": "mdi:power",
-    "unjoin": "mdi:ungroup",
-    "volume_down": "mdi:volume-minus",
-    "volume_mute": "mdi:volume-mute",
-    "volume_set": "mdi:volume-medium",
-    "volume_up": "mdi:volume-plus"
+    "clear_playlist": {
+      "service": "mdi:playlist-remove"
+    },
+    "join": {
+      "service": "mdi:group"
+    },
+    "media_next_track": {
+      "service": "mdi:skip-next"
+    },
+    "media_pause": {
+      "service": "mdi:pause"
+    },
+    "media_play": {
+      "service": "mdi:play"
+    },
+    "media_play_pause": {
+      "service": "mdi:play-pause"
+    },
+    "media_previous_track": {
+      "service": "mdi:skip-previous"
+    },
+    "media_seek": {
+      "service": "mdi:fast-forward"
+    },
+    "media_stop": {
+      "service": "mdi:stop"
+    },
+    "play_media": {
+      "service": "mdi:play"
+    },
+    "repeat_set": {
+      "service": "mdi:repeat"
+    },
+    "select_sound_mode": {
+      "service": "mdi:surround-sound"
+    },
+    "select_source": {
+      "service": "mdi:import"
+    },
+    "shuffle_set": {
+      "service": "mdi:shuffle"
+    },
+    "toggle": {
+      "service": "mdi:play-pause"
+    },
+    "turn_off": {
+      "service": "mdi:power"
+    },
+    "turn_on": {
+      "service": "mdi:power"
+    },
+    "unjoin": {
+      "service": "mdi:ungroup"
+    },
+    "volume_down": {
+      "service": "mdi:volume-minus"
+    },
+    "volume_mute": {
+      "service": "mdi:volume-mute"
+    },
+    "volume_set": {
+      "service": "mdi:volume-medium"
+    },
+    "volume_up": {
+      "service": "mdi:volume-plus"
+    }
   }
 }

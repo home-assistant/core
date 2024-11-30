@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_NAME,
     PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
@@ -22,6 +24,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import QnapCoordinator
@@ -53,6 +56,13 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -74,6 +84,17 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
 )
 _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="memory_size",
+        translation_key="memory_size",
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+    ),
     SensorEntityDescription(
         key="memory_free",
         translation_key="memory_free",
@@ -133,6 +154,22 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
+    SensorEntityDescription(
+        key="network_err",
+        translation_key="network_err",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="network_max_speed",
+        translation_key="network_max_speed",
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -152,6 +189,17 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="volume_size_total",
+        translation_key="volume_size_total",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+    ),
     SensorEntityDescription(
         key="volume_size_used",
         translation_key="volume_size_used",
@@ -300,6 +348,8 @@ class QNAPCPUSensor(QNAPSensor):
         if self.entity_description.key == "cpu_usage":
             return self.coordinator.data["system_stats"]["cpu"]["usage_percent"]
 
+        return None
+
 
 class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
@@ -312,6 +362,8 @@ class QNAPMemorySensor(QNAPSensor):
             return free
 
         total = float(self.coordinator.data["system_stats"]["memory"]["total"])
+        if self.entity_description.key == "memory_size":
+            return total
 
         used = total - free
         if self.entity_description.key == "memory_used":
@@ -320,24 +372,26 @@ class QNAPMemorySensor(QNAPSensor):
         if self.entity_description.key == "memory_percent_used":
             return used / total * 100
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]["memory"]
-            size = round(float(data["total"]) / 1024, 2)
-            return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
+        return None
 
 
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
+    monitor_device: str
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        nic = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
         if self.entity_description.key == "network_link_status":
-            nic = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
             return nic["link_status"]
+
+        if self.entity_description.key == "network_max_speed":
+            return nic["max_speed"]
+
+        if self.entity_description.key == "network_err":
+            return nic["err_packets"]
 
         data = self.coordinator.data["bandwidth"][self.monitor_device]
         if self.entity_description.key == "network_tx":
@@ -346,18 +400,7 @@ class QNAPNetworkSensor(QNAPSensor):
         if self.entity_description.key == "network_rx":
             return data["rx"]
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
-            return {
-                ATTR_IP: data["ip"],
-                ATTR_MASK: data["mask"],
-                ATTR_MAC: data["mac"],
-                ATTR_MAX_SPEED: data["max_speed"],
-                ATTR_PACKETS_ERR: data["err_packets"],
-            }
+        return None
 
 
 class QNAPSystemSensor(QNAPSensor):
@@ -372,25 +415,23 @@ class QNAPSystemSensor(QNAPSensor):
         if self.entity_description.key == "system_temp":
             return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]
-            days = int(data["uptime"]["days"])
-            hours = int(data["uptime"]["hours"])
-            minutes = int(data["uptime"]["minutes"])
+        if self.entity_description.key == "uptime":
+            uptime = self.coordinator.data["system_stats"]["uptime"]
+            uptime_duration = timedelta(
+                days=uptime["days"],
+                hours=uptime["hours"],
+                minutes=uptime["minutes"],
+                seconds=uptime["seconds"],
+            )
+            return dt_util.now() - uptime_duration
 
-            return {
-                ATTR_NAME: data["system"]["name"],
-                ATTR_MODEL: data["system"]["model"],
-                ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
-            }
+        return None
 
 
 class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
+
+    monitor_device: str
 
     @property
     def native_value(self):
@@ -403,8 +444,10 @@ class QNAPDriveSensor(QNAPSensor):
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
+        return None
+
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["smart_drive_health"][self.monitor_device]
@@ -414,10 +457,13 @@ class QNAPDriveSensor(QNAPSensor):
                 ATTR_SERIAL: data["serial"],
                 ATTR_TYPE: data["type"],
             }
+        return None
 
 
 class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
+
+    monitor_device: str
 
     @property
     def native_value(self):
@@ -429,6 +475,8 @@ class QNAPVolumeSensor(QNAPSensor):
             return free_gb
 
         total_gb = int(data["total_size"])
+        if self.entity_description.key == "volume_size_total":
+            return total_gb
 
         used_gb = total_gb - free_gb
         if self.entity_description.key == "volume_size_used":
@@ -437,13 +485,4 @@ class QNAPVolumeSensor(QNAPSensor):
         if self.entity_description.key == "volume_percentage_used":
             return used_gb / total_gb * 100
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["volumes"][self.monitor_device]
-            total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
-
-            return {
-                ATTR_VOLUME_SIZE: f"{round(total_gb, 1)} {UnitOfInformation.GIBIBYTES}"
-            }
+        return None

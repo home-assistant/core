@@ -1,0 +1,142 @@
+# serializer version: 1
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.ssid_1_regenerate_password-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.ssid_1_regenerate_password',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Regenerate Password',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wlan_regenerate_password',
+    'unique_id': 'regenerate_password-012345678910111213141516',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.ssid_1_regenerate_password-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'SSID 1 Regenerate Password',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ssid_1_regenerate_password',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_port_1_power_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.switch_port_1_power_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Port 1 Power Cycle',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'power_cycle-00:00:00:00:01:01_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_port_1_power_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'switch Port 1 Power Cycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.switch_port_1_power_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.switch_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_restart-00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'switch Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.switch_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

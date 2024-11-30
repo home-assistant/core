@@ -1,0 +1,12 @@
+{
+  "domain": "linkplay",
+  "name": "LinkPlay",
+  "codeowners": ["@Velleman"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/linkplay",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["linkplay"],
+  "requirements": ["python-linkplay==0.0.20"],
+  "zeroconf": ["_linkplay._tcp.local."]
+}

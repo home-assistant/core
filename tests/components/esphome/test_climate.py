@@ -13,6 +13,7 @@ from aioesphomeapi import (
     ClimateState,
     ClimateSwingMode,
 )
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -41,6 +42,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 
 async def test_climate_entity(
@@ -54,7 +56,6 @@ async def test_climate_entity(
             name="my climate",
             unique_id="my_climate",
             supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
             supports_action=True,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
@@ -134,14 +135,13 @@ async def test_climate_entity_with_step_and_two_point(
     assert state is not None
     assert state.state == HVACMode.COOL
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
-        blocking=True,
-    )
-    mock_client.climate_command.assert_has_calls([call(key=1, target_temperature=25.0)])
-    mock_client.climate_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
+            blocking=True,
+        )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -216,34 +216,30 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
-        blocking=True,
-    )
-    mock_client.climate_command.assert_has_calls([call(key=1, target_temperature=25.0)])
-    mock_client.climate_command.reset_mock()
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: "climate.test_myclimate",
             ATTR_HVAC_MODE: HVACMode.AUTO,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
+            ATTR_TEMPERATURE: 25,
         },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
-        [
-            call(
-                key=1,
-                mode=ClimateMode.AUTO,
-                target_temperature_low=20.0,
-                target_temperature_high=30.0,
-            )
-        ]
+        [call(key=1, mode=ClimateMode.AUTO, target_temperature=25.0)]
     )
     mock_client.climate_command.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.test_myclimate",
+                ATTR_HVAC_MODE: HVACMode.AUTO,
+                ATTR_TARGET_TEMP_LOW: 20,
+                ATTR_TARGET_TEMP_HIGH: 30,
+            },
+            blocking=True,
+        )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

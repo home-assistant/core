@@ -20,6 +20,13 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Ring Integration",
+        "description": "Will create a new Authorized Device for {username} at ring.com",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -27,14 +34,26 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
     "binary_sensor": {
       "ding": {
         "name": "Ding"
+      },
+      "motion": {
+        "name": "Motion"
+      }
+    },
+    "event": {
+      "ding": {
+        "name": "Ding"
+      },
+      "intercom_unlock": {
+        "name": "Intercom unlock"
       }
     },
     "button": {
@@ -45,6 +64,20 @@
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "doorbell_volume": {
+        "name": "Doorbell volume"
+      },
+      "mic_volume": {
+        "name": "Mic volume"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
       }
     },
     "siren": {
@@ -84,26 +117,27 @@
     "switch": {
       "siren": {
         "name": "[%key:component::siren::title%]"
+      },
+      "in_home_chime": {
+        "name": "In-home chime"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
       }
-    }
-  },
-  "services": {
-    "update": {
-      "name": "Update",
-      "description": "Updates the data we have for all your ring devices."
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      },
+      "last_recording": {
+        "name": "Last recording"
+      }
     }
   },
   "issues": {
-    "deprecated_service_ring_update": {
-      "title": "Detected use of deprecated service `ring.update`",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::ring::issues::deprecated_service_ring_update::title%]",
-            "description": "Use `homeassistant.update_entity` instead which will update all ring entities.\n\nPlease replace calls to this service and adjust your automations and scripts and select **submit** to close this issue."
-          }
-        }
-      }
+    "deprecated_entity": {
+      "title": "Detected deprecated {platform} entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }
 }

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 from unittest.mock import Mock
 
 from uiprotect import ProtectApiClient
@@ -41,11 +40,11 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
-    def ws_msg(self, msg: WSSubscriptionMessage) -> Any:
+    def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
 
         if self.ws_subscription is not None:
-            return self.ws_subscription(msg)
+            self.ws_subscription(msg)
 
 
 def reset_objects(bootstrap: Bootstrap):
@@ -110,7 +109,11 @@ def ids_from_device_description(
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
     entity_name = normalize_name(device.display_name)
-    description_entity_name = normalize_name(str(description.name))
+
+    if description.name and isinstance(description.name, str):
+        description_entity_name = normalize_name(description.name)
+    else:
+        description_entity_name = normalize_name(description.key)
 
     unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"

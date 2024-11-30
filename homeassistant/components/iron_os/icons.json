@@ -1,0 +1,63 @@
+{
+  "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "live_temperature": {
+        "default": "mdi:soldering-iron"
+      },
+      "voltage": {
+        "default": "mdi:current-dc"
+      },
+      "handle_temperature": {
+        "default": "mdi:grease-pencil"
+      },
+      "power_pwm_level": {
+        "default": "mdi:square-wave"
+      },
+      "power_source": {
+        "default": "mdi:power-plug",
+        "state": {
+          "dc": "mdi:record-circle-outline",
+          "qc": "mdi:usb-port",
+          "pd_vbus": "mdi:usb-c-port",
+          "pd": "mdi:usb-c-port"
+        }
+      },
+      "tip_resistance": {
+        "default": "mdi:omega"
+      },
+      "hall_sensor": {
+        "default": "mdi:leak"
+      },
+      "movement_time": {
+        "default": "mdi:clock-fast"
+      },
+      "max_tip_temp_ability": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "uptime": {
+        "default": "mdi:progress-clock"
+      },
+      "tip_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "operating_mode": {
+        "default": "mdi:format-list-bulleted",
+        "state": {
+          "boost": "mdi:rocket-launch",
+          "soldering": "mdi:soldering-iron",
+          "sleeping": "mdi:sleep",
+          "settings": "mdi:menu-open",
+          "debug": "mdi:bug-play"
+        }
+      },
+      "estimated_power": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}

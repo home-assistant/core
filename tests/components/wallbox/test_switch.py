@@ -1,7 +1,5 @@
 """Test Wallbox Lock component."""
 
-import json
-
 import pytest
 import requests_mock
 
@@ -36,7 +34,7 @@ async def test_wallbox_switch_class(
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
+            json={CHARGER_STATUS_ID_KEY: 193},
             status_code=200,
         )
 
@@ -58,8 +56,6 @@ async def test_wallbox_switch_class(
             blocking=True,
         )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_wallbox_switch_class_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -76,7 +72,7 @@ async def test_wallbox_switch_class_connection_error(
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
+            json={CHARGER_STATUS_ID_KEY: 193},
             status_code=404,
         )
 
@@ -99,8 +95,6 @@ async def test_wallbox_switch_class_connection_error(
                 blocking=True,
             )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_wallbox_switch_class_authentication_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -117,7 +111,7 @@ async def test_wallbox_switch_class_authentication_error(
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
+            json={CHARGER_STATUS_ID_KEY: 193},
             status_code=403,
         )
 
@@ -139,5 +133,3 @@ async def test_wallbox_switch_class_authentication_error(
                 },
                 blocking=True,
             )
-
-    await hass.config_entries.async_unload(entry.entry_id)

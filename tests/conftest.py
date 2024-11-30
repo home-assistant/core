@@ -34,11 +34,17 @@ import multidict
 import pytest
 import pytest_socket
 import requests_mock
+import respx
 from syrupy.assertion import SnapshotAssertion
+from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
+from homeassistant.exceptions import ServiceNotFound
 
-# Setup patching if dt_util time functions before any other Home Assistant imports
+# Setup patching of recorder functions before any other Home Assistant imports
+from . import patch_recorder  # noqa: F401, isort:skip
+
+# Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
 from homeassistant import core as ha, loader, runner
@@ -46,15 +52,19 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
 from homeassistant.core import (
     Context,
     CoreState,
@@ -77,13 +87,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import BASE_PLATFORMS, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
-from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension
+from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -139,6 +149,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Override default finish to detect unused snapshots despite xdist
+    # Temporary workaround until it is finalised inside syrupy
+    # See https://github.com/syrupy-project/syrupy/pull/901
+    SnapshotSession.finish = override_syrupy_finish
 
 
 def pytest_runtest_setup() -> None:
@@ -367,7 +382,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
+    for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
             with long_repr_strings():
                 if expected_lingering_timers:
@@ -394,6 +409,13 @@ def verify_cleanup(
         # Restore the default time zone to not break subsequent tests
         dt_util.DEFAULT_TIME_ZONE = datetime.UTC
 
+    try:
+        # Verify respx.mock has been cleaned up
+        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+    finally:
+        # Clear mock routes not break subsequent tests
+        respx.mock.clear()
+
 
 @pytest.fixture(autouse=True)
 def reset_hass_threading_local_object() -> Generator[None]:
@@ -402,7 +424,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
     gensalt_orig = bcrypt.gensalt
@@ -488,30 +510,31 @@ def aiohttp_client(
     clients = []
 
     async def go(
-        __param: Application | BaseTestServer,
+        param: Application | BaseTestServer,
+        /,
         *args: Any,
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
-            __param, (Application, BaseTestServer)
+        if isinstance(param, Callable) and not isinstance(  # type: ignore[arg-type]
+            param, (Application, BaseTestServer)
         ):
-            __param = __param(loop, *args, **kwargs)
+            param = param(loop, *args, **kwargs)
             kwargs = {}
         else:
             assert not args, "args should be empty"
 
         client: TestClient
-        if isinstance(__param, Application):
+        if isinstance(param, Application):
             server_kwargs = server_kwargs or {}
-            server = TestServer(__param, loop=loop, **server_kwargs)
+            server = TestServer(param, loop=loop, **server_kwargs)
             # Registering a view after starting the server should still work.
             server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
-        elif isinstance(__param, BaseTestServer):
-            client = TestClient(__param, loop=loop, **kwargs)
+        elif isinstance(param, BaseTestServer):
+            client = TestClient(param, loop=loop, **kwargs)
         else:
-            raise TypeError(f"Unknown argument type: {type(__param)!r}")
+            raise TypeError(f"Unknown argument type: {type(param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -1169,7 +1192,12 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session."""
+    """Only load translations once per session.
+
+    Warning: having this as a session fixture can cause issues with tests that
+    create mock integrations, overriding the real integration translations
+    with empty ones. Translations should be reset after such tests (see #131628)
+    """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1251,6 +1279,16 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
+def enable_missing_statistics() -> bool:
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_missing_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
@@ -1271,11 +1309,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1296,6 +1344,16 @@ def enable_migrate_entity_ids() -> bool:
 
     To enable context id migration, tests can be marked with:
     @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_event_ids() -> bool:
+    """Fixture to control enabling of recorder's event id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_event_ids", [True])
     """
     return False
 
@@ -1383,6 +1441,9 @@ async def _async_init_recorder_component(
     hass: HomeAssistant,
     add_config: dict[str, Any] | None = None,
     db_url: str | None = None,
+    *,
+    expected_setup_result: bool,
+    wait_setup: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
     # pylint: disable-next=import-outside-toplevel
@@ -1397,14 +1458,30 @@ async def _async_init_recorder_component(
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        assert await async_setup_component(
-            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        setup_task = asyncio.ensure_future(
+            async_setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         )
-        assert recorder.DOMAIN in hass.config.components
+        if wait_setup:
+            # Wait for recorder integration to setup
+            setup_result = await setup_task
+            assert setup_result == expected_setup_result
+            assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        else:
+            # Wait for recorder to connect to the database
+            await recorder_helper.async_wait_recorder(hass)
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
     )
+
+
+class ThreadSession(threading.local):
+    """Keep track of session per thread."""
+
+    has_session = False
+
+
+thread_session = ThreadSession()
 
 
 @pytest.fixture
@@ -1412,10 +1489,13 @@ async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
+    enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
+    enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
@@ -1427,6 +1507,39 @@ async def async_test_recorder(
     # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
+    # pylint: disable-next=import-outside-toplevel
+    from .patch_recorder import real_session_scope
+
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from sqlalchemy.orm.session import Session
+
+    @contextmanager
+    def debug_session_scope(
+        *,
+        hass: HomeAssistant | None = None,
+        session: Session | None = None,
+        exception_filter: Callable[[Exception], bool] | None = None,
+        read_only: bool = False,
+    ) -> Generator[Session]:
+        """Wrap session_scope to bark if we create nested sessions."""
+        if thread_session.has_session:
+            raise RuntimeError(
+                f"Thread '{threading.current_thread().name}' already has an "
+                "active session"
+            )
+        thread_session.has_session = True
+        try:
+            with real_session_scope(
+                hass=hass,
+                session=session,
+                exception_filter=exception_filter,
+                read_only=read_only,
+            ) as ses:
+                yield ses
+        finally:
+            thread_session.has_session = False
+
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     schema_validate = (
@@ -1436,26 +1549,31 @@ async def async_test_recorder(
     )
     compile_missing = (
         recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
+        if enable_missing_statistics
         else None
     )
     migrate_states_context_ids = (
-        recorder.Recorder._migrate_states_context_ids
-        if enable_migrate_context_ids
+        migration.StatesContextIDMigration.migrate_data
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
-        recorder.Recorder._migrate_events_context_ids
-        if enable_migrate_context_ids
+        migration.EventsContextIDMigration.migrate_data
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
-        recorder.Recorder._migrate_event_type_ids
+        migration.EventTypeIDMigration.migrate_data
         if enable_migrate_event_type_ids
         else None
     )
     migrate_entity_ids = (
-        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+        migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
+    )
+    legacy_event_id_foreign_key_exists = (
+        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+        if enable_migrate_event_ids
+        else lambda _: None
     )
     with (
         patch(
@@ -1474,28 +1592,39 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+            "homeassistant.components.recorder.migration.EventsContextIDMigration.migrate_data",
             side_effect=migrate_events_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+            "homeassistant.components.recorder.migration.StatesContextIDMigration.migrate_data",
             side_effect=migrate_states_context_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+            "homeassistant.components.recorder.migration.EventTypeIDMigration.migrate_data",
             side_effect=migrate_event_type_ids,
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+            "homeassistant.components.recorder.migration.EntityIDMigration.migrate_data",
             side_effect=migrate_entity_ids,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
+            side_effect=legacy_event_id_foreign_key_exists,
             autospec=True,
         ),
         patch(
             "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
             side_effect=compile_missing,
+            autospec=True,
+        ),
+        patch.object(
+            patch_recorder,
+            "real_session_scope",
+            side_effect=debug_session_scope,
             autospec=True,
         ),
     ):
@@ -1505,10 +1634,18 @@ async def async_test_recorder(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
+            expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
-            await _async_init_recorder_component(hass, config, recorder_db_url)
+            await _async_init_recorder_component(
+                hass,
+                config,
+                recorder_db_url,
+                expected_setup_result=expected_setup_result,
+                wait_setup=wait_recorder_setup,
+            )
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
@@ -1535,12 +1672,20 @@ async def async_setup_recorder_instance(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
+            expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Set up and return recorder instance."""
 
             return await stack.enter_async_context(
-                async_test_recorder(hass, config, wait_recorder=wait_recorder)
+                async_test_recorder(
+                    hass,
+                    config,
+                    expected_setup_result=expected_setup_result,
+                    wait_recorder=wait_recorder,
+                    wait_recorder_setup=wait_recorder_setup,
+                )
             )
 
         yield async_setup_recorder
@@ -1582,7 +1727,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
@@ -1633,10 +1778,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )
@@ -1746,7 +1911,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
                 target,
                 return_response,
             )
-        except ha.ServiceNotFound:
+        except ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
         return None
 

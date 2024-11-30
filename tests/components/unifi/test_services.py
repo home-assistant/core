@@ -10,11 +10,11 @@ from homeassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -25,7 +25,7 @@ async def test_reconnect_client(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify call to reconnect client is performed as expected."""
@@ -69,7 +69,7 @@ async def test_reconnect_device_without_mac(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify no call is made if device does not have a known mac."""
     aioclient_mock.clear_requests()
@@ -95,7 +95,7 @@ async def test_reconnect_client_hub_unavailable(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if hub is unavailable."""
@@ -127,7 +127,7 @@ async def test_reconnect_client_unknown_mac(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to hub."""
     aioclient_mock.clear_requests()
@@ -152,7 +152,7 @@ async def test_reconnect_wired_client(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if client is wired."""
@@ -204,7 +204,7 @@ async def test_reconnect_wired_client(
 async def test_remove_clients(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify removing different variations of clients work."""
     aioclient_mock.clear_requests()
@@ -288,8 +288,8 @@ async def test_services_handle_unloaded_config_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
-    clients_all_payload,
+    config_entry_setup: MockConfigEntry,
+    clients_all_payload: dict[str, Any],
 ) -> None:
     """Verify no call is made if config entry is unloaded."""
     await hass.config_entries.async_unload(config_entry_setup.entry_id)

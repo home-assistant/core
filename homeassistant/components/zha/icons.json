@@ -45,6 +45,15 @@
       "maximum_level": {
         "default": "mdi:brightness-percent"
       },
+      "default_level_local": {
+        "default": "mdi:brightness-percent"
+      },
+      "default_level_remote": {
+        "default": "mdi:brightness-percent"
+      },
+      "state_after_power_restored": {
+        "default": "mdi:brightness-percent"
+      },
       "auto_off_timer": {
         "default": "mdi:timer"
       },
@@ -86,6 +95,18 @@
       },
       "presence_detection_timeout": {
         "default": "mdi:timer-edit"
+      },
+      "exercise_trigger_time": {
+        "default": "mdi:clock"
+      },
+      "external_temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "load_room_mean": {
+        "default": "mdi:scale-balance"
+      },
+      "regulation_setpoint_offset": {
+        "default": "mdi:thermostat"
       }
     },
     "select": {
@@ -94,6 +115,15 @@
       },
       "keypad_lockout": {
         "default": "mdi:lock"
+      },
+      "exercise_day_of_week": {
+        "default": "mdi:wrench-clock"
+      },
+      "off_led_color": {
+        "default": "mdi:palette-outline"
+      },
+      "on_led_color": {
+        "default": "mdi:palette"
       }
     },
     "sensor": {
@@ -132,6 +162,15 @@
       },
       "hooks_state": {
         "default": "mdi:hook"
+      },
+      "open_window_detected": {
+        "default": "mdi:window-open"
+      },
+      "load_estimate": {
+        "default": "mdi:scale-balance"
+      },
+      "preheat_time": {
+        "default": "mdi:radiator"
       }
     },
     "switch": {
@@ -158,21 +197,63 @@
       },
       "hooks_locked": {
         "default": "mdi:lock"
+      },
+      "external_window_sensor": {
+        "default": "mdi:window-open"
+      },
+      "use_internal_window_detection": {
+        "default": "mdi:window-open"
+      },
+      "prioritize_external_temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "heat_available": {
+        "default": "mdi:water-boiler"
+      },
+      "use_load_balancing": {
+        "default": "mdi:scale-balance"
+      },
+      "double_up_full": {
+        "default": "mdi:gesture-double-tap"
       }
     }
   },
   "services": {
-    "permit": "mdi:cellphone-link",
-    "remove": "mdi:cellphone-remove",
-    "reconfigure_device": "mdi:cellphone-cog",
-    "set_zigbee_cluster_attribute": "mdi:cog",
-    "issue_zigbee_cluster_command": "mdi:console",
-    "issue_zigbee_group_command": "mdi:console",
-    "warning_device_squawk": "mdi:alert",
-    "warning_device_warn": "mdi:alert",
-    "clear_lock_user_code": "mdi:lock-remove",
-    "enable_lock_user_code": "mdi:lock",
-    "disable_lock_user_code": "mdi:lock-off",
-    "set_lock_user_code": "mdi:lock"
+    "permit": {
+      "service": "mdi:cellphone-link"
+    },
+    "remove": {
+      "service": "mdi:cellphone-remove"
+    },
+    "reconfigure_device": {
+      "service": "mdi:cellphone-cog"
+    },
+    "set_zigbee_cluster_attribute": {
+      "service": "mdi:cog"
+    },
+    "issue_zigbee_cluster_command": {
+      "service": "mdi:console"
+    },
+    "issue_zigbee_group_command": {
+      "service": "mdi:console"
+    },
+    "warning_device_squawk": {
+      "service": "mdi:alert"
+    },
+    "warning_device_warn": {
+      "service": "mdi:alert"
+    },
+    "clear_lock_user_code": {
+      "service": "mdi:lock-remove"
+    },
+    "enable_lock_user_code": {
+      "service": "mdi:lock"
+    },
+    "disable_lock_user_code": {
+      "service": "mdi:lock-off"
+    },
+    "set_lock_user_code": {
+      "service": "mdi:lock"
+    }
   }
 }

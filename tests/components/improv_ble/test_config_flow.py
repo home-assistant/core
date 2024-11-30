@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from . import (
+    BAD_IMPROV_BLE_DISCOVERY_INFO,
     IMPROV_BLE_DISCOVERY_INFO,
     NOT_IMPROV_BLE_DISCOVERY_INFO,
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
@@ -543,7 +544,7 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["reason"] == error
 
 
-async def _test_provision_error(hass: HomeAssistant, exc) -> None:
+async def _test_provision_error(hass: HomeAssistant, exc) -> str:
     """Test bluetooth flow with error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -649,3 +650,20 @@ async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] == {"base": error}
+
+
+async def test_provision_fails_invalid_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test bluetooth flow with error due to invalid data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=BAD_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_improv_data"
+    assert (
+        "Aborting improv flow, device AA:BB:CC:DD:EE:F0 sent invalid improv data: '000000000000'"
+        in caplog.text
+    )

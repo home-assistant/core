@@ -27,7 +27,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
             },
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             manufacturer="LaMetric Inc.",
-            model=coordinator.data.model,
+            model_id=coordinator.data.model,
             name=coordinator.data.name,
             sw_version=coordinator.data.os_version,
         )

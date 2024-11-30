@@ -2,6 +2,7 @@
 
 from regenmaschine.errors import RainMachineError
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -17,10 +18,9 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_entry_diagnostics_failed_controller_diagnostics(
@@ -33,7 +33,6 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
 ) -> None:
     """Test config entry diagnostics when the controller diagnostics API call fails."""
     controller.diagnostics.current.side_effect = RainMachineError
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))

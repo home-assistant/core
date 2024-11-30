@@ -157,11 +157,9 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(user_input=import_config)
+        return await self.async_step_user(user_input=import_data)
 
     async def async_load_data(self, config: dict[str, Any]) -> None:
         """Load the data."""

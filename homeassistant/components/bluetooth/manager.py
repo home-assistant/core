@@ -20,7 +20,9 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import DOMAIN
 from .match import (
     ADDRESS,
     CALLBACK,
@@ -75,12 +77,18 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Trigger discovery for matching domains."""
+        discovery_key = discovery_flow.DiscoveryKey(
+            domain=DOMAIN,
+            key=service_info.address,
+            version=1,
+        )
         for domain in self._integration_matcher.match_domains(service_info):
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_BLUETOOTH},
                 service_info,
+                discovery_key=discovery_key,
             )
 
     @hass_callback
@@ -110,12 +118,21 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
+        if not matched_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
+
+        discovery_key = discovery_flow.DiscoveryKey(
+            domain=DOMAIN,
+            key=service_info.address,
+            version=1,
+        )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_BLUETOOTH},
                 service_info,
+                discovery_key=discovery_key,
             )
 
     def _address_disappeared(self, address: str) -> None:
@@ -145,6 +162,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 continue
             seen.add(address)
             self._async_trigger_matching_discovery(service_info)
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
+        )
 
     def async_register_callback(
         self,
@@ -230,3 +252,16 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
         unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)
+
+    @hass_callback
+    def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+                continue
+            address = discovery_key.key
+            _LOGGER.debug("Rediscover address %s", address)
+            self.async_rediscover_address(address)

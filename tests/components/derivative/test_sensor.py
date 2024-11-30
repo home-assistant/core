@@ -3,12 +3,14 @@
 from datetime import timedelta
 from math import sin
 import random
+from typing import Any
 
 from freezegun import freeze_time
 
 from homeassistant.components.derivative.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import UnitOfPower, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -49,7 +51,9 @@ async def test_state(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def _setup_sensor(hass, config):
+async def _setup_sensor(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> tuple[dict[str, Any], str]:
     default_config = {
         "platform": "derivative",
         "name": "power",
@@ -67,7 +71,13 @@ async def _setup_sensor(hass, config):
     return config, entity_id
 
 
-async def setup_tests(hass, config, times, values, expected_state):
+async def setup_tests(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    times: list[int],
+    values: list[float],
+    expected_state: float,
+) -> State:
     """Test derivative sensor state."""
     config, entity_id = await _setup_sensor(hass, config)
 
@@ -343,6 +353,41 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
+
+
+async def test_total_increasing_reset(hass: HomeAssistant) -> None:
+    """Test derivative sensor state with total_increasing sensor input where it should ignore the reset value."""
+    times = [0, 20, 30, 35, 40, 50, 60]
+    values = [0, 10, 30, 40, 0, 10, 40]
+    expected_times = [0, 20, 30, 35, 50, 60]
+    expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
+
+    config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
+
+    base_time = dt_util.utcnow()
+    actual_times = []
+    actual_values = []
+    with freeze_time(base_time) as freezer:
+        for time, value in zip(times, values, strict=False):
+            current_time = base_time + timedelta(seconds=time)
+            freezer.move_to(current_time)
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
+                force_update=True,
+            )
+            await hass.async_block_till_done()
+
+            state = hass.states.get("sensor.power")
+            assert state is not None
+
+            if state.last_reported == current_time:
+                actual_times.append(time)
+                actual_values.append(state.state)
+
+    assert actual_times == expected_times
+    assert actual_values == expected_values
 
 
 async def test_device_id(

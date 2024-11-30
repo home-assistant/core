@@ -12,11 +12,20 @@
       },
       "moving_ban": {
         "default": "mdi:car-off"
+      },
+      "is_running": {
+        "default": "mdi:speedometer"
       }
     },
     "button": {
       "horn": {
         "default": "mdi:bullhorn-outline"
+      },
+      "flex": {
+        "default": "mdi:star-circle-outline"
+      },
+      "panic": {
+        "default": "mdi:alarm-note"
       }
     },
     "device_tracker": {
@@ -60,9 +69,6 @@
           "on": "mdi:access-point-network"
         }
       },
-      "horn": {
-        "default": "mdi:bullhorn-outline"
-      },
       "service_mode": {
         "default": "mdi:car-wrench",
         "state": {
@@ -72,8 +78,14 @@
     }
   },
   "services": {
-    "update_state": "mdi:reload",
-    "set_scan_interval": "mdi:timer",
-    "set_scan_obd_interval": "mdi:timer"
+    "update_state": {
+      "service": "mdi:reload"
+    },
+    "set_scan_interval": {
+      "service": "mdi:timer"
+    },
+    "set_scan_obd_interval": {
+      "service": "mdi:timer"
+    }
   }
 }

@@ -8,6 +8,7 @@ from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
+import logging
 import re
 import sys
 from typing import Any, Protocol, cast
@@ -60,7 +61,7 @@ import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template, attach as template_attach, render_complex
+from .template import Template, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -510,9 +511,6 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test numeric state condition."""
-        if value_template is not None:
-            value_template.hass = hass
-
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
@@ -630,7 +628,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
@@ -792,8 +789,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
-        value_template.hass = hass
-
         return async_template(hass, value_template, variables)
 
     return template_if
@@ -826,9 +821,15 @@ def time(
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
             )
-        elif after_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
+        elif after_entity.domain == "time" and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
+        elif (
+            after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -850,9 +851,15 @@ def time(
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
             )
-        elif before_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
+        elif before_entity.domain == "time":
+            try:
+                before = datetime.strptime(before_entity.state, "%H:%M:%S").time()
+            except ValueError:
+                return False
+        elif (
+            before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -1068,6 +1075,46 @@ async def async_validate_conditions_config(
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
     return [await async_validate_condition_config(hass, cond) for cond in conditions]
+
+
+async def async_conditions_from_config(
+    hass: HomeAssistant,
+    condition_configs: list[ConfigType],
+    logger: logging.Logger,
+    name: str,
+) -> Callable[[TemplateVarsType], bool]:
+    """AND all conditions."""
+    checks: list[ConditionCheckerType] = [
+        await async_from_config(hass, condition_config)
+        for condition_config in condition_configs
+    ]
+
+    def check_conditions(variables: TemplateVarsType = None) -> bool:
+        """AND all conditions."""
+        errors: list[ConditionErrorIndex] = []
+        for index, check in enumerate(checks):
+            try:
+                with trace_path(["condition", str(index)]):
+                    if check(hass, variables) is False:
+                        return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "condition", index=index, total=len(checks), error=ex
+                    )
+                )
+
+        if errors:
+            logger.warning(
+                "Error evaluating condition in '%s':\n%s",
+                name,
+                ConditionErrorContainer("condition", errors=errors),
+            )
+            return False
+
+        return True
+
+    return check_conditions
 
 
 @callback

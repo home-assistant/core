@@ -11,9 +11,10 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
+from homeassistant.helpers.typing import VolDictType
 
-from . import ATTR_DURATION, DOMAIN, GeniusZone
+from . import ATTR_DURATION, GeniusHubConfigEntry
+from .entity import GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
 
@@ -27,24 +28,19 @@ SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub switch entities."""
-    if discovery_info is None:
-        return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     async_add_entities(
-        [
-            GeniusSwitch(broker, z)
-            for z in broker.client.zone_objs
-            if z.data.get("type") == GH_ON_OFF_ZONE
-        ]
+        GeniusSwitch(broker, z)
+        for z in broker.client.zone_objs
+        if z.data.get("type") == GH_ON_OFF_ZONE
     )
 
     # Register custom services

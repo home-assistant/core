@@ -38,6 +38,7 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
@@ -141,6 +142,13 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         translation_key=CHARGER_MAX_CHARGING_CURRENT_KEY,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    CHARGER_MAX_ICP_CURRENT_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_MAX_ICP_CURRENT_KEY,
+        translation_key=CHARGER_MAX_ICP_CURRENT_KEY,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,

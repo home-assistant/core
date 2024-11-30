@@ -63,6 +63,9 @@
       },
       "moving_ban": {
         "name": "Moving ban"
+      },
+      "is_running": {
+        "name": "Running"
       }
     },
     "device_tracker": {
@@ -114,9 +117,6 @@
       "additional_channel": {
         "name": "Additional channel"
       },
-      "horn": {
-        "name": "Horn"
-      },
       "service_mode": {
         "name": "Service mode"
       }
@@ -124,13 +124,13 @@
     "button": {
       "horn": {
         "name": "Horn"
+      },
+      "flex": {
+        "name": "Flex logic {num}"
+      },
+      "panic": {
+        "name": "Panic mode"
       }
-    }
-  },
-  "issues": {
-    "deprecated_horn_switch": {
-      "title": "The Starline Horn switch entity is being removed",
-      "description": "Using the Horn switch is now deprecated and will be removed in a future version of Home Assistant.\n\nPlease adjust any automations or scripts that use Horn switch entity to instead use the Horn button entity."
     }
   },
   "services": {

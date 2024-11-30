@@ -1476,7 +1476,7 @@ async def test_track_template_result_super_template_2(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -1628,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -1892,10 +1892,10 @@ async def test_track_template_result_complex(hass: HomeAssistant) -> None:
         "time": False,
     }
 
-    hass.states.async_set("binary_sensor.single", "binary_sensor_on")
+    hass.states.async_set("binary_sensor.single", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 9
-    assert specific_runs[8] == "binary_sensor_on"
+    assert specific_runs[8] == "on"
     assert info.listeners == {
         "all": False,
         "domains": set(),
@@ -3124,11 +3124,11 @@ async def test_async_track_template_result_multiple_templates(
 ) -> None:
     """Test tracking multiple templates."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.binary_sensor | map(attribute='entity_id') | list }}"
+        "{{ states.binary_sensor | map(attribute='entity_id') | list }}", hass
     )
 
     refresh_runs = []
@@ -3188,11 +3188,12 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
 ) -> None:
     """Test tracking multiple templates when tracking entities and an entire domain."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}",
+        hass,
     )
 
     refresh_runs = []
@@ -3417,8 +3418,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
 ) -> None:
     """Test tracking multiple templates with mixing listener types."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ now() and True }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ now() and True }}", hass)
 
     refresh_runs = []
 
@@ -4386,8 +4387,8 @@ async def test_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     async_call_later(hass, delay, action)
@@ -4406,8 +4407,8 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
@@ -4428,8 +4429,8 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, timedelta(seconds=delay), action)
@@ -4449,7 +4450,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     delay_tolerance = 0.1
 
     @callback
-    def action(__now: datetime):
+    def action(now: datetime, /):
         future.set_result(False)
 
     remove = async_call_later(hass, delay, action)
@@ -4894,7 +4895,7 @@ async def test_track_state_change_deprecated(
     assert (
         "Detected code that calls `async_track_state_change` instead "
         "of `async_track_state_change_event` which is deprecated and "
-        "will be removed in Home Assistant 2025.5. Please report this issue."
+        "will be removed in Home Assistant 2025.5. Please report this issue"
     ) in caplog.text
 
 
@@ -4937,3 +4938,45 @@ async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(tracker_called) == 2
     unsub()
+
+
+async def test_async_track_template_no_hass_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_template with a template without hass is deprecated."""
+    message = (
+        "Detected code that calls async_track_template_result with template without "
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
+    )
+
+    async_track_template(hass, Template("blah"), lambda x, y, z: None)
+    assert message in caplog.text
+    caplog.clear()
+
+    async_track_template(hass, Template("blah", hass), lambda x, y, z: None)
+    assert message not in caplog.text
+    caplog.clear()
+
+
+async def test_async_track_template_result_no_hass_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_template_result with a template without hass is deprecated."""
+    message = (
+        "Detected code that calls async_track_template_result with template without "
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
+    )
+
+    async_track_template_result(
+        hass, [TrackTemplate(Template("blah"), None)], lambda x, y, z: None
+    )
+    assert message in caplog.text
+    caplog.clear()
+
+    async_track_template_result(
+        hass, [TrackTemplate(Template("blah", hass), None)], lambda x, y, z: None
+    )
+    assert message not in caplog.text
+    caplog.clear()

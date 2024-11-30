@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
@@ -472,4 +473,29 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
+    }
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that the options flow works."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    user_input = {
+        CONFIG_ENTRY_FORCE_POLL: True,
+    }
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONFIG_ENTRY_FORCE_POLL: True,
+    }
+    assert mock_config_entry.options == {
+        CONFIG_ENTRY_FORCE_POLL: True,
     }

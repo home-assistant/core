@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_all_entities[fan.model0_ventilation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        <VentilationMode.PERMANENT: 'permanent'>,
+        <VentilationMode.VENTILATION: 'ventilation'>,
+        <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
+        <VentilationMode.SENSOR_OVERRIDE: 'sensor_override'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.model0_ventilation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:fan',
+    'original_name': 'Ventilation',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 9>,
+    'translation_key': 'ventilation',
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[fan.model0_ventilation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Ventilation',
+      'icon': 'mdi:fan',
+      'percentage': 0,
+      'percentage_step': 25.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        <VentilationMode.PERMANENT: 'permanent'>,
+        <VentilationMode.VENTILATION: 'ventilation'>,
+        <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
+        <VentilationMode.SENSOR_OVERRIDE: 'sensor_override'>,
+      ]),
+      'supported_features': <FanEntityFeature: 9>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.model0_ventilation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

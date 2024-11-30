@@ -33,10 +33,20 @@
     }
   },
   "services": {
-    "set_humidity": "mdi:water-percent",
-    "set_mode": "mdi:air-humidifier",
-    "toggle": "mdi:air-humidifier",
-    "turn_off": "mdi:air-humidifier-off",
-    "turn_on": "mdi:air-humidifier"
+    "set_humidity": {
+      "service": "mdi:water-percent"
+    },
+    "set_mode": {
+      "service": "mdi:air-humidifier"
+    },
+    "toggle": {
+      "service": "mdi:air-humidifier"
+    },
+    "turn_off": {
+      "service": "mdi:air-humidifier-off"
+    },
+    "turn_on": {
+      "service": "mdi:air-humidifier"
+    }
   }
 }

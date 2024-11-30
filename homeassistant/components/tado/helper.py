@@ -1,11 +1,11 @@
 """Helper methods for Tado."""
 
-from . import TadoConnector
 from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
 )
+from .tado_connector import TadoConnector
 
 
 def decide_overlay_mode(

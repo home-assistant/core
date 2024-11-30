@@ -812,8 +812,8 @@ async def test_thermostat_heatit_z_trm2fx(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    assert state.attributes[ATTR_MIN_TEMP] == 7
-    assert state.attributes[ATTR_MAX_TEMP] == 35
+    assert state.attributes[ATTR_MIN_TEMP] == 0
+    assert state.attributes[ATTR_MAX_TEMP] == 50
 
     # Try switching to external sensor
     event = Event(

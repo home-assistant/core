@@ -1,5 +1,6 @@
 """Config flow to configure WiLight."""
 
+from typing import Any
 from urllib.parse import urlparse
 
 import pywilight
@@ -8,7 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
-from . import DOMAIN
+from .const import DOMAIN
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
@@ -24,13 +25,14 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    _title: str
+
+    def __init__(self) -> None:
         """Initialize the WiLight flow."""
         self._host = None
         self._serial_number = None
-        self._title = None
         self._model_name = None
-        self._wilight_components = []
+        self._wilight_components: list[str] = []
         self._components_text = ""
 
     def _wilight_update(self, host, serial_number, model_name):
@@ -89,7 +91,9 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered WiLight."""
         if user_input is not None:
             return self._get_entry()

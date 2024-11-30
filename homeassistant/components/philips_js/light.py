@@ -385,6 +385,6 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         """Return true if entity is available."""
         if not super().available:
             return False
-        if not self.coordinator.api.on:
+        if not self._tv.on:
             return False
-        return self.coordinator.api.powerstate == "On"
+        return True

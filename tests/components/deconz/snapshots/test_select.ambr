@@ -1,0 +1,573 @@
+# serializer version: 1
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_device_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Device Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_device_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Device Mode',
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'undirected',
+  })
+# ---
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Sensitivity',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Sensitivity',
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'High',
+  })
+# ---
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_trigger_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Trigger Distance',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload0-expected0][select.aqara_fp1_trigger_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Trigger Distance',
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_device_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Device Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_device_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Device Mode',
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'undirected',
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Sensitivity',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Sensitivity',
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'High',
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_trigger_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Trigger Distance',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload1-expected1][select.aqara_fp1_trigger_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Trigger Distance',
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_device_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Device Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_device_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Device Mode',
+      'options': list([
+        'leftright',
+        'undirected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_device_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'undirected',
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Sensitivity',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Sensitivity',
+      'options': list([
+        'High',
+        'Medium',
+        'Low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'High',
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_trigger_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Trigger Distance',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload2-expected2][select.aqara_fp1_trigger_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara FP1 Trigger Distance',
+      'options': list([
+        'far',
+        'medium',
+        'near',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_fp1_trigger_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'auto',
+        'speed_1',
+        'speed_2',
+        'speed_3',
+        'speed_4',
+        'speed_5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ikea_starkvind_fan_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IKEA Starkvind Fan Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-fan_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'IKEA Starkvind Fan Mode',
+      'options': list([
+        'off',
+        'auto',
+        'speed_1',
+        'speed_2',
+        'speed_3',
+        'speed_4',
+        'speed_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ikea_starkvind_fan_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'speed_1',
+  })
+# ---

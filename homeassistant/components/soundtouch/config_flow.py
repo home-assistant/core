@@ -1,6 +1,6 @@
 """Config flow for Bose SoundTouch integration."""
 
-import logging
+from typing import Any
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
@@ -13,20 +13,20 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bose SoundTouch."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new SoundTouch config flow."""
-        self.host = None
-        self.name = None
+        self.host: str | None = None
+        self.name: str | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -62,17 +62,21 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         except RequestException:
             return self.async_abort(reason="cannot_connect")
 
-        self.context["title_placeholders"] = {"name": self.name}
+        if self.name:
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             return await self._async_create_soundtouch_entry()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             last_step=True,
-            description_placeholders={"name": self.name},
+            description_placeholders={"name": self.name or "?"},
         )
 
     async def _async_get_device_id(self, raise_on_progress: bool = True) -> None:
@@ -87,10 +91,10 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.name = device.config.name
 
-    async def _async_create_soundtouch_entry(self):
+    async def _async_create_soundtouch_entry(self) -> ConfigFlowResult:
         """Finish config flow and create a SoundTouch config entry."""
         return self.async_create_entry(
-            title=self.name,
+            title=self.name or "SoundTouch",
             data={
                 CONF_HOST: self.host,
             },

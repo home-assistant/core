@@ -33,9 +33,9 @@
     "step": {
       "init": {
         "title": "TotalConnect Options",
-        "description": "Automatically bypass zones the moment they report a low battery.",
         "data": {
-          "auto_bypass_low_battery": "Auto bypass low battery"
+          "auto_bypass_low_battery": "Auto bypass low battery",
+          "code_required": "Require user to enter code for alarm actions"
         }
       }
     }
@@ -56,6 +56,15 @@
         "name": "Partition {partition_id}"
       }
     },
+    "binary_sensor": {
+      "police": {
+        "name": "Police emergency",
+        "state": {
+          "off": "No emergency",
+          "on": "Police emergency"
+        }
+      }
+    },
     "button": {
       "clear_bypass": {
         "name": "Clear bypass"
@@ -66,6 +75,47 @@
       "bypass": {
         "name": "Bypass"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_pin": {
+      "message": "Incorrect code entered"
+    },
+    "disarm_failed": {
+      "message": "Failed to disarm {device}"
+    },
+    "disarm_invalid_code": {
+      "message": "Usercode is invalid, did not disarm"
+    },
+    "arm_home_failed": {
+      "message": "Failed to arm home {device}"
+    },
+    "arm_home_invalid_code": {
+      "message": "Usercode is invalid, did not arm home"
+    },
+    "arm_away_failed": {
+      "message": "Failed to arm away {device}"
+    },
+    "arm_away_invalid_code": {
+      "message": "Usercode is invalid, did not arm away"
+    },
+    "arm_night_failed": {
+      "message": "Failed to arm night {device}"
+    },
+    "arm_night_invalid_code": {
+      "message": "Usercode is invalid, did not arm night"
+    },
+    "arm_home_instant_failed": {
+      "message": "Failed to arm home instant {device}"
+    },
+    "arm_home_instant_invalid_code": {
+      "message": "Usercode is invalid, did not arm home instant"
+    },
+    "arm_away_instant_failed": {
+      "message": "Failed to arm away instant {device}"
+    },
+    "arm_away_instant_invalid_code": {
+      "message": "Usercode is invalid, did not arm away instant"
     }
   }
 }

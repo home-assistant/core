@@ -60,33 +60,6 @@ from tests.common import MockConfigEntry
                 "style": "natural",
             },
         ),
-        (
-            {"prompt": "Picture of a dog", "size": "256"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
-        (
-            {"prompt": "Picture of a dog", "size": "512"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
-        (
-            {"prompt": "Picture of a dog", "size": "1024"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
     ],
 )
 async def test_generate_image_service(

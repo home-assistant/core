@@ -7,7 +7,7 @@ from airgradient import Config
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.airgradient import DOMAIN
+from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,

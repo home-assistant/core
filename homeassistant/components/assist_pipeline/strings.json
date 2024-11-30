@@ -7,7 +7,7 @@
     },
     "select": {
       "pipeline": {
-        "name": "Assist pipeline",
+        "name": "Assistant",
         "state": {
           "preferred": "Preferred"
         }
@@ -18,6 +18,18 @@
           "default": "Default",
           "aggressive": "Aggressive",
           "relaxed": "Relaxed"
+        }
+      }
+    }
+  },
+  "issues": {
+    "assist_in_progress_deprecated": {
+      "title": "{integration_name} in progress binary sensors are deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "The {integration_name} in progress binary sensor `{entity_id}` is deprecated.\n\nMigrate your configuration to use the corresponding `{assist_satellite_domain}` entity and then click SUBMIT to disable the in progress binary sensor and fix this issue."
+          }
         }
       }
     }

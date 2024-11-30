@@ -35,19 +35,19 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -292,7 +292,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         await self.hass.services.async_call(
-            DOMAIN, service_name, service_data, blocking=True, context=self._context
+            MEDIA_PLAYER_DOMAIN,
+            service_name,
+            service_data,
+            blocking=True,
+            context=self._context,
         )
 
     @property
@@ -651,7 +655,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         entity_id = self._browse_media_entity
         if not entity_id and self._child_state:
             entity_id = self._child_state.entity_id
-        component: EntityComponent[MediaPlayerEntity] = self.hass.data[DOMAIN]
+        component: EntityComponent[MediaPlayerEntity] = self.hass.data[
+            MEDIA_PLAYER_DOMAIN
+        ]
         if entity_id and (entity := component.get_entity(entity_id)):
             return await entity.async_browse_media(media_content_type, media_content_id)
         raise NotImplementedError

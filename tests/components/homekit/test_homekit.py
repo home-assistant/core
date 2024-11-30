@@ -59,7 +59,8 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError, State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -72,6 +73,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITY_GLOBS,
+    EntityFilter,
     convert_filter,
 )
 from homeassistant.setup import async_setup_component
@@ -118,7 +120,13 @@ def patch_source_ip():
         yield
 
 
-def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
+def _mock_homekit(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    homekit_mode: str,
+    entity_filter: EntityFilter | None = None,
+    devices: list[str] | None = None,
+) -> HomeKit:
     return HomeKit(
         hass=hass,
         name=BRIDGE_NAME,
@@ -135,7 +143,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
     )
 
 
-def _mock_homekit_bridge(hass, entry):
+def _mock_homekit_bridge(hass: HomeAssistant, entry: MockConfigEntry) -> HomeKit:
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
     homekit.driver = MagicMock()
     homekit.iid_storage = MagicMock()
@@ -1842,7 +1850,11 @@ async def test_homekit_uses_system_zeroconf(hass: HomeAssistant, hk_driver) -> N
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+        # New tests should not access runtime data.
+        # Do not use this pattern for new tests.
+        entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+            entry.entry_id
+        ).runtime_data
         assert entry_data.homekit.driver.advertiser == system_async_zc
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -2018,7 +2030,6 @@ async def test_homekit_finds_linked_motion_sensors(
 @pytest.mark.parametrize(
     ("domain", "device_class"),
     [
-        ("binary_sensor", BinarySensorDeviceClass.OCCUPANCY),
         ("event", EventDeviceClass.DOORBELL),
     ],
 )

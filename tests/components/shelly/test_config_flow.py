@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import DEFAULT_HTTP_PORT, MODEL_1, MODEL_PLUS_2PM
 from aioshelly.exceptions import (
@@ -16,14 +16,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.shelly import config_flow
+from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -332,6 +331,7 @@ async def test_form_missing_model_key_zeroconf(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -437,6 +437,7 @@ async def test_user_setup_ignored_device(
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -474,6 +475,7 @@ async def test_form_auth_errors_test_connection_gen1(
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -819,20 +821,15 @@ async def test_reauth_successful(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -850,14 +847,28 @@ async def test_reauth_successful(
         (3, {"password": "test2 password"}),
     ],
 )
+@pytest.mark.parametrize(
+    ("exc", "abort_reason"),
+    [
+        (DeviceConnectionError, "reauth_unsuccessful"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
+    ],
+)
 async def test_reauth_unsuccessful(
-    hass: HomeAssistant, gen: int, user_input: dict[str, str]
+    hass: HomeAssistant,
+    gen: int,
+    user_input: dict[str, str],
+    exc: Exception,
+    abort_reason: str,
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -865,30 +876,17 @@ async def test_reauth_unsuccessful(
             return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
         ),
         patch(
-            "aioshelly.block_device.BlockDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
+            "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
         ),
-        patch(
-            "aioshelly.rpc_device.RpcDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
-        ),
+        patch("aioshelly.rpc_device.RpcDevice.create", new=AsyncMock(side_effect=exc)),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+        assert result["reason"] == abort_reason
 
 
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
@@ -897,20 +895,14 @@ async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         side_effect=DeviceConnectionError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"password": "test2 password"},
@@ -1114,6 +1106,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
         domain="shelly",
@@ -1150,6 +1143,182 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 1
     assert "device did not update" not in caplog.text
+
+
+async def test_zeroconf_sleeping_device_attempts_configure(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test zeroconf discovery configures a sleeping device outbound websocket."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "online, resuming setup" in caplog.text
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == []
+
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
+    await hass.async_block_till_done()
+    assert "device did not update" not in caplog.text
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == [
+        call("ws://10.10.10.10:8123/api/shelly/ws")
+    ]
+
+
+async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test zeroconf discovery configures a sleeping device outbound websocket when its disabled."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setitem(
+        mock_rpc_device.config, "ws", {"enable": False, "server": "ws://oldha"}
+    )
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "online, resuming setup" in caplog.text
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == []
+
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
+    await hass.async_block_till_done()
+    assert "device did not update" not in caplog.text
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == [
+        call("ws://10.10.10.10:8123/api/shelly/ws")
+    ]
+
+
+async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test zeroconf discovery for sleeping device with no hass url."""
+    hass.config.internal_url = None
+    hass.config.external_url = None
+    hass.config.api = None
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "online, resuming setup" in caplog.text
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == []
+
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
+    await hass.async_block_till_done()
+    assert "device did not update" not in caplog.text
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    # No url available so no attempt to configure the device
+    assert mock_rpc_device.update_outbound_websocket.mock_calls == []
 
 
 async def test_sleeping_device_gen2_with_new_firmware(
@@ -1202,17 +1371,10 @@ async def test_reconfigure_successful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1241,17 +1403,10 @@ async def test_reconfigure_unsuccessful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1285,17 +1440,10 @@ async def test_reconfigure_with_exception(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result = await hass.config_entries.flow.async_configure(
@@ -1304,3 +1452,22 @@ async def test_reconfigure_with_exception(
         )
 
     assert result["errors"] == {"base": base_error}
+
+
+async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery rejects ipv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
+            hostname="mock_hostname",
+            name="shelly1pm-12345",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ipv6_not_supported"

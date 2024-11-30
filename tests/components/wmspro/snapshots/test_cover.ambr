@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_cover_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '58717',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Awning',
+    'model_id': None,
+    'name': 'Markise',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '58717',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'current_position': 0,
+      'device_class': 'awning',
+      'friendly_name': 'Markise',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.markise',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

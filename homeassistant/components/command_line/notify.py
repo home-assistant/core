@@ -21,8 +21,10 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CommandLineNotificationService:
+) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
+    if not discovery_info:
+        return None
 
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     notify_config = discovery_info

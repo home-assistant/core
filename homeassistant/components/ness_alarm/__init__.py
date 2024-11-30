@@ -44,7 +44,7 @@ DEFAULT_INFER_ARMING_STATE = False
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
 
-ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])
+ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])  # noqa: PYI024
 
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(

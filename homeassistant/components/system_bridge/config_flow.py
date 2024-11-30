@@ -13,19 +13,18 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import GetData
+from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .data import SystemBridgeData
+from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,16 +47,6 @@ async def _validate_input(
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    system_bridge_data = SystemBridgeData()
-
-    async def _async_handle_module(
-        module_name: str,
-        module: Any,
-    ) -> None:
-        """Handle data from the WebSocket client."""
-        _LOGGER.debug("Set new data for: %s", module_name)
-        setattr(system_bridge_data, module_name, module)
-
     websocket_client = WebSocketClient(
         data[CONF_HOST],
         data[CONF_PORT],
@@ -66,17 +55,11 @@ async def _validate_input(
     )
 
     try:
-        async with asyncio.timeout(15):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await websocket_client.connect()
-            hass.async_create_task(
-                websocket_client.listen(callback=_async_handle_module)
+            modules_data = await websocket_client.get_data(
+                GetData(modules=[Module.SYSTEM])
             )
-            response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response)
-            if response is None:
-                raise CannotConnect("No data received")
-            while system_bridge_data.system is None:
-                await asyncio.sleep(0.2)
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s",
@@ -98,9 +81,13 @@ async def _validate_input(
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system_bridge_data.system)
+    _LOGGER.debug("Got modules data: %s", modules_data)
+    if modules_data is None or modules_data.system is None:
+        raise CannotConnect("No system data received")
 
-    return {"hostname": data[CONF_HOST], "uuid": system_bridge_data.system.uuid}
+    _LOGGER.debug("Got System data: %s", modules_data.system)
+
+    return {"hostname": data[CONF_HOST], "uuid": modules_data.system.uuid}
 
 
 async def _async_get_info(
@@ -133,11 +120,11 @@ class SystemBridgeConfigFlow(
     VERSION = 1
     MINOR_VERSION = 2
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._name: str | None = None
         self._input: dict[str, Any] = {}
-        self._reauth = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -170,15 +157,13 @@ class SystemBridgeConfigFlow(
             user_input = {**self._input, **user_input}
             errors, info = await _async_get_info(self.hass, user_input)
             if not errors and info is not None:
-                # Check if already configured
-                existing_entry = await self.async_set_unique_id(info["uuid"])
+                await self.async_set_unique_id(info["uuid"])
 
-                if self._reauth and existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=user_input
                     )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
 
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: info["hostname"]}
@@ -225,7 +210,6 @@ class SystemBridgeConfigFlow(
             CONF_HOST: entry_data[CONF_HOST],
             CONF_PORT: entry_data[CONF_PORT],
         }
-        self._reauth = True
         return await self.async_step_authenticate()
 
 

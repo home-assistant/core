@@ -95,7 +95,7 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
-    """Return next step_id for options flow according to template_type."""
+    """Return next step_id for options flow according to entity_type."""
     return cast(str, options["entity_type"])
 
 
@@ -122,7 +122,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
 
 
 def validate_user_input(
-    template_type: str,
+    entity_type: str,
 ) -> Callable[
     [SchemaCommonFlowHandler, dict[str, Any]],
     Coroutine[Any, Any, dict[str, Any]],
@@ -136,10 +136,10 @@ def validate_user_input(
         _: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
-        """Add template type to user input."""
-        if template_type == Platform.SENSOR:
+        """Add entity type to user input."""
+        if entity_type == Platform.SENSOR:
             _validate_unit(user_input)
-        return {"entity_type": template_type} | user_input
+        return {"entity_type": entity_type} | user_input
 
     return _validate_user_input
 

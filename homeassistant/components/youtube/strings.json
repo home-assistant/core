@@ -10,7 +10,8 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Wrong account: please authenticate with the right account."
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -46,7 +47,8 @@
           "published_at": { "name": "Published at" }
         }
       },
-      "subscribers": { "name": "Subscribers" }
+      "subscribers": { "name": "Subscribers" },
+      "views": { "name": "Views" }
     }
   }
 }

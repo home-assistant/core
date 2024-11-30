@@ -2,7 +2,8 @@
 
 import copy
 import json
-from unittest.mock import ANY
+from typing import Any
+from unittest.mock import ANY, AsyncMock
 
 from hatasmota.const import (
     CONF_DEEP_SLEEP,
@@ -19,6 +20,7 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -26,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import WebSocketGenerator
+from tests.typing import MqttMockHAClient, MqttMockPahoClient, WebSocketGenerator
 
 DEFAULT_CONFIG = {
     "ip": "192.168.15.10",
@@ -125,14 +127,14 @@ async def remove_device(
 
 
 async def help_test_availability_when_connection_lost(
-    hass,
-    mqtt_client_mock,
-    mqtt_mock,
-    domain,
-    config,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test availability after MQTT disconnection.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -191,14 +193,14 @@ async def help_test_availability_when_connection_lost(
 
 
 async def help_test_deep_sleep_availability_when_connection_lost(
-    hass,
-    mqtt_client_mock,
-    mqtt_mock,
-    domain,
-    config,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test availability after MQTT disconnection when deep sleep is enabled.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -261,13 +263,13 @@ async def help_test_deep_sleep_availability_when_connection_lost(
 
 
 async def help_test_availability(
-    hass,
-    mqtt_mock,
-    domain,
-    config,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test availability.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -309,13 +311,13 @@ async def help_test_availability(
 
 
 async def help_test_deep_sleep_availability(
-    hass,
-    mqtt_mock,
-    domain,
-    config,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test availability when deep sleep is enabled.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -358,13 +360,13 @@ async def help_test_deep_sleep_availability(
 
 
 async def help_test_availability_discovery_update(
-    hass,
-    mqtt_mock,
-    domain,
-    config,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test update of discovered TasmotaAvailability.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -434,15 +436,15 @@ async def help_test_availability_discovery_update(
 
 
 async def help_test_availability_poll_state(
-    hass,
-    mqtt_client_mock,
-    mqtt_mock,
-    domain,
-    config,
-    poll_topic,
-    poll_payload,
-    sensor_config=None,
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    poll_topic: str,
+    poll_payload: str,
+    sensor_config: dict[str, Any] | None = None,
+) -> None:
     """Test polling of state when device is available.
 
     This is a test helper for the TasmotaAvailability mixin.
@@ -503,17 +505,17 @@ async def help_test_availability_poll_state(
 
 
 async def help_test_discovery_removal(
-    hass,
-    mqtt_mock,
-    caplog,
-    domain,
-    config1,
-    config2,
-    sensor_config1=None,
-    sensor_config2=None,
-    object_id="tasmota_test",
-    name="Tasmota Test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    config1: dict[str, Any],
+    config2: dict[str, Any],
+    sensor_config1: dict[str, Any] | None = None,
+    sensor_config2: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+    name: str = "Tasmota Test",
+) -> None:
     """Test removal of discovered entity."""
     device_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
@@ -569,16 +571,16 @@ async def help_test_discovery_removal(
 
 
 async def help_test_discovery_update_unchanged(
-    hass,
-    mqtt_mock,
-    caplog,
-    domain,
-    config,
-    discovery_update,
-    sensor_config=None,
-    object_id="tasmota_test",
-    name="Tasmota Test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    config: dict[str, Any],
+    discovery_update: AsyncMock,
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+    name: str = "Tasmota Test",
+) -> None:
     """Test update of discovered component with and without changes.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -623,8 +625,13 @@ async def help_test_discovery_update_unchanged(
 
 
 async def help_test_discovery_device_remove(
-    hass, mqtt_mock, domain, unique_id, config, sensor_config=None
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    unique_id: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+) -> None:
     """Test domain entity is removed when device is removed."""
     device_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
@@ -659,14 +666,14 @@ async def help_test_discovery_device_remove(
 
 
 async def help_test_entity_id_update_subscriptions(
-    hass,
-    mqtt_mock,
-    domain,
-    config,
-    topics=None,
-    sensor_config=None,
-    object_id="tasmota_test",
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    topics: list[str] | None = None,
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     entity_reg = er.async_get(hass)
 
@@ -711,8 +718,13 @@ async def help_test_entity_id_update_subscriptions(
 
 
 async def help_test_entity_id_update_discovery_update(
-    hass, mqtt_mock, domain, config, sensor_config=None, object_id="tasmota_test"
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    domain: str,
+    config: dict[str, Any],
+    sensor_config: dict[str, Any] | None = None,
+    object_id: str = "tasmota_test",
+) -> None:
     """Test MQTT discovery update after entity_id is updated."""
     entity_reg = er.async_get(hass)
 

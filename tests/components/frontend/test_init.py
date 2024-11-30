@@ -166,7 +166,7 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     text = await resp.text()
 
     # Test we can retrieve frontend.js
-    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{11}.js)", text)
+    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{16}.js)", text)
 
     assert frontendjs is not None, text
     resp = await mock_http_client.get(frontendjs.groups(0)[0])
@@ -174,9 +174,12 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_dont_cache_service_worker(mock_http_client: TestClient) -> None:
+@pytest.mark.parametrize("sw_url", ["/sw-modern.js", "/sw-legacy.js"])
+async def test_dont_cache_service_worker(
+    mock_http_client: TestClient, sw_url: str
+) -> None:
     """Test that we don't cache the service worker."""
-    resp = await mock_http_client.get("/service_worker.js")
+    resp = await mock_http_client.get(sw_url)
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
@@ -686,7 +689,7 @@ async def test_auth_authorize(mock_http_client: TestClient) -> None:
 
     # Test we can retrieve authorize.js
     authorizejs = re.search(
-        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{11}.js)", text
+        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{16}.js)", text
     )
 
     assert authorizejs is not None, text

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components.homeassistant_hardware.util import guess_firmware_type
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from .util import guess_firmware_type
 
 _LOGGER = logging.getLogger(__name__)
 

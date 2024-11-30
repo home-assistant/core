@@ -1486,7 +1486,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][fan.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][fan.DOMAIN])
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
@@ -1590,7 +1590,7 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature(0),
+            fan.FanEntityFeature.TURN_OFF | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1605,7 +1605,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.OSCILLATE,
+            fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1620,7 +1622,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1651,7 +1655,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1667,7 +1673,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1682,7 +1690,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1698,7 +1708,10 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1714,7 +1727,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1730,7 +1745,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1747,7 +1764,10 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1764,7 +1784,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1831,7 +1853,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             "some error",
         ),
         (
@@ -1846,7 +1870,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.DIRECTION,
+            fan.FanEntityFeature.DIRECTION
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             "some error",
         ),
     ],
@@ -2175,7 +2201,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = fan.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "preset_mode_command_topic":
         config[mqtt.DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
 

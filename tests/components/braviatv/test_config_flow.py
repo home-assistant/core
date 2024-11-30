@@ -17,7 +17,7 @@ from homeassistant.components.braviatv.const import (
     DOMAIN,
     NICKNAME_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -405,6 +405,9 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         title="TV-Model",
     )
     config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
 
     with (
         patch("pybravia.BraviaClient.connect"),
@@ -421,15 +424,6 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
             return_value={},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-            data=config_entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "authorize"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_USE_PSK: use_psk}
         )

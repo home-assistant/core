@@ -66,8 +66,7 @@ from .const import (
     SERVICE_SET_DELAYED_TURN_OFF,
     SERVICE_SET_SCENE,
 )
-from .device import XiaomiMiioEntity
-from .gateway import XiaomiGatewayDevice
+from .entity import XiaomiGatewayDevice, XiaomiMiioEntity
 from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)

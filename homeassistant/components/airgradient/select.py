@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirGradientConfigEntry
 from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
-from .coordinator import AirGradientConfigCoordinator
+from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
 
@@ -144,12 +144,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
-    coordinator = entry.runtime_data.config
-    measurement_coordinator = entry.runtime_data.measurement
+    coordinator = entry.runtime_data
+    model = coordinator.data.measures.model
 
     async_add_entities([AirGradientSelect(coordinator, CONFIG_CONTROL_ENTITY)])
-
-    model = measurement_coordinator.data.model
 
     added_entities = False
 
@@ -158,7 +156,7 @@ async def async_setup_entry(
         nonlocal added_entities
 
         if (
-            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
             entities: list[AirGradientSelect] = [
@@ -179,7 +177,8 @@ async def async_setup_entry(
             async_add_entities(entities)
             added_entities = True
         elif (
-            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control
+            is not ConfigurationControl.LOCAL
             and added_entities
         ):
             entity_registry = er.async_get(hass)
@@ -201,11 +200,10 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
     """Defines an AirGradient select entity."""
 
     entity_description: AirGradientSelectEntityDescription
-    coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientConfigCoordinator,
+        coordinator: AirGradientCoordinator,
         description: AirGradientSelectEntityDescription,
     ) -> None:
         """Initialize AirGradient select."""
@@ -216,7 +214,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the state of the select."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.config)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

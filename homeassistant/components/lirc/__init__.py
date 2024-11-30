@@ -71,7 +71,7 @@ class LircInterface(threading.Thread):
             # interpret result from python-lirc
             if code:
                 code = code[0]
-                _LOGGER.info("Got new LIRC code %s", code)
+                _LOGGER.debug("Got new LIRC code %s", code)
                 self.hass.bus.fire(EVENT_IR_COMMAND_RECEIVED, {BUTTON_NAME: code})
             else:
                 time.sleep(0.2)

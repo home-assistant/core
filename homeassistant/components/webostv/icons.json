@@ -1,7 +1,13 @@
 {
   "services": {
-    "button": "mdi:button-pointer",
-    "command": "mdi:console",
-    "select_sound_output": "mdi:volume-source"
+    "button": {
+      "service": "mdi:button-pointer"
+    },
+    "command": {
+      "service": "mdi:console"
+    },
+    "select_sound_output": {
+      "service": "mdi:volume-source"
+    }
   }
 }

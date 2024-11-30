@@ -1,0 +1,23 @@
+{
+  "BHA": {
+    "RETURNCODE": "1",
+    "VERSION": [
+      {
+        "FIRMWARE": "000125",
+        "BUILD_NUMBER": "15870439",
+        "WIFI_MAC_ADDR": "1234ABCD",
+        "RELAYS": [
+          "1",
+          "2",
+          "ghchdi@1",
+          "ghchdi@2",
+          "ghchdi@3",
+          "ghdwkh@1",
+          "ghdwkh@2",
+          "ghdwkh@3"
+        ],
+        "DEVICE-TYPE": "DoorBird D2101V"
+      }
+    ]
+  }
+}

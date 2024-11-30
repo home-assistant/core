@@ -46,7 +46,7 @@ EVENT_FIREALARM_1 = EventTestData(
 )
 
 
-async def setup_entry(hass, devices):
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)

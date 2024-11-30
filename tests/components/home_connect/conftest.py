@@ -67,6 +67,20 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
         },
+        minor_version=2,
+    )
+
+
+@pytest.fixture(name="config_entry_v1_1")
+def mock_config_entry_v1_1(token_entry: dict[str, Any]) -> MockConfigEntry:
+    """Fixture for a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": FAKE_AUTH_IMPL,
+            "token": token_entry,
+        },
+        minor_version=1,
     )
 
 
@@ -152,18 +166,23 @@ def mock_appliance(request: pytest.FixtureRequest) -> MagicMock:
 
 
 @pytest.fixture(name="problematic_appliance")
-def mock_problematic_appliance() -> Mock:
+def mock_problematic_appliance(request: pytest.FixtureRequest) -> Mock:
     """Fixture to mock a problematic Appliance."""
     app = "Washer"
+    if hasattr(request, "param") and request.param:
+        app = request.param
+
     mock = Mock(
-        spec=HomeConnectAppliance,
+        autospec=HomeConnectAppliance,
         **MOCK_APPLIANCES_PROPERTIES.get(app),
     )
     mock.name = app
-    setattr(mock, "status", {})
+    type(mock).status = PropertyMock(return_value={})
+    mock.get.side_effect = HomeConnectError
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
     mock.start_program.side_effect = HomeConnectError
+    mock.select_program.side_effect = HomeConnectError
     mock.stop_program.side_effect = HomeConnectError
     mock.get_status.side_effect = HomeConnectError
     mock.get_settings.side_effect = HomeConnectError

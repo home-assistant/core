@@ -10,7 +10,7 @@ import pybbox
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -34,12 +34,12 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | None:
     """Validate the configuration and return a Bbox scanner."""
-    scanner = BboxDeviceScanner(config[DOMAIN])
+    scanner = BboxDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI024
 
 
 class BboxDeviceScanner(DeviceScanner):
@@ -54,7 +54,6 @@ class BboxDeviceScanner(DeviceScanner):
         self.last_results: list[Device] = []
 
         self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -78,7 +77,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()
@@ -96,5 +95,5 @@ class BboxDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info("Scan successful")
+        _LOGGER.debug("Scan successful")
         return True

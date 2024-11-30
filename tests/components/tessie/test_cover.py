@@ -9,8 +9,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -42,6 +41,7 @@ async def test_covers(
         ("cover.test_charge_port_door", "open_unlock_charge_port", "close_charge_port"),
         ("cover.test_frunk", "open_front_trunk", False),
         ("cover.test_trunk", "open_close_rear_trunk", "open_close_rear_trunk"),
+        ("cover.test_sunroof", "vent_sunroof", "close_sunroof"),
     ):
         # Test open windows
         if openfunc:
@@ -56,7 +56,7 @@ async def test_covers(
                     blocking=True,
                 )
                 mock_open.assert_called_once()
-            assert hass.states.get(entity_id).state == STATE_OPEN
+            assert hass.states.get(entity_id).state == CoverState.OPEN
 
         # Test close windows
         if closefunc:
@@ -71,7 +71,7 @@ async def test_covers(
                     blocking=True,
                 )
                 mock_close.assert_called_once()
-            assert hass.states.get(entity_id).state == STATE_CLOSED
+            assert hass.states.get(entity_id).state == CoverState.CLOSED
 
 
 async def test_errors(hass: HomeAssistant) -> None:
@@ -112,4 +112,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert str(error.value) == TEST_RESPONSE_ERROR["reason"]
+    assert str(error.value) == f"Command failed, {TEST_RESPONSE_ERROR["reason"]}"

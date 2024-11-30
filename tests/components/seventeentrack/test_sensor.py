@@ -5,10 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack.errors import SeventeenTrackError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import goto_future, init_integration
@@ -306,15 +305,3 @@ async def test_non_valid_platform_config(
     assert await async_setup_component(hass, "sensor", VALID_PLATFORM_CONFIG_FULL)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
-
-
-async def test_full_valid_platform_config(
-    hass: HomeAssistant,
-    mock_seventeentrack: AsyncMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Ensure everything starts correctly."""
-    assert await async_setup_component(hass, "sensor", VALID_PLATFORM_CONFIG_FULL)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids()) == len(DEFAULT_SUMMARY.keys())
-    assert len(issue_registry.issues) == 1

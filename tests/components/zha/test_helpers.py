@@ -1,81 +1,34 @@
 """Tests for ZHA helpers."""
 
-import enum
 import logging
-from unittest.mock import patch
+from typing import Any
 
 import pytest
 import voluptuous_serialize
-from zigpy.profiles import zha
-from zigpy.quirks.v2.homeassistant import UnitOfPower as QuirksUnitOfPower
+from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
-from zigpy.zcl.clusters import general, lighting
+from zigpy.zcl.clusters import lighting
 
-from homeassistant.components.zha.core.helpers import (
+import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
-    validate_unit,
+    create_zha_config,
+    exclude_none_values,
+    get_zha_data,
 )
-from homeassistant.const import Platform, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.setup import async_setup_component
 
-from .common import async_enable_traffic
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only set up the light and required base platforms to speed up tests."""
-    with patch(
-        "homeassistant.components.zha.PLATFORMS",
-        (
-            Platform.BUTTON,
-            Platform.LIGHT,
-            Platform.NUMBER,
-            Platform.SELECT,
-        ),
-    ):
-        yield
-
-
-@pytest.fixture
-async def device_light(hass: HomeAssistant, zigpy_device_mock, zha_device_joined):
-    """Test light."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [
-                    general.OnOff.cluster_id,
-                    general.LevelControl.cluster_id,
-                    lighting.Color.cluster_id,
-                    general.Groups.cluster_id,
-                    general.Identify.cluster_id,
-                ],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
-                SIG_EP_PROFILE: zha.PROFILE_ID,
-            }
-        }
-    )
-    color_cluster = zigpy_device.endpoints[1].light_color
-    color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
-        | lighting.Color.ColorCapabilities.XY_attributes
-    }
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return color_cluster, zha_device
-
-
-async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None:
+async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
     """Test ZHA ZCL schema conversion helpers."""
-    color_cluster, zha_device = device_light
-    await async_enable_traffic(hass, [zha_device])
-    command_schema = color_cluster.commands_by_name["color_loop_set"].schema
+    command_schema = lighting.Color.ServerCommandDefs.color_loop_set.schema
     expected_schema = [
         {
             "type": "multi_select",
@@ -114,16 +67,14 @@ async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None
             "required": True,
         },
         {
-            "type": "integer",
-            "valueMin": 0,
-            "valueMax": 255,
+            "type": "multi_select",
+            "options": ["Execute if off present"],
             "name": "options_mask",
             "optional": True,
         },
         {
-            "type": "integer",
-            "valueMin": 0,
-            "valueMax": 255,
+            "type": "multi_select",
+            "options": ["Execute if off"],
             "name": "options_override",
             "optional": True,
         },
@@ -215,23 +166,53 @@ async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None
     assert converted_data["update_flags"] == 0
 
 
-def test_unit_validation() -> None:
-    """Test unit validation."""
+@pytest.mark.parametrize(
+    ("obj", "expected_output"),
+    [
+        ({"a": 1, "b": 2, "c": None}, {"a": 1, "b": 2}),
+        ({"a": 1, "b": 2, "c": 0}, {"a": 1, "b": 2, "c": 0}),
+        ({"a": 1, "b": 2, "c": ""}, {"a": 1, "b": 2, "c": ""}),
+        ({"a": 1, "b": 2, "c": False}, {"a": 1, "b": 2, "c": False}),
+    ],
+)
+def test_exclude_none_values(
+    obj: dict[str, Any], expected_output: dict[str, Any]
+) -> None:
+    """Test exclude_none_values helper."""
+    result = exclude_none_values(obj)
+    assert result == expected_output
 
-    assert validate_unit(QuirksUnitOfPower.WATT) == UnitOfPower.WATT
+    for key, value in expected_output.items():
+        assert value == obj[key]
 
-    class FooUnit(enum.Enum):
-        """Foo unit."""
 
-        BAR = "bar"
+async def test_create_zha_config_remove_unused(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test creating ZHA config data with unused keys."""
+    config_entry.add_to_hass(hass)
 
-    class UnitOfMass(enum.Enum):
-        """UnitOfMass."""
+    options = config_entry.options.copy()
+    options["custom_configuration"]["zha_options"]["some_random_key"] = "a value"
 
-        BAR = "bar"
+    hass.config_entries.async_update_entry(config_entry, options=options)
 
-    with pytest.raises(KeyError):
-        validate_unit(FooUnit.BAR)
+    assert (
+        config_entry.options["custom_configuration"]["zha_options"]["some_random_key"]
+        == "a value"
+    )
 
-    with pytest.raises(ValueError):
-        validate_unit(UnitOfMass.BAR)
+    status = await async_setup_component(
+        hass,
+        zha_const.DOMAIN,
+        {zha_const.DOMAIN: {zha_const.CONF_ENABLE_QUIRKS: False}},
+    )
+    assert status is True
+    await hass.async_block_till_done()
+
+    ha_zha_data = get_zha_data(hass)
+
+    # Does not error out
+    create_zha_config(hass, ha_zha_data)

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+
+from pydrawise import Zone
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,10 +16,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .const import DOMAIN, SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
+from .coordinator import HydrawiseUpdateCoordinators
 from .entity import HydrawiseEntity
 
 
@@ -61,6 +67,13 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
     ),
 )
 
+SCHEMA_START_WATERING: VolDictType = {
+    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
+}
+SCHEMA_SUSPEND: VolDictType = {
+    vol.Required("until"): cv.datetime,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -68,18 +81,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise binary_sensor platform."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[HydrawiseBinarySensor] = []
-    for controller in coordinator.data.controllers.values():
+    for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller)
+            HydrawiseBinarySensor(coordinators.main, description, controller)
             for description in CONTROLLER_BINARY_SENSORS
         )
         entities.extend(
             HydrawiseBinarySensor(
-                coordinator,
+                coordinators.main,
                 description,
                 controller,
                 sensor_id=sensor.id,
@@ -89,11 +100,19 @@ async def async_setup_entry(
             if "rain sensor" in sensor.model.name.lower()
         )
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller, zone_id=zone.id)
+            HydrawiseZoneBinarySensor(
+                coordinators.main, description, controller, zone_id=zone.id
+            )
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS
         )
     async_add_entities(entities)
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
+    )
+    platform.async_register_entity_service(SERVICE_SUSPEND, SCHEMA_SUSPEND, "suspend")
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
@@ -111,3 +130,27 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         if self.entity_description.always_available:
             return True
         return super().available
+
+
+class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
+    """A binary sensor for a Hydrawise irrigation zone.
+
+    This is only used for irrigation zones, as they have special methods for
+    service actions that don't apply to other binary sensors.
+    """
+
+    zone: Zone
+
+    async def start_watering(self, duration: int | None = None) -> None:
+        """Start watering in the irrigation zone."""
+        await self.coordinator.api.start_zone(
+            self.zone, custom_run_duration=int((duration or 0) * 60)
+        )
+
+    async def suspend(self, until: datetime) -> None:
+        """Suspend automatic watering in the irrigation zone."""
+        await self.coordinator.api.suspend_zone(self.zone, until=until)
+
+    async def resume(self) -> None:
+        """Resume automatic watering in the irrigation zone."""
+        await self.coordinator.api.resume_zone(self.zone)

@@ -203,7 +203,7 @@ class ElectraClimateEntity(ClimateEntity):
                 return
 
             if not self._was_available:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
                     self.name,

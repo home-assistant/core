@@ -1,0 +1,241 @@
+# serializer version: 1
+# name: test_states[binary_sensor.front_door_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.front_door_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ding',
+    'unique_id': '987654-ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.front_door_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'occupancy',
+      'friendly_name': 'Front Door Ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_door_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_states[binary_sensor.front_door_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.front_door_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion',
+    'unique_id': '987654-motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.front_door_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'motion',
+      'friendly_name': 'Front Door Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_door_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_states[binary_sensor.front_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.front_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion',
+    'unique_id': '765432-motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.front_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'motion',
+      'friendly_name': 'Front Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_states[binary_sensor.ingress_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ingress_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ding',
+    'unique_id': '185036587-ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.ingress_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'occupancy',
+      'friendly_name': 'Ingress Ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ingress_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_states[binary_sensor.internal_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.internal_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion',
+    'unique_id': '345678-motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.internal_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'motion',
+      'friendly_name': 'Internal Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.internal_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

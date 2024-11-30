@@ -2,7 +2,7 @@
 
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
     TrackerEntity,
 )
@@ -66,7 +66,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = f"{DOMAIN}.{dev_id}"
+        self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
     def unique_id(self):

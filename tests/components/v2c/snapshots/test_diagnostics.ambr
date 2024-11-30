@@ -6,6 +6,8 @@
         'host': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'v2c',
       'entry_id': 'da58ee91f38c2406c2a36d0a1a7f8569',
       'minor_version': 1,
@@ -18,7 +20,7 @@
       'unique_id': 'ABC123',
       'version': 1,
     }),
-    'data': "TrydanData(ID='ABC123', charge_state=<ChargeState.CONNECTED_CHARGING: 2>, ready_state=<ReadyState.NOT_READY: 0>, charge_power=1500.27, charge_energy=1.8, slave_error=<SlaveCommunicationState.WAITING_WIFI: 4>, charge_time=4355, house_power=0.0, fv_power=0.0, battery_power=0.0, paused=<PauseState.NOT_PAUSED: 0>, locked=<LockState.DISABLED: 0>, timer=<ChargePointTimerState.TIMER_OFF: 0>, intensity=6, dynamic=<DynamicState.DISABLED: 0>, min_intensity=6, max_intensity=16, pause_dynamic=<PauseDynamicState.MODULATING: 0>, dynamic_power_mode=<DynamicPowerMode.TIMED_POWER_DISABLED_AND_EXCLUSIVE_MODE_SETTED: 2>, contracted_power=4600, firmware_version='2.1.7')",
+    'data': "TrydanData(ID='ABC123', charge_state=<ChargeState.CONNECTED_CHARGING: 2>, ready_state=<ReadyState.NOT_READY: 0>, charge_power=1500.27, voltage_installation=None, charge_energy=1.8, slave_error=<SlaveCommunicationState.WAITING_WIFI: 4>, charge_time=4355, house_power=0.0, fv_power=0.0, battery_power=0.0, paused=<PauseState.NOT_PAUSED: 0>, locked=<LockState.DISABLED: 0>, timer=<ChargePointTimerState.TIMER_OFF: 0>, intensity=6, dynamic=<DynamicState.DISABLED: 0>, min_intensity=6, max_intensity=16, pause_dynamic=<PauseDynamicState.MODULATING: 0>, dynamic_power_mode=<DynamicPowerMode.TIMED_POWER_DISABLED_AND_EXCLUSIVE_MODE_SETTED: 2>, contracted_power=4600, firmware_version='2.1.7', SSID=None, IP=None, signal_status=None)",
     'host_status': 200,
     'raw_data': '{"ID":"ABC123","ChargeState":2,"ReadyState":0,"ChargePower":1500.27,"ChargeEnergy":1.8,"SlaveError":4,"ChargeTime":4355,"HousePower":0.0,"FVPower":0.0,"BatteryPower":0.0,"Paused":0,"Locked":0,"Timer":0,"Intensity":6,"Dynamic":0,"MinIntensity":6,"MaxIntensity":16,"PauseDynamic":0,"FirmwareVersion":"2.1.7","DynamicPowerMode":2,"ContractedPower":4600}',
   })

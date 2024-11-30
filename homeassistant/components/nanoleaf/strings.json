@@ -12,7 +12,7 @@
       },
       "link": {
         "title": "Link Nanoleaf",
-        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then click **SUBMIT** within 30 seconds."
+        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then select **Submit** within 30 seconds."
       }
     },
     "error": {

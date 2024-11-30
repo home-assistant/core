@@ -111,12 +111,12 @@ class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):
         """Return the state of the EVSE switch."""
         return self.entity_description.value_fn(self.data)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the EVSE switch."""
         await self.entity_description.turn_on_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the EVSE switch."""
         await self.entity_description.turn_off_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()

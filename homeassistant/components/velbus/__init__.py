@@ -119,11 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
-        memo_text.hass = hass
         await (
             hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
             .get_module(call.data[CONF_ADDRESS])
-            .set_memo_text(memo_text.async_render())
+            .set_memo_text(memo_text)
         )
 
     hass.services.async_register(
@@ -136,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
             }
         ),
     )

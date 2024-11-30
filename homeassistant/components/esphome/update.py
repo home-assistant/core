@@ -8,6 +8,7 @@ from typing import Any
 from aioesphomeapi import (
     DeviceInfo as ESPHomeDeviceInfo,
     EntityInfo,
+    UpdateCommand,
     UpdateInfo,
     UpdateState,
 )
@@ -60,6 +61,8 @@ async def async_setup_entry(
     if (dashboard := async_get_dashboard(hass)) is None:
         return
     entry_data = DomainData.get(hass).get_entry_data(entry)
+    assert entry_data.device_info is not None
+    device_name = entry_data.device_info.name
     unsubs: list[CALLBACK_TYPE] = []
 
     @callback
@@ -71,13 +74,22 @@ async def async_setup_entry(
         if not entry_data.available or not dashboard.last_update_success:
             return
 
+        # Do not add Dashboard Entity if this device is not known to the ESPHome dashboard.
+        if dashboard.data is None or dashboard.data.get(device_name) is None:
+            return
+
         for unsub in unsubs:
             unsub()
         unsubs.clear()
 
         async_add_entities([ESPHomeDashboardUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available and dashboard.last_update_success:
+    if (
+        entry_data.available
+        and dashboard.last_update_success
+        and dashboard.data is not None
+        and dashboard.data.get(device_name)
+    ):
         _async_setup_update_entity()
         return
 
@@ -132,10 +144,8 @@ class ESPHomeDashboardUpdateEntity(
             self._attr_supported_features = NO_FEATURES
         self._attr_installed_version = device_info.esphome_version
         device = coordinator.data.get(device_info.name)
-        if device is None:
-            self._attr_latest_version = None
-        else:
-            self._attr_latest_version = device["current_version"]
+        assert device is not None
+        self._attr_latest_version = device["current_version"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -229,10 +239,8 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
         """Return if the update is in progress."""
-        if self._state.has_progress:
-            return int(self._state.progress)
         return self._state.in_progress
 
     @property
@@ -259,9 +267,23 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         """Return the title of the update."""
         return self._state.title
 
+    @property
+    @esphome_state_property
+    def update_percentage(self) -> int | None:
+        """Return if the update is in progress."""
+        if self._state.has_progress:
+            return int(self._state.progress)
+        return None
+
+    @convert_api_error_ha_error
+    async def async_update(self) -> None:
+        """Command device to check for update."""
+        if self.available:
+            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+
     @convert_api_error_ha_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
-        """Update the current value."""
-        self._client.update_command(key=self._key, install=True)
+        """Command device to install update."""
+        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)

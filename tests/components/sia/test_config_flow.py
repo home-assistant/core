@@ -1,5 +1,6 @@
 """Test the sia config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.sia.const import (
     CONF_ZONES,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -105,7 +107,7 @@ ADDITIONAL_OPTIONS = {
 
 
 @pytest.fixture
-async def flow_at_user_step(hass):
+async def flow_at_user_step(hass: HomeAssistant) -> ConfigFlowResult:
     """Return a initialized flow."""
     return await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -114,7 +116,9 @@ async def flow_at_user_step(hass):
 
 
 @pytest.fixture
-async def entry_with_basic_config(hass, flow_at_user_step):
+async def entry_with_basic_config(
+    hass: HomeAssistant, flow_at_user_step: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return a entry with a basic config."""
     with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
         return await hass.config_entries.flow.async_configure(
@@ -123,7 +127,9 @@ async def entry_with_basic_config(hass, flow_at_user_step):
 
 
 @pytest.fixture
-async def flow_at_add_account_step(hass, flow_at_user_step):
+async def flow_at_add_account_step(
+    hass: HomeAssistant, flow_at_user_step: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return a initialized flow at the additional account step."""
     return await hass.config_entries.flow.async_configure(
         flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
@@ -131,7 +137,9 @@ async def flow_at_add_account_step(hass, flow_at_user_step):
 
 
 @pytest.fixture
-async def entry_with_additional_account_config(hass, flow_at_add_account_step):
+async def entry_with_additional_account_config(
+    hass: HomeAssistant, flow_at_add_account_step: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return a entry with a two account config."""
     with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
         return await hass.config_entries.flow.async_configure(
@@ -139,7 +147,7 @@ async def entry_with_additional_account_config(hass, flow_at_add_account_step):
         )
 
 
-async def setup_sia(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def setup_sia(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Add mock config to HASS."""
     assert await async_setup_component(hass, DOMAIN, {})
     config_entry.add_to_hass(hass)
@@ -147,23 +155,21 @@ async def setup_sia(hass: HomeAssistant, config_entry: MockConfigEntry):
     await hass.async_block_till_done()
 
 
-async def test_form_start_user(hass: HomeAssistant, flow_at_user_step) -> None:
+async def test_form_start_user(flow_at_user_step: ConfigFlowResult) -> None:
     """Start the form and check if you get the right id and schema for the user step."""
     assert flow_at_user_step["step_id"] == "user"
     assert flow_at_user_step["errors"] is None
     assert flow_at_user_step["data_schema"] == HUB_SCHEMA
 
 
-async def test_form_start_account(
-    hass: HomeAssistant, flow_at_add_account_step
-) -> None:
+async def test_form_start_account(flow_at_add_account_step: ConfigFlowResult) -> None:
     """Start the form and check if you get the right id and schema for the additional account step."""
     assert flow_at_add_account_step["step_id"] == "add_account"
     assert flow_at_add_account_step["errors"] is None
     assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
 
 
-async def test_create(hass: HomeAssistant, entry_with_basic_config) -> None:
+async def test_create(entry_with_basic_config: ConfigFlowResult) -> None:
     """Test we create a entry through the form."""
     assert entry_with_basic_config["type"] is FlowResultType.CREATE_ENTRY
     assert (
@@ -175,7 +181,7 @@ async def test_create(hass: HomeAssistant, entry_with_basic_config) -> None:
 
 
 async def test_create_additional_account(
-    hass: HomeAssistant, entry_with_additional_account_config
+    entry_with_additional_account_config: ConfigFlowResult,
 ) -> None:
     """Test we create a config with two accounts."""
     assert entry_with_additional_account_config["type"] is FlowResultType.CREATE_ENTRY
@@ -210,7 +216,7 @@ async def test_abort_form(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_sia():
+def mock_sia() -> Generator[None]:
     """Mock SIAClient."""
     with patch("homeassistant.components.sia.hub.SIAClient", autospec=True):
         yield

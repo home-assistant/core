@@ -9,13 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     ATTR_DISCOVER_CONFIG,
     ATTR_DISCOVER_DEVICES,
     DATA_TELLSTICK,
     DEFAULT_SIGNAL_REPETITIONS,
-    TellstickDevice,
 )
+from .entity import TellstickDevice
 
 
 def setup_platform(

@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_SERVICE_ID
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -30,6 +31,9 @@ async def test_entry_diagnostics(
             "source": "user",
             "unique_id": REDACTED,
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
         },
         "data": [
             {

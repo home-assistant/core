@@ -1,6 +1,6 @@
 """Test for Powerwall off-grid switch."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tesla_powerwall import GridStatus, PowerwallError
@@ -24,7 +24,7 @@ ENTITY_ID = "switch.mysite_off_grid_operation"
 
 
 @pytest.fixture(name="mock_powerwall")
-async def mock_powerwall_fixture(hass):
+async def mock_powerwall_fixture(hass: HomeAssistant) -> MagicMock:
     """Set up base powerwall fixture."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)

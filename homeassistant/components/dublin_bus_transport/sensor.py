@@ -9,6 +9,7 @@ from __future__ import annotations
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -102,7 +103,7 @@ class DublinPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"
@@ -117,6 +118,7 @@ class DublinPublicTransportSensor(SensorEntity):
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
                 ATTR_NEXT_UP: next_up,
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):

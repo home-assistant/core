@@ -149,8 +149,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return None
 
         if (
-            self.coordinator.data.app.name == "Power Saver"
-            or self.coordinator.data.app.name == "Roku"
+            self.coordinator.data.app.name in {"Power Saver", "Roku"}
             or self.coordinator.data.app.screensaver
         ):
             return MediaPlayerState.IDLE
@@ -446,17 +445,25 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            params = {"t": "a", **params}
+            params = {"u": media_id, "t": "a", **params}
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            await self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                params,
+            )
         elif media_type in {MediaType.URL, MediaType.VIDEO}:
             params = {
                 param: extra[attr]
                 for (attr, param) in ATTRS_TO_PLAY_ON_ROKU_PARAMS.items()
                 if attr in extra
             }
+            params["u"] = media_id
+            params["t"] = "v"
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            await self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                params,
+            )
         else:
             _LOGGER.error("Media type %s is not supported", original_media_type)
             return

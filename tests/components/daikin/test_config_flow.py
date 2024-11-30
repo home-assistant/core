@@ -28,9 +28,11 @@ def mock_daikin():
         """Mock the init function in pydaikin."""
         return Appliance
 
-    with patch("homeassistant.components.daikin.config_flow.Appliance") as Appliance:
+    with patch(
+        "homeassistant.components.daikin.config_flow.DaikinFactory"
+    ) as Appliance:
         type(Appliance).mac = PropertyMock(return_value="AABBCCDDEEFF")
-        Appliance.factory.side_effect = mock_daikin_factory
+        Appliance.side_effect = mock_daikin_factory
         yield Appliance
 
 
@@ -90,7 +92,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
 )
 async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
     """Test device abort."""
-    mock_daikin.factory.side_effect = s_effect
+    mock_daikin.side_effect = s_effect
 
     result = await hass.config_entries.flow.async_init(
         "daikin",

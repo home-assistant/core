@@ -172,11 +172,27 @@
           "description": "Enable or disable including grouped rooms."
         }
       }
+    },
+    "get_queue": {
+      "name": "Get queue",
+      "description": "Returns the contents of the queue."
     }
   },
   "exceptions": {
     "invalid_favorite": {
       "message": "Could not find a Sonos favorite: {name}"
+    },
+    "invalid_sonos_playlist": {
+      "message": "Could not find Sonos playlist: {name}"
+    },
+    "invalid_media": {
+      "message": "Could not find media in library: {media_id}"
+    },
+    "invalid_content_type": {
+      "message": "Sonos does not support media content type: {media_type}"
+    },
+    "announce_media_error": {
+      "message": "Announcing clip {media_id} failed {response}"
     }
   }
 }

@@ -3,9 +3,10 @@
 import asyncio
 from dataclasses import asdict
 from datetime import timedelta
-from unittest.mock import call, patch
+from unittest.mock import _Call, call, patch
 
 import pytest
+import pywemo
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
@@ -14,7 +15,7 @@ from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.components.wemo.coordinator import Options, async_get_coordinator
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -177,6 +178,7 @@ async def test_device_info(
     }
     assert device_entries[0].manufacturer == "Belkin"
     assert device_entries[0].model == "LightSwitch"
+    assert device_entries[0].model_id == "LightSwitch"
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
@@ -248,14 +250,14 @@ class TestInsight:
     )
     async def test_should_poll(
         self,
-        hass,
-        subscribed,
-        state,
-        expected_calls,
-        wemo_entity,
-        pywemo_device,
-        pywemo_registry,
-    ):
+        hass: HomeAssistant,
+        subscribed: bool,
+        state: int,
+        expected_calls: list[_Call],
+        wemo_entity: er.RegistryEntry,
+        pywemo_device: pywemo.WeMoDevice,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+    ) -> None:
         """Validate the should_poll returns the correct value."""
         pywemo_registry.is_subscribed.return_value = subscribed
         pywemo_device.get_state.reset_mock()

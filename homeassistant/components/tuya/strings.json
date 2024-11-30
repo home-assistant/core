@@ -119,6 +119,9 @@
       }
     },
     "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -145,6 +148,9 @@
       },
       "far_detection": {
         "name": "Far detection"
+      },
+      "target_dis_closest": {
+        "name": "Clostest target distance"
       },
       "water_level": {
         "name": "Water level"
@@ -620,6 +626,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
       }
     },
     "switch": {
@@ -640,6 +657,9 @@
       },
       "filter_reset": {
         "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
       },
       "water_pump_reset": {
         "name": "Water pump reset"

@@ -29,8 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     gree_discovery = DiscoveryService(hass)
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     async def _async_scan_update(_=None):
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
         await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
@@ -43,6 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
         )
     )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

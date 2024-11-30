@@ -7,12 +7,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import automation
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 
 from tests.typing import ClientSessionGenerator
@@ -78,7 +78,7 @@ async def test_update_automation_config(
 
     resp = await client.post(
         "/api/config/automation/config/moon",
-        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+        data=json.dumps({"triggers": [], "actions": [], "conditions": []}),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
@@ -91,8 +91,13 @@ async def test_update_automation_config(
     assert result == {"result": "ok"}
 
     new_data = hass_config_store["automations.yaml"]
-    assert list(new_data[1]) == ["id", "trigger", "condition", "action"]
-    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
+    assert list(new_data[1]) == ["id", "triggers", "conditions", "actions"]
+    assert new_data[1] == {
+        "id": "moon",
+        "triggers": [],
+        "conditions": [],
+        "actions": [],
+    }
 
 
 @pytest.mark.parametrize("automation_config", [{}])
@@ -101,18 +106,18 @@ async def test_update_automation_config(
     [
         (
             {"action": []},
-            "required key not provided @ data['trigger']",
+            "required key not provided @ data['triggers']",
         ),
         (
             {
-                "trigger": {"platform": "automation"},
+                "trigger": {"trigger": "automation"},
                 "action": [],
             },
             "Integration 'automation' does not provide trigger support",
         ),
         (
             {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "state",
                     # The UUID will fail being resolved to en entity_id
@@ -125,7 +130,7 @@ async def test_update_automation_config(
         ),
         (
             {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {
                     "condition": "state",
                     # The UUID will fail being resolved to en entity_id
@@ -254,7 +259,7 @@ async def test_update_remove_key_automation_config(
 
     resp = await client.post(
         "/api/config/automation/config/moon",
-        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+        data=json.dumps({"triggers": [], "actions": [], "conditions": []}),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
@@ -267,8 +272,13 @@ async def test_update_remove_key_automation_config(
     assert result == {"result": "ok"}
 
     new_data = hass_config_store["automations.yaml"]
-    assert list(new_data[1]) == ["id", "trigger", "condition", "action"]
-    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
+    assert list(new_data[1]) == ["id", "triggers", "conditions", "actions"]
+    assert new_data[1] == {
+        "id": "moon",
+        "triggers": [],
+        "conditions": [],
+        "actions": [],
+    }
 
 
 @pytest.mark.parametrize("automation_config", [{}])
@@ -297,7 +307,7 @@ async def test_bad_formatted_automations(
 
     resp = await client.post(
         "/api/config/automation/config/moon",
-        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+        data=json.dumps({"triggers": [], "actions": [], "conditions": []}),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
@@ -312,7 +322,12 @@ async def test_bad_formatted_automations(
     # Verify ID added
     new_data = hass_config_store["automations.yaml"]
     assert "id" in new_data[0]
-    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
+    assert new_data[1] == {
+        "id": "moon",
+        "triggers": [],
+        "conditions": [],
+        "actions": [],
+    }
 
 
 @pytest.mark.parametrize(
@@ -321,12 +336,12 @@ async def test_bad_formatted_automations(
         [
             {
                 "id": "sun",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {"service": "test.automation"},
             },
             {
                 "id": "moon",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {"service": "test.automation"},
             },
         ],

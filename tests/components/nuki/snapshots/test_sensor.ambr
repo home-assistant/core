@@ -37,7 +37,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Home Battery',
-      'nuki_id': 1,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,

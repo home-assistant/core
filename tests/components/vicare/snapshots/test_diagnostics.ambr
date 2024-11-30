@@ -8,6 +8,24 @@
             'apiVersion': 1,
             'commands': dict({
             }),
+            'deviceId': '0',
+            'feature': 'device.serial',
+            'gatewayId': '################',
+            'isEnabled': True,
+            'isReady': True,
+            'properties': dict({
+              'value': dict({
+                'type': 'string',
+                'value': 'deviceSerialVitodens300W',
+              }),
+            }),
+            'timestamp': '2024-07-30T20:03:40.073Z',
+            'uri': 'https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.serial',
+          }),
+          dict({
+            'apiVersion': 1,
+            'commands': dict({
+            }),
             'components': list([
             ]),
             'deviceId': '0',
@@ -4703,6 +4721,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'vicare',
       'entry_id': '1234',
       'minor_version': 1,

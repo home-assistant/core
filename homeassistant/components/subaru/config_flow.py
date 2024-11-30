@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from subarulink import (
     Controller as SubaruAPI,
@@ -44,10 +44,10 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
-        self.config_data = {CONF_PIN: None}
-        self.controller = None
+        self.config_data: dict[str, Any] = {CONF_PIN: None}
+        self.controller: SubaruAPI | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -66,6 +66,8 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
                 return self.async_abort(reason="cannot_connect")
             else:
+                if TYPE_CHECKING:
+                    assert self.controller
                 if not self.controller.device_registered:
                     _LOGGER.debug("2FA validation is required")
                     return await self.async_step_two_factor()
@@ -104,7 +106,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def validate_login_creds(self, data):
         """Validate the user input allows us to connect.
@@ -137,6 +139,8 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select contact method and request 2FA code from Subaru."""
         error = None
+        if TYPE_CHECKING:
+            assert self.controller
         if user_input:
             # self.controller.contact_methods is a dict:
             # {"phone":"555-555-5555", "userName":"my@email.com"}
@@ -165,6 +169,8 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate received 2FA code with Subaru."""
         error = None
+        if TYPE_CHECKING:
+            assert self.controller
         if user_input:
             try:
                 vol.Match(r"^[0-9]{6}$")(user_input[CONF_VALIDATION_CODE])
@@ -190,6 +196,8 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle second part of config flow, if required."""
         error = None
+        if TYPE_CHECKING:
+            assert self.controller
         if user_input and self.controller.update_saved_pin(user_input[CONF_PIN]):
             try:
                 vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
@@ -209,10 +217,6 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Subaru."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -18,7 +18,7 @@ from pysnmp.hlapi.asyncio import (
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -59,7 +59,7 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
-    scanner = SnmpScanner(config[DOMAIN])
+    scanner = SnmpScanner(config[DEVICE_TRACKER_DOMAIN])
     await scanner.async_init(hass)
 
     return scanner if scanner.success_init else None
@@ -128,7 +128,7 @@ class SnmpScanner(DeviceScanner):
         await self._async_update_info()
         return [client["mac"] for client in self.last_results if client.get("mac")]
 
-    async def async_get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         # We have no names
         return None

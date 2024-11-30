@@ -94,7 +94,7 @@ async def _update_no_ip(
 
     params = {"hostname": domain}
 
-    headers = {
+    headers: dict[str, str] = {
         AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }

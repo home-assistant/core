@@ -7,6 +7,8 @@
         'station_id': 123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'gios',
       'entry_id': '86129426118ae32020417a53712d6eef',
       'minor_version': 1,

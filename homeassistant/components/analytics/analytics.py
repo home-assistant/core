@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import (
@@ -136,7 +137,7 @@ class Analytics:
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return hassio.is_hassio(self.hass)
+        return is_hassio(self.hass)
 
     async def load(self) -> None:
         """Load preferences."""
@@ -261,18 +262,19 @@ class Analytics:
                 integrations.append(integration.domain)
 
             if supervisor_info is not None:
+                supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
                     *(
-                        hassio.async_get_addon_info(hass, addon[ATTR_SLUG])
+                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
                     )
                 )
                 addons.extend(
                     {
-                        ATTR_SLUG: addon[ATTR_SLUG],
-                        ATTR_PROTECTED: addon[ATTR_PROTECTED],
-                        ATTR_VERSION: addon[ATTR_VERSION],
-                        ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
+                        ATTR_SLUG: addon.slug,
+                        ATTR_PROTECTED: addon.protected,
+                        ATTR_VERSION: addon.version,
+                        ATTR_AUTO_UPDATE: addon.auto_update,
                     }
                     for addon in installed_addons
                 )

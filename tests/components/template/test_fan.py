@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     FanEntityFeature,
     NotValidPresetModeError,
 )
@@ -36,12 +36,12 @@ _OSC_INPUT = "input_select.osc"
 _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -54,17 +54,18 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
         },
     ],
 )
-async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
     _verify(hass, STATE_ON, None, None, None, None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -78,7 +79,7 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
             }
         },
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -92,7 +93,7 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
             }
         },
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -107,17 +108,18 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_wrong_template_config(hass: HomeAssistant) -> None:
     """Test: missing 'value_template' will fail."""
     assert hass.states.async_all("fan") == []
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -149,7 +151,8 @@ async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_templates_with_entities(hass: HomeAssistant) -> None:
     """Test tempalates with values from other entities."""
     _verify(hass, STATE_OFF, 0, None, None, None)
 
@@ -173,13 +176,13 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
     _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "entity", "tests"),
     [
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -203,7 +206,7 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -229,9 +232,8 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_templates_with_entities2(
-    hass: HomeAssistant, entity, tests, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_templates_with_entities2(hass: HomeAssistant, entity, tests) -> None:
     """Test templates with values from other entities."""
     for set_percentage, test_percentage, test_type in tests:
         hass.states.async_set(entity, set_percentage)
@@ -239,12 +241,12 @@ async def test_templates_with_entities2(
         _verify(hass, STATE_ON, test_percentage, None, None, test_type)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -262,9 +264,8 @@ async def test_templates_with_entities2(
         },
     ],
 )
-async def test_availability_template_with_entities(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability tempalates with values from other entities."""
     for state, test_assert in ((STATE_ON, True), (STATE_OFF, False)):
         hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, state)
@@ -272,13 +273,13 @@ async def test_availability_template_with_entities(
         assert (hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE) == test_assert
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "states"),
     [
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -293,7 +294,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -311,7 +312,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -329,7 +330,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -347,19 +348,18 @@ async def test_availability_template_with_entities(
         ),
     ],
 )
-async def test_template_with_unavailable_entities(
-    hass: HomeAssistant, states, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_with_unavailable_entities(hass: HomeAssistant, states) -> None:
     """Test unavailability with value_template."""
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -378,8 +378,9 @@ async def test_template_with_unavailable_entities(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
@@ -699,13 +700,13 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
 
 
 def _verify(
-    hass,
-    expected_state,
-    expected_percentage,
-    expected_oscillating,
-    expected_direction,
-    expected_preset_mode,
-):
+    hass: HomeAssistant,
+    expected_state: str,
+    expected_percentage: int | None,
+    expected_oscillating: bool | None,
+    expected_direction: str | None,
+    expected_preset_mode: str | None,
+) -> None:
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
@@ -716,7 +717,7 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
-async def _register_fan_sources(hass):
+async def _register_fan_sources(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
             hass, "input_boolean", {"input_boolean": {"state": None}}
@@ -760,8 +761,11 @@ async def _register_fan_sources(hass):
 
 
 async def _register_components(
-    hass, speed_list=None, preset_modes=None, speed_count=None
-):
+    hass: HomeAssistant,
+    speed_list: list[str] | None = None,
+    preset_modes: list[str] | None = None,
+    speed_count: int | None = None,
+) -> None:
     """Register basic components for testing."""
     await _register_fan_sources(hass)
 
@@ -900,12 +904,12 @@ async def _register_components(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_template_fan_01": {
@@ -937,7 +941,8 @@ async def _register_components(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one fan per id."""
     assert len(hass.states.async_all()) == 1
 
@@ -1021,12 +1026,12 @@ async def test_implemented_percentage(
     assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "mechanical_ventilation": {
@@ -1079,7 +1084,8 @@ async def test_implemented_percentage(
         },
     ],
 )
-async def test_implemented_preset_mode(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_implemented_preset_mode(hass: HomeAssistant) -> None:
     """Test a fan that implements preset_mode."""
     assert len(hass.states.async_all()) == 1
 
