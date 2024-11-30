@@ -27,7 +27,11 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
@@ -948,7 +952,7 @@ async def test_unsupported_service(
     await create_mock_platform(hass, [entity1])
 
     with pytest.raises(
-        HomeAssistantError,
+        ServiceNotSupported,
         match=f"Entity todo.entity1 does not support action {DOMAIN}.{service_name}",
     ):
         await hass.services.async_call(
