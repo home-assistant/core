@@ -186,8 +186,8 @@ def process_plex_payload(
         playqueue = plex_server.create_playqueue(
             media,
             includeRelated=0,
-            shuffle=1 if shuffle else 0,           
-            continuous=1 if continuous else 0
+            shuffle=1 if shuffle else 0,
+            continuous=1 if continuous else 0,
         )
         return PlexMediaSearchResult(playqueue, content)
 
