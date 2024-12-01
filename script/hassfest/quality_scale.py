@@ -219,7 +219,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth_adapters",
     "bluetooth_le_tracker",
     "bluetooth_tracker",
-    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
