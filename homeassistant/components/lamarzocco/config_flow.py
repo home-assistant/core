@@ -20,7 +20,6 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -46,6 +45,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
 
@@ -354,7 +354,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LaMarzoccoConfigEntry,
     ) -> LmOptionsFlowHandler:
         """Create the options flow."""
         return LmOptionsFlowHandler()
