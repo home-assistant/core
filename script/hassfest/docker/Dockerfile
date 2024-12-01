@@ -27,6 +27,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.5.4,source=/uv,target=/bin/uv \
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
+LABEL "org.opencontainers.image.source"="https://github.com/home-assistant/core"
 
 LABEL "com.github.actions.name"="hassfest"
 LABEL "com.github.actions.description"="Run hassfest to validate standalone integration repositories"

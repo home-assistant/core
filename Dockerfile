@@ -61,3 +61,5 @@ RUN \
     && go2rtc --version
 
 WORKDIR /config
+
+LABEL "org.opencontainers.image.source"="https://github.com/home-assistant/core"
