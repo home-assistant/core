@@ -8,6 +8,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
@@ -16,6 +17,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
 )
 from homeassistant.components.music_assistant.const import DOMAIN as MASS_DOMAIN
 from homeassistant.components.music_assistant.media_player import (
@@ -266,6 +269,71 @@ async def test_media_player_repeat_set_action(
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/repeat", queue_id=mass_player_id, repeat_mode="one"
+    )
+
+
+async def test_media_player_join_players_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity join_players action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_GROUP_MEMBERS: ["media_player.my_super_test_player_2"],
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/group_many",
+        target_player=mass_player_id,
+        child_player_ids=["00:00:00:00:00:02"],
+    )
+    # test again with invalid source player
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(
+        HomeAssistantError, match="Entity media_player.blah_blah not found"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_GROUP_MEMBERS: ["media_player.blah_blah"],
+            },
+            blocking=True,
+        )
+
+
+async def test_media_player_unjoin_player_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity unjoin player action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/ungroup", player_id=mass_player_id
     )
 
 
