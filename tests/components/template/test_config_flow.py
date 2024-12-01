@@ -273,11 +273,21 @@ async def test_config_flow(
                 "min": "0",
                 "max": "100",
                 "step": "0.1",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
@@ -1263,11 +1273,21 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
