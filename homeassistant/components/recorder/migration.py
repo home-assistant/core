@@ -313,7 +313,7 @@ def _migrate_schema(
 
     for version in range(current_version, end_version):
         new_version = version + 1
-        _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+        _LOGGER.warning("Upgrading recorder db schema to version %s", new_version)
         _apply_update(instance, hass, engine, session_maker, new_version, start_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
@@ -2326,9 +2326,15 @@ class BaseMigration(ABC):
         """
         if self.schema_version < self.required_schema_version:
             # Schema is too old, we must have to migrate
+            _LOGGER.info(
+                "Data migration '%s' needed, schema too old", self.migration_id
+            )
             return True
         if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
             # The migration changes table indicates that the migration has been done
+            _LOGGER.debug(
+                "Data migration '%s' not needed, already completed", self.migration_id
+            )
             return False
         # We do not know if the migration is done from the
         # migration changes table so we must check the index and data
@@ -2338,10 +2344,19 @@ class BaseMigration(ABC):
             and get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
             is not None
         ):
+            _LOGGER.info(
+                "Data migration '%s' needed, index to drop still exists",
+                self.migration_id,
+            )
             return True
         needs_migrate = self.needs_migrate_impl(instance, session)
         if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
+        _LOGGER.info(
+            "Data migration '%s' needed: %s",
+            self.migration_id,
+            needs_migrate.needs_migrate,
+        )
         return needs_migrate.needs_migrate
 
 
@@ -2354,10 +2369,17 @@ class BaseOffLineMigration(BaseMigration):
         """Migrate all data."""
         with session_scope(session=session_maker()) as session:
             if not self.needs_migrate(instance, session):
+                _LOGGER.debug("Migration not needed for '%s'", self.migration_id)
                 self.migration_done(instance, session)
                 return
+        _LOGGER.warning(
+            "The database is about to do data migration step '%s', %s",
+            self.migration_id,
+            MIGRATION_NOTE_OFFLINE,
+        )
         while not self.migrate_data(instance):
             pass
+        _LOGGER.warning("Data migration step '%s' completed", self.migration_id)
 
     @database_job_retry_wrapper_method("migrate data", 10)
     def migrate_data(self, instance: Recorder) -> bool:
