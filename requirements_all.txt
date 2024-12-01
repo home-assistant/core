@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.31
+SQLAlchemy==2.0.36
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -1622,7 +1622,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.0
+plugwise==1.6.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
