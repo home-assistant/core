@@ -106,10 +106,9 @@ class WyomingConversationEntity(
                     Transcript(
                         user_input.text,
                         context={
-                            "conversation_id": conversation_id,
-                            "conversation_context": user_input.context,
-                            "device_id": user_input.device_id,
-                            "agent_id": user_input.agent_id,
+                            "home_assistant": {
+                                user_input.as_dict(),
+                            }
                         },
                     ).event()
                 )
