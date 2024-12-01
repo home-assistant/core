@@ -88,10 +88,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         position_updated_at = dt_util.utcnow()
 
         if (context := current.context) is not None:
-            if self._playlist is None or self._checked_playlist_id not in [
-                context.uri,
+            if context.uri not in [
+                self._checked_playlist_id,
                 SPOTIFY_DJ_PLAYLIST_URI,
-            ]:
+            ] or (self._playlist is None and context.uri == SPOTIFY_DJ_PLAYLIST_URI):
                 self._checked_playlist_id = context.uri
                 self._playlist = None
                 if context.context_type == ContextType.PLAYLIST:

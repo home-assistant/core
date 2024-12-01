@@ -200,7 +200,7 @@ async def test_normal_playlist(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_spotify.return_value.get_playlist.assert_called_once_with(
+    mock_spotify.return_value.get_playlist.assert_called_with(
         "spotify:playlist:123123123123123"
     )
 
