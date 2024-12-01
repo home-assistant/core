@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from nikohomecontrol import NikoHomeControlConnection
+from nhc.connection import NHCConnection
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,7 +22,7 @@ DATA_SCHEMA = vol.Schema(
 def test_connection(host: str) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
     try:
-        NikoHomeControlConnection(host, 8000)
+        NHCConnection(host, 8000)
     except Exception:  # noqa: BLE001
         return "cannot_connect"
     return None
