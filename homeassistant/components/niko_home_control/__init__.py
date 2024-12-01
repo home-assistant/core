@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from nclib.errors import NetcatError
-from nikohomecontrol import NikoHomeControl
+from nhc.controller import NHCController
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set Niko Home Control from a config entry."""
     try:
-        controller = NikoHomeControl({"ip": entry.data[CONF_HOST], "port": 8000})
+        controller = NHCController(entry.data[CONF_HOST], 8000)
         niko_data = NikoHomeControlData(hass, controller)
         await niko_data.async_update()
     except NetcatError as err:
@@ -66,9 +66,8 @@ class NikoHomeControlData:
         """Get the latest data from the NikoHomeControl API."""
         _LOGGER.debug("Fetching async state in bulk")
         try:
-            self.data = await self.hass.async_add_executor_job(
-                self.nhc.list_actions_raw
-            )
+            await self.hass.async_add_executor_job(self.nhc.update)
+            self.data = self.nhc.actions
             self.available = True
         except OSError as ex:
             _LOGGER.error("Unable to retrieve data from Niko, %s", str(ex))
