@@ -270,9 +270,6 @@ aiolifx-themes==0.5.5
 # homeassistant.components.lifx
 aiolifx==1.1.1
 
-# homeassistant.components.livisi
-aiolivisi==0.0.19
-
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
@@ -1092,6 +1089,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.linear_garage_door
 linear-garage-door==0.2.9
+
+# homeassistant.components.livisi
+livisi==0.0.22
 
 # homeassistant.components.london_underground
 london-tube-status==0.5

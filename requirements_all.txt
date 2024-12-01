@@ -288,9 +288,6 @@ aiolifx-themes==0.5.5
 # homeassistant.components.lifx
 aiolifx==1.1.1
 
-# homeassistant.components.livisi
-aiolivisi==0.0.19
-
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
@@ -1311,6 +1308,9 @@ linear-garage-door==0.2.9
 
 # homeassistant.components.linode
 linode-api==4.1.9b1
+
+# homeassistant.components.livisi
+livisi==0.0.22
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
