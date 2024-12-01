@@ -143,7 +143,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-dev"
-          skip-binary: aiohttp;multidict;yarl
+          skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
