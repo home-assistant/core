@@ -30,7 +30,6 @@ def generate_actual_interval(channel_type: ChannelType, end_time: datetime) -> I
             channel_type=channel_type,
             spike_status=SpikeStatus.NONE,
             descriptor=PriceDescriptor.LOW,
-            advanced_price=AdvancedPrice(low=10, high=20),
         )
     )
 
