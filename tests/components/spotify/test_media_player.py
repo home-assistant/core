@@ -170,7 +170,7 @@ async def test_normal_playlist(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Spotify entities."""
+    """Test normal playlist switching."""
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
