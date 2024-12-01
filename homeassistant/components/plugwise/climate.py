@@ -190,19 +190,28 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
 
-        if self._gateway["smile_name"] == "Anna":
-            heater: str = self._gateway["heater_id"]
-            heater_data = self._devices[heater]
-            if heater_data["binary_sensors"]["heating_state"]:
-                return HVACAction.HEATING
-            if heater_data["binary_sensors"].get("cooling_state", False):
+        # Adam provides the hvac_action for each thermostat
+        if self._gateway["smile_name"] == "Adam":
+            if (control_state := self.device.get("control_state")) == "cooling":
                 return HVACAction.COOLING
+            if control_state == "heating":
+                return HVACAction.HEATING
+            if control_state == "preheating":
+                return HVACAction.PREHEATING
+            if control_state == "off":
+                return HVACAction.IDLE
+
             return HVACAction.IDLE
 
-        # Adam provides the hvac_action for each thermostat
-        if (action := self.device.get("control_state")) is None or action == "off":
-            return HVACAction.IDLE
-        return HVACAction(action)
+        # Anna
+        heater: str = self._gateway["heater_id"]
+        heater_data = self._devices[heater]
+        if heater_data["binary_sensors"]["heating_state"]:
+            return HVACAction.HEATING
+        if heater_data["binary_sensors"].get("cooling_state", False):
+            return HVACAction.COOLING
+
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
