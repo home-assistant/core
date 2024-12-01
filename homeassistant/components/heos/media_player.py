@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import GroupManager, HeosConfigEntry, HeosRuntimeData, SourceManager
+from . import GroupManager, HeosConfigEntry, SourceManager
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 
 BASE_SUPPORTED_FEATURES = (
@@ -77,7 +77,10 @@ async def async_setup_entry(
     """Add media players for a config entry."""
     players = entry.runtime_data.players
     devices = [
-        HeosMediaPlayer(player, entry.runtime_data) for player in players.values()
+        HeosMediaPlayer(
+            player, entry.runtime_data.source_manager, entry.runtime_data.group_manager
+        )
+        for player in players.values()
     ]
     async_add_entities(devices, True)
 
@@ -114,14 +117,15 @@ class HeosMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, player, runtime_data: HeosRuntimeData) -> None:
+    def __init__(
+        self, player, source_manager: SourceManager, group_manager: GroupManager
+    ) -> None:
         """Initialize."""
         self._media_position_updated_at = None
         self._player = player
-        self._runtime_data = runtime_data
         self._signals: list = []
-        self._source_manager: SourceManager
-        self._group_manager: GroupManager
+        self._source_manager = source_manager
+        self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(HEOS_DOMAIN, player.player_id)},
@@ -286,12 +290,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._attr_supported_features = reduce(
             ior, current_support, BASE_SUPPORTED_FEATURES
         )
-
-        if self._group_manager is None:
-            self._group_manager = self._runtime_data.group_manager
-
-        if self._source_manager is None:
-            self._source_manager = self._runtime_data.source_manager
 
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self) -> None:
