@@ -3,9 +3,9 @@
 import logging
 
 from packaging import version
-from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
-from pylamarzocco.client_cloud import LaMarzoccoCloudClient
-from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
 from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
