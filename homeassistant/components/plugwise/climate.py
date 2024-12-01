@@ -196,14 +196,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 return HVACAction.IDLE
             return HVACAction(action)
         # Anna
-        else:
-            heater: str = self._gateway["heater_id"]
-            heater_data = self._devices[heater]
-            if heater_data["binary_sensors"]["heating_state"]:
-                return HVACAction.HEATING
-            if heater_data["binary_sensors"].get("cooling_state", False):
-                return HVACAction.COOLING
-            return HVACAction.IDLE
+        heater: str = self._gateway["heater_id"]
+        heater_data = self._devices[heater]
+        if heater_data["binary_sensors"]["heating_state"]:
+            return HVACAction.HEATING
+        if heater_data["binary_sensors"].get("cooling_state", False):
+            return HVACAction.COOLING
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
