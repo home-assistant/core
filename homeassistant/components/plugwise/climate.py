@@ -192,8 +192,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Adam provides the hvac_action for each thermostat
         if self._gateway["smile_name"] == "Adam":
-            if (action := self.device.get("control_state")) is not None:
-                return HVACAction(action)
+            if (action := self.device.get("control_state")) is None:
+                return HVACAction.IDLE
+            return HVACAction(action)
         # Anna
         else:
             heater: str = self._gateway["heater_id"]
@@ -202,8 +203,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 return HVACAction.HEATING
             if heater_data["binary_sensors"].get("cooling_state", False):
                 return HVACAction.COOLING
-
-        return HVACAction.IDLE
+            return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
