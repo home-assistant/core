@@ -14,7 +14,7 @@ class IgloohomeBaseEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi
+        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi, unique_key: str
     ) -> None:
         """Initialize the base device class."""
         self.api = api
@@ -28,3 +28,5 @@ class IgloohomeBaseEntity(Entity):
             name=api_device_info.deviceName,
             model=api_device_info.type,
         )
+        # Set the unique ID of the entity.
+        self._attr_unique_id = f"{unique_key}_{api_device_info.deviceId}"

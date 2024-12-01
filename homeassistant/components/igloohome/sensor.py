@@ -53,9 +53,11 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
         self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi
     ) -> None:
         """Initialize the class."""
-        super().__init__(api_device_info=api_device_info, api=api)
-        # Set the unique ID of the battery entity.
-        self._attr_unique_id = f"battery_{api_device_info.deviceId}"
+        super().__init__(
+            api_device_info=api_device_info,
+            api=api,
+            unique_key=SensorDeviceClass.BATTERY,
+        )
 
     async def async_update(self) -> None:
         """Update the battery level."""
