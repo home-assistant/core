@@ -38,9 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) ->
         raise ConfigEntryAuthFailed from e
     except (ApiException, ClientError) as e:
         raise ConfigEntryNotReady from e
-    else:
-        entry.runtime_data = (api, devices)
 
+    entry.runtime_data = (api, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
