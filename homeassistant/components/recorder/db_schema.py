@@ -162,14 +162,14 @@ class Unused(CHAR):
     """An unused column type that behaves like a string."""
 
 
-@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
-@compiles(Unused, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")
+@compiles(Unused, "mysql", "mariadb", "sqlite")
 def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile UnusedDateTime and Unused as CHAR(0) on mysql, mariadb, and sqlite."""
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "postgresql")
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile Unused as CHAR(1) on postgresql."""
     return "CHAR(1)"  # Uses 1 byte
