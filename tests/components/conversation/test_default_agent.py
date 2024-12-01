@@ -397,7 +397,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         callback.reset_mock()
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
-        assert callback.call_args[0][0] == sentence
+        assert callback.call_args[0][0].text == sentence
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), sentence
