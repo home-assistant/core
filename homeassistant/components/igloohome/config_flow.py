@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for igloohome."""
 
     async def async_step_user(
