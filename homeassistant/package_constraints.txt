@@ -25,7 +25,7 @@ bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
 certifi>=2021.5.30
 ciso8601==2.3.1
-cryptography==43.0.1
+cryptography==44.0.0
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
 go2rtc-client==0.1.1
@@ -50,7 +50,7 @@ psutil-home-assistant==0.0.1
 PyJWT==2.10.0
 pymicro-vad==1.0.1
 PyNaCl==1.5.0
-pyOpenSSL==24.2.1
+pyOpenSSL==24.3.0
 pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
