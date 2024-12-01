@@ -17,7 +17,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions:
     status: exempt
     comment: This integration does not have any actions.
@@ -66,10 +66,10 @@ rules:
   repair-issues:
     status: exempt
     comment: There are no cases where a repair issue is warranted
-  docs-use-cases: todo
-  docs-supported-devices: todo
+  docs-use-cases: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-known-limitations: todo
   docs-troubleshooting: todo
   docs-examples: todo
