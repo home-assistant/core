@@ -64,15 +64,32 @@ class GrowattCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
+    async def _make_api_call(self, api_method, *args):
+        """In order to handle the case where the API token expires, we will try to re-login and retry the API call."""
+        try:
+            return await self.hass.async_add_executor_job(api_method, *args)
+        except ValueError as err:
+            _LOGGER.debug("make_api_call failed, trying to re-login: %s", err)
+            login_response = await self.hass.async_add_executor_job(
+                self.api.login, self.username, self.password
+            )
+            if not login_response["success"]:
+                _LOGGER.error(
+                    "Failed to log in, msg: %s, error: %s",
+                    login_response["msg"],
+                    login_response["error"],
+                )
+                return None
+            _LOGGER.debug("make_api_call: login success")
+            return await self.hass.async_add_executor_job(api_method, *args)
+
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            await self.hass.async_add_executor_job(
-                self.api.login, self.username, self.password
-            )
             _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.device_type)
+
             if self.device_type == "total":
-                total_info = await self.hass.async_add_executor_job(
+                total_info = await self._make_api_call(
                     self.api.plant_info, self.device_id
                 )
                 del total_info["deviceList"]
@@ -81,24 +98,31 @@ class GrowattCoordinator(DataUpdateCoordinator):
                 total_info["currency"] = currency
                 self.data = total_info
             elif self.device_type == "inverter":
-                inverter_info = await self.hass.async_add_executor_job(
+                inverter_info = await self._make_api_call(
                     self.api.inverter_detail, self.device_id
                 )
                 self.data = inverter_info
             elif self.device_type == "tlx":
-                tlx_system_status = await self.hass.async_add_executor_job(
+                tlx_system_status = await self._make_api_call(
                     self.api.tlx_system_status, self.plant_id, self.device_id
                 )
-                tlx_energy_overview = await self.hass.async_add_executor_job(
+                # the following values are returned in kW, but we want them in W
+                tlx_system_status["chargePower"] = (
+                    float(tlx_system_status["chargePower"]) * 1000
+                )
+                tlx_system_status["pdisCharge"] = (
+                    float(tlx_system_status["pdisCharge"]) * 1000
+                )
+                tlx_energy_overview = await self._make_api_call(
                     self.api.tlx_energy_overview, self.plant_id, self.device_id
                 )
-                tlx_details = await self.hass.async_add_executor_job(
+                tlx_details = await self._make_api_call(
                     self.api.tlx_detail, self.device_id
                 )
-                all_settings = await self.hass.async_add_executor_job(
+                all_settings = await self._make_api_call(
                     self.api.tlx_all_settings, self.device_id
                 )
-                enabled_settings = await self.hass.async_add_executor_job(
+                enabled_settings = await self._make_api_call(
                     self.api.tlx_enabled_settings, self.device_id
                 )
                 # Present in web UI, but not returned in enabled_settings for some reason
@@ -114,11 +138,12 @@ class GrowattCoordinator(DataUpdateCoordinator):
                     **tlx_details["data"],
                     **tlx_settings,
                 }
+                # chargePower, pdisCharge
             elif self.device_type == "storage":
-                storage_info_detail = await self.hass.async_add_executor_job(
+                storage_info_detail = await self._make_api_call(
                     self.api.storage_params, self.device_id
                 )
-                storage_energy_overview = await self.hass.async_add_executor_job(
+                storage_energy_overview = await self._make_api_call(
                     self.api.storage_energy_overview, self.plant_id, self.device_id
                 )
                 self.data = {
@@ -126,16 +151,14 @@ class GrowattCoordinator(DataUpdateCoordinator):
                     **storage_energy_overview,
                 }
             elif self.device_type == "mix":
-                mix_info = await self.hass.async_add_executor_job(
-                    self.api.mix_info, self.device_id
-                )
-                mix_totals = await self.hass.async_add_executor_job(
+                mix_info = await self._make_api_call(self.api.mix_info, self.device_id)
+                mix_totals = await self._make_api_call(
                     self.api.mix_totals, self.device_id, self.plant_id
                 )
-                mix_system_status = await self.hass.async_add_executor_job(
+                mix_system_status = await self._make_api_call(
                     self.api.mix_system_status, self.device_id, self.plant_id
                 )
-                mix_detail = await self.hass.async_add_executor_job(
+                mix_detail = await self._make_api_call(
                     self.api.mix_detail, self.device_id, self.plant_id
                 )
 
@@ -203,10 +226,7 @@ class GrowattCoordinator(DataUpdateCoordinator):
 
     def get_data(self, entity_description):
         """Get the data."""
-        _LOGGER.debug(
-            "Data request for: %s",
-            entity_description.key,
-        )
+
         variable = entity_description.api_key
         api_value = self.data.get(variable)
         previous_value = self.previous_values.get(variable)
@@ -276,15 +296,21 @@ class GrowattCoordinator(DataUpdateCoordinator):
 
         self.previous_values[variable] = return_value
 
+        _LOGGER.debug(
+            "Data request for: %s: res=%s", entity_description.key, str(return_value)
+        )
+
         return return_value
 
     def get_value(self, entity_description):
         """Get the raw parameter value."""
+        return_value = self.data.get(entity_description.api_key)
         _LOGGER.debug(
-            "Get parameter value for: %s",
+            "Get parameter value for: %s, res=%s",
             entity_description.key,
+            str(return_value),
         )
-        return self.data.get(entity_description.api_key)
+        return return_value
 
     def set_value(self, entity_description, value):
         """Set value of the parameter."""

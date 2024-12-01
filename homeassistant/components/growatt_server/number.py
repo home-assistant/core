@@ -129,8 +129,13 @@ class GrowattNumber(CoordinatorEntity, NumberEntity):
             # fetching all data with coordinator.async_refresh() to off-load the API
             self.coordinator.set_value(self.entity_description, int(value))
             self.async_write_ha_state()
-
-    #        await self.coordinator.async_refresh()
+        else:
+            _LOGGER.error(
+                "Set parameter: %s to value: %s failed msg: %s",
+                self.entity_description.key,
+                value,
+                res.get("msg"),
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:
