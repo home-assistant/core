@@ -154,6 +154,8 @@ async def test_spotify_dj_list(
     assert state
     assert state.attributes["media_playlist"] == "DJ"
 
+    mock_spotify.return_value.get_playlist.assert_not_called()
+
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -161,6 +163,8 @@ async def test_spotify_dj_list(
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.attributes["media_playlist"] == "DJ"
+
+    mock_spotify.return_value.get_playlist.assert_not_called()
 
 
 @pytest.mark.usefixtures("setup_credentials")
