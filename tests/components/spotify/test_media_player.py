@@ -235,7 +235,7 @@ async def test_fetching_playlist_once(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test failing fetching playlist does not fail update."""
+    """Test that not being able to find a playlist doesn't retry."""
     mock_spotify.return_value.get_playlist.side_effect = SpotifyNotFoundError
     await setup_integration(hass, mock_config_entry)
 
