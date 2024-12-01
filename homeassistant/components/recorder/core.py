@@ -1128,7 +1128,6 @@ class Recorder(threading.Thread):
 
         # Map the event data to the StateAttributes table
         shared_attrs = shared_attrs_bytes.decode("utf-8")
-        dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_event_data := state_attributes_manager.get_pending(shared_attrs):
             dbstate.state_attributes = pending_event_data
