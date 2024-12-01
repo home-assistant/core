@@ -691,12 +691,14 @@ class StatisticsBase:
     duration: timedelta
 
     @classmethod
-    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
+    def from_stats(
+        cls, metadata_id: int, stats: StatisticData, now_timestamp: float | None = None
+    ) -> Self:
         """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
@@ -709,12 +711,17 @@ class StatisticsBase:
         )
 
     @classmethod
-    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
+    def from_stats_ts(
+        cls,
+        metadata_id: int,
+        stats: StatisticDataTimestamp,
+        now_timestamp: float | None = None,
+    ) -> Self:
         """Create object from a statistics with timestamps."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
