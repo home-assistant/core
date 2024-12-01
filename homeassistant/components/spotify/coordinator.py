@@ -11,6 +11,7 @@ from spotifyaio import (
     Playlist,
     SpotifyClient,
     SpotifyConnectionError,
+    SpotifyNotFoundError,
     UserProfile,
 )
 
@@ -62,6 +63,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         )
         self.client = client
         self._playlist: Playlist | None = None
+        self._checked_playlist_id: str | None = None
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -85,17 +87,25 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         # and doesn't actually return the fetch time as is mentioned in the API description
         position_updated_at = dt_util.utcnow()
 
-        dj_playlist = False
         if (context := current.context) is not None:
-            if self._playlist is None or self._playlist.uri != context.uri:
+            if self._playlist is None or self._checked_playlist_id not in [
+                context.uri,
+                SPOTIFY_DJ_PLAYLIST_URI,
+            ]:
+                self._checked_playlist_id = context.uri
                 self._playlist = None
-                if context.uri == SPOTIFY_DJ_PLAYLIST_URI:
-                    dj_playlist = True
-                elif context.context_type == ContextType.PLAYLIST:
+                if context.context_type == ContextType.PLAYLIST:
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:
                         self._playlist = await self.client.get_playlist(context.uri)
+                    except SpotifyNotFoundError:
+                        _LOGGER.debug(
+                            "Spotify playlist '%s' not found. "
+                            "Most likely a Spotify-created playlist",
+                            context.uri,
+                        )
+                        self._playlist = None
                     except SpotifyConnectionError:
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "
@@ -103,9 +113,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                             context.uri,
                         )
                         self._playlist = None
+                        self._checked_playlist_id = None
         return SpotifyCoordinatorData(
             current_playback=current,
             position_updated_at=position_updated_at,
             playlist=self._playlist,
-            dj_playlist=dj_playlist,
+            dj_playlist=self._checked_playlist_id == SPOTIFY_DJ_PLAYLIST_URI,
         )
