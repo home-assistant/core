@@ -1186,14 +1186,6 @@ async def test_rgbww_color_action_no_template(
             },
             "color_template",
         ),
-        (
-            True,
-            {
-                **OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG,
-                "state": "{{ trigger.event.data.beer == 2 }}",
-            },
-            "color",
-        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1500,7 +1492,7 @@ async def test_rgbww_template(
             "color_temp",
             ColorMode.COLOR_TEMP,
         ),
-        (OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG, "color", "hs_color", ColorMode.HS),
+        (OPTIMISTIC_HS_COLOR_LIGHT_CONFIG, "hs", "hs_color", ColorMode.HS),
         (OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG, "rgb", "rgb_color", ColorMode.RGB),
         (OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG, "rgbw", "rgbw_color", ColorMode.RGBW),
         (OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG, "rgbww", "rgbww_color", ColorMode.RGBWW),
