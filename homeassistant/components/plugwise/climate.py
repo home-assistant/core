@@ -89,10 +89,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if (
-            self._gateway["cooling_present"]
-            and self._gateway["smile_name"] != "Adam"
-        ):
+        if self._gateway["cooling_present"] and self._gateway["smile_name"] != "Adam":
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
@@ -196,7 +193,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Adam provides the hvac_action for each thermostat
         if self._gateway["smile_name"] == "Adam":
             if (control_state := self.device.get("control_state")) in (
-                HVACAction.COOLING, HVACAction.HEATING, HVACAction.PREHEATING
+                HVACAction.COOLING,
+                HVACAction.HEATING,
+                HVACAction.PREHEATING,
             ):
                 return cast(HVACAction, control_state)
 
