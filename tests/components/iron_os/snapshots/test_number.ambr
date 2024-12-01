@@ -875,7 +875,7 @@
     'supported_features': 0,
     'translation_key': <PinecilNumber.SHUTDOWN_TIMEOUT: 'shutdown_timeout'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_shutdown_timeout',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_state[number.pinecil_shutdown_timeout-state]
@@ -887,7 +887,7 @@
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_shutdown_timeout',
