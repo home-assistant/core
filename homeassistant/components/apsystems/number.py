@@ -47,7 +47,6 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
 
     async def async_update(self) -> None:
         """Set the state with the value fetched from the inverter."""
-        self._attr_native_value = await self._api.get_max_power()
         try:
             status = await self._api.get_max_power()
         except ClientConnectorError:
