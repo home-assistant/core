@@ -40,10 +40,7 @@ rules:
   devices: done
   entity-category: done
   entity-disabled-by-default: done
-  discovery:
-    status: exempt
-    comment: |
-      Total Connect is not discoverable
+  discovery: todo
   stale-devices: todo
   diagnostics: done
   exception-translations: todo
