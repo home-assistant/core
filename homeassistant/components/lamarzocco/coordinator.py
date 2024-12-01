@@ -68,11 +68,10 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self._last_statistics_data_update: float | None = None
         self._local_client = local_client
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-        if self._local_client is not None:
-            _LOGGER.debug("Init WebSocket in background task")
-
+    def _async_setup_websocket(self) -> None:
+        if self._local_client is not None and (
+            self._local_client.websocket is None or self._local_client.websocket.closed
+        ):
             self.config_entry.async_create_background_task(
                 hass=self.hass,
                 target=self.device.websocket_connect(
@@ -80,6 +79,11 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 ),
                 name="lm_websocket_task",
             )
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        if self._local_client is not None:
+            _LOGGER.debug("Init WebSocket in background task")
 
             async def websocket_close(_: Any | None = None) -> None:
                 if (
@@ -99,6 +103,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self._async_handle_request(self.device.get_config)
+        self._async_setup_websocket()
 
         if (
             self._last_firmware_data_update is None
