@@ -3,18 +3,31 @@
 import base64
 import io
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 from telegram import Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
 
 from homeassistant.components.telegram_bot import (
+    ATTR_FILE,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_THREAD_ID,
+    ATTR_OPTIONS,
+    ATTR_QUESTION,
+    ATTR_STICKER_ID,
     DOMAIN,
+    SERVICE_SEND_ANIMATION,
+    SERVICE_SEND_DOCUMENT,
+    SERVICE_SEND_LOCATION,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
+    SERVICE_SEND_POLL,
+    SERVICE_SEND_STICKER,
+    SERVICE_SEND_VIDEO,
+    SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.const import EVENT_HOMEASSISTANT_START
@@ -35,15 +48,49 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
-async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
-    """Test the send_message service."""
+@pytest.mark.parametrize(
+    ("service", "input"),
+    [
+        (
+            SERVICE_SEND_MESSAGE,
+            {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
+        ),
+        (
+            SERVICE_SEND_STICKER,
+            {
+                ATTR_STICKER_ID: "1",
+                ATTR_MESSAGE_THREAD_ID: "123",
+            },
+        ),
+        (
+            SERVICE_SEND_POLL,
+            {
+                ATTR_QUESTION: "Question",
+                ATTR_OPTIONS: ["Yes", "No"],
+            },
+        ),
+        (
+            SERVICE_SEND_LOCATION,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_LONGITUDE: "1.123",
+                ATTR_LATITUDE: "1.123",
+            },
+        ),
+    ],
+)
+async def test_send_message(
+    hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
+) -> None:
+    """Test the send_message service. Tests any service that does not require files to be sent."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
+        service,
+        input,
         blocking=True,
         context=context,
         return_response=True,
@@ -73,31 +120,39 @@ def _read_file_as_bytesio_mock(file_path):
     with open(file_path, encoding="utf8") as file_handler:
         _file = io.BytesIO(file_handler.read())
 
-    _file.name = "image.jpg"
+    _file.name = "dummy"
     _file.seek(0)
 
     return _file
 
 
-@patch("os.path.isfile", Mock(return_value=True))
-@patch("os.access", Mock(return_value=True))
-async def test_send_photo(hass: HomeAssistant, webhook_platform) -> None:
-    """Test the send_message service."""
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_SEND_PHOTO,
+        SERVICE_SEND_ANIMATION,
+        SERVICE_SEND_VIDEO,
+        SERVICE_SEND_VOICE,
+        SERVICE_SEND_DOCUMENT,
+    ],
+)
+async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) -> None:
+    """Test the send_file service (photo, animation, video, document...)."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
 
     hass.config.allowlist_external_dirs.add("/media/")
 
-    # Mock the file handler read with our 1x1 base64 encoded fixture image
+    # Mock the file handler read with our base64 encoded dummy file
     with patch(
         "homeassistant.components.telegram_bot._read_file_as_bytesio",
         _read_file_as_bytesio_mock,
     ):
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PHOTO,
+            service,
             {
-                "file": "/media/image.jpg",
+                ATTR_FILE: "/media/dummy",
                 ATTR_MESSAGE_THREAD_ID: "123",
             },
             blocking=True,
