@@ -41,7 +41,7 @@ rules:
     comment: Climate exception on ValueError should be ServiceValidationError
   reauthentication-flow:
     status: exempt
-    comment: The hubs have a hardcoded `Smile ID` printed on there sticker, it can not be changed
+    comment: The hubs have a hardcoded `Smile ID` printed on the sticker used as password, it can not be changed
   parallel-updates:
     status: todo
     comment: Using coordinator, but required due to mutable platform
