@@ -1,5 +1,6 @@
 """Test the APSystem number module."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,13 +18,16 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
-async def test_command(
+async def test_number(
     hass: HomeAssistant,
     mock_apsystems: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number command."""
     await setup_integration(hass, mock_config_entry)
@@ -36,6 +40,12 @@ async def test_command(
         blocking=True,
     )
     mock_apsystems.set_max_power.assert_called_once_with(50)
+    mock_apsystems.get_max_power.return_value = 50
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "50"
 
 
 @pytest.mark.usefixtures("mock_apsystems")
@@ -45,7 +55,6 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
