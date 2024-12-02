@@ -30,7 +30,8 @@
     },
     "sensor": {
       "counter_id": {
-        "name": "Counter {id}"
+        "name": "Counter {id}",
+        "unit_of_measurement": "count"
       },
       "humidity_hih3600": {
         "name": "HIH3600 humidity"
