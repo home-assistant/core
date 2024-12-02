@@ -174,12 +174,19 @@ class MatterEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    def _on_featuremap_update(self, event: EventType, data: int) -> None:
+    def _on_featuremap_update(
+        self, event: EventType, data: tuple[int, str, int] | None
+    ) -> None:
         """Handle FeatureMap attribute updates."""
+        if data is None:
+            return
+        new_value = data[2]
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(data & self._entity_info.discovery_schema.featuremap_contains)
+            and not bool(
+                new_value & self._entity_info.discovery_schema.featuremap_contains
+            )
         ):
             # this entity is no longer supported by the device
             ent_reg = er.async_get(self.hass)
