@@ -334,9 +334,15 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
-        # Check we do have returned items
+        # Check we do have returned items.
+        #
         # In rare cases, when no UID's are returned,
-        # only the status line returned
+        # only the status line is returned, and not an empty line.
+        #
+        # Strictly the RfC notes that 0 or more numbers should be returned
+        # delimited by a space.
+        #
+        # See: https://datatracker.ietf.org/doc/html/rfc3501#section-7.2.5
         if len(lines) == 1 or not (count := len(message_ids := lines[0].split())):
             self._last_message_uid = None
             return 0
