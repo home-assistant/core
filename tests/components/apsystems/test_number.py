@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.number import (
