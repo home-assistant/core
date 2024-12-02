@@ -222,7 +222,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -256,7 +256,7 @@
           'password': 'test-password',
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
-        'retention_config': dict({
+        'retention': dict({
           'copies': 3,
           'days': 7,
         }),
@@ -286,7 +286,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': 3,
           'days': None,
         }),
@@ -316,7 +316,7 @@
           'password': None,
         }),
         'last_automatic_backup': '2024-10-26T04:45:00+01:00',
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': 7,
         }),
@@ -346,7 +346,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -376,7 +376,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -405,7 +405,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -435,7 +435,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': 7,
         }),
@@ -490,7 +490,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -520,7 +520,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': 7,
         }),
@@ -575,7 +575,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -605,7 +605,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -660,7 +660,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -690,7 +690,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -745,7 +745,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -775,7 +775,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -830,7 +830,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -864,7 +864,7 @@
           'password': 'test-password',
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -923,7 +923,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -953,7 +953,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': 3,
           'days': 7,
         }),
@@ -1008,7 +1008,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1038,7 +1038,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1093,7 +1093,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1123,7 +1123,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': 3,
           'days': None,
         }),
@@ -1178,7 +1178,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1208,7 +1208,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': 7,
         }),
@@ -1263,7 +1263,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1293,7 +1293,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': 3,
           'days': None,
         }),
@@ -1348,7 +1348,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),
@@ -1377,7 +1377,7 @@
           'password': None,
         }),
         'last_automatic_backup': None,
-        'retention_config': dict({
+        'retention': dict({
           'copies': None,
           'days': None,
         }),

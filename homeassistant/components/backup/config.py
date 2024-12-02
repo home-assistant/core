@@ -47,7 +47,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
-    retention_config: RetentionConfig
+    retention: RetentionConfig
     last_automatic_backup: datetime | None = None
     schedule: BackupSchedule
 
@@ -71,7 +71,7 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
-            retention_config=RetentionConfig(
+            retention=RetentionConfig(
                 copies=retention["copies"],
                 days=retention["days"],
             ),
@@ -83,7 +83,7 @@ class BackupConfigData:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
-            retention=self.retention_config.to_dict(),
+            retention=self.retention.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
             schedule=self.schedule.state,
         )
@@ -96,7 +96,7 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             create_backup=CreateBackupConfig(),
-            retention_config=RetentionConfig(),
+            retention=RetentionConfig(),
             schedule=BackupSchedule(),
         )
         self._manager = manager
@@ -133,10 +133,10 @@ class BackupConfig:
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
-            retention_config = RetentionConfig(**retention)
-            if retention_config != self.data.retention_config:
-                self.data.retention_config = retention_config
-                self.data.retention_config.apply(self._manager)
+            new_retention = RetentionConfig(**retention)
+            if new_retention != self.data.retention:
+                self.data.retention = new_retention
+                self.data.retention.apply(self._manager)
         if schedule is not UNDEFINED:
             new_schedule = BackupSchedule(state=schedule)
             if new_schedule != self.data.schedule:
@@ -308,13 +308,13 @@ class BackupSchedule:
                 """Return oldest backups more numerous than copies to delete."""
                 # we need to check here since we await before
                 # this filter is applied
-                if config_data.retention_config.copies is None:
+                if config_data.retention.copies is None:
                     return {}
                 return dict(
                     sorted(
                         backups.items(),
                         key=lambda backup_item: backup_item[1].date,
-                    )[: len(backups) - config_data.retention_config.copies]
+                    )[: len(backups) - config_data.retention.copies]
                 )
 
             await _delete_filtered_backups(manager, _backups_filter)
