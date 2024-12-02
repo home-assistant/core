@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IronOSConfigEntry
+from .coordinator import IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     entity_description = BinarySensorEntityDescription(
         key=PinecilBinarySensor.TIP_CONNECTED,
@@ -41,6 +42,8 @@ async def async_setup_entry(
 
 class IronOSBinarySensorEntity(IronOSBaseEntity, BinarySensorEntity):
     """Representation of a IronOS binary sensor entity."""
+
+    coordinator: IronOSLiveDataCoordinator
 
     @property
     def is_on(self) -> bool | None:
