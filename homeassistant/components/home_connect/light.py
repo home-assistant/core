@@ -15,14 +15,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import get_dict_from_home_connect_error
-from .api import ConfigEntryAuth, HomeConnectDevice
+from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
+from .api import HomeConnectDevice
 from .const import (
     ATTR_VALUE,
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
@@ -88,18 +87,17 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect light."""
 
     def get_entities() -> list[LightEntity]:
         """Get a list of entities."""
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         return [
             HomeConnectLight(device, description)
             for description in LIGHTS
-            for device in hc_api.devices
+            for device in entry.runtime_data.devices
             if description.key in device.appliance.status
         ]
 
@@ -152,7 +150,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, True
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_light",
                 translation_placeholders={
@@ -171,7 +169,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    raise ServiceValidationError(
+                    raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="select_light_custom_color",
                         translation_placeholders={
@@ -189,7 +187,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise ServiceValidationError(
+                    raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="set_light_color",
                         translation_placeholders={
@@ -221,7 +219,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             f"#{hex_val}",
                         )
                     except HomeConnectError as err:
-                        raise ServiceValidationError(
+                        raise HomeAssistantError(
                             translation_domain=DOMAIN,
                             translation_key="set_light_color",
                             translation_placeholders={
@@ -246,7 +244,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     self.device.appliance.set_setting, self._brightness_key, brightness
                 )
             except HomeConnectError as err:
-                raise ServiceValidationError(
+                raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_light_brightness",
                     translation_placeholders={
@@ -265,7 +263,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, False
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_light",
                 translation_placeholders={

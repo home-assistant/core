@@ -144,7 +144,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
         }
 
         if not self.configurable_devices:
-            return self.async_abort(reason="No configurable devices found.")
+            return self.async_abort(reason="no_configurable_devices")
 
         return await self.async_step_device_selection(user_input=None)
 
