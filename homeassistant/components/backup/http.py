@@ -8,7 +8,7 @@ from typing import cast
 
 from aiohttp import BodyPartReader
 from aiohttp.hdrs import CONTENT_DISPOSITION
-from aiohttp.web import FileResponse, Request, Response
+from aiohttp.web import FileResponse, Request, Response, StreamResponse
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
@@ -37,7 +37,7 @@ class DownloadBackupView(HomeAssistantView):
         self,
         request: Request,
         backup_id: str,
-    ) -> FileResponse | Response:
+    ) -> StreamResponse | FileResponse | Response:
         """Download a backup file."""
         if not request["hass_user"].is_admin:
             return Response(status=HTTPStatus.UNAUTHORIZED)
@@ -57,20 +57,24 @@ class DownloadBackupView(HomeAssistantView):
         if backup is None:
             return Response(status=HTTPStatus.NOT_FOUND)
 
+        headers = {
+            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
+        }
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
             path = local_agent.get_backup_path(backup_id)
-        else:
-            path = manager.temp_backup_dir / f"{backup_id}.tar"
-            await agent.async_download_backup(backup_id, path=path)
+            return FileResponse(path=path.as_posix(), headers=headers)
 
-        # TODO: We need a callback to remove the temp file once the download is complete
-        return FileResponse(
-            path=path.as_posix(),
-            headers={
-                CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
-            },
-        )
+        stream = await agent.async_download_backup(backup_id)
+        response = StreamResponse(status=HTTPStatus.OK, headers=headers)
+        await response.prepare(request)
+        if isinstance(stream, asyncio.StreamReader):
+            while chunk := await stream.read(2**20):
+                await response.write(chunk)
+        else:
+            async for chunk, _ in stream.iter_chunks():
+                await response.write(chunk)
+        return response
 
 
 class UploadBackupView(HomeAssistantView):

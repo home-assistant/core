@@ -12,6 +12,7 @@ from .agent import (
     BackupAgent,
     BackupAgentError,
     BackupAgentPlatformProtocol,
+    BackupAgentStream,
     LocalBackupAgent,
 )
 from .const import DATA_MANAGER, DOMAIN
@@ -35,6 +36,7 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupAgentStream",
     "BackupPlatformProtocol",
     "BackupProgress",
     "BackupReaderWriter",
