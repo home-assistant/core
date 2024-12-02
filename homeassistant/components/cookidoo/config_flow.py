@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from cookidoo_api import (
     DEFAULT_COOKIDOO_CONFIG,
@@ -53,22 +53,16 @@ AUTH_DATA_SCHEMA = {
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
-    def __init__(self) -> None:
-        """Init config flow."""
-        super().__init__()
-        self.reauth_entry: CookidooConfigEntry | None = None
-        self.reconfigure_entry: CookidooConfigEntry | None = None
-        self.LOCALIZATION_DATA_SCHEMA: dict | None = None
-        self.localizations: list[CookidooLocalizationConfig] = []
+    reauth_entry: CookidooConfigEntry
+    reconfigure_entry: CookidooConfigEntry
+    LOCALIZATION_DATA_SCHEMA: dict
+    localizations: list[CookidooLocalizationConfig] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
-
-        if TYPE_CHECKING:
-            assert self.LOCALIZATION_DATA_SCHEMA
 
         if (
             user_input is not None
@@ -103,10 +97,6 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Allow reconfiguration of localization and ignore auth."""
         errors: dict[str, str] = {}
 
-        if TYPE_CHECKING:
-            assert self.LOCALIZATION_DATA_SCHEMA
-            assert self.reconfigure_entry
-
         if user_input is not None:
             if not (
                 errors := await self.validate_input(
@@ -139,9 +129,6 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-
-        if TYPE_CHECKING:
-            assert self.reauth_entry
 
         if user_input is not None:
             if not (
@@ -192,11 +179,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             session,
             {
                 **DEFAULT_COOKIDOO_CONFIG,
-                "localization": cookidoo_localization_for_key(
+                CONF_EMAIL: user_input[CONF_EMAIL],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_LOCALIZATION: cookidoo_localization_for_key(
                     self.localizations, user_input[CONF_LOCALIZATION]
                 ),
-                "email": user_input[CONF_EMAIL],
-                "password": user_input[CONF_PASSWORD],
             },
         )
         try:
