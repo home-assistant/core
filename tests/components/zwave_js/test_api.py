@@ -3176,10 +3176,10 @@ async def test_set_raw_config_parameter(
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.set_raw_config_parameter_value"
     assert args["nodeId"] == multisensor_6.node_id
-    assert args["options"]["parameter"] == 102
-    assert args["options"]["value"] == 1
-    assert args["options"]["valueSize"] == 2
-    assert args["options"]["valueFormat"] == 1
+    assert args["parameter"] == 102
+    assert args["value"] == 1
+    assert args["valueSize"] == 2
+    assert args["valueFormat"] == 1
 
     # Reset the mock for async_send_command_no_wait instead
     client.async_send_command_no_wait.reset_mock()
@@ -3250,7 +3250,7 @@ async def test_get_raw_config_parameter(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.get_raw_config_parameter_value"
     assert args["nodeId"] == multisensor_6.node_id
-    assert args["options"]["parameter"] == 102
+    assert args["parameter"] == 102
 
     client.async_send_command.reset_mock()
 
