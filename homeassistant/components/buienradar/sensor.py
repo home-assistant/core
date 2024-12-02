@@ -780,7 +780,6 @@ class BrSensor(SensorEntity):
     @callback
     def _load_data(self, data):  # noqa: C901
         """Load the sensor with relevant data."""
-        # Find sensor
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
         if self._measured == data.get(MEASURED):
