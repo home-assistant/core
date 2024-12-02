@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -52,6 +51,9 @@ from .const import (
     MESSAGE_DATA_OPTIONS,
 )
 from .errors import InvalidAuth, InvalidFolder
+
+if TYPE_CHECKING:
+    from . import ImapConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,14 +212,14 @@ class ImapMessage:
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     """Base class for imap client."""
 
-    config_entry: ConfigEntry
+    config_entry: ImapConfigEntry
     custom_event_template: Template | None
 
     def __init__(
         self,
         hass: HomeAssistant,
         imap_client: IMAP4_SSL,
-        entry: ConfigEntry,
+        entry: ImapConfigEntry,
         update_interval: timedelta | None,
     ) -> None:
         """Initiate imap client."""
@@ -391,7 +393,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
 
     def __init__(
-        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ConfigEntry
+        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ImapConfigEntry
     ) -> None:
         """Initiate imap client."""
         _LOGGER.debug(
@@ -437,7 +439,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
 
     def __init__(
-        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ConfigEntry
+        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ImapConfigEntry
     ) -> None:
         """Initiate imap client."""
         _LOGGER.debug("Connected to server %s using IMAP push", entry.data[CONF_SERVER])
