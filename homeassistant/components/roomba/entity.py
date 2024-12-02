@@ -127,20 +127,6 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
-    @property
-    def _robot_state(self):
-        """Return the state of the vacuum cleaner."""
-        clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
-        cycle = clean_mission_status.get("cycle")
-        phase = clean_mission_status.get("phase")
-        try:
-            state = STATE_MAP[phase]
-        except KeyError:
-            return STATE_ERROR
-        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
-            state = STATE_PAUSED
-        return state
-
     async def async_added_to_hass(self):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
@@ -167,6 +153,20 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
+
+    @property
+    def _robot_state(self):
+        """Return the state of the vacuum cleaner."""
+        clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
+        cycle = clean_mission_status.get("cycle")
+        phase = clean_mission_status.get("phase")
+        try:
+            state = STATE_MAP[phase]
+        except KeyError:
+            return STATE_ERROR
+        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
+            state = STATE_PAUSED
+        return state
 
     @property
     def state(self):
