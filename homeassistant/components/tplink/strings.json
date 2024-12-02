@@ -55,6 +55,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Camera account",
+        "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "both_or_none": "Username and password must both be blank or not blank"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "humidity_warning": {

@@ -24,6 +24,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_ALIAS,
@@ -48,6 +49,7 @@ from . import (
 )
 from .const import (
     CONF_AES_KEYS,
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
@@ -60,6 +62,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
+
+OPTIONS_DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
 )
 
 
@@ -633,4 +639,59 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_AUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders=placeholders,
+        )
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        if conn_params_dict := config_entry.data.get(CONF_CONNECTION_PARAMETERS):
+            try:
+                conn_params = Device.ConnectionParameters.from_dict(conn_params_dict)
+            except (KasaException, TypeError, ValueError, LookupError):
+                _LOGGER.warning(
+                    "Invalid connection parameters dict for %s: %s",
+                    config_entry.data.get(CONF_HOST),
+                    conn_params_dict,
+                )
+            else:
+                return conn_params.device_family in {Device.Family.SmartIpCamera}
+        return False
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow for TPLink."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors = {}
+        if user_input is not None:
+            un = user_input.get(CONF_USERNAME)
+            pw = user_input.get(CONF_PASSWORD)
+            if bool(un) != bool(pw):
+                errors["base"] = "both_or_none"
+            else:
+                if un:
+                    data = {
+                        CONF_CAMERA_CREDENTIALS: {CONF_USERNAME: un, CONF_PASSWORD: pw}
+                    }
+                else:
+                    data = {}
+                return self.async_create_entry(title="", data=data)
+
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_DATA_SCHEMA,
+                self.config_entry.options.get(CONF_CAMERA_CREDENTIALS, {}),
+            ),
         )

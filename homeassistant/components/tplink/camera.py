@@ -6,7 +6,7 @@ import logging
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from kasa import Device, Module
+from kasa import Credentials, Device, Module
 from kasa.smartcam.modules import Camera as CameraModule
 
 from homeassistant.components import ffmpeg
@@ -50,6 +50,7 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
+    camera_credentials = data.camera_credentials
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     async_add_entities(
@@ -60,6 +61,7 @@ async def async_setup_entry(
             camera_module=camera_module,
             parent=None,
             ffmpeg_manager=ffmpeg_manager,
+            camera_credentials=camera_credentials,
         )
         for description in CAMERA_DESCRIPTIONS
         if (camera_module := device.modules.get(Module.Camera))
@@ -82,6 +84,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         camera_module: CameraModule,
         parent: Device | None = None,
         ffmpeg_manager: ffmpeg.FFmpegManager,
+        camera_credentials: Credentials | None,
     ) -> None:
         """Initialize a TPlink camera."""
         self.entity_description = description
@@ -92,6 +95,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         Camera.__init__(self)
         self._ffmpeg_manager = ffmpeg_manager
         self._image_lock = asyncio.Lock()
+        self._camera_credentials = camera_credentials
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
@@ -101,7 +105,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_is_on = self._camera_module.is_on
-        self._video_url = self._camera_module.stream_rtsp_url()
+        self._video_url = self._camera_module.stream_rtsp_url(self._camera_credentials)
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
