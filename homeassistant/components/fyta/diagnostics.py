@@ -5,15 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
 from . import FytaConfigEntry
 
 TO_REDACT = [
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_USERNAME,  # keep, as username-entry has not been deleted from old config entries
 ]
 
 

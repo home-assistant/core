@@ -8,9 +8,9 @@ from fyta_cli.fyta_models import Credentials, Plant
 import pytest
 
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 
-from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
+from .const import ACCESS_TOKEN, EMAIL, EXPIRATION, PASSWORD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -22,12 +22,12 @@ def mock_config_entry() -> MockConfigEntry:
         domain=FYTA_DOMAIN,
         title="fyta_user",
         data={
-            CONF_USERNAME: USERNAME,
+            CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
             CONF_EXPIRATION: EXPIRATION,
         },
-        minor_version=2,
+        minor_version=3,
         entry_id="ce5f5431554d101905d31797e1232da8",
     )
 

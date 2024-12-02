@@ -16,7 +16,7 @@ from fyta_cli.fyta_models import Credentials
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
@@ -51,11 +51,11 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     credentials: Credentials
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
-        fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        fyta = FytaConnector(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
         try:
             self.credentials = await fyta.login()
@@ -79,7 +79,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
 
             if not (errors := await self.async_auth(user_input)):
                 user_input |= {
@@ -87,7 +87,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_EXPIRATION: self.credentials.expiration.isoformat(),
                 }
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=user_input[CONF_EMAIL], data=user_input
                 )
 
         return self.async_show_form(
@@ -119,7 +119,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
-            {CONF_USERNAME: reauth_entry.data[CONF_USERNAME], **(user_input or {})},
+            {CONF_EMAIL: reauth_entry.data[CONF_EMAIL], **(user_input or {})},
         )
         return self.async_show_form(
             step_id="reauth_confirm",

@@ -14,6 +14,7 @@ from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
     Platform,
@@ -21,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform
-from .const import ACCESS_TOKEN, EXPIRATION, EXPIRATION_OLD, PASSWORD, USERNAME
+from .const import ACCESS_TOKEN, EMAIL, EXPIRATION, EXPIRATION_OLD, PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -121,16 +122,16 @@ async def test_raise_config_entry_not_ready_when_offline_and_expired(
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_migrate_config_entry(
+async def test_migrate_config_entry_1(
     hass: HomeAssistant,
     mock_fyta_connector: AsyncMock,
 ) -> None:
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
         domain=FYTA_DOMAIN,
-        title=USERNAME,
+        title=EMAIL,
         data={
-            CONF_USERNAME: USERNAME,
+            CONF_USERNAME: EMAIL,
             CONF_PASSWORD: PASSWORD,
         },
         version=1,
@@ -145,8 +146,41 @@ async def test_migrate_config_entry(
     await hass.async_block_till_done()
 
     assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_EMAIL] == EMAIL
+    assert entry.data[CONF_PASSWORD] == PASSWORD
+    assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert entry.data[CONF_EXPIRATION] == EXPIRATION
+
+
+async def test_migrate_config_entry_2(
+    hass: HomeAssistant,
+    mock_fyta_connector: AsyncMock,
+) -> None:
+    """Test successful migration of entry data."""
+    entry = MockConfigEntry(
+        domain=FYTA_DOMAIN,
+        title=EMAIL,
+        data={
+            CONF_USERNAME: EMAIL,
+            CONF_PASSWORD: PASSWORD,
+            CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+            CONF_EXPIRATION: EXPIRATION,
+        },
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.version == 1
     assert entry.minor_version == 2
-    assert entry.data[CONF_USERNAME] == USERNAME
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_EMAIL] == EMAIL
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert entry.data[CONF_EXPIRATION] == EXPIRATION

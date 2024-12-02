@@ -4,16 +4,16 @@
     'config_entry': dict({
       'data': dict({
         'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
         'expiration': '2030-12-31T10:00:00+00:00',
         'password': '**REDACTED**',
-        'username': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'fyta',
       'entry_id': 'ce5f5431554d101905d31797e1232da8',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

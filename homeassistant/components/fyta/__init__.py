@@ -10,6 +10,7 @@ from fyta_cli.fyta_connector import FytaConnector
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
     Platform,
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
     """Set up the Fyta integration."""
     tz: str = hass.config.time_zone
 
-    username = entry.data[CONF_USERNAME]
+    email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
     access_token: str = entry.data[CONF_ACCESS_TOKEN]
     expiration: datetime = datetime.fromisoformat(
@@ -41,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
     ).astimezone(await async_get_time_zone(tz))
 
     fyta = FytaConnector(
-        username, password, access_token, expiration, tz, async_get_clientsession(hass)
+        email, password, access_token, expiration, tz, async_get_clientsession(hass)
     )
 
     coordinator = FytaCoordinator(hass, fyta)
@@ -80,9 +81,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             new[CONF_ACCESS_TOKEN] = credentials.access_token
             new[CONF_EXPIRATION] = credentials.expiration.isoformat()
+            new[CONF_EMAIL] = config_entry.data[CONF_USERNAME]
 
             hass.config_entries.async_update_entry(
-                config_entry, data=new, minor_version=2, version=1
+                config_entry, data=new, minor_version=3, version=1
+            )
+
+        elif config_entry.minor_version < 3:
+            new = {**config_entry.data}
+
+            new[CONF_EMAIL] = config_entry.data[CONF_USERNAME]
+
+            hass.config_entries.async_update_entry(
+                config_entry, data=new, minor_version=3, version=1
             )
 
     _LOGGER.debug(

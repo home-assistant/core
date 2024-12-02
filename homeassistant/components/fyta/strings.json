@@ -5,22 +5,22 @@
         "title": "Credentials for FYTA API",
         "description": "Provide username and password to connect to the FYTA server",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The username to login to your FYTA account.",
+          "email": "The email address to login to your FYTA account.",
           "password": "The password to login to your FYTA account."
         }
       },
       "reauth_confirm": {
         "description": "Update your credentials for FYTA API",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "[%key:component::fyta::config::step::user::data_description::username%]",
+          "email": "[%key:component::fyta::config::step::user::data_description::email%]",
           "password": "[%key:component::fyta::config::step::user::data_description::password%]"
         }
       }
