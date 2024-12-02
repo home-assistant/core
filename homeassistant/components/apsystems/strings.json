@@ -75,7 +75,7 @@
   },
   "exceptions": {
     "inverter_error": {
-      "message": "Inverter error."
+      "message": "Inverter returned an error"
     }
   }
 }
