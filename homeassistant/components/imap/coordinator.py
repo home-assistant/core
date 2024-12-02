@@ -338,6 +338,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         #
         # In rare cases, when no UID's are returned,
         # only the status line is returned, and not an empty line.
+        # See: https://github.com/home-assistant/core/issues/132042
         #
         # Strictly the RfC notes that 0 or more numbers should be returned
         # delimited by a space.
