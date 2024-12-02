@@ -387,6 +387,23 @@
               "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
+          },
+          "horizontal_swing_mode": {
+            "state": {
+              "stopped": "",
+              "fixedleft": "",
+              "fixedcenterleft": "",
+              "fixedcenter": "",
+              "fixedcenterright": "",
+              "fixedright": "",
+              "fixedleftright": "",
+              "rangecenter": "",
+              "rangefull": "",
+              "rangeleft": "",
+              "rangeright": "",
+              "horizontal": "",
+              "both": ""
+            }
           }
         }
       }
