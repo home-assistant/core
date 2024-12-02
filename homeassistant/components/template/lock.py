@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -142,8 +143,18 @@ class TemplateLock(TemplateEntity, LockEntity):
             return
 
         if isinstance(result, str):
-            if result.lower() in ("true", STATE_ON, LockState.LOCKED):
+            if result.lower() in (
+                "true",
+                STATE_ON,
+                LockState.LOCKED,
+            ):
                 self._state = LockState.LOCKED
+            elif result.lower() in (
+                "false",
+                STATE_OFF,
+                LockState.UNLOCKED,
+            ):
+                self._state = LockState.UNLOCKED
             else:
                 try:
                     self._state = LockState(result.lower())
