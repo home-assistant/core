@@ -18,6 +18,7 @@ from .quality_scale_validation import (
     config_flow,
     diagnostics,
     discovery,
+    parallel_updates,
     reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
@@ -67,7 +68,7 @@ ALL_RULES = [
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
     Rule(
         "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
     ),
