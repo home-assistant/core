@@ -33,7 +33,7 @@ class HoneywellHumidifierEntityDescription(HumidifierEntityDescription):
     current_set_humidity: Callable[[Device], Any]
     max_humidity: Callable[[Device], Any]
     min_humidity: Callable[[Device], Any]
-    set_humidity: Callable[[Device], Any]
+    set_humidity: Callable[[Device, Any], Any]
     mode: Callable[[Device], Any]
     off: Callable[[Device], Any]
     on: Callable[[Device], Any]
@@ -43,7 +43,7 @@ HUMIDIFIERS: dict[str, HoneywellHumidifierEntityDescription] = {
     "Humidifier": HoneywellHumidifierEntityDescription(
         key=HUMIDIFIER_KEY,
         current_humidity=lambda device: device.current_humidity,
-        set_humidity=lambda device: device.set_humidifier_setpoint,
+        set_humidity=lambda device, humidity: device.set_humidifier_setpoint(humidity),
         min_humidity=lambda device: device.humidifier_lower_limit,
         max_humidity=lambda device: device.humidifier_upper_limit,
         current_set_humidity=lambda device: device.humidifier_setpoint,
@@ -55,7 +55,9 @@ HUMIDIFIERS: dict[str, HoneywellHumidifierEntityDescription] = {
     "Dehumidifier": HoneywellHumidifierEntityDescription(
         key=DEHUMIDIFIER_KEY,
         current_humidity=lambda device: device.current_humidity,
-        set_humidity=lambda device: device.set_dehumidifier_setpoint,
+        set_humidity=lambda device, humidity: device.set_dehumidifier_setpoint(
+            humidity
+        ),
         min_humidity=lambda device: device.dehumidifier_lower_limit,
         max_humidity=lambda device: device.dehumidifier_upper_limit,
         current_set_humidity=lambda device: device.dehumidifier_setpoint,
@@ -151,7 +153,7 @@ class HoneywellHumidifier(HumidifierEntity):
             raise RuntimeError(
                 "Cannot set humidity, device doesn't provide methods to set it"
             )
-        self.entity_description.set_humidity(self._device)
+        self.entity_description.set_humidity(self._device, humidity)
 
 
 # Look at Tuya humidifier for help....
