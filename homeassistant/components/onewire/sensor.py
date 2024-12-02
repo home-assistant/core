@@ -233,6 +233,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "1D": tuple(
         OneWireSensorEntityDescription(
             key=f"counter.{device_key}",
+            native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="counter_id",
