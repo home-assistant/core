@@ -121,6 +121,15 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor] | None = None
 
+    @property
+    def _xknx(self) -> XKNX:
+        """Return XKNX instance."""
+        if isinstance(self, OptionsFlow) and (
+            knx_module := self.hass.data.get(KNX_MODULE_KEY)
+        ):
+            return knx_module.xknx
+        return XKNX()
+
     @abstractmethod
     def finish_flow(self) -> ConfigFlowResult:
         """Finish the flow."""
@@ -183,14 +192,8 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
         }
 
-        if isinstance(self, OptionsFlow) and (
-            knx_module := self.hass.data.get(KNX_MODULE_KEY)
-        ):
-            xknx = knx_module.xknx
-        else:
-            xknx = XKNX()
         self._gatewayscanner = GatewayScanner(
-            xknx, stop_on_found=0, timeout_in_seconds=2
+            self._xknx, stop_on_found=0, timeout_in_seconds=2
         )
         # keep a reference to the generator to scan in background until user selects a connection type
         self._async_scan_gen = self._gatewayscanner.async_scan()
@@ -325,7 +328,9 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         tunnel_endpoint_options.extend(
             selector.SelectOptionDict(
                 value=str(slot),
-                label=(f"{slot}{' (occupied)' if not slot_status.free else ''}"),
+                label=(
+                    f"{slot} - {'current connection' if slot == self._xknx.current_address else 'occupied' if not slot_status.free else 'free'}"
+                ),
             )
             for slot, slot_status in self._selected_tunnel.tunnelling_slots.items()
         )
