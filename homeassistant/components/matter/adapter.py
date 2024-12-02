@@ -75,10 +75,6 @@ class MatterAdapter:
             node = self.matter_client.get_node(data["node_id"])
             self._setup_endpoint(node.endpoints[data["endpoint_id"]])
 
-        def node_event_callback(event: EventType, data: dict[str, int]) -> None:
-            """Handle endpoint added event."""
-            LOGGER.warning("Node event: %s %s", event, data)
-
         def endpoint_removed_callback(event: EventType, data: dict[str, int]) -> None:
             """Handle endpoint removed event."""
             server_info = cast(ServerInfoMessage, self.matter_client.server_info)
@@ -134,11 +130,6 @@ class MatterAdapter:
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
                 callback=node_updated_callback, event_filter=EventType.NODE_UPDATED
-            )
-        )
-        self.config_entry.async_on_unload(
-            self.matter_client.subscribe_events(
-                callback=node_event_callback, event_filter=EventType.NODE_EVENT
             )
         )
 
