@@ -92,10 +92,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             dj_playlist = context.uri == SPOTIFY_DJ_PLAYLIST_URI
             if not (
                 context.uri
-                in [
+                in (
                     self._checked_playlist_id,
                     SPOTIFY_DJ_PLAYLIST_URI,
-                ]
+                )
                 or (self._playlist is None and context.uri == self._checked_playlist_id)
             ):
                 self._checked_playlist_id = context.uri
