@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
+import logging
+import math
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
@@ -13,6 +15,8 @@ import homeassistant.util.dt as dt_util
 from .helpers import async_calculate_period, floored_timestamp
 
 MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -186,8 +190,13 @@ class HistoryStats:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
 
-            if state_change_timestamp > now_timestamp:
+            if math.floor(state_change_timestamp) > now_timestamp:
                 # Shouldn't count states that are in the future
+                _LOGGER.debug(
+                    "Skipping future timestamp %s (now %s)",
+                    state_change_timestamp,
+                    now_timestamp,
+                )
                 continue
 
             if previous_state_matches:
