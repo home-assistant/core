@@ -79,8 +79,11 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
+        if self.romy.status is None:
+            self._attr_activity = None
+            self.async_write_ha_state()
+            return
         try:
-            assert self.romy.status is not None
             self._attr_activity = VacuumActivity(self.romy.status)
         except (AssertionError, ValueError):
             self._attr_activity = None

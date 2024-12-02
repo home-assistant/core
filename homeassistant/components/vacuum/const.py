@@ -36,8 +36,6 @@ _DEPRECATED_STATE_RETURNING = DeprecatedConstantEnum(
 _DEPRECATED_STATE_ERROR = DeprecatedConstantEnum(VacuumActivity.ERROR, "2025.12")
 
 
-STATES = [cls.value for cls in VacuumActivity]
-
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
 __dir__ = partial(

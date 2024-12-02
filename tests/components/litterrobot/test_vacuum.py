@@ -107,7 +107,7 @@ async def test_vacuum_with_error(
         ),
     ],
 )
-async def test_activitys(
+async def test_activities(
     hass: HomeAssistant,
     mock_account_with_litterrobot_4: MagicMock,
     robot_data: dict[str, str | bool],

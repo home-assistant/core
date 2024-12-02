@@ -32,7 +32,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -44,7 +44,6 @@ from .const import (  # noqa: F401
     _DEPRECATED_STATE_ERROR,
     _DEPRECATED_STATE_RETURNING,
     DOMAIN,
-    STATES,
     VacuumActivity,
 )
 
@@ -285,12 +284,15 @@ class StateVacuumEntity(
 
         Integrations should implement activity instead of using state directly.
         """
-        report(
-            "is setting state directly which will stop working in HA Core 2025.12."
+        report_usage(
+            "is setting state directly."
             f" Entity {self.entity_id} ({type(self)}) should implement the 'activity'"
-            " property and return its state using the VacuumActivity enum.",
-            error_if_core=True,
-            error_if_integration=False,
+            " property and return its state using the VacuumActivity enum",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2026.1",
+            integration_domain=self.platform.platform_name if self.platform else None,
+            exclude_integrations={DOMAIN},
         )
 
     @cached_property
