@@ -40,7 +40,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
-CONF_SENDER_PORT = "sender_port"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
@@ -63,7 +62,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_SENDER_PORT, default=DEFAULT_SENDER_PORT): cv.port,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
             }
@@ -165,7 +163,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return metrics
 
     if publish_states_host:
-        zabbix_sender = Sender(server=conf[CONF_HOST], port=conf[CONF_SENDER_PORT])
+        zabbix_sender = Sender(server=conf[CONF_HOST], port=DEFAULT_SENDER_PORT)
         instance = ZabbixThread(zabbix_sender, event_to_metrics)
         instance.setup(hass)
 
