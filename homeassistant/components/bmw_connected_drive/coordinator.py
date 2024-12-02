@@ -32,7 +32,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     account: MyBMWAccount
     read_only: bool
-    _entry: ConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, *, entry: ConfigEntry) -> None:
         """Initialize account-wide BMW data updater."""
@@ -44,7 +44,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             verify=get_default_context(),
         )
         self.read_only = entry.options[CONF_READ_ONLY]
-        self._entry = entry
 
         if CONF_REFRESH_TOKEN in entry.data:
             self.account.set_refresh_token(
@@ -55,6 +54,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}-{entry.data['username']}",
             update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
         )
@@ -90,9 +90,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""
         data = {
-            **self._entry.data,
+            **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
         }
         if not refresh_token:
             data.pop(CONF_REFRESH_TOKEN)
-        self.hass.config_entries.async_update_entry(self._entry, data=data)
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
