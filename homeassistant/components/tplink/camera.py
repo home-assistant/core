@@ -89,7 +89,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         """Initialize a TPlink camera."""
         self.entity_description = description
         self._camera_module = camera_module
-        self._video_url: str | None = None
+        self._video_url = camera_module.stream_rtsp_url(camera_credentials)
         self._image: bytes | None = None
         super().__init__(device, coordinator, parent=parent)
         Camera.__init__(self)
@@ -105,7 +105,6 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_is_on = self._camera_module.is_on
-        self._video_url = self._camera_module.stream_rtsp_url(self._camera_credentials)
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
