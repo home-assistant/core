@@ -44,8 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "search",
         async_handle_search,
         schema=vol.Schema({vol.Required("query"): str}),
-        supports_response=SupportsResponse.OPTIONAL,
-        return_response=True
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Register the get_coordinates service. Not sure if this is needed
@@ -54,8 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "get_coordinates",
         async_handle_get_coordinates,
         schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
-        supports_response=SupportsResponse.OPTIONAL,
-        return_response=True
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Register the get_address_coordinates service
@@ -65,8 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_handle_get_address_coordinates,
         schema=vol.Schema({vol.Required("query"): str}),
         # schema=cv.make_entity_service_schema({vol.Required("query"): str}),
-        supports_response=SupportsResponse.OPTIONAL,
-        return_response=True
+        supports_response=SupportsResponse.ONLY,
     )
 
     return True
@@ -176,6 +173,7 @@ async def async_handle_get_address_coordinates(
         return {"error": "No query provided"}
 
     coordinates = get_address_coordinates(query)
+    hass.states.async_set(DOMAIN, coordinates)
 
     # Fire event with error or coordinates
     if "error" in coordinates:
@@ -183,7 +181,7 @@ async def async_handle_get_address_coordinates(
         hass.bus.async_fire(f"{DOMAIN}_event", {"error": coordinates["error"]})
     else:
         hass.bus.async_fire(f"{DOMAIN}_event",
-                            {"type": "get_coordinates",
+                            {"type": "get_address_coordinates",
                              "query": query,
                              "coordinates": coordinates
                             })
