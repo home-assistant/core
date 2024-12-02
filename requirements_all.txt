@@ -2987,7 +2987,7 @@ weatherflow4py==1.0.6
 webexpythonsdk==2.0.1
 
 # homeassistant.components.nasweb
-webio-api==0.1.8
+webio-api==0.1.11
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
