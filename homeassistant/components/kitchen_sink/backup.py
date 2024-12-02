@@ -68,7 +68,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        LOGGER.info("Uploading backup %s", backup)
+        LOGGER.info("Uploading backup %s %s", backup.backup_id, backup)
         self._uploads.append(backup)
 
     async def async_delete_backup(

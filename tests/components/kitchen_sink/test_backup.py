@@ -106,8 +106,7 @@ async def test_agents_download(
     response = await client.receive_json()
 
     assert response["success"]
-    path = hass.config.path(f"tmp_backups/{backup_id}.tar")
-    assert f"Downloading backup {backup_id} to {path}" in caplog.text
+    assert f"Downloading backup {backup_id}" in caplog.text
 
 
 async def test_agents_upload(
@@ -150,8 +149,7 @@ async def test_agents_upload(
         )
 
     assert resp.status == 201
-    backup_name = f"{backup_id}.tar"
-    assert f"Uploading backup {backup_name}" in caplog.text
+    assert f"Uploading backup {backup_id}" in caplog.text
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     response = await ws_client.receive_json()

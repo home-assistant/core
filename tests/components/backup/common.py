@@ -86,7 +86,7 @@ class BackupAgentTest(BackupAgent):
         **kwargs: Any,
     ) -> BackupAgentStream:
         """Download a backup file."""
-        return AsyncMock(spec_set=["readchunk"])
+        return AsyncMock(spec_set=["iter_chunks"])
 
     async def async_upload_backup(
         self,

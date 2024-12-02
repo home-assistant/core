@@ -487,7 +487,7 @@ async def test_restore_remote_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch("pathlib.Path.write_text"):
+    with patch("pathlib.Path.write_text"), patch("pathlib.Path.open"):
         await client.send_json_auto_id(
             {
                 "type": "backup/restore",

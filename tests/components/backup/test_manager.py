@@ -589,6 +589,7 @@ async def test_async_trigger_restore(
 
     with (
         patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open"),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
