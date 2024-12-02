@@ -15,9 +15,10 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     NotValidPresetModeError,
 )
-from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
+from homeassistant.components.template import CONF_TRIGGER, DOMAIN as TEMPLATE_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_platform as ep
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
@@ -117,7 +118,7 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("config", "domain"),
+    ("config", "domain", "expected_unique_id"),
     [
         (
             {
@@ -152,6 +153,7 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
                 }
             },
             FAN_DOMAIN,
+            None,
         ),
         (
             {
@@ -182,17 +184,22 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
                                 "turn_on": {"service": "script.fan_on"},
                                 "turn_off": {"service": "script.fan_off"},
                                 "name": "Test fan",
+                                "unique_id": "uniqfan",
                             }
-                        ]
+                        ],
+                        "unique_id": "uniqtemplate",
                     }
                 ]
             },
             TEMPLATE_DOMAIN,
+            "uniqtemplate-uniqfan",
         ),
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_templates_with_entities(hass: HomeAssistant) -> None:
+async def test_templates_with_entities(
+    hass: HomeAssistant, expected_unique_id: str
+) -> None:
     """Test tempalates with values from other entities."""
     _verify(hass, STATE_OFF, 0, None, None, None)
 
@@ -214,6 +221,14 @@ async def test_templates_with_entities(hass: HomeAssistant) -> None:
     hass.states.async_set(_STATE_INPUT_BOOLEAN, False)
     await hass.async_block_till_done()
     _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
+
+    if expected_unique_id is not None:
+        for platform in ep.async_get_platforms(hass, TEMPLATE_DOMAIN):
+            if platform.domain != FAN_DOMAIN:
+                continue
+
+            assert _TEST_FAN in platform.entities
+            assert platform.entities.get(_TEST_FAN).unique_id == expected_unique_id
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
@@ -279,6 +294,108 @@ async def test_templates_with_entities2(hass: HomeAssistant, entity, tests) -> N
         hass.states.async_set(entity, set_percentage)
         await hass.async_block_till_done()
         _verify(hass, STATE_ON, test_percentage, None, None, test_type)
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("config", "domain"),
+    [
+        (
+            {
+                TEMPLATE_DOMAIN: {
+                    FAN_DOMAIN: {
+                        "name": "test_fan",
+                        "state": """
+        {% if is_state('input_boolean.state', 'True') %}
+            {{ 'on' }}
+        {% else %}
+            {{ 'off' }}
+        {% endif %}
+    """,
+                        "percentage": ("{{ states('input_number.percentage') }}"),
+                        "preset_mode": ("{{ states('input_select.preset_mode') }}"),
+                        "oscillating": "{{ states('input_select.osc') }}",
+                        "direction": "{{ states('input_select.direction') }}",
+                        "speed_count": "3",
+                        "set_percentage": {
+                            "service": "script.fans_set_speed",
+                            "data_template": {"percentage": "{{ percentage }}"},
+                        },
+                        "turn_on": {"service": "script.fan_on"},
+                        "turn_off": {"service": "script.fan_off"},
+                        "unique_id": "uniqfan",
+                    }
+                }
+            },
+            TEMPLATE_DOMAIN,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_new_syntax(hass: HomeAssistant) -> None:
+    """Test templates with values from other entities."""
+    _verify(hass, STATE_OFF, 0, None, None, None)
+
+    hass.states.async_set(_STATE_INPUT_BOOLEAN, True)
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 66)
+    hass.states.async_set(_OSC_INPUT, "True")
+
+    for set_state, set_value, value in (
+        (_DIRECTION_INPUT_SELECT, DIRECTION_FORWARD, 66),
+        (_PERCENTAGE_INPUT_NUMBER, 33, 33),
+        (_PERCENTAGE_INPUT_NUMBER, 66, 66),
+        (_PERCENTAGE_INPUT_NUMBER, 100, 100),
+        (_PERCENTAGE_INPUT_NUMBER, "dog", 0),
+    ):
+        hass.states.async_set(set_state, set_value)
+        await hass.async_block_till_done()
+        _verify(hass, STATE_ON, value, True, DIRECTION_FORWARD, None)
+
+    hass.states.async_set(_STATE_INPUT_BOOLEAN, False)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, TEMPLATE_DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            TEMPLATE_DOMAIN: [
+                {
+                    CONF_TRIGGER: {"platform": "event", "event_type": "test_event"},
+                    FAN_DOMAIN: {
+                        "name": "test_fan",
+                        "state": """
+{% if is_state('input_boolean.state', 'True') %}
+    {{ 'on' }}
+{% else %}
+    {{ 'off' }}
+{% endif %}
+""",
+                        "percentage": ("{{ states('input_number.percentage') }}"),
+                        "preset_mode": ("{{ states('input_select.preset_mode') }}"),
+                        "oscillating": "{{ states('input_select.osc') }}",
+                        "direction": "{{ states('input_select.direction') }}",
+                        "speed_count": "3",
+                        "set_percentage": {
+                            "service": "script.fans_set_speed",
+                            "data_template": {"percentage": "{{ percentage }}"},
+                        },
+                        "turn_on": {"service": "script.fan_on"},
+                        "turn_off": {"service": "script.fan_off"},
+                        "unique_id": "uniqfan",
+                    },
+                }
+            ]
+        }
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_invalid_trigger(hass: HomeAssistant) -> None:
+    """Test if invalid use of triggers would raise proper exceptions."""
+    state = hass.states.get(_TEST_FAN)
+    assert state is None
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
