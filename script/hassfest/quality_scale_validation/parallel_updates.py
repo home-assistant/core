@@ -1,4 +1,4 @@
-"""Enforce that the integration set Parallel updates.
+"""Enforce that the integration sets PARALLEL_UPDATES constant.
 
 https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates
 """
@@ -18,7 +18,7 @@ def _has_parallel_updates_defined(module: ast.Module) -> bool:
 
 
 def validate(integration: Integration) -> list[str] | None:
-    """Validate that the integration has a reauthentication flow."""
+    """Validate that the integration sets PARALLEL_UPDATES constant."""
 
     errors = []
     for platform in Platform:
@@ -29,8 +29,7 @@ def validate(integration: Integration) -> list[str] | None:
 
         if not _has_parallel_updates_defined(module):
             errors.append(
-                "Integration does not support a reauthentication flow "
-                f"(is missing `PARALLEL_UPDATES` in {module_file})"
+                "Integration does not set `PARALLEL_UPDATES` in {module_file}"
             )
 
     return errors
