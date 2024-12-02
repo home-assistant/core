@@ -16,7 +16,6 @@ def search_address(query: str):
         dict: A dictionary containing the search results or an error message.
 
     """
-
     params = {"q": query, "format": "json"}
     try:
         response = requests.get(NOMINATIM_URL, params=params, timeout=5)
