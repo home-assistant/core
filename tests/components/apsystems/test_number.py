@@ -20,10 +20,8 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 async def test_command(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_apsystems: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number command."""
     await setup_integration(hass, mock_config_entry)
@@ -35,23 +33,17 @@ async def test_command(
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = mock_apsystems.set_max_power
-    mocked_method.assert_called_once_with(50)
+    mock_apsystems.set_max_power.assert_called_once_with(50)
 
 
+@pytest.mark.usefixtures("mock_apsystems")
+@patch("homeassistant.components.apsystems.PLATFORMS", [Platform.NUMBER])
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_apsystems: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch(
-        "homeassistant.components.apsystems.PLATFORMS",
-        [Platform.NUMBER],
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
