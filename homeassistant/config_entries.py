@@ -2409,7 +2409,13 @@ class ConfigEntries:
         except KeyError as err:
             raise UnknownSubEntry from err
 
-        return self._async_update_entry(entry, subentries=subentries)
+        result = self._async_update_entry(entry, subentries=subentries)
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+
+        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+        ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+        return result
 
     def _raise_if_subentry_unique_id_exists(
         self, entry: ConfigEntry, unique_id: str | None
