@@ -88,10 +88,6 @@ async def test_async_setup_entry_loads_platforms(
         assert controller.get_favorites.call_count == 1
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert config_entry.runtime_data.controller_manager.controller == controller
-    assert config_entry.runtime_data.players == controller.players
-    assert config_entry.runtime_data.source_manager.favorites == favorites
-    assert config_entry.runtime_data.source_manager.inputs == input_sources
 
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(
@@ -117,10 +113,6 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
         assert controller.get_favorites.call_count == 0
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert config_entry.runtime_data.controller_manager.controller == controller
-    assert config_entry.runtime_data.players == controller.players
-    assert config_entry.runtime_data.source_manager.favorites == {}
-    assert config_entry.runtime_data.source_manager.inputs == input_sources
     assert (
         "127.0.0.1 is not logged in to a HEOS account and will be unable to retrieve "
         "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account"

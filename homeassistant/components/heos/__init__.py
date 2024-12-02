@@ -248,23 +248,25 @@ class ControllerManager:
 class GroupManager:
     """Class that manages HEOS groups."""
 
-    def __init__(self, hass, controller, players):
+    def __init__(
+        self, hass: HomeAssistant, controller: Heos, players: dict[int, HeosPlayer]
+    ) -> None:
         """Init group manager."""
         self._hass = hass
-        self._group_membership = {}
+        self._group_membership: dict[str, str] = {}
         self._disconnect_player_added = None
         self._initialized = False
         self.controller = controller
         self.players = players
-        self.entity_id_map = {}
+        self.entity_id_map: dict[int, str] = {}
 
     def _get_entity_id_to_player_id_map(self) -> dict:
         """Return mapping of all HeosMediaPlayer entity_ids to player_ids."""
         return {v: k for k, v in self.entity_id_map.items()}
 
-    async def async_get_group_membership(self):
+    async def async_get_group_membership(self) -> dict[str, list[str]]:
         """Return all group members for each player as entity_ids."""
-        group_info_by_entity_id = {
+        group_info_by_entity_id: dict[str, list[str]] = {
             player_entity_id: []
             for player_entity_id in self._get_entity_id_to_player_id_map()
         }
@@ -286,9 +288,9 @@ class GroupManager:
             # Make sure the group leader is always the first element
             group_info = [leader_entity_id, *member_entity_ids]
             if leader_entity_id:
-                group_info_by_entity_id[leader_entity_id] = group_info
+                group_info_by_entity_id[leader_entity_id] = group_info  # type: ignore[assignment]
                 for member_entity_id in member_entity_ids:
-                    group_info_by_entity_id[member_entity_id] = group_info
+                    group_info_by_entity_id[member_entity_id] = group_info  # type: ignore[assignment]
 
         return group_info_by_entity_id
 
