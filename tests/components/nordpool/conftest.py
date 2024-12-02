@@ -23,7 +23,6 @@ from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
 @pytest.fixture
 async def load_int(
     hass: HomeAssistant, get_data: DeliveryPeriodData

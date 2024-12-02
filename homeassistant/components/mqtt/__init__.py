@@ -225,77 +225,27 @@ async def async_check_config_schema(
                     ) from exc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Load a config entry."""
-    conf: dict[str, Any]
-    mqtt_data: MqttData
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the actions and websocket API for the MQTT component."""
 
-    async def _setup_client(
-        client_available: asyncio.Future[bool],
-    ) -> tuple[MqttData, dict[str, Any]]:
-        """Set up the MQTT client."""
-        # Fetch configuration
-        conf = dict(entry.data)
-        hass_config = await conf_util.async_hass_config_yaml(hass)
-        mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
-        await async_create_certificate_temp_files(hass, conf)
-        client = MQTT(hass, entry, conf)
-        if DOMAIN in hass.data:
-            mqtt_data = hass.data[DATA_MQTT]
-            mqtt_data.config = mqtt_yaml
-            mqtt_data.client = client
-        else:
-            # Initial setup
-            websocket_api.async_register_command(hass, websocket_subscribe)
-            websocket_api.async_register_command(hass, websocket_mqtt_info)
-            hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        await client.async_start(mqtt_data)
-
-        # Restore saved subscriptions
-        if mqtt_data.subscriptions_to_restore:
-            mqtt_data.client.async_restore_tracked_subscriptions(
-                mqtt_data.subscriptions_to_restore
-            )
-            mqtt_data.subscriptions_to_restore = set()
-        mqtt_data.reload_dispatchers.append(
-            entry.add_update_listener(_async_config_entry_updated)
-        )
-
-        return (mqtt_data, conf)
-
-    client_available: asyncio.Future[bool]
-    if DATA_MQTT_AVAILABLE not in hass.data:
-        client_available = hass.data[DATA_MQTT_AVAILABLE] = hass.loop.create_future()
-    else:
-        client_available = hass.data[DATA_MQTT_AVAILABLE]
-
-    mqtt_data, conf = await _setup_client(client_available)
-    platforms_used = platforms_from_config(mqtt_data.config)
-    platforms_used.update(
-        entry.domain
-        for entry in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
-    )
-    integration = async_get_loaded_integration(hass, DOMAIN)
-    # Preload platforms we know we are going to use so
-    # discovery can setup each platform synchronously
-    # and avoid creating a flood of tasks at startup
-    # while waiting for the the imports to complete
-    if not integration.platforms_are_loaded(platforms_used):
-        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
-            await integration.async_get_platforms(platforms_used)
-
-    # Wait to connect until the platforms are loaded so
-    # we can be sure discovery does not have to wait for
-    # each platform to load when we get the flood of retained
-    # messages on connect
-    await mqtt_data.client.async_connect(client_available)
+    websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_mqtt_info)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic: str | None = call.data.get(ATTR_TOPIC)
         msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+
+        if not mqtt_config_entry_enabled(hass):
+            raise ServiceValidationError(
+                translation_key="mqtt_not_setup_cannot_publish",
+                translation_domain=DOMAIN,
+                translation_placeholders={
+                    "topic": str(msg_topic or msg_topic_template)
+                },
+            )
+
+        mqtt_data = hass.data[DATA_MQTT]
         payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
         evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
@@ -402,6 +352,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
+    conf: dict[str, Any]
+    mqtt_data: MqttData
+
+    async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
+        """Set up the MQTT client."""
+        # Fetch configuration
+        conf = dict(entry.data)
+        hass_config = await conf_util.async_hass_config_yaml(hass)
+        mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
+        await async_create_certificate_temp_files(hass, conf)
+        client = MQTT(hass, entry, conf)
+        if DOMAIN in hass.data:
+            mqtt_data = hass.data[DATA_MQTT]
+            mqtt_data.config = mqtt_yaml
+            mqtt_data.client = client
+        else:
+            # Initial setup
+            hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
+        await client.async_start(mqtt_data)
+
+        # Restore saved subscriptions
+        if mqtt_data.subscriptions_to_restore:
+            mqtt_data.client.async_restore_tracked_subscriptions(
+                mqtt_data.subscriptions_to_restore
+            )
+            mqtt_data.subscriptions_to_restore = set()
+        mqtt_data.reload_dispatchers.append(
+            entry.add_update_listener(_async_config_entry_updated)
+        )
+
+        return (mqtt_data, conf)
+
+    client_available: asyncio.Future[bool]
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        client_available = hass.data[DATA_MQTT_AVAILABLE] = hass.loop.create_future()
+    else:
+        client_available = hass.data[DATA_MQTT_AVAILABLE]
+
+    mqtt_data, conf = await _setup_client()
+    platforms_used = platforms_from_config(mqtt_data.config)
+    platforms_used.update(
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    )
+    integration = async_get_loaded_integration(hass, DOMAIN)
+    # Preload platforms we know we are going to use so
+    # discovery can setup each platform synchronously
+    # and avoid creating a flood of tasks at startup
+    # while waiting for the the imports to complete
+    if not integration.platforms_are_loaded(platforms_used):
+        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+            await integration.async_get_platforms(platforms_used)
+
+    # Wait to connect until the platforms are loaded so
+    # we can be sure discovery does not have to wait for
+    # each platform to load when we get the flood of retained
+    # messages on connect
+    await mqtt_data.client.async_connect(client_available)
 
     # setup platforms and discovery
     async def _reload_config(call: ServiceCall) -> None:
@@ -556,10 +571,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
     mqtt_data = hass.data[DATA_MQTT]
     mqtt_client = mqtt_data.client
-
-    # Unload publish and dump services.
-    hass.services.async_remove(DOMAIN, SERVICE_PUBLISH)
-    hass.services.async_remove(DOMAIN, SERVICE_DUMP)
 
     # Stop the discovery
     await discovery.async_stop(hass)
