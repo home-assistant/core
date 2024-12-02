@@ -3248,7 +3248,7 @@ class ConfigSubentryFlowManager(
             raise UnknownEntry(flow.handler)
 
         unique_id = result.get("unique_id")
-        if "unique_id" in result and not isinstance(unique_id, str):
+        if unique_id is not None and not isinstance(unique_id, str):
             raise HomeAssistantError("unique_id must be a string")
 
         if any(
