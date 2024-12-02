@@ -247,7 +247,7 @@ def slug(
 
 async def async_test_and_preview_stream(
     hass: HomeAssistant, info: Mapping[str, Any]
-) -> PreviewStream | None:
+) -> Stream | None:
     """Verify that the stream is valid before we create an entity.
 
     Returns the stream object if valid. Raises InvalidStreamException if not.
@@ -286,14 +286,12 @@ async def async_test_and_preview_stream(
             url = url.with_user(username).with_password(password)
             stream_source = str(url)
     try:
-        stream = PreviewStream(
-            create_stream(
-                hass,
-                stream_source,
-                stream_options,
-                DynamicStreamSettings(),
-                f"{DOMAIN}.test_stream",
-            )
+        stream = create_stream(
+            hass,
+            stream_source,
+            stream_options,
+            DynamicStreamSettings(),
+            f"{DOMAIN}.test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
     except StreamWorkerError as err:
@@ -335,7 +333,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
         self.preview_cam: dict[str, Any] = {}
-        self.preview_stream: PreviewStream | None = None
+        self.preview_stream: Stream | None = None
         self.user_input: dict[str, Any] = {}
         self.title = ""
 
@@ -552,41 +550,6 @@ class CameraImagePreview(HomeAssistantView):
             CAMERA_IMAGE_TIMEOUT,
         )
         return web.Response(body=image.content, content_type=image.content_type)
-
-
-class PreviewStream:
-    """A wrapper around the stream object to automatically close unused streams."""
-
-    def __init__(self, stream: Stream) -> None:
-        """Initialize the object."""
-        self.stream = stream
-        self._deferred_stop = None
-
-    async def start(self, timeout=600):
-        """Start the stream with a timeout."""
-
-        async def _timeout() -> None:
-            _LOGGER.debug("Starting preview stream with timeout %ss", timeout)
-            await asyncio.sleep(timeout)
-            _LOGGER.info("Preview stream stopping due to timeout")
-            await self.stream.stop()
-
-        await self.stream.start()
-        self._deferred_stop = self.stream.hass.async_create_task(_timeout())
-
-    async def stop(self):
-        """Stop the stream."""
-        if not self._deferred_stop.done():
-            self._deferred_stop.cancel()
-        await self.stream.stop()
-
-    def add_provider(self, provider):
-        """Add a provider to the stream."""
-        return self.stream.add_provider(provider)
-
-    def endpoint_url(self, fmt: str) -> str:
-        """Return the endpoint URL."""
-        return self.stream.endpoint_url(fmt)
 
 
 @websocket_api.websocket_command(

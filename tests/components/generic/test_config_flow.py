@@ -765,7 +765,6 @@ async def test_form_stream_preview_auto_timeout(
 
     mock_str = mock_stream.return_value
     mock_str.start.assert_awaited_once()
-    mock_str.stop.assert_awaited_once()
 
 
 @respx.mock
