@@ -3,13 +3,13 @@
     "step": {
       "user": {
         "title": "Credentials for FYTA API",
-        "description": "Provide username and password to connect to the FYTA server",
+        "description": "Provide email and password to connect to the FYTA server",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
+          "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The username to login to your FYTA account.",
+          "username": "The email address to login to your FYTA account.",
           "password": "The password to login to your FYTA account."
         }
       },
