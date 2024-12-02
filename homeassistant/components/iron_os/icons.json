@@ -1,13 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "tip_connected": {
-        "default": "mdi:pencil-outline",
-        "state": {
-          "off": "mdi:pencil-off-outline"
-        }
-      }
-    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
