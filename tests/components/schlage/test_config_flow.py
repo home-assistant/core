@@ -61,7 +61,7 @@ async def test_form_requires_unique_id(
     mock_added_config_entry: MockConfigEntry,
     mock_pyschlage_auth: Mock,
 ) -> None:
-    """Testentries have unique ids."""
+    """Test entries have unique ids."""
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
