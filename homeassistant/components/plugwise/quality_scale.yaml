@@ -33,9 +33,7 @@ rules:
   docs-installation-instructions:
     status: todo
     comment: Docs PR 36087
-  docs-removal-instructions:
-    status: todo
-    comment: Docs PR 36055 (done, but mark todo for benchmark)
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   ## Silver
@@ -95,9 +93,7 @@ rules:
   docs-supported-functions:
     status: todo
     comment: Check for completeness
-  docs-data-update:
-    status: todo
-    comment: Docs PR 36055 (done, but mark todo for benchmark)
+  docs-data-update: done
   docs-known-limitations:
     status: todo
     comment: Partial in 36087 but could be more elaborat
