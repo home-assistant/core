@@ -334,7 +334,10 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
-        if not (count := len(message_ids := lines[0].split())):
+        # Check we do have returned items
+        # In rare cases, when no UID's are returned,
+        # only the status line returned
+        if len(lines) == 1 or not (count := len(message_ids := lines[0].split())):
             self._last_message_uid = None
             return 0
         last_message_uid = (
