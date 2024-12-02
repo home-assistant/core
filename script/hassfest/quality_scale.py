@@ -17,9 +17,12 @@ from .quality_scale_validation import (
     config_entry_unloading,
     config_flow,
     diagnostics,
+    discovery,
     reauthentication_flow,
     reconfiguration_flow,
+    runtime_data,
     strict_typing,
+    unique_config_entry,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -50,10 +53,10 @@ ALL_RULES = [
     Rule("entity-event-setup", ScaledQualityScaleTiers.BRONZE),
     Rule("entity-unique-id", ScaledQualityScaleTiers.BRONZE),
     Rule("has-entity-name", ScaledQualityScaleTiers.BRONZE),
-    Rule("runtime-data", ScaledQualityScaleTiers.BRONZE),
+    Rule("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data),
     Rule("test-before-configure", ScaledQualityScaleTiers.BRONZE),
     Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE),
-    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE),
+    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
     Rule(
@@ -72,7 +75,7 @@ ALL_RULES = [
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
     Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
-    Rule("discovery", ScaledQualityScaleTiers.GOLD),
+    Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
     Rule("docs-examples", ScaledQualityScaleTiers.GOLD),
