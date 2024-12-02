@@ -9,6 +9,20 @@
       }
     }
   },
+  "config_subentries": {
+    "add_entity": {
+      "title": "Add entity",
+      "step": {
+        "add_sensor": {
+          "description": "Configure the new sensor",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "state": "Initial state"
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

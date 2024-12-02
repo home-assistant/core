@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
 
 from . import DOMAIN
@@ -21,7 +21,8 @@ from .device import async_create_device
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    # pylint: disable-next=hass-argument-type
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Everything but the Kitchen Sink config entry."""
     async_create_device(
@@ -89,6 +90,23 @@ async def async_setup_entry(
             ),
         ]
     )
+
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [
+                DemoSensor(
+                    device_unique_id=subentry_id,
+                    unique_id=subentry_id,
+                    device_name=subentry.title,
+                    entity_name=None,
+                    state=subentry.data["state"],
+                    device_class=None,
+                    state_class=None,
+                    unit_of_measurement=None,
+                )
+            ],
+            subentry_id=subentry_id,
+        )
 
 
 class DemoSensor(SensorEntity):

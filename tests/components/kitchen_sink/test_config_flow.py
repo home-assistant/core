@@ -104,3 +104,36 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert config_entry.options == {"section_1": {"bool": True, "int": 15}}
 
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("no_platforms")
+async def test_subentry_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "add_entity")
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_sensor"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Sensor 1", "state": 15},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries.keys())[0]
+    assert config_entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data={"state": 15},
+            subentry_id=subentry_id,
+            title="Sensor 1",
+            unique_id=None,
+        )
+    }
+
+    await hass.async_block_till_done()
