@@ -36,5 +36,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["pylamarzocco"],
-  "requirements": ["pylamarzocco==1.2.11"]
+  "requirements": ["pylamarzocco==1.2.12"]
 }

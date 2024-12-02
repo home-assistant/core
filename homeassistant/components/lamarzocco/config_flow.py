@@ -20,7 +20,6 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -46,6 +45,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
 
@@ -291,6 +291,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: discovery_info.macaddress,
             }
         )
+        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.macaddress})
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",
@@ -353,7 +354,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LaMarzoccoConfigEntry,
     ) -> LmOptionsFlowHandler:
         """Create the options flow."""
         return LmOptionsFlowHandler()

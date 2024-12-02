@@ -22,6 +22,8 @@ from .entity import BMWBaseEntity
 if TYPE_CHECKING:
     from .coordinator import BMWDataUpdateCoordinator
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 

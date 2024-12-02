@@ -68,7 +68,6 @@ from .common import (
     async_mock_service,
     help_test_all,
     import_and_test_deprecated_alias,
-    import_and_test_deprecated_constant_enum,
 )
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
@@ -2978,22 +2977,6 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
 def test_all() -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(ha)
-
-
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        ha.ConfigSource.DISCOVERED,
-        ha.ConfigSource.YAML,
-        ha.ConfigSource.STORAGE,
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: ha.ConfigSource,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
 
 
 def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
