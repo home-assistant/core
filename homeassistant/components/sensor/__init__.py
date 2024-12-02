@@ -509,6 +509,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return translation key for unit of measurement."""
         if self.translation_key is None:
             return None
+        if self.platform is None:
+            raise ValueError(
+                f"Sensor {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
         platform = self.platform
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
