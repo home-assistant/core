@@ -722,12 +722,12 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities)
-
     # create weather data:
     data = BrData(hass, coordinates, timeframe, entities)
     entry.runtime_data[Platform.SENSOR] = data
     await data.async_update()
+
+    async_add_entities(entities)
 
 
 class BrSensor(SensorEntity):
@@ -742,6 +742,7 @@ class BrSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._data: BrData | None = None
         self._measured = None
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
@@ -756,10 +757,24 @@ class BrSensor(SensorEntity):
         if description.key.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to hass."""
+        if self._data is None:
+            return
+        self._update()
+
     @callback
     def data_updated(self, data: BrData):
-        """Update data."""
-        if self._load_data(data.data) and self.hass:
+        """Handle data update."""
+        self._data = data
+        if not self.hass:
+            return
+        self._update()
+
+    def _update(self):
+        """Update sensor data."""
+        _LOGGER.debug("Updating sensor %s", self.entity_id)
+        if self._load_data(self._data.data):
             self.async_write_ha_state()
 
     @callback
