@@ -3251,7 +3251,7 @@ class ConfigSubentryFlowManager(
         if unique_id is not None and not isinstance(unique_id, str):
             raise HomeAssistantError("unique_id must be a string")
 
-        if any(
+        if unique_id is not None and any(
             subentry.unique_id == unique_id for subentry in entry.subentries.values()
         ):
             raise data_entry_flow.AbortFlow("already_configured")
