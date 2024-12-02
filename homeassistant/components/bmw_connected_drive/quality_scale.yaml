@@ -1,13 +1,19 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      Does not have custom services
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Does not have custom services
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
@@ -23,7 +29,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      Does not have custom services
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
