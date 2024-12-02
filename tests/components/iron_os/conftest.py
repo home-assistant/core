@@ -5,7 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from habluetooth import BluetoothServiceInfoBleak
-from pynecil import DeviceInfoResponse, LiveDataResponse, OperatingMode, PowerSource
+from pynecil import (
+    DeviceInfoResponse,
+    LiveDataResponse,
+    OperatingMode,
+    PowerSource,
+    SettingsDataResponse,
+)
 import pytest
 
 from homeassistant.components.iron_os import DOMAIN
@@ -144,6 +150,27 @@ def mock_pynecil() -> Generator[AsyncMock]:
             address="c0:ff:ee:c0:ff:ee",
             device_sn="0000c0ffeec0ffee",
             name=DEFAULT_NAME,
+        )
+        client.get_settings.return_value = SettingsDataResponse(
+            sleep_temp=150,
+            sleep_timeout=5,
+            min_dc_voltage_cells=0,
+            min_volltage_per_cell=3.3,
+            qc_ideal_voltage=9.0,
+            accel_sensitivity=7,
+            shutdown_time=10,
+            keep_awake_pulse_power=0.5,
+            keep_awake_pulse_delay=4,
+            keep_awake_pulse_duration=1,
+            voltage_div=600,
+            boost_temp=420,
+            calibration_offset=900,
+            power_limit=12.0,
+            temp_increment_long=10,
+            temp_increment_short=1,
+            hall_sensitivity=7,
+            pd_negotiation_timeout=2.0,
+            display_brightness=3,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,

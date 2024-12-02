@@ -16,7 +16,7 @@
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
   "mqtt": ["esphome/discover/#"],
   "requirements": [
-    "aioesphomeapi==27.0.2",
+    "aioesphomeapi==27.0.3",
     "esphome-dashboard-api==1.2.3",
     "bleak-esphome==1.1.0"
   ],
