@@ -18,18 +18,15 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
     """Set up Cookidoo from a config entry."""
 
-    email = entry.data[CONF_EMAIL]
-    password = entry.data[CONF_PASSWORD]
-    localization = cookidoo_localization_for_key(
-        await get_localization_options(), entry.data[CONF_LOCALIZATION]
-    )
     cookidoo = Cookidoo(
         async_get_clientsession(hass),
         {
             **DEFAULT_COOKIDOO_CONFIG,
-            "localization": localization,
-            "email": email,
-            "password": password,
+            CONF_EMAIL: entry.data[CONF_EMAIL],
+            CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            CONF_LOCALIZATION: cookidoo_localization_for_key(
+                await get_localization_options(), entry.data[CONF_LOCALIZATION]
+            ),
         },
     )
 
