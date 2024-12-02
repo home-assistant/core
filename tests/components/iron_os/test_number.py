@@ -1,9 +1,10 @@
 """Tests for the IronOS number platform."""
 
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pynecil import CharSetting, CommunicationError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -40,6 +41,7 @@ async def test_state(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the IronOS number platform states."""
     config_entry.add_to_hass(hass)
@@ -47,7 +49,9 @@ async def test_state(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    async_fire_time_changed(hass, datetime.now() + timedelta(seconds=60))
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
