@@ -12,6 +12,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockSchlageConfigEntry
 
+from tests.common import MockConfigEntry
+
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
@@ -59,7 +61,7 @@ async def test_form_requires_unique_id(
     mock_added_config_entry: MockConfigEntry,
     mock_pyschlage_auth: Mock,
 ) -> None:
-    """Test we get the form."""
+    """Testentries have unique ids."""
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
