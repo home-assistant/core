@@ -79,6 +79,21 @@ AVAILABLE_SWING_MODES = {
     "horizontal",
     "both",
 }
+AVAILABLE_HORIZONTAL_SWING_MODES = {
+    "stopped",
+    "fixedleft",
+    "fixedcenterleft",
+    "fixedcenter",
+    "fixedcenterright",
+    "fixedright",
+    "fixedleftright",
+    "rangecenter",
+    "rangefull",
+    "rangeleft",
+    "rangeright",
+    "horizontal",
+    "both",
+}
 
 PARALLEL_UPDATES = 0
 
@@ -105,6 +120,7 @@ AC_STATE_TO_DATA = {
     "on": "device_on",
     "mode": "hvac_mode",
     "swing": "swing_mode",
+    "horizontalSwing": "horizontal_swing_mode",
 }
 
 
@@ -286,6 +302,18 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         return self.device_data.swing_modes
 
     @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the horizontal swing setting."""
+        return self.device_data.horizontal_swing_mode
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return the list of available horizontal swing modes."""
+        if modes := self.device_data.horizontal_swing_modes:
+            return modes
+        return None
+
+    @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.device_data.temp_list[0]
@@ -368,6 +396,29 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             key=AC_STATE_TO_DATA["swing"],
             value=swing_mode,
             name="swing",
+            assumed_state=False,
+            transformation=transformation,
+        )
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        if "horizontalSwing" not in self.device_data.active_features:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_horizontal_swing_in_features",
+            )
+        if swing_horizontal_mode not in AVAILABLE_HORIZONTAL_SWING_MODES:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="horizontal_swing_not_supported",
+                translation_placeholders={"swing_mode": swing_horizontal_mode},
+            )
+
+        transformation = self.device_data.horizontal_swing_modes_translated
+        await self.async_send_api_call(
+            key=AC_STATE_TO_DATA["horizontalSwing"],
+            value=swing_horizontal_mode,
+            name="horizontalSwing",
             assumed_state=False,
             transformation=transformation,
         )
