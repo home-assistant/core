@@ -31,6 +31,8 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching BMW data."""
 
     account: MyBMWAccount
+    read_only: bool = False
+    _entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, *, entry: ConfigEntry) -> None:
         """Initialize account-wide BMW data updater."""
