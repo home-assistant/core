@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from numbers import Number
 from typing import TYPE_CHECKING, Final
 
@@ -74,8 +73,6 @@ _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     PRESSURE: PRESSURE_UNITS,
     AREA: AREA_UNITS,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _is_valid_unit(unit: str, unit_type: str) -> bool:
