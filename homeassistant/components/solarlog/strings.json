@@ -5,7 +5,6 @@
         "title": "Define your Solar-Log connection",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "The prefix to be used for your Solar-Log sensors",
           "has_password": "I have the password for the Solar-Log user account."
         },
         "data_description": {

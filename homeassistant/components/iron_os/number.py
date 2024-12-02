@@ -23,6 +23,8 @@ from . import IronOSConfigEntry
 from .const import DOMAIN, MAX_TEMP, MIN_TEMP
 from .entity import IronOSBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class IronOSNumberEntityDescription(NumberEntityDescription):
