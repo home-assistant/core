@@ -236,13 +236,6 @@ def _deprecated_unit_system(value: str) -> str:
     """Convert deprecated unit system."""
 
     if value == _CONF_UNIT_SYSTEM_IMPERIAL:
-        # Deprecated in 2024.12, to raise error in 2025.12
-        _LOGGER.warning(
-            "Your Home Assistant configuration is using the imperial unit system"
-            " which is deprecated, please replace imperial with us_customary"
-            " in your Home Assistant configuration and restart Home Assistant"
-        )
-
         return _CONF_UNIT_SYSTEM_US_CUSTOMARY
     return value
 

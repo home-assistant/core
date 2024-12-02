@@ -911,9 +911,3 @@ async def test_imperial_deprecated_log_warning(
     assert hass.config.country == "US"
     assert hass.config.language == "en"
     assert hass.config.radius == 150
-
-    assert (
-        "Your Home Assistant configuration is using the imperial unit system"
-        " which is deprecated, please replace imperial with us_customary"
-        " in your Home Assistant configuration and restart Home Assistant"
-    ) in caplog.text
