@@ -33,7 +33,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
-                autocomplete="username",
+                autocomplete="email",
             ),
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
