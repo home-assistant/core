@@ -322,6 +322,7 @@ async def test_vacuum_not_log_deprecated_state_warning(
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
@@ -365,6 +366,7 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
@@ -406,24 +408,14 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
         not in caplog.text
     )
 
-    with patch.object(
-        MockLegacyVacuum,
-        "__module__",
-        "tests.custom_components.test.vacuum",
-    ):
-        await async_start(hass, entity.entity_id)
+    await async_start(hass, entity.entity_id)
 
     assert (
         "should implement the 'activity' property and return its state using the VacuumActivity enum"
         in caplog.text
     )
     caplog.clear()
-    with patch.object(
-        MockLegacyVacuum,
-        "__module__",
-        "tests.custom_components.test.vacuum",
-    ):
-        await async_start(hass, entity.entity_id)
+    await async_start(hass, entity.entity_id)
     # Test we only log once
     assert (
         "should implement the 'activity' property and return its state using the VacuumActivity enum"
@@ -431,6 +423,8 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -474,20 +468,15 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     assert state is not None
     assert state.state == "docked"
 
-    with patch.object(
-        MockLegacyVacuum,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_START,
-            {
-                "entity_id": entity.entity_id,
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {
+            "entity_id": entity.entity_id,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None

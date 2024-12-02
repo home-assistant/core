@@ -1,14 +1,14 @@
 """Fixtures for Vacuum platform tests."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MockVacuum
@@ -107,3 +107,19 @@ async def setup_vacuum_platform_test_entity(
     assert state is not None
 
     return entity
+
+
+@pytest.fixture(name="mock_as_custom_component")
+async def mock_frame(hass: HomeAssistant) -> AsyncGenerator[None]:
+    """Mock frame."""
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=frame.IntegrationFrame(
+            custom_integration=True,
+            integration="alarm_control_panel",
+            module="test_init.py",
+            relative_filename="test_init.py",
+            frame=frame.get_current_frame(),
+        ),
+    ):
+        yield
