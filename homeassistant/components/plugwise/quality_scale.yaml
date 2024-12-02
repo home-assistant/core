@@ -2,17 +2,31 @@ rules:
   ## Bronze
   config-flow: done
   test-before-configure: done
-  unique-config-entry: done
-  config-flow-test-coverage: done
-  runtime-data: done
+  unique-config-entry:
+    status: todo
+    comment: Add tests preventing second entry for same device
+  config-flow-test-coverage:
+    status: todo
+    comment: Cover test_form and zeroconf
+  runtime-data:
+    status: todo
+    comment: Clean up test_init for testing internals
   test-before-setup: done
-  appropriate-polling: done
+  appropriate-polling:
+    status: todo
+    comment: Clean up coordinator (L71) check for mypy happiness
   entity-unique-id: done
-  has-entity-name: done
+  has-entity-name:
+    status: todo
+    comment: Clean up climate (already in superclass)
   entity-event-setup: done
   dependency-transparency: done
-  action-setup: done
-  common-modules: done
+  action-setup:
+    status: todo
+    comment: Check if we have these, otherwise exempt
+  common-modules:
+    status: todo
+    comment: Verify entity for async_added_to_hass usage (discard?)
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -22,19 +36,25 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: Climate exception on ValueError should be ServiceValidationError
   reauthentication-flow:
     status: exempt
-    comment: This integration does not have reauthentication (e.g. fixed authentication for Plugwise Smiles)
+    comment: The hubs have a hardcoded `Smile ID` printed on there sticker, it can not be changed
   parallel-updates:
-    status: done
-    comment: Using coordinator
-  test-coverage: done
+    status: todo
+    comment: Using coordinator, but required due to mutable platform
+  test-coverage:
+    status: todo
+    comment: Consider using snapshots + consistency in setup calls + add numerical tests + use fixtures
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters: done
   ## Gold
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: Clean up name where not needed, remove translation key on deviceclasses
   entity-device-class: done
   devices: done
   entity-category: done
@@ -42,12 +62,16 @@ rules:
   discovery: done
   stale-devices: done
   diagnostics: done
-  exception-translations: done
+  exception-translations:
+    status: todo
+    comment: Add coordinator, util and climate exceptions
   icon-translations: done
   reconfiguration-flow:
-    status: exempt
-    comment: This integration does not have any reconfiguration steps
-  dynamic-devices: done
+    status: todo
+    comment: This integration does not have any reconfiguration steps (yet) investigate how/why
+  dynamic-devices:
+    status: todo
+    comment: Add missing logic to button for unloading and creation
   discovery-update-info: done
   repair-issues:
     status: exempt
