@@ -27,11 +27,15 @@ rules:
   common-modules:
     status: todo
     comment: Verify entity for async_added_to_hass usage (discard?)
-  docs-high-level-description: done
-  docs-installation-instructions: done
+  docs-high-level-description:
+    status: todo
+    comment: Rewrite top section
+  docs-installation-instructions:
+    status: todo
+    comment: Docs PR 36087
   docs-removal-instructions:
     status: todo
-    comment: Docs PR 36055
+    comment: Docs PR 36055 (done, but mark todo for benchmark)
   docs-actions: done
   brands: done
   ## Silver
@@ -93,7 +97,7 @@ rules:
     comment: Check for completeness
   docs-data-update:
     status: todo
-    comment: Docs PR 36055
+    comment: Docs PR 36055 (done, but mark todo for benchmark)
   docs-known-limitations:
     status: todo
     comment: Partial in 36087 but could be more elaborat
