@@ -55,7 +55,7 @@ class PinecilSensor(StrEnum):
 class IronOSSensorEntityDescription(SensorEntityDescription):
     """IronOS sensor entity descriptions."""
 
-    value_fn: Callable[[LiveDataResponse], StateType]
+    value_fn: Callable[[LiveDataResponse, bool], StateType]
 
 
 PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
@@ -65,7 +65,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.live_temp,
+        value_fn=lambda data, has_tip: data.live_temp if has_tip else None,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.DC_VOLTAGE,
@@ -73,7 +73,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.dc_voltage,
+        value_fn=lambda data, _: data.dc_voltage,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -82,7 +82,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.handle_temp,
+        value_fn=lambda data, _: data.handle_temp,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.PWMLEVEL,
@@ -91,7 +91,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.pwm_level,
+        value_fn=lambda data, _: data.pwm_level,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -99,14 +99,16 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         translation_key=PinecilSensor.POWER_SRC,
         device_class=SensorDeviceClass.ENUM,
         options=[item.name.lower() for item in PowerSource],
-        value_fn=lambda data: data.power_src.name.lower() if data.power_src else None,
+        value_fn=(
+            lambda data, _: data.power_src.name.lower() if data.power_src else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.TIP_RESISTANCE,
         translation_key=PinecilSensor.TIP_RESISTANCE,
         native_unit_of_measurement=OHM,
-        value_fn=lambda data: data.tip_resistance,
+        value_fn=lambda data, has_tip: data.tip_resistance if has_tip else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -116,7 +118,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.uptime,
+        value_fn=lambda data, _: data.uptime,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -125,7 +127,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.movement_time,
+        value_fn=lambda data, _: data.movement_time,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -133,7 +135,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         translation_key=PinecilSensor.MAX_TIP_TEMP_ABILITY,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        value_fn=lambda data: data.max_tip_temp_ability,
+        value_fn=lambda data, has_tip: data.max_tip_temp_ability if has_tip else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -143,7 +145,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda data: data.tip_voltage,
+        value_fn=lambda data, has_tip: data.tip_voltage if has_tip else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -151,7 +153,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         translation_key=PinecilSensor.HALL_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.hall_sensor,
+        value_fn=lambda data, _: data.hall_sensor,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -160,7 +162,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[item.name.lower() for item in OperatingMode],
         value_fn=(
-            lambda data: data.operating_mode.name.lower()
+            lambda data, _: data.operating_mode.name.lower()
             if data.operating_mode
             else None
         ),
@@ -171,7 +173,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.estimated_power,
+        value_fn=lambda data, _: data.estimated_power,
     ),
 )
 
@@ -199,4 +201,6 @@ class IronOSSensorEntity(IronOSBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(
+            self.coordinator.data, self.coordinator.has_tip
+        )
