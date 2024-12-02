@@ -19,7 +19,6 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
@@ -204,29 +203,6 @@ async def async_setup_platform(
             discovery_info["entities"],
             discovery_info["unique_id"],
         )
-    )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = FAN_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [
-            TemplateFan(
-                hass,
-                validated_config.get(
-                    CONF_NAME, {template: config_entry.entry_id}
-                ).template,
-                validated_config,
-                config_entry.entry_id,
-            )
-        ]
     )
 
 
