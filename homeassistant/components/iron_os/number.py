@@ -45,8 +45,8 @@ class IronOSNumberEntityDescription(NumberEntityDescription):
 
     value_fn: Callable[[LiveDataResponse, SettingsDataResponse], float | int | None]
     max_value_fn: Callable[[LiveDataResponse], float | int] | None = None
-    set_key: CharSetting
-    set_fn: Callable[[float], float | int] | None = None
+    characteristic: CharSetting
+    raw_value_fn: Callable[[float], float | int] | None = None
 
 
 class PinecilNumber(StrEnum):
@@ -85,7 +85,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda data, _: data.setpoint_temp,
-        set_key=CharSetting.SETPOINT_TEMP,
+        characteristic=CharSetting.SETPOINT_TEMP,
         mode=NumberMode.BOX,
         native_min_value=MIN_TEMP,
         native_step=5,
@@ -97,7 +97,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda _, settings: settings.get("sleep_temp"),
-        set_key=CharSetting.SLEEP_TEMP,
+        characteristic=CharSetting.SLEEP_TEMP,
         mode=NumberMode.BOX,
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
@@ -110,7 +110,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda _, settings: settings.get("boost_temp"),
-        set_key=CharSetting.BOOST_TEMP,
+        characteristic=CharSetting.BOOST_TEMP,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=MAX_TEMP,
@@ -123,7 +123,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=NumberDeviceClass.VOLTAGE,
         value_fn=lambda _, settings: settings.get("qc_ideal_voltage"),
-        set_key=CharSetting.QC_IDEAL_VOLTAGE,
+        characteristic=CharSetting.QC_IDEAL_VOLTAGE,
         mode=NumberMode.BOX,
         native_min_value=9.0,
         native_max_value=22.0,
@@ -137,7 +137,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=NumberDeviceClass.DURATION,
         value_fn=lambda _, settings: settings.get("pd_negotiation_timeout"),
-        set_key=CharSetting.PD_NEGOTIATION_TIMEOUT,
+        characteristic=CharSetting.PD_NEGOTIATION_TIMEOUT,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=5.0,
@@ -151,7 +151,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
         value_fn=lambda _, settings: settings.get("shutdown_time"),
-        set_key=CharSetting.SHUTDOWN_TIME,
+        characteristic=CharSetting.SHUTDOWN_TIME,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=60,
@@ -162,7 +162,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.DISPLAY_BRIGHTNESS,
         translation_key=PinecilNumber.DISPLAY_BRIGHTNESS,
         value_fn=lambda _, settings: settings.get("display_brightness"),
-        set_key=CharSetting.DISPLAY_BRIGHTNESS,
+        characteristic=CharSetting.DISPLAY_BRIGHTNESS,
         mode=NumberMode.SLIDER,
         native_min_value=1,
         native_max_value=5,
@@ -173,7 +173,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.SLEEP_TIMEOUT,
         translation_key=PinecilNumber.SLEEP_TIMEOUT,
         value_fn=lambda _, settings: settings.get("sleep_timeout"),
-        set_key=CharSetting.SLEEP_TIMEOUT,
+        characteristic=CharSetting.SLEEP_TIMEOUT,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=15,
@@ -185,7 +185,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.POWER_LIMIT,
         translation_key=PinecilNumber.POWER_LIMIT,
         value_fn=lambda _, settings: settings.get("power_limit"),
-        set_key=CharSetting.POWER_LIMIT,
+        characteristic=CharSetting.POWER_LIMIT,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=12,
@@ -198,7 +198,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.CALIBRATION_OFFSET,
         translation_key=PinecilNumber.CALIBRATION_OFFSET,
         value_fn=lambda _, settings: settings.get("calibration_offset"),
-        set_key=CharSetting.CALIBRATION_OFFSET,
+        characteristic=CharSetting.CALIBRATION_OFFSET,
         mode=NumberMode.BOX,
         native_min_value=100,
         native_max_value=2500,
@@ -211,7 +211,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.HALL_SENSITIVITY,
         translation_key=PinecilNumber.HALL_SENSITIVITY,
         value_fn=lambda _, settings: settings.get("hall_sensitivity"),
-        set_key=CharSetting.HALL_SENSITIVITY,
+        characteristic=CharSetting.HALL_SENSITIVITY,
         mode=NumberMode.SLIDER,
         native_min_value=0,
         native_max_value=9,
@@ -223,7 +223,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.MIN_VOLTAGE_PER_CELL,
         translation_key=PinecilNumber.MIN_VOLTAGE_PER_CELL,
         value_fn=lambda _, settings: settings.get("min_voltage_per_cell"),
-        set_key=CharSetting.MIN_VOLTAGE_PER_CELL,
+        characteristic=CharSetting.MIN_VOLTAGE_PER_CELL,
         mode=NumberMode.BOX,
         native_min_value=2.4,
         native_max_value=3.8,
@@ -236,7 +236,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.ACCEL_SENSITIVITY,
         translation_key=PinecilNumber.ACCEL_SENSITIVITY,
         value_fn=lambda _, settings: settings.get("accel_sensitivity"),
-        set_key=CharSetting.ACCEL_SENSITIVITY,
+        characteristic=CharSetting.ACCEL_SENSITIVITY,
         mode=NumberMode.SLIDER,
         native_min_value=0,
         native_max_value=9,
@@ -247,7 +247,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.KEEP_AWAKE_PULSE_POWER,
         translation_key=PinecilNumber.KEEP_AWAKE_PULSE_POWER,
         value_fn=lambda _, settings: settings.get("keep_awake_pulse_power"),
-        set_key=CharSetting.KEEP_AWAKE_PULSE_POWER,
+        characteristic=CharSetting.KEEP_AWAKE_PULSE_POWER,
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=9.9,
@@ -262,8 +262,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         value_fn=(
             lambda _, settings: multiply(settings.get("keep_awake_pulse_delay"), 2.5)
         ),
-        set_key=CharSetting.KEEP_AWAKE_PULSE_DELAY,
-        set_fn=lambda value: value / 2.5,
+        characteristic=CharSetting.KEEP_AWAKE_PULSE_DELAY,
+        raw_value_fn=lambda value: value / 2.5,
         mode=NumberMode.BOX,
         native_min_value=2.5,
         native_max_value=22.5,
@@ -278,8 +278,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         value_fn=(
             lambda _, settings: multiply(settings.get("keep_awake_pulse_duration"), 250)
         ),
-        set_key=CharSetting.KEEP_AWAKE_PULSE_DURATION,
-        set_fn=lambda value: value / 250,
+        characteristic=CharSetting.KEEP_AWAKE_PULSE_DURATION,
+        raw_value_fn=lambda value: value / 250,
         mode=NumberMode.BOX,
         native_min_value=250,
         native_max_value=2250,
@@ -292,8 +292,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.VOLTAGE_DIV,
         translation_key=PinecilNumber.VOLTAGE_DIV,
         value_fn=(lambda _, settings: settings.get("voltage_div")),
-        set_key=CharSetting.VOLTAGE_DIV,
-        set_fn=lambda value: value,
+        characteristic=CharSetting.VOLTAGE_DIV,
+        raw_value_fn=lambda value: value,
         mode=NumberMode.BOX,
         native_min_value=360,
         native_max_value=900,
@@ -305,8 +305,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.TEMP_INCREMENT_SHORT,
         translation_key=PinecilNumber.TEMP_INCREMENT_SHORT,
         value_fn=(lambda _, settings: settings.get("temp_increment_short")),
-        set_key=CharSetting.TEMP_INCREMENT_SHORT,
-        set_fn=lambda value: value,
+        characteristic=CharSetting.TEMP_INCREMENT_SHORT,
+        raw_value_fn=lambda value: value,
         mode=NumberMode.BOX,
         native_min_value=1,
         native_max_value=50,
@@ -318,8 +318,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.TEMP_INCREMENT_LONG,
         translation_key=PinecilNumber.TEMP_INCREMENT_LONG,
         value_fn=(lambda _, settings: settings.get("temp_increment_long")),
-        set_key=CharSetting.TEMP_INCREMENT_LONG,
-        set_fn=lambda value: value,
+        characteristic=CharSetting.TEMP_INCREMENT_LONG,
+        raw_value_fn=lambda value: value,
         mode=NumberMode.BOX,
         native_min_value=5,
         native_max_value=90,
@@ -355,16 +355,20 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
         entity_description: IronOSNumberEntityDescription,
     ) -> None:
         """Initialize the number entity."""
-        super().__init__(coordinator.live_data, entity_description)
+        super().__init__(
+            coordinator.live_data, entity_description, entity_description.characteristic
+        )
 
         self.settings = coordinator.settings
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        if set_fn := self.entity_description.set_fn:
-            value = set_fn(value)
+        if raw_value_fn := self.entity_description.raw_value_fn:
+            value = raw_value_fn(value)
         try:
-            await self.coordinator.device.write(self.entity_description.set_key, value)
+            await self.coordinator.device.write(
+                self.entity_description.characteristic, value
+            )
         except CommunicationError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -394,7 +398,7 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.settings.async_add_listener(
-                self._handle_coordinator_update, self.entity_description.set_key
+                self._handle_coordinator_update, self.entity_description.characteristic
             )
         )
         await self.settings.async_request_refresh()

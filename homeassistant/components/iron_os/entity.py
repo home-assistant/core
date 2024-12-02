@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -21,11 +21,10 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSBaseCoordinator]):
         self,
         coordinator: IronOSBaseCoordinator,
         entity_description: EntityDescription,
+        context: Any | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            coordinator, context=getattr(entity_description, "set_key", None)
-        )
+        super().__init__(coordinator, context=context)
 
         self.entity_description = entity_description
         self._attr_unique_id = (
