@@ -1,7 +1,9 @@
 """Test the APSystem number module."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -16,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_command(
@@ -44,7 +46,11 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
+    freezer.tick(datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
