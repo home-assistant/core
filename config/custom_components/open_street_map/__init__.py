@@ -6,7 +6,7 @@ import voluptuous as vol
 
 # from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import _LOGGER, HomeAssistant, ServiceCall
+from homeassistant.core import _LOGGER, HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -44,6 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "search",
         async_handle_search,
         schema=vol.Schema({vol.Required("query"): str}),
+        supports_response=SupportsResponse.OPTIONAL
     )
 
     # Register the get_coordinates service. Not sure if this is needed
@@ -52,6 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "get_coordinates",
         async_handle_get_coordinates,
         schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
+        supports_response=SupportsResponse.OPTIONAL
     )
 
     # Register the get_address_coordinates service
@@ -61,6 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_handle_get_address_coordinates,
         schema=vol.Schema({vol.Required("query"): str}),
         # schema=cv.make_entity_service_schema({vol.Required("query"): str}),
+        supports_response=SupportsResponse.OPTIONAL
     )
 
     return True

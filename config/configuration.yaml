@@ -26,3 +26,5 @@ panel_custom:
     config:
       # Data you want to make available to panel
       hello: world
+
+# open_street_map: // causes error does not support yaml setup
