@@ -269,12 +269,21 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         ]
         tunnel_options.append(
             selector.SelectOptionDict(
-                value=OPTION_MANUAL_TUNNEL,
-                label=OPTION_MANUAL_TUNNEL,
+                value=OPTION_MANUAL_TUNNEL, label=OPTION_MANUAL_TUNNEL
             )
         )
+        default_tunnel = next(
+            (
+                str(tunnel)
+                for tunnel in self._found_tunnels
+                if tunnel.ip_addr == self.initial_data.get(CONF_HOST)
+            ),
+            vol.UNDEFINED,
+        )
         fields = {
-            vol.Required(CONF_KNX_GATEWAY): selector.SelectSelector(
+            vol.Required(
+                CONF_KNX_GATEWAY, default=default_tunnel
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=tunnel_options,
                     mode=selector.SelectSelectorMode.LIST,
@@ -320,12 +329,15 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             )
             for slot, slot_status in self._selected_tunnel.tunnelling_slots.items()
         )
+        default_endpoint = self.initial_data.get(
+            CONF_KNX_TUNNEL_ENDPOINT_IA, CONF_KNX_AUTOMATIC
+        )
         return self.async_show_form(
             step_id="tcp_tunnel_endpoint",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_KNX_TUNNEL_ENDPOINT_IA, default=CONF_KNX_AUTOMATIC
+                        CONF_KNX_TUNNEL_ENDPOINT_IA, default=default_endpoint
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=tunnel_endpoint_options,
@@ -681,12 +693,15 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             )
             for endpoint in self._tunnel_endpoints
         )
+        default_endpoint = self.initial_data.get(
+            CONF_KNX_TUNNEL_ENDPOINT_IA, CONF_KNX_AUTOMATIC
+        )
         return self.async_show_form(
             step_id="knxkeys_tunnel_select",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_KNX_TUNNEL_ENDPOINT_IA, default=CONF_KNX_AUTOMATIC
+                        CONF_KNX_TUNNEL_ENDPOINT_IA, default=default_endpoint
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=tunnel_endpoint_options,
