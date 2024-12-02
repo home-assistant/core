@@ -297,7 +297,7 @@ async def handle_config_info(
         vol.Required("type"): "backup/config/update",
         vol.Optional("create_backup"): vol.Schema(
             {
-                vol.Optional("agent_ids"): vol.All(list[str], vol.Length(min=1)),
+                vol.Optional("agent_ids"): vol.All(list[str]),
                 vol.Optional("include_addons"): vol.Any(list[str], None),
                 vol.Optional("include_all_addons"): bool,
                 vol.Optional("include_database"): bool,
