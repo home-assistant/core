@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from httpx import AsyncClient
 from pylamarzocco.client_cloud import LaMarzoccoCloudClient
@@ -58,9 +58,10 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    _client: AsyncClient
+
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._client: AsyncClient | None = None
         self._config: dict[str, Any] = {}
         self._fleet: dict[str, LaMarzoccoDeviceInfo] = {}
         self._discovered: dict[str, str] = {}
@@ -166,8 +167,6 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
-                if TYPE_CHECKING:
-                    assert self._client
                 if not await LaMarzoccoLocalClient.validate_connection(
                     client=self._client,
                     host=user_input[CONF_HOST],
