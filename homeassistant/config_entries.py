@@ -610,6 +610,7 @@ class ConfigEntry(Generic[_DataT]):
             "reason": self.reason,
             "error_reason_translation_key": self.error_reason_translation_key,
             "error_reason_translation_placeholders": self.error_reason_translation_placeholders,
+            "num_subentries": len(self.subentries),
         }
         return json_fragment(json_bytes(json_repr))
 
