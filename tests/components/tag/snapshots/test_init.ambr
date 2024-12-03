@@ -34,7 +34,6 @@
         dict({
           'device_id': 'some_scanner',
           'id': 'new tag',
-          'last_scanned': '2024-12-03T20:01:34.803742+00:00',
         }),
       ]),
     }),

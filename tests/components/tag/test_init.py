@@ -6,6 +6,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
@@ -211,7 +212,7 @@ async def test_tag_scanned(
     freezer.tick(11)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass_storage[DOMAIN] == snapshot
+    assert hass_storage[DOMAIN] == snapshot(exclude=props("last_scanned"))
 
 
 def track_changes(coll: collection.ObservableCollection):
