@@ -165,7 +165,9 @@ async def test_tag_scanned(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
     storage_setup,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test scanning tags."""
     assert await storage_setup()
@@ -204,6 +206,12 @@ async def test_tag_scanned(
             "name": "Tag new tag",
         },
     ]
+
+    # Trigger store
+    freezer.tick(11)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN] == snapshot
 
 
 def track_changes(coll: collection.ObservableCollection):
