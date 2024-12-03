@@ -52,9 +52,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: No noisy entities.
-  discovery:
-    status: exempt
-    comment: Fyta device cannot be discovered.
+  discovery: done
   stale-devices: done
   diagnostics: done
   exception-translations: done
@@ -65,7 +63,7 @@ rules:
   dynamic-devices: done
   discovery-update-info:
     status: exempt
-    comment: Fyta cannot be discovered.
+    comment: Fyta can be discovered but does not have a local connection.
   repair-issues:
     status: exempt
     comment: |
