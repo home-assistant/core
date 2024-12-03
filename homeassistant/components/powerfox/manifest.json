@@ -6,5 +6,11 @@
   "documentation": "https://www.home-assistant.io/integrations/powerfox",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["powerfox==1.0.0"]
+  "requirements": ["powerfox==1.0.0"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "powerfox*"
+    }
+  ]
 }

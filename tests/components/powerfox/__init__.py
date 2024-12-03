@@ -4,6 +4,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+MOCK_DIRECT_HOST = "1.1.1.1"
+
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the integration."""

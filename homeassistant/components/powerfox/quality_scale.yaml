@@ -55,11 +55,11 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      This integration cannot be discovered, it is connecting to a cloud service.
+      This integration is connecting to a cloud service.
   discovery:
     status: exempt
     comment: |
-      This integration cannot be discovered, it is connecting to a cloud service.
+      It can find poweropti devices via zeroconf, but will start a normal user flow.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done

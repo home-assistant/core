@@ -5,13 +5,26 @@ from unittest.mock import AsyncMock
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
 
+from homeassistant.components import zeroconf
 from homeassistant.components.powerfox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import MOCK_DIRECT_HOST
+
 from tests.common import MockConfigEntry
+
+MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    ip_address=MOCK_DIRECT_HOST,
+    ip_addresses=[MOCK_DIRECT_HOST],
+    hostname="powerfox.local",
+    name="Powerfox",
+    port=443,
+    type="_http._tcp",
+    properties={},
+)
 
 
 async def test_full_user_flow(
@@ -22,6 +35,37 @@ async def test_full_user_flow(
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "test@powerfox.test"
+    assert result.get("data") == {
+        CONF_EMAIL: "test@powerfox.test",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_powerfox_client.all_devices.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_discovery(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
     )
 
     assert result.get("type") is FlowResultType.FORM
