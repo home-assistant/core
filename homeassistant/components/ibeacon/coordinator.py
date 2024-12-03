@@ -24,6 +24,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_ALLOW_NAMELESS_UUIDS,
+    CONF_ALLOW_NEW_DEVICES,
+    DEFAULT_ALLOW_NEW_DEVICES,
     CONF_IGNORE_ADDRESSES,
     CONF_IGNORE_UUIDS,
     DOMAIN,
@@ -151,6 +153,11 @@ class IBeaconCoordinator:
             entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
         )
         self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
+
+        # Global option to allow creating new devices or not
+        self._allow_new_devices = entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+        )
 
         self._entry.async_on_unload(
             self._entry.add_update_listener(self.async_config_entry_updated)
@@ -332,6 +339,12 @@ class IBeaconCoordinator:
             return
 
         previously_tracked = address in self._unique_ids_by_address
+
+        # If we are not set to allow new devices and this device has not been registered yet stop processing
+        if not previously_tracked and not self._allow_new_devices:
+            _LOGGER.debug("ignoring new beacon %s due to config", unique_id)
+            return
+
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
