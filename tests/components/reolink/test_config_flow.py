@@ -85,7 +85,7 @@ async def test_config_flow_manual_success(
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
-    assert result["context"]["unique_id"] == TEST_MAC
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_errors(
