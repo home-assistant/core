@@ -243,7 +243,7 @@ class BackupManager:
         path: Path,
     ) -> None:
         """Upload a backup to selected agents."""
-        LOGGER.warning("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
+        LOGGER.debug("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
         async def send_backup() -> AsyncGenerator[bytes]:
             f = await self.hass.async_add_executor_job(path.open, "rb")
