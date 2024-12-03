@@ -160,7 +160,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
-        self._group_manager.entity_id_map[self._player.player_id] = self.entity_id
+        self._group_manager.register_media_player(
+            self._player.player_id, self.entity_id
+        )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")

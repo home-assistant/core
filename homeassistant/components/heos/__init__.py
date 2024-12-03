@@ -345,6 +345,11 @@ class GroupManager:
             self._disconnect_player_added()
             self._disconnect_player_added = None
 
+    @callback
+    def register_media_player(self, player_id: int, entity_id: str) -> None:
+        """Register a media player player_id with it's entity_id so it can be resolved later."""
+        self.entity_id_map[player_id] = entity_id
+
     @property
     def group_membership(self):
         """Provide access to group members for player entities."""
