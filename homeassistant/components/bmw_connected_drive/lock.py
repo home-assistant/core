@@ -18,7 +18,10 @@ from . import BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
+PARALLEL_UPDATES = 1
+
 DOOR_LOCK_STATE = "door_lock_state"
+
 _LOGGER = logging.getLogger(__name__)
 
 

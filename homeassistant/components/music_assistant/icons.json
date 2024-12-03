@@ -1,0 +1,7 @@
+{
+  "services": {
+    "play_media": { "service": "mdi:play" },
+    "play_announcement": { "service": "mdi:bullhorn" },
+    "transfer_queue": { "service": "mdi:transfer" }
+  }
+}
