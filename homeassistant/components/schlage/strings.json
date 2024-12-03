@@ -53,5 +53,10 @@
         "name": "1-Touch Locking"
       }
     }
+  },
+  "exceptions": {
+    "schlage_refresh_failed": {
+      "message": "Failed to refresh Schlage data"
+    }
   }
 }

@@ -159,6 +159,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
+        featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,

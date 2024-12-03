@@ -114,7 +114,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
-INVALID_END_CHARS = "-_"
+INVALID_END_CHARS = "-_ "
 MAX_VERSION_PART = 2**32 - 1
 
 
@@ -182,7 +182,6 @@ HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
 )
 
-
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
@@ -193,6 +192,14 @@ COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string)}
+)
+
+LOCK_SCHEMA = CODE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
+    }
 )
 
 MEDIA_PLAYER_SCHEMA = vol.Schema(
@@ -284,7 +291,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         if not isinstance(config, dict):
             raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
 
-        if domain in ("alarm_control_panel", "lock"):
+        if domain == "alarm_control_panel":
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
@@ -300,6 +307,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "camera":
             config = CAMERA_SCHEMA(config)
+
+        elif domain == "lock":
+            config = LOCK_SCHEMA(config)
 
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
@@ -424,20 +434,12 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(
-        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
-    )
+    return TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS)
 
 
 def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return (
-        round(
-            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
-            * 2
-        )
-        / 2
-    )
+    return TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
 
 
 def density_to_air_quality(density: float) -> int:

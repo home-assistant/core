@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Final, cast
 
 from kasa import Device, Feature
 
@@ -108,4 +108,4 @@ class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_native_value = self._feature.value
+        self._attr_native_value = cast(float | None, self._feature.value)

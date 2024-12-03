@@ -270,6 +270,25 @@ class ServiceNotFound(ServiceValidationError):
         self.generate_message = True
 
 
+class ServiceNotSupported(ServiceValidationError):
+    """Raised when an entity action is not supported."""
+
+    def __init__(self, domain: str, service: str, entity_id: str) -> None:
+        """Initialize ServiceNotSupported exception."""
+        super().__init__(
+            translation_domain="homeassistant",
+            translation_key="service_not_supported",
+            translation_placeholders={
+                "domain": domain,
+                "service": service,
+                "entity_id": entity_id,
+            },
+        )
+        self.domain = domain
+        self.service = service
+        self.generate_message = True
+
+
 class MaxLengthExceeded(HomeAssistantError):
     """Raised when a property value has exceeded the max character length."""
 

@@ -40,6 +40,9 @@ from .coordinator import T
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_vehicle import RenaultVehicleProxy
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RenaultSensorEntityDescription(

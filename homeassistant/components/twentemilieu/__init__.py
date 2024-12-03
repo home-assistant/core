@@ -29,7 +29,9 @@ type TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator[
 type TwenteMilieuConfigEntry = ConfigEntry[TwenteMilieuDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TwenteMilieuConfigEntry
+) -> bool:
     """Set up Twente Milieu from a config entry."""
     session = async_get_clientsession(hass)
     twentemilieu = TwenteMilieu(
@@ -55,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TwenteMilieuConfigEntry
+) -> bool:
     """Unload Twente Milieu config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

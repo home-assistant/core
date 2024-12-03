@@ -4,17 +4,14 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from bimmer_connected.models import (
-    MyBMWAPIError,
-    MyBMWAuthError,
-    MyBMWCaptchaMissingError,
-)
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
 from httpx import RequestError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_CAPTCHA_TOKEN,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
@@ -23,10 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    FIXTURE_CAPTCHA_INPUT,
     FIXTURE_CONFIG_ENTRY,
     FIXTURE_GCID,
     FIXTURE_REFRESH_TOKEN,
     FIXTURE_USER_INPUT,
+    FIXTURE_USER_INPUT_W_CAPTCHA,
 )
 
 from tests.common import MockConfigEntry
@@ -61,7 +60,7 @@ async def test_authentication_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT_W_CAPTCHA),
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -79,7 +78,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT_W_CAPTCHA),
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -97,12 +96,34 @@ async def test_api_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=deepcopy(FIXTURE_USER_INPUT),
+            data=deepcopy(FIXTURE_USER_INPUT_W_CAPTCHA),
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_captcha_flow_missing_error(hass: HomeAssistant) -> None:
+    """Test the external flow with captcha failing once and succeeding the second time."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=deepcopy(FIXTURE_USER_INPUT),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "captcha"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CAPTCHA_TOKEN: " "}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "missing_captcha"}
 
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
@@ -118,14 +139,22 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=deepcopy(FIXTURE_USER_INPUT),
         )
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == FIXTURE_COMPLETE_ENTRY[CONF_USERNAME]
-        assert result2["data"] == FIXTURE_COMPLETE_ENTRY
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "captcha"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_CAPTCHA_INPUT
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == FIXTURE_COMPLETE_ENTRY[CONF_USERNAME]
+        assert result["data"] == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -206,13 +235,20 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert suggested_values[CONF_PASSWORD] == wrong_password
         assert suggested_values[CONF_REGION] == FIXTURE_USER_INPUT[CONF_REGION]
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], FIXTURE_USER_INPUT
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], deepcopy(FIXTURE_USER_INPUT)
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "reauth_successful"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "captcha"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_CAPTCHA_INPUT
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 2
@@ -243,13 +279,13 @@ async def test_reauth_unique_id_abort(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {**FIXTURE_USER_INPUT, CONF_REGION: "north_america"}
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "account_mismatch"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "account_mismatch"
         assert config_entry.data == config_entry_with_wrong_password["data"]
 
 
@@ -279,13 +315,20 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         assert suggested_values[CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
         assert suggested_values[CONF_REGION] == FIXTURE_USER_INPUT[CONF_REGION]
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "reconfigure_successful"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "captcha"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_CAPTCHA_INPUT
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
 
@@ -307,40 +350,12 @@ async def test_reconfigure_unique_id_abort(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {**FIXTURE_USER_INPUT, CONF_USERNAME: "somebody@email.com"},
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "account_mismatch"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "account_mismatch"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
-
-
-@pytest.mark.usefixtures("bmw_fixture")
-async def test_captcha_flow_not_set(hass: HomeAssistant) -> None:
-    """Test the external flow with captcha failing once and succeeding the second time."""
-
-    TEST_REGION = "north_america"
-
-    # Start flow and open form
-    # Start flow and open form
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # Add login data
-    with patch(
-        "bimmer_connected.api.authentication.MyBMWAuthentication._login_row_na",
-        side_effect=MyBMWCaptchaMissingError(
-            "Missing hCaptcha token for North America login"
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={**FIXTURE_USER_INPUT, CONF_REGION: TEST_REGION},
-        )
-        assert result["errors"]["base"] == "missing_captcha"

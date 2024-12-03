@@ -10,8 +10,21 @@
           "charset": "Character set",
           "folder": "Folder",
           "search": "IMAP search",
+          "event_message_data": "Message data to be included in the `imap_content` event data:",
           "ssl_cipher_list": "SSL cipher list (Advanced)",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "username": "The IMAP username.",
+          "password": "The IMAP password",
+          "server": "The IMAP server.",
+          "port": "The IMAP port supporting SSL, usually this is 993.",
+          "charset": "The character set used. Common values are `utf-8` or `US-ASCII`.",
+          "folder": "In generally the folder is set to `INBOX`, but e.g. in case of a sub folder, named `Test`, this should be `INBOX.Test`.",
+          "search": "The IMAP search command which is `UnSeen UnDeleted` by default.",
+          "event_message_data": "Note that the event size is limited, and not all message text might be sent with the event if the message is too large.",
+          "ssl_cipher_list": "If the IMAP service only supports legacy encryption, try to change this.",
+          "verify_ssl": "Recommended, to ensure the server certificate is valid. Turn off, if the server certificate is not trusted (e.g. self signed)."
         }
       },
       "reauth_confirm": {
@@ -19,6 +32,9 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Correct the IMAP password."
         }
       }
     },
@@ -33,6 +49,14 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "imap_mail_count": {
+        "name": "Messages",
+        "unit_of_measurement": "messages"
+      }
     }
   },
   "exceptions": {
@@ -73,7 +97,15 @@
           "custom_event_data_template": "Template to create custom event data",
           "max_message_size": "Max message size (2048 < size < 30000)",
           "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable.",
-          "event_message_data": "Message data to be included in the `imap_content` event data:"
+          "event_message_data": "Message data to be included in the `imap_content` event data."
+        },
+        "data_description": {
+          "folder": "[%key:component::imap::config::step::user::data_description::folder%]",
+          "search": "[%key:component::imap::config::step::user::data_description::search%]",
+          "event_message_data": "[%key:component::imap::config::step::user::data_description::event_message_data%]",
+          "custom_event_data_template": "This template is evaluated when a new message was received, and the result is added to the `custom` attribute of the event data.",
+          "max_message_size": "Limit the maximum size of the event. Instead of passing the (whole) text message, using a template is a better option.",
+          "enable_push": "Using Push-IMAP is recommended. Polling will increase the time to respond."
         }
       }
     },

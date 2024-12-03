@@ -13,6 +13,8 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,4 +64,4 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
             or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        return brightness_to_value((0, 100), brightness)
+        return round(brightness_to_value((0, 100), brightness))

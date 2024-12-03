@@ -45,6 +45,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TIMER_DATA
 from .timers import (
+    CancelAllTimersIntentHandler,
     CancelTimerIntentHandler,
     DecreaseTimerIntentHandler,
     IncreaseTimerIntentHandler,
@@ -130,6 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, SetPositionIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
+    intent.async_register(hass, CancelAllTimersIntentHandler())
     intent.async_register(hass, IncreaseTimerIntentHandler())
     intent.async_register(hass, DecreaseTimerIntentHandler())
     intent.async_register(hass, PauseTimerIntentHandler())

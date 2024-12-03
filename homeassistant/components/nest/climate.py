@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
@@ -28,14 +27,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
+from .types import NestConfigEntry
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
 THERMOSTAT_MODE_MAP: dict[str, HVACMode] = {
@@ -78,17 +76,13 @@ MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the client entities."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
-
     async_add_entities(
         ThermostatEntity(device)
-        for device in device_manager.devices.values()
+        for device in entry.runtime_data.device_manager.devices.values()
         if ThermostatHvacTrait.NAME in device.traits
     )
 

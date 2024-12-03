@@ -342,20 +342,6 @@ async def test_api_set_yellow_settings(
 
 
 @pytest.mark.usefixtures("hassio_stubs")
-async def test_api_reboot_host(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.post(
-        "http://127.0.0.1/host/reboot",
-        json={"result": "ok", "data": {}},
-    )
-
-    assert await handler.async_reboot_host(hass) == {}
-    assert aioclient_mock.call_count == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
 async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     """Test send command fails when command is invalid."""
     hassio: HassIO = hass.data["hassio"]

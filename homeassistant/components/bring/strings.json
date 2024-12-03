@@ -1,4 +1,7 @@
 {
+  "common": {
+    "shopping_list_items": "items"
+  },
   "config": {
     "step": {
       "user": {
@@ -29,13 +32,16 @@
   "entity": {
     "sensor": {
       "urgent": {
-        "name": "Urgent"
+        "name": "Urgent",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "convenient": {
-        "name": "On occasion"
+        "name": "On occasion",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "discounted": {
-        "name": "Discount only"
+        "name": "Discount only",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "list_language": {
         "name": "Region & language",

@@ -6,6 +6,11 @@ CONF_API_USER = "api_user"
 
 DEFAULT_URL = "https://habitica.com"
 ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
+SITE_DATA_URL = "https://habitica.com/user/settings/siteData"
+FORGOT_PASSWORD_URL = "https://habitica.com/forgot-password"
+SIGN_UP_URL = "https://habitica.com/register"
+HABITICANS_URL = "https://habitica.com/static/img/home-main@3x.ffc32b12.png"
+
 DOMAIN = "habitica"
 
 # service constants
@@ -19,8 +24,6 @@ ATTR_DATA = "data"
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
-
-UNIT_TASKS = "tasks"
 
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"

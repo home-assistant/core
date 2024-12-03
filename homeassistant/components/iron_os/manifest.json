@@ -13,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/iron_os",
   "iot_class": "local_polling",
   "loggers": ["pynecil", "aiogithubapi"],
-  "requirements": ["pynecil==0.2.1", "aiogithubapi==24.6.0"]
+  "requirements": ["pynecil==1.0.1", "aiogithubapi==24.6.0"]
 }

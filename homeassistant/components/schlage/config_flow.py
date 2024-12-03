@@ -40,6 +40,7 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_user_form(errors)
 
         await self.async_set_unique_id(user_id)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=username,
             data={

@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, BMWConfigEntry
 
+PARALLEL_UPDATES = 1
+
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
 
 POI_SCHEMA = vol.Schema(

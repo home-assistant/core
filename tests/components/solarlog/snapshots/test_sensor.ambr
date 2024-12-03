@@ -254,7 +254,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Alternator loss',
+      'friendly_name': 'SolarLog Alternator loss',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -308,7 +308,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'solarlog Capacity',
+      'friendly_name': 'SolarLog Capacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -359,7 +359,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Consumption AC',
+      'friendly_name': 'SolarLog Consumption AC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -416,7 +416,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Consumption day',
+      'friendly_name': 'SolarLog Consumption day',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -473,7 +473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Consumption month',
+      'friendly_name': 'SolarLog Consumption month',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -530,7 +530,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Consumption total',
+      'friendly_name': 'SolarLog Consumption total',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -587,7 +587,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Consumption year',
+      'friendly_name': 'SolarLog Consumption year',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -642,7 +642,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Consumption yesterday',
+      'friendly_name': 'SolarLog Consumption yesterday',
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -695,7 +695,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'solarlog Efficiency',
+      'friendly_name': 'SolarLog Efficiency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -746,7 +746,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Installed peak power',
+      'friendly_name': 'SolarLog Installed peak power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -795,7 +795,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'solarlog Last update',
+      'friendly_name': 'SolarLog Last update',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarlog_last_update',
@@ -844,7 +844,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Power AC',
+      'friendly_name': 'SolarLog Power AC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -895,7 +895,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Power available',
+      'friendly_name': 'SolarLog Power available',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -946,7 +946,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'solarlog Power DC',
+      'friendly_name': 'SolarLog Power DC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -997,7 +997,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Self-consumption year',
+      'friendly_name': 'SolarLog Self-consumption year',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1051,7 +1051,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'solarlog Usage',
+      'friendly_name': 'SolarLog Usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1102,7 +1102,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'solarlog Voltage AC',
+      'friendly_name': 'SolarLog Voltage AC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -1153,7 +1153,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'solarlog Voltage DC',
+      'friendly_name': 'SolarLog Voltage DC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -1210,7 +1210,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Yield day',
+      'friendly_name': 'SolarLog Yield day',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1267,7 +1267,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Yield month',
+      'friendly_name': 'SolarLog Yield month',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1324,7 +1324,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Yield total',
+      'friendly_name': 'SolarLog Yield total',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1378,7 +1378,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Yield year',
+      'friendly_name': 'SolarLog Yield year',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1433,7 +1433,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'solarlog Yield yesterday',
+      'friendly_name': 'SolarLog Yield yesterday',
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,

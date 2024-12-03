@@ -42,7 +42,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            mac = format_mac(user_input[CONF_ADDRESS])
+            mac = user_input[CONF_ADDRESS]
             try:
                 is_new_style_scale = await is_new_scale(mac)
             except AcaiaDeviceNotFound:
@@ -53,12 +53,12 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             except AcaiaUnknownDevice:
                 return self.async_abort(reason="unsupported_device")
             else:
-                await self.async_set_unique_id(mac)
+                await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured()
 
             if not errors:
                 return self.async_create_entry(
-                    title=self._discovered_devices[user_input[CONF_ADDRESS]],
+                    title=self._discovered_devices[mac],
                     data={
                         CONF_ADDRESS: mac,
                         CONF_IS_NEW_STYLE_SCALE: is_new_style_scale,
@@ -99,10 +99,10 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
 
-        self._discovered[CONF_ADDRESS] = mac = format_mac(discovery_info.address)
+        self._discovered[CONF_ADDRESS] = discovery_info.address
         self._discovered[CONF_NAME] = discovery_info.name
 
-        await self.async_set_unique_id(mac)
+        await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
 
         try:

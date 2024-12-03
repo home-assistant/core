@@ -230,6 +230,19 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
+
+# aiofiles keeps getting downgraded by custom components
+# causing newer methods to not be available and breaking
+# some integrations at startup
+# https://github.com/home-assistant/core/issues/127529
+# https://github.com/home-assistant/core/issues/122508
+# https://github.com/home-assistant/core/issues/118004
+aiofiles>=24.1.0
+
+# 0.22.0 causes CI failures on Python 3.13
+# python3 -X dev -m pytest tests/components/matrix
+# python3 -X dev -m pytest tests/components/zha
+rpds-py==0.21.0
 """
 
 GENERATED_MESSAGE = (
@@ -350,8 +363,8 @@ def gather_modules() -> dict[str, list[str]] | None:
     gather_requirements_from_manifests(errors, reqs)
     gather_requirements_from_modules(errors, reqs)
 
-    for key in reqs:
-        reqs[key] = sorted(reqs[key], key=lambda name: (len(name.split(".")), name))
+    for value in reqs.values():
+        value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
     if errors:
         print("******* ERROR")

@@ -7,6 +7,16 @@
           "password": "[%key:common::config_flow::data::password%]",
           "region": "ConnectedDrive Region"
         }
+      },
+      "captcha": {
+        "title": "Are you a robot?",
+        "description": "A captcha is required for BMW login. Visit the external website to complete the challenge and submit the form. Copy the resulting token into the field below.\n\n{captcha_url}\n\nNo data will be exposed outside of your Home Assistant instance.",
+        "data": {
+          "captcha_token": "Captcha token"
+        },
+        "data_description": {
+          "captcha_token": "One-time token retrieved from the captcha challenge."
+        }
       }
     },
     "error": {

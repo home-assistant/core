@@ -22,6 +22,10 @@ from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
@@ -40,9 +44,6 @@ SUPPORT_STATE_SERVICES = (
 MOW = "mow"
 PARK = "park"
 OVERRIDE_MODES = [MOW, PARK]
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

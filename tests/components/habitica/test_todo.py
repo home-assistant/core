@@ -1,7 +1,6 @@
 """Tests for Habitica todo platform."""
 
 from collections.abc import Generator
-from datetime import datetime
 from http import HTTPStatus
 import json
 import re
@@ -39,7 +38,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def switch_only() -> Generator[None]:
+def todo_only() -> Generator[None]:
     """Enable only the todo platform."""
     with patch(
         "homeassistant.components.habitica.PLATFORMS",
@@ -628,12 +627,12 @@ async def test_move_todo_item_exception(
 @pytest.mark.parametrize(
     ("fixture", "calculated_due_date"),
     [
-        ("duedate_fixture_1.json", (2024, 9, 23)),
-        ("duedate_fixture_2.json", (2024, 9, 24)),
-        ("duedate_fixture_3.json", (2024, 10, 23)),
-        ("duedate_fixture_4.json", (2024, 10, 23)),
-        ("duedate_fixture_5.json", (2024, 9, 28)),
-        ("duedate_fixture_6.json", (2024, 10, 21)),
+        ("duedate_fixture_1.json", "2024-09-22"),
+        ("duedate_fixture_2.json", "2024-09-24"),
+        ("duedate_fixture_3.json", "2024-10-23"),
+        ("duedate_fixture_4.json", "2024-10-23"),
+        ("duedate_fixture_5.json", "2024-09-28"),
+        ("duedate_fixture_6.json", "2024-10-21"),
         ("duedate_fixture_7.json", None),
         ("duedate_fixture_8.json", None),
     ],
@@ -693,8 +692,4 @@ async def test_next_due_date(
         return_response=True,
     )
 
-    assert (
-        result[dailies_entity]["items"][0].get("due") is None
-        if not calculated_due_date
-        else datetime(*calculated_due_date).date()
-    )
+    assert result[dailies_entity]["items"][0].get("due") == calculated_due_date

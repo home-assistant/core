@@ -8,11 +8,7 @@ from pyheos.error import HeosError
 import pytest
 
 from homeassistant.components.heos import media_player
-from homeassistant.components.heos.const import (
-    DATA_SOURCE_MANAGER,
-    DOMAIN,
-    SIGNAL_HEOS_UPDATED,
-)
+from homeassistant.components.heos.const import DOMAIN, SIGNAL_HEOS_UPDATED
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -106,7 +102,7 @@ async def test_state_attributes(
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+        == config_entry.runtime_data.source_manager.source_list
     )
 
 
@@ -219,7 +215,7 @@ async def test_updates_from_sources_updated(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 2
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -318,7 +314,7 @@ async def test_updates_from_user_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 1
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list

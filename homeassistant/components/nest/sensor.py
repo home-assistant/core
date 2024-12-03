@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
 
 from homeassistant.components.sensor import (
@@ -13,13 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,15 +31,12 @@ DEVICE_TYPE_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
     entities: list[SensorEntity] = []
-    for device in device_manager.devices.values():
+    for device in entry.runtime_data.device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:
             entities.append(TemperatureSensor(device))
         if HumidityTrait.NAME in device.traits:

@@ -95,14 +95,16 @@ class CameraMediaSource(MediaSource):
         can_stream_hls = "stream" in self.hass.config.components
 
         async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
-            stream_type = camera.frontend_stream_type
-            if stream_type is None:
+            stream_types = camera.camera_capabilities.frontend_stream_types
+            if not stream_types:
                 return _media_source_for_camera(self.hass, camera, camera.content_type)
             if not can_stream_hls:
                 return None
 
             content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
-            if stream_type != StreamType.HLS and not (await camera.stream_source()):
+            if StreamType.HLS not in stream_types and not (
+                await camera.stream_source()
+            ):
                 return None
 
             return _media_source_for_camera(self.hass, camera, content_type)

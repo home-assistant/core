@@ -1004,6 +1004,8 @@ build.json @home-assistant/supervisor
 /tests/components/nice_go/ @IceBotYT
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
+/homeassistant/components/niko_home_control/ @VandeurenGlenn
+/tests/components/niko_home_control/ @VandeurenGlenn
 /homeassistant/components/nilu/ @hfurubotten
 /homeassistant/components/nina/ @DeerMaximum
 /tests/components/nina/ @DeerMaximum

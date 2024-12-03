@@ -148,7 +148,10 @@ class Trigger:
         def async_remove() -> None:
             """Remove trigger."""
             if instance not in self.trigger_instances:
-                raise HomeAssistantError("Can't remove trigger twice")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mqtt_trigger_cannot_remove_twice",
+                )
 
             if instance.remove:
                 instance.remove()

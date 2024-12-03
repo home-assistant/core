@@ -536,6 +536,8 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
+        await self._api.baichuan.check_subscribe_events()
+
         if self._api.baichuan.events_active and self._api.subscribed(SubType.push):
             # TCP push active, unsubscribe from ONVIF push because not needed
             self.unregister_webhook()
@@ -721,7 +723,7 @@ class ReolinkHost:
                     self._hass, POLL_INTERVAL_NO_PUSH, self._poll_job
                 )
 
-        self._signal_write_ha_state(None)
+        self._signal_write_ha_state()
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -780,7 +782,7 @@ class ReolinkHost:
                         "Could not poll motion state after losing connection during receiving ONVIF event"
                     )
                     return
-                async_dispatcher_send(hass, f"{webhook_id}_all", {})
+                self._signal_write_ha_state()
                 return
 
             message = data.decode("utf-8")
@@ -793,14 +795,14 @@ class ReolinkHost:
 
         self._signal_write_ha_state(channels)
 
-    def _signal_write_ha_state(self, channels: list[int] | None) -> None:
+    def _signal_write_ha_state(self, channels: list[int] | None = None) -> None:
         """Update the binary sensors with async_write_ha_state."""
         if channels is None:
-            async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
+            async_dispatcher_send(self._hass, f"{self.unique_id}_all", {})
             return
 
         for channel in channels:
-            async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
+            async_dispatcher_send(self._hass, f"{self.unique_id}_{channel}", {})
 
     @property
     def event_connection(self) -> str:

@@ -776,7 +776,11 @@ class MQTT:
             else:
                 del self._wildcard_subscriptions[subscription]
         except (KeyError, ValueError) as exc:
-            raise HomeAssistantError("Can't remove subscription twice") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_not_setup_cannot_unsubscribe_twice",
+                translation_placeholders={"topic": topic},
+            ) from exc
 
     @callback
     def _async_queue_subscriptions(
@@ -822,7 +826,11 @@ class MQTT:
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos."""
         if not isinstance(topic, str):
-            raise HomeAssistantError("Topic needs to be a string!")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_topic_not_a_string",
+                translation_placeholders={"topic": topic},
+            )
 
         if job_type is None:
             job_type = get_hassjob_callable_job_type(msg_callback)
@@ -1213,7 +1221,11 @@ class MQTT:
             import paho.mqtt.client as mqtt
 
             raise HomeAssistantError(
-                f"Error talking to MQTT: {mqtt.error_string(result_code)}"
+                translation_domain=DOMAIN,
+                translation_key="mqtt_broker_error",
+                translation_placeholders={
+                    "error_message": mqtt.error_string(result_code)
+                },
             )
 
         # Create the mid event if not created, either _mqtt_handle_mid or

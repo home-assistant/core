@@ -331,7 +331,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 break
         else:
             raise AddonError(
-                f"Failed to correctly start {addon_manager.addon_name} add-on"
+                translation_domain=DOMAIN,
+                translation_key="addon_start_failed",
+                translation_placeholders={"addon": addon_manager.addon_name},
             )
 
     async def async_step_user(

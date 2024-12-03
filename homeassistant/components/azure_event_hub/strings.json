@@ -31,7 +31,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "cannot_connect": "Connecting with the credentials from the configuration.yaml failed, please remove from yaml and use the config flow.",
       "unknown": "Connecting with the credentials from the configuration.yaml failed with an unknown error, please remove from yaml and use the config flow."
     }

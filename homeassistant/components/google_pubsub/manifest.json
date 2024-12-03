@@ -4,5 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/google_pubsub",
   "iot_class": "cloud_push",
+  "quality_scale": "legacy",
   "requirements": ["google-cloud-pubsub==2.23.0"]
 }

@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      Device is expected to be offline most of the time, but needs to connect quickly once available.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      No authentication required.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No IP discovery.
+  discovery:
+    status: done
+    comment: |
+      Bluetooth discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Device type integration.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No noisy/non-essential entities.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      No custom exceptions.
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Only parameter that could be changed (MAC = unique_id) would force a new config entry.
+  repair-issues:
+    status: exempt
+    comment: |
+      No repairs/issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      Device type integration.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      Bluetooth connection.
+  strict-typing: done

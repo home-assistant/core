@@ -1274,6 +1274,8 @@ async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
+    # Set up homeassistant component to fetch the translations
+    await async_setup_component(hass, "homeassistant", {})
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
@@ -1293,7 +1295,11 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
-    with pytest.raises(exceptions.HomeAssistantError):
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match="Entity light.living_room does not "
+        "support action test_domain.test_service",
+    ):
         await service.entity_service_call(
             hass,
             mock_entities,

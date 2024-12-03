@@ -12,7 +12,7 @@ from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import get_all_appliances
 
@@ -136,7 +136,7 @@ async def test_time_entity_error(
         getattr(problematic_appliance, mock_attr)()
 
     with pytest.raises(
-        ServiceValidationError, match=r"Error.*assign.*value.*to.*setting.*"
+        HomeAssistantError, match=r"Error.*assign.*value.*to.*setting.*"
     ):
         await hass.services.async_call(
             TIME_DOMAIN,

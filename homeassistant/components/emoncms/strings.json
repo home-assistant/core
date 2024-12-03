@@ -24,6 +24,52 @@
       "already_configured": "This server is already configured"
     }
   },
+  "entity": {
+    "sensor": {
+      "energy": {
+        "name": "Energy {emoncms_details}"
+      },
+      "power": {
+        "name": "Power {emoncms_details}"
+      },
+      "percent": {
+        "name": "Percentage {emoncms_details}"
+      },
+      "voltage": {
+        "name": "Voltage {emoncms_details}"
+      },
+      "current": {
+        "name": "Current {emoncms_details}"
+      },
+      "apparent_power": {
+        "name": "Apparent power {emoncms_details}"
+      },
+      "temperature": {
+        "name": "Temperature {emoncms_details}"
+      },
+      "frequency": {
+        "name": "Frequency {emoncms_details}"
+      },
+      "pressure": {
+        "name": "Pressure {emoncms_details}"
+      },
+      "decibel": {
+        "name": "Decibel {emoncms_details}"
+      },
+      "volume": {
+        "name": "Volume {emoncms_details}"
+      },
+      "flow": {
+        "name": "Flow rate {emoncms_details}"
+      },
+      "speed": {
+        "name": "Speed {emoncms_details}"
+      },
+      "concentration": {
+        "name": "Concentration {emoncms_details}"
+      }
+    }
+  },
   "options": {
     "error": {
       "api_error": "[%key:component::emoncms::config::error::api_error%]"

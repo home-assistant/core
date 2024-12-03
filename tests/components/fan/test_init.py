@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
@@ -27,8 +26,6 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
     setup_test_component_platform,
@@ -164,23 +161,6 @@ async def test_preset_mode_validation(
     with pytest.raises(NotValidPresetModeError) as exc:
         await test_fan._valid_preset_mode_or_raise("invalid")
     assert exc.value.translation_key == "not_valid_preset_mode"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(fan)
-
-
-@pytest.mark.parametrize(("enum"), list(fan.FanEntityFeature))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: fan.FanEntityFeature,
-) -> None:
-    """Test deprecated constants."""
-    if not FanEntityFeature.TURN_OFF and not FanEntityFeature.TURN_ON:
-        import_and_test_deprecated_constant_enum(
-            caplog, fan, enum, "SUPPORT_", "2025.1"
-        )
 
 
 def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:

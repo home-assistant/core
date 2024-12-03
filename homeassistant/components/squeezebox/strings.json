@@ -76,25 +76,31 @@
         "name": "Last scan"
       },
       "info_total_albums": {
-        "name": "Total albums"
+        "name": "Total albums",
+        "unit_of_measurement": "albums"
       },
       "info_total_artists": {
-        "name": "Total artists"
+        "name": "Total artists",
+        "unit_of_measurement": "artists"
       },
       "info_total_duration": {
         "name": "Total duration"
       },
       "info_total_genres": {
-        "name": "Total genres"
+        "name": "Total genres",
+        "unit_of_measurement": "genres"
       },
       "info_total_songs": {
-        "name": "Total songs"
+        "name": "Total songs",
+        "unit_of_measurement": "songs"
       },
       "player_count": {
-        "name": "Player count"
+        "name": "Player count",
+        "unit_of_measurement": "players"
       },
       "other_player_count": {
-        "name": "Player count off service"
+        "name": "Player count off service",
+        "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
       }
     }
   }

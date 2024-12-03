@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     if conn_params_dict := entry.data.get(CONF_CONNECTION_PARAMETERS):
         try:
             conn_params = Device.ConnectionParameters.from_dict(conn_params_dict)
-        except KasaException:
+        except (KasaException, TypeError, ValueError, LookupError):
             _LOGGER.warning(
                 "Invalid connection parameters dict for %s: %s", host, conn_params_dict
             )

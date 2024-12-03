@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate
 from homeassistant.components.climate import (
     DOMAIN,
     SET_TEMPERATURE_SCHEMA,
@@ -24,6 +22,7 @@ from homeassistant.components.climate.const import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -31,8 +30,11 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SWING_HORIZONTAL_OFF,
+    SWING_HORIZONTAL_ON,
     ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -54,9 +56,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
     setup_test_component_platform,
@@ -104,6 +103,7 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.SWING_HORIZONTAL_MODE
     )
     _attr_preset_mode = "home"
     _attr_preset_modes = ["home", "away"]
@@ -111,6 +111,8 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_fan_modes = ["auto", "off"]
     _attr_swing_mode = "auto"
     _attr_swing_modes = ["auto", "off"]
+    _attr_swing_horizontal_mode = "on"
+    _attr_swing_horizontal_modes = [SWING_HORIZONTAL_ON, SWING_HORIZONTAL_OFF]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature = 20
     _attr_target_temperature_high = 25
@@ -143,6 +145,10 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
+
+    def set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set horizontal swing mode."""
+        self._attr_swing_horizontal_mode = swing_horizontal_mode
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -194,65 +200,12 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
         (enum_field, constant_prefix)
         for enum_field in enum
         if enum_field
-        not in [ClimateEntityFeature.TURN_ON, ClimateEntityFeature.TURN_OFF]
+        not in [
+            ClimateEntityFeature.TURN_ON,
+            ClimateEntityFeature.TURN_OFF,
+            ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+        ]
     ]
-
-
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_")
-    + _create_tuples(climate.HVACMode, "HVAC_MODE_"),
-)
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.1"
-    )
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_postfix"),
-    [
-        (climate.HVACAction.OFF, "OFF"),
-        (climate.HVACAction.HEATING, "HEAT"),
-        (climate.HVACAction.COOLING, "COOL"),
-        (climate.HVACAction.DRYING, "DRY"),
-        (climate.HVACAction.IDLE, "IDLE"),
-        (climate.HVACAction.FAN, "FAN"),
-    ],
-)
-def test_deprecated_current_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: climate.HVACAction,
-    constant_postfix: str,
-) -> None:
-    """Test deprecated current constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        climate.const,
-        "CURRENT_HVAC_" + constant_postfix,
-        f"{enum.__class__.__name__}.{enum.name}",
-        enum,
-        "2025.1",
-    )
 
 
 async def test_temperature_features_is_valid(
@@ -339,6 +292,7 @@ async def test_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "home"
     assert state.attributes.get(ATTR_FAN_MODE) == "auto"
     assert state.attributes.get(ATTR_SWING_MODE) == "auto"
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "on"
 
     await hass.services.async_call(
         DOMAIN,
@@ -360,6 +314,15 @@ async def test_mode_validation(
     )
     await hass.services.async_call(
         DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {
+            "entity_id": "climate.test",
+            "swing_horizontal_mode": "off",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
         SERVICE_SET_FAN_MODE,
         {
             "entity_id": "climate.test",
@@ -371,6 +334,7 @@ async def test_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "away"
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "off"
 
     await hass.services.async_call(
         DOMAIN,
@@ -426,6 +390,25 @@ async def test_mode_validation(
         == "Swing mode invalid is not valid. Valid swing modes are: auto, off"
     )
     assert exc.value.translation_key == "not_valid_swing_mode"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {
+                "entity_id": "climate.test",
+                "swing_horizontal_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off"
+    )
+    assert exc.value.translation_key == "not_valid_horizontal_swing_mode"
 
     with pytest.raises(
         ServiceValidationError,
