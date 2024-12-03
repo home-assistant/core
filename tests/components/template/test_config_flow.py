@@ -222,8 +222,8 @@ async def test_config_flow(
 
     state = hass.states.get(f"{template_type}.my_template")
     assert state.state == template_state
-    for key in extra_attrs:
-        assert state.attributes[key] == extra_attrs[key]
+    for key, value in extra_attrs.items():
+        assert state.attributes[key] == value
 
 
 @pytest.mark.parametrize(
@@ -273,11 +273,21 @@ async def test_config_flow(
                 "min": "0",
                 "max": "100",
                 "step": "0.1",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
@@ -1263,11 +1273,21 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from plugwise.constants import DeviceData
+from plugwise.constants import GwEntityData
 
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import (
@@ -74,7 +74,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         )
 
     @property
-    def device(self) -> DeviceData:
+    def device(self) -> GwEntityData:
         """Return data for this device."""
         return self.coordinator.data.devices[self._dev_id]
 
