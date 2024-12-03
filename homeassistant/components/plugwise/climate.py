@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
@@ -241,7 +241,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            raise HomeAssistantError("Unsupported hvac_mode")
+            raise ServiceValidationError("Unsupported hvac_mode")
 
         if hvac_mode == self.hvac_mode:
             return
