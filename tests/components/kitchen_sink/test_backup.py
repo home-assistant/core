@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -96,14 +96,21 @@ async def test_agents_download(
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "kitchen_sink.syncer",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_write = Mock()
+        mocked_open.return_value.write = mocked_write
+        await client.send_json_auto_id(
+            {
+                "type": "backup/agents/download",
+                "agent_id": "kitchen_sink.syncer",
+                "backup_id": backup_id,
+            }
+        )
+        response = await client.receive_json()
+        mocked_write.assert_called_once_with(b"backup data")
 
     assert response["success"]
     assert f"Downloading backup {backup_id}" in caplog.text

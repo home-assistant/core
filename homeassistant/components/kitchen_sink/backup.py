@@ -7,13 +7,7 @@ from collections.abc import AsyncGenerator, Callable, Coroutine
 import logging
 from typing import Any
 
-from homeassistant.components.backup import (
-    AddonInfo,
-    AgentBackup,
-    BackupAgent,
-    BackupAgentStream,
-    Folder,
-)
+from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
@@ -52,13 +46,13 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BackupAgentStream:
+    ) -> AsyncGenerator[bytes]:
         """Download a backup file."""
         LOGGER.info("Downloading backup %s", backup_id)
         reader = asyncio.StreamReader()
         reader.feed_data(b"backup data")
         reader.feed_eof()
-        return reader
+        return reader  # type: ignore[return-value]
 
     async def async_upload_backup(
         self,

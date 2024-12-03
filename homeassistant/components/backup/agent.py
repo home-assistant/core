@@ -3,19 +3,14 @@
 from __future__ import annotations
 
 import abc
-import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
-
-import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .models import AgentBackup
-
-type BackupAgentStream = aiohttp.StreamReader | asyncio.StreamReader
 
 
 class BackupAgentError(HomeAssistantError):
@@ -38,7 +33,7 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BackupAgentStream:
+    ) -> AsyncGenerator[bytes]:
         """Download a backup file.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.

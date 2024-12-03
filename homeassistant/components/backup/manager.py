@@ -246,8 +246,9 @@ class BackupManager:
         LOGGER.warning("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
         async def send_backup() -> AsyncGenerator[bytes]:
-            with await self.hass.async_add_executor_job(path.open, "rb") as f:
-                while chunk := f.read(2**20):
+            f = await self.hass.async_add_executor_job(path.open, "rb")
+            with f:
+                while chunk := await self.hass.async_add_executor_job(f.read, 2**20):
                     yield chunk
 
         async def open_backup() -> AsyncGenerator[bytes]:
@@ -562,14 +563,10 @@ class BackupManager:
                     f"Backup {backup_id} not found in agent {agent_id}"
                 )
             stream = await agent.async_download_backup(backup_id)
-            file = await self.hass.async_add_executor_job(path.open, "wb")
-            if isinstance(stream, asyncio.StreamReader):
-                while chunk := await stream.read(2**20):
-                    await self.hass.async_add_executor_job(file.write, chunk)
-            else:
-                async for chunk, _ in stream.iter_chunks():
-                    await self.hass.async_add_executor_job(file.write, chunk)
-            file.close()
+            f = await self.hass.async_add_executor_job(path.open, "wb")
+            with f:
+                async for chunk in stream:
+                    await self.hass.async_add_executor_job(f.write, chunk)
 
         await self._reader_writer.async_restore_backup(
             backup_id=backup_id,

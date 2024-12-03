@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
-    BackupAgentStream,
     BackupProgress,
     BackupReaderWriter,
     Folder,
@@ -50,7 +49,7 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BackupAgentStream:
+    ) -> AsyncGenerator[bytes]:
         """Download a backup file."""
         raise NotImplementedError("Not yet supported by supervisor")
 

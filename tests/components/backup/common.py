@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
-    BackupAgentStream,
     Folder,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -84,9 +83,9 @@ class BackupAgentTest(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BackupAgentStream:
+    ) -> AsyncGenerator[bytes]:
         """Download a backup file."""
-        return AsyncMock(spec_set=["iter_chunks"])
+        return AsyncMock(spec_set=["__aiter__"])
 
     async def async_upload_backup(
         self,

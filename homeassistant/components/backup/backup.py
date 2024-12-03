@@ -11,7 +11,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
-from .agent import BackupAgent, BackupAgentStream, LocalBackupAgent
+from .agent import BackupAgent, LocalBackupAgent
 from .const import LOGGER
 from .models import AgentBackup
 from .util import read_backup
@@ -62,7 +62,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> BackupAgentStream:
+    ) -> AsyncGenerator[bytes]:
         """Download a backup file."""
         raise NotImplementedError
 

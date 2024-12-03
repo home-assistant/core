@@ -68,12 +68,8 @@ class DownloadBackupView(HomeAssistantView):
         stream = await agent.async_download_backup(backup_id)
         response = StreamResponse(status=HTTPStatus.OK, headers=headers)
         await response.prepare(request)
-        if isinstance(stream, asyncio.StreamReader):
-            while chunk := await stream.read(2**20):
-                await response.write(chunk)
-        else:
-            async for chunk, _ in stream.iter_chunks():
-                await response.write(chunk)
+        async for chunk in stream:
+            await response.write(chunk)
         return response
 
 
