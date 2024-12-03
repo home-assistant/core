@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
@@ -443,30 +443,12 @@ async def test_reconfigure_flow_error(
     }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(
+    hass: HomeAssistant,
+    load_config_entry: tuple[MockConfigEntry, Mock],
+) -> None:
     """Test options config flow."""
-    entry = MockConfigEntry(
-        title="test-username",
-        domain=DOMAIN,
-        unique_id="test-username",
-        data={
-            "username": "test-username",
-            "password": "test-password",
-            "area_id": "1",
-        },
-        version=2,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-            return_value=True,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entry = load_config_entry[0]
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
