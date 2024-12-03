@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import base64
+from collections.abc import AsyncIterator, Callable, Coroutine
 import hashlib
-from pathlib import Path
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -25,12 +25,11 @@ from .const import DATA_CLOUD, DOMAIN
 _STORAGE_BACKUP = "backup"
 
 
-def b64md5(path: Path) -> str:
+async def _b64md5(stream: AsyncIterator[bytes]) -> str:
     """Calculate the MD5 hash of a file."""
-    with open(path, "rb") as f:
-        file_hash = hashlib.md5()
-        while chunk := f.read(8192):
-            file_hash.update(chunk)
+    file_hash = hashlib.md5()
+    async for chunk in stream:
+        file_hash.update(chunk)
     return base64.b64encode(file_hash.digest()).decode()
 
 
@@ -61,10 +60,8 @@ class CloudBackupAgent(BackupAgent):
     async def async_download_backup(
         self,
         backup_id: str,
-        *,
-        path: Path,
         **kwargs: Any,
-    ) -> None:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
@@ -87,14 +84,12 @@ class CloudBackupAgent(BackupAgent):
             raise_for_status=True,
         )
 
-        file = await self._hass.async_add_executor_job(path.open, "wb")
-        async for chunk, _ in resp.content.iter_chunks():
-            await self._hass.async_add_executor_job(file.write, chunk)
+        return resp.content.iter_chunked(2**20)
 
     async def async_upload_backup(
         self,
         *,
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
@@ -109,7 +104,7 @@ class CloudBackupAgent(BackupAgent):
         if not self._cloud.is_logged_in:
             raise BackupAgentError("Not logged in to cloud")
 
-        base64md5hash = await self._hass.async_add_executor_job(b64md5, path)
+        base64md5hash = await _b64md5(await open_stream())
 
         details = await async_files_upload_details(
             self._cloud,
@@ -123,8 +118,8 @@ class CloudBackupAgent(BackupAgent):
         try:
             upload_status = await self._cloud.websession.put(
                 details["url"],
-                data=await self._hass.async_add_executor_job(path.open, "rb"),
-                headers=details["headers"],
+                data=await open_stream(),
+                headers=details["headers"] | {"content-length": str(backup.size)},
                 raise_for_status=True,
             )
 
