@@ -48,7 +48,7 @@
       "message": "`{filename}` is not an image"
     },
     "missing_upload_permission": {
-      "message": "Home Assistnt was not granted permission to upload to Google Photos"
+      "message": "Home Assistant was not granted permission to upload to Google Photos"
     },
     "upload_error": {
       "message": "Failed to upload content: {message}"
