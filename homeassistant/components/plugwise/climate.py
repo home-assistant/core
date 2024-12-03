@@ -78,19 +78,18 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
 
+        self._devices = coordinator.data.devices
+        self._gateway = coordinator.data.gateway
+        gateway_id: str = self._gateway["gateway_id"]
+        self._gateway_data = self._devices[gateway_id]
+
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
 
-        self.cdr_gateway = coordinator.data.gateway
-        gateway_id: str = coordinator.data.gateway["gateway_id"]
-        self.gateway_data = coordinator.data.devices[gateway_id]
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if (
-            self.cdr_gateway["cooling_present"]
-            and self.cdr_gateway["smile_name"] != "Adam"
-        ):
+        if self._gateway["cooling_present"] and self._gateway["smile_name"] != "Adam":
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
@@ -116,10 +115,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """
         # When no cooling available, _previous_mode is always heating
         if (
-            "regulation_modes" in self.gateway_data
-            and "cooling" in self.gateway_data["regulation_modes"]
+            "regulation_modes" in self._gateway_data
+            and "cooling" in self._gateway_data["regulation_modes"]
         ):
-            mode = self.gateway_data["select_regulation_mode"]
+            mode = self._gateway_data["select_regulation_mode"]
             if mode in ("cooling", "heating"):
                 self._previous_mode = mode
 
@@ -166,17 +165,17 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return a list of available HVACModes."""
         hvac_modes: list[HVACMode] = []
-        if "regulation_modes" in self.gateway_data:
+        if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
         if "available_schedules" in self.device:
             hvac_modes.append(HVACMode.AUTO)
 
-        if self.cdr_gateway["cooling_present"]:
-            if "regulation_modes" in self.gateway_data:
-                if self.gateway_data["select_regulation_mode"] == "cooling":
+        if self._gateway["cooling_present"]:
+            if "regulation_modes" in self._gateway_data:
+                if self._gateway_data["select_regulation_mode"] == "cooling":
                     hvac_modes.append(HVACMode.COOL)
-                if self.gateway_data["select_regulation_mode"] == "heating":
+                if self._gateway_data["select_regulation_mode"] == "heating":
                     hvac_modes.append(HVACMode.HEAT)
             else:
                 hvac_modes.append(HVACMode.HEAT_COOL)
@@ -192,17 +191,21 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._previous_action_mode(self.coordinator)
 
         # Adam provides the hvac_action for each thermostat
-        if (control_state := self.device.get("control_state")) == "cooling":
-            return HVACAction.COOLING
-        if control_state == "heating":
-            return HVACAction.HEATING
-        if control_state == "preheating":
-            return HVACAction.PREHEATING
-        if control_state == "off":
+        if self._gateway["smile_name"] == "Adam":
+            if (control_state := self.device.get("control_state")) == "cooling":
+                return HVACAction.COOLING
+            if control_state == "heating":
+                return HVACAction.HEATING
+            if control_state == "preheating":
+                return HVACAction.PREHEATING
+            if control_state == "off":
+                return HVACAction.IDLE
+
             return HVACAction.IDLE
 
-        heater: str = self.coordinator.data.gateway["heater_id"]
-        heater_data = self.coordinator.data.devices[heater]
+        # Anna
+        heater: str = self._gateway["heater_id"]
+        heater_data = self._devices[heater]
         if heater_data["binary_sensors"]["heating_state"]:
             return HVACAction.HEATING
         if heater_data["binary_sensors"].get("cooling_state", False):

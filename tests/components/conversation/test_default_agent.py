@@ -397,7 +397,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         callback.reset_mock()
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
-        assert callback.call_args[0][0] == sentence
+        assert callback.call_args[0][0].text == sentence
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), sentence
@@ -2930,7 +2930,7 @@ async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
     )
     result = await agent.async_recognize_intent(user_input)
     assert result is not None
-    assert result.unmatched_entities["name"].text == "test light"
+    assert result.unmatched_entities["area"].text == "test "
 
     # Mark this result so we know it is from cache next time
     mark = "_from_cache"

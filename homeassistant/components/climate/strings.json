@@ -123,6 +123,16 @@
         "swing_modes": {
           "name": "Swing modes"
         },
+        "swing_horizontal_mode": {
+          "name": "Horizontal swing mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        },
+        "swing_horizontal_modes": {
+          "name": "Horizontal swing modes"
+        },
         "target_temp_high": {
           "name": "Upper target temperature"
         },
@@ -221,6 +231,16 @@
         }
       }
     },
+    "set_swing_horizontal_mode": {
+      "name": "Set horizontal swing mode",
+      "description": "Sets horizontal swing operation mode.",
+      "fields": {
+        "swing_horizontal_mode": {
+          "name": "Horizontal swing mode",
+          "description": "Horizontal swing operation mode."
+        }
+      }
+    },
     "turn_on": {
       "name": "[%key:common::action::turn_on%]",
       "description": "Turns climate device on."
@@ -263,6 +283,9 @@
     },
     "not_valid_swing_mode": {
       "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
+    },
+    "not_valid_horizontal_swing_mode": {
+      "message": "Horizontal swing mode {mode} is not valid. Valid horizontal swing modes are: {modes}."
     },
     "not_valid_fan_mode": {
       "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."

@@ -326,7 +326,8 @@ class HomeAssistantApplication(web.Application):
             protocol,
             writer,
             task,
-            loop=self._loop,
+            # loop will never be None when called from aiohttp
+            loop=self._loop,  # type: ignore[arg-type]
             client_max_size=self._client_max_size,
         )
 

@@ -31,7 +31,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -66,10 +65,6 @@ class LockEntityFeature(IntFlag):
 
     OPEN = 1
 
-
-# The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
-# Please use the LockEntityFeature enum instead.
-_DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 

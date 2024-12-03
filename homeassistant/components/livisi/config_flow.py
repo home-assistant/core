@@ -6,7 +6,8 @@ from contextlib import suppress
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from aiolivisi import AioLivisi, errors as livisi_errors
+from livisi import errors as livisi_errors
+from livisi.aiolivisi import AioLivisi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
