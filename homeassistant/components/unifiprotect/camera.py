@@ -38,8 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 def _create_rtsp_repair(
     hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
 ) -> None:
-    if camera.is_third_party_camera:
-        return
     edit_key = "readonly"
     if camera.can_write(data.api.bootstrap.auth_user):
         edit_key = "writable"
@@ -93,7 +91,8 @@ def _get_camera_channels(
 
         # no RTSP enabled use first channel with no stream
         if is_default:
-            _create_rtsp_repair(hass, entry, data, camera)
+            if not camera.is_third_party_camera:
+                _create_rtsp_repair(hass, entry, data, camera)
             yield camera, camera.channels[0], True
         else:
             ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
