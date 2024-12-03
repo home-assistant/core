@@ -80,9 +80,4 @@ class AmazonBinarySensorEntity(
     @property
     def is_on(self) -> bool:
         """Presence detected."""
-        return bool(
-            getattr(
-                self.coordinator.data[self._device.serial_number],
-                self.entity_description.key,
-            )
-        )
+        return bool(getattr(self._device, self.entity_description.key))
