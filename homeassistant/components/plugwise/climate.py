@@ -230,7 +230,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             if temperature is None or not (
                 self._attr_min_temp <= temperature <= self._attr_max_temp
             ):
-                raise ValueError("Invalid temperature change requested")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_temperature_change_requested",
+                )
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(mode)
@@ -241,7 +244,15 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            raise ServiceValidationError("Unsupported hvac_mode")
+            hvac_modes = ", ".join(self.hvac_modes)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode_requested",
+                translation_placeholders={
+                    "hvac_mode": hvac_mode,
+                    "hvac_modes": hvac_modes,
+                },
+            )
 
         if hvac_mode == self.hvac_mode:
             return

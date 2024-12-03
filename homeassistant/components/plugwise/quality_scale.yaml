@@ -62,14 +62,12 @@ rules:
   diagnostics: done
   exception-translations:
     status: todo
-    comment: Add coordinator, util and climate exceptions
+    comment: Add coordinator, util exceptions (climate done in core 132175)
   icon-translations: done
   reconfiguration-flow:
     status: todo
     comment: This integration does not have any reconfiguration steps (yet) investigate how/why
-  dynamic-devices:
-    status: todo
-    comment: Investigate missing logic to button for unloading and creation
+  dynamic-devices: done
   discovery-update-info: done
   repair-issues:
     status: exempt
