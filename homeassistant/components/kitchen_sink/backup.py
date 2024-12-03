@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from pathlib import Path
 from typing import Any
 
 from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
@@ -44,22 +45,24 @@ class KitchenSinkBackupAgent(BackupAgent):
     async def async_download_backup(
         self,
         backup_id: str,
-        *,
-        path: Path,
         **kwargs: Any,
-    ) -> None:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        LOGGER.info("Downloading backup %s to %s", backup_id, path)
+        LOGGER.info("Downloading backup %s", backup_id)
+        reader = asyncio.StreamReader()
+        reader.feed_data(b"backup data")
+        reader.feed_eof()
+        return reader
 
     async def async_upload_backup(
         self,
         *,
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        LOGGER.info("Uploading backup %s %s", path.name, backup)
+        LOGGER.info("Uploading backup %s %s", backup.backup_id, backup)
         self._uploads.append(backup)
 
     async def async_delete_backup(

@@ -262,10 +262,13 @@ async def backup_agents_download(
         return
     try:
         path = manager.temp_backup_dir / f"{msg["backup_id"]}.tar"
-        await agent.async_download_backup(
-            msg["backup_id"],
-            path=path,
-        )
+        stream = await agent.async_download_backup(msg["backup_id"])
+        f = await hass.async_add_executor_job(path.open, "wb")
+        try:
+            async for chunk in stream:
+                await hass.async_add_executor_job(f.write, chunk)
+        finally:
+            await hass.async_add_executor_job(f.close)
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))
         return

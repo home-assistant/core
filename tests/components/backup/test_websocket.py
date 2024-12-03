@@ -2,9 +2,8 @@
 
 from collections.abc import Generator
 from datetime import datetime
-from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -487,7 +486,7 @@ async def test_restore_remote_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch("pathlib.Path.write_text"):
+    with patch("pathlib.Path.write_text"), patch("pathlib.Path.open"):
         await client.send_json_auto_id(
             {
                 "type": "backup/restore",
@@ -655,19 +654,24 @@ async def test_agents_download(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "domain.test",
-            "backup_id": "abc123",
-        }
-    )
-    with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
+    with (
+        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
+        mocked_write = Mock()
+        mocked_open.return_value.write = mocked_write
+        await client.send_json_auto_id(
+            {
+                "type": "backup/agents/download",
+                "agent_id": "domain.test",
+                "backup_id": "abc123",
+            }
+        )
         assert await client.receive_json() == snapshot
-        assert download_mock.call_args[0] == ("abc123",)
-        assert download_mock.call_args[1] == {
-            "path": Path(hass.config.path("tmp_backups"), "abc123.tar"),
-        }
+        download_mock.assert_called_once_with("abc123")
+        mocked_write.assert_called_once_with(b"backup data")
 
 
 async def test_agents_download_exception(

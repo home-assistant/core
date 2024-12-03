@@ -7,19 +7,20 @@ from unittest.mock import patch
 from aiohttp import web
 import pytest
 
+from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_ABC123, setup_backup_integration
+from .common import TEST_BACKUP_ABC123, BackupAgentTest, setup_backup_integration
 
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
 
 
-async def test_downloading_backup(
+async def test_downloading_local_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test downloading a backup file."""
+    """Test downloading a local backup file."""
     await setup_backup_integration(hass)
 
     client = await hass_client()
@@ -37,6 +38,25 @@ async def test_downloading_backup(
     ):
         resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
         assert resp.status == 200
+
+
+async def test_downloading_remote_backup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test downloading a remote backup."""
+    await setup_backup_integration(hass)
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+
+    client = await hass_client()
+
+    with (
+        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
+    ):
+        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
+        resp = await client.get("/api/backup/download/abc123?agent_id=domain.test")
+        assert resp.status == 200
+        assert await resp.content.read() == b"backup data"
 
 
 async def test_downloading_backup_not_found(

@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -96,18 +96,24 @@ async def test_agents_download(
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "kitchen_sink.syncer",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_write = Mock()
+        mocked_open.return_value.write = mocked_write
+        await client.send_json_auto_id(
+            {
+                "type": "backup/agents/download",
+                "agent_id": "kitchen_sink.syncer",
+                "backup_id": backup_id,
+            }
+        )
+        response = await client.receive_json()
+        mocked_write.assert_called_once_with(b"backup data")
 
     assert response["success"]
-    path = hass.config.path(f"tmp_backups/{backup_id}.tar")
-    assert f"Downloading backup {backup_id} to {path}" in caplog.text
+    assert f"Downloading backup {backup_id}" in caplog.text
 
 
 async def test_agents_upload(
@@ -150,8 +156,7 @@ async def test_agents_upload(
         )
 
     assert resp.status == 201
-    backup_name = f"{backup_id}.tar"
-    assert f"Uploading backup {backup_name}" in caplog.text
+    assert f"Uploading backup {backup_id}" in caplog.text
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     response = await ws_client.receive_json()
