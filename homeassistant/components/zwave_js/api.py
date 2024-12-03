@@ -83,7 +83,9 @@ from .const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
+    CONF_INSTALLER_MODE,
     DATA_CLIENT,
+    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -393,6 +395,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
+    websocket_api.async_register_command(hass, websocket_cancel_secure_bootstrap_s2)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
     websocket_api.async_register_command(hass, websocket_provision_smart_start_node)
@@ -450,6 +453,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
+    websocket_api.async_register_command(hass, websocket_get_integration_settings)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -834,6 +838,29 @@ async def websocket_add_node(
             msg[ID],
             result,
         )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/cancel_secure_bootstrap_s2",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_cancel_secure_bootstrap_s2(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Cancel secure bootstrap S2."""
+    await driver.controller.async_cancel_secure_bootstrap_s2()
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -2682,3 +2709,25 @@ async def websocket_invoke_cc_api(
             msg[ID],
             result,
         )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_integration_settings",
+    }
+)
+def websocket_get_integration_settings(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get Z-Wave JS integration wide configuration."""
+    connection.send_result(
+        msg[ID],
+        {
+            # list explicitly to avoid leaking other keys and to set default
+            CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
+        },
+    )

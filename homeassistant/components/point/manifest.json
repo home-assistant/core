@@ -7,6 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/point",
   "iot_class": "cloud_polling",
   "loggers": ["pypoint"],
-  "quality_scale": "silver",
   "requirements": ["pypoint==3.0.0"]
 }
