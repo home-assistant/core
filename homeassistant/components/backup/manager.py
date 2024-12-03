@@ -247,9 +247,11 @@ class BackupManager:
 
         async def send_backup() -> AsyncGenerator[bytes]:
             f = await self.hass.async_add_executor_job(path.open, "rb")
-            with f:
+            try:
                 while chunk := await self.hass.async_add_executor_job(f.read, 2**20):
                     yield chunk
+            finally:
+                await self.hass.async_add_executor_job(f.close)
 
         async def open_backup() -> AsyncGenerator[bytes]:
             return send_backup()
@@ -564,9 +566,11 @@ class BackupManager:
                 )
             stream = await agent.async_download_backup(backup_id)
             f = await self.hass.async_add_executor_job(path.open, "wb")
-            with f:
+            try:
                 async for chunk in stream:
                     await self.hass.async_add_executor_job(f.write, chunk)
+            finally:
+                await self.hass.async_add_executor_job(f.close)
 
         await self._reader_writer.async_restore_backup(
             backup_id=backup_id,
