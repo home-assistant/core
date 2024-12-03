@@ -48,7 +48,7 @@ rules:
     comment: no configuration option
 
   # Gold
-  entity-translations: todo
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: todo
@@ -71,7 +71,7 @@ rules:
     comment: fixed api
   repair-issues:
     status: exempt
-    comment: only authentication failure possible
+    comment: No repair issues to be raised
   docs-use-cases: done
   docs-supported-devices: todo
   docs-supported-functions: done
