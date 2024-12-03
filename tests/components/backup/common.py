@@ -77,6 +77,7 @@ class BackupAgentTest(BackupAgent):
                 )
             ]
 
+        self._backup_data = None
         self._backups = {backup.backup_id: backup for backup in backups}
 
     async def async_download_backup(
@@ -96,6 +97,10 @@ class BackupAgentTest(BackupAgent):
     ) -> None:
         """Upload a backup."""
         self._backups[backup.backup_id] = backup
+        backup_stream = await open_stream()
+        self._backup_data = bytearray()
+        async for chunk in backup_stream:
+            self._backup_data += chunk
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
