@@ -51,7 +51,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform as ep,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
@@ -1051,3 +1055,34 @@ async def test_media_player_unjoin_group(
         blocking=True,
     )
     assert "Failed to ungroup media_player.test_player" in caplog.text
+
+
+async def test_media_player_group_fails_when_entity_removed(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping fails when entity unloaded."""
+    await setup_platform(hass, config_entry, config)
+
+    # Unload one of the players
+    entity_platform = ep.async_get_platforms(hass, DOMAIN)[0]
+    await entity_platform.async_remove_entity("media_player.test_player_2")
+
+    # Attempt to group
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    # Assert that the group call failed
+    controller.create_group.assert_called_once_with(
+        1,
+        [],
+    )
