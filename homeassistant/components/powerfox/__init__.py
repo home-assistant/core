@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import asyncio
 
-from powerfox import Device, Powerfox
+from powerfox import Powerfox, PowerfoxConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import PowerfoxDataUpdateCoordinator
@@ -25,7 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         password=entry.data[CONF_PASSWORD],
         session=async_get_clientsession(hass),
     )
-    devices: list[Device] = await client.all_devices()
+
+    try:
+        devices = await client.all_devices()
+    except PowerfoxConnectionError as err:
+        await client.close()
+        raise ConfigEntryNotReady from err
 
     coordinators: list[PowerfoxDataUpdateCoordinator] = [
         PowerfoxDataUpdateCoordinator(hass, client, device) for device in devices
