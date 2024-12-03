@@ -7,8 +7,8 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import hashlib
 from typing import Any
 
-from aiohttp import ClientResponseError
-from hass_nabucasa import Cloud
+from aiohttp import ClientError
+from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.cloud_api import (
     async_files_delete_file,
     async_files_download_details,
@@ -67,22 +67,23 @@ class CloudBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :param path: The full file path to download the backup to.
         """
-        if not self._cloud.is_logged_in:
-            raise BackupAgentError("Not logged in to cloud")
-
         if not await self.async_get_backup(backup_id):
             raise BackupAgentError("Backup not found")
 
-        details = await async_files_download_details(
-            self._cloud,
-            storage_type=_STORAGE_BACKUP,
-            filename=self._get_backup_filename(),
-        )
+        try:
+            details = await async_files_download_details(
+                self._cloud,
+                storage_type=_STORAGE_BACKUP,
+                filename=self._get_backup_filename(),
+            )
+        except CloudError as err:
+            raise BackupAgentError("Failed to get download details") from err
 
-        resp = await self._cloud.websession.get(
-            details["url"],
-            raise_for_status=True,
-        )
+        try:
+            resp = await self._cloud.websession.get(details["url"])
+            resp.raise_for_status()
+        except ClientError as err:
+            raise BackupAgentError("Failed to download backup") from err
 
         return resp.content.iter_chunked(2**20)
 
@@ -101,30 +102,28 @@ class CloudBackupAgent(BackupAgent):
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
-        if not self._cloud.is_logged_in:
-            raise BackupAgentError("Not logged in to cloud")
-
         base64md5hash = await _b64md5(await open_stream())
 
-        details = await async_files_upload_details(
-            self._cloud,
-            storage_type=_STORAGE_BACKUP,
-            filename=self._get_backup_filename(),
-            metadata=backup.as_dict(),
-            size=backup.size,
-            base64md5hash=base64md5hash,
-        )
+        try:
+            details = await async_files_upload_details(
+                self._cloud,
+                storage_type=_STORAGE_BACKUP,
+                filename=self._get_backup_filename(),
+                metadata=backup.as_dict(),
+                size=backup.size,
+                base64md5hash=base64md5hash,
+            )
+        except CloudError as err:
+            raise BackupAgentError("Failed to get upload details") from err
 
         try:
             upload_status = await self._cloud.websession.put(
                 details["url"],
                 data=await open_stream(),
                 headers=details["headers"] | {"content-length": str(backup.size)},
-                raise_for_status=True,
             )
-
             upload_status.raise_for_status()
-        except ClientResponseError as err:
+        except ClientError as err:
             raise BackupAgentError("Failed to upload backup") from err
 
     async def async_delete_backup(
@@ -139,15 +138,21 @@ class CloudBackupAgent(BackupAgent):
         if not await self.async_get_backup(backup_id):
             raise BackupAgentError("Backup not found")
 
-        await async_files_delete_file(
-            self._cloud,
-            storage_type=_STORAGE_BACKUP,
-            filename=self._get_backup_filename(),
-        )
+        try:
+            await async_files_delete_file(
+                self._cloud,
+                storage_type=_STORAGE_BACKUP,
+                filename=self._get_backup_filename(),
+            )
+        except CloudError as err:
+            raise BackupAgentError("Failed to delete backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+        try:
+            backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+        except CloudError as err:
+            raise BackupAgentError("Failed to list backups") from err
 
         return [AgentBackup.from_dict(backup["Metadata"]) for backup in backups]
 

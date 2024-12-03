@@ -5,6 +5,7 @@ from io import StringIO
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
+from hass_nabucasa import CloudError
 import pytest
 from yarl import URL
 
@@ -170,6 +171,28 @@ async def test_agents_list_backups(
     ]
 
 
+async def test_agents_list_backups_fail_cloud(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    mock_list_files: Mock,
+) -> None:
+    """Test agent list backups."""
+    client = await hass_ws_client(hass)
+    mock_list_files.side_effect = CloudError
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agent_errors": {"cloud.cloud": "Failed to list backups"},
+        "backing_up": False,
+        "backups": [],
+        "last_automatic_backup": None,
+    }
+
+
 @pytest.mark.parametrize(
     ("backup_id", "expected_result"),
     [
@@ -250,13 +273,16 @@ async def test_agents_download(
     mocked_write.assert_called_once_with(b"backup data")
 
 
-async def test_agents_download_not_logged_in(
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_download_fail_cloud(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    mock_get_download_details: Mock,
 ) -> None:
     """Test agent download backup, when cloud user is logged in."""
     client = await hass_ws_client(hass)
-    backup_id = "abc123"
+    backup_id = "23e64aec"
+    mock_get_download_details.side_effect = CloudError
 
     await client.send_json_auto_id(
         {
@@ -270,7 +296,36 @@ async def test_agents_download_not_logged_in(
     assert not response["success"]
     assert response["error"] == {
         "code": "backup_agents_download",
-        "message": "Not logged in to cloud",
+        "message": "Failed to get download details",
+    }
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_download_fail_get(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_get_download_details: Mock,
+) -> None:
+    """Test agent download backup, when cloud user is logged in."""
+    client = await hass_ws_client(hass)
+    backup_id = "23e64aec"
+
+    aioclient_mock.get(mock_get_download_details.return_value["url"], status=500)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "agent_id": "cloud.cloud",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "backup_agents_download",
+        "message": "Failed to download backup",
     }
 
 
@@ -353,7 +408,7 @@ async def test_agents_upload(
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
-async def test_agents_upload_fail(
+async def test_agents_upload_fail_put(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -398,14 +453,17 @@ async def test_agents_upload_fail(
     assert "Error during backup upload - Failed to upload backup" in caplog.text
 
 
-async def test_agents_upload_not_logged_in(
+@pytest.mark.usefixtures("cloud_logged_in")
+async def test_agents_upload_fail_cloud(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    mock_get_upload_details: Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
     backup_id = "test-backup"
+    mock_get_upload_details.side_effect = CloudError
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
@@ -420,17 +478,23 @@ async def test_agents_upload_not_logged_in(
     )
     with (
         patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
             "homeassistant.components.backup.manager.read_backup",
             return_value=test_backup,
         ),
+        patch("pathlib.Path.open") as mocked_open,
     ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
 
     assert resp.status == 201
-    assert "Error during backup upload - Not logged in to cloud" in caplog.text
+    assert "Error during backup upload - Failed to get upload details" in caplog.text
 
 
 async def test_agents_upload_not_protected(
@@ -489,6 +553,31 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     mock_delete_file.assert_called_once()
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_delete_fail_cloud(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_delete_file: Mock,
+) -> None:
+    """Test agent delete backup."""
+    client = await hass_ws_client(hass)
+    backup_id = "23e64aec"
+    mock_delete_file.side_effect = CloudError
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agent_errors": {"cloud.cloud": "Failed to delete backup"}
+    }
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
