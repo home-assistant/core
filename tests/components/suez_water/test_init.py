@@ -6,8 +6,8 @@ from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
 from homeassistant.components.suez_water.coordinator import (
@@ -51,6 +51,7 @@ async def test_initialization_setup_api_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
     ("statistic", "daily_value"),
     [
@@ -62,8 +63,8 @@ async def test_statistics(
     hass: HomeAssistant,
     suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    recorder_mock: Recorder,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
     statistic: str,
     daily_value: float,
 ) -> None:
@@ -90,6 +91,7 @@ async def test_statistics(
     await _test_for_data(
         hass,
         suez_client,
+        snapshot,
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
@@ -106,6 +108,7 @@ async def test_statistics(
     await _test_for_data(
         hass,
         suez_client,
+        snapshot,
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
@@ -123,6 +126,7 @@ async def test_statistics(
     await _test_for_data(
         hass,
         suez_client,
+        snapshot,
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
@@ -141,6 +145,7 @@ async def test_statistics(
     await _test_for_data(
         hass,
         suez_client,
+        snapshot,
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
@@ -154,6 +159,7 @@ async def test_statistics(
 async def _test_for_data(
     hass: HomeAssistant,
     suez_client: AsyncMock,
+    snapshot: SnapshotAssertion,
     statistic: str,
     origin: datetime,
     counter_id: str,
@@ -177,17 +183,18 @@ async def _test_for_data(
         None,
         {"start", "state", "mean", "min", "max", "last_reset", "sum"},
     )
+    assert stats == snapshot
 
-    assert stats.get(statistic_id) is not None
-    assert len(stats[statistic_id]) == nb_samples + extra_samples
-    _sum = 0
-    for _k, stat in enumerate(stats[statistic_id]):
-        assert stat["state"] == daily_value
-        assert stat["last_reset"] is None
+    # assert stats.get(statistic_id) is not None
+    # assert len(stats[statistic_id]) == nb_samples + extra_samples
+    # _sum = 0
+    # for _k, stat in enumerate(stats[statistic_id]):
+    #     assert stat["state"] == daily_value
+    #     assert stat["last_reset"] is None
 
-        _sum += daily_value
-        assert stat["sum"] == _sum
-        assert stat.get("max") is None
-        assert stat.get("min") is None
-        assert stat.get("mean") is None
-        assert stat.get("last_reset") is None
+    #     _sum += daily_value
+    #     assert stat["sum"] == _sum
+    #     assert stat.get("max") is None
+    #     assert stat.get("min") is None
+    #     assert stat.get("mean") is None
+    #     assert stat.get("last_reset") is None
