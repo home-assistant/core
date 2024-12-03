@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import Any
 
@@ -46,18 +46,18 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AsyncGenerator[bytes]:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         LOGGER.info("Downloading backup %s", backup_id)
         reader = asyncio.StreamReader()
         reader.feed_data(b"backup data")
         reader.feed_eof()
-        return reader  # type: ignore[return-value]
+        return reader
 
     async def async_upload_backup(
         self,
         *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncGenerator[bytes]]],
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:

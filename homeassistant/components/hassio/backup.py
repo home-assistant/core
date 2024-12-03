@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
@@ -49,14 +49,14 @@ class SupervisorLocalBackupAgent(LocalBackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AsyncGenerator[bytes]:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         raise NotImplementedError("Not yet supported by supervisor")
 
     async def async_upload_backup(
         self,
         *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncGenerator[bytes]]],
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:

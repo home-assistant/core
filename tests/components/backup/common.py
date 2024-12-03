@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -84,14 +84,14 @@ class BackupAgentTest(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AsyncGenerator[bytes]:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         return AsyncMock(spec_set=["__aiter__"])
 
     async def async_upload_backup(
         self,
         *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncGenerator[bytes]]],
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -33,24 +33,24 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AsyncGenerator[bytes]:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
-        :return: Either an aiohttp or asyncio StreamReader.
+        :return: An async iterator that yields bytes.
         """
 
     @abc.abstractmethod
     async def async_upload_backup(
         self,
         *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncGenerator[bytes]]],
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
-        :param open_stream: A function returning an async generator.
+        :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
 
