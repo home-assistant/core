@@ -531,7 +531,6 @@ jobs:
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
       - name: Create Python virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
