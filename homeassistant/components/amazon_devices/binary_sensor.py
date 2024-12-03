@@ -40,13 +40,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Comelit sensors."""
+    """Set up Comelit binary sensors."""
 
     coordinator: AmazonDevicesCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[AmazonBinarySensorEntity] = []
-    for device in coordinator.data.values():
+    for serial_num in coordinator.data:
         entities.extend(
-            AmazonBinarySensorEntity(coordinator, device, sensor_desc)
+            AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
             for sensor_desc in BINARY_SENSORS
         )
 
@@ -56,24 +56,24 @@ async def async_setup_entry(
 class AmazonBinarySensorEntity(
     CoordinatorEntity[AmazonDevicesCoordinator], BinarySensorEntity
 ):
-    """Sensor device."""
+    """Binary sensor device."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
-        device: AmazonDevice,
+        serial_num: str,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
-        self._device = device
+        self._device: AmazonDevice = coordinator.data[serial_num]
 
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{device.serial_number}-{description.key}"
-        self._attr_device_info = coordinator.device_info(device)
+        self._attr_unique_id = f"{self._device.serial_number}-{description.key}"
+        self._attr_device_info = coordinator.device_info(self._device)
 
         self.entity_description = description
 

@@ -37,9 +37,9 @@ async def async_setup_entry(
 
     coordinator: AmazonDevicesCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[AmazonSensorEntity] = []
-    for device in coordinator.data.values():
+    for serial_num in coordinator.data:
         entities.extend(
-            AmazonSensorEntity(coordinator, device, sensor_desc)
+            AmazonSensorEntity(coordinator, serial_num, sensor_desc)
             for sensor_desc in SENSORS
         )
 
@@ -54,17 +54,17 @@ class AmazonSensorEntity(CoordinatorEntity[AmazonDevicesCoordinator], SensorEnti
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
-        device: AmazonDevice,
+        serial_num: str,
         description: SensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
-        self._device = device
+        self._device: AmazonDevice = coordinator.data[serial_num]
 
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{device.serial_number}-{description.key}"
-        self._attr_device_info = coordinator.device_info(device)
+        self._attr_unique_id = f"{self._device.serial_number}-{description.key}"
+        self._attr_device_info = coordinator.device_info(self._device)
 
         self.entity_description = description
 
