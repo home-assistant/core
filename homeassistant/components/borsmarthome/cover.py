@@ -57,7 +57,7 @@ class TapparellaEntity(CoverEntity):
 
     @property
     def name(self) -> str:
-        """Driently name."""
+        """Friendly name."""
         return self._name
 
     @property
@@ -75,7 +75,7 @@ class TapparellaEntity(CoverEntity):
             | CoverEntityFeature.SET_POSITION
         )
 
-    def _set_current_position(self, position: float):
+    def _set_current_position(self, position: int):
         """Set position."""
         self.is_closed = position < 1
         self.current_cover_position = position
@@ -147,7 +147,7 @@ class TapparellaEntity(CoverEntity):
 
                 await asyncio.sleep(1)
                 if self.is_closing:
-                    perc = 100 / self._roller.total_down_time
+                    perc = round(100 / self._roller.total_down_time)
                     self.current_cover_position = max(
                         self.current_cover_position - perc, 0
                     )
