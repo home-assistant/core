@@ -4,7 +4,11 @@ from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, patch
 
-from cookidoo_api import CookidooRequestException
+from cookidoo_api import (
+    CookidooAdditionalItem,
+    CookidooIngredientItem,
+    CookidooRequestException,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -77,14 +81,14 @@ async def test_update_ingredient(
         blocking=True,
     )
 
-    mock_cookidoo_client.edit_ingredients_ownership.assert_called_once_with(
+    mock_cookidoo_client.edit_ingredient_items_ownership.assert_called_once_with(
         [
-            {
-                "id": "unique_id_mehl",
-                "name": "<nil>",
-                "description": "<nil>",
-                "isOwned": True,
-            }
+            CookidooIngredientItem(
+                id="unique_id_mehl",
+                name="",
+                description="",
+                is_owned=True,
+            )
         ],
     )
 
@@ -100,7 +104,7 @@ async def test_update_ingredient_exception(
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
-    mock_cookidoo_client.edit_ingredients_ownership.side_effect = (
+    mock_cookidoo_client.edit_ingredient_items_ownership.side_effect = (
         CookidooRequestException
     )
     with pytest.raises(
@@ -191,22 +195,20 @@ async def test_update_additional_item(
 
     mock_cookidoo_client.edit_additional_items_ownership.assert_called_once_with(
         [
-            {
-                "id": "unique_id_tomaten",
-                "name": "Peperoni",
-                "description": None,
-                "isOwned": True,
-            }
+            CookidooAdditionalItem(
+                id="unique_id_tomaten",
+                name="Peperoni",
+                is_owned=True,
+            )
         ],
     )
     mock_cookidoo_client.edit_additional_items.assert_called_once_with(
         [
-            {
-                "id": "unique_id_tomaten",
-                "name": "Peperoni",
-                "description": None,
-                "isOwned": True,
-            }
+            CookidooAdditionalItem(
+                id="unique_id_tomaten",
+                name="Peperoni",
+                is_owned=True,
+            )
         ],
     )
 

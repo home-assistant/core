@@ -2,22 +2,23 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TypedDict
 
 from cookidoo_api import (
     Cookidoo,
+    CookidooAdditionalItem,
     CookidooAuthException,
     CookidooException,
-    CookidooItem,
+    CookidooIngredientItem,
     CookidooRequestException,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -27,11 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 type CookidooConfigEntry = ConfigEntry[CookidooDataUpdateCoordinator]
 
 
-class CookidooData(TypedDict):
+@dataclass
+class CookidooData:
     """Cookidoo data type."""
 
-    ingredient_items: list[CookidooItem]
-    additional_items: list[CookidooItem]
+    ingredient_items: list[CookidooIngredientItem]
+    additional_items: list[CookidooAdditionalItem]
 
 
 class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
@@ -56,12 +58,12 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         try:
             await self.cookidoo.login()
         except CookidooRequestException as e:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_request_exception",
             ) from e
         except CookidooAuthException as e:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
                 translation_placeholders={
@@ -71,7 +73,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
 
     async def _async_update_data(self) -> CookidooData:
         try:
-            ingredient_items = await self.cookidoo.get_ingredients()
+            ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
         except CookidooAuthException:
             try:

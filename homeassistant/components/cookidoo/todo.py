@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from cookidoo_api import CookidooException, CookidooItem
+from cookidoo_api import (
+    CookidooAdditionalItem,
+    CookidooException,
+    CookidooIngredientItem,
+)
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -55,16 +59,16 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
         """Return the todo ingredients."""
         return [
             TodoItem(
-                uid=item["id"],
-                summary=item["name"],
-                description=item["description"] or "",
+                uid=item.id,
+                summary=item.name,
+                description=item.description or "",
                 status=(
                     TodoItemStatus.COMPLETED
-                    if item["isOwned"]
+                    if item.is_owned
                     else TodoItemStatus.NEEDS_ACTION
                 ),
             )
-            for item in self.coordinator.data["ingredient_items"]
+            for item in self.coordinator.data.ingredient_items
         ]
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
@@ -75,15 +79,13 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
         try:
             if TYPE_CHECKING:
                 assert item.uid
-            await self.coordinator.cookidoo.edit_ingredients_ownership(
+            await self.coordinator.cookidoo.edit_ingredient_items_ownership(
                 [
-                    CookidooItem(
-                        {
-                            "id": item.uid,
-                            "name": "<nil>",
-                            "description": "<nil>",
-                            "isOwned": item.status == TodoItemStatus.COMPLETED,
-                        }
+                    CookidooIngredientItem(
+                        id=item.uid,
+                        name="",
+                        description="",
+                        is_owned=item.status == TodoItemStatus.COMPLETED,
                     )
                 ]
             )
@@ -118,15 +120,15 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
 
         return [
             TodoItem(
-                uid=item["id"],
-                summary=item["name"],
+                uid=item.id,
+                summary=item.name,
                 status=(
                     TodoItemStatus.COMPLETED
-                    if item["isOwned"]
+                    if item.is_owned
                     else TodoItemStatus.NEEDS_ACTION
                 ),
             )
-            for item in self.coordinator.data["additional_items"]
+            for item in self.coordinator.data.additional_items
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -152,13 +154,10 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
             if TYPE_CHECKING:
                 assert item.uid
                 assert item.summary
-            new_item = CookidooItem(
-                {
-                    "id": item.uid,
-                    "name": item.summary,
-                    "description": None,
-                    "isOwned": item.status == TodoItemStatus.COMPLETED,
-                }
+            new_item = CookidooAdditionalItem(
+                id=item.uid,
+                name=item.summary,
+                is_owned=item.status == TodoItemStatus.COMPLETED,
             )
             await self.coordinator.cookidoo.edit_additional_items_ownership([new_item])
             await self.coordinator.cookidoo.edit_additional_items([new_item])

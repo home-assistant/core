@@ -13,6 +13,6 @@ def cookidoo_localization_for_key(
     return next(
         localization
         for localization in localizations
-        if localization["country_code"].lower() == country_code
-        and localization["language"].lower() == language
+        if localization.country_code.lower() == country_code
+        and localization.language.lower() == language
     )

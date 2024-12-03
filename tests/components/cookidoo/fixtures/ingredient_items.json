@@ -4,7 +4,7 @@
       "id": "unique_id_mehl",
       "name": "Mehl",
       "description": "200 g",
-      "isOwned": false
+      "is_owned": false
     }
   ]
 }
