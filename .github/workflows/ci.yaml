@@ -535,7 +535,18 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          uv pip freeze
+          uv pip freeze >> pip_freeze.txt
+      - name: Upload pip_freeze artifact
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: pip_freeze
+          path: pip_freeze.txt
+          overwrite: true
+      - name: Remove pip_freeze
+        run: rm pip_freeze.txt
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
 
   hassfest:
     name: Check hassfest
