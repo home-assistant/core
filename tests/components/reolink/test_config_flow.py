@@ -357,14 +357,6 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -410,14 +402,6 @@ async def test_reauth_abort_unique_id_mismatch(
     reolink_connect.mac_address = "aa:aa:aa:aa:aa:aa"
 
     result = await config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
