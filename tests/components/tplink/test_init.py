@@ -69,6 +69,7 @@ async def test_configuring_tplink_causes_discovery(
     with (
         patch("homeassistant.components.tplink.Discover.discover") as discover,
         patch("homeassistant.components.tplink.Discover.discover_single"),
+        patch("homeassistant.components.tplink.Device.connect"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})

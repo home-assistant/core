@@ -26,9 +26,11 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.tplink import (
     CONF_AES_KEYS,
     CONF_ALIAS,
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_HOST,
+    CONF_LIVE_VIEW,
     CONF_MODEL,
     CONF_USES_HTTP,
     Credentials,
@@ -119,6 +121,11 @@ CREATE_ENTRY_DATA_AES = {
     CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES.to_dict(),
     CONF_USES_HTTP: True,
     CONF_AES_KEYS: AES_KEYS,
+}
+CREATE_ENTRY_DATA_AES_CAMERA = {
+    **CREATE_ENTRY_DATA_AES,
+    CONF_LIVE_VIEW: True,
+    CONF_CAMERA_CREDENTIALS: {"username": "camuser", "password": "campass"},
 }
 
 

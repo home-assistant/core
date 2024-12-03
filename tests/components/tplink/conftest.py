@@ -10,6 +10,7 @@ from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import (
+    CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
@@ -113,6 +114,17 @@ def mock_config_entry() -> MockConfigEntry:
         title="TPLink",
         domain=DOMAIN,
         data={**CREATE_ENTRY_DATA_LEGACY},
+        unique_id=MAC_ADDRESS,
+    )
+
+
+@pytest.fixture
+def mock_camera_config_entry() -> MockConfigEntry:
+    """Mock camera ConfigEntry."""
+    return MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_AES_CAMERA},
         unique_id=MAC_ADDRESS,
     )
 
