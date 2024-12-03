@@ -1073,7 +1073,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tomorrowio",
     "toon",
     "torque",
-    "totalconnect",
     "touchline",
     "touchline_sl",
     "tplink",

@@ -60,7 +60,6 @@ async def async_setup_entry(
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     """Representation of a Plugwise thermostat."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
@@ -75,7 +74,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
 
         self._devices = coordinator.data.devices

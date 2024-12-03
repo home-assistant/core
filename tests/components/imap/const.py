@@ -141,6 +141,8 @@ TEST_CONTENT_MULTIPART_BASE64_INVALID = (
 )
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
+EMPTY_SEARCH_RESPONSE_ALT = ("OK", [b"Search completed (0.0001 + 0.000 secs)."])
+
 BAD_RESPONSE = ("BAD", [b"", b"Unexpected error"])
 
 TEST_SEARCH_RESPONSE = ("OK", [b"1", b"Search completed (0.0001 + 0.000 secs)."])

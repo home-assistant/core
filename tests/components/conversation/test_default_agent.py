@@ -2930,7 +2930,7 @@ async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
     )
     result = await agent.async_recognize_intent(user_input)
     assert result is not None
-    assert result.unmatched_entities["name"].text == "test light"
+    assert result.unmatched_entities["area"].text == "test "
 
     # Mark this result so we know it is from cache next time
     mark = "_from_cache"
@@ -3013,3 +3013,39 @@ async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
         assert len(name_list.values) == 2
         assert name_list.values[0].text_in.text == "test light"
         assert name_list.values[1].text_in.text == "test light"
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
+    """Test that entities names are not treated as hassil templates."""
+    # Contains hassil template characters
+    hass.states.async_set(
+        "light.test_light", "off", attributes={ATTR_FRIENDLY_NAME: "<test [light"}
+    )
+
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # Exposed
+    result = await conversation.async_converse(
+        hass,
+        "turn on <test [light",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+
+    assert result is not None
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Not exposed
+    expose_entity(hass, "light.test_light", False)
+    result = await conversation.async_converse(
+        hass,
+        "turn on <test [light",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+
+    assert result is not None
+    assert result.response.response_type == intent.IntentResponseType.ERROR

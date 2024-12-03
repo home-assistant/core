@@ -128,13 +128,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is not None:
-            return await self.async_step_user()
-        placeholders = {"name": self.context["title_placeholders"]["name"]}
-        return self.async_show_form(
-            step_id="reauth_confirm", description_placeholders=placeholders
-        )
+        """Perform a reauthentication."""
+        return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

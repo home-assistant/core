@@ -210,6 +210,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fyta",
+        "hostname": "fyta*",
+    },
+    {
         "domain": "goalzero",
         "registered_devices": True,
     },

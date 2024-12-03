@@ -5,12 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
+from APsystemsEZ1 import (
+    APsystemsEZ1M,
+    InverterReturnedError,
+    ReturnAlarmInfo,
+    ReturnOutputData,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -43,6 +48,11 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.api.min_power = device_info.minPower
 
     async def _async_update_data(self) -> ApSystemsSensorData:
-        output_data = await self.api.get_output_data()
-        alarm_info = await self.api.get_alarm_info()
+        try:
+            output_data = await self.api.get_output_data()
+            alarm_info = await self.api.get_alarm_info()
+        except InverterReturnedError:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="inverter_error"
+            ) from None
         return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)
