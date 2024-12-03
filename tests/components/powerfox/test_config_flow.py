@@ -89,7 +89,7 @@ async def test_exceptions(
         result["flow_id"],
         user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
 
     mock_powerfox_client.all_devices.side_effect = None
@@ -98,4 +98,4 @@ async def test_exceptions(
         result["flow_id"],
         user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY

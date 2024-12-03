@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import PowerfoxConfigEntry
 from .coordinator import PowerfoxDataUpdateCoordinator
@@ -30,13 +29,12 @@ T = TypeVar("T", PowerMeter, WaterMeter)
 class PowerfoxSensorEntityDescription(Generic[T], SensorEntityDescription):
     """Describes Poweropti sensor entity."""
 
-    value_fn: Callable[[T], StateType]
+    value_fn: Callable[[T], float | int | None]
 
 
 SENSORS_POWER: tuple[PowerfoxSensorEntityDescription[PowerMeter], ...] = (
     PowerfoxSensorEntityDescription[PowerMeter](
         key="power",
-        translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -134,7 +132,6 @@ class PowerfoxSensorEntity(PowerfoxEntity, SensorEntity):
 
     def __init__(
         self,
-        *,
         coordinator: PowerfoxDataUpdateCoordinator,
         device: Device,
         description: PowerfoxSensorEntityDescription,
@@ -145,6 +142,6 @@ class PowerfoxSensorEntity(PowerfoxEntity, SensorEntity):
         self._attr_unique_id = f"{device.id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.coordinator.data)

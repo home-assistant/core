@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from powerfox import Device
 
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -24,7 +24,6 @@ class PowerfoxEntity(CoordinatorEntity[PowerfoxDataUpdateCoordinator]):
         """Initialize Powerfox entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Powerfox",
             model=device.type.human_readable,

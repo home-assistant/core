@@ -233,7 +233,7 @@
     'platform': 'powerfox',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': '9x9x1f12xx3x_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
