@@ -52,11 +52,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform as ep,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
@@ -1069,8 +1065,7 @@ async def test_media_player_group_fails_when_entity_removed(
     await setup_platform(hass, config_entry, config)
 
     # Remove one of the players
-    entity_platform = ep.async_get_platforms(hass, DOMAIN)[0]
-    await entity_platform.async_remove_entity("media_player.test_player_2")
+    er.async_get(hass).async_remove("media_player.test_player_2")
 
     # Attempt to group
     with pytest.raises(HomeAssistantError) as exc_info:
