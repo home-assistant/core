@@ -539,7 +539,7 @@ jobs:
       - name: Upload pip_freeze artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: pip_freeze
+          name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
           overwrite: true
       - name: Remove pip_freeze
