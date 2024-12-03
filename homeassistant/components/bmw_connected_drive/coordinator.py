@@ -34,7 +34,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching BMW data."""
 
     account: MyBMWAccount
-    read_only: bool
     config_entry: BMWConfigEntry
 
     def __init__(self, hass: HomeAssistant, *, config_entry: ConfigEntry) -> None:
@@ -46,7 +45,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
             verify=get_default_context(),
         )
-        self.read_only = config_entry.options[CONF_READ_ONLY]
+        self.read_only: bool = config_entry.options[CONF_READ_ONLY]
 
         if CONF_REFRESH_TOKEN in config_entry.data:
             self.account.set_refresh_token(
