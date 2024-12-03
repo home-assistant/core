@@ -320,15 +320,6 @@ class IBeaconCoordinator:
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
         uuid = str(ibeacon_advertisement.uuid)
 
-        # If we are not set to allow new devices don't bother with any other processing
-        # Do not store new devices for use later
-        if (
-            new
-            and not self._allow_new_devices
-        ):
-            _LOGGER.debug("ignoring new beacon %s due to config", unique_id)
-            return
-            
         # Reject creating new trackers if the name is not set (unless the uuid is allowlisted).
         if (
             new
@@ -346,6 +337,15 @@ class IBeaconCoordinator:
             return
 
         previously_tracked = address in self._unique_ids_by_address
+        
+        # If we are not set to allow new devices and this device has not been registered yet stop processing
+        if (
+            not previously_tracked
+            and not self._allow_new_devices
+        ):
+            _LOGGER.debug("ignoring new beacon %s due to config", unique_id)
+            return
+            
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
