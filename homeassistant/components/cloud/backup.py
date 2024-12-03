@@ -65,7 +65,7 @@ class CloudBackupAgent(BackupAgent):
         """Download a backup file.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
-        :param path: The full file path to download the backup to.
+        :return: An async iterator that yields bytes.
         """
         if not await self.async_get_backup(backup_id):
             raise BackupAgentError("Backup not found")
@@ -96,7 +96,7 @@ class CloudBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup.
 
-        :param path: The full file path to the backup that should be uploaded.
+        :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
         if not backup.protected:
