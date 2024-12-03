@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Final
 
 from aioamazondevices.api import AmazonDevice
@@ -19,18 +21,31 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
 
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Amazon Devices binary sensor entity description."""
+
+    is_on_fn: Callable[
+        [AmazonDevice],
+        bool,
+    ]
+
+
 BINARY_SENSORS: Final = (
-    BinarySensorEntityDescription(
+    AmazonBinarySensorEntityDescription(
         key="online",
         translation_key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Online",
+        is_on_fn=lambda _device: bool(_device.online),
     ),
-    BinarySensorEntityDescription(
+    AmazonBinarySensorEntityDescription(
         key="bluetooth_state",
         translation_key="bluetooth_state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Bluetooth state",
+        is_on_fn=lambda _device: bool(_device.bluetooth_state),
     ),
 )
 
@@ -59,12 +74,13 @@ class AmazonBinarySensorEntity(
     """Binary sensor device."""
 
     _attr_has_entity_name = True
+    entity_description: AmazonBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
         serial_num: str,
-        description: BinarySensorEntityDescription,
+        description: AmazonBinarySensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
@@ -80,4 +96,4 @@ class AmazonBinarySensorEntity(
     @property
     def is_on(self) -> bool:
         """Presence detected."""
-        return bool(getattr(self._device, self.entity_description.key))
+        return self.entity_description.is_on_fn(self._device)

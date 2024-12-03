@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Final, cast
 
 from aioamazondevices.api import AmazonDevice
@@ -19,11 +21,23 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
 
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonSensorEntityDescription(SensorEntityDescription):
+    """Amazon Devices binary sensor entity description."""
+
+    value: Callable[
+        [AmazonDevice],
+        StateType,
+    ]
+
+
 SENSORS: Final = (
-    SensorEntityDescription(
+    AmazonSensorEntityDescription(
         key="response_style",
         translation_key="response_style",
         name="Response style",
+        value=lambda _device: _device.response_style,
     ),
 )
 
@@ -50,12 +64,13 @@ class AmazonSensorEntity(CoordinatorEntity[AmazonDevicesCoordinator], SensorEnti
     """Sensor device."""
 
     _attr_has_entity_name = True
+    entity_description: AmazonSensorEntityDescription
 
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
         serial_num: str,
-        description: SensorEntityDescription,
+        description: AmazonSensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
@@ -71,10 +86,4 @@ class AmazonSensorEntity(CoordinatorEntity[AmazonDevicesCoordinator], SensorEnti
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        return cast(
-            StateType,
-            getattr(
-                self.coordinator.data[self._device.serial_number],
-                self.entity_description.key,
-            ),
-        )
+        return cast(StateType, self.entity_description.value(self._device))
