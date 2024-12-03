@@ -5,9 +5,9 @@ from __future__ import annotations
 import base64
 from collections.abc import AsyncIterator, Callable, Coroutine
 import hashlib
-from typing import Any
+from typing import Any, Self
 
-from aiohttp import ClientError
+from aiohttp import ClientError, StreamReader
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.cloud_api import (
     async_files_delete_file,
@@ -39,6 +39,31 @@ async def async_get_backup_agents(
 ) -> list[BackupAgent]:
     """Return the cloud backup agent."""
     return [CloudBackupAgent(hass=hass, cloud=hass.data[DATA_CLOUD])]
+
+
+class ChunkAsyncStreamIterator:
+    """Async iterator for chunked streams.
+
+    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
+    bytes instead of tuple[bytes, bool].
+    """
+
+    __slots__ = ("_stream",)
+
+    def __init__(self, stream: StreamReader) -> None:
+        """Initialize."""
+        self._stream = stream
+
+    def __aiter__(self) -> Self:
+        """Iterate."""
+        return self
+
+    async def __anext__(self) -> bytes:
+        """Yield next chunk."""
+        rv = await self._stream.readchunk()
+        if rv == (b"", False):
+            raise StopAsyncIteration
+        return rv[0]
 
 
 class CloudBackupAgent(BackupAgent):
@@ -85,7 +110,7 @@ class CloudBackupAgent(BackupAgent):
         except ClientError as err:
             raise BackupAgentError("Failed to download backup") from err
 
-        return resp.content.iter_chunked(2**20)
+        return ChunkAsyncStreamIterator(resp.content)
 
     async def async_upload_backup(
         self,
