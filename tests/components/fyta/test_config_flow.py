@@ -10,6 +10,7 @@ from fyta_cli.fyta_exceptions import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -190,3 +191,39 @@ async def test_reauth(
     assert entry.data[CONF_PASSWORD] == "other_password"
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert entry.data[CONF_EXPIRATION] == EXPIRATION
+
+
+async def test_dhcp_discovery(
+    hass: HomeAssistant, mock_fyta_connector: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test DHCP discovery flow."""
+
+    service_info = DhcpServiceInfo(
+        hostname="FYTA HUB",
+        ip="1.2.3.4",
+        macaddress="aabbccddeeff",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=service_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == USERNAME
+    assert result2["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+        CONF_EXPIRATION: EXPIRATION,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

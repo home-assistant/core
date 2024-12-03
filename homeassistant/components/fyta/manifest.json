@@ -3,6 +3,7 @@
   "name": "FYTA",
   "codeowners": ["@dontinelli"],
   "config_flow": true,
+  "dhcp": [{ "hostname": "fyta*" }],
   "documentation": "https://www.home-assistant.io/integrations/fyta",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

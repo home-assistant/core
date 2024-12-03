@@ -15,6 +15,7 @@ from fyta_cli.fyta_exceptions import (
 from fyta_cli.fyta_models import Credentials
 import voluptuous as vol
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.selector import (
@@ -126,3 +127,14 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by DHCP discovery."""
+
+        _LOGGER.debug("Starting discovery via: %s", discovery_info)
+
+        await self._async_handle_discovery_without_unique_id()
+
+        return await self.async_step_user()
