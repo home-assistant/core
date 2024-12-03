@@ -126,5 +126,4 @@ async def test_async_device_diagnostics_api_error(
     )
 
     diagnostics = await async_get_device_diagnostics(hass, config_entry, device)
-    assert diagnostics["connection_status"] == expected_connection_status
-    assert diagnostics["programs"] == []
+    assert diagnostics["programs"] is None

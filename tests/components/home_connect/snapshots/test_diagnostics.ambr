@@ -2,7 +2,7 @@
 # name: test_async_get_config_entry_diagnostics
   dict({
     'BOSCH-000000000-000000000000': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -24,7 +24,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000001': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'LaundryCare.WasherDryer.Program.Mix',
         'LaundryCare.Washer.Option.Temperature',
@@ -48,7 +48,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000002': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -70,7 +70,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000003': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -92,7 +92,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000004': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -149,7 +149,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000005': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -171,7 +171,7 @@
       }),
     }),
     'BOSCH-HCS000000-D00000000006': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -193,7 +193,7 @@
       }),
     }),
     'BOSCH-HCS01OVN1-43E0065FE245': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'Cooking.Oven.Program.HeatingMode.HotAir',
         'Cooking.Oven.Program.HeatingMode.TopBottomHeating',
@@ -225,7 +225,7 @@
       }),
     }),
     'BOSCH-HCS04DYR1-831694AE3C5A': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'LaundryCare.Dryer.Program.Cotton',
         'LaundryCare.Dryer.Program.Synthetic',
@@ -250,7 +250,7 @@
       }),
     }),
     'BOSCH-HCS06COM1-D70390681C2C': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso',
         'ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoMacchiato',
@@ -278,7 +278,7 @@
       }),
     }),
     'SIEMENS-HCS02DWH1-6BE58C26DCC1': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'Dishcare.Dishwasher.Program.Auto1',
         'Dishcare.Dishwasher.Program.Auto2',
@@ -330,7 +330,7 @@
       }),
     }),
     'SIEMENS-HCS03WCH1-7BC6383CF794': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
         'LaundryCare.Washer.Program.Cotton',
         'LaundryCare.Washer.Program.EasyCare',
@@ -368,7 +368,7 @@
       }),
     }),
     'SIEMENS-HCS05FRF1-304F4F9E541D': dict({
-      'connection_status': 'online',
+      'connected': True,
       'programs': list([
       ]),
       'status': dict({
@@ -428,7 +428,7 @@
 # ---
 # name: test_async_get_device_diagnostics
   dict({
-    'connection_status': 'online',
+    'connected': True,
     'programs': list([
       'Dishcare.Dishwasher.Program.Auto1',
       'Dishcare.Dishwasher.Program.Auto2',

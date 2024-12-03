@@ -16,20 +16,10 @@ from .api import HomeConnectDevice
 def _generate_appliance_diagnostics(appliance: HomeConnectAppliance) -> dict[str, Any]:
     try:
         programs = appliance.get_programs_available()
-        connection_status = "online"
-    except HomeConnectError as err:
-        programs = []
-        if (
-            err.args
-            and isinstance(err.args[0], dict)
-            and err.args[0].get("key")
-            == "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
-        ):
-            connection_status = "offline"
-        else:
-            connection_status = "unknown"
+    except HomeConnectError:
+        programs = None
     return {
-        "connection_status": connection_status,
+        "connected": appliance.connected,
         "status": appliance.status,
         "programs": programs,
     }
