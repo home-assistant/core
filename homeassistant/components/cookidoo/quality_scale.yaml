@@ -36,8 +36,8 @@ rules:
     status: done
     comment: Offloaded to coordinator
   action-exceptions:
-    status: exempt
-    comment: No service actions implemented
+    status: done
+    comment: Only providing todo actions
   reauthentication-flow: done
   parallel-updates: done
   test-coverage: done

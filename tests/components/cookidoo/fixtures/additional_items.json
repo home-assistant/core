@@ -3,8 +3,7 @@
     {
       "id": "unique_id_tomaten",
       "name": "Tomaten",
-      "description": null,
-      "isOwned": false
+      "is_owned": false
     }
   ]
 }

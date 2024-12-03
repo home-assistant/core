@@ -5,11 +5,9 @@ from unittest.mock import AsyncMock
 from cookidoo_api import CookidooAuthException, CookidooRequestException
 import pytest
 
-from homeassistant.components.cookidoo import async_setup_entry
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from . import setup_integration
 
@@ -37,7 +35,7 @@ async def test_load_unload(
     ("exception", "status"),
     [
         (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
-        (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
+        (CookidooAuthException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_init_failure(
@@ -54,32 +52,9 @@ async def test_init_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected"),
-    [
-        (CookidooRequestException, ConfigEntryNotReady),
-        (CookidooAuthException, ConfigEntryAuthFailed),
-    ],
-)
-async def test_init_exceptions(
-    hass: HomeAssistant,
-    mock_cookidoo_client: AsyncMock,
-    exception: Exception,
-    expected: Exception,
-    cookidoo_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initialization error on integration load."""
-    cookidoo_config_entry.add_to_hass(hass)
-    mock_cookidoo_client.login.side_effect = exception
-
-    with pytest.raises(expected):
-        await async_setup_entry(hass, cookidoo_config_entry)
-
-
-@pytest.mark.parametrize("exception", [CookidooRequestException])
-@pytest.mark.parametrize(
     "cookidoo_method",
     [
-        "get_ingredients",
+        "get_ingredient_items",
         "get_additional_items",
     ],
 )
@@ -87,11 +62,12 @@ async def test_config_entry_not_ready(
     hass: HomeAssistant,
     cookidoo_config_entry: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
-    exception: Exception,
     cookidoo_method: str,
 ) -> None:
     """Test config entry not ready."""
-    getattr(mock_cookidoo_client, cookidoo_method).side_effect = exception
+    getattr(
+        mock_cookidoo_client, cookidoo_method
+    ).side_effect = CookidooRequestException()
     cookidoo_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -116,7 +92,7 @@ async def test_config_entry_not_ready_auth_error(
 ) -> None:
     """Test config entry not ready from authentication error."""
 
-    mock_cookidoo_client.get_ingredients.side_effect = CookidooAuthException
+    mock_cookidoo_client.get_ingredient_items.side_effect = CookidooAuthException
     mock_cookidoo_client.refresh_token.side_effect = exception
 
     cookidoo_config_entry.add_to_hass(hass)

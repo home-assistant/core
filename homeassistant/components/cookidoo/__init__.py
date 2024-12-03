@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cookidoo_api import DEFAULT_COOKIDOO_CONFIG, Cookidoo, get_localization_options
+from cookidoo_api import Cookidoo, CookidooConfig, get_localization_options
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
@@ -20,14 +20,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
 
     cookidoo = Cookidoo(
         async_get_clientsession(hass),
-        {
-            **DEFAULT_COOKIDOO_CONFIG,
-            CONF_EMAIL: entry.data[CONF_EMAIL],
-            CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            CONF_LOCALIZATION: cookidoo_localization_for_key(
+        CookidooConfig(
+            email=entry.data[CONF_EMAIL],
+            password=entry.data[CONF_PASSWORD],
+            localization=cookidoo_localization_for_key(
                 await get_localization_options(), entry.data[CONF_LOCALIZATION]
             ),
-        },
+        ),
     )
 
     coordinator = CookidooDataUpdateCoordinator(hass, cookidoo, entry)

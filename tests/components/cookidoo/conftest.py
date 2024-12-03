@@ -4,7 +4,11 @@ from collections.abc import Generator
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
-from cookidoo_api import CookidooAuthResponse
+from cookidoo_api import (
+    CookidooAdditionalItem,
+    CookidooAuthResponse,
+    CookidooIngredientItem,
+)
 import pytest
 
 from homeassistant.components.cookidoo.const import CONF_LOCALIZATION, DOMAIN
@@ -41,12 +45,18 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.login.return_value = cast(CookidooAuthResponse, {"name": "Cookidoo"})
-        client.get_ingredients.return_value = load_json_object_fixture(
-            "ingredient_items.json", DOMAIN
-        )["data"]
-        client.get_additional_items.return_value = load_json_object_fixture(
-            "additional_items.json", DOMAIN
-        )["data"]
+        client.get_ingredient_items.return_value = [
+            CookidooIngredientItem(**item)
+            for item in load_json_object_fixture("ingredient_items.json", DOMAIN)[
+                "data"
+            ]
+        ]
+        client.get_additional_items.return_value = [
+            CookidooAdditionalItem(**item)
+            for item in load_json_object_fixture("additional_items.json", DOMAIN)[
+                "data"
+            ]
+        ]
         yield client
 
 

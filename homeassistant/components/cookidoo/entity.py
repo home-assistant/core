@@ -27,5 +27,4 @@ class CookidooBaseEntity(CoordinatorEntity[CookidooDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Vorwerk International & Co. KmG",
             model="Cookidoo - Thermomix® recipe portal",
-            configuration_url="https://cookidoo.ch",  # coordinator.cookidoo.localization["url"],
         )
