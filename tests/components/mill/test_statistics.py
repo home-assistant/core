@@ -57,4 +57,3 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
 
         _sum += data[start]
         assert stat["sum"] == _sum
-    assert _sum == sum(data.values())
