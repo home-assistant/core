@@ -243,6 +243,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.async_create_task(
                     self._async_reload_requires_auth_entries(), eager_start=False
                 )
+                if self._async_supports_camera_credentials(device):
+                    return await self.async_step_camera_auth_confirm()
+
                 return self._async_create_or_update_entry_from_device(
                     self._discovered_device
                 )
@@ -271,6 +274,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         if user_input is not None:
+            if self._async_supports_camera_credentials(self._discovered_device):
+                return await self.async_step_camera_auth_confirm()
+
             return self._async_create_or_update_entry_from_device(
                 self._discovered_device
             )
@@ -351,8 +357,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if not device:
                     return await self.async_step_user_auth_confirm()
+
                 if self._async_supports_camera_credentials(device):
                     return await self.async_step_camera_auth_confirm()
+
                 return self._async_create_or_update_entry_from_device(device)
 
         return self.async_show_form(
@@ -406,6 +414,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     if self._async_supports_camera_credentials(device):
                         return await self.async_step_camera_auth_confirm()
+
                     return self._async_create_or_update_entry_from_device(device)
 
         return self.async_show_form(
@@ -513,6 +522,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_user_auth_confirm()
             except KasaException:
                 return self.async_abort(reason="cannot_connect")
+
+            if self._async_supports_camera_credentials(device):
+                return await self.async_step_camera_auth_confirm()
+
             return self._async_create_or_update_entry_from_device(device)
 
         configured_devices = {

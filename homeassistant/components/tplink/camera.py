@@ -171,7 +171,11 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
-        """Generate an HTTP MJPEG stream from the camera."""
+        """Generate an HTTP MJPEG stream from the camera.
+
+        The frontend falls back to calling this method if the HLS
+        stream fails.
+        """
         _LOGGER.debug("Starting http mjpeg stream for %s", self._device.host)
         if self._video_url is None or self._can_stream is False:
             return None
