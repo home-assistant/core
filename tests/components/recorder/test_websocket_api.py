@@ -51,6 +51,16 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
+AREA_SENSOR_FT_ATTRIBUTES = {
+    "device_class": "area",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft²",
+}
+AREA_SENSOR_M_ATTRIBUTES = {
+    "device_class": "area",
+    "state_class": "measurement",
+    "unit_of_measurement": "m²",
+}
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
     "state_class": "measurement",
@@ -1247,6 +1257,9 @@ async def test_statistic_during_period_calendar(
 @pytest.mark.parametrize(
     ("attributes", "state", "value", "custom_units", "converted_value"),
     [
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "cm²"}, 100000),
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "m²"}, 10),
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "ft²"}, 107.639),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
@@ -1434,6 +1447,7 @@ async def test_sum_statistics_during_period_unit_conversion(
     "custom_units",
     [
         {"distance": "L"},
+        {"area": "L"},
         {"energy": "W"},
         {"power": "Pa"},
         {"pressure": "K"},
@@ -1678,6 +1692,8 @@ async def test_statistics_during_period_empty_statistic_ids(
 @pytest.mark.parametrize(
     ("units", "attributes", "display_unit", "statistics_unit", "unit_class"),
     [
+        (US_CUSTOMARY_SYSTEM, AREA_SENSOR_M_ATTRIBUTES, "m²", "m²", "area"),
+        (METRIC_SYSTEM, AREA_SENSOR_M_ATTRIBUTES, "m²", "m²", "area"),
         (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (
@@ -1853,6 +1869,13 @@ async def test_list_statistic_ids(
     ("attributes", "attributes2", "display_unit", "statistics_unit", "unit_class"),
     [
         (
+            AREA_SENSOR_M_ATTRIBUTES,
+            AREA_SENSOR_FT_ATTRIBUTES,
+            "ft²",
+            "m²",
+            "area",
+        ),
+        (
             DISTANCE_SENSOR_M_ATTRIBUTES,
             DISTANCE_SENSOR_FT_ATTRIBUTES,
             "ft",
@@ -1984,6 +2007,18 @@ async def test_validate_statistics(
     await assert_validation_result(client, {})
 
 
+async def test_update_statistics_issues(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update_statistics_issues can be called."""
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
 async def test_clear_statistics(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2104,6 +2139,30 @@ async def test_clear_statistics(
     assert response["result"] == {"sensor.test2": expected_response["sensor.test2"]}
 
 
+async def test_clear_statistics_time_out(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing statistics with time-out error."""
+    client = await hass_ws_client()
+
+    with (
+        patch.object(recorder.tasks.ClearStatisticsTask, "run"),
+        patch.object(recorder.websocket_api, "CLEAR_STATISTICS_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "clear_statistics timed out",
+    }
+
+
 @pytest.mark.parametrize(
     ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
@@ -2201,6 +2260,31 @@ async def test_update_statistics_metadata(
                 "start": int(now.timestamp() * 1000),
             }
         ],
+    }
+
+
+async def test_update_statistics_metadata_time_out(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update statistics metadata with time-out error."""
+    client = await hass_ws_client()
+
+    with (
+        patch.object(recorder.tasks.UpdateStatisticsMetadataTask, "run"),
+        patch.object(recorder.websocket_api, "UPDATE_STATISTICS_METADATA_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/update_statistics_metadata",
+                "statistic_id": "sensor.test",
+                "unit_of_measurement": "dogs",
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "update_statistics_metadata timed out",
     }
 
 

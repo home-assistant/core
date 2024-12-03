@@ -112,7 +112,7 @@ class PushBot(BaseTelegramBotEntity):
         if current_status and current_status["url"] != self.webhook_url:
             result = await self._try_to_set_webhook()
             if result:
-                _LOGGER.info("Set new telegram webhook %s", self.webhook_url)
+                _LOGGER.debug("Set new telegram webhook %s", self.webhook_url)
             else:
                 _LOGGER.error("Set telegram webhook failed %s", self.webhook_url)
                 return False

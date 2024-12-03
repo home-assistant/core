@@ -37,12 +37,12 @@ def get_scanner(
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
 
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
         device = WifiRepeater(host, token)
         device_info = device.info()
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s %s %s detected",
             device_info.model,
             device_info.firmware_version,

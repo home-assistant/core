@@ -39,6 +39,16 @@
       "red_ox": {
         "name": "Red OX"
       }
+    },
+    "select": {
+      "hub_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Automatic",
+          "manual": "Manual",
+          "planning": "Planning"
+        }
+      }
     }
   },
   "issues": {

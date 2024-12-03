@@ -55,7 +55,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         client: speech_v1.SpeechAsyncClient,
     ) -> None:
         """Init Google Cloud STT entity."""
-        self._attr_unique_id = f"{entry.entry_id}-stt"
+        self._attr_unique_id = f"{entry.entry_id}"
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

@@ -15,7 +15,7 @@ async def test_sending_location(
 ) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
         json={
             "type": "update_location",
             "data": {
@@ -48,7 +48,7 @@ async def test_sending_location(
     assert state.attributes["vertical_accuracy"] == 80
 
     resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
         json={
             "type": "update_location",
             "data": {
@@ -87,7 +87,7 @@ async def test_restoring_location(
 ) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
         json={
             "type": "update_location",
             "data": {

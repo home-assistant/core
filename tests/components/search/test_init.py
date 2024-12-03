@@ -250,7 +250,7 @@ async def test_search(
                 {
                     "id": "unique_id",
                     "alias": "blueprint_automation_1",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {
@@ -262,7 +262,7 @@ async def test_search(
                 },
                 {
                     "alias": "blueprint_automation_2",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {

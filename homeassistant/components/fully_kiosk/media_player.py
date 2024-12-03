@@ -12,23 +12,23 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
+from . import FullyKioskConfigEntry
+from .const import AUDIOMANAGER_STREAM_MUSIC, MEDIA_SUPPORT_FULLYKIOSK
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FullyKioskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser media player entity."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities([FullyMediaPlayer(coordinator)])
 
 

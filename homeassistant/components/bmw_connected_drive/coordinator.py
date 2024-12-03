@@ -7,7 +7,12 @@ import logging
 
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.models import GPSPosition, MyBMWAPIError, MyBMWAuthError
+from bimmer_connected.models import (
+    GPSPosition,
+    MyBMWAPIError,
+    MyBMWAuthError,
+    MyBMWCaptchaMissingError,
+)
 from httpx import RequestError
 
 from homeassistant.config_entries import ConfigEntry
@@ -61,6 +66,12 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await self.account.get_vehicles()
+        except MyBMWCaptchaMissingError as err:
+            # If a captcha is required (user/password login flow), always trigger the reauth flow
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_captcha",
+            ) from err
         except MyBMWAuthError as err:
             # Allow one retry interval before raising AuthFailed to avoid flaky API issues
             if self.last_update_success:
@@ -73,11 +84,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
-            _LOGGER.debug(
-                "bimmer_connected: refresh token %s > %s",
-                old_refresh_token,
-                self.account.refresh_token,
-            )
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""

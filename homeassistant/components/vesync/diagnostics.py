@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .common import VeSyncBaseDevice
 from .const import DOMAIN, VS_MANAGER
+from .entity import VeSyncBaseDevice
 
 KEYS_TO_REDACT = {"manager", "uuid", "mac_id"}
 

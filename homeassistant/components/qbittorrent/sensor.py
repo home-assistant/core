@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
@@ -79,6 +80,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         translation_key="download_speed",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
@@ -88,6 +90,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         translation_key="upload_speed",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
@@ -97,13 +100,11 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
         translation_key="all_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(coordinator, []),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ACTIVE_TORRENTS,
         translation_key="active_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["downloading", "uploading"]
         ),
@@ -111,7 +112,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_INACTIVE_TORRENTS,
         translation_key="inactive_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["stalledDL", "stalledUP"]
         ),
@@ -119,7 +119,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["pausedDL", "pausedUP"]
         ),
@@ -177,8 +176,12 @@ def count_torrents_in_states(
     # When torrents are not in the returned data, there are none, return 0.
     try:
         torrents = cast(Mapping[str, Mapping], coordinator.data.get("torrents"))
+        if torrents is None:
+            return 0
+
         if not states:
             return len(torrents)
+
         return len(
             [torrent for torrent in torrents.values() if torrent.get("state") in states]
         )

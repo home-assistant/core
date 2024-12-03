@@ -40,6 +40,12 @@ SENSORS = [
         value_fn=lambda x: x.ethernet,
     ),
     SmBinarySensorEntityDescription(
+        key="vpn",
+        translation_key="vpn",
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.vpn_status,
+    ),
+    SmBinarySensorEntityDescription(
         key="wifi",
         translation_key="wifi",
         entity_registry_enabled_default=False,

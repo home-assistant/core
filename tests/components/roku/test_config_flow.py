@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from rokuecp import RokuConnectionError
 
-from homeassistant.components.roku.const import DOMAIN
+from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -254,3 +254,25 @@ async def test_ssdp_discovery(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_PLAY_MEDIA_APP_ID: "782875"},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {
+        CONF_PLAY_MEDIA_APP_ID: "782875",
+    }

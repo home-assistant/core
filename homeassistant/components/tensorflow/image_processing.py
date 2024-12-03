@@ -324,13 +324,13 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                label = "{} {:.1f}%".format(category, instance["score"])
+                label = f"{category} {instance['score']:.1f}%"
                 draw_box(
                     draw, instance["box"], img_width, img_height, label, (255, 255, 0)
                 )
 
         for path in paths:
-            _LOGGER.info("Saving results image to %s", path)
+            _LOGGER.debug("Saving results image to %s", path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 

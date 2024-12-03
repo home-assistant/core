@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import cached_property, partial
+from functools import partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -13,6 +13,7 @@ import logging
 import mimetypes
 import os
 import re
+import secrets
 import subprocess
 import tempfile
 from typing import Any, Final, TypedDict, final
@@ -20,6 +21,7 @@ from typing import Any, Final, TypedDict, final
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
@@ -57,6 +59,7 @@ from .const import (
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
+    DATA_COMPONENT,
     DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
@@ -137,19 +140,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
 
     Returns None if no engines found.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     default_entity_id: str | None = None
 
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         if entity.platform and entity.platform.platform_name == "cloud":
             return entity.entity_id
 
         if default_entity_id is None:
             default_entity_id = entity.entity_id
 
-    return default_entity_id or next(iter(manager.providers), None)
+    return default_entity_id or next(iter(hass.data[DATA_TTS_MANAGER].providers), None)
 
 
 @callback
@@ -158,11 +158,11 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
 
     Returns None if no engines found or invalid engine passed in.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     if engine is not None:
-        if not component.get_entity(engine) and engine not in manager.providers:
+        if (
+            not hass.data[DATA_COMPONENT].get_entity(engine)
+            and engine not in hass.data[DATA_TTS_MANAGER].providers
+        ):
             return None
         return engine
 
@@ -179,10 +179,8 @@ async def async_support_options(
     if (engine_instance := get_engine_instance(hass, engine)) is None:
         raise HomeAssistantError(f"Provider {engine} not found")
 
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     try:
-        manager.process_options(engine_instance, language, options)
+        hass.data[DATA_TTS_MANAGER].process_options(engine_instance, language, options)
     except HomeAssistantError:
         return False
 
@@ -194,8 +192,7 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-    return await manager.async_get_tts_audio(
+    return await hass.data[DATA_TTS_MANAGER].async_get_tts_audio(
         **media_source_id_to_kwargs(media_source_id),
     )
 
@@ -205,14 +202,11 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by tts engines."""
     languages = set()
 
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
-    for tts_engine in manager.providers.values():
+    for tts_engine in hass.data[DATA_TTS_MANAGER].providers.values():
         for language_tag in tts_engine.supported_languages:
             languages.add(language_tag)
 
@@ -325,7 +319,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_TTS_MANAGER] = tts
-    component = hass.data[DOMAIN] = EntityComponent[TextToSpeechEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextToSpeechEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -373,14 +367,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -549,6 +541,10 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
+        # filename <-> token
+        self.filename_to_token: dict[str, str] = {}
+        self.token_to_filename: dict[str, str] = {}
+
     def _init_cache(self) -> dict[str, str]:
         """Init cache folder and fetch files."""
         try:
@@ -665,7 +661,17 @@ class SpeechManager:
                 engine_instance, cache_key, message, use_cache, language, options
             )
 
-        return f"/api/tts_proxy/{filename}"
+        # Use a randomly generated token instead of exposing the filename
+        token = self.filename_to_token.get(filename)
+        if not token:
+            # Keep extension (.mp3, etc.)
+            token = secrets.token_urlsafe(16) + os.path.splitext(filename)[1]
+
+            # Map token <-> filename
+            self.filename_to_token[filename] = token
+            self.token_to_filename[token] = filename
+
+        return f"/api/tts_proxy/{token}"
 
     async def async_get_tts_audio(
         self,
@@ -919,11 +925,15 @@ class SpeechManager:
             ),
         )
 
-    async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
+    async def async_read_tts(self, token: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
 
         This method is a coroutine.
         """
+        filename = self.token_to_filename.get(token)
+        if not filename:
+            raise HomeAssistantError(f"{token} was not recognized!")
+
         if not (record := _RE_VOICE_FILE.match(filename.lower())) and not (
             record := _RE_LEGACY_VOICE_FILE.match(filename.lower())
         ):
@@ -1085,6 +1095,7 @@ class TextToSpeechView(HomeAssistantView):
     async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
+            # filename is actually token, but we keep its name for compatibility
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
@@ -1105,16 +1116,13 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List text to speech engines and, optionally, if they support a given language."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
     entity_domains: set[str] = set()
 
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
@@ -1126,7 +1134,7 @@ def websocket_list_engines(
         providers.append(provider_info)
         if entity.platform:
             entity_domains.add(entity.platform.platform_name)
-    for engine_id, provider in manager.providers.items():
+    for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         provider_info = {
             "engine_id": engine_id,
             "name": provider.name,
@@ -1156,17 +1164,19 @@ def websocket_get_engine(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get text to speech engine info."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     engine_id = msg["engine_id"]
     provider_info: dict[str, Any]
 
     provider: TextToSpeechEntity | Provider | None = next(
-        (entity for entity in component.entities if entity.entity_id == engine_id), None
+        (
+            entity
+            for entity in hass.data[DATA_COMPONENT].entities
+            if entity.entity_id == engine_id
+        ),
+        None,
     )
     if not provider:
-        provider = manager.providers.get(engine_id)
+        provider = hass.data[DATA_TTS_MANAGER].providers.get(engine_id)
 
     if not provider:
         connection.send_error(

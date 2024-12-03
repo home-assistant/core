@@ -1,0 +1,1094 @@
+# serializer version: 1
+# name: test_api_events[calendar.test_user_dailies]
+  list([
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-21',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-09-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-09-21',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-23',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-24',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-23',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-25',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-24',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-25',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-24',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-26',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-25',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-26',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-25',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-09-26',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-09-25',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-27',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-26',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-27',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-26',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-28',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-27',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-28',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-27',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-29',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-28',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-29',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-28',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-09-29',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-09-28',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-09-30',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-29',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-30',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-29',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-09-30',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-09-29',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-01',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-30',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-01',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-30',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-02',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-01',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-02',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-01',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-03',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-02',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-03',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-02',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-10-03',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-10-02',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-04',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-03',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-04',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-03',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-05',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-04',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-05',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-04',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-06',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-05',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-06',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-05',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-10-06',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-10-05',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-06',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-06',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+    dict({
+      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+      'end': dict({
+        'date': '2024-10-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
+      'start': dict({
+        'date': '2024-10-06',
+      }),
+      'summary': 'Fitnessstudio besuchen',
+      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
+        'date': '2024-10-08',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-07',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-10-08',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-10-07',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+    }),
+  ])
+# ---
+# name: test_api_events[calendar.test_user_daily_reminders]
+  list([
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-21T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-21T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-22T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-22T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-23T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-23T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-24T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-24T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-25T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-25T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-26T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-26T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-27T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-27T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-28T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-28T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-29T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-29T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-30T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-30T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-01T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-01T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-02T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-02T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-03T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-03T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-04T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-04T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-05T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-05T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-06T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-06T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-07T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-07T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+  ])
+# ---
+# name: test_api_events[calendar.test_user_to_do_reminders]
+  list([
+    dict({
+      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      'end': dict({
+        'dateTime': '2024-09-22T03:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-22T02:00:00+02:00',
+      }),
+      'summary': 'Rechnungen bezahlen',
+      'uid': '2f6fcabc-f670-4ec3-ba65-817e8deea490_91c09432-10ac-4a49-bd20-823081ec29ed',
+    }),
+  ])
+# ---
+# name: test_api_events[calendar.test_user_to_do_s]
+  list([
+    dict({
+      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      'end': dict({
+        'date': '2024-09-01',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-08-31',
+      }),
+      'summary': 'Rechnungen bezahlen',
+      'uid': '2f6fcabc-f670-4ec3-ba65-817e8deea490',
+    }),
+    dict({
+      'description': 'Den Ausflug für das kommende Wochenende organisieren.',
+      'end': dict({
+        'date': '2024-09-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-09-21',
+      }),
+      'summary': 'Wochenendausflug planen',
+      'uid': '86ea2475-d1b5-4020-bdcc-c188c7996afa',
+    }),
+    dict({
+      'description': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
+      'end': dict({
+        'date': '2024-09-28',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-09-27',
+      }),
+      'summary': 'Buch zu Ende lesen',
+      'uid': '88de7cd9-af2b-49ce-9afd-bf941d87336b',
+    }),
+  ])
+# ---
+# name: test_calendar_platform[calendar.test_user_dailies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_dailies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dailies',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_dailies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end_time': '2024-09-22 00:00:00',
+      'friendly_name': 'test-user Dailies',
+      'location': '',
+      'message': '5 Minuten ruhig durchatmen',
+      'start_time': '2024-09-21 00:00:00',
+      'yesterdaily': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_dailies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_daily_reminders-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_daily_reminders',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily reminders',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_daily_reminders',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_daily_reminders-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end_time': '2024-09-21 21:00:00',
+      'friendly_name': 'test-user Daily reminders',
+      'location': '',
+      'message': '5 Minuten ruhig durchatmen',
+      'start_time': '2024-09-21 20:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_daily_reminders',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_reminders-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_to_do_reminders',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'To-do reminders',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_todo_reminders',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_reminders-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      'end_time': '2024-09-22 03:00:00',
+      'friendly_name': 'test-user To-do reminders',
+      'location': '',
+      'message': 'Rechnungen bezahlen',
+      'start_time': '2024-09-22 02:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_to_do_reminders',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_s-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_to_do_s',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': "To-Do's",
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_s-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'Den Ausflug für das kommende Wochenende organisieren.',
+      'end_time': '2024-09-22 00:00:00',
+      'friendly_name': "test-user To-Do's",
+      'location': '',
+      'message': 'Wochenendausflug planen',
+      'start_time': '2024-09-21 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_to_do_s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

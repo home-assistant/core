@@ -305,7 +305,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '48.0',
+    'state': '47.0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_led_bar_brightness-entry]
@@ -912,7 +912,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27.96',
+    'state': '22.17',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_voc_index-entry]

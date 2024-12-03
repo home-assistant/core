@@ -8,7 +8,11 @@ import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -32,8 +36,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,13 +43,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_step(user_input)
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the device."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reconfigure_confirm(user_input)
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
@@ -75,23 +70,16 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.debug("MAC address found: %s", mac)
                     # abort if the detected mac differs from the one in the entry
-                    if self.entry:
-                        existing_mac = self.entry.unique_id
-                        if existing_mac != mac:
-                            _LOGGER.debug(
-                                "MAC address changed from %s to %s", existing_mac, mac
-                            )
-                            # abort
-                            return self.async_abort(reason="set_up_new_device")
+                    await self.async_set_unique_id(mac)
+                    if self.source == SOURCE_RECONFIGURE:
+                        self._abort_if_unique_id_mismatch(reason="set_up_new_device")
 
                         _LOGGER.debug("Reconfiguration done")
                         return self.async_update_reload_and_abort(
-                            entry=self.entry,
+                            entry=self._get_reconfigure_entry(),
                             data={**user_input, CONF_HOST: host, CONF_PORT: port},
-                            reason="reconfigure_successful",
                         )
                     # abort if already configured with same mac
-                    await self.async_set_unique_id(mac)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                     _LOGGER.debug("Configuration successful")

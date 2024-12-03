@@ -28,6 +28,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkBinarySensorEntityDescription(
@@ -42,29 +44,34 @@ class ReolinkBinarySensorEntityDescription(
 BINARY_PUSH_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
+        cmd_id=33,
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
     ),
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="face",
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PERSON_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="person",
         value=lambda api, ch: api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="vehicle",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="pet",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
@@ -74,18 +81,21 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="animal",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PACKAGE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="package",
         value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
+        cmd_id=33,
         translation_key="visitor",
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
@@ -95,6 +105,7 @@ BINARY_PUSH_SENSORS = (
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="sleep",
+        cmd_id=145,
         cmd_key="GetChannelstatus",
         translation_key="sleep",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -165,14 +176,14 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_{self._channel}",
+                f"{self._host.unique_id}_{self._channel}",
                 self._async_handle_event,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_all",
+                f"{self._host.unique_id}_all",
                 self._async_handle_event,
             )
         )

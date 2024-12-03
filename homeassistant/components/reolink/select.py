@@ -8,11 +8,13 @@ import logging
 from typing import Any
 
 from reolink_aio.api import (
+    BinningModeEnum,
     Chime,
     ChimeToneEnum,
     DayNightEnum,
     HDREnum,
     Host,
+    HubToneEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -20,7 +22,7 @@ from reolink_aio.api import (
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,6 +36,7 @@ from .entity import (
 from .util import ReolinkConfigEntry, ReolinkData
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -115,6 +118,32 @@ SELECT_ENTITIES = (
         ),
     ),
     ReolinkSelectEntityDescription(
+        key="hub_alarm_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_alarm_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: api.supported(ch, "hub_audio"),
+        value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="hub_visitor_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_visitor_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: (
+            api.supported(ch, "hub_audio") and api.is_doorbell(ch)
+        ),
+        value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="auto_track_method",
         cmd_key="GetAiCfg",
         translation_key="auto_track_method",
@@ -147,6 +176,67 @@ SELECT_ENTITIES = (
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
     ),
+    ReolinkSelectEntityDescription(
+        key="binning_mode",
+        cmd_key="GetIsp",
+        translation_key="binning_mode",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in BinningModeEnum],
+        supported=lambda api, ch: api.supported(ch, "binning_mode"),
+        value=lambda api, ch: BinningModeEnum(api.binning_mode(ch)).name,
+        method=lambda api, ch, name: api.set_binning_mode(
+            ch, BinningModeEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="main_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="main_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "main")],
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: str(api.frame_rate(ch, "main")),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "main"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "sub")],
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: str(api.frame_rate(ch, "sub")),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "sub"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="main_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="main_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "main")],
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: str(api.bit_rate(ch, "main")),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "main"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "sub")],
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: str(api.bit_rate(ch, "sub")),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
+    ),
 )
 
 CHIME_SELECT_ENTITIES = (
@@ -169,6 +259,16 @@ CHIME_SELECT_ENTITIES = (
         supported=lambda chime: "people" in chime.chime_event_types,
         value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="vehicle_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="vehicle_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "vehicle" in chime.chime_event_types,
+        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
         key="visitor_tone",
@@ -245,7 +345,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False
@@ -287,7 +387,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         """Return the current option."""
         try:
             option = self.entity_description.value(self._chime)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False

@@ -71,14 +71,22 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return (
+            self.get("vehicle_state_software_update_status")
+            == TessieUpdateStatus.INSTALLING
+        )
+
+    @property
+    def update_percentage(self) -> int | None:
         """Update installation progress."""
         if (
             self.get("vehicle_state_software_update_status")
             == TessieUpdateStatus.INSTALLING
         ):
             return self.get("vehicle_state_software_update_install_perc")
-        return False
+        return None
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

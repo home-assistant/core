@@ -9,8 +9,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DelugeConfigEntry, DelugeEntity
+from . import DelugeConfigEntry
 from .coordinator import DelugeDataUpdateCoordinator
+from .entity import DelugeEntity
 
 
 async def async_setup_entry(

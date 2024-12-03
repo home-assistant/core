@@ -67,7 +67,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
         if brightness == 0:
             fallback_brightness = 100
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Setting brightness to %d%%, because it was 0", fallback_brightness
             )
             brightness = int(fallback_brightness * 255 / 100)

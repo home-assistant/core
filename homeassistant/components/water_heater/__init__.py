@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
-from functools import cached_property
 import logging
 from typing import Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,20 +25,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 
+DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -67,18 +63,6 @@ class WaterHeaterEntityFeature(IntFlag):
     AWAY_MODE = 4
     ON_OFF = 8
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the WaterHeaterEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TARGET_TEMPERATURE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.TARGET_TEMPERATURE, "2025.1"
-)
-_DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.OPERATION_MODE, "2025.1"
-)
-_DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
-)
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -109,7 +93,7 @@ SET_OPERATION_MODE_SCHEMA: VolDictType = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up water_heater devices."""
-    component = hass.data[DOMAIN] = EntityComponent[WaterHeaterEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[WaterHeaterEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -137,14 +121,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[WaterHeaterEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[WaterHeaterEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -437,11 +419,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

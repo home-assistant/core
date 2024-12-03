@@ -77,6 +77,10 @@
         '0': 1,
         'null': 1,
       }),
+      'GetDeviceAudioCfg': dict({
+        '0': 2,
+        'null': 4,
+      }),
       'GetEmail': dict({
         '0': 1,
         'null': 2,
@@ -114,8 +118,8 @@
         'null': 2,
       }),
       'GetPtzCurPos': dict({
-        '0': 1,
-        'null': 1,
+        '0': 2,
+        'null': 2,
       }),
       'GetPtzGuard': dict({
         '0': 2,
@@ -132,6 +136,9 @@
       'GetRec': dict({
         '0': 1,
         'null': 2,
+      }),
+      'GetStateLight': dict({
+        'null': 1,
       }),
       'GetWhiteLed': dict({
         '0': 3,

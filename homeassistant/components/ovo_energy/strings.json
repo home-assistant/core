@@ -1,10 +1,15 @@
 {
   "config": {
     "flow_title": "{username}",
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "authorization_error": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
@@ -16,7 +21,7 @@
         "description": "Set up an OVO Energy instance to access your energy usage.",
         "title": "Add OVO Energy Account"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },

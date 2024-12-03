@@ -11,13 +11,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry, PiHoleEntity
+from . import PiHoleConfigEntry
+from .entity import PiHoleEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
-        native_unit_of_measurement="ads",
     ),
     SensorEntityDescription(
         key="ads_percentage_today",
@@ -27,38 +27,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
-        native_unit_of_measurement="clients",
     ),
     SensorEntityDescription(
-        key="dns_queries_today",
-        translation_key="dns_queries_today",
-        native_unit_of_measurement="queries",
+        key="dns_queries_today", translation_key="dns_queries_today"
     ),
     SensorEntityDescription(
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
-        native_unit_of_measurement="domains",
     ),
+    SensorEntityDescription(key="queries_cached", translation_key="queries_cached"),
     SensorEntityDescription(
-        key="queries_cached",
-        translation_key="queries_cached",
-        native_unit_of_measurement="queries",
+        key="queries_forwarded", translation_key="queries_forwarded"
     ),
-    SensorEntityDescription(
-        key="queries_forwarded",
-        translation_key="queries_forwarded",
-        native_unit_of_measurement="queries",
-    ),
-    SensorEntityDescription(
-        key="unique_clients",
-        translation_key="unique_clients",
-        native_unit_of_measurement="clients",
-    ),
-    SensorEntityDescription(
-        key="unique_domains",
-        translation_key="unique_domains",
-        native_unit_of_measurement="domains",
-    ),
+    SensorEntityDescription(key="unique_clients", translation_key="unique_clients"),
+    SensorEntityDescription(key="unique_domains", translation_key="unique_domains"),
 )
 
 

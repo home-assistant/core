@@ -69,7 +69,7 @@ async def async_setup_entry(
 
 
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
-    """Representation of an mobile app binary sensor."""
+    """Representation of a mobile app binary sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""

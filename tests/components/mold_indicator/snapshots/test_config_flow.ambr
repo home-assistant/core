@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_config_flow_preview_success[missing_calibration_factor]
+  dict({
+    'attributes': dict({
+      'device_class': 'humidity',
+      'friendly_name': 'Mold Indicator',
+      'state_class': 'measurement',
+      'unit_of_measurement': '%',
+    }),
+    'state': 'unavailable',
+  })
+# ---
+# name: test_config_flow_preview_success[missing_humidity_entity]
+  dict({
+    'attributes': dict({
+      'device_class': 'humidity',
+      'friendly_name': 'Mold Indicator',
+      'state_class': 'measurement',
+      'unit_of_measurement': '%',
+    }),
+    'state': 'unavailable',
+  })
+# ---
+# name: test_config_flow_preview_success[success]
+  dict({
+    'attributes': dict({
+      'device_class': 'humidity',
+      'dewpoint': 12.01,
+      'estimated_critical_temp': 19.5,
+      'friendly_name': 'Mold Indicator',
+      'state_class': 'measurement',
+      'unit_of_measurement': '%',
+    }),
+    'state': '61',
+  })
+# ---
+# name: test_options_flow_preview
+  dict({
+    'attributes': dict({
+      'device_class': 'humidity',
+      'dewpoint': 12.01,
+      'estimated_critical_temp': 19.5,
+      'friendly_name': 'Mold Indicator',
+      'state_class': 'measurement',
+      'unit_of_measurement': '%',
+    }),
+    'state': '61',
+  })
+# ---

@@ -10,7 +10,6 @@ import logging
 from aiohttp import web
 from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
-from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
@@ -25,9 +24,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import NukiCoordinator
@@ -266,33 +264,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
-    """An entity using CoordinatorEntity.
-
-    The CoordinatorEntity class provides:
-      should_poll
-      async_update
-      async_added_to_hass
-      available
-
-    """
-
-    def __init__(self, coordinator: NukiCoordinator, nuki_device: _NukiDeviceT) -> None:
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-        self._nuki_device = nuki_device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for Nuki entities."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            name=self._nuki_device.name,
-            manufacturer="Nuki Home Solutions GmbH",
-            model=self._nuki_device.device_model_str.capitalize(),
-            sw_version=self._nuki_device.firmware_version,
-            via_device=(DOMAIN, self.coordinator.bridge_id),
-            serial_number=parse_id(self._nuki_device.nuki_id),
-        )

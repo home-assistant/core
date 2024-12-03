@@ -24,6 +24,8 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -67,6 +69,8 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -109,6 +113,8 @@
         'port': 9123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'elgato',
       'entry_id': <ANY>,
       'minor_version': 1,

@@ -24,8 +24,6 @@
         'capture_latest': None,
         'device_status': list([
           dict({
-            '_state': 'locked',
-            '_state2': 'closed',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -86,8 +84,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'unknown',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -147,8 +143,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'locked',
-            '_state2': 'unknown',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -209,6 +203,7 @@
             'type_no': '72',
           }),
           dict({
+            '_battery': True,
             '_state': 'closed',
             'address': '**REDACTED**',
             'area': '1',
@@ -240,7 +235,7 @@
             'sresp_button_2': None,
             'sresp_button_3': None,
             'sresp_button_4': None,
-            'status1': 'device_status.dc_close',
+            'status1': 'device_status.dc_close,device_status.low_battery',
             'status2': None,
             'status_dim_level': None,
             'status_fault': list([
@@ -270,6 +265,7 @@
             'type_no': '4',
           }),
           dict({
+            '_battery': False,
             '_state': 'open',
             'address': '**REDACTED**',
             'area': '1',
@@ -331,6 +327,7 @@
             'type_no': '4',
           }),
           dict({
+            '_battery': False,
             '_state': 'unavailable',
             'address': '**REDACTED**',
             'area': '1',
@@ -391,8 +388,6 @@
             'type_no': '4',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'closed',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -453,8 +448,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'open',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -515,7 +508,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unavailable',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -866,7 +858,7 @@
           'sresp_button_2': None,
           'sresp_button_3': None,
           'sresp_button_4': None,
-          'status1': 'device_status.dc_close',
+          'status1': 'device_status.dc_close,device_status.low_battery',
           'status2': None,
           'status_dim_level': None,
           'status_fault': list([

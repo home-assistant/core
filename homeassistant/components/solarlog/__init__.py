@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .const import CONF_HAS_PWD
 from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,12 +58,13 @@ async def async_migrate_entry(
                         entity.entity_id, new_unique_id=new_uid
                     )
 
+        if config_entry.minor_version < 3:
             # migrate config_entry
             new = {**config_entry.data}
-            new["extended_data"] = False
+            new[CONF_HAS_PWD] = False
 
             hass.config_entries.async_update_entry(
-                config_entry, data=new, minor_version=2, version=1
+                config_entry, data=new, minor_version=3, version=1
             )
 
     _LOGGER.debug(

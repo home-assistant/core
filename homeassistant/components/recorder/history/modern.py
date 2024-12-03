@@ -24,9 +24,9 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ... import recorder
 from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
@@ -34,7 +34,6 @@ from ..models import (
     LazyState,
     datetime_to_timestamp_or_none,
     extract_metadata_ids,
-    process_timestamp,
     row_to_compressed_state,
 )
 from ..util import execute_stmt_lambda_element, session_scope
@@ -231,7 +230,7 @@ def get_significant_states_with_session(
         raise ValueError("entity_ids must be provided")
     entity_id_to_metadata_id: dict[str, int | None] | None = None
     metadata_ids_in_significant_domains: list[int] = []
-    instance = recorder.get_instance(hass)
+    instance = get_instance(hass)
     if not (
         entity_id_to_metadata_id := instance.states_meta_manager.get_many(
             entity_ids, session, False
@@ -246,12 +245,12 @@ def get_significant_states_with_session(
             if metadata_id is not None
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
-    run_start_ts: float | None = None
+    oldest_ts: float | None = None
     if include_start_time_state and not (
-        run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+        oldest_ts := _get_oldest_possible_ts(hass, start_time)
     ):
         include_start_time_state = False
-    start_time_ts = dt_util.utc_to_timestamp(start_time)
+    start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
     stmt = lambda_stmt(
@@ -264,7 +263,7 @@ def get_significant_states_with_session(
             significant_changes_only,
             no_attributes,
             include_start_time_state,
-            run_start_ts,
+            oldest_ts,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -393,14 +392,14 @@ def state_changes_during_period(
 ) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     has_last_reported = (
-        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
     )
     if not entity_id:
         raise ValueError("entity_id must be provided")
     entity_ids = [entity_id.lower()]
 
     with session_scope(hass=hass, read_only=True) as session:
-        instance = recorder.get_instance(hass)
+        instance = get_instance(hass)
         if not (
             possible_metadata_id := instance.states_meta_manager.get(
                 entity_id, session, False
@@ -411,12 +410,12 @@ def state_changes_during_period(
         entity_id_to_metadata_id: dict[str, int | None] = {
             entity_id: single_metadata_id
         }
-        run_start_ts: float | None = None
+        oldest_ts: float | None = None
         if include_start_time_state and not (
-            run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+            oldest_ts := _get_oldest_possible_ts(hass, start_time)
         ):
             include_start_time_state = False
-        start_time_ts = dt_util.utc_to_timestamp(start_time)
+        start_time_ts = start_time.timestamp()
         end_time_ts = datetime_to_timestamp_or_none(end_time)
         stmt = lambda_stmt(
             lambda: _state_changed_during_period_stmt(
@@ -426,7 +425,7 @@ def state_changes_during_period(
                 no_attributes,
                 limit,
                 include_start_time_state,
-                run_start_ts,
+                oldest_ts,
                 has_last_reported,
             ),
             track_on=[
@@ -507,7 +506,7 @@ def get_last_state_changes(
 ) -> dict[str, list[State]]:
     """Return the last number_of_states."""
     has_last_reported = (
-        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
     )
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
@@ -517,7 +516,7 @@ def get_last_state_changes(
     # because the metadata_id_last_updated_ts index is in ascending order.
 
     with session_scope(hass=hass, read_only=True) as session:
-        instance = recorder.get_instance(hass)
+        instance = get_instance(hass)
         if not (
             possible_metadata_id := instance.states_meta_manager.get(
                 entity_id, session, False
@@ -600,17 +599,17 @@ def _get_start_time_state_for_entities_stmt(
     )
 
 
-def _get_run_start_ts_for_utc_point_in_time(
+def _get_oldest_possible_ts(
     hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
-    """Return the start time of a run."""
-    run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
-    if (
-        run is not None
-        and (run_start := process_timestamp(run.start)) < utc_point_in_time
-    ):
-        return run_start.timestamp()
-    # History did not run before utc_point_in_time but we still
+    """Return the oldest possible timestamp.
+
+    Returns None if there are no states as old as utc_point_in_time.
+    """
+
+    oldest_ts = get_instance(hass).states_manager.oldest_ts
+    if oldest_ts is not None and oldest_ts < utc_point_in_time.timestamp():
+        return oldest_ts
     return None
 
 

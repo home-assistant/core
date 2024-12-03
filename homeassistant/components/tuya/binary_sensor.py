@@ -17,8 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode
+from .entity import TuyaEntity
 
 
 @dataclass(frozen=True)
@@ -150,8 +150,8 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "hps": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
-            device_class=BinarySensorDeviceClass.MOTION,
-            on_value="presence",
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
+            on_value={"presence", "small_move", "large_move", "peaceful"},
         ),
     ),
     # Formaldehyde Detector
