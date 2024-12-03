@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -24,7 +24,7 @@ from .const import (
     SERVICE_RESUME,
     SERVICE_SET_SPEED,
 )
-from .coordinator import SabnzbdUpdateCoordinator
+from .coordinator import SabnzbdConfigEntry, SabnzbdUpdateCoordinator
 from .helpers import get_client
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
@@ -47,8 +47,6 @@ SERVICE_SPEED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
     }
 )
-
-type SabnzbdConfigEntry = ConfigEntry[SabnzbdUpdateCoordinator]
 
 
 @callback
