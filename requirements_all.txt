@@ -2906,7 +2906,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.unifi_direct
-unifi_ap==0.0.1
+unifi_ap==0.0.2
 
 # homeassistant.components.unifiled
 unifiled==0.11
