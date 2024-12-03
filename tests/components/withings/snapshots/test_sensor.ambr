@@ -92,7 +92,7 @@
     'supported_features': 0,
     'translation_key': 'activity_active_calories_burnt_today',
     'unique_id': 'withings_12345_activity_active_calories_burnt_today',
-    'unit_of_measurement': 'calories',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.henk_active_calories_burnt_today-state]
@@ -101,7 +101,6 @@
       'friendly_name': 'henk Active calories burnt today',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'calories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_active_calories_burnt_today',
@@ -453,14 +452,13 @@
     'supported_features': 0,
     'translation_key': 'workout_active_calories_burnt',
     'unique_id': 'withings_12345_workout_active_calories_burnt',
-    'unit_of_measurement': 'calories',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.henk_calories_burnt_last_workout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Calories burnt last workout',
-      'unit_of_measurement': 'calories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_calories_burnt_last_workout',
@@ -3351,7 +3349,7 @@
     'supported_features': 0,
     'translation_key': 'step_goal',
     'unique_id': 'withings_12345_step_goal',
-    'unit_of_measurement': 'steps',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.henk_step_goal-state]
@@ -3359,7 +3357,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Step goal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'steps',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_step_goal',
@@ -3401,7 +3398,7 @@
     'supported_features': 0,
     'translation_key': 'activity_steps_today',
     'unique_id': 'withings_12345_activity_steps_today',
-    'unit_of_measurement': 'steps',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.henk_steps_today-state]
@@ -3410,7 +3407,6 @@
       'friendly_name': 'henk Steps today',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'steps',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_steps_today',
@@ -3658,7 +3654,7 @@
     'supported_features': 0,
     'translation_key': 'activity_total_calories_burnt_today',
     'unique_id': 'withings_12345_activity_total_calories_burnt_today',
-    'unit_of_measurement': 'calories',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.henk_total_calories_burnt_today-state]
@@ -3667,7 +3663,6 @@
       'friendly_name': 'henk Total calories burnt today',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'calories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_total_calories_burnt_today',

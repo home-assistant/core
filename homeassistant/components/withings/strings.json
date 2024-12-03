@@ -203,7 +203,8 @@
         "name": "Wakeup time"
       },
       "step_goal": {
-        "name": "Step goal"
+        "name": "Step goal",
+        "unit_of_measurement": "steps"
       },
       "sleep_goal": {
         "name": "Sleep goal"
@@ -212,7 +213,8 @@
         "name": "Weight goal"
       },
       "activity_steps_today": {
-        "name": "Steps today"
+        "name": "Steps today",
+        "unit_of_measurement": "[%key:component::withings::entity::sensor::step_goal::unit_of_measurement%]"
       },
       "activity_distance_today": {
         "name": "Distance travelled today"
@@ -233,10 +235,12 @@
         "name": "Active time today"
       },
       "activity_active_calories_burnt_today": {
-        "name": "Active calories burnt today"
+        "name": "Active calories burnt today",
+        "unit_of_measurement": "calories"
       },
       "activity_total_calories_burnt_today": {
-        "name": "Total calories burnt today"
+        "name": "Total calories burnt today",
+        "unit_of_measurement": "[%key:component::withings::entity::sensor::activity_active_calories_burnt_today::unit_of_measurement%]"
       },
       "workout_type": {
         "name": "Last workout type",
@@ -293,7 +297,8 @@
         }
       },
       "workout_active_calories_burnt": {
-        "name": "Calories burnt last workout"
+        "name": "Calories burnt last workout",
+        "unit_of_measurement": "[%key:component::withings::entity::sensor::activity_active_calories_burnt_today::unit_of_measurement%]"
       },
       "workout_distance": {
         "name": "Distance travelled last workout"

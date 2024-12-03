@@ -467,7 +467,6 @@ ACTIVITY_SENSORS = [
         key="activity_steps_today",
         value_fn=lambda activity: activity.steps,
         translation_key="activity_steps_today",
-        native_unit_of_measurement="steps",
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -531,7 +530,6 @@ ACTIVITY_SENSORS = [
         value_fn=lambda activity: activity.active_calories_burnt,
         suggested_display_precision=1,
         translation_key="activity_active_calories_burnt_today",
-        native_unit_of_measurement="calories",
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -539,7 +537,6 @@ ACTIVITY_SENSORS = [
         value_fn=lambda activity: activity.total_calories_burnt,
         suggested_display_precision=1,
         translation_key="activity_total_calories_burnt_today",
-        native_unit_of_measurement="calories",
         state_class=SensorStateClass.TOTAL,
     ),
 ]
@@ -562,7 +559,6 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
         key="step_goal",
         value_fn=lambda goals: goals.steps,
         translation_key="step_goal",
-        native_unit_of_measurement="steps",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SLEEP_GOAL: WithingsGoalsSensorEntityDescription(
@@ -610,7 +606,6 @@ WORKOUT_SENSORS = [
         value_fn=lambda workout: workout.active_calories_burnt,
         translation_key="workout_active_calories_burnt",
         suggested_display_precision=1,
-        native_unit_of_measurement="calories",
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_distance",
