@@ -17,7 +17,7 @@ from homeassistant.helpers import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
-from .coordinator import BMWConfigEntry, BMWData, BMWDataUpdateCoordinator
+from .coordinator import BMWConfigEntry, BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = BMWData(coordinator)
+    entry.runtime_data = coordinator
 
     # Set up all platforms except notify
     await hass.config_entries.async_forward_entry_setups(

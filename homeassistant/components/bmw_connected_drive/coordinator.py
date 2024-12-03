@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -28,14 +27,7 @@ from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN, SCAN_I
 _LOGGER = logging.getLogger(__name__)
 
 
-type BMWConfigEntry = ConfigEntry[BMWData]
-
-
-@dataclass
-class BMWData:
-    """Class to store BMW runtime data."""
-
-    coordinator: BMWDataUpdateCoordinator
+type BMWConfigEntry = ConfigEntry[BMWDataUpdateCoordinator]
 
 
 class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
