@@ -18,10 +18,6 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Reolink integration needs to re-authenticate your connection details"
       }
     },
     "error": {
