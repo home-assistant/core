@@ -16,7 +16,7 @@
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
-          "workdays": "Workdays",
+          "workdays": "Includes",
           "add_holidays": "Add holidays",
           "remove_holidays": "Remove Holidays",
           "province": "Subdivision of country",
@@ -24,9 +24,9 @@
           "category": "Additional category as holiday"
         },
         "data_description": {
-          "excludes": "List of workdays to exclude, notice the keyword `holiday` and read the documentation on how to use it correctly",
+          "excludes": "List of weekdays to exclude, plus the keyword `holidays` (read the documentation on how to use it correctly)",
           "days_offset": "Days offset from current day",
-          "workdays": "List of working days",
+          "workdays": "List of weekdays to include, plus the keyword `holidays` (read the documentation on how to use it correctly)",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "province": "State, territory, province or region of country",
