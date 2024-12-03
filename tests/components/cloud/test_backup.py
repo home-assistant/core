@@ -5,6 +5,7 @@ from io import StringIO
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
+from aiohttp import ClientError
 from hass_nabucasa import CloudError
 import pytest
 from yarl import URL
@@ -171,15 +172,17 @@ async def test_agents_list_backups(
     ]
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
 async def test_agents_list_backups_fail_cloud(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     cloud: MagicMock,
     mock_list_files: Mock,
+    side_effect: Exception,
 ) -> None:
     """Test agent list backups."""
     client = await hass_ws_client(hass)
-    mock_list_files.side_effect = CloudError
+    mock_list_files.side_effect = side_effect
 
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
@@ -273,16 +276,18 @@ async def test_agents_download(
     mocked_write.assert_called_once_with(b"backup data")
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download_fail_cloud(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_get_download_details: Mock,
+    side_effect: Exception,
 ) -> None:
     """Test agent download backup, when cloud user is logged in."""
     client = await hass_ws_client(hass)
     backup_id = "23e64aec"
-    mock_get_download_details.side_effect = CloudError
+    mock_get_download_details.side_effect = side_effect
 
     await client.send_json_auto_id(
         {
@@ -453,17 +458,19 @@ async def test_agents_upload_fail_put(
     assert "Error during backup upload - Failed to upload backup" in caplog.text
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
 @pytest.mark.usefixtures("cloud_logged_in")
 async def test_agents_upload_fail_cloud(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_get_upload_details: Mock,
+    side_effect: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
     backup_id = "test-backup"
-    mock_get_upload_details.side_effect = CloudError
+    mock_get_upload_details.side_effect = side_effect
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
@@ -555,16 +562,18 @@ async def test_agents_delete(
     mock_delete_file.assert_called_once()
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_delete_fail_cloud(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_delete_file: Mock,
+    side_effect: Exception,
 ) -> None:
     """Test agent delete backup."""
     client = await hass_ws_client(hass)
     backup_id = "23e64aec"
-    mock_delete_file.side_effect = CloudError
+    mock_delete_file.side_effect = side_effect
 
     await client.send_json_auto_id(
         {

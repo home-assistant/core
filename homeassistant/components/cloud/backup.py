@@ -76,7 +76,7 @@ class CloudBackupAgent(BackupAgent):
                 storage_type=_STORAGE_BACKUP,
                 filename=self._get_backup_filename(),
             )
-        except CloudError as err:
+        except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to get download details") from err
 
         try:
@@ -113,7 +113,7 @@ class CloudBackupAgent(BackupAgent):
                 size=backup.size,
                 base64md5hash=base64md5hash,
             )
-        except CloudError as err:
+        except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to get upload details") from err
 
         try:
@@ -144,14 +144,14 @@ class CloudBackupAgent(BackupAgent):
                 storage_type=_STORAGE_BACKUP,
                 filename=self._get_backup_filename(),
             )
-        except CloudError as err:
+        except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to delete backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         try:
             backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
-        except CloudError as err:
+        except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
 
         return [AgentBackup.from_dict(backup["Metadata"]) for backup in backups]
