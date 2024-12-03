@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -76,26 +77,30 @@ class BackupAgentTest(BackupAgent):
                 )
             ]
 
+        self._backup_data = None
         self._backups = {backup.backup_id: backup for backup in backups}
 
     async def async_download_backup(
         self,
         backup_id: str,
-        *,
-        path: Path,
         **kwargs: Any,
-    ) -> None:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
+        return AsyncMock(spec_set=["__aiter__"])
 
     async def async_upload_backup(
         self,
         *,
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         self._backups[backup.backup_id] = backup
+        backup_stream = await open_stream()
+        self._backup_data = bytearray()
+        async for chunk in backup_stream:
+            self._backup_data += chunk
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""

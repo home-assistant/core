@@ -505,7 +505,7 @@ async def test_exception_platform_post(
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
-async def test_async_receive_backup(
+async def test_async_receive_backup_local(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -550,6 +550,62 @@ async def test_async_receive_backup(
         assert copy_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
+async def test_async_receive_backup_remote(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving a backup file."""
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    remote_agent = BackupAgentTest("remote", backups=[])
+
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+    await manager.load_platforms()
+
+    size = 2 * 2**16
+    protocol = Mock(_reading_paused=False)
+    stream = aiohttp.StreamReader(protocol, 2**16)
+    stream.feed_data(b"0" * size + b"\r\n--:--")
+    stream.feed_eof()
+
+    open_mock = mock_open()
+
+    assert remote_agent._backups == {}
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        open_mock.return_value.read.side_effect = [b"0" * size, b""]
+        await manager.async_receive_backup(
+            agent_ids=["test.remote"],
+            contents=aiohttp.BodyPartReader(
+                b"--:",
+                CIMultiDictProxy(
+                    CIMultiDict(
+                        {
+                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
+                        }
+                    )
+                ),
+                stream,
+            ),
+        )
+        assert open_mock.call_count == 2
+        assert remote_agent._backups == {
+            TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123
+        }
+        assert remote_agent._backup_data == b"0" * size
+
+
 @pytest.mark.parametrize(
     ("agent_id", "password", "restore_database", "restore_homeassistant", "dir"),
     [
@@ -589,9 +645,12 @@ async def test_async_trigger_restore(
 
     with (
         patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open"),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
     ):
+        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await manager.async_restore_backup(
             TEST_BACKUP_ABC123.backup_id,
             agent_id=agent_id,

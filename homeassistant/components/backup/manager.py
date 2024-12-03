@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
 import hashlib
 import io
@@ -244,12 +244,24 @@ class BackupManager:
     ) -> None:
         """Upload a backup to selected agents."""
         LOGGER.warning("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
+
+        async def send_backup() -> AsyncGenerator[bytes]:
+            f = await self.hass.async_add_executor_job(path.open, "rb")
+            try:
+                while chunk := await self.hass.async_add_executor_job(f.read, 2**20):
+                    yield chunk
+            finally:
+                await self.hass.async_add_executor_job(f.close)
+
+        async def open_backup() -> AsyncGenerator[bytes]:
+            return send_backup()
+
         self.syncing = True
         try:
             sync_backup_results = await asyncio.gather(
                 *(
                     self.backup_agents[agent_id].async_upload_backup(
-                        path=path,
+                        open_stream=open_backup,
                         backup=backup,
                     )
                     for agent_id in agent_ids
@@ -552,7 +564,13 @@ class BackupManager:
                 raise HomeAssistantError(
                     f"Backup {backup_id} not found in agent {agent_id}"
                 )
-            await agent.async_download_backup(backup_id, path=path)
+            stream = await agent.async_download_backup(backup_id)
+            f = await self.hass.async_add_executor_job(path.open, "wb")
+            try:
+                async for chunk in stream:
+                    await self.hass.async_add_executor_job(f.write, chunk)
+            finally:
+                await self.hass.async_add_executor_job(f.close)
 
         await self._reader_writer.async_restore_backup(
             backup_id=backup_id,

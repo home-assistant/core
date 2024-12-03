@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from pathlib import Path
 from tarfile import TarError
@@ -60,17 +61,15 @@ class CoreLocalBackupAgent(LocalBackupAgent):
     async def async_download_backup(
         self,
         backup_id: str,
-        *,
-        path: Path,
         **kwargs: Any,
-    ) -> None:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         raise NotImplementedError
 
     async def async_upload_backup(
         self,
         *,
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:

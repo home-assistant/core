@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -31,27 +32,25 @@ class BackupAgent(abc.ABC):
     async def async_download_backup(
         self,
         backup_id: str,
-        *,
-        path: Path,
         **kwargs: Any,
-    ) -> None:
+    ) -> AsyncIterator[bytes]:
         """Download a backup file.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
-        :param path: The full file path to download the backup to.
+        :return: An async iterator that yields bytes.
         """
 
     @abc.abstractmethod
     async def async_upload_backup(
         self,
         *,
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
-        :param path: The full file path to the backup that should be uploaded.
+        :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
 
