@@ -7,8 +7,7 @@ from pathlib import Path
 from homeassistant.const import Platform
 
 from . import upload
-from .develop import flatten_translations
-from .util import get_base_arg_parser, load_json_from_path
+from .util import flatten_translations, get_base_arg_parser, load_json_from_path
 
 
 def get_arguments() -> argparse.Namespace:

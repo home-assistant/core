@@ -1192,7 +1192,12 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session."""
+    """Only load translations once per session.
+
+    Warning: having this as a session fixture can cause issues with tests that
+    create mock integrations, overriding the real integration translations
+    with empty ones. Translations should be reset after such tests (see #131628)
+    """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
