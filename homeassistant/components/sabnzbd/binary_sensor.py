@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SabnzbdConfigEntry
+from .coordinator import SabnzbdConfigEntry
 from .entity import SabnzbdEntity
 
 
