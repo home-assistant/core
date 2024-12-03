@@ -206,6 +206,5 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
-        optional_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
 ]

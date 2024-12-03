@@ -176,14 +176,14 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_{self._channel}",
+                f"{self._host.unique_id}_{self._channel}",
                 self._async_handle_event,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_all",
+                f"{self._host.unique_id}_all",
                 self._async_handle_event,
             )
         )

@@ -711,7 +711,7 @@ class DefaultAgent(ConversationEntity):
             for name_tuple in self._get_entity_name_tuples(exposed=False):
                 self._unexposed_names_trie.insert(
                     name_tuple[0].lower(),
-                    TextSlotValue.from_tuple(name_tuple),
+                    TextSlotValue.from_tuple(name_tuple, allow_template=False),
                 )
 
         # Build filtered slot list

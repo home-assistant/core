@@ -16,6 +16,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from . import BMWConfigEntry
 from .const import CONF_REFRESH_TOKEN
 
+PARALLEL_UPDATES = 1
+
 if TYPE_CHECKING:
     from bimmer_connected.vehicle import MyBMWVehicle
 

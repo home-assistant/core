@@ -26,6 +26,8 @@ from .const import UNIT_MAP
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -72,7 +72,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             raise UpdateFailed("Cannot connect to device") from e
 
 
-class IronOSLiveDataCoordinator(IronOSBaseCoordinator):
+class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
@@ -124,7 +124,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel])
         return release.data
 
 
-class IronOSSettingsCoordinator(IronOSBaseCoordinator):
+class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
     """IronOS coordinator."""
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
