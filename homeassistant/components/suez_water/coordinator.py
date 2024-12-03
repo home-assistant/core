@@ -2,9 +2,8 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, time
+from datetime import date, datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from pysuez import DayDataResult, PySuezError, SuezClient
 
@@ -25,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
@@ -71,7 +71,6 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         self._water_statistic_id = (
             f"{DOMAIN}:{self._counter_id}_water_consumption_statistics"
         )
-        self.config_entry.async_on_unload(self._clear_statistics)
 
     async def _async_setup(self) -> None:
         self._suez_client = SuezClient(
@@ -160,9 +159,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         for data in usage:
             if last_stats is not None and data.date <= last_stats:
                 continue
-            consumption_date = datetime.combine(
-                data.date, time(0, 0, 0, 0), ZoneInfo("Europe/Paris")
-            )
+            consumption_date = dt_util.start_of_local_day(data.date)
 
             consumption_sum += data.day_consumption
             consumption_statistics.append(
@@ -227,13 +224,4 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         last_stat = await get_instance(self.hass).async_add_executor_job(
             get_last_statistics, self.hass, 1, id, True, {"sum"}
         )
-        if last_stat is None or len(last_stat) == 0:
-            return None
-        return last_stat[id][0]
-
-    def _clear_statistics(self) -> None:
-        """Clear suez water statistics."""
-        instance = get_instance(self.hass)
-        instance.async_clear_statistics(
-            [self._water_statistic_id, self._cost_statistic_id]
-        )
+        return last_stat[id][0] if last_stat or len(last_stat) == 0 else None
