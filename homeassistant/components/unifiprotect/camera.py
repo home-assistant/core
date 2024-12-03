@@ -38,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 def _create_rtsp_repair(
     hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
 ) -> None:
+    if camera.is_third_party_camera:
+        return
     edit_key = "readonly"
     if camera.can_write(data.api.bootstrap.auth_user):
         edit_key = "writable"
