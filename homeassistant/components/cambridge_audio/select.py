@@ -12,7 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import CambridgeAudioEntity
+from .entity import CambridgeAudioEntity, command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -116,6 +118,7 @@ class CambridgeAudioSelect(CambridgeAudioEntity, SelectEntity):
         """Return the state of the select."""
         return self.entity_description.value_fn(self.client)
 
+    @command
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.client, option)

@@ -740,7 +740,7 @@ class Recorder(threading.Thread):
             self.schema_version = schema_status.current_version
 
             # Do non-live data migration
-            migration.migrate_data_non_live(self, self.get_session, schema_status)
+            self._migrate_data_offline(schema_status)
 
             # Non-live migration is now completed, remaining steps are live
             self.migration_is_live = True
@@ -915,6 +915,13 @@ class Recorder(threading.Thread):
                 time.sleep(self.db_retry_wait)
 
         return False
+
+    def _migrate_data_offline(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> None:
+        """Migrate data."""
+        with self.hass.timeout.freeze(DOMAIN):
+            migration.migrate_data_non_live(self, self.get_session, schema_status)
 
     def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
@@ -1121,7 +1128,6 @@ class Recorder(threading.Thread):
 
         # Map the event data to the StateAttributes table
         shared_attrs = shared_attrs_bytes.decode("utf-8")
-        dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_event_data := state_attributes_manager.get_pending(shared_attrs):
             dbstate.state_attributes = pending_event_data
@@ -1424,6 +1430,7 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.recorder_runs_manager.recording_start)
             self.recorder_runs_manager.start(session)
+            self.states_manager.load_from_db(session)
 
         self._open_event_session()
 

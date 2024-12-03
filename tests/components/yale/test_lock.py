@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -29,6 +29,7 @@ from .mocks import (
     _mock_lock_from_fixture,
     _mock_lock_with_unlatch,
     _mock_operative_yale_lock_detail,
+    async_setup_component,
 )
 
 from tests.common import async_fire_time_changed
@@ -418,8 +419,14 @@ async def test_open_throws_hass_service_not_supported_error(
     hass: HomeAssistant,
 ) -> None:
     """Test open throws correct error on entity does not support this service error."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
     mocked_lock_detail = await _mock_operative_yale_lock_detail(hass)
     await _create_yale_with_devices(hass, [mocked_lock_detail])
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    entity_id = "lock.a6697750d607098bae8d6baa11ef8063_name"
+    data = {ATTR_ENTITY_ID: entity_id}
+    with pytest.raises(
+        ServiceNotSupported,
+        match=f"Entity {entity_id} does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
+    ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
