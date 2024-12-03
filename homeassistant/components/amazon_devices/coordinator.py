@@ -35,6 +35,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._login_username = username
         self._login_country = country
+        assert login_data
 
         super().__init__(
             hass=hass,
@@ -45,7 +46,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            identifiers={(DOMAIN, login_data["customer_info"]["user_id"])},
             name="Amazon Devices",
             manufacturer="Amazon",
         )
