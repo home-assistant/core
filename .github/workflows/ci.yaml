@@ -485,7 +485,6 @@ jobs:
         uses: actions/cache@v4.1.2
         with:
           path: venv
-          lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
@@ -531,6 +530,26 @@ jobs:
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
+      - name: Dump pip freeze
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          uv pip freeze >> pip_freeze.txt
+      - name: Upload pip_freeze artifact
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: pip-freeze-${{ matrix.python-version }}
+          path: pip_freeze.txt
+          overwrite: true
+      - name: Remove pip_freeze
+        run: rm pip_freeze.txt
+      - name: Remove generated requirements_all
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
 
   hassfest:
     name: Check hassfest

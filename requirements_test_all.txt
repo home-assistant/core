@@ -928,7 +928,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.85.0
 
 # homeassistant.components.conversation
-hassil==2.0.4
+hassil==2.0.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
@@ -953,10 +953,10 @@ hole==0.8.0
 holidays==0.61
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.1
+home-assistant-frontend==20241127.3
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.11.27
+home-assistant-intents==2024.12.2
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1091,7 +1091,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.9
 
 # homeassistant.components.livisi
-livisi==0.0.22
+livisi==0.0.24
 
 # homeassistant.components.london_underground
 london-tube-status==0.5
@@ -1202,7 +1202,7 @@ nessclient==1.1.2
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.3.0
+nettigo-air-monitor==4.0.0
 
 # homeassistant.components.nexia
 nexia==2.0.8
@@ -1539,7 +1539,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.1.2
+pyezviz==0.2.2.3
 
 # homeassistant.components.fibaro
 pyfibaro==0.8.0
@@ -1832,7 +1832,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.3
+pysmlight==0.1.4
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -1950,7 +1950,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.2.0
+pytouchlinesl==0.3.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2038,13 +2038,13 @@ radiotherm==2.1.0
 rapt-ble==0.1.2
 
 # homeassistant.components.refoss
-refoss-ha==1.2.4
+refoss-ha==1.2.5
 
 # homeassistant.components.rainmachine
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.7
+renault-api==0.2.8
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2313,7 +2313,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.4
+uiprotect==6.6.5
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2357,7 +2357,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.1.0
+voip-utils==0.2.1
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
@@ -2385,7 +2385,7 @@ watchdog==2.3.1
 weatherflow4py==1.0.6
 
 # homeassistant.components.nasweb
-webio-api==0.1.8
+webio-api==0.1.11
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -2470,7 +2470,7 @@ zeversolar==0.3.2
 zha==0.0.41
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.59.1
+zwave-js-server-python==0.60.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
