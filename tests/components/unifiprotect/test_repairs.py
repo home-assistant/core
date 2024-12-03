@@ -389,4 +389,4 @@ async def test_rtsp_no_fix_if_third_party(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 0
+    assert not msg["result"]["issues"]
