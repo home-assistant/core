@@ -27,11 +27,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         country: str,
         username: str,
         password: str,
-        login_data_file: str,
+        login_data: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the scanner."""
 
-        self.api = AmazonEchoApi(country, username, password, login_data_file, False)
+        self.api = AmazonEchoApi(country, username, password, login_data)
 
         self._login_username = username
         self._login_country = country

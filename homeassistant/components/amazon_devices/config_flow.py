@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
 from typing import Any
 
 import aioamazondevices
 from aioamazondevices import AmazonEchoApi
-import orjson
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -17,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, CREDENTIAL_STORAGE, DEFAULT_COUNTRY, DOMAIN
+from .const import _LOGGER, CONF_LOGIN_DATA, DEFAULT_COUNTRY, DOMAIN
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -41,26 +39,13 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    api = AmazonEchoApi(
-        data[CONF_COUNTRY],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        None,
-        False,
-    )
+    api = AmazonEchoApi(data[CONF_COUNTRY], data[CONF_USERNAME], data[CONF_PASSWORD])
 
     try:
         login_data = await api.login_mode_interactive(data[CONF_CODE])
-        data_json = orjson.dumps(
-            login_data,
-            option=orjson.OPT_INDENT_2,
-        ).decode("utf-8")
-        with Path.open(Path(CREDENTIAL_STORAGE), "w+") as file:
-            file.write(data_json)
-            file.write("\n")
 
     except aioamazondevices.exceptions.CannotConnect as err:
         raise CannotConnect from err
@@ -69,7 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     finally:
         await api.close()
 
-    return {"title": data[CONF_USERNAME]}
+    return {"title": data[CONF_USERNAME], CONF_LOGIN_DATA: login_data}
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -100,7 +85,10 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(
+                title=info["title"],
+                data=user_input | {CONF_LOGIN_DATA: info[CONF_LOGIN_DATA]},
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
@@ -124,7 +112,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(
+                info = await validate_input(
                     self.hass,
                     {
                         CONF_COUNTRY: entry_data[CONF_COUNTRY],
@@ -149,6 +137,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: entry_data.get(CONF_USERNAME),
                         CONF_PASSWORD: entry_data.get(CONF_PASSWORD),
                         CONF_CODE: entry_data.get(CONF_CODE),
+                        CONF_LOGIN_DATA: info[CONF_LOGIN_DATA],
                     },
                 )
 

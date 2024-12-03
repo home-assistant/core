@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CREDENTIAL_STORAGE, DOMAIN
+from .const import CONF_LOGIN_DATA, DOMAIN
 from .coordinator import AmazonDevicesCoordinator
 
 PLATFORMS = [
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_COUNTRY],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
-        CREDENTIAL_STORAGE,
+        entry.data[CONF_LOGIN_DATA],
     )
 
     await coordinator.async_config_entry_first_refresh()
