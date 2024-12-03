@@ -67,11 +67,11 @@ class UnifiDeviceScanner(DeviceScanner):
         """Update the client info from AP."""
         try:
             self.clients = self.ap.get_clients()
-        except UniFiAPConnectionException as e:
-            _LOGGER.error("Failed to connect to accesspoint: %s", str(e))
+        except UniFiAPConnectionException:
+            _LOGGER.error("Failed to connect to accesspoint")
             return False
-        except UniFiAPDataException as e:
-            _LOGGER.error("Failed to get proper response from accesspoint: %s", str(e))
+        except UniFiAPDataException:
+            _LOGGER.error("Failed to get proper response from accesspoint")
             return False
 
         return True
