@@ -530,7 +530,7 @@ jobs:
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
-      - name: Create Python virtual environment
+      - name: Dump pip freeze
         run: |
           python -m venv venv
           . venv/bin/activate
