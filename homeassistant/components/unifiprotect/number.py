@@ -20,8 +20,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,7 +124,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Infrared custom lux trigger",
         icon="mdi:white-balance-sunny",
         entity_category=EntityCategory.CONFIG,
-        ufp_min=1,
+        ufp_min=0,
         ufp_max=30,
         ufp_step=1,
         ufp_required_field="feature_flags.has_led_ir",

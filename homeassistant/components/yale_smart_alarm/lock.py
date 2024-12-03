@@ -6,12 +6,7 @@ from typing import Any
 
 from yalesmartalarmclient import YaleLock, YaleLockState
 
-from homeassistant.components.lock import (
-    STATE_LOCKED,
-    STATE_OPEN,
-    STATE_UNLOCKED,
-    LockEntity,
-)
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -28,9 +23,9 @@ from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleLockEntity
 
 LOCK_STATE_MAP = {
-    YaleLockState.LOCKED: STATE_LOCKED,
-    YaleLockState.UNLOCKED: STATE_UNLOCKED,
-    YaleLockState.DOOR_OPEN: STATE_OPEN,
+    YaleLockState.LOCKED: LockState.LOCKED,
+    YaleLockState.UNLOCKED: LockState.UNLOCKED,
+    YaleLockState.DOOR_OPEN: LockState.OPEN,
 }
 
 
@@ -108,9 +103,9 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        return LOCK_STATE_MAP.get(self.lock_data.state()) == STATE_LOCKED
+        return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.LOCKED
 
     @property
     def is_open(self) -> bool | None:
         """Return true if the lock is open."""
-        return LOCK_STATE_MAP.get(self.lock_data.state()) == STATE_OPEN
+        return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.OPEN

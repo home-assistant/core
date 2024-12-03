@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State
 
-from .const import DOMAIN, DOMAIN_DATA
+from .const import DATA_COMPONENT, DOMAIN
 
 
 async def async_get_media_source(hass: HomeAssistant) -> ImageMediaSource:
@@ -35,7 +35,7 @@ class ImageMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        image = self.hass.data[DOMAIN_DATA].get_entity(item.identifier)
+        image = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
 
         if not image:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
@@ -65,7 +65,7 @@ class ImageMediaSource(MediaSource):
                 can_play=True,
                 can_expand=False,
             )
-            for image in self.hass.data[DOMAIN_DATA].entities
+            for image in self.hass.data[DATA_COMPONENT].entities
         ]
 
         return BrowseMediaSource(

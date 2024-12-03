@@ -1,0 +1,1241 @@
+# serializer version: 1
+# name: test_sensors[sensor.test_user_class-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'warrior',
+        'healer',
+        'wizard',
+        'rogue',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_class',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Class',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.CLASS: 'class'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_class',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_class-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'test-user Class',
+      'options': list([
+        'warrior',
+        'healer',
+        'wizard',
+        'rogue',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_class',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'wizard',
+  })
+# ---
+# name: test_sensors[sensor.test_user_constitution-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_constitution',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Constitution',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.CONSTITUTION: 'constitution'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_constitution',
+    'unit_of_measurement': 'CON',
+  })
+# ---
+# name: test_sensors[sensor.test_user_constitution-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 42,
+      'friendly_name': 'test-user Constitution',
+      'level': 19,
+      'unit_of_measurement': 'CON',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_constitution',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '102',
+  })
+# ---
+# name: test_sensors[sensor.test_user_dailies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_dailies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dailies',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.DAILIES: 'dailys'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_dailies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1': dict({
+        'created_at': '2024-09-22T11:44:43.774Z',
+        'every_x': 1,
+        'frequency': 'weekly',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'is_due': True,
+        'next_due': list([
+          '2024-09-24T22:00:00.000Z',
+          '2024-09-27T22:00:00.000Z',
+          '2024-09-28T22:00:00.000Z',
+          '2024-10-01T22:00:00.000Z',
+          '2024-10-04T22:00:00.000Z',
+          '2024-10-08T22:00:00.000Z',
+        ]),
+        'notes': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+        'priority': 2,
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': True,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': True,
+        }),
+        'start_date': '2024-09-21T22:00:00.000Z',
+        'tags': list([
+          '51076966-2970-4b40-b6ba-d58c6a756dd7',
+        ]),
+        'text': 'Fitnessstudio besuchen',
+        'type': 'daily',
+        'yester_daily': True,
+      }),
+      '564b9ac9-c53d-4638-9e7f-1cd96fe19baa': dict({
+        'completed': True,
+        'created_at': '2024-07-07T17:51:53.268Z',
+        'every_x': 1,
+        'frequency': 'weekly',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'is_due': True,
+        'next_due': list([
+          'Mon Sep 23 2024 00:00:00 GMT+0200',
+          'Tue Sep 24 2024 00:00:00 GMT+0200',
+          'Wed Sep 25 2024 00:00:00 GMT+0200',
+          'Thu Sep 26 2024 00:00:00 GMT+0200',
+          'Fri Sep 27 2024 00:00:00 GMT+0200',
+          'Sat Sep 28 2024 00:00:00 GMT+0200',
+        ]),
+        'notes': 'Klicke um Änderungen zu machen!',
+        'priority': 1,
+        'repeat': dict({
+          'f': True,
+          'm': True,
+          's': True,
+          'su': True,
+          't': True,
+          'th': True,
+          'w': True,
+        }),
+        'start_date': '2024-07-06T22:00:00.000Z',
+        'streak': 1,
+        'text': 'Zahnseide benutzen',
+        'type': 'daily',
+        'value': -2.9663035443712333,
+        'yester_daily': True,
+      }),
+      'f2c85972-1a19-4426-bc6d-ce3337b9d99f': dict({
+        'created_at': '2024-07-07T17:51:53.266Z',
+        'every_x': 1,
+        'frequency': 'weekly',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'is_due': True,
+        'next_due': list([
+          '2024-09-22T22:00:00.000Z',
+          '2024-09-23T22:00:00.000Z',
+          '2024-09-24T22:00:00.000Z',
+          '2024-09-25T22:00:00.000Z',
+          '2024-09-26T22:00:00.000Z',
+          '2024-09-27T22:00:00.000Z',
+        ]),
+        'notes': 'Klicke um Deinen Terminplan festzulegen!',
+        'priority': 1,
+        'repeat': dict({
+          'f': True,
+          'm': True,
+          's': True,
+          'su': True,
+          't': True,
+          'th': True,
+          'w': True,
+        }),
+        'start_date': '2024-07-06T22:00:00.000Z',
+        'text': '5 Minuten ruhig durchatmen',
+        'type': 'daily',
+        'value': -1.919611992979862,
+        'yester_daily': True,
+      }),
+      'friendly_name': 'test-user Dailies',
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_dailies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_display_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_display_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display name',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.DISPLAY_NAME: 'display_name'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_display_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_display_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Display name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_display_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'test-user',
+  })
+# ---
+# name: test_sensors[sensor.test_user_experience-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_experience',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Experience',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EXPERIENCE: 'experience'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_experience',
+    'unit_of_measurement': 'XP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_experience-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Experience',
+      'unit_of_measurement': 'XP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_experience',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '737',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gems-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gems',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gems',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.GEMS: 'gems'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_gems',
+    'unit_of_measurement': 'gems',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gems-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_gem.png',
+      'friendly_name': 'test-user Gems',
+      'unit_of_measurement': 'gems',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gems',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.GOLD: 'gold'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_gold',
+    'unit_of_measurement': 'GP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Gold',
+      'unit_of_measurement': 'GP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '137.625872146098',
+  })
+# ---
+# name: test_sensors[sensor.test_user_habits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_habits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Habits',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HABITS: 'habits'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_habits',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_habits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '1d147de6-5c02-4740-8e2f-71d3015a37f4': dict({
+        'created_at': '2024-07-07T17:51:53.266Z',
+        'frequency': 'daily',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'priority': 1,
+        'text': 'Eine kurze Pause machen',
+        'type': 'habit',
+        'up': True,
+      }),
+      'bc1d1855-b2b8-4663-98ff-62e7b763dfc4': dict({
+        'created_at': '2024-07-07T17:51:53.265Z',
+        'down': True,
+        'frequency': 'daily',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Oder lösche es über die Bearbeitungs-Ansicht',
+        'priority': 1,
+        'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
+        'type': 'habit',
+      }),
+      'e97659e0-2c42-4599-a7bb-00282adc410d': dict({
+        'created_at': '2024-07-07T17:51:53.264Z',
+        'frequency': 'daily',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
+        'priority': 1,
+        'text': 'Füge eine Aufgabe zu Habitica hinzu',
+        'type': 'habit',
+        'up': True,
+      }),
+      'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a': dict({
+        'created_at': '2024-07-07T17:51:53.268Z',
+        'down': True,
+        'frequency': 'daily',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'priority': 1,
+        'text': 'Gesundes Essen/Junkfood',
+        'type': 'habit',
+        'up': True,
+      }),
+      'friendly_name': 'test-user Habits',
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_habits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HEALTH: 'health'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_health',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Health',
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_intelligence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_intelligence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intelligence',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.INTELLIGENCE: 'intelligence'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_intelligence',
+    'unit_of_measurement': 'INT',
+  })
+# ---
+# name: test_sensors[sensor.test_user_intelligence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 12,
+      'friendly_name': 'test-user Intelligence',
+      'level': 19,
+      'unit_of_measurement': 'INT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_intelligence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '72',
+  })
+# ---
+# name: test_sensors[sensor.test_user_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.LEVEL: 'level'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mana-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_mana',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mana',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.MANA: 'mana'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_mana',
+    'unit_of_measurement': 'MP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mana-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Mana',
+      'unit_of_measurement': 'MP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_mana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.9',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_max_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max. health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HEALTH_MAX: 'health_max'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_health_max',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Max. health',
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_max_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_mana-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_max_mana',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max. mana',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.MANA_MAX: 'mana_max'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_mana_max',
+    'unit_of_measurement': 'MP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_mana-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Max. mana',
+      'unit_of_measurement': 'MP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_max_mana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '166',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mystic hourglasses',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.TRINKETS: 'trinkets'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_trinkets',
+    'unit_of_measurement': '⧖',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
+      'friendly_name': 'test-user Mystic hourglasses',
+      'unit_of_measurement': '⧖',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_next_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_next_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next level',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EXPERIENCE_MAX: 'experience_max'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_experience_max',
+    'unit_of_measurement': 'XP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_next_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Next level',
+      'unit_of_measurement': 'XP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_next_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '880',
+  })
+# ---
+# name: test_sensors[sensor.test_user_perception-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_perception',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Perception',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.PERCEPTION: 'perception'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_perception',
+    'unit_of_measurement': 'PER',
+  })
+# ---
+# name: test_sensors[sensor.test_user_perception-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 15,
+      'friendly_name': 'test-user Perception',
+      'level': 19,
+      'unit_of_measurement': 'PER',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_perception',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rewards-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rewards',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rewards',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.REWARDS: 'rewards'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_rewards',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rewards-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b': dict({
+        'created_at': '2024-07-07T17:51:53.266Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!',
+        'priority': 1,
+        'text': 'Belohne Dich selbst',
+        'type': 'reward',
+        'value': 10,
+      }),
+      'friendly_name': 'test-user Rewards',
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rewards',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Strength',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.STRENGTH: 'strength'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_strength',
+    'unit_of_measurement': 'STR',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 44,
+      'friendly_name': 'test-user Strength',
+      'level': 19,
+      'unit_of_measurement': 'STR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '104',
+  })
+# ---
+# name: test_sensors[sensor.test_user_to_do_s-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_to_do_s',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': "To-Do's",
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.TODOS: 'todos'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_to_do_s-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '1aa3137e-ef72-4d1f-91ee-41933602f438': dict({
+        'created_at': '2024-09-21T22:16:38.153Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Rasen mähen und die Pflanzen gießen.',
+        'priority': 1,
+        'text': 'Garten pflegen',
+        'type': 'todo',
+      }),
+      '2f6fcabc-f670-4ec3-ba65-817e8deea490': dict({
+        'created_at': '2024-09-21T22:17:19.513Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+        'priority': 1,
+        'text': 'Rechnungen bezahlen',
+        'type': 'todo',
+      }),
+      '86ea2475-d1b5-4020-bdcc-c188c7996afa': dict({
+        'created_at': '2024-09-21T22:16:16.756Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Den Ausflug für das kommende Wochenende organisieren.',
+        'priority': 1,
+        'tags': list([
+          '51076966-2970-4b40-b6ba-d58c6a756dd7',
+        ]),
+        'text': 'Wochenendausflug planen',
+        'type': 'todo',
+      }),
+      '88de7cd9-af2b-49ce-9afd-bf941d87336b': dict({
+        'created_at': '2024-09-21T22:17:57.816Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
+        'priority': 1,
+        'text': 'Buch zu Ende lesen',
+        'type': 'todo',
+      }),
+      'friendly_name': "test-user To-Do's",
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_to_do_s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---

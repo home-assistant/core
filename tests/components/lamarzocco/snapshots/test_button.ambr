@@ -2,10 +2,10 @@
 # name: test_start_backflush
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Start backflush',
+      'friendly_name': 'GS012345 Start backflush',
     }),
     'context': <ANY>,
-    'entity_id': 'button.gs01234_start_backflush',
+    'entity_id': 'button.gs012345_start_backflush',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -24,7 +24,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.gs01234_start_backflush',
+    'entity_id': 'button.gs012345_start_backflush',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_backflush',
-    'unique_id': 'GS01234_start_backflush',
+    'unique_id': 'GS012345_start_backflush',
     'unit_of_measurement': None,
   })
 # ---

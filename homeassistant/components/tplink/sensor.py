@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from kasa import Feature
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
+from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -96,6 +98,10 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     TPLinkSensorEntityDescription(
+        key="water_alert_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -110,6 +116,7 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -128,6 +135,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
@@ -135,6 +143,7 @@ async def async_setup_entry(
         descriptions=SENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
+    async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
     async_add_entities(entities)
 
 
@@ -151,6 +160,12 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = round(cast(float, value), self._feature.precision_hint)
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
+
+        if TYPE_CHECKING:
+            # pylint: disable-next=import-outside-toplevel
+            from datetime import date, datetime
+
+            assert isinstance(value, str | int | float | date | datetime | None)
 
         self._attr_native_value = value
         # Map to homeassistant units and fallback to upstream one if none found

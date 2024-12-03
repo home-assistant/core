@@ -15,6 +15,7 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
 from homeassistant.components.zwave_js.const import (
     ATTR_LOCK_TIMEOUT,
@@ -27,13 +28,7 @@ from homeassistant.components.zwave_js.lock import (
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    STATE_UNLOCKED,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -52,7 +47,7 @@ async def test_door_lock(
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
 
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     # Test locking
     await hass.services.async_call(
@@ -97,7 +92,7 @@ async def test_door_lock(
 
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
     assert state
-    assert state.state == STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
     client.async_send_command.reset_mock()
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import Cluster, ClusterAttributeDescriptor
@@ -50,6 +50,9 @@ class MatterEntityInfo:
 
     # entity class to use to instantiate the entity
     entity_class: type
+
+    # the original discovery schema used to create this entity
+    discovery_schema: MatterDiscoverySchema
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
@@ -107,6 +110,15 @@ class MatterDiscoverySchema:
     # these attributes are copied over to attributes_to_watch and
     # are not discovered by other entities
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
+
+    # [optional] the primary attribute value must contain this value
+    # for example for the AcceptedCommandList
+    # NOTE: only works for list values
+    value_contains: Any | None = None
+
+    # [optional] the primary attribute's cluster featuremap must contain this value
+    # for example for the DoorSensor on a DoorLock Cluster
+    featuremap_contains: int | None = None
 
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms

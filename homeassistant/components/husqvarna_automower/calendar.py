@@ -7,7 +7,6 @@ from aioautomower.model import make_name_string
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -49,8 +48,6 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
         schedule = self.mower_attributes.calendar
-        if schedule.timeline is None:
-            return None
         cursor = schedule.timeline.active_after(dt_util.now())
         program_event = next(cursor, None)
         _LOGGER.debug("program_event %s", program_event)
@@ -63,8 +60,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             ]
         return CalendarEvent(
             summary=make_name_string(work_area_name, program_event.schedule_no),
-            start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
-            end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            start=program_event.start,
+            end=program_event.end,
             rrule=program_event.rrule_str,
         )
 
@@ -76,8 +73,6 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         This is only called when opening the calendar in the UI.
         """
         schedule = self.mower_attributes.calendar
-        if schedule.timeline is None:
-            raise HomeAssistantError("Unable to get events: No schedule set")
         cursor = schedule.timeline.overlapping(
             start_date,
             end_date,

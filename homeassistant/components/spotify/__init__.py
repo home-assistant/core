@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING
 
 import aiohttp
-import requests
-from spotipy import Spotify, SpotifyException
+from spotifyaio import Device, SpotifyClient, SpotifyConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -21,7 +21,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
-from .models import HomeAssistantSpotifyData
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
+from .models import SpotifyData
 from .util import (
     is_spotify_media_type,
     resolve_spotify_media_type,
@@ -39,9 +40,6 @@ __all__ = [
 ]
 
 
-type SpotifyConfigEntry = ConfigEntry[HomeAssistantSpotifyData]
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
@@ -52,52 +50,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    spotify = Spotify(auth=session.token["access_token"])
+    spotify = SpotifyClient(async_get_clientsession(hass))
 
-    try:
-        current_user = await hass.async_add_executor_job(spotify.me)
-    except SpotifyException as err:
-        raise ConfigEntryNotReady from err
+    spotify.authenticate(session.token[CONF_ACCESS_TOKEN])
 
-    if not current_user:
-        raise ConfigEntryNotReady
+    async def _refresh_token() -> str:
+        await session.async_ensure_token_valid()
+        token = session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
 
-    async def _update_devices() -> list[dict[str, Any]]:
-        if not session.valid_token:
-            await session.async_ensure_token_valid()
-            await hass.async_add_executor_job(
-                spotify.set_auth, session.token["access_token"]
-            )
+    spotify.refresh_token_function = _refresh_token
 
+    coordinator = SpotifyCoordinator(hass, spotify)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    async def _update_devices() -> list[Device]:
         try:
-            devices: dict[str, Any] | None = await hass.async_add_executor_job(
-                spotify.devices
-            )
-        except (requests.RequestException, SpotifyException) as err:
+            return await spotify.get_devices()
+        except SpotifyConnectionError as err:
             raise UpdateFailed from err
 
-        if devices is None:
-            return []
-
-        return devices.get("devices", [])
-
-    device_coordinator: DataUpdateCoordinator[list[dict[str, Any]]] = (
-        DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=f"{entry.title} Devices",
-            update_interval=timedelta(minutes=5),
-            update_method=_update_devices,
-        )
+    device_coordinator: DataUpdateCoordinator[list[Device]] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{entry.title} Devices",
+        config_entry=entry,
+        update_interval=timedelta(minutes=5),
+        update_method=_update_devices,
     )
     await device_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = HomeAssistantSpotifyData(
-        client=spotify,
-        current_user=current_user,
-        devices=device_coordinator,
-        session=session,
-    )
+    entry.runtime_data = SpotifyData(coordinator, session, device_coordinator)
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         raise ConfigEntryAuthFailed

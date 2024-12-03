@@ -23,6 +23,7 @@ async def test_integration_not_found_confirm_step(
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
+    MockConfigEntry(domain="test1").add_to_hass(hass)
     assert await async_setup_component(hass, "test1", {}) is False
     await hass.async_block_till_done()
     entry1 = MockConfigEntry(domain="test1")
@@ -83,6 +84,7 @@ async def test_integration_not_found_ignore_step(
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
+    MockConfigEntry(domain="test1").add_to_hass(hass)
     assert await async_setup_component(hass, "test1", {}) is False
     await hass.async_block_till_done()
     entry1 = MockConfigEntry(domain="test1")

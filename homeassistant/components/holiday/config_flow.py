@@ -8,7 +8,7 @@ from babel import Locale, UnknownLocaleError
 from holidays import list_supported_countries
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.helpers.selector import (
     CountrySelector,
@@ -27,7 +27,6 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
     VERSION = 1
-    config_entry: ConfigEntry | None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -115,19 +114,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the re-configuration of a province."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the re-configuration of a province."""
-        assert self.config_entry
-
+        reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
-            combined_input: dict[str, Any] = {**self.config_entry.data, **user_input}
+            combined_input: dict[str, Any] = {**reconfigure_entry.data, **user_input}
 
             country = combined_input[CONF_COUNTRY]
             province = combined_input.get(CONF_PROVINCE)
@@ -149,10 +138,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             name = f"{locale.territories[country]}{province_str}"
 
             return self.async_update_reload_and_abort(
-                self.config_entry,
-                title=name,
-                data=combined_input,
-                reason="reconfigure_successful",
+                reconfigure_entry, title=name, data=combined_input
             )
 
         province_schema = vol.Schema(
@@ -160,7 +146,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_PROVINCE): SelectSelector(
                     SelectSelectorConfig(
                         options=SUPPORTED_COUNTRIES[
-                            self.config_entry.data[CONF_COUNTRY]
+                            reconfigure_entry.data[CONF_COUNTRY]
                         ],
                         mode=SelectSelectorMode.DROPDOWN,
                     )
@@ -168,6 +154,4 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="reconfigure_confirm", data_schema=province_schema
-        )
+        return self.async_show_form(step_id="reconfigure", data_schema=province_schema)

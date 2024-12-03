@@ -39,7 +39,7 @@ async def test_ha_preset_to_heating_program(
     ha_preset: str | None,
     expected_result: str | None,
 ) -> None:
-    """Testing HA Preset tp ViCare HeatingProgram."""
+    """Testing HA Preset to ViCare HeatingProgram."""
 
     supported_programs = [
         HeatingProgram.COMFORT,
@@ -49,6 +49,17 @@ async def test_ha_preset_to_heating_program(
     ]
     assert (
         HeatingProgram.from_ha_preset(ha_preset, supported_programs) == expected_result
+    )
+
+
+async def test_ha_preset_to_heating_program_error() -> None:
+    """Testing HA Preset to ViCare HeatingProgram."""
+
+    supported_programs = [
+        "test",
+    ]
+    assert (
+        HeatingProgram.from_ha_preset(HeatingProgram.NORMAL, supported_programs) is None
     )
 
 

@@ -1,0 +1,2215 @@
+# serializer version: 1
+# name: test_sensor[sensor.nord_pool_se3_currency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se3_currency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Currency',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'currency',
+    'unique_id': 'SE3-currency',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_currency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Currency',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_currency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'SEK',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_current_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_current_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_price',
+    'unique_id': 'SE3-current_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_current_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Current price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_current_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.01177',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_daily_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_daily_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_average',
+    'unique_id': 'SE3-daily_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_daily_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Daily average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_daily_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.90074',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_exchange_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se3_exchange_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exchange rate',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'exchange_rate',
+    'unique_id': 'SE3-exchange_rate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_exchange_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Exchange rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_exchange_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.6402',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_last_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se3_last_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last updated',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'updated_at',
+    'unique_id': 'SE3-updated_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_last_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Last updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_last_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-04T12:15:03+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_next_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_next_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_price',
+    'unique_id': 'SE3-next_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_next_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Next price',
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_next_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.83553',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'off_peak_1-SE3-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.42287',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'off_peak_1-SE3-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.40614',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'off_peak_1-SE3-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06169',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'off_peak_1-SE3-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-04T23:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'off_peak_1-SE3-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'off_peak_2-SE3-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.61079',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'off_peak_2-SE3-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.83553',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'off_peak_2-SE3-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.28914',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'off_peak_2-SE3-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T19:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'off_peak_2-SE3-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T23:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_peak_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'peak-SE3-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Peak average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_peak_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.31597',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_peak_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'peak-SE3-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Peak highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_peak_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.51265',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_peak_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'peak-SE3-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Peak lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_peak_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.92505',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_peak_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Peak time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'peak-SE3-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Peak time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_peak_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_peak_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Peak time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'peak-SE3-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_peak_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE3 Peak time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_peak_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T19:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_previous_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se3_previous_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Previous price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_price',
+    'unique_id': 'SE3-last_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se3_previous_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE3 Previous price',
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se3_previous_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.81983',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_currency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se4_currency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Currency',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'currency',
+    'unique_id': 'SE4-currency',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_currency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Currency',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_currency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'SEK',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_current_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_current_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_price',
+    'unique_id': 'SE4-current_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_current_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Current price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_current_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.80446',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_daily_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_daily_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_average',
+    'unique_id': 'SE4-daily_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_daily_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Daily average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_daily_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.16612',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_exchange_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se4_exchange_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exchange rate',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'exchange_rate',
+    'unique_id': 'SE4-exchange_rate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_exchange_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Exchange rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_exchange_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.6402',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_last_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nord_pool_se4_last_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last updated',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'updated_at',
+    'unique_id': 'SE4-updated_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_last_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Last updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_last_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-04T12:15:03+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_next_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_next_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_price',
+    'unique_id': 'SE4-next_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_next_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Next price',
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_next_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.11257',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'off_peak_1-SE4-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.49797',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'off_peak_1-SE4-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.64825',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'off_peak_1-SE4-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06519',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'off_peak_1-SE4-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-04T23:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 1 time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'off_peak_1-SE4-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'off_peak_2-SE4-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.79398',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'off_peak_2-SE4-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.11257',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'off_peak_2-SE4-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.34921',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'off_peak_2-SE4-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T19:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Off-peak 2 time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'off_peak_2-SE4-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T23:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_peak_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak average',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_average',
+    'unique_id': 'peak-SE4-block_average',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Peak average',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_peak_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.73559',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_highest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_peak_highest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak highest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_max',
+    'unique_id': 'peak-SE4-block_max',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_highest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Peak highest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_peak_highest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.53303',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_peak_lowest_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak lowest price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_min',
+    'unique_id': 'peak-SE4-block_min',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Peak lowest price',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_peak_lowest_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.08172',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_time_from-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_peak_time_from',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Peak time from',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_start_time',
+    'unique_id': 'peak-SE4-block_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_time_from-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Peak time from',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_peak_time_from',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_time_until-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_peak_time_until',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Peak time until',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_end_time',
+    'unique_id': 'peak-SE4-block_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_peak_time_until-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Nord Pool SE4 Peak time until',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_peak_time_until',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-05T19:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_previous_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nord_pool_se4_previous_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Previous price',
+    'platform': 'nordpool',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_price',
+    'unique_id': 'SE4-last_price',
+    'unit_of_measurement': 'SEK/kWh',
+  })
+# ---
+# name: test_sensor[sensor.nord_pool_se4_previous_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nord Pool SE4 Previous price',
+      'unit_of_measurement': 'SEK/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nord_pool_se4_previous_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.52406',
+  })
+# ---

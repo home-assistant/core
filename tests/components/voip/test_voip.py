@@ -57,6 +57,7 @@ def async_get_satellite_entity(
     )
     if satellite_entity_id is None:
         return None
+    assert not satellite_entity_id.endswith("none")
 
     component: EntityComponent[AssistSatelliteEntity] = hass.data[
         assist_satellite.DOMAIN
@@ -198,7 +199,7 @@ async def test_pipeline(
     assert voip_user_id
 
     # Satellite is muted until a call begins
-    assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert satellite.state == AssistSatelliteState.IDLE
 
     done = asyncio.Event()
 
@@ -250,7 +251,7 @@ async def test_pipeline(
             )
         )
 
-        assert satellite.state == AssistSatelliteState.LISTENING_COMMAND
+        assert satellite.state == AssistSatelliteState.LISTENING
 
         # Fake STT result
         event_callback(
@@ -344,7 +345,7 @@ async def test_pipeline(
         satellite.transport = Mock()
 
         satellite.connection_made(satellite.transport)
-        assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert satellite.state == AssistSatelliteState.IDLE
 
         # Ensure audio queue is cleared before pipeline starts
         satellite._audio_queue.put_nowait(bad_chunk)
@@ -369,7 +370,7 @@ async def test_pipeline(
             await done.wait()
 
         # Finished speaking
-        assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_stt_stream_timeout(

@@ -29,12 +29,13 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "august",
-        "hostname": "august*",
-        "macaddress": "E076D0*",
+        "hostname": "connect",
+        "macaddress": "789C85*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*",
     },
     {
         "domain": "axis",
@@ -236,6 +237,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "homewizard",
+        "registered_devices": True,
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "registered_devices": True,
     },
@@ -274,6 +279,22 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "lamarzocco",
+        "registered_devices": True,
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
     },
     {
         "domain": "lametric",
@@ -367,6 +388,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F8811A*",
     },
     {
+        "domain": "palazzetti",
+        "hostname": "connbox*",
+        "macaddress": "40F3857*",
+    },
+    {
+        "domain": "palazzetti",
+        "registered_devices": True,
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },
@@ -426,6 +456,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "2CAB33*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "94E36D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "9C7613*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "341513*",
     },
     {
         "domain": "roomba",

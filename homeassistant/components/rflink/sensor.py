@@ -71,6 +71,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
+        # Rflink devices reports ok/low so device class can’t be used
+        # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
         icon="mdi:battery",

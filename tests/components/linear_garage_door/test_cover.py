@@ -10,16 +10,10 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    CoverState,
 )
 from homeassistant.components.linear_garage_door import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -109,8 +103,8 @@ async def test_update_cover_state(
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
-    assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
+    assert hass.states.get("cover.test_garage_1").state == CoverState.OPEN
+    assert hass.states.get("cover.test_garage_2").state == CoverState.CLOSED
 
     device_states = load_json_object_fixture("get_device_state_1.json", DOMAIN)
     mock_linear.get_device_state.side_effect = lambda device_id: device_states[
@@ -120,5 +114,5 @@ async def test_update_cover_state(
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
 
-    assert hass.states.get("cover.test_garage_1").state == STATE_CLOSING
-    assert hass.states.get("cover.test_garage_2").state == STATE_OPENING
+    assert hass.states.get("cover.test_garage_1").state == CoverState.CLOSING
+    assert hass.states.get("cover.test_garage_2").state == CoverState.OPENING

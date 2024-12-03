@@ -23,8 +23,8 @@ from homeassistant.components.smartthings.const import (
     PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 

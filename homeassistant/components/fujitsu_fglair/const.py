@@ -9,5 +9,5 @@ DOMAIN = "fujitsu_fglair"
 
 CONF_REGION = "region"
 CONF_EUROPE = "is_europe"
-REGION_EU = "EU"
+REGION_EU = "eu"
 REGION_DEFAULT = "default"

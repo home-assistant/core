@@ -6,12 +6,16 @@ from time import sleep
 from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 from serial import SerialException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+type AuroraAbbConfigEntry = ConfigEntry[AuroraAbbDataUpdateCoordinator]
 
 
 class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):

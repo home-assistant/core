@@ -18,8 +18,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 
 @dataclass(frozen=True, kw_only=True)

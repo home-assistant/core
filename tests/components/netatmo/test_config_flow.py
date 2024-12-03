@@ -23,7 +23,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, start_reauth_flow
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -282,9 +282,7 @@ async def test_reauth(
     assert len(mock_setup.mock_calls) == 1
 
     # Should show form
-    result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_REAUTH}
-    )
+    result = await start_reauth_flow(hass, new_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

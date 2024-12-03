@@ -4,13 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
-from freezegun.api import FrozenDateTimeFactory
-from pytedee_async import TedeeLock, TedeeLockState
-from pytedee_async.exception import (
+from aiotedee import TedeeLock, TedeeLockState
+from aiotedee.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,16 +19,14 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
+    LockState,
 )
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import WEBHOOK_ID
 
@@ -75,7 +73,7 @@ async def test_lock(
     mock_tedee.lock.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b")
     assert state
-    assert state.state == STATE_LOCKING
+    assert state.state == LockState.LOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -90,7 +88,7 @@ async def test_lock(
     mock_tedee.unlock.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b")
     assert state
-    assert state.state == STATE_UNLOCKING
+    assert state.state == LockState.UNLOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -105,7 +103,7 @@ async def test_lock(
     mock_tedee.open.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b")
     assert state
-    assert state.state == STATE_UNLOCKING
+    assert state.state == LockState.UNLOCKING
 
 
 async def test_lock_without_pullspring(
@@ -116,6 +114,8 @@ async def test_lock_without_pullspring(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the tedee lock without pullspring."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
     mock_tedee.lock.return_value = None
     mock_tedee.unlock.return_value = None
     mock_tedee.open.return_value = None
@@ -134,8 +134,8 @@ async def test_lock_without_pullspring(
     assert device == snapshot
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity lock.lock_2c3d does not support this service.",
+        ServiceNotSupported,
+        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
@@ -155,7 +155,7 @@ async def test_lock_errors(
 ) -> None:
     """Test event errors."""
     mock_tedee.lock.side_effect = TedeeClientException("Boom")
-    with pytest.raises(HomeAssistantError, match="Failed to lock the door. Lock 12345"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
@@ -164,11 +164,10 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "lock_failed"
 
     mock_tedee.unlock.side_effect = TedeeClientException("Boom")
-    with pytest.raises(
-        HomeAssistantError, match="Failed to unlock the door. Lock 12345"
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
@@ -177,11 +176,10 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "unlock_failed"
 
     mock_tedee.open.side_effect = TedeeClientException("Boom")
-    with pytest.raises(
-        HomeAssistantError, match="Failed to unlatch the door. Lock 12345"
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_OPEN,
@@ -190,6 +188,7 @@ async def test_lock_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "open_failed"
 
 
 @pytest.mark.parametrize(
@@ -279,7 +278,7 @@ async def test_new_lock(
 @pytest.mark.parametrize(
     ("lib_state", "expected_state"),
     [
-        (TedeeLockState.LOCKED, STATE_LOCKED),
+        (TedeeLockState.LOCKED, LockState.LOCKED),
         (TedeeLockState.HALF_OPEN, STATE_UNKNOWN),
         (TedeeLockState.UNKNOWN, STATE_UNKNOWN),
         (TedeeLockState.UNCALIBRATED, STATE_UNAVAILABLE),
@@ -296,7 +295,7 @@ async def test_webhook_update(
 
     state = hass.states.get("lock.lock_1a2b")
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     webhook_data = {"dummystate": lib_state.value}
     # is updated in the lib, so mock and assert below

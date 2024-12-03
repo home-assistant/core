@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 from aiowebostv import WebOsTvPairError
@@ -47,7 +47,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str = ""
         self._name: str = ""
         self._uuid: str | None = None
-        self._entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -92,7 +91,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Display pairing form."""
         self._async_check_configured_entry()
 
-        self.context[CONF_HOST] = self._host
         self.context["title_placeholders"] = {"name": self._name}
         errors = {}
 
@@ -130,27 +128,27 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._host:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         self._uuid = uuid
         return await self.async_step_pairing()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an WebOsTvPairError."""
         self._host = entry_data[CONF_HOST]
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self._entry is not None
-
         if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
@@ -159,8 +157,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except WEBOSTV_EXCEPTIONS:
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            update_client_key(self.hass, self._entry, client)
-            await self.hass.config_entries.async_reload(self._entry.entry_id)
+            reauth_entry = self._get_reauth_entry()
+            update_client_key(self.hass, reauth_entry, client)
+            await self.hass.config_entries.async_reload(reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(step_id="reauth_confirm")
@@ -171,8 +170,6 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = config_entry.options
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
 
@@ -189,7 +186,8 @@ class OptionsFlowHandler(OptionsFlow):
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 
-        sources = [s for s in self.options.get(CONF_SOURCES, []) if s in sources_list]
+        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
+        sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
 

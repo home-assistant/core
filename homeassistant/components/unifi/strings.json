@@ -2,6 +2,11 @@
   "config": {
     "flow_title": "{site} ({host})",
     "step": {
+      "site": {
+        "data": {
+          "site": "Site ID"
+        }
+      },
       "user": {
         "title": "Set up UniFi Network",
         "data": {

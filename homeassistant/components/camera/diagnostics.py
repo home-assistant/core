@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import _get_camera_from_entity_id
 from .const import DOMAIN
+from .helper import get_camera_from_entity_id
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,7 +22,7 @@ async def async_get_config_entry_diagnostics(
         if entity.domain != DOMAIN:
             continue
         try:
-            camera = _get_camera_from_entity_id(hass, entity.entity_id)
+            camera = get_camera_from_entity_id(hass, entity.entity_id)
         except HomeAssistantError:
             continue
         diagnostics[entity.entity_id] = (

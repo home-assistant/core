@@ -1,0 +1,90 @@
+# Descriptions for Music Assistant custom services
+
+play_media:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    media_id:
+      required: true
+      example: "spotify://playlist/aabbccddeeff"
+      selector:
+        object:
+    media_type:
+      example: "playlist"
+      selector:
+        select:
+          translation_key: media_type
+          options:
+            - artist
+            - album
+            - playlist
+            - track
+            - radio
+    artist:
+      example: "Queen"
+      selector:
+        text:
+    album:
+      example: "News of the world"
+      selector:
+        text:
+    enqueue:
+      selector:
+        select:
+          options:
+            - "play"
+            - "replace"
+            - "next"
+            - "replace_next"
+            - "add"
+          translation_key: enqueue
+    radio_mode:
+      advanced: true
+      selector:
+        boolean:
+
+play_announcement:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+        - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+  fields:
+    url:
+      required: true
+      example: "http://someremotesite.com/doorbell.mp3"
+      selector:
+        text:
+    use_pre_announce:
+      example: "true"
+      selector:
+        boolean:
+    announce_volume:
+      example: 75
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+
+transfer_queue:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+  fields:
+    source_player:
+      selector:
+        entity:
+          domain: media_player
+          integration: music_assistant
+    auto_play:
+      example: "true"
+      selector:
+        boolean:
