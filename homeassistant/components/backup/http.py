@@ -16,9 +16,6 @@ from homeassistant.util import slugify
 
 from .const import DATA_MANAGER
 
-# pylint: disable=fixme
-# TODO: Don't forget to remove this when the implementation is complete
-
 
 @callback
 def async_register_http_views(hass: HomeAssistant) -> None:
