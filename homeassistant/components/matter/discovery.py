@@ -122,20 +122,21 @@ def async_discover_entities(
             continue
 
         # check for required value in (primary) attribute
-        if schema.value_contains is not None and (
-            (primary_attribute := next((x for x in schema.required_attributes), None))
-            is None
-            or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
-            or not isinstance(value, list)
-            or schema.value_contains not in value
+        primary_attribute = schema.required_attributes[0]
+        if (
+            schema.value_contains is not None
+            and (primary_value := endpoint.get_attribute_value(None, primary_attribute))
+            is not None
+            and (
+                isinstance(primary_value, list)
+                and schema.value_contains not in primary_value
+            )
         ):
             continue
 
         # check for required value in cluster featuremap
         if schema.featuremap_contains is not None and (
-            (primary_attribute := next((x for x in schema.required_attributes), None))
-            is None
-            or not bool(
+            not bool(
                 int(
                     endpoint.get_attribute_value(
                         primary_attribute.cluster_id, FEATUREMAP_ATTRIBUTE_ID

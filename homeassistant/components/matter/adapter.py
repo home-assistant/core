@@ -237,7 +237,8 @@ class MatterAdapter:
             discovery_key = (
                 f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
                 f"{entity_info.primary_attribute.cluster_id}_"
-                f"{entity_info.primary_attribute.attribute_id}"
+                f"{entity_info.primary_attribute.attribute_id}_"
+                f"{entity_info.entity_description.key}"
             )
             if discovery_key in self.discovered_entities:
                 continue
