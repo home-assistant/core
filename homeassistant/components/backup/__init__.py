@@ -32,7 +32,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_create_service(call: ServiceCall) -> None:
         """Service handler for creating backups."""
-        await backup_manager.async_create_backup()
+        await backup_manager.async_create_backup(on_progress=None)
+        if backup_task := backup_manager.backup_task:
+            await backup_task
 
     hass.services.async_register(DOMAIN, "create", async_handle_create_service)
 
