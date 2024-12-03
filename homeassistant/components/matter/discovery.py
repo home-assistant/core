@@ -123,14 +123,10 @@ def async_discover_entities(
 
         # check for required value in (primary) attribute
         primary_attribute = schema.required_attributes[0]
-        if (
-            schema.value_contains is not None
-            and (primary_value := endpoint.get_attribute_value(None, primary_attribute))
-            is not None
-            and (
-                isinstance(primary_value, list)
-                and schema.value_contains not in primary_value
-            )
+        primary_value = endpoint.get_attribute_value(None, primary_attribute)
+        if schema.value_contains is not None and (
+            isinstance(primary_value, list)
+            and schema.value_contains not in primary_value
         ):
             continue
 
