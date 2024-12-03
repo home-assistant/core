@@ -1,6 +1,6 @@
 {
   "domain": "reolink",
-  "name": "Reolink IP NVR/camera",
+  "name": "Reolink",
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
   "dependencies": ["webhook"],
