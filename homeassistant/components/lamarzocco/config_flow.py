@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from httpx import AsyncClient
 from pylamarzocco.client_cloud import LaMarzoccoCloudClient
 from pylamarzocco.client_local import LaMarzoccoLocalClient
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
@@ -37,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -56,6 +57,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
     VERSION = 2
+
+    _client: AsyncClient
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -79,10 +82,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
                 **self._discovered,
             }
+            self._client = create_async_httpx_client(self.hass)
 
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
+                client=self._client,
             )
             try:
                 self._fleet = await cloud_client.get_customer_fleet()
@@ -163,7 +168,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
                 if not await LaMarzoccoLocalClient.validate_connection(
-                    client=get_async_client(self.hass),
+                    client=self._client,
                     host=user_input[CONF_HOST],
                     token=selected_device.communication_key,
                 ):
