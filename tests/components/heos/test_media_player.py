@@ -51,6 +51,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform as ep,
@@ -1064,25 +1065,28 @@ async def test_media_player_group_fails_when_entity_removed(
     controller,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test grouping fails when entity unloaded."""
+    """Test grouping fails when entity removed."""
     await setup_platform(hass, config_entry, config)
 
-    # Unload one of the players
+    # Remove one of the players
     entity_platform = ep.async_get_platforms(hass, DOMAIN)[0]
     await entity_platform.async_remove_entity("media_player.test_player_2")
 
     # Attempt to group
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            },
+            blocking=True,
+        )
+
     # Assert that the group call failed
-    controller.create_group.assert_called_once_with(
-        1,
-        [],
+    assert (
+        exc_info.value.args[0]
+        == "The group member media_player.test_player_2 could not be resolved to a HEOS player."
     )
+    controller.create_group.assert_not_called()

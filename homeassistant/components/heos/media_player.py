@@ -175,7 +175,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("join_players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self._group_manager.async_join_players(self.entity_id, group_members)
+        await self._group_manager.async_join_players(
+            self._player.player_id, self.entity_id, group_members
+        )
 
     @log_command_error("pause")
     async def async_media_pause(self) -> None:
@@ -298,7 +300,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(self.entity_id)
+        await self._group_manager.async_unjoin_player(
+            self._player.player_id, self.entity_id
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
