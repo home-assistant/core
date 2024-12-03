@@ -42,32 +42,37 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      }
-    },
-    "error": {
-      "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Invalid authentication: {error}"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Camera account",
+      },
+      "reconfigure": {
+        "title": "Reconfigure TPLink entry",
+        "description": "Will update configuration for device {mac}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "camera_auth_confirm": {
+        "title": "Camera live view",
         "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
         "data": {
+          "live_view": "Enable camera live view",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
+      "cannot_connect": "Connection error: {error}",
+      "invalid_auth": "Invalid authentication: {error}",
+      "invalid_camera_auth": "Authentication error from camera stream",
+      "cannot_connect_camera": "Cannot access camera stream, check camera account is enabled",
       "both_or_none": "Username and password must both be blank or not blank"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {

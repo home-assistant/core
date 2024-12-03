@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any
 
 from aiohttp import ClientSession
+import av
 from kasa import (
     AuthenticationError,
     Credentials,
@@ -52,6 +54,7 @@ from .const import (
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
+    CONF_LIVE_VIEW,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -228,13 +231,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         ]
 
     camera_creds: Credentials | None = None
-    if camera_creds_dict := entry.options.get(CONF_CAMERA_CREDENTIALS):
+    if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
         camera_creds = Credentials(
             camera_creds_dict[CONF_USERNAME], camera_creds_dict[CONF_PASSWORD]
         )
+    live_view = entry.data.get(CONF_LIVE_VIEW)
 
     entry.runtime_data = TPLinkData(
-        parent_coordinator, child_coordinators, camera_creds
+        parent_coordinator, child_coordinators, camera_creds, live_view
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -460,3 +464,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             "Migration to version %s.%s complete", entry_version, new_minor_version
         )
     return True
+
+
+async def async_has_stream_auth_error(hass: HomeAssistant, source: str) -> bool:
+    """Return true if rtsp stream raises an HTTPUnauthorizedError error."""
+    pyav_options = {"rtsp_flags": "prefer_tcp", "timeout": "5000000"}
+    try:
+        func = partial(av.open, source, options=pyav_options, timeout=5)
+        await hass.loop.run_in_executor(None, func)
+    except av.HTTPUnauthorizedError:
+        return True
+    return False

@@ -25,6 +25,7 @@ CONF_CONNECTION_PARAMETERS: Final = "connection_parameters"
 CONF_USES_HTTP: Final = "uses_http"
 CONF_AES_KEYS: Final = "aes_keys"
 CONF_CAMERA_CREDENTIALS = "camera_credentials"
+CONF_LIVE_VIEW = "live_view"
 
 CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 
