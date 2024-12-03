@@ -654,7 +654,7 @@ class Entity(
             return None
         if self.platform is None:
             raise ValueError(
-                f"Sensor {type(self)} cannot have a translation key for "
+                f"Entity {type(self)} cannot have a translation key for "
                 "unit of measurement before being added to the entity platform"
             )
         platform = self.platform

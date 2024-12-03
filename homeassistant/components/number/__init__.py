@@ -390,7 +390,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(
-                    f"Sensor {type(self)} from integration '{self.platform.platform_name}' "
+                    f"Number entity {type(self)} from integration '{self.platform.platform_name}' "
                     f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
                     f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
                 )
