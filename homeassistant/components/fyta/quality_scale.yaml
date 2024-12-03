@@ -52,7 +52,9 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: No noisy entities.
-  discovery: done
+  discovery:
+    status: exempt
+    comment: bug in hassfest
   stale-devices: done
   diagnostics: done
   exception-translations: done
