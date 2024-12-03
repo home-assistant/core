@@ -128,7 +128,7 @@ async def async_setup_entry(
     def _shutdown(_event: Event) -> None:
         ccb.disconnect()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    entry.async_on_unload(hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
