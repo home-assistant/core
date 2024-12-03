@@ -21,6 +21,26 @@ from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 from tests.common import MockConfigEntry
 
 
+async def user_step(
+    hass: HomeAssistant, flow_id: str, mock_setup_entry: AsyncMock
+) -> None:
+    """Test user step (helper function)."""
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+        CONF_EXPIRATION: EXPIRATION,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_user_flow(
     hass: HomeAssistant, mock_fyta_connector: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
@@ -32,20 +52,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == USERNAME
-    assert result2["data"] == {
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-        CONF_EXPIRATION: EXPIRATION,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    await user_step(hass, result["flow_id"], mock_setup_entry)
 
 
 @pytest.mark.parametrize(
@@ -214,16 +221,4 @@ async def test_dhcp_discovery(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == USERNAME
-    assert result2["data"] == {
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-        CONF_EXPIRATION: EXPIRATION,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    await user_step(hass, result["flow_id"], mock_setup_entry)
