@@ -688,7 +688,7 @@ async def test_error_no_floor(hass: HomeAssistant) -> None:
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any floor called missing"
+        == "Sorry, I am not aware of any area called missing floor"
     )
 
 
@@ -2930,7 +2930,7 @@ async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
     )
     result = await agent.async_recognize_intent(user_input)
     assert result is not None
-    assert result.unmatched_entities["area"].text == "test "
+    assert result.unmatched_entities["name"].text == "test light"
 
     # Mark this result so we know it is from cache next time
     mark = "_from_cache"
