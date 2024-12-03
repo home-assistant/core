@@ -5126,7 +5126,7 @@
       "iot_class": "local_polling"
     },
     "reolink": {
-      "name": "Reolink IP NVR/camera",
+      "name": "Reolink",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
