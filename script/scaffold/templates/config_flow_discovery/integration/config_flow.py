@@ -1,4 +1,4 @@
-"""Config flow for NEW_NAME."""
+"""Config flow for the NEW_NAME."""
 
 import my_pypi_dependency
 
