@@ -508,7 +508,7 @@ class BackupManager:
         try:
             backup, tar_file_path = await self.backup_task
         except Exception as err:  # noqa: BLE001
-            LOGGER.debug("Backup upload failed", exc_info=err)
+            LOGGER.debug("Generating backup failed", exc_info=err)
         else:
             LOGGER.debug(
                 "Generated new backup with backup_id %s, uploading to agents %s",
