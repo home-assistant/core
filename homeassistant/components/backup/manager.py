@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
-from tempfile import TemporaryDirectory
 import time
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -382,10 +381,7 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> None:
         """Receive and store a backup file from upload."""
-        temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
-        target_temp_file = Path(
-            temp_dir_handler.name, contents.filename or "backup.tar"
-        )
+        target_temp_file = Path(self.temp_backup_dir, contents.filename or "backup.tar")
 
         await receive_file(self.hass, contents, target_temp_file)
 
@@ -393,13 +389,11 @@ class BackupManager:
             local_file_paths: list[Path], backup: AgentBackup
         ) -> Path:
             if local_file_paths:
-                tar_file_path = local_file_paths[0]
-            else:
-                tar_file_path = self.temp_backup_dir / f"{backup.backup_id}.tar"
-            for local_path in local_file_paths:
-                shutil.copy(target_temp_file, local_path)
-            temp_dir_handler.cleanup()
-            return tar_file_path
+                for local_path in local_file_paths:
+                    shutil.copy(target_temp_file, local_path)
+                return local_file_paths[0]
+
+            return target_temp_file
 
         try:
             backup = await self.hass.async_add_executor_job(
