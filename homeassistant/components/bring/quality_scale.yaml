@@ -58,9 +58,7 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: Only 6 entities,2 less important are categorized as diagnostics and are not "noisy"
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done
