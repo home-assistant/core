@@ -47,6 +47,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.device = device
         self.paired_device = paired_device
         self.dev_online = True
+        self.net_mode = None
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""

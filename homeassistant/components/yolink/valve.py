@@ -6,7 +6,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from yolink.client_request import ClientRequest
-from yolink.const import ATTR_DEVICE_WATER_METER_CONTROLLER
+from yolink.const import (
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.valve import (
@@ -19,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
+from .const import DEV_MODEL_LEAK_STOP_YS5009, DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -42,9 +45,30 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         == ATTR_DEVICE_WATER_METER_CONTROLLER
         and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),
     ),
+    YoLinkValveEntityDescription(
+        key="valve_1_state",
+        translation_key="meter_valve_1_state",
+        device_class=ValveDeviceClass.WATER,
+        value=lambda value: value != "open" if value is not None else None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ),
+    ),
+    YoLinkValveEntityDescription(
+        key="valve_2_state",
+        translation_key="meter_valve_2_state",
+        device_class=ValveDeviceClass.WATER,
+        value=lambda value: value != "open" if value is not None else None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ),
+    ),
 )
 
-DEVICE_TYPE = [ATTR_DEVICE_WATER_METER_CONTROLLER]
+DEVICE_TYPE = [
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+]
 
 
 async def async_setup_entry(
@@ -80,9 +104,14 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     ) -> None:
         """Init YoLink valve."""
         super().__init__(config_entry, coordinator)
-        self._attr_supported_features = (
-            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-        )
+        device_mode = self.coordinator.device.device_model_name
+        # YS5009 running in Class A model if valve is open, can't be closed.
+        if device_mode.startswith(DEV_MODEL_LEAK_STOP_YS5009):
+            self._attr_supported_features = ValveEntityFeature.OPEN
+        else:
+            self._attr_supported_features = (
+                ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+            )
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"

@@ -45,6 +45,8 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Update state."""
         data = self.coordinator.data
+        if (lora_info := data.get("loraInfo")) is not None:
+            self.coordinator.net_mode = lora_info.get("devNetType")
         if data is not None:
             self.update_entity_state(data)
 

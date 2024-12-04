@@ -15,6 +15,7 @@ from yolink.const import (
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_OUTLET,
     ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SIREN,
@@ -95,6 +96,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -116,6 +118,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -211,14 +214,14 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="power_failure_alarm",
         device_class=SensorDeviceClass.ENUM,
         options=["normal", "alert", "off"],
-        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
     YoLinkSensorEntityDescription(
         key="mute",
         translation_key="power_failure_alarm_mute",
         device_class=SensorDeviceClass.ENUM,
         options=["muted", "unmuted"],
-        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "muted" if value is True else "unmuted",
     ),
     YoLinkSensorEntityDescription(
@@ -226,7 +229,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="power_failure_alarm_volume",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "medium", "high"],
-        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=cvt_volume,
     ),
     YoLinkSensorEntityDescription(
@@ -234,14 +237,14 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="power_failure_alarm_beep",
         device_class=SensorDeviceClass.ENUM,
         options=["enabled", "disabled"],
-        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "enabled" if value is True else "disabled",
     ),
     YoLinkSensorEntityDescription(
         key="waterDepth",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
-        exists_fn=lambda device: device.device_type in ATTR_DEVICE_WATER_DEPTH_SENSOR,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ),
     YoLinkSensorEntityDescription(
         key="meter_reading",
@@ -251,7 +254,29 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: (
-            device.device_type in ATTR_DEVICE_WATER_METER_CONTROLLER
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="meter_1_reading",
+        translation_key="water_meter_1_reading",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        should_update_entity=lambda value: value is not None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="meter_2_reading",
+        translation_key="water_meter_2_reading",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        should_update_entity=lambda value: value is not None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
     ),
     YoLinkSensorEntityDescription(
