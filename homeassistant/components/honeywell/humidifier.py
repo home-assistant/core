@@ -22,7 +22,7 @@ from . import HoneywellData
 from .const import DOMAIN
 
 HUMIDIFIER_KEY = "humidifier"
-DEHUMIDIFIER_KEY = "dehumidfier"
+DEHUMIDIFIER_KEY = "dehumidifier"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,18 +42,20 @@ class HoneywellHumidifierEntityDescription(HumidifierEntityDescription):
 HUMIDIFIERS: dict[str, HoneywellHumidifierEntityDescription] = {
     "Humidifier": HoneywellHumidifierEntityDescription(
         key=HUMIDIFIER_KEY,
+        translation_key=HUMIDIFIER_KEY,
         current_humidity=lambda device: device.current_humidity,
         set_humidity=lambda device, humidity: device.set_humidifier_setpoint(humidity),
         min_humidity=lambda device: device.humidifier_lower_limit,
         max_humidity=lambda device: device.humidifier_upper_limit,
         current_set_humidity=lambda device: device.humidifier_setpoint,
-        mode=lambda device: device.humidifer_mode,
-        off=lambda device: device.set_dehumidifer_off,
-        on=lambda device: device.set_dehumidifer_auto,
+        mode=lambda device: device.humidifier_mode,
+        off=lambda device: device.set_humidifier_off(),
+        on=lambda device: device.set_humidifier_auto(),
         device_class=HumidifierDeviceClass.HUMIDIFIER,
     ),
     "Dehumidifier": HoneywellHumidifierEntityDescription(
         key=DEHUMIDIFIER_KEY,
+        translation_key=DEHUMIDIFIER_KEY,
         current_humidity=lambda device: device.current_humidity,
         set_humidity=lambda device, humidity: device.set_dehumidifier_setpoint(
             humidity
@@ -61,9 +63,9 @@ HUMIDIFIERS: dict[str, HoneywellHumidifierEntityDescription] = {
         min_humidity=lambda device: device.dehumidifier_lower_limit,
         max_humidity=lambda device: device.dehumidifier_upper_limit,
         current_set_humidity=lambda device: device.dehumidifier_setpoint,
-        mode=lambda device: device.dehumidifer_mode,
-        off=lambda device: device.set_dehumidifer_off,
-        on=lambda device: device.set_dehumidifer_auto,
+        mode=lambda device: device.dehumidifier_mode,
+        off=lambda device: device.set_dehumidifier_off(),
+        on=lambda device: device.set_dehumidifier_auto(),
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
 }
@@ -97,12 +99,10 @@ class HoneywellHumidifier(HumidifierEntity):
         self._device = device
         self.entity_description = description
         self._attr_unique_id = f"{device.deviceid}_{description.key}"
-        self._attr_native_unit_of_measurement = description.unit_fn(device)
         self._set_humidity = description.current_set_humidity(device)
         self._attr_min_humidity = description.min_humidity(device)
         self._attr_max_humidity = description.max_humidity(device)
         self._current_humidity = description.current_humidity(device)
-        self._mode = description.mode(device)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.deviceid)},
             name=device.name,
@@ -138,21 +138,14 @@ class HoneywellHumidifier(HumidifierEntity):
             return None
         return self.entity_description.current_humidity(self._device)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.entity_description.on(self._device)
+        await self.entity_description.on(self._device)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.entity_description.off(self._device)
+        await self.entity_description.off(self._device)
 
-    def set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
-            )
-        self.entity_description.set_humidity(self._device, humidity)
-
-
-# Look at Tuya humidifier for help....
+        await self.entity_description.set_humidity(self._device, humidity)

@@ -61,6 +61,14 @@
           }
         }
       }
+    },
+    "humidifier": {
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      }
     }
   },
   "exceptions": {
