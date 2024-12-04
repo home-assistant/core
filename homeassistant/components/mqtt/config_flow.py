@@ -499,7 +499,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if can_connect:
-                if existing_entry is not None:
+                if self.source == SOURCE_RECONFIGURE and existing_entry is not None:
                     return self.async_update_reload_and_abort(
                         existing_entry,
                         data_updates=broker_config,
