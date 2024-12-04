@@ -1,8 +1,7 @@
 """Test Suez_water integration initialization."""
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
-from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,6 +19,7 @@ from homeassistant.components.suez_water.coordinator import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_DATA
@@ -56,10 +56,10 @@ async def test_initialization_setup_api_error(
 
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
-    ("statistic", "daily_value"),
+    "statistic",
     [
-        ("water_cost_statistics", ((500 / 1000) * 4.74)),
-        ("water_consumption_statistics", 500),
+        "water_cost_statistics",
+        "water_consumption_statistics",
     ],
 )
 async def test_statistics(
@@ -69,17 +69,14 @@ async def test_statistics(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     statistic: str,
-    daily_value: float,
 ) -> None:
     """Test that suez_water statisticts are working."""
     nb_samples = 120
 
-    start = datetime.now().replace(hour=2)
+    start = datetime.fromisoformat("2024-12-04T02:00:00.0")
     freezer.move_to(start)
 
-    origin = datetime.combine(
-        start.date(), time(0, 0, 0, 0), ZoneInfo("Europe/Paris")
-    ) - timedelta(days=nb_samples)
+    origin = dt_util.start_of_local_day(start.date()) - timedelta(days=nb_samples)
     result = [
         DayDataResult((origin + timedelta(days=d)).date(), 500, 500 * (d + 1))
         for d in range(nb_samples)
@@ -98,8 +95,6 @@ async def test_statistics(
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
-        nb_samples,
-        daily_value,
         1,
     )
 
@@ -115,8 +110,6 @@ async def test_statistics(
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
-        nb_samples,
-        daily_value,
         2,
     )
     # Old data retrieved
@@ -133,8 +126,6 @@ async def test_statistics(
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
-        nb_samples,
-        daily_value,
         3,
     )
 
@@ -152,10 +143,7 @@ async def test_statistics(
         statistic,
         origin,
         mock_config_entry.data[CONF_COUNTER_ID],
-        nb_samples,
-        daily_value,
         4,
-        1,
     )
 
 
@@ -166,10 +154,7 @@ async def _test_for_data(
     statistic: str,
     origin: datetime,
     counter_id: str,
-    nb_samples: int,
-    daily_value: float,
     nb_calls: int,
-    extra_samples: int = 0,
 ) -> None:
     await hass.async_block_till_done(True)
     await async_wait_recording_done(hass)
@@ -186,21 +171,7 @@ async def _test_for_data(
         None,
         {"start", "state", "mean", "min", "max", "last_reset", "sum"},
     )
-    assert stats == snapshot
-
-    # assert stats.get(statistic_id) is not None
-    # assert len(stats[statistic_id]) == nb_samples + extra_samples
-    # _sum = 0
-    # for _k, stat in enumerate(stats[statistic_id]):
-    #     assert stat["state"] == daily_value
-    #     assert stat["last_reset"] is None
-
-    #     _sum += daily_value
-    #     assert stat["sum"] == _sum
-    #     assert stat.get("max") is None
-    #     assert stat.get("min") is None
-    #     assert stat.get("mean") is None
-    #     assert stat.get("last_reset") is None
+    assert stats == snapshot(name=f"test_statistics_call{nb_calls}")
 
 
 async def test_migration_version_rollback(
