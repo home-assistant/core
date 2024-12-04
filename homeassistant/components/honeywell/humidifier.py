@@ -98,10 +98,8 @@ class HoneywellHumidifier(HumidifierEntity):
         self._device = device
         self.entity_description = description
         self._attr_unique_id = f"{device.deviceid}_{description.key}"
-        self._set_humidity = description.current_set_humidity(device)
         self._attr_min_humidity = description.min_humidity(device)
         self._attr_max_humidity = description.max_humidity(device)
-        self._current_humidity = description.current_humidity(device)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.deviceid)},
             name=device.name,
@@ -114,27 +112,13 @@ class HoneywellHumidifier(HumidifierEntity):
         return self.entity_description.mode(self._device) != 0
 
     @property
-    def mode(self) -> str | None:
-        """Return the current mode."""
-        return self.entity_description.mode(self._device)
-
-    @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if self._set_humidity is None:
-            return None
-
-        humidity = self.entity_description.current_set_humidity(self._device)
-        if humidity is None:
-            return None
-
-        return humidity
+        return self.entity_description.current_set_humidity(self._device)
 
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if self._current_humidity is None:
-            return None
         return self.entity_description.current_humidity(self._device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
