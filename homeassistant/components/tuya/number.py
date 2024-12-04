@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -312,22 +312,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             translation_key="installation_height",
             entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
-            native_unit_of_measurement=UnitOfLength.METERS,
             icon="mdi:human-male-height",
-            native_min_value=100,
-            native_max_value=3000,
-            native_step=1,
         ),
         NumberEntityDescription(
             key=DPCode.LIQUID_DEPTH_MAX,
             translation_key="maximum_depth",
             entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
-            native_unit_of_measurement=UnitOfLength.METERS,
             icon="mdi:wave-arrow-up",
-            native_min_value=100,
-            native_max_value=2900,
-            native_step=1,
         ),
     ),
 }
