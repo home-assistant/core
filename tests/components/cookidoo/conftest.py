@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 EMAIL = "test-email"
 PASSWORD = "test-password"
 COUNTRY = "ch"
-LANGUAGE = "de-ch"
+LANGUAGE = "de-CH"
 
 
 @pytest.fixture

@@ -21,6 +21,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    LanguageSelector,
+    LanguageSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -117,17 +119,15 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_language_schema(self) -> None:
         """Generate language schema."""
         self.LANGUAGE_DATA_SCHEMA = {
-            vol.Required(CONF_LANGUAGE): SelectSelector(
-                SelectSelectorConfig(
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="language",
-                    options=[
-                        option.language.lower()
+            vol.Required(CONF_LANGUAGE): LanguageSelector(
+                LanguageSelectorConfig(
+                    languages=[
+                        option.language
                         for option in await get_localization_options(
                             country=self.user_input[CONF_COUNTRY]
                         )
                     ],
-                    sort=True,
+                    native_name=True,
                 ),
             ),
         }
