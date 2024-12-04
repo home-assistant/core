@@ -96,12 +96,16 @@ async def async_setup_entry(
     return True
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: HoneywellConfigEntry
+) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: HoneywellConfigEntry
+) -> bool:
     """Unload the config and platforms."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
