@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import HoneywellConfigEntry, HoneywellData
+from . import HoneywellConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
@@ -14,7 +14,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: HoneywellConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    honeywell: HoneywellData = config_entry.runtime_data
+    honeywell = config_entry.runtime_data
 
     return {
         f"Device {device}": {

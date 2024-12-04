@@ -20,7 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HoneywellConfigEntry, HoneywellData
+from . import HoneywellConfigEntry
 from .const import DOMAIN
 
 OUTDOOR_TEMPERATURE_STATUS_KEY = "outdoor_temperature"
@@ -84,7 +84,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""
-    data: HoneywellData = config_entry.runtime_data
+    data = config_entry.runtime_data
 
     async_add_entities(
         HoneywellSensor(device, description)

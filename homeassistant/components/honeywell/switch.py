@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell switches."""
-    data: HoneywellData = config_entry.runtime_data
+    data = config_entry.runtime_data
     async_add_entities(
         HoneywellSwitch(data, device, description)
         for device in data.devices.values()
