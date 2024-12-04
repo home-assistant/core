@@ -57,7 +57,7 @@ def _get_async_function(module: ast.Module, name: str) -> ast.AsyncFunctionDef |
 def _check_function_annotation(
     function: ast.AsyncFunctionDef, position: int
 ) -> str | None:
-    """Get async_setup_entry function."""
+    """Ensure function uses CustomConfigEntry type annotation."""
     if len(function.args.args) < position:
         return f"{function.name} has incorrect signature"
     argument = function.args.args[position - 1]
@@ -70,26 +70,10 @@ def _check_function_annotation(
     return None
 
 
-def validate(integration: Integration) -> list[str] | None:
-    """Validate correct use of ConfigEntry.runtime_data."""
-    init_file = integration.path / "__init__.py"
-    init = ast_parse_module(init_file)
-
-    # Should not happen, but better to be safe
-    if not (async_setup_entry := _get_async_function(init, "async_setup_entry")):
-        return [f"Could not find `async_setup_entry` in {init_file}"]
-    if len(async_setup_entry.args.args) != 2:
-        return [f"async_setup_entry has incorrect signature in {init_file}"]
-    config_entry_argument = async_setup_entry.args.args[1]
-
+def _check_typed_config_entry(integration: Integration) -> list[str]:
+    """Ensure integration uses CustomConfigEntry type annotation."""
     errors: list[str] = []
-    if not _sets_runtime_data(async_setup_entry, config_entry_argument):
-        errors.append(
-            "Integration does not set entry.runtime_data in async_setup_entry"
-            f"({init_file})"
-        )
-
-    # Check top level annotations
+    # Check body level function annotations
     for file, functions in _FUNCTIONS.items():
         module_file = integration.path / f"{file}.py"
         if not module_file.exists():
@@ -114,4 +98,31 @@ def validate(integration: Integration) -> list[str] | None:
             for async_function in node.body
         ):
             errors.append(f"{error} in {config_flow_file}")
+
+    return errors
+
+
+def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
+    """Validate correct use of ConfigEntry.runtime_data."""
+    init_file = integration.path / "__init__.py"
+    init = ast.parse(init_file.read_text())
+
+    # Should not happen, but better to be safe
+    if not (async_setup_entry := _get_async_function(init, "async_setup_entry")):
+        return [f"Could not find `async_setup_entry` in {init_file}"]
+    if len(async_setup_entry.args.args) != 2:
+        return [f"async_setup_entry has incorrect signature in {init_file}"]
+    config_entry_argument = async_setup_entry.args.args[1]
+
+    errors: list[str] = []
+    if not _sets_runtime_data(async_setup_entry, config_entry_argument):
+        errors.append(
+            "Integration does not set entry.runtime_data in async_setup_entry"
+            f"({init_file})"
+        )
+
+    # Extra checks, if strict-typing is marked as done
+    if "strict-typing" in rules_done:
+        errors.extend(_check_typed_config_entry(integration))
+
     return errors
