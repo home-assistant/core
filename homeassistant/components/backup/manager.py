@@ -565,7 +565,9 @@ class BackupManager:
                     f"Backup {backup_id} not found in agent {agent_id}"
                 )
             stream = await agent.async_download_backup(backup_id)
-            make_backup_dir(self.temp_backup_dir)
+            await self.hass.async_add_executor_job(
+                make_backup_dir, self.temp_backup_dir
+            )
             f = await self.hass.async_add_executor_job(path.open, "wb")
             try:
                 async for chunk in stream:
