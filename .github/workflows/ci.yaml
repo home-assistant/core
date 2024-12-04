@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 11
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2024.12"
+  HA_SHORT_VERSION: "2025.1"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
   # 10.3 is the oldest supported version
@@ -485,7 +485,6 @@ jobs:
         uses: actions/cache@v4.1.2
         with:
           path: venv
-          lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
@@ -531,6 +530,26 @@ jobs:
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
+      - name: Dump pip freeze
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          uv pip freeze >> pip_freeze.txt
+      - name: Upload pip_freeze artifact
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: pip-freeze-${{ matrix.python-version }}
+          path: pip_freeze.txt
+          overwrite: true
+      - name: Remove pip_freeze
+        run: rm pip_freeze.txt
+      - name: Remove generated requirements_all
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
 
   hassfest:
     name: Check hassfest
@@ -819,6 +838,12 @@ jobs:
     needs:
       - info
       - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - lint-ruff-format
+      - mypy
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -1248,12 +1273,11 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-24.04
@@ -1387,8 +1411,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0

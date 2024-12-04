@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
-    NordPoolAuthenticationError,
     NordPoolClient,
+    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -19,7 +19,7 @@ from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREAS, DOMAIN, LOGGER
@@ -75,8 +75,8 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
-        except NordPoolAuthenticationError as error:
-            LOGGER.error("Authentication error: %s", error)
+        except NordPoolEmptyResponseError as error:
+            LOGGER.debug("Empty response error: %s", error)
             self.async_set_update_error(error)
             return
         except NordPoolResponseError as error:
@@ -86,10 +86,6 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
         except NordPoolError as error:
             LOGGER.debug("Connection error: %s", error)
             self.async_set_update_error(error)
-            return
-
-        if not data.raw:
-            self.async_set_update_error(UpdateFailed("No data"))
             return
 
         self.async_set_updated_data(data)

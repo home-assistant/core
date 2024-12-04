@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from propcache import cached_property
 from xknx import XKNX
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
 
@@ -389,39 +390,47 @@ class _KnxLight(LightEntity):
                 )
         return None
 
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        if self._device.supports_xyy_color:
-            return ColorMode.XY
-        if self._device.supports_hs_color:
-            return ColorMode.HS
-        if self._device.supports_rgbw:
-            return ColorMode.RGBW
-        if self._device.supports_color:
-            return ColorMode.RGB
+    @cached_property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Get supported color modes."""
+        color_mode = set()
         if (
             self._device.supports_color_temperature
             or self._device.supports_tunable_white
         ):
-            return ColorMode.COLOR_TEMP
-        if self._device.supports_brightness:
-            return ColorMode.BRIGHTNESS
-        return ColorMode.ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
-        return {self.color_mode}
+            color_mode.add(ColorMode.COLOR_TEMP)
+        if self._device.supports_xyy_color:
+            color_mode.add(ColorMode.XY)
+        if self._device.supports_rgbw:
+            color_mode.add(ColorMode.RGBW)
+        elif self._device.supports_color:
+            # one of RGB or RGBW so individual color configurations work properly
+            color_mode.add(ColorMode.RGB)
+        if self._device.supports_hs_color:
+            color_mode.add(ColorMode.HS)
+        if not color_mode:
+            # brightness or on/off must be the only supported mode
+            if self._device.supports_brightness:
+                color_mode.add(ColorMode.BRIGHTNESS)
+            else:
+                color_mode.add(ColorMode.ONOFF)
+        return color_mode
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-        rgb = kwargs.get(ATTR_RGB_COLOR)
-        rgbw = kwargs.get(ATTR_RGBW_COLOR)
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-        xy_color = kwargs.get(ATTR_XY_COLOR)
+        # LightEntity color translation will ensure that only attributes of supported
+        # color modes are passed to this method - so we can't set unsupported mode here
+        if color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+        if rgb := kwargs.get(ATTR_RGB_COLOR):
+            self._attr_color_mode = ColorMode.RGB
+        if rgbw := kwargs.get(ATTR_RGBW_COLOR):
+            self._attr_color_mode = ColorMode.RGBW
+        if hs_color := kwargs.get(ATTR_HS_COLOR):
+            self._attr_color_mode = ColorMode.HS
+        if xy_color := kwargs.get(ATTR_XY_COLOR):
+            self._attr_color_mode = ColorMode.XY
 
         if (
             not self.is_on
@@ -500,17 +509,17 @@ class _KnxLight(LightEntity):
                 await self._device.set_brightness(brightness)
                 return
             # brightness without color in kwargs; set via color
-            if self.color_mode == ColorMode.XY:
+            if self._attr_color_mode == ColorMode.XY:
                 await self._device.set_xyy_color(XYYColor(brightness=brightness))
                 return
             # default to white if color not known for RGB(W)
-            if self.color_mode == ColorMode.RGBW:
+            if self._attr_color_mode == ColorMode.RGBW:
                 _rgbw = self.rgbw_color
                 if not _rgbw or not any(_rgbw):
                     _rgbw = (0, 0, 0, 255)
                 await set_color(_rgbw[:3], _rgbw[3], brightness)
                 return
-            if self.color_mode == ColorMode.RGB:
+            if self._attr_color_mode == ColorMode.RGB:
                 _rgb = self.rgb_color
                 if not _rgb or not any(_rgb):
                     _rgb = (255, 255, 255)
@@ -533,6 +542,7 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
             knx_module=knx_module,
             device=_create_yaml_light(knx_module.xknx, config),
         )
+        self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._attr_min_color_temp_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
@@ -566,5 +576,6 @@ class KnxUiLight(_KnxLight, KnxUiEntity):
         self._device = _create_ui_light(
             knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
         )
+        self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MAX]
         self._attr_min_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MIN]
