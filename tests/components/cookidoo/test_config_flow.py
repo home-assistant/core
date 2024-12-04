@@ -9,20 +9,24 @@ from cookidoo_api.exceptions import (
 )
 import pytest
 
-from homeassistant.components.cookidoo.const import CONF_LOCALIZATION, DOMAIN
+from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL, LOCALIZATION, PASSWORD
+from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD
 
 from tests.common import MockConfigEntry
 
-MOCK_DATA_STEP = {
+MOCK_DATA_USER_STEP = {
     CONF_EMAIL: EMAIL,
     CONF_PASSWORD: PASSWORD,
-    CONF_LOCALIZATION: LOCALIZATION,
+    CONF_COUNTRY: COUNTRY,
+}
+
+MOCK_DATA_LANGUAGE_STEP = {
+    CONF_LANGUAGE: LANGUAGE,
 }
 
 
@@ -34,19 +38,25 @@ async def test_flow_user_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+    assert result["handler"] == "cookidoo"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_DATA_STEP,
+        user_input=MOCK_DATA_USER_STEP,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cookidoo"
-    assert result["data"] == MOCK_DATA_STEP
+    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -59,7 +69,7 @@ async def test_flow_user_success(
         (IndexError(), "unknown"),
     ],
 )
-async def test_flow_user_init_data_unknown_error_and_recover(
+async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     raise_error: Exception,
@@ -73,7 +83,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_DATA_STEP,
+        user_input=MOCK_DATA_USER_STEP,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -83,13 +93,71 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     mock_cookidoo_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_DATA_STEP,
+        user_input=MOCK_DATA_USER_STEP,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == "Cookidoo"
 
-    assert result["data"] == MOCK_DATA_STEP
+    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CookidooRequestException(), "cannot_connect"),
+        (CookidooAuthException(), "invalid_auth"),
+        (CookidooException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_user_init_data_unknown_error_and_recover_on_step_2(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test unknown errors."""
+    mock_cookidoo_client.get_additional_items.side_effect = raise_error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == text_error
+
+    # Recover
+    mock_cookidoo_client.get_additional_items.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].title == "Cookidoo"
+
+    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
 
 
 async def test_flow_user_init_data_already_configured(
@@ -107,7 +175,7 @@ async def test_flow_user_init_data_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_DATA_STEP,
+        user_input=MOCK_DATA_USER_STEP,
     )
 
     assert result["type"] is FlowResultType.ABORT
