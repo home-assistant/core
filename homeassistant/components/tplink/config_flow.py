@@ -806,7 +806,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     raise_on_progress=False,
                     port=port,
                 )
-            except AuthenticationError:
+            except AuthenticationError:  # Error from the update()
                 return await self.async_step_user_auth_confirm()
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
@@ -828,6 +828,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
+                **placeholders,
                 CONF_MAC: reconfigure_entry.unique_id,
             },
         )

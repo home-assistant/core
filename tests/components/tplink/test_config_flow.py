@@ -1,9 +1,9 @@
 """Test the tplink config flow."""
 
-from contextlib import contextmanager
 import logging
 from unittest.mock import ANY, AsyncMock, patch
 
+import av
 from kasa import TimeoutError
 import pytest
 
@@ -19,9 +19,11 @@ from homeassistant.components.tplink import (
 )
 from homeassistant.components.tplink.config_flow import TPLinkConfigFlow
 from homeassistant.components.tplink.const import (
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
+    CONF_LIVE_VIEW,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -54,27 +56,20 @@ from . import (
     DEVICE_CONFIG_LEGACY,
     DHCP_FORMATTED_MAC_ADDRESS,
     IP_ADDRESS,
+    IP_ADDRESS2,
+    IP_ADDRESS3,
     MAC_ADDRESS,
     MAC_ADDRESS2,
     MODULE,
+    SMALLEST_VALID_JPEG_BYTES,
     _mocked_device,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
 )
+from .conftest import override_side_effect
 
 from tests.common import MockConfigEntry
-
-
-@contextmanager
-def override_side_effect(mock: AsyncMock, effect):
-    """Temporarily override a mock side effect and replace afterwards."""
-    try:
-        default_side_effect = mock.side_effect
-        mock.side_effect = effect
-        yield mock
-    finally:
-        mock.side_effect = default_side_effect
 
 
 @pytest.mark.parametrize(
@@ -98,6 +93,7 @@ async def test_discovery(
         device_config=device_config,
         credentials_hash=credentials_hash,
         ip_address=ip_address,
+        mac=MAC_ADDRESS,
     )
     with (
         _patch_discovery(device, ip_address=ip_address),
@@ -143,7 +139,7 @@ async def test_discovery(
             result["flow_id"],
             {CONF_DEVICE: MAC_ADDRESS},
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
@@ -171,9 +167,13 @@ async def test_discovery_auth(
     hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
 ) -> None:
     """Test authenticated discovery."""
-
-    mock_device = mock_connect["mock_devices"][IP_ADDRESS]
-    assert mock_device.config == DEVICE_CONFIG_KLAP
+    mock_device = _mocked_device(
+        alias=ALIAS,
+        ip_address=IP_ADDRESS,
+        mac=MAC_ADDRESS,
+        device_config=DEVICE_CONFIG_KLAP,
+        credentials_hash=CREDENTIALS_HASH_KLAP,
+    )
 
     with override_side_effect(mock_connect["connect"], AuthenticationError):
         result = await hass.config_entries.flow.async_init(
@@ -191,13 +191,14 @@ async def test_discovery_auth(
     assert result["step_id"] == "discovery_auth_confirm"
     assert not result["errors"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
-    )
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_ENTRY_TITLE
@@ -385,7 +386,7 @@ async def test_discovery_new_credentials_invalid(
 async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS2}, unique_id="dd:dd:dd:dd:dd:dd"
     )
     config_entry.add_to_hass(hass)
 
@@ -535,6 +536,179 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
+async def test_manual_camera(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test manual camera."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: IP_ADDRESS3}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+
+    # Test only username
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LIVE_VIEW: True,
+            CONF_USERNAME: "camuser",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert result["errors"] == {"base": "both_or_none"}
+
+    # Test unknown error
+    with (
+        patch(
+            "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+            return_value=b"",
+        ),
+        patch("homeassistant.components.tplink.av.open"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert result["errors"] == {"base": "cannot_connect_camera"}
+
+    # Test unknown error
+    with (
+        patch(
+            "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+            return_value=b"",
+        ),
+        patch(
+            "homeassistant.components.tplink.av.open",
+            side_effect=av.HTTPUnauthorizedError(404, "Unauthorized"),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert result["errors"] == {"base": "invalid_camera_auth"}
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_CREDENTIALS] == {
+        CONF_USERNAME: "camuser",
+        CONF_PASSWORD: "campass",
+    }
+    assert result["data"][CONF_LIVE_VIEW] is True
+
+
+async def test_manual_camera_no_creds(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test manual camera."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: IP_ADDRESS3}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_CAMERA_CREDENTIALS not in result["data"]
+    assert result["data"][CONF_LIVE_VIEW] is True
+
+
+async def test_manual_camera_no_live_view(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test manual camera."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: IP_ADDRESS3}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LIVE_VIEW: False,
+            CONF_USERNAME: "camuser",
+            CONF_PASSWORD: "campass",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_CAMERA_CREDENTIALS not in result["data"]
+    assert result["data"][CONF_LIVE_VIEW] is False
+
+
 async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
@@ -575,7 +749,7 @@ async def test_manual_auth(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_discovery["mock_device"].update.side_effect = AuthenticationError
+    mock_discovery["mock_devices"][IP_ADDRESS].update.side_effect = AuthenticationError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: IP_ADDRESS}
@@ -586,7 +760,7 @@ async def test_manual_auth(
     assert result2["step_id"] == "user_auth_confirm"
     assert not result2["errors"]
 
-    mock_discovery["mock_device"].update.reset_mock(side_effect=True)
+    mock_discovery["mock_devices"][IP_ADDRESS].update.reset_mock(side_effect=True)
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -627,7 +801,7 @@ async def test_manual_auth_errors(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_discovery["mock_device"].update.side_effect = AuthenticationError
+    mock_discovery["mock_devices"][IP_ADDRESS].update.side_effect = AuthenticationError
 
     with override_side_effect(mock_connect["connect"], error_type):
         result2 = await hass.config_entries.flow.async_configure(
@@ -682,11 +856,27 @@ async def test_manual_port_override(
     port,
 ) -> None:
     """Test manually setup."""
-    mock_discovery["mock_device"].config.port_override = port
-    mock_discovery["mock_device"].host = host
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    config = DeviceConfig(
+        host,
+        credentials=None,
+        port_override=port,
+        uses_http=True,
+        connection_type=CONN_PARAMS_KLAP,
     )
+    mock_device = _mocked_device(
+        alias=ALIAS,
+        ip_address=host,
+        mac=MAC_ADDRESS,
+        device_config=config,
+        credentials_hash=CREDENTIALS_HASH_KLAP,
+    )
+
+    with override_side_effect(
+        mock_discovery["try_connect_all"], lambda *_, **__: mock_device
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
@@ -696,23 +886,29 @@ async def test_manual_port_override(
     mock_discovery["discover_single"].side_effect = TimeoutError
     mock_connect["connect"].side_effect = AuthenticationError
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: host_str}
-    )
-    await hass.async_block_till_done()
+    with override_side_effect(
+        mock_discovery["try_connect_all"], lambda *_, **__: mock_device
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: host_str}
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user_auth_confirm"
     assert not result2["errors"]
 
     creds = Credentials("fake_username", "fake_password")
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        user_input={
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
-    )
+    with override_side_effect(
+        mock_discovery["try_connect_all"], lambda *_, **__: mock_device
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
     await hass.async_block_till_done()
     mock_discovery["try_connect_all"].assert_called_once_with(
         host, credentials=creds, port=port, http_client=ANY
@@ -744,7 +940,7 @@ async def test_manual_port_override_invalid(
     await hass.async_block_till_done()
 
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=None, port=None
+        IP_ADDRESS, credentials=None, port=None
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
@@ -941,7 +1137,7 @@ async def test_integration_discovery_with_ip_change(
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS]
         == CONN_PARAMS_LEGACY.to_dict()
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
     mocked_device = _mocked_device(device_config=DEVICE_CONFIG_KLAP)
     with override_side_effect(mock_connect["connect"], lambda *_, **__: mocked_device):
@@ -949,7 +1145,7 @@ async def test_integration_discovery_with_ip_change(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={
-                CONF_HOST: "127.0.0.2",
+                CONF_HOST: IP_ADDRESS2,
                 CONF_MAC: MAC_ADDRESS,
                 CONF_ALIAS: ALIAS,
                 CONF_DEVICE: mocked_device,
@@ -961,7 +1157,7 @@ async def test_integration_discovery_with_ip_change(
     assert (
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS] == CONN_PARAMS_KLAP.to_dict()
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
 
     config = DeviceConfig.from_dict(DEVICE_CONFIG_DICT_KLAP)
 
@@ -984,8 +1180,8 @@ async def test_integration_discovery_with_ip_change(
         await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Check that init set the new host correctly before calling connect
-    assert config.host == "127.0.0.1"
-    config.host = "127.0.0.2"
+    assert config.host == IP_ADDRESS
+    config.host = IP_ADDRESS2
     config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     mock_connect["connect"].assert_awaited_once_with(config=config)
@@ -1024,7 +1220,7 @@ async def test_integration_discovery_with_connection_change(
         )
         == 0
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
     assert (
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS] == CONN_PARAMS_AES.to_dict()
     )
@@ -1034,7 +1230,7 @@ async def test_integration_discovery_with_connection_change(
     NEW_DEVICE_CONFIG = {
         **DEVICE_CONFIG_DICT_KLAP,
         "connection_type": CONN_PARAMS_KLAP.to_dict(),
-        CONF_HOST: "127.0.0.2",
+        CONF_HOST: IP_ADDRESS2,
     }
     config = DeviceConfig.from_dict(NEW_DEVICE_CONFIG)
     # Reset the connect mock so when the config flow reloads the entry it succeeds
@@ -1055,7 +1251,7 @@ async def test_integration_discovery_with_connection_change(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={
-                CONF_HOST: "127.0.0.2",
+                CONF_HOST: IP_ADDRESS2,
                 CONF_MAC: MAC_ADDRESS2,
                 CONF_ALIAS: ALIAS,
                 CONF_DEVICE: bulb,
@@ -1067,12 +1263,12 @@ async def test_integration_discovery_with_connection_change(
     assert (
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS] == CONN_PARAMS_KLAP.to_dict()
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
     assert CREDENTIALS_HASH_AES not in mock_config_entry.data
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    config.host = "127.0.0.2"
+    config.host = IP_ADDRESS2
     config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     config.aes_keys = AES_KEYS
@@ -1097,18 +1293,18 @@ async def test_dhcp_discovery_with_ip_change(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
-            ip="127.0.0.2", macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+            ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
         ),
     )
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
 
 
 async def test_dhcp_discovery_discover_fail(
@@ -1121,14 +1317,14 @@ async def test_dhcp_discovery_discover_fail(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
     with override_side_effect(mock_discovery["discover_single"], TimeoutError):
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip="127.0.0.2", macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+                ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
     assert discovery_result["type"] is FlowResultType.ABORT
@@ -1160,13 +1356,52 @@ async def test_reauth(
     )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
-    mock_discovery["mock_device"].update.assert_called_once_with()
+    mock_discovery["mock_devices"][IP_ADDRESS].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
+
+
+async def test_reauth_camera(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test async_get_image."""
+    mock_device = mock_connect["mock_devices"][IP_ADDRESS3]
+    mock_camera_config_entry.add_to_hass(hass)
+    mock_camera_config_entry.async_start_reauth(
+        hass,
+        config_entries.ConfigFlowContext(
+            reauth_source=CONF_CAMERA_CREDENTIALS,  # type: ignore[typeddict-unknown-key]
+        ),
+        {"device": mock_device},
+    )
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+
+    assert result["step_id"] == "camera_auth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_try_connect_all(
@@ -1195,7 +1430,7 @@ async def test_reauth_try_connect_all(
         )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
     assert result2["type"] is FlowResultType.ABORT
@@ -1233,7 +1468,7 @@ async def test_reauth_try_connect_all_fail(
         )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -1278,40 +1513,48 @@ async def test_reauth_update_with_encryption_change(
     assert CONF_CREDENTIALS_HASH not in mock_config_entry.data
 
     new_config = DeviceConfig(
-        "127.0.0.2",
+        IP_ADDRESS2,
         credentials=None,
         connection_type=Device.ConnectionParameters(
             Device.Family.SmartTapoPlug, Device.EncryptionType.Klap
         ),
         uses_http=True,
     )
-    mock_discovery["mock_device"].host = "127.0.0.2"
-    mock_discovery["mock_device"].config = new_config
-    mock_discovery["mock_device"].credentials_hash = None
-    mock_connect["mock_devices"]["127.0.0.2"].config = new_config
-    mock_connect["mock_devices"]["127.0.0.2"].credentials_hash = CREDENTIALS_HASH_KLAP
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
+    mock_device = _mocked_device(
+        alias="my_device",
+        ip_address=IP_ADDRESS2,
+        mac=MAC_ADDRESS2,
+        device_config=new_config,
+        credentials_hash=CREDENTIALS_HASH_KLAP,
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
+
+    with (
+        override_side_effect(
+            mock_discovery["discover_single"], lambda *_, **__: mock_device
+        ),
+        override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert "Connection type changed for 127.0.0.2" in caplog.text
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.2", credentials=credentials, port=None
+        IP_ADDRESS2, credentials=credentials, port=None
     )
-    mock_discovery["mock_device"].update.assert_called_once_with()
+    mock_device.update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert (
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS] == CONN_PARAMS_KLAP.to_dict()
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
     assert mock_config_entry.data[CONF_CREDENTIALS_HASH] == CREDENTIALS_HASH_KLAP
 
 
@@ -1398,7 +1641,7 @@ async def test_reauth_update_from_discovery_with_ip_change(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={
-                CONF_HOST: "127.0.0.2",
+                CONF_HOST: IP_ADDRESS2,
                 CONF_MAC: MAC_ADDRESS,
                 CONF_ALIAS: ALIAS,
                 CONF_DEVICE: device,
@@ -1410,7 +1653,7 @@ async def test_reauth_update_from_discovery_with_ip_change(
     assert (
         mock_config_entry.data[CONF_CONNECTION_PARAMETERS] == CONN_PARAMS_KLAP.to_dict()
     )
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
 
 
 async def test_reauth_no_update_if_config_and_ip_the_same(
@@ -1493,26 +1736,27 @@ async def test_reauth_errors(
     [result] = flows
     assert result["step_id"] == "reauth_confirm"
 
-    mock_discovery["mock_device"].update.side_effect = error_type
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
-    )
+    mock_device = mock_discovery["mock_devices"][IP_ADDRESS]
+    with override_side_effect(mock_device.update, error_type):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
     credentials = Credentials("fake_username", "fake_password")
 
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
-    mock_discovery["mock_device"].update.assert_called_once_with()
+    mock_device.update.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_placement: errors_msg}
     assert result2["description_placeholders"]["error"] == str(error_type)
 
     mock_discovery["discover_single"].reset_mock()
-    mock_discovery["mock_device"].update.reset_mock(side_effect=True)
+    mock_device.update.reset_mock(side_effect=True)
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
@@ -1522,9 +1766,9 @@ async def test_reauth_errors(
     )
 
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
-    mock_discovery["mock_device"].update.assert_called_once_with()
+    mock_device.update.assert_called_once_with()
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
@@ -1731,12 +1975,169 @@ async def test_reauth_update_other_flows(
     )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials, port=None
+        IP_ADDRESS, credentials=credentials, port=None
     )
-    mock_discovery["mock_device"].update.assert_called_once_with()
+    mock_discovery["mock_devices"][IP_ADDRESS].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reconfigure flow."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: IP_ADDRESS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_auth_discovered(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reconfigure auth flow for device that's discovered."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Simulate a bad host
+    with (
+        override_side_effect(
+            mock_discovery["mock_devices"][IP_ADDRESS].update, KasaException
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "WRONG_IP",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert "error" in result["description_placeholders"]
+
+    with (
+        override_side_effect(
+            mock_discovery["mock_devices"][IP_ADDRESS].update, AuthenticationError
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: IP_ADDRESS,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_auth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_auth_try_connect_all(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reconfigure auth flow for device that's not discovered."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        override_side_effect(mock_discovery["discover_single"], TimeoutError),
+        override_side_effect(mock_connect["connect"], KasaException),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: IP_ADDRESS,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_auth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_camera(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reconfigure flow."""
+    mock_camera_config_entry.add_to_hass(hass)
+    result = await mock_camera_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: IP_ADDRESS3,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

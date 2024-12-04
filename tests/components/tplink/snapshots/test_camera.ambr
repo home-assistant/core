@@ -57,7 +57,7 @@
     'connections': set({
       tuple(
         'mac',
-        'aa:bb:cc:dd:ee:ff',
+        '66:55:44:33:22:11',
       ),
     }),
     'disabled_by': None,
