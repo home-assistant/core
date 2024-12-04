@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_browse_media_root
+  list([
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
+      'media_class': 'directory',
+      'media_content_id': '',
+      'media_content_type': 'presets',
+      'thumbnail': 'https://brands.home-assistant.io/_/cambridge_audio/logo.png',
+      'title': 'Presets',
+    }),
+  ])
+# ---
+# name: test_browse_presets
+  list([
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'children_media_class': None,
+      'media_class': 'music',
+      'media_content_id': '1',
+      'media_content_type': 'preset',
+      'thumbnail': 'https://static.airable.io/43/68/432868.png',
+      'title': 'Chicago House Radio',
+    }),
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'children_media_class': None,
+      'media_class': 'music',
+      'media_content_id': '2',
+      'media_content_type': 'preset',
+      'thumbnail': 'https://i.scdn.co/image/ab67616d0000b27325a5a1ed28871e8e53e62d59',
+      'title': 'Spotify: Good & Evil',
+    }),
+  ])
+# ---
