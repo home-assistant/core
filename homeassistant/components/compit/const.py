@@ -7,8 +7,4 @@ MANURFACER_NAME = "Compit"
 
 PLATFORMS = [
     Platform.CLIMATE,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
 ]
