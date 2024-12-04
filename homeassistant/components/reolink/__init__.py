@@ -73,7 +73,9 @@ async def async_setup_entry(
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+            translation_placeholders={"host": host.api.host, "err": str(err)},
         ) from err
     except BaseException:
         await host.stop()
