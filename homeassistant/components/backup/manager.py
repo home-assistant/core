@@ -386,16 +386,6 @@ class BackupManager:
 
         await receive_file(self.hass, contents, target_temp_file)
 
-        def _copy_and_cleanup(
-            local_file_paths: list[Path], backup: AgentBackup
-        ) -> Path:
-            if local_file_paths:
-                for local_path in local_file_paths:
-                    shutil.copy(target_temp_file, local_path)
-                return local_file_paths[0]
-
-            return target_temp_file
-
         try:
             backup = await self.hass.async_add_executor_job(
                 read_backup, target_temp_file
@@ -409,9 +399,18 @@ class BackupManager:
             for agent_id in agent_ids
             if agent_id in self.local_backup_agents
         ]
-        tar_file_path = await self.hass.async_add_executor_job(
-            _copy_and_cleanup, local_file_paths, backup
-        )
+        if local_file_paths:
+
+            def _copy_to_local_agents(local_file_paths: list[Path]) -> Path:
+                for local_path in local_file_paths:
+                    shutil.copy(target_temp_file, local_path)
+                return local_file_paths[0]
+
+            tar_file_path = await self.hass.async_add_executor_job(
+                _copy_to_local_agents, local_file_paths
+            )
+        else:
+            tar_file_path = target_temp_file
         await self._async_upload_backup(
             backup=backup, agent_ids=agent_ids, path=tar_file_path
         )
