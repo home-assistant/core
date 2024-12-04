@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/compit",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["aiofiles>=24.1.0", "compit-inext-api>=0.1.7"],
+  "requirements": ["aiofiles==24.1.0", "compit-inext-api==0.1.7"],
   "ssdp": [],
   "zeroconf": []
 }
