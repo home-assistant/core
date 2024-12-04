@@ -129,18 +129,25 @@ class BackupManager:
     def __init__(self, hass: HomeAssistant, reader_writer: BackupReaderWriter) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_task: asyncio.Task[tuple[AgentBackup, Path]] | None = None
-        self.finish_backup_task: asyncio.Task[None] | None = None
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
         self.local_backup_agents: dict[str, LocalBackupAgent] = {}
+
         self.config = BackupConfig(hass, self)
+        self._reader_writer = reader_writer
+
+        # Tasks and flag tracking backup progress
+        self.backup_task: asyncio.Task[tuple[AgentBackup, Path]] | None = None
+        self.finish_backup_task: asyncio.Task[None] | None = None
+        self.syncing = False
+
+        # Backup schedule and retention listeners
         self.remove_next_backup_event: Callable[[], None] | None = None
         self.remove_next_delete_event: Callable[[], None] | None = None
-        self.syncing = False
+
+        # Latest backup event and backup event subscribers
         self.backup_event: BackupEvent | None = None
-        self._subscriptions: list[Callable[[BackupEvent], None]] = []
-        self._reader_writer = reader_writer
+        self._backup_event_subscriptions: list[Callable[[BackupEvent], None]] = []
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -555,7 +562,7 @@ class BackupManager:
     ) -> None:
         """Forward event to subscribers."""
         self.backup_event = event
-        for subscription in self._subscriptions:
+        for subscription in self._backup_event_subscriptions:
             subscription(event)
 
     @callback
@@ -566,9 +573,9 @@ class BackupManager:
         """Subscribe events."""
 
         def remove_subscription() -> None:
-            self._subscriptions.remove(on_event)
+            self._backup_event_subscriptions.remove(on_event)
 
-        self._subscriptions.append(on_event)
+        self._backup_event_subscriptions.append(on_event)
         return remove_subscription
 
 
