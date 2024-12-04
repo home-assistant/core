@@ -549,7 +549,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "islamic_prayer_times",
     "israel_rail",
     "iss",
-    "ista_ecotrend",
     "isy994",
     "itach",
     "itunes",
