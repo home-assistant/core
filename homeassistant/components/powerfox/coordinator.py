@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from powerfox import Device, Powerfox, PowerfoxConnectionError, Poweropti
+from powerfox import (
+    Device,
+    Powerfox,
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    Poweropti,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -36,5 +43,7 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
         """Fetch data from Powerfox API."""
         try:
             return await self.client.device(device_id=self.device.id)
-        except PowerfoxConnectionError as error:
-            raise UpdateFailed(error) from error
+        except PowerfoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        except PowerfoxConnectionError as err:
+            raise UpdateFailed(err) from err
