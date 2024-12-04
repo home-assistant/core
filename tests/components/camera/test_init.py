@@ -802,30 +802,11 @@ async def test_use_stream_for_stills(
 
 @pytest.mark.parametrize(
     "module",
-    [camera, camera.const],
+    [camera],
 )
 def test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "enum",
-    list(camera.const.StreamType),
-)
-@pytest.mark.parametrize(
-    "module",
-    [camera, camera.const],
-)
-def test_deprecated_stream_type_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: camera.const.StreamType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "STREAM_TYPE_", "2025.1"
-    )
 
 
 @pytest.mark.parametrize(
@@ -843,20 +824,6 @@ def test_deprecated_state_constants(
 ) -> None:
     """Test deprecated stream type constants."""
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
-
-
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(camera.CameraEntityFeature),
-)
-def test_deprecated_support_constants(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: camera.CameraEntityFeature,
-) -> None:
-    """Test deprecated support constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, camera, entity_feature, "SUPPORT_", "2025.1"
-    )
 
 
 def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:

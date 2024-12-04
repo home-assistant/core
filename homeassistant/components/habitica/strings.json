@@ -2,7 +2,11 @@
   "common": {
     "todos": "To-Do's",
     "dailies": "Dailies",
-    "config_entry_name": "Select character"
+    "config_entry_name": "Select character",
+    "unit_tasks": "tasks",
+    "unit_health_points": "HP",
+    "unit_mana_points": "MP",
+    "unit_experience_points": "XP"
   },
   "config": {
     "abort": {
@@ -135,31 +139,39 @@
         "name": "Display name"
       },
       "health": {
-        "name": "Health"
+        "name": "Health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "health_max": {
-        "name": "Max. health"
+        "name": "Max. health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
-        "name": "Mana"
+        "name": "Mana",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "mana_max": {
-        "name": "Max. mana"
+        "name": "Max. mana",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "experience": {
-        "name": "Experience"
+        "name": "Experience",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "experience_max": {
-        "name": "Next level"
+        "name": "Next level",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "level": {
         "name": "Level"
       },
       "gold": {
-        "name": "Gold"
+        "name": "Gold",
+        "unit_of_measurement": "GP"
       },
       "gems": {
-        "name": "Gems"
+        "name": "Gems",
+        "unit_of_measurement": "gems"
       },
       "trinkets": {
         "name": "Mystic hourglasses"
@@ -174,16 +186,20 @@
         }
       },
       "todos": {
-        "name": "[%key:component::habitica::common::todos%]"
+        "name": "[%key:component::habitica::common::todos%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "dailys": {
-        "name": "[%key:component::habitica::common::dailies%]"
+        "name": "[%key:component::habitica::common::dailies%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "habits": {
-        "name": "Habits"
+        "name": "Habits",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "rewards": {
-        "name": "Rewards"
+        "name": "Rewards",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
