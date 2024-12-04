@@ -9,6 +9,7 @@ import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -1052,55 +1053,94 @@ async def test_execute_stmt_lambda_element(
             assert rows == ["mock_row"]
 
 
-@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=UTC))
-async def test_resolve_period(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("start_time", "periods"),
+    [
+        (
+            # Test 00:25 local time, during DST
+            datetime(2022, 10, 21, 7, 25, 50, 123, tzinfo=UTC),
+            {
+                "hour": ["2022-10-21T07:00:00+00:00", "2022-10-21T08:00:00+00:00"],
+                "hour-1": ["2022-10-21T06:00:00+00:00", "2022-10-21T07:00:00+00:00"],
+                "day": ["2022-10-21T07:00:00+00:00", "2022-10-22T07:00:00+00:00"],
+                "day-1": ["2022-10-20T07:00:00+00:00", "2022-10-21T07:00:00+00:00"],
+                "week": ["2022-10-17T07:00:00+00:00", "2022-10-24T07:00:00+00:00"],
+                "week-1": ["2022-10-10T07:00:00+00:00", "2022-10-17T07:00:00+00:00"],
+                "month": ["2022-10-01T07:00:00+00:00", "2022-11-01T07:00:00+00:00"],
+                "month-1": ["2022-09-01T07:00:00+00:00", "2022-10-01T07:00:00+00:00"],
+                "year": ["2022-01-01T08:00:00+00:00", "2023-01-01T08:00:00+00:00"],
+                "year-1": ["2021-01-01T08:00:00+00:00", "2022-01-01T08:00:00+00:00"],
+            },
+        ),
+        (
+            # Test 00:25 local time, standard time, February 28th a leap year
+            datetime(2024, 2, 28, 8, 25, 50, 123, tzinfo=UTC),
+            {
+                "hour": ["2024-02-28T08:00:00+00:00", "2024-02-28T09:00:00+00:00"],
+                "hour-1": ["2024-02-28T07:00:00+00:00", "2024-02-28T08:00:00+00:00"],
+                "day": ["2024-02-28T08:00:00+00:00", "2024-02-29T08:00:00+00:00"],
+                "day-1": ["2024-02-27T08:00:00+00:00", "2024-02-28T08:00:00+00:00"],
+                "week": ["2024-02-26T08:00:00+00:00", "2024-03-04T08:00:00+00:00"],
+                "week-1": ["2024-02-19T08:00:00+00:00", "2024-02-26T08:00:00+00:00"],
+                "month": ["2024-02-01T08:00:00+00:00", "2024-03-01T08:00:00+00:00"],
+                "month-1": ["2024-01-01T08:00:00+00:00", "2024-02-01T08:00:00+00:00"],
+                "year": ["2024-01-01T08:00:00+00:00", "2025-01-01T08:00:00+00:00"],
+                "year-1": ["2023-01-01T08:00:00+00:00", "2024-01-01T08:00:00+00:00"],
+            },
+        ),
+    ],
+)
+async def test_resolve_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    start_time: datetime,
+    periods: dict[str, tuple[str, str]],
+) -> None:
     """Test statistic_during_period."""
+    assert hass.config.time_zone == "US/Pacific"
+    freezer.move_to(start_time)
 
     now = dt_util.utcnow()
 
     start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+    assert start_t.isoformat() == periods["hour"][0]
+    assert end_t.isoformat() == periods["hour"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert start_t.isoformat() == periods["hour-1"][0]
+    assert end_t.isoformat() == periods["hour-1"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "day"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
+    assert start_t.isoformat() == periods["day"][0]
+    assert end_t.isoformat() == periods["day"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert start_t.isoformat() == periods["day-1"][0]
+    assert end_t.isoformat() == periods["day-1"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "week"}})
-    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
+    assert start_t.isoformat() == periods["week"][0]
+    assert end_t.isoformat() == periods["week"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
+    assert start_t.isoformat() == periods["week-1"][0]
+    assert end_t.isoformat() == periods["week-1"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "month"}})
-    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
+    assert start_t.isoformat() == periods["month"][0]
+    assert end_t.isoformat() == periods["month"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
-    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
+    assert start_t.isoformat() == periods["month-1"][0]
+    assert end_t.isoformat() == periods["month-1"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "year"}})
-    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
+    assert start_t.isoformat() == periods["year"][0]
+    assert end_t.isoformat() == periods["year"][1]
 
     start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
-    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    assert start_t.isoformat() == periods["year-1"][0]
+    assert end_t.isoformat() == periods["year-1"][1]
 
     # Fixed period
     assert resolve_period({}) == (None, None)
