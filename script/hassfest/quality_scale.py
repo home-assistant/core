@@ -642,7 +642,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "manual_mqtt",
     "map",
     "marytts",
-    "mastodon",
     "matrix",
     "matter",
     "maxcube",
