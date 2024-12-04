@@ -138,6 +138,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
             async with self._image_lock:
                 if self._image and now - self._last_update < self.IMAGE_INTERVAL:
                     return self._image
+
                 _LOGGER.debug("Updating camera image for %s", self._device.host)
                 image = await ffmpeg.async_get_image(
                     self.hass,

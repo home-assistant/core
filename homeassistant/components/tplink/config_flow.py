@@ -442,6 +442,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._async_create_or_update_entry_from_device(
                     device, camera_data={CONF_LIVE_VIEW: False}
                 )
+
             un = user_input.get(CONF_USERNAME)
             pw = user_input.get(CONF_PASSWORD)
             if bool(un) != bool(pw):
@@ -458,6 +459,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     entry_data = {CONF_LIVE_VIEW: True}
                     camera_creds = None
+
                 rtsp_url = camera_module.stream_rtsp_url(camera_creds)
                 assert rtsp_url
                 img = await ffmpeg.async_get_image(self.hass, rtsp_url)
@@ -576,8 +578,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             entry = self._get_reconfigure_entry()
         elif self.source == SOURCE_REAUTH:
             entry = self._get_reauth_entry()
+
         if not entry:
             self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+
         data: dict[str, Any] = {
             CONF_HOST: device.host,
             CONF_ALIAS: device.alias,
@@ -589,8 +593,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_LIVE_VIEW] = camera_data[CONF_LIVE_VIEW]
             if camera_creds := camera_data.get(CONF_CAMERA_CREDENTIALS):
                 data[CONF_CAMERA_CREDENTIALS] = camera_creds
+
         if device.config.aes_keys:
             data[CONF_AES_KEYS] = device.config.aes_keys
+
         # This is only ever called after a successful device update so we know that
         # the credential_hash is correct and should be saved.
         if device.credentials_hash:
@@ -603,6 +609,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=f"{device.alias} {device.model}",
                 data=data,
             )
+
         return self.async_update_reload_and_abort(entry, data=data)
 
     async def _async_try_connect_all(
@@ -708,6 +715,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.context.get("reauth_source") == CONF_CAMERA_CREDENTIALS:
             self._discovered_device = entry_data["device"]
             return await self.async_step_camera_auth_confirm()
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -783,11 +791,14 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Trigger a reconfiguration flow."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
+
         reconfigure_entry = self._get_reconfigure_entry()
         assert reconfigure_entry.unique_id
+        await self.async_set_unique_id(reconfigure_entry.unique_id)
+
         host = reconfigure_entry.data[CONF_HOST]
         port = reconfigure_entry.data.get(CONF_PORT)
-        await self.async_set_unique_id(reconfigure_entry.unique_id)
+
         if user_input is not None:
             host, port = self._async_get_host_port(host)
 
