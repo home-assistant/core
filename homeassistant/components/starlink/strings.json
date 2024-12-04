@@ -70,12 +70,6 @@
       },
       "ping_drop_rate": {
         "name": "Ping drop rate"
-      },
-      "power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "energy": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
       }
     },
     "switch": {
