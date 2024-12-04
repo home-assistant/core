@@ -16,7 +16,9 @@ rules:
       Does not have custom services
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions:
+    status: todo
+    comment: https://github.com/home-assistant/home-assistant.io/pull/36083
   entity-event-setup:
     status: exempt
     comment: |
@@ -34,8 +36,12 @@ rules:
     comment: |
       Does not have custom services
   config-entry-unloading: done
-  docs-configuration-parameters: done
-  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: todo
+    comment: https://github.com/home-assistant/home-assistant.io/pull/36083
+  docs-installation-parameters:
+    status: todo
+    comment: https://github.com/home-assistant/home-assistant.io/pull/36083
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -59,13 +65,19 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: Discussion going on if needed as cars are not added regularly.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: Issue in button
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: Issue in device_tracker
   reconfiguration-flow: done
   repair-issues:
     status: exempt
@@ -75,6 +87,6 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession:
-    status: exempt
-    comment: The library requires a custom client for API authentication.
+    status: todo
+    comment: The library requires a custom client for API authentication, with custom auth lifecycle and user agents.
   strict-typing: done
