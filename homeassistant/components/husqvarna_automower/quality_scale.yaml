@@ -28,7 +28,7 @@ rules:
       Fix typos in entity.py
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
 
@@ -38,7 +38,7 @@ rules:
   entity-unavailable: done
   action-exceptions: done
   reauthentication-flow: done
-  parallel-updates: todo
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
@@ -59,7 +59,7 @@ rules:
       Wifi connection. Check, if discovery with Wifi is possible
   docs-data-update: todo
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
@@ -69,9 +69,7 @@ rules:
     comment: Add devices dynamically
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: todo
-    comment: remove number of collision sensor
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
