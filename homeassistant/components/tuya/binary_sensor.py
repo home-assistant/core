@@ -258,6 +258,10 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=BinarySensorDeviceClass.MOISTURE,
             on_value="alarm",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.NEED_CLEAN,
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
         TAMPER_BINARY_SENSOR,
     ),
     # Emergency Button
