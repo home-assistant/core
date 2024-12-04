@@ -113,9 +113,9 @@ async def test_line_detector_crossed(hass: HomeAssistant) -> None:
     assert event.name == "Line Detector Crossed"
     assert event.platform == "sensor"
     assert event.value == "0"
-    assert (
-        event.uid
-        == f"{TEST_UID}_tns1:RuleEngine/LineDetector/Crossed_video_source_config1_analytics_video_source_MyLineDetectorRule"
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/LineDetector/"
+        "Crossed_video_source_config1_analytics_video_source_MyLineDetectorRule"
     )
 
 
@@ -146,7 +146,10 @@ async def test_tapo_vehicle(hass: HomeAssistant) -> None:
                                 "Name": "VideoAnalyticsConfigurationToken",
                                 "Value": "VideoAnalyticsToken",
                             },
-                            {"Name": "Rule", "Value": "MyTPSmartEventDetectorRule"},
+                            {
+                                "Name": "Rule",
+                                "Value": "MyTPSmartEventDetectorRule",
+                            },
                         ],
                         "_attr_1": None,
                     },
@@ -189,9 +192,9 @@ async def test_tapo_vehicle(hass: HomeAssistant) -> None:
     assert event.platform == "binary_sensor"
     assert event.device_class == "motion"
     assert event.value
-    assert (
-        event.uid
-        == f"{TEST_UID}_tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent_VideoSourceToken_VideoAnalyticsToken_MyTPSmartEventDetectorRule"
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/TPSmartEventDetector/"
+        "TPSmartEvent_VideoSourceToken_VideoAnalyticsToken_MyTPSmartEventDetectorRule"
     )
 
 
@@ -265,7 +268,7 @@ async def test_tapo_person(hass: HomeAssistant) -> None:
     assert event.platform == "binary_sensor"
     assert event.device_class == "motion"
     assert event.value
-    assert (
-        event.uid
-        == f"{TEST_UID}_tns1:RuleEngine/PeopleDetector/People_VideoSourceToken_VideoAnalyticsToken_MyPeopleDetectorRule"
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/PeopleDetector/"
+        "People_VideoSourceToken_VideoAnalyticsToken_MyPeopleDetectorRule"
     )
