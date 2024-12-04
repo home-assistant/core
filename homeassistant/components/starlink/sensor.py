@@ -120,4 +120,20 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
     ),
+    StarlinkSensorEntityDescription(
+        key="power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda data: data.power["latest_power"],
+    ),
+    StarlinkSensorEntityDescription(
+        key="energy",
+        translation_key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT_HOUR,
+        value_fn=lambda data: data.power["total_energy"],
+    ),
 )
