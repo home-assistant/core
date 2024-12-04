@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/imou_life",
   "dependencies": [],
   "requirements": [
-    "pyimouapi==1.0.2"
+    "pyimouapi==1.0.3"
   ],
   "codeowners": [
     "@Imou-OpenPlatform"
