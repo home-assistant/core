@@ -120,6 +120,22 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         """Return the source of the stream."""
         return self._video_url
 
+    async def _async_check_stream_auth(self, video_url: str) -> None:
+        """Check for an auth error and start reauth flow."""
+        if await async_has_stream_auth_error(self.hass, video_url):
+            _LOGGER.debug(
+                "Camera stream failed authentication for %s",
+                self._device.host,
+            )
+            self._can_stream = False
+            self.coordinator.config_entry.async_start_reauth(
+                self.hass,
+                ConfigFlowContext(
+                    reauth_source=CONF_CAMERA_CREDENTIALS,  # type: ignore[typeddict-unknown-key]
+                ),
+                {"device": self._device},
+            )
+
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -150,22 +166,12 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
                     self._image = image
                     self._last_update = now
                     _LOGGER.debug("Updated camera image for %s", self._device.host)
+                # This coroutine is called by camera with an asyncio.timeout
+                # so image could be None whereas an auth issue returns b''
                 elif image == b"":
                     _LOGGER.debug("No camera image returned for %s", self._device.host)
                     # image could be empty if a stream is running so check for explicit auth error
-                    if await async_has_stream_auth_error(self.hass, self._video_url):
-                        _LOGGER.debug(
-                            "Camera stream failed authentication for %s",
-                            self._device.host,
-                        )
-                        self._can_stream = False
-                        self.coordinator.config_entry.async_start_reauth(
-                            self.hass,
-                            ConfigFlowContext(
-                                reauth_source=CONF_CAMERA_CREDENTIALS,  # type: ignore[typeddict-unknown-key]
-                            ),
-                            {"device": self._device},
-                        )
+                    await self._async_check_stream_auth(video_url)
 
         return self._image
 

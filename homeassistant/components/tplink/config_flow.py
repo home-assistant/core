@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from kasa import (
     AuthenticationError,
@@ -424,6 +424,28 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    async def _check_camera_stream_error(
+        self, device: Device, username: str | None, password: str | None
+    ) -> str | None:
+        """Return an error string if error accessing the camera stream."""
+        camera_creds: Credentials | None = None
+        assert bool(username) == bool(password)
+
+        if username:
+            camera_creds = Credentials(username, cast(str, password))
+
+        camera_module = device.modules[Module.Camera]
+        rtsp_url = camera_module.stream_rtsp_url(camera_creds)
+        assert rtsp_url
+
+        if await ffmpeg.async_get_image(self.hass, rtsp_url):
+            return None
+
+        if await async_has_stream_auth_error(self.hass, rtsp_url):
+            return "invalid_camera_auth"
+
+        return "cannot_connect_camera"
+
     async def async_step_camera_auth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -431,10 +453,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         device = self._discovered_device
         assert device
-        camera_module = device.modules[Module.Camera]
-        if TYPE_CHECKING:
-            # self.host is set by async_step_user and async_step_pick_device
-            assert self.host is not None
 
         if user_input:
             live_view = user_input[CONF_LIVE_VIEW]
@@ -445,34 +463,24 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             un = user_input.get(CONF_USERNAME)
             pw = user_input.get(CONF_PASSWORD)
-            if bool(un) != bool(pw):
-                errors["base"] = "both_or_none"
-            else:
+            both_or_none = bool(un) == bool(pw)
+
+        if user_input and not both_or_none:
+            errors["base"] = "both_or_none"
+
+        if user_input and both_or_none:
+            if (error := await self._check_camera_stream_error(device, un, pw)) is None:
+                entry_data: dict[str, bool | dict[str, str]] = {CONF_LIVE_VIEW: True}
                 if un:
-                    entry_data = {
-                        CONF_LIVE_VIEW: True,
-                        CONF_CAMERA_CREDENTIALS: {CONF_USERNAME: un, CONF_PASSWORD: pw},
+                    entry_data[CONF_CAMERA_CREDENTIALS] = {
+                        CONF_USERNAME: cast(str, un),
+                        CONF_PASSWORD: cast(str, pw),
                     }
-                    if TYPE_CHECKING:
-                        assert pw
-                    camera_creds = Credentials(un, pw)
-                else:
-                    entry_data = {CONF_LIVE_VIEW: True}
-                    camera_creds = None
+                return self._async_create_or_update_entry_from_device(
+                    device, camera_data=entry_data
+                )
 
-                rtsp_url = camera_module.stream_rtsp_url(camera_creds)
-                assert rtsp_url
-                img = await ffmpeg.async_get_image(self.hass, rtsp_url)
-
-                if img:
-                    return self._async_create_or_update_entry_from_device(
-                        device, camera_data=entry_data
-                    )
-
-                if await async_has_stream_auth_error(self.hass, rtsp_url):
-                    errors["base"] = "invalid_camera_auth"
-                else:
-                    errors["base"] = "cannot_connect_camera"
+            errors["base"] = error
 
         placeholders: dict[str, str] = {}
 
