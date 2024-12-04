@@ -101,7 +101,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 20,
+      'equipment': 42,
       'friendly_name': 'test-user Constitution',
       'level': 19,
       'unit_of_measurement': 'CON',
@@ -111,7 +111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '80',
+    'state': '102',
   })
 # ---
 # name: test_sensors[sensor.test_user_dailies-entry]
@@ -665,7 +665,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 0,
+      'equipment': 12,
       'friendly_name': 'test-user Intelligence',
       'level': 19,
       'unit_of_measurement': 'INT',
@@ -675,7 +675,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '72',
   })
 # ---
 # name: test_sensors[sensor.test_user_level-entry]
@@ -907,6 +907,7 @@
 # name: test_sensors[sensor.test_user_mystic_hourglasses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
       'friendly_name': 'test-user Mystic hourglasses',
       'unit_of_measurement': '⧖',
     }),
@@ -1007,7 +1008,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 8,
+      'equipment': 15,
       'friendly_name': 'test-user Perception',
       'level': 19,
       'unit_of_measurement': 'PER',
@@ -1017,7 +1018,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '68',
+    'state': '75',
   })
 # ---
 # name: test_sensors[sensor.test_user_rewards-entry]
@@ -1123,7 +1124,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 27,
+      'equipment': 44,
       'friendly_name': 'test-user Strength',
       'level': 19,
       'unit_of_measurement': 'STR',
@@ -1133,7 +1134,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '104',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]
