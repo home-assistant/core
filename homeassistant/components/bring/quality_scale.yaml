@@ -7,7 +7,9 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: todo
+  config-flow:
+    status: todo
+    comment: Check uuid match in reauth
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: todo
@@ -58,9 +60,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: It was considered but not deemed necessary
+    comment: Only 6 entities,2 less important are categorized as diagnostics and are not "noisy"
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
@@ -71,4 +73,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo
