@@ -105,11 +105,7 @@ class WyomingConversationEntity(
                 await client.write_event(
                     Transcript(
                         user_input.text,
-                        context={
-                            "home_assistant": {
-                                user_input.as_dict(),
-                            }
-                        },
+                        context={"home_assistant": user_input.as_dict()},
                     ).event()
                 )
 
