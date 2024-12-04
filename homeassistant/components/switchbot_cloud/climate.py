@@ -79,6 +79,8 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature = 21
+    _attr_target_temperature_step = 1
+    _attr_precision = 1
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -97,7 +99,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
         )
         await self.send_api_command(
             AirConditionerCommands.SET_ALL,
-            parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
+            parameters=f"{int(new_temperature)},{new_mode},{new_fan_speed},on",
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
