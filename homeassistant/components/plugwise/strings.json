@@ -11,10 +11,10 @@
           "username": "Smile Username"
         },
         "data_description": {
-          "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1",
-          "host": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "Default is `smile`, or `stretch` for the legacy Stretch"
+          "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1.",
+          "host": "The hostname or IP-address of your Smile. You can find it in your router or the Plugwise App. Check https://www.home-assistant.io/integrations/plugwise/#configuration for more help.",
+          "port": "By default your Smile uses port 80, normally you should not have to change this.",
+          "username": "Default is `smile`, or `stretch` for the legacy Stretch."
         }
       }
     },
