@@ -21,11 +21,7 @@ rules:
     status: done
     comment: |
       The integration only has an entity service, registered in the platform.
-  common-modules:
-    status: todo
-    comment: |
-      Remove unused config_entry in coordinator.
-      Fix typos in entity.py
+  common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
