@@ -6,7 +6,12 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
+from homeassistant.components.spaceapi import (
+    ATTR_SENSOR_LOCATION,
+    DOMAIN,
+    SPACEAPI_VERSION,
+    URL_API_SPACEAPI,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -70,7 +75,7 @@ SENSOR_OUTPUT = {
             "value": 25.0,
         },
         {
-            "location": "Home",
+            "location": "outside",
             "name": "temp2",
             "unit": UnitOfTemperature.CELSIUS,
             "value": 23.0,
@@ -102,6 +107,14 @@ def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> Tes
     hass.states.async_set(
         "test.temp2",
         23,
+        attributes={
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_SENSOR_LOCATION: "outside",
+        },
+    )
+    hass.states.async_set(
+        "test.temp3",
+        "foo",
         attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
