@@ -11,14 +11,15 @@ from cookidoo_api import (
 )
 import pytest
 
-from homeassistant.components.cookidoo.const import CONF_LOCALIZATION, DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.components.cookidoo.const import DOMAIN
+from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
-LOCALIZATION = "ch_de-ch"
+COUNTRY = "ch"
+LANGUAGE = "de-ch"
 
 
 @pytest.fixture
@@ -68,7 +69,8 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
-            CONF_LOCALIZATION: LOCALIZATION,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
         },
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
     )

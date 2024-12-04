@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from cookidoo_api import Cookidoo, CookidooConfig, get_localization_options
+from cookidoo_api import Cookidoo, CookidooConfig, CookidooLocalizationConfig
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LOCALIZATION
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
-from .helpers import cookidoo_localization_for_key
 
 PLATFORMS: list[Platform] = [Platform.TODO]
 
@@ -23,8 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
         CookidooConfig(
             email=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            localization=cookidoo_localization_for_key(
-                await get_localization_options(), entry.data[CONF_LOCALIZATION]
+            localization=CookidooLocalizationConfig(
+                country_code=entry.data[CONF_COUNTRY],
+                language=entry.data[CONF_LANGUAGE],
             ),
         ),
     )

@@ -12,12 +12,13 @@ from cookidoo_api import (
     CookidooConfig,
     CookidooLocalizationConfig,
     CookidooRequestException,
+    get_country_options,
     get_localization_options,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -28,8 +29,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_LOCALIZATION, DOMAIN, LOCALIZATION_SPLIT_CHAR
-from .helpers import cookidoo_localization_for_key
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +52,10 @@ AUTH_DATA_SCHEMA = {
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
-    LOCALIZATION_DATA_SCHEMA: dict
-    localizations: list[CookidooLocalizationConfig] = []
+    COUNTRY_DATA_SCHEMA: dict
+    LANGUAGE_DATA_SCHEMA: dict
+
+    user_input: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -61,46 +63,80 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors: dict[str, str] = {}
 
-        if (
-            user_input is not None
-            and not (errors := await self.validate_input(user_input))
-            and self.LOCALIZATION_DATA_SCHEMA is not None
+        if user_input is not None and not (
+            errors := await self.validate_input(user_input)
         ):
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
-            return self.async_create_entry(title="Cookidoo", data=user_input)
-        await self.generate_schemas()
+            self.user_input = user_input
+            return await self.async_step_language()
+        await self.generate_country_schema()
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(
-                    {**AUTH_DATA_SCHEMA, **self.LOCALIZATION_DATA_SCHEMA}
+                    {**AUTH_DATA_SCHEMA, **self.COUNTRY_DATA_SCHEMA}
                 ),
                 suggested_values=user_input,
             ),
             errors=errors,
         )
 
-    async def generate_schemas(self) -> None:
-        """Generate schemas."""
-        self.localizations = await get_localization_options()
+    async def async_step_language(
+        self,
+        language_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Async language step to set up the connection."""
+        errors: dict[str, str] = {}
+        if language_input is not None and not (
+            errors := await self.validate_input(self.user_input, language_input)
+        ):
+            return self.async_create_entry(
+                title="Cookidoo", data={**self.user_input, **language_input}
+            )
 
-        self.LOCALIZATION_DATA_SCHEMA = {
-            vol.Required(CONF_LOCALIZATION): SelectSelector(
+        await self.generate_language_schema()
+        return self.async_show_form(
+            step_id="language",
+            data_schema=vol.Schema(self.LANGUAGE_DATA_SCHEMA),
+            errors=errors,
+        )
+
+    async def generate_country_schema(self) -> None:
+        """Generate country schema."""
+        self.COUNTRY_DATA_SCHEMA = {
+            vol.Required(CONF_COUNTRY): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="localization",
+                    translation_key="country",
+                    options=await get_country_options(),
+                    sort=True,
+                ),
+            ),
+        }
+
+    async def generate_language_schema(self) -> None:
+        """Generate language schema."""
+        self.LANGUAGE_DATA_SCHEMA = {
+            vol.Required(CONF_LANGUAGE): SelectSelector(
+                SelectSelectorConfig(
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="language",
                     options=[
-                        LOCALIZATION_SPLIT_CHAR.join(
-                            [localization.country_code, localization.language]
-                        ).lower()
-                        for localization in self.localizations
+                        option.language.lower()
+                        for option in await get_localization_options(
+                            country=self.user_input[CONF_COUNTRY]
+                        )
                     ],
                     sort=True,
                 ),
             ),
         }
 
-    async def validate_input(self, user_input: Mapping[str, Any]) -> dict[str, str]:
+    async def validate_input(
+        self,
+        user_input: Mapping[str, Any],
+        language_input: Mapping[str, Any] | None = None,
+    ) -> dict[str, str]:
         """Input Helper."""
 
         errors: dict[str, str] = {}
@@ -111,13 +147,18 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             CookidooConfig(
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
-                localization=cookidoo_localization_for_key(
-                    self.localizations, user_input[CONF_LOCALIZATION]
+                localization=CookidooLocalizationConfig(
+                    country_code=user_input[CONF_COUNTRY],
+                    language=language_input[CONF_LANGUAGE]
+                    if language_input
+                    else "de-ch",
                 ),
             ),
         )
         try:
             await cookidoo.login()
+            if language_input:
+                await cookidoo.get_additional_items()
         except CookidooRequestException:
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
