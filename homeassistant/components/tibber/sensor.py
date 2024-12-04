@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime
 from datetime import timedelta
 import logging
-from random import randrange
 from typing import Any
 
 import aiohttp
@@ -39,7 +37,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 from .coordinator import TibberDataCoordinator
@@ -283,10 +281,10 @@ async def async_setup_entry(
             raise PlatformNotReady from err
 
         if home.has_active_subscription:
-            entities.append(TibberSensorElPrice(home))
-            entities.append(TibberSensorElPriceExclTax(home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, tibber_connection)
+                entities.append(TibberSensorElPrice(home, coordinator))
+                entities.append(TibberSensorElPriceExclTax(home, coordinator))
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
@@ -366,77 +364,53 @@ class TibberSensorElPrice(TibberSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "electricity_price"
 
-    def __init__(self, tibber_home: tibber.TibberHome) -> None:
+    def __init__(
+        self, tibber_home: tibber.TibberHome, coordinator: TibberDataCoordinator
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
-        self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(TWENTY_MINUTES)
+        self.coordinator = coordinator
 
         self._attr_available = False
-        self._attr_extra_state_attributes = {
-            "app_nickname": None,
-            "grid_company": None,
-            "estimated_annual_consumption": None,
-            "price_level": None,
-            "max_price": None,
-            "avg_price": None,
-            "min_price": None,
-            "off_peak_1": None,
-            "peak": None,
-            "off_peak_2": None,
-            "intraday_price_ranking": None,
-        }
+        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
         self._device_name = self._home_name
 
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        now = dt_util.now()
-        if (
-            not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 10 * 3600 - self._spread_load_constant
-            or not self.available
-        ):
-            _LOGGER.debug("Asking for new data")
-            await self._fetch_data()
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the sensor."""
+        price, _, _, _ = self._tibber_home.current_price_data()
+        return price
 
-        elif (
-            self._tibber_home.current_price_total
-            and self._last_updated
-            and self._last_updated.hour == now.hour
-            and self._tibber_home.last_data_timestamp
-        ):
-            return
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes."""
+        data = self._tibber_home.info["viewer"]["home"]
+        _, price_level, _, price_rank = self._tibber_home.current_price_data()
 
-        res = self._tibber_home.current_price_data()
-        self._attr_native_value, price_level, self._last_updated, price_rank = res
-        self._attr_extra_state_attributes["price_level"] = price_level
-        self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
+        price_attrs = {
+            "app_nickname": data["appNickname"],
+            "grid_company": data["meteringPointData"]["gridCompany"],
+            "estimated_annual_consumption": data["meteringPointData"][
+                "estimatedAnnualConsumption"
+            ],
+            "price_level": price_level,
+            "intraday_price_ranking": price_rank,
+        }
 
         attrs = self._tibber_home.current_attributes()
-        self._attr_extra_state_attributes.update(attrs)
-        self._attr_available = self._attr_native_value is not None
-        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
+        price_attrs.update(attrs)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def _fetch_data(self) -> None:
-        _LOGGER.debug("Fetching data")
-        try:
-            await self._tibber_home.update_info_and_price_info()
-        except (TimeoutError, aiohttp.ClientError):
-            return
-        data = self._tibber_home.info["viewer"]["home"]
-        self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]
-        self._attr_extra_state_attributes["grid_company"] = data["meteringPointData"][
-            "gridCompany"
-        ]
-        self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
-            "meteringPointData"
-        ]["estimatedAnnualConsumption"]
+        return price_attrs
+
+    @property
+    def available(self) -> bool:
+        """Return sensor availability."""
+        price, _, _, _ = self._tibber_home.current_price_data()
+        return price is not None
 
 
 class TibberSensorElPriceExclTax(TibberSensor):
@@ -445,52 +419,41 @@ class TibberSensorElPriceExclTax(TibberSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "electricity_price_excl_tax"
 
-    def __init__(self, tibber_home: tibber.TibberHome) -> None:
+    def __init__(
+        self, tibber_home: tibber.TibberHome, coordinator: TibberDataCoordinator
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
-        self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(TWENTY_MINUTES)
+        self.coordinator = coordinator
 
         self._attr_available = False
+        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
         self._attr_unique_id = f"{self._tibber_home.home_id}-excl_tax"
         self._model = "Price Sensor excluding tax"
 
         self._device_name = self._home_name
 
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        now = dt_util.now()
-        if (
-            not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 5 * 3600 + self._spread_load_constant
-            or not self.available
-        ):
-            _LOGGER.debug("Asking for new data")
-            await self._fetch_data()
-
-        elif (
-            self._tibber_home.current_price_total
-            and self._last_updated
-            and self._last_updated.hour == now.hour
-            and self._tibber_home.last_data_timestamp
-        ):
-            return
-
-        # Price energy / tax
-        # current_price_info -> {'energy': 0.0737, 'tax': 0.1719, 'total': 0.2456, 'startsAt': '2024-08-06T09:00:00.000+02:00', 'level': 'NORMAL'}
-        res = self._tibber_home.current_price_info
-        self._attr_native_value = res.get("energy")
-        self._attr_available = self._attr_native_value is not None
-        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def _fetch_data(self) -> None:
-        _LOGGER.debug("Fetching data")
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the sensor."""
         try:
-            await self._tibber_home.update_current_price_info()
-        except (TimeoutError, aiohttp.ClientError):
-            return
+            home = self._tibber_home.info["viewer"]["home"]
+            price = home["currentSubscription"]["priceInfo"]["current"]["energy"]
+        except (KeyError, TypeError):
+            price = None
+
+        return round(price, 3) if price is not None else None
+
+    @property
+    def available(self) -> bool:
+        """Return sensor availability."""
+        try:
+            home = self._tibber_home.info["viewer"]["home"]
+            price = home["currentSubscription"]["priceInfo"]["current"]["energy"]
+        except (KeyError, TypeError):
+            price = None
+
+        return price is not None
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
