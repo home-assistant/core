@@ -48,9 +48,13 @@ def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the controller from the service call."""
 
     if not (entries := hass.config_entries.async_entries(DOMAIN)):
-        raise ServiceValidationError("HEOS entry not found")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="entry_not_found"
+        )
     if (entry := entries[0]).state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError("HEOS entry is not loaded")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="entry_not_loaded"
+        )
     return entry.runtime_data.controller_manager.controller
 
 
