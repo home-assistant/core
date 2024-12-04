@@ -897,12 +897,8 @@ def resolve_period(
             start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
             end_time = (start_time + timedelta(days=31)).replace(day=1)
         else:  # calendar_period = "year"
-            start_time = start_of_day.replace(month=12, day=31)
-            # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
-                month=1, day=1
-            )
-            end_time = (start_time + timedelta(days=366)).replace(day=1)
+            start_time = start_of_day.replace(month=1, day=1, year=start_of_day.year + cal_offset)
+            end_time = start_time.replace(month=12, day=31)
 
         start_time = dt_util.as_utc(start_time)
         end_time = dt_util.as_utc(end_time)
