@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import cast
@@ -49,6 +50,16 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
             await self._tibber_connection.fetch_consumption_data_active_homes()
             await self._tibber_connection.fetch_production_data_active_homes()
             await self._insert_statistics()
+
+            await asyncio.gather(
+                *[
+                    tibber_home.update_info_and_price_info()
+                    for tibber_home in self._tibber_connection.get_homes(
+                        only_active=True
+                    )
+                ],
+            )
+
         except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
         except tibber.FatalHttpExceptionError:
