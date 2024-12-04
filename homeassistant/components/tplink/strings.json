@@ -51,7 +51,7 @@
         }
       },
       "camera_auth_confirm": {
-        "title": "Camera live view",
+        "title": "Set camera account credentials",
         "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
         "data": {
           "live_view": "Enable camera live view",
@@ -62,10 +62,10 @@
     },
     "error": {
       "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Invalid authentication: {error}",
-      "invalid_camera_auth": "Authentication error from camera stream",
-      "cannot_connect_camera": "Cannot access camera stream, check camera account is enabled",
-      "both_or_none": "Username and password must both be blank or not blank"
+      "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_camera_auth": "Camera stream authentication failed",
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account",
+      "both_or_none": "You have to set both username and password, or leave them both empty"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
