@@ -90,9 +90,9 @@
     },
     "select": {
       "min_dc_voltage_cells": {
-        "name": "Battery cell count",
+        "name": "Power source",
         "state": {
-          "no_battery": "External Power Supply (DC)",
+          "no_battery": "External power supply (DC)",
           "battery_3s": "3S (3 cells)",
           "battery_4s": "4S (4 cells)",
           "battery_5s": "5S (5 cells)",
