@@ -2479,4 +2479,4 @@ zwave-js-server-python==0.60.0
 zwave-me-ws==0.4.3
 
 # homeassistant.components.pyimouapi
-pyimouapi==1.0.3
+pyimouapi==1.0.2
