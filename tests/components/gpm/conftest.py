@@ -22,7 +22,7 @@ from homeassistant.const import CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import TESTING_VERSIONS
+from . import DEFAULT_VERSION, TESTING_VERSIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ def repo() -> Generator[None]:
         for tag in TESTING_VERSIONS:
             repo.index.commit(f"New version: {tag}")
             repo.create_tag(tag)
+        repo.git.checkout(DEFAULT_VERSION)
         return repo
 
     remote_mock = MagicMock(spec=Remote)
@@ -172,7 +173,10 @@ def _testing_manager(
         "remove",
         "get_current_version",
         "get_latest_version",
+        "get_download_url",
     ):
+        if not hasattr(manager, method):
+            continue
         setattr(manager, method, AsyncMock(wraps=getattr(manager, method)))
     manager.clone_basedir = tmp_path / "clone_basedir"
     manager.clone_basedir.mkdir()
