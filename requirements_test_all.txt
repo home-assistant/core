@@ -252,6 +252,9 @@ aiohasupervisor==0.2.1
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
 
+# homeassistant.components.microsoft_speech
+aiohttp==3.10.9
+
 # homeassistant.components.hue
 aiohue==4.7.3
 

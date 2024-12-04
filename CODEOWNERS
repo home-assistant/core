@@ -913,6 +913,8 @@ build.json @home-assistant/supervisor
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/microsoft_speech/ @lukcz
+/tests/components/microsoft_speech/ @lukcz
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen
