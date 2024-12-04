@@ -46,7 +46,7 @@ rules:
     status: exempt
     comment: |
       This integration uses a coordinator to handle updates.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
