@@ -43,7 +43,7 @@ from .const import (
     LOGGER,
 )
 from .models import AgentBackup, Folder
-from .util import read_backup, receive_file
+from .util import make_backup_dir, read_backup, receive_file
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -528,6 +528,9 @@ class BackupManager:
                     f"Backup {backup_id} not found in agent {agent_id}"
                 )
             stream = await agent.async_download_backup(backup_id)
+            await self.hass.async_add_executor_job(
+                make_backup_dir, self.temp_backup_dir
+            )
             f = await self.hass.async_add_executor_job(path.open, "wb")
             try:
                 async for chunk in stream:
@@ -692,9 +695,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         """Generate backup contents and return the size."""
         if not tar_file_path:
             tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
-        if not (backup_dir := tar_file_path.parent).exists():
-            LOGGER.debug("Creating backup directory %s", backup_dir)
-            backup_dir.mkdir()
+        make_backup_dir(tar_file_path.parent)
 
         excludes = EXCLUDE_FROM_BACKUP
         if not database_included:
