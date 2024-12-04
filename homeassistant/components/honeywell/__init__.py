@@ -31,7 +31,7 @@ type HoneywellConfigEntry = ConfigEntry[HoneywellData]
 
 @callback
 def _async_migrate_data_to_options(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: HoneywellConfigEntry
 ) -> None:
     if not MIGRATE_OPTIONS_KEYS.intersection(config_entry.data):
         return

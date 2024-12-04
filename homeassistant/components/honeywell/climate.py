@@ -31,7 +31,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -133,7 +132,7 @@ def _async_migrate_unique_id(
 
 def remove_stale_devices(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HoneywellConfigEntry,
     devices: dict[str, SomeComfortDevice],
 ) -> None:
     """Remove stale devices from device registry."""
