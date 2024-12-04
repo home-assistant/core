@@ -32,6 +32,7 @@ import bcrypt
 import freezegun
 import multidict
 import pytest
+import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
@@ -168,8 +169,8 @@ def pytest_runtest_setup() -> None:
     freezegun:
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
-    # pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    # pytest_socket.disable_socket(allow_unix_socket=True)
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    pytest_socket.disable_socket(allow_unix_socket=True)
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
