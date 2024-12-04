@@ -2,8 +2,10 @@
 
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
 
+from homeassistant.components.smart_meter_b_route.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.smart_meter_b_route.coordinator import (
     BRouteData,
     BRouteUpdateCoordinator,
@@ -11,14 +13,18 @@ from homeassistant.components.smart_meter_b_route.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from tests.common import async_fire_time_changed
+
 
 async def test_broute_update_coordinator(
-    hass: HomeAssistant, mock_momonga: Mock
+    hass: HomeAssistant, mock_momonga: Mock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test the BRouteUpdateCoordinator."""
     coordinator = BRouteUpdateCoordinator(hass, "device", "id", "password")
 
-    await coordinator.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert coordinator.data == BRouteData(
         instantaneous_current_r_phase=1,
@@ -28,7 +34,10 @@ async def test_broute_update_coordinator(
     )
 
     mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
-    await coordinator.async_refresh()
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
     assert coordinator.last_exception is not None
