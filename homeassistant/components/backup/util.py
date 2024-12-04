@@ -64,7 +64,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
         )
 
 
-async def receieve_file(
+async def receive_file(
     hass: HomeAssistant, contents: aiohttp.BodyPartReader, path: Path
 ) -> None:
     """Receive a file from a stream and write it to a file."""

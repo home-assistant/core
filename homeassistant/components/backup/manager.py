@@ -43,7 +43,7 @@ from .const import (
     LOGGER,
 )
 from .models import AgentBackup, Folder
-from .util import read_backup, receieve_file
+from .util import read_backup, receive_file
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -387,7 +387,7 @@ class BackupManager:
             temp_dir_handler.name, contents.filename or "backup.tar"
         )
 
-        await receieve_file(self.hass, contents, target_temp_file)
+        await receive_file(self.hass, contents, target_temp_file)
 
         def _copy_and_cleanup(
             local_file_paths: list[Path], backup: AgentBackup
