@@ -66,6 +66,9 @@
       "overheated": {
         "name": "Overheated"
       },
+      "overloaded": {
+        "name": "Overloaded"
+      },
       "battery_low": {
         "name": "Battery low"
       },
@@ -196,6 +199,9 @@
       },
       "pir_enabled": {
         "name": "Motion sensor"
+      },
+      "power_protection_enabled": {
+        "name": "Power protection"
       }
     },
     "number": {
@@ -210,6 +216,9 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "power_protection_threshold": {
+        "name": "Power protection threshold"
       }
     }
   },
