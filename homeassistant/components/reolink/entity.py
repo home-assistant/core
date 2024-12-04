@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from types import CoroutineType
-from typing import Any
 
 from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 

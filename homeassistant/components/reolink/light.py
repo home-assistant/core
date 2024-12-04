@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -156,9 +155,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await try_function(
-            self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, False
-            )
+            self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
         )
         self.async_write_ha_state()
 
@@ -175,9 +172,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
             )
 
         await try_function(
-            self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, True
-            )
+            self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
         )
         self.async_write_ha_state()
 
@@ -212,7 +207,5 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        await try_function(
-            self.entity_description.turn_on_off_fn(self._host.api, True)
-        )
+        await try_function(self.entity_description.turn_on_off_fn(self._host.api, True))
         self.async_write_ha_state()

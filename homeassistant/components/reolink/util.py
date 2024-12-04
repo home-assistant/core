@@ -2,15 +2,30 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from dataclasses import dataclass
+from typing import Any
+
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    InvalidContentTypeError,
+    InvalidParameterError,
+    LoginError,
+    NoDataError,
+    NotSupportedError,
+    ReolinkConnectionError,
+    ReolinkError,
+    ReolinkTimeoutError,
+    SubscriptionError,
+    UnexpectedDataError,
+)
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from reolink_aio.exceptions import ReolinkError, InvalidParameterError, ApiError, InvalidContentTypeError, CredentialsInvalidError, LoginError, NoDataError, UnexpectedDataError, NotSupportedError, SubscriptionError, ReolinkConnectionError, ReolinkTimeoutError
 
 from .const import DOMAIN
 from .host import ReolinkHost
@@ -57,7 +72,8 @@ def get_device_uid_and_ch(
         ch = host.api.channel_for_uid(device_uid[1])
     return (device_uid, ch, is_chime)
 
-async def try_function(func: CoroutineType) -> Any:
+
+async def try_function(func: Coroutine) -> Any:
     """Try a reolink-aio function and translate any potential errors."""
     try:
         return await func

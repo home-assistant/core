@@ -19,7 +19,6 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
@@ -394,7 +393,5 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await try_function(
-            self.entity_description.method(self._chime, option)
-        )
+        await try_function(self.entity_description.method(self._chime, option))
         self.async_write_ha_state()

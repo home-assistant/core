@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Chime, Host
-from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -465,16 +464,12 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await try_function(
-            self.entity_description.method(self._host.api, True)
-        )
+        await try_function(self.entity_description.method(self._host.api, True))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await try_function(
-            self.entity_description.method(self._host.api, False)
-        )
+        await try_function(self.entity_description.method(self._host.api, False))
         self.async_write_ha_state()
 
 
@@ -500,14 +495,10 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await try_function(
-            self.entity_description.method(self._chime, True)
-        )
+        await try_function(self.entity_description.method(self._chime, True))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await try_function(
-            self.entity_description.method(self._chime, False)
-        )
+        await try_function(self.entity_description.method(self._chime, False))
         self.async_write_ha_state()

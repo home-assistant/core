@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
-
 from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_VOLUME_LEVEL,
@@ -83,12 +81,8 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
                 self._host.api.set_volume(self._channel, int(volume * 100))
             )
         duration = kwargs.get(ATTR_DURATION)
-        await try_function(
-            self._host.api.set_siren(self._channel, True, duration)
-        )
+        await try_function(self._host.api.set_siren(self._channel, True, duration))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
-        await try_function(
-            self._host.api.set_siren(self._channel, False, None)
-        )
+        await try_function(self._host.api.set_siren(self._channel, False, None))

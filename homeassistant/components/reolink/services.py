@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from reolink_aio.api import Chime
 from reolink_aio.enums import ChimeToneEnum
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -58,9 +57,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
-            await try_function(
-                chime.play(ChimeToneEnum[ringtone].value)
-            )
+            await try_function(chime.play(ChimeToneEnum[ringtone].value))
 
     hass.services.async_register(
         DOMAIN,

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
-from reolink_aio.exceptions import ReolinkError
 import voluptuous as vol
 
 from homeassistant.components.button import (
@@ -236,6 +235,4 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await try_function(
-            self.entity_description.method(self._host.api)
-        )
+        await try_function(self.entity_description.method(self._host.api))

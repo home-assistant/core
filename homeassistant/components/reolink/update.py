@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DEVICE_UPDATE_INTERVAL
+from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,

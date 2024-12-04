@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Chime, Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -619,9 +618,7 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await try_function(
-            self.entity_description.method(self._host.api, value)
-        )
+        await try_function(self.entity_description.method(self._host.api, value))
         self.async_write_ha_state()
 
 
@@ -649,7 +646,5 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await try_function(
-            self.entity_description.method(self._chime, value)
-        )
+        await try_function(self.entity_description.method(self._chime, value))
         self.async_write_ha_state()
