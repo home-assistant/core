@@ -88,7 +88,8 @@ async def async_setup_entry(
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
         return False
-    config_entry.runtime_data = HoneywellData(config_entry.entry_id, client, devices)
+    data = HoneywellData(config_entry.entry_id, client, devices)
+    config_entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
