@@ -257,6 +257,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle MQTT discovery."""
+        if not discovery_info.payload:
+            return self.async_abort(reason="mqtt_missing_payload")
+
         device_info = json_loads_object(discovery_info.payload)
         if "mac" not in device_info:
             return self.async_abort(reason="mqtt_missing_mac")
@@ -482,15 +485,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for esphome."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -366,7 +366,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -725,10 +725,9 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     """Handle an options flow for Z-Wave JS."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Set up the options flow."""
         super().__init__()
-        self.config_entry = config_entry
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 

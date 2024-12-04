@@ -220,7 +220,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MQTTOptionsFlowHandler(config_entry)
+        return MQTTOptionsFlowHandler()
 
     async def _async_install_addon(self) -> None:
         """Install the Mosquitto Mqtt broker add-on."""
@@ -543,11 +543,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize MQTT options flow."""
-        self.config_entry = config_entry
         self.broker_config: dict[str, str | int] = {}
-        self.options = config_entry.options
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""

@@ -240,6 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,

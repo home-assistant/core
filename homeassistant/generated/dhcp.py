@@ -237,6 +237,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "homewizard",
+        "registered_devices": True,
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "registered_devices": True,
     },
@@ -275,6 +279,22 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "lamarzocco",
+        "registered_devices": True,
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
     },
     {
         "domain": "lametric",
@@ -366,6 +386,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*",
+    },
+    {
+        "domain": "palazzetti",
+        "hostname": "connbox*",
+        "macaddress": "40F3857*",
+    },
+    {
+        "domain": "palazzetti",
+        "registered_devices": True,
     },
     {
         "domain": "powerwall",
