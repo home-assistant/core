@@ -75,22 +75,22 @@
       "message": "Error during login attempt: {err}"
     },
     "no_data": {
-      "message": ""
+      "message": "Device returned no data: {err}"
     },
     "unexpected_data": {
-      "message": ""
+      "message": "Device returned unexpected data: {err}"
     },
     "not_supported": {
-      "message": ""
+      "message": "Function not supported by this device: {err}"
     },
     "subscription_error": {
-      "message": ""
+      "message": "Error during ONVIF subscription: {err}"
     },
     "connection_error": {
-      "message": ""
+      "message": "Could not connect to the device: {err}"
     },
     "timeout": {
-      "message": ""
+      "message": "Timeout waiting on a response: {err}"
     }
   },
   "issues": {
