@@ -14,9 +14,9 @@
       "options": {
         "description": "Set additional options for {name} configured for country {country}",
         "data": {
-          "excludes": "Excludes",
+          "excludes": "Days to exclude",
           "days_offset": "Offset",
-          "workdays": "Includes",
+          "workdays": "Days to include",
           "add_holidays": "Add holidays",
           "remove_holidays": "Remove Holidays",
           "province": "Subdivision of country",
