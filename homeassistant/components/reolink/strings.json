@@ -60,19 +60,19 @@
       "message": "Reolink play_chime error: {device_name} is not a chime"
     },
     "invalid_parameter": {
-      "message": ""
+      "message": "Invalid input parameter: {err}"
     },
     "api_error": {
-      "message": ""
+      "message": "The device responded with a error: {err}"
     },
     "invalid_content_type": {
-      "message": ""
+      "message": "Received a different content type than expected: {err}"
     },
     "invalid_credentials": {
-      "message": ""
+      "message": "Invalid credentials: {err}"
     },
     "login_error": {
-      "message": ""
+      "message": "Error during login attempt: {err}"
     },
     "no_data": {
       "message": ""
