@@ -127,7 +127,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda data: data.power["latest_power"],
+        value_fn=lambda data: data.consumption["latest_power"],
     ),
     StarlinkSensorEntityDescription(
         key="energy",
@@ -135,6 +135,6 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfPower.KILO_WATT_HOUR,
-        value_fn=lambda data: data.power["total_energy"],
+        value_fn=lambda data: data.consumption["total_energy"],
     ),
 )
