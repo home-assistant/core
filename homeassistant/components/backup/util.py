@@ -17,6 +17,11 @@ from .const import BUF_SIZE
 from .models import AddonInfo, AgentBackup, Folder
 
 
+def make_backup_dir(path: Path) -> None:
+    """Create a backup directory if it does not exist."""
+    path.mkdir(exist_ok=True)
+
+
 def read_backup(backup_path: Path) -> AgentBackup:
     """Read a backup from disk."""
 

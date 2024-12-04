@@ -11,6 +11,7 @@ from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
 from .manager import BackupEvent
 from .models import Folder
+from .util import make_backup_dir
 
 
 @callback
@@ -263,6 +264,7 @@ async def backup_agents_download(
     try:
         path = manager.temp_backup_dir / f"{msg["backup_id"]}.tar"
         stream = await agent.async_download_backup(msg["backup_id"])
+        await hass.async_add_executor_job(make_backup_dir, manager.temp_backup_dir)
         f = await hass.async_add_executor_job(path.open, "wb")
         try:
             async for chunk in stream:
