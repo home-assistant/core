@@ -59,7 +59,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   dynamic-devices:
     status: exempt
     comment: |
