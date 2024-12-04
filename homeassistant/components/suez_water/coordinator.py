@@ -126,6 +126,9 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         if cost_last_stat is not None:
             if cost_last_stat["sum"] is not None and cost_last_stat["sum"] is not None:
                 cost_sum = cost_last_stat["sum"]
+        if last_stats is None:
+            last_stats = datetime.now().date()
+            last_stats = last_stats.replace(year=last_stats.year - 2)
 
         _LOGGER.debug(
             "Updating suez stat since %s for %s",
