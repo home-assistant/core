@@ -6,12 +6,12 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
-    comment: Integration does not have actions
+    status: done
+    comment: Integration does register actions aside from entity actions
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
@@ -32,10 +32,10 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Integration has no configuration parameters
+    comment: Integration has no options flow
   docs-installation-parameters:
-    status: exempt
-    comment: Integration has no installation parameters
+    status: todo
+    comment: Needs bluetooth address as parameter
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -80,5 +80,5 @@ rules:
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: Device is not connected to an ip network and therefore doesn't require a session.
+    comment: Device doesn't make http requests.
   strict-typing: done
