@@ -24,8 +24,9 @@ from homeassistant.components.lock import (
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import WEBHOOK_ID
 
@@ -113,6 +114,8 @@ async def test_lock_without_pullspring(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the tedee lock without pullspring."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
     mock_tedee.lock.return_value = None
     mock_tedee.unlock.return_value = None
     mock_tedee.open.return_value = None
@@ -131,8 +134,8 @@ async def test_lock_without_pullspring(
     assert device == snapshot
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity lock.lock_2c3d does not support this service.",
+        ServiceNotSupported,
+        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,

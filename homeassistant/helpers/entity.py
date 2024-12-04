@@ -647,6 +647,22 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
+        )
+
     def _substitute_name_placeholders(self, name: str) -> str:
         """Substitute placeholders in entity name."""
         try:

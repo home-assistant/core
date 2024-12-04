@@ -400,13 +400,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[str] = []
+        entity_registry = er.async_get(self.hass)
         for child_entity_id in group_members:
             # resolve HA entity_id to MA player_id
-            if (hass_state := self.hass.states.get(child_entity_id)) is None:
-                continue
-            if (mass_player_id := hass_state.attributes.get("mass_player_id")) is None:
-                continue
-            player_ids.append(mass_player_id)
+            if not (entity_reg_entry := entity_registry.async_get(child_entity_id)):
+                raise HomeAssistantError(f"Entity {child_entity_id} not found")
+            # unique id is the MA player_id
+            player_ids.append(entity_reg_entry.unique_id)
         await self.mass.players.player_command_group_many(self.player_id, player_ids)
 
     @catch_musicassistant_error
