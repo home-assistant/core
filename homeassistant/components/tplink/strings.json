@@ -45,7 +45,7 @@
       },
       "reconfigure": {
         "title": "Reconfigure TPLink entry",
-        "description": "Will update configuration for device {mac}",
+        "description": "Update your configuration for device {mac}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }

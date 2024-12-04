@@ -169,9 +169,15 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
                 # This coroutine is called by camera with an asyncio.timeout
                 # so image could be None whereas an auth issue returns b''
                 elif image == b"":
-                    _LOGGER.debug("No camera image returned for %s", self._device.host)
+                    _LOGGER.debug(
+                        "Empty camera image returned for %s", self._device.host
+                    )
                     # image could be empty if a stream is running so check for explicit auth error
                     await self._async_check_stream_auth(video_url)
+                else:
+                    _LOGGER.debug(
+                        "None camera image returned for %s", self._device.host
+                    )
 
         return self._image
 
