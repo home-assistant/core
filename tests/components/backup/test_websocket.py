@@ -8,7 +8,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import AgentBackup, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgentError,
+    BackupReaderWriterError,
+)
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
@@ -1193,7 +1197,23 @@ async def test_config_update_errors(
             1,
             2,
             BACKUP_CALL,
-            [Exception("Boom"), None],
+            [BackupReaderWriterError("Boom"), None],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test.test-agent"]},
+                "schedule": "daily",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",  # attempted to create backup but failed
+            "2024-11-11T04:45:00+01:00",
+            1,
+            2,
+            BACKUP_CALL,
+            [Exception("Boom"), None],  # unknown error
         ),
     ],
 )
@@ -2272,7 +2292,7 @@ async def test_subscribe_event(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test generating a backup."""
+    """Test subscribe event."""
     await setup_backup_integration(hass, with_hassio=False)
 
     manager = hass.data[DATA_MANAGER]

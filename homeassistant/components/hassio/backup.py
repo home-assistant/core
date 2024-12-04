@@ -10,6 +10,7 @@ from typing import Any, cast
 
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
+    SupervisorError,
     SupervisorNotFoundError,
 )
 from aiohasupervisor.models import (
@@ -23,6 +24,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupReaderWriter,
+    BackupReaderWriterError,
     CreateBackupEvent,
     Folder,
     NewBackup,
@@ -233,20 +235,23 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         ]
         locations = [agent.location for agent in hassio_agents]
 
-        backup = await self._client.backups.partial_backup(
-            supervisor_backups.PartialBackupOptions(
-                addons=include_addons_set,
-                folders=include_folders_set,
-                homeassistant=include_homeassistant,
-                name=backup_name,
-                password=password,
-                compressed=True,
-                location=locations or LOCATION_CLOUD_BACKUP,
-                homeassistant_exclude_database=not include_database,
-                background=True,
-                extra=extra_metadata,
+        try:
+            backup = await self._client.backups.partial_backup(
+                supervisor_backups.PartialBackupOptions(
+                    addons=include_addons_set,
+                    folders=include_folders_set,
+                    homeassistant=include_homeassistant,
+                    name=backup_name,
+                    password=password,
+                    compressed=True,
+                    location=locations or LOCATION_CLOUD_BACKUP,
+                    homeassistant_exclude_database=not include_database,
+                    background=True,
+                    extra=extra_metadata,
+                )
             )
-        )
+        except SupervisorError as err:
+            raise BackupReaderWriterError(f"Error creating backup: {err}") from err
         backup_task = self._hass.async_create_task(
             self._async_wait_for_backup(
                 backup, remove_after_upload=not bool(locations)
@@ -278,22 +283,35 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         finally:
             unsub()
         if not backup_id:
-            raise HomeAssistantError("Backup failed")
+            raise BackupReaderWriterError("Backup failed")
 
         async def open_backup() -> AsyncIterator[bytes]:
-            return await self._client.backups.download_backup(backup_id)
+            try:
+                return await self._client.backups.download_backup(backup_id)
+            except SupervisorError as err:
+                raise BackupReaderWriterError(
+                    f"Error downloading backup: {err}"
+                ) from err
 
         async def remove_backup() -> None:
             if not remove_after_upload:
                 return
-            await self._client.backups.remove_backup(
-                backup_id,
-                options=supervisor_backups.RemoveBackupOptions(
-                    location={LOCATION_CLOUD_BACKUP}
-                ),
-            )
+            try:
+                await self._client.backups.remove_backup(
+                    backup_id,
+                    options=supervisor_backups.RemoveBackupOptions(
+                        location={LOCATION_CLOUD_BACKUP}
+                    ),
+                )
+            except SupervisorError as err:
+                raise BackupReaderWriterError(f"Error removing backup: {err}") from err
 
-        details = await self._client.backups.backup_info(backup_id)
+        try:
+            details = await self._client.backups.backup_info(backup_id)
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting backup details: {err}"
+            ) from err
 
         return WrittenBackup(
             backup=_backup_details_to_agent_backup(details),
