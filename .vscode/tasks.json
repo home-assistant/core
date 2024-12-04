@@ -57,6 +57,20 @@
       "problemMatcher": []
     },
     {
+      "label": "Pre-commit",
+      "type": "shell",
+      "command": "pre-commit run --show-diff-on-failure",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Pylint",
       "type": "shell",
       "command": "pylint homeassistant",
