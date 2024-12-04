@@ -75,11 +75,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Honeywell (de)humidifier dynamically."""
-    # hass_data = config_entry.runtime_data
-    data: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
+    data: HoneywellData = config_entry.runtime_data
     entities: list = []
     for device in data.devices.values():
-        if device.has_humidifer:
+        if device.has_humidifier:
             entities.append(HoneywellHumidifier(device, HUMIDIFIERS["Humidifier"]))
         if device.has_dehumidifier:
             entities.append(HoneywellHumidifier(device, HUMIDIFIERS["Dehumidifier"]))
