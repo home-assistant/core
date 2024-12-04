@@ -11,7 +11,8 @@
           "username": "Smile Username"
         },
         "data_description": {
-          "host": "Leave empty if using Auto Discovery"
+          "host": "Leave empty if using Auto Discovery",
+          "password": "The Smile ID located on the bottom of your Smile"
         }
       }
     },
