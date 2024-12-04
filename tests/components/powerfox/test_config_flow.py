@@ -110,6 +110,27 @@ async def test_duplicate_entry(
     assert result.get("reason") == "already_configured"
 
 
+async def test_duplicate_entry_reconfiguration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_powerfox_client: AsyncMock,
+) -> None:
+    """Test abort when setting up duplicate entry on reconfiguration."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
