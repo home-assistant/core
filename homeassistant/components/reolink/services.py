@@ -10,12 +10,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .host import ReolinkHost
-from .util import get_device_uid_and_ch
+from .util import get_device_uid_and_ch, try_function
 
 ATTR_RINGTONE = "ringtone"
 
@@ -58,12 +58,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
-            try:
-                await chime.play(ChimeToneEnum[ringtone].value)
-            except InvalidParameterError as err:
-                raise ServiceValidationError(err) from err
-            except ReolinkError as err:
-                raise HomeAssistantError(err) from err
+            await try_function(
+                chime.play(ChimeToneEnum[ringtone].value)
+            )
 
     hass.services.async_register(
         DOMAIN,

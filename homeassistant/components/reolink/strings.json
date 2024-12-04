@@ -91,6 +91,9 @@
     },
     "timeout": {
       "message": "Timeout waiting on a response: {err}"
+    },
+    "firmware_install_error": {
+      "message": "Error trying to update Reolink firmware: {err}"
     }
   },
   "issues": {

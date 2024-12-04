@@ -15,11 +15,10 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, try_function
 
 PARALLEL_UPDATES = 0
 
@@ -80,23 +79,16 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            try:
-                await self._host.api.set_volume(self._channel, int(volume * 100))
-            except InvalidParameterError as err:
-                raise ServiceValidationError(err) from err
-            except ReolinkError as err:
-                raise HomeAssistantError(err) from err
+            await try_function(
+                self._host.api.set_volume(self._channel, int(volume * 100))
+            )
         duration = kwargs.get(ATTR_DURATION)
-        try:
-            await self._host.api.set_siren(self._channel, True, duration)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self._host.api.set_siren(self._channel, True, duration)
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
-        try:
-            await self._host.api.set_siren(self._channel, False, None)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self._host.api.set_siren(self._channel, False, None)
+        )

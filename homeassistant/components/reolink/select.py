@@ -24,7 +24,6 @@ from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
@@ -33,7 +32,7 @@ from .entity import (
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, try_function
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -356,12 +355,9 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self.entity_description.method(self._host.api, self._channel, option)
+        )
         self.async_write_ha_state()
 
 
@@ -398,10 +394,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._chime, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self.entity_description.method(self._chime, option)
+        )
         self.async_write_ha_state()

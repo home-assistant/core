@@ -18,7 +18,6 @@ from homeassistant.components.button import (
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -31,7 +30,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, try_function
 
 PARALLEL_UPDATES = 0
 ATTR_SPEED = "speed"
@@ -207,20 +206,18 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self.entity_description.method(self._host.api, self._channel)
+        )
 
     async def async_ptz_move(self, **kwargs: Any) -> None:
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
-        try:
-            await self._host.api.set_ptz_command(
+        await try_function(
+            self._host.api.set_ptz_command(
                 self._channel, command=self.entity_description.ptz_cmd, speed=speed
             )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        )
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
@@ -239,7 +236,6 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        try:
-            await self.entity_description.method(self._host.api)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await try_function(
+            self.entity_description.method(self._host.api)
+        )
