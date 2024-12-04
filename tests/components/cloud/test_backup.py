@@ -525,6 +525,7 @@ async def test_agents_upload_not_protected(
         size=0.0,
     )
     with (
+        patch("pathlib.Path.open"),
         patch(
             "homeassistant.components.backup.manager.read_backup",
             return_value=test_backup,

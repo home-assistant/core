@@ -141,6 +141,7 @@ async def test_agents_upload(
     )
 
     with (
+        patch("pathlib.Path.open"),
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,
