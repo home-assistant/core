@@ -55,7 +55,9 @@ IP_ADDRESS = "127.0.0.1"
 IP_ADDRESS2 = "127.0.0.2"
 IP_ADDRESS3 = "127.0.0.3"
 ALIAS = "My Bulb"
+ALIAS_CAMERA = "My Camera"
 MODEL = "HS100"
+MODEL_CAMERA = "C210"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEVICE_ID = "123456789ABCDEFGH"
 DEVICE_ID_MAC = "AA:BB:CC:DD:EE:FF"
@@ -63,6 +65,7 @@ DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 MAC_ADDRESS3 = "66:55:44:33:22:11"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
+DEFAULT_ENTRY_TITLE_CAMERA = f"{ALIAS_CAMERA} {MODEL_CAMERA}"
 CREDENTIALS_HASH_LEGACY = ""
 CONN_PARAMS_LEGACY = DeviceConnectionParameters(
     DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
@@ -113,6 +116,16 @@ DEVICE_CONFIG_AES = DeviceConfig(
     uses_http=True,
     aes_keys=AES_KEYS,
 )
+CONN_PARAMS_AES_CAMERA = DeviceConnectionParameters(
+    DeviceFamily.SmartIpCamera, DeviceEncryptionType.Aes, https=True, login_version=2
+)
+DEVICE_CONFIG_AES_CAMERA = DeviceConfig(
+    IP_ADDRESS3,
+    credentials=CREDENTIALS,
+    connection_type=CONN_PARAMS_AES_CAMERA,
+    uses_http=True,
+)
+
 DEVICE_CONFIG_DICT_KLAP = {
     k: v for k, v in DEVICE_CONFIG_KLAP.to_dict().items() if k != "credentials"
 }
@@ -145,8 +158,12 @@ CREATE_ENTRY_DATA_AES = {
     CONF_AES_KEYS: AES_KEYS,
 }
 CREATE_ENTRY_DATA_AES_CAMERA = {
-    **CREATE_ENTRY_DATA_AES,
     CONF_HOST: IP_ADDRESS3,
+    CONF_ALIAS: ALIAS_CAMERA,
+    CONF_MODEL: MODEL_CAMERA,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
+    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES_CAMERA.to_dict(),
+    CONF_USES_HTTP: True,
     CONF_LIVE_VIEW: True,
     CONF_CAMERA_CREDENTIALS: {"username": "camuser", "password": "campass"},
 }

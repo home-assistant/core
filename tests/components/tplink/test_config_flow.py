@@ -4,7 +4,7 @@ import logging
 from unittest.mock import ANY, AsyncMock, patch
 
 import av
-from kasa import TimeoutError
+from kasa import Module, TimeoutError
 import pytest
 
 from homeassistant import config_entries
@@ -41,16 +41,20 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     AES_KEYS,
     ALIAS,
+    ALIAS_CAMERA,
     CONN_PARAMS_AES,
     CONN_PARAMS_KLAP,
     CONN_PARAMS_LEGACY,
     CREATE_ENTRY_DATA_AES,
+    CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_KLAP,
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
     DEFAULT_ENTRY_TITLE,
+    DEFAULT_ENTRY_TITLE_CAMERA,
     DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_AES_CAMERA,
     DEVICE_CONFIG_DICT_KLAP,
     DEVICE_CONFIG_KLAP,
     DEVICE_CONFIG_LEGACY,
@@ -60,6 +64,8 @@ from . import (
     IP_ADDRESS3,
     MAC_ADDRESS,
     MAC_ADDRESS2,
+    MAC_ADDRESS3,
+    MODEL_CAMERA,
     MODULE,
     SMALLEST_VALID_JPEG_BYTES,
     _mocked_device,
@@ -163,6 +169,131 @@ async def test_discovery(
     assert result2["reason"] == "no_devices_found"
 
 
+async def test_discovery_camera(
+    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+) -> None:
+    """Test authenticated discovery for camera with stream."""
+    mock_device = _mocked_device(
+        alias=ALIAS_CAMERA,
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+        model=MODEL_CAMERA,
+        device_config=DEVICE_CONFIG_AES_CAMERA,
+        credentials_hash=CREDENTIALS_HASH_AES,
+        modules=[Module.Camera],
+    )
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_HOST: IP_ADDRESS3,
+                CONF_MAC: MAC_ADDRESS3,
+                CONF_ALIAS: ALIAS,
+                CONF_DEVICE: mock_device,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_ENTRY_TITLE_CAMERA
+    assert result["data"] == CREATE_ENTRY_DATA_AES_CAMERA
+    assert result["context"]["unique_id"] == MAC_ADDRESS3
+
+
+async def test_discovery_pick_device_camera(
+    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+) -> None:
+    """Test authenticated discovery for camera with stream."""
+    mock_device = _mocked_device(
+        alias=ALIAS_CAMERA,
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+        model=MODEL_CAMERA,
+        device_config=DEVICE_CONFIG_AES_CAMERA,
+        credentials_hash=CREDENTIALS_HASH_AES,
+        modules=[Module.Camera],
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with override_side_effect(
+        mock_discovery["discover"], lambda *_, **__: {IP_ADDRESS3: mock_device}
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_device"
+    assert not result["errors"]
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEVICE: MAC_ADDRESS3},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_ENTRY_TITLE_CAMERA
+    assert result["data"] == CREATE_ENTRY_DATA_AES_CAMERA
+    assert result["context"]["unique_id"] == MAC_ADDRESS3
+
+
 async def test_discovery_auth(
     hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
 ) -> None:
@@ -204,6 +335,69 @@ async def test_discovery_auth(
     assert result2["title"] == DEFAULT_ENTRY_TITLE
     assert result2["data"] == CREATE_ENTRY_DATA_KLAP
     assert result2["context"]["unique_id"] == MAC_ADDRESS
+
+
+async def test_discovery_auth_camera(
+    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+) -> None:
+    """Test authenticated discovery for camera with stream."""
+    mock_device = _mocked_device(
+        alias=ALIAS_CAMERA,
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+        model=MODEL_CAMERA,
+        device_config=DEVICE_CONFIG_AES_CAMERA,
+        credentials_hash=CREDENTIALS_HASH_AES,
+        modules=[Module.Camera],
+    )
+
+    with override_side_effect(mock_connect["connect"], AuthenticationError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_HOST: IP_ADDRESS3,
+                CONF_MAC: MAC_ADDRESS3,
+                CONF_ALIAS: ALIAS,
+                CONF_DEVICE: mock_device,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_auth_confirm"
+    assert not result["errors"]
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_ENTRY_TITLE_CAMERA
+    assert result["data"] == CREATE_ENTRY_DATA_AES_CAMERA
+    assert result["context"]["unique_id"] == MAC_ADDRESS3
 
 
 @pytest.mark.parametrize(
@@ -774,6 +968,63 @@ async def test_manual_auth(
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == CREATE_ENTRY_DATA_KLAP
     assert result3["context"]["unique_id"] == MAC_ADDRESS
+
+
+async def test_manual_auth_camera(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test manual camera."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with override_side_effect(
+        mock_discovery["mock_devices"][IP_ADDRESS3].update, AuthenticationError
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS3}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_auth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "foobar",
+            CONF_PASSWORD: "foobar",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_auth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIVE_VIEW: True,
+                CONF_USERNAME: "camuser",
+                CONF_PASSWORD: "campass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_CREDENTIALS] == {
+        CONF_USERNAME: "camuser",
+        CONF_PASSWORD: "campass",
+    }
+    assert result["data"][CONF_LIVE_VIEW] is True
 
 
 @pytest.mark.parametrize(
@@ -1396,12 +1647,16 @@ async def test_reauth_camera(
             result["flow_id"],
             user_input={
                 CONF_LIVE_VIEW: True,
-                CONF_USERNAME: "camuser",
-                CONF_PASSWORD: "campass",
+                CONF_USERNAME: "camuser2",
+                CONF_PASSWORD: "campass2",
             },
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert dict(mock_camera_config_entry.data) == {
+        **CREATE_ENTRY_DATA_AES_CAMERA,
+        CONF_CAMERA_CREDENTIALS: {CONF_USERNAME: "camuser2", CONF_PASSWORD: "campass2"},
+    }
 
 
 async def test_reauth_try_connect_all(

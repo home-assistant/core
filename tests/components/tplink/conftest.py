@@ -11,11 +11,13 @@ from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import (
+    ALIAS_CAMERA,
     CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
     DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_AES_CAMERA,
     DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
@@ -23,6 +25,7 @@ from . import (
     MAC_ADDRESS,
     MAC_ADDRESS2,
     MAC_ADDRESS3,
+    MODEL_CAMERA,
     _mocked_device,
 )
 
@@ -54,12 +57,13 @@ def _get_mock_devices():
             ip_address=IP_ADDRESS2,
         ),
         IP_ADDRESS3: _mocked_device(
-            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES_CAMERA.to_dict()),
             credentials_hash=CREDENTIALS_HASH_AES,
             mac=MAC_ADDRESS3,
             ip_address=IP_ADDRESS3,
             modules=[Module.Camera],
-            alias="my_camera",
+            alias=ALIAS_CAMERA,
+            model=MODEL_CAMERA,
         ),
     }
 

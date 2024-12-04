@@ -496,9 +496,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             placeholders[CONF_HOST] = entry.data[CONF_HOST]
 
         if user_input:
-            form_data = user_input
+            form_data = {**user_input}
         elif entry:
-            form_data = entry.data.get(CONF_CAMERA_CREDENTIALS, {})
+            form_data = {**entry.data.get(CONF_CAMERA_CREDENTIALS, {})}
             form_data[CONF_LIVE_VIEW] = entry.data.get(CONF_LIVE_VIEW, False)
         else:
             form_data = {}
