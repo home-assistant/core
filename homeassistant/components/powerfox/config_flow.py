@@ -107,7 +107,6 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reconfigure Powerfox configuration."""
         errors = {}
 
-        reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             client = Powerfox(
                 username=user_input[CONF_EMAIL],
@@ -121,8 +120,9 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             except PowerfoxConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=user_input
+                    self._get_reconfigure_entry(), data_updates=user_input
                 )
         return self.async_show_form(
             step_id="reconfigure",
