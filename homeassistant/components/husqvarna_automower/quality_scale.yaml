@@ -5,10 +5,7 @@ rules:
   unique-config-entry: done
   config-flow-test-coverage: done
   runtime-data: done
-  test-before-setup:
-    status: todo
-    comment: |
-      Raise ConfigEntryAuthFailed earlier, when "amc:api" is missing in the token scope.
+  test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
@@ -21,11 +18,7 @@ rules:
     status: done
     comment: |
       The integration only has an entity service, registered in the platform.
-  common-modules:
-    status: todo
-    comment: |
-      Remove unused config_entry in coordinator.
-      Fix typos in entity.py
+  common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
