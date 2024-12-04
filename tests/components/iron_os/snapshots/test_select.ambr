@@ -58,67 +58,6 @@
     'state': 'medium',
   })
 # ---
-# name: test_state[select.pinecil_battery_cell_count-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'no_battery',
-        'battery_3s',
-        'battery_4s',
-        'battery_5s',
-        'battery_6s',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.pinecil_battery_cell_count',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery cell count',
-    'platform': 'iron_os',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PinecilSelect.MIN_DC_VOLTAGE_CELLS: 'min_dc_voltage_cells'>,
-    'unique_id': 'c0:ff:ee:c0:ff:ee_min_dc_voltage_cells',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_state[select.pinecil_battery_cell_count-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Battery cell count',
-      'options': list([
-        'no_battery',
-        'battery_3s',
-        'battery_4s',
-        'battery_5s',
-        'battery_6s',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.pinecil_battery_cell_count',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'battery_3s',
-  })
-# ---
 # name: test_state[select.pinecil_boot_logo_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -415,6 +354,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'de',
+  })
+# ---
+# name: test_state[select.pinecil_power_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_battery',
+        'battery_3s',
+        'battery_4s',
+        'battery_5s',
+        'battery_6s',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_power_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power source',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.MIN_DC_VOLTAGE_CELLS: 'min_dc_voltage_cells'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_min_dc_voltage_cells',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_power_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Power source',
+      'options': list([
+        'no_battery',
+        'battery_3s',
+        'battery_4s',
+        'battery_5s',
+        'battery_6s',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_power_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'battery_3s',
   })
 # ---
 # name: test_state[select.pinecil_scrolling_speed-entry]

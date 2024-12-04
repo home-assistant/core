@@ -72,7 +72,7 @@ async def test_state(
     ("entity_id", "option", "call_params"),
     [
         (
-            "select.pinecil_battery_cell_count",
+            "select.pinecil_power_source",
             "battery_3s",
             (CharSetting.MIN_DC_VOLTAGE_CELLS, BatteryType.BATTERY_3S),
         ),
@@ -165,6 +165,6 @@ async def test_select_option_exception(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             service_data={ATTR_OPTION: "battery_3s"},
-            target={ATTR_ENTITY_ID: "select.pinecil_battery_cell_count"},
+            target={ATTR_ENTITY_ID: "select.pinecil_power_source"},
             blocking=True,
         )
