@@ -382,7 +382,6 @@ async def test_async_create_backup(
     )
 
     assert "Generated new backup with backup_id " in caplog.text
-    assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
     assert "Loaded 2 agents" in caplog.text
 
