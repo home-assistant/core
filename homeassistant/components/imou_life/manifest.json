@@ -2,7 +2,7 @@
   "domain": "imou_life",
   "name": "Imou Life",
   "version": "0.0.1",
-  "documentation": "https://www.home-assistant.io/integrations/ImouLife",
+  "documentation": "https://www.home-assistant.io/integrations/imou_life",
   "dependencies": [],
   "requirements": [
     "pyimouapi==1.0.3"
