@@ -8,8 +8,15 @@ from typing import cast
 
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import BUF_SIZE
+from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
+
+
+def make_backup_dir(path: Path) -> None:
+    """Create a backup directory if it does not exist."""
+    if not path.exists():
+        LOGGER.debug("Creating backup directory %s", path)
+        path.mkdir()
 
 
 def read_backup(backup_path: Path) -> AgentBackup:
