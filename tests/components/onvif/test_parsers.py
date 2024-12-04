@@ -272,3 +272,64 @@ async def test_tapo_person(hass: HomeAssistant) -> None:
         f"{TEST_UID}_tns1:RuleEngine/PeopleDetector/"
         "People_VideoSourceToken_VideoAnalyticsToken_MyPeopleDetectorRule"
     )
+
+
+async def test_tapo_missing_attributes(hass: HomeAssistant) -> None:
+    """Tests async_parse_tplink_detector with missing fields."""
+    event = await get_event(
+        {
+            "Message": {
+                "_value_1": {
+                    "Data": {
+                        "ElementItem": [],
+                        "Extension": None,
+                        "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
+                        "_attr_1": None,
+                    },
+                }
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/PeopleDetector/People",
+            },
+        }
+    )
+
+    assert event is None
+
+
+async def test_tapo_unknown_type(hass: HomeAssistant) -> None:
+    """Tests async_parse_tplink_detector with unknown event type."""
+    event = await get_event(
+        {
+            "Message": {
+                "_value_1": {
+                    "Data": {
+                        "ElementItem": [],
+                        "Extension": None,
+                        "SimpleItem": [{"Name": "IsNotPerson", "Value": "true"}],
+                        "_attr_1": None,
+                    },
+                    "Source": {
+                        "ElementItem": [],
+                        "Extension": None,
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyPeopleDetectorRule"},
+                        ],
+                    },
+                }
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/PeopleDetector/People",
+            },
+        }
+    )
+
+    assert event is None
