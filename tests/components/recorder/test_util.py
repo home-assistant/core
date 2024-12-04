@@ -1058,7 +1058,7 @@ async def test_execute_stmt_lambda_element(
     [
         (
             # Test 00:25 local time, during DST
-            datetime(2022, 10, 21, 7, 25, tzinfo=UTC),
+            datetime(2022, 10, 21, 7, 25, 50, 123, tzinfo=UTC),
             {
                 "hour": ["2022-10-21T07:00:00+00:00", "2022-10-21T08:00:00+00:00"],
                 "hour-1": ["2022-10-21T06:00:00+00:00", "2022-10-21T07:00:00+00:00"],
@@ -1074,7 +1074,7 @@ async def test_execute_stmt_lambda_element(
         ),
         (
             # Test 00:25 local time, standard time, February 28th a leap year
-            datetime(2024, 2, 28, 8, 25, tzinfo=UTC),
+            datetime(2024, 2, 28, 8, 25, 50, 123, tzinfo=UTC),
             {
                 "hour": ["2024-02-28T08:00:00+00:00", "2024-02-28T09:00:00+00:00"],
                 "hour-1": ["2024-02-28T07:00:00+00:00", "2024-02-28T08:00:00+00:00"],
