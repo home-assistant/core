@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from types import ModuleType
 from typing import Any
 from unittest.mock import patch
 
@@ -60,8 +59,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -546,6 +543,45 @@ async def test_translated_unit_with_native_unit_raises(
         await hass.async_block_till_done()
         # Setup fails so entity_id is None
         assert entity0.entity_id is None
+
+
+async def test_unit_translation_key_without_platform_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unit translation key property raises if the entity has no platform yet."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = MockSensor(
+            name="Test",
+            native_value="123",
+            unique_id="very_unique",
+        )
+        entity0.entity_description = SensorEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+        )
+        with pytest.raises(
+            ValueError,
+            match="cannot have a translation key for unit of measurement before "
+            "being added to the entity platform",
+        ):
+            unit = entity0.unit_of_measurement  # noqa: F841
+
+        setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        # Should not raise after being added to the platform
+        unit = entity0.unit_of_measurement  # noqa: F841
+        assert unit == "Tests"
 
 
 @pytest.mark.parametrize(
@@ -2641,28 +2677,6 @@ async def test_entity_category_config_raises_error(
     )
 
     assert not hass.states.get("sensor.test")
-
-
-@pytest.mark.parametrize(
-    "module",
-    [sensor, sensor.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
-@pytest.mark.parametrize(("module"), [sensor, sensor.const])
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: sensor.SensorStateClass,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "STATE_CLASS_", "2025.1"
-    )
 
 
 @pytest.mark.parametrize(

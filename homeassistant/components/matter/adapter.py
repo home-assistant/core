@@ -45,6 +45,7 @@ class MatterAdapter:
         self.hass = hass
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
+        self.discovered_entities: set[str] = set()
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -54,23 +55,19 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
-        initialized_nodes: set[int] = set()
         for node in self.matter_client.get_nodes():
-            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
-            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_updated_callback(event: EventType, node: MatterNode) -> None:
             """Handle node updated event."""
-            if node.node_id in initialized_nodes:
-                return
             if not node.available:
                 return
-            initialized_nodes.add(node.node_id)
+            # We always run the discovery logic again,
+            # because the firmware version could have been changed or features added.
             self._setup_node(node)
 
         def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
@@ -237,11 +234,20 @@ class MatterAdapter:
         self._create_device_registry(endpoint)
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(endpoint):
+            discovery_key = (
+                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
+                f"{entity_info.primary_attribute.cluster_id}_"
+                f"{entity_info.primary_attribute.attribute_id}_"
+                f"{entity_info.entity_description.key}"
+            )
+            if discovery_key in self.discovered_entities:
+                continue
             LOGGER.debug(
                 "Creating %s entity for %s",
                 entity_info.platform,
                 entity_info.primary_attribute,
             )
+            self.discovered_entities.add(discovery_key)
             new_entity = entity_info.entity_class(
                 self.matter_client, endpoint, entity_info
             )
