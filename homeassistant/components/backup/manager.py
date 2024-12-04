@@ -10,7 +10,6 @@ import hashlib
 import io
 import json
 from pathlib import Path
-from queue import SimpleQueue
 import shutil
 import tarfile
 from tempfile import TemporaryDirectory
@@ -44,7 +43,7 @@ from .const import (
     LOGGER,
 )
 from .models import AgentBackup, Folder
-from .util import read_backup
+from .util import read_backup, receive_file
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -383,48 +382,12 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> None:
         """Receive and store a backup file from upload."""
-        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
-            SimpleQueue()
-        )
         temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
         target_temp_file = Path(
             temp_dir_handler.name, contents.filename or "backup.tar"
         )
 
-        def _sync_queue_consumer() -> None:
-            with target_temp_file.open("wb") as file_handle:
-                while True:
-                    if (_chunk_future := queue.get()) is None:
-                        break
-                    _chunk, _future = _chunk_future
-                    if _future is not None:
-                        self.hass.loop.call_soon_threadsafe(_future.set_result, None)
-                    file_handle.write(_chunk)
-
-        fut: asyncio.Future[None] | None = None
-        try:
-            fut = self.hass.async_add_executor_job(_sync_queue_consumer)
-            megabytes_sending = 0
-            while chunk := await contents.read_chunk(BUF_SIZE):
-                megabytes_sending += 1
-                if megabytes_sending % 5 != 0:
-                    queue.put_nowait((chunk, None))
-                    continue
-
-                chunk_future = self.hass.loop.create_future()
-                queue.put_nowait((chunk, chunk_future))
-                await asyncio.wait(
-                    (fut, chunk_future),
-                    return_when=asyncio.FIRST_COMPLETED,
-                )
-                if fut.done():
-                    # The executor job failed
-                    break
-
-            queue.put_nowait(None)  # terminate queue consumer
-        finally:
-            if fut is not None:
-                await fut
+        await receive_file(self.hass, contents, target_temp_file)
 
         def _copy_and_cleanup(
             local_file_paths: list[Path], backup: AgentBackup
