@@ -164,4 +164,4 @@ class WorkAreaAvailableEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
-    """Base entity work areas with control function."""
+    """Base entity for work areas with control function."""
