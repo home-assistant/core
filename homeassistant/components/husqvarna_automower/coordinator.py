@@ -29,9 +29,9 @@ DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
     """Class to manage fetching Husqvarna data."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: AutomowerSession, entry: ConfigEntry
-    ) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, api: AutomowerSession) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
