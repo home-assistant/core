@@ -509,7 +509,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
-    "husqvarna_automower",
     "husqvarna_automower_ble",
     "huum",
     "hvv_departures",
