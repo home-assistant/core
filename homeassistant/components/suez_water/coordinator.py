@@ -226,4 +226,4 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         last_stat = await get_instance(self.hass).async_add_executor_job(
             get_last_statistics, self.hass, 1, id, True, {"sum"}
         )
-        return last_stat[id][0] if last_stat or len(last_stat) == 0 else None
+        return last_stat[id][0] if last_stat else None
