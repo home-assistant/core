@@ -2586,15 +2586,11 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate entity_ids to states_meta, return True if completed.
@@ -2663,18 +2659,6 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
-
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        # The migration has finished, now we start the post migration
-        # to remove the old entity_id data from the states table
-        # at this point we can also start using the StatesMeta table
-        # so we set active to True
-        _LOGGER.debug("Activating states_meta manager as all data is migrated")
-        instance.states_meta_manager.active = True
-        with contextlib.suppress(SQLAlchemyError):
-            migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
-            migrate.queue_migration(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2786,12 +2770,13 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 NON_LIVE_DATA_MIGRATORS = (
     StatesContextIDMigration,  # Introduced in HA Core 2023.4
     EventsContextIDMigration,  # Introduced in HA Core 2023.4
+    EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
 LIVE_DATA_MIGRATORS = (
     EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
-    EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
     EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
+    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
 
