@@ -21,6 +21,8 @@ from starlink_grpc import (
     set_sleep_config,
     set_stow_state,
     status_data,
+    PowerDict,
+    history_stats,
 )
 
 from homeassistant.core import HomeAssistant
@@ -39,6 +41,7 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    consumption: PowerDict 
 
 
 class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
@@ -61,7 +64,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         status = status_data(channel_context)
         location = location_data(channel_context)
         sleep = get_sleep_config(channel_context)
-        return StarlinkData(location, sleep, *status)
+        consumption = history_stats(parse_samples=-1, context=channel_context)[-1]
+        return StarlinkData(location, sleep, *status, consumption)
 
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
