@@ -129,6 +129,14 @@ def device():
     mock_device.cool_away_temp = COOLAWAY
     mock_device.has_humidifier = False
     mock_device.has_dehumidifier = False
+    mock_device.humidifier_upper_limit = 60
+    mock_device.humidifier_lower_limit = 10
+    mock_device.humidifier_setpoint = 20
+    mock_device.dehumidifier_mode = 1
+    mock_device.dehumidifier_upper_limit = 55
+    mock_device.dehumidifier_lower_limit = 15
+    mock_device.dehumidifier_setpoint = 30
+    mock_device.dehumidifier_mode = 1
     mock_device.raw_dr_data = {"CoolSetpLimit": None, "HeatSetpLimit": None}
 
     return mock_device
@@ -193,6 +201,14 @@ def another_device():
     mock_device.outdoor_humidity = None
     mock_device.has_humidifier = False
     mock_device.has_dehumidifier = False
+    mock_device.humidifier_upper_limit = 60
+    mock_device.humidifier_lower_limit = 10
+    mock_device.humidifier_setpoint = 20
+    mock_device.dehumidifier_mode = 1
+    mock_device.dehumidifier_upper_limit = 55
+    mock_device.dehumidifier_lower_limit = 15
+    mock_device.dehumidifier_setpoint = 30
+    mock_device.dehumidifier_mode = 1
     mock_device.raw_ui_data = {
         "SwitchOffAllowed": True,
         "SwitchAutoAllowed": True,
