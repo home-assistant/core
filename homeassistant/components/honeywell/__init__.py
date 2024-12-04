@@ -84,8 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
         return False
-    data = HoneywellData(config_entry.entry_id, client, devices)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data
+    config_entry.runtime_data = HoneywellData(config_entry.entry_id, client, devices)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
@@ -100,12 +99,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 @dataclass

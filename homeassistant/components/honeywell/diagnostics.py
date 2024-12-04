@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import HoneywellData
-from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -16,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    honeywell: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
+    honeywell: HoneywellData = config_entry.runtime_data
 
     return {
         f"Device {device}": {

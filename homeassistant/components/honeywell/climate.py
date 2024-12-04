@@ -103,7 +103,7 @@ async def async_setup_entry(
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
+    data: HoneywellData = entry.runtime_data
     _async_migrate_unique_id(hass, data.devices)
     async_add_entities(
         [

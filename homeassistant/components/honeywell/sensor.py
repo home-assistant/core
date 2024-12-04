@@ -85,7 +85,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""
-    data: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
+    data: HoneywellData = config_entry.runtime_data
 
     async_add_entities(
         HoneywellSensor(device, description)
