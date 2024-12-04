@@ -2216,3 +2216,59 @@ async def test_change_websockets_transport_to_tcp(
         mqtt.CONF_DISCOVERY: True,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }
+
+
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+            mqtt.CONF_WS_PATH: "/some_path",
+        }
+    ],
+)
+async def test_reconfigure_flow_form(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reconfigure flow."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+            "show_advanced_options": True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "10.10.10,10",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
+            mqtt.CONF_WS_PATH: "/some_new_path",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        mqtt.CONF_BROKER: "10.10.10,10",
+        CONF_PORT: 1234,
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+        mqtt.CONF_WS_PATH: "/some_new_path",
+    }
+    await hass.async_block_till_done(wait_background_tasks=True)
