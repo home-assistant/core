@@ -31,9 +31,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, api: AutomowerSession, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: AutomowerSession) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
