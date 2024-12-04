@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         # without the scope. So only polling would be possible.
         raise ConfigEntryAuthFailed
 
-    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
+    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api)
     await coordinator.async_config_entry_first_refresh()
     available_devices = list(coordinator.data)
     cleanup_removed_devices(hass, coordinator.config_entry, available_devices)
