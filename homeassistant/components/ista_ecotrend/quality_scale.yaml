@@ -6,9 +6,11 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules:
-    status: done
-    comment: Has coordinator for centralized data retrieval. No need for base entity as there is only one platform.
-  config-flow-test-coverage: done
+    status: todo
+    comment: Group the 3 different executor jobs as one executor job
+  config-flow-test-coverage:
+    status: todo
+    comment: test_form/docstrings outdated, test already_configuret, test abort conditions in reauth,
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -74,5 +76,5 @@ rules:
 
   # Platinum
   async-dependency: todo
-  inject-websession: done
+  inject-websession: todo
   strict-typing: todo
