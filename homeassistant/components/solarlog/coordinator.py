@@ -52,7 +52,6 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         path = url.path if url.netloc else ""
         url = ParseResult("http", netloc, path, *url[3:])
         self.unique_id = entry.entry_id
-        self.name = entry.title
         self.host = url.geturl()
 
         self.solarlog = SolarLogConnector(
@@ -83,15 +82,27 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
                 await self.solarlog.update_device_list()
                 data.inverter_data = await self.solarlog.update_inverter_data()
         except SolarLogConnectionError as ex:
-            raise ConfigEntryNotReady(ex) from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+            ) from ex
         except SolarLogAuthenticationError as ex:
             if await self.renew_authentication():
                 # login was successful, update availability of extended data, retry data update
                 await self.solarlog.test_extended_data_available()
-                raise ConfigEntryNotReady from ex
-            raise ConfigEntryAuthFailed from ex
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
         except SolarLogUpdateError as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from ex
 
         _LOGGER.debug("Data successfully updated")
 
@@ -150,9 +161,15 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         try:
             logged_in = await self.solarlog.login()
         except SolarLogAuthenticationError as ex:
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+            ) from ex
 
         _LOGGER.debug("Credentials successfully updated? %s", logged_in)
 

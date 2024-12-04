@@ -76,7 +76,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceNotSupported
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import async_wait_config_entry_reload, setup_samsungtv_entry
@@ -1021,8 +1022,9 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
     """Test turn on."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
