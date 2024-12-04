@@ -382,6 +382,7 @@ class BackupManager:
     ) -> None:
         """Receive and store a backup file from upload."""
         target_temp_file = Path(self.temp_backup_dir, contents.filename or "backup.tar")
+        await self.hass.async_add_executor_job(make_backup_dir, self.temp_backup_dir)
 
         await receive_file(self.hass, contents, target_temp_file)
 
