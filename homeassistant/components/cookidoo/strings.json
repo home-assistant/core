@@ -123,41 +123,6 @@
         "ch": "Switzerland",
         "ar": "Argentina"
       }
-    },
-    "language": {
-      "options": {
-        "de-at": "German (Austria)",
-        "en-gb": "English (United Kingdom)",
-        "es-mx": "Spanish (Mexico)",
-        "en-ca": "English (Canada)",
-        "fr-ch": "French (Switzerland)",
-        "tr-tr": "Turkish (Turkey)",
-        "cs": "Czech",
-        "en-us": "English (United States)",
-        "zh-hans": "Chinese (Simplified)",
-        "pt-br": "Portuguese (Brazil)",
-        "en": "English",
-        "fr-be": "French (Belgium)",
-        "it-ch": "Italian (Switzerland)",
-        "fr": "French",
-        "fr-fr": "French (France)",
-        "es": "Spanish",
-        "en-au": "English (Australia)",
-        "pt-pt": "Portuguese (Portugal)",
-        "fr-ca": "French (Canada)",
-        "pl": "Polish",
-        "el": "Greek",
-        "ro": "Romanian",
-        "de-de": "German (Germany)",
-        "nl-be": "Dutch (Belgium)",
-        "de-ch": "German (Switzerland)",
-        "hu": "Hungarian",
-        "vi": "Vietnamese",
-        "de-be": "German (Belgium)",
-        "es-es": "Spanish (Spain)",
-        "it-it": "Italian (Italy)",
-        "id": "Indonesian"
-      }
     }
   }
 }
