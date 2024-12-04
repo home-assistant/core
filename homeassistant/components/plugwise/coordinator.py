@@ -54,7 +54,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
             password=self.config_entry.data[CONF_PASSWORD],
             port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
-            timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
         self._current_devices: set[str] = set()
@@ -65,11 +64,11 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         version = await self.api.connect()
         self._connected = isinstance(version, Version)
         if self._connected:
-            self.api.get_all_devices()
+            self.api.get_all_gateway_entities()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
-        data = PlugwiseData({}, {})
+        data = PlugwiseData(devices={}, gateway={})
         try:
             if not self._connected:
                 await self._connect()

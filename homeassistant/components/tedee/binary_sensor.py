@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async import TedeeLock
-from pytedee_async.lock import TedeeLockState
+from aiotedee import TedeeLock
+from aiotedee.lock import TedeeLockState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

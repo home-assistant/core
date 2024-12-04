@@ -16,7 +16,8 @@
       "list_access": {
         "default": "mdi:account-lock",
         "state": {
-          "shared": "mdi:account-group"
+          "shared": "mdi:account-group",
+          "invitation": "mdi:account-multiple-plus"
         }
       }
     },

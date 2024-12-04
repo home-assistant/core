@@ -10,6 +10,7 @@ from spotifyaio import (
     ProductType,
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
+    SpotifyNotFoundError,
 )
 from syrupy import SnapshotAssertion
 
@@ -142,6 +143,7 @@ async def test_spotify_dj_list(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Spotify entities with a Spotify DJ playlist."""
     mock_spotify.return_value.get_playback.return_value.context.uri = (
@@ -152,12 +154,67 @@ async def test_spotify_dj_list(
     assert state
     assert state.attributes["media_playlist"] == "DJ"
 
+    mock_spotify.return_value.get_playlist.assert_not_called()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.attributes["media_playlist"] == "DJ"
+
+    mock_spotify.return_value.get_playlist.assert_not_called()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_normal_playlist(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test normal playlist switching."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.attributes["media_playlist"] == "Spotify Web API Testing playlist"
+
+    mock_spotify.return_value.get_playlist.assert_called_once_with(
+        "spotify:user:rushofficial:playlist:2r35vbe6hHl6yDSMfjKgmm"
+    )
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.attributes["media_playlist"] == "Spotify Web API Testing playlist"
+
+    mock_spotify.return_value.get_playlist.assert_called_once_with(
+        "spotify:user:rushofficial:playlist:2r35vbe6hHl6yDSMfjKgmm"
+    )
+
+    mock_spotify.return_value.get_playback.return_value.context.uri = (
+        "spotify:playlist:123123123123123"
+    )
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playlist.assert_called_with(
+        "spotify:playlist:123123123123123"
+    )
+
 
 @pytest.mark.usefixtures("setup_credentials")
 async def test_fetching_playlist_does_not_fail(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
     mock_spotify.return_value.get_playlist.side_effect = SpotifyConnectionError
@@ -165,6 +222,42 @@ async def test_fetching_playlist_does_not_fail(
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert "media_playlist" not in state.attributes
+
+    mock_spotify.return_value.get_playlist.assert_called_once()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_spotify.return_value.get_playlist.call_count == 2
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_fetching_playlist_once(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that not being able to find a playlist doesn't retry."""
+    mock_spotify.return_value.get_playlist.side_effect = SpotifyNotFoundError
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert "media_playlist" not in state.attributes
+
+    mock_spotify.return_value.get_playlist.assert_called_once()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert "media_playlist" not in state.attributes
+
+    mock_spotify.return_value.get_playlist.assert_called_once()
 
 
 @pytest.mark.usefixtures("setup_credentials")
