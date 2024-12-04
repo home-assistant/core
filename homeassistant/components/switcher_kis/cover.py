@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
+from aioswitcher.api import SwitcherApi, SwitcherBaseResponse
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
 
 from homeassistant.components.cover import (
@@ -99,7 +99,7 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
         error = None
 
         try:
-            async with SwitcherType2Api(
+            async with SwitcherApi(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,

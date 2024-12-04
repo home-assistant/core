@@ -91,6 +91,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT HVAC"
 
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
