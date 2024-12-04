@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -213,7 +214,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
-        self._existing_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -471,9 +471,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         broker_config: dict[str, Any] = {}
-        existing_entry_data = (
-            self._existing_entry.data if self._existing_entry else None
-        )
+        existing_entry: ConfigEntry | None = None
+        existing_entry_data: MappingProxyType[str, Any] | None = None
+        if self.source == SOURCE_RECONFIGURE:
+            existing_entry = self._get_reconfigure_entry()
+            existing_entry_data = existing_entry.data
         if await async_get_broker_settings(
             self,
             fields,
@@ -497,9 +499,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if can_connect:
-                if self._existing_entry is not None:
+                if existing_entry is not None:
                     return self.async_update_reload_and_abort(
-                        self._existing_entry,
+                        existing_entry,
                         data_updates=broker_config,
                     )
                 validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
@@ -518,7 +520,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._existing_entry = self._get_reconfigure_entry()
         return await self.async_step_broker()
 
     async def async_step_hassio(
