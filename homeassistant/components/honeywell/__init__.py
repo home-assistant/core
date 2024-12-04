@@ -26,6 +26,8 @@ PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
+type HoneywellConfigEntry = ConfigEntry[HoneywellData]
+
 
 @callback
 def _async_migrate_data_to_options(
@@ -45,7 +47,9 @@ def _async_migrate_data_to_options(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: HoneywellConfigEntry
+) -> bool:
     """Set up the Honeywell thermostat."""
     _async_migrate_data_to_options(hass, config_entry)
 

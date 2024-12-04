@@ -40,7 +40,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import HoneywellData
+from . import HoneywellConfigEntry, HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -97,7 +97,9 @@ SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HoneywellConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)

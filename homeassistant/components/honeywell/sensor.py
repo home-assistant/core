@@ -14,14 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HoneywellData
+from . import HoneywellConfigEntry, HoneywellData
 from .const import DOMAIN
 
 OUTDOOR_TEMPERATURE_STATUS_KEY = "outdoor_temperature"
@@ -81,7 +80,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HoneywellConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""

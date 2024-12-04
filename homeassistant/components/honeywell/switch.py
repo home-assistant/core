@@ -12,13 +12,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HoneywellData
+from . import HoneywellConfigEntry, HoneywellData
 from .const import DOMAIN
 
 EMERGENCY_HEAT_KEY = "emergency_heat"
@@ -34,7 +33,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HoneywellConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Honeywell switches."""
