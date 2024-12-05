@@ -19,9 +19,7 @@ rules:
   runtime-data: done
   test-before-configure: todo
   test-before-setup: done
-  unique-config-entry:
-    status: exempt
-    comment: Only a single config entry is supported.
+  unique-config-entry: todo
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
