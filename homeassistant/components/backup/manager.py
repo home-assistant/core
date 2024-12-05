@@ -249,8 +249,8 @@ class BackupManager:
         self._reader_writer = reader_writer
 
         # Tasks and flags tracking backup and restore progress
-        self.backup_task: asyncio.Task[WrittenBackup] | None = None
-        self.backup_finish_task: asyncio.Task[None] | None = None
+        self._backup_task: asyncio.Task[WrittenBackup] | None = None
+        self._backup_finish_task: asyncio.Task[None] | None = None
 
         # Backup schedule and retention listeners
         self.remove_next_backup_event: Callable[[], None] | None = None
@@ -548,6 +548,33 @@ class BackupManager:
         name: str | None,
         password: str | None,
     ) -> NewBackup:
+        """Create a backup."""
+        new_backup = await self.async_initiate_backup(
+            agent_ids=agent_ids,
+            include_addons=include_addons,
+            include_all_addons=include_all_addons,
+            include_database=include_database,
+            include_folders=include_folders,
+            include_homeassistant=include_homeassistant,
+            name=name,
+            password=password,
+        )
+        assert self._backup_finish_task
+        await self._backup_finish_task
+        return new_backup
+
+    async def async_initiate_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        include_addons: list[str] | None,
+        include_all_addons: bool,
+        include_database: bool,
+        include_folders: list[Folder] | None,
+        include_homeassistant: bool,
+        name: str | None,
+        password: str | None,
+    ) -> NewBackup:
         """Initiate generating a backup."""
         if self.state is not BackupManagerState.IDLE:
             raise HomeAssistantError("Backup manager busy")
@@ -596,7 +623,7 @@ class BackupManager:
             )
 
         backup_name = name or f"Core {HAVERSION}"
-        new_backup, self.backup_task = await self._reader_writer.async_create_backup(
+        new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
             backup_name=backup_name,
             include_addons=include_addons,
@@ -607,7 +634,7 @@ class BackupManager:
             on_progress=self.async_on_backup_event,
             password=password,
         )
-        self.backup_finish_task = self.hass.async_create_task(
+        self._backup_finish_task = self.hass.async_create_task(
             self._async_finish_backup(agent_ids),
             name="backup_manager_finish_backup",
         )
@@ -615,9 +642,9 @@ class BackupManager:
 
     async def _async_finish_backup(self, agent_ids: list[str]) -> None:
         if TYPE_CHECKING:
-            assert self.backup_task is not None
+            assert self._backup_task is not None
         try:
-            written_backup = await self.backup_task
+            written_backup = await self._backup_task
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Generating backup failed", exc_info=err)
             self.async_on_backup_event(
@@ -645,8 +672,8 @@ class BackupManager:
                 CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED)
             )
         finally:
-            self.backup_task = None
-            self.backup_finish_task = None
+            self._backup_task = None
+            self._backup_finish_task = None
             self.last_event = IdleEvent()
 
     async def async_restore_backup(

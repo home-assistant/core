@@ -9,7 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import AgentBackup, BackupAgentError, Folder
+from homeassistant.components.backup import AgentBackup, BackupAgentError
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
@@ -380,16 +380,14 @@ async def test_generate_wrong_parameters(
         (
             {
                 "agent_ids": ["backup.local"],
-                "include_addons": ["ssl"],
                 "include_database": False,
-                "include_folders": ["media"],
                 "name": "abc123",
             },
             {
                 "agent_ids": ["backup.local"],
-                "include_addons": ["ssl"],
+                "include_addons": None,
                 "include_database": False,
-                "include_folders": [Folder.MEDIA],
+                "include_folders": None,
                 "name": "abc123",
             },
         ),
@@ -411,7 +409,7 @@ async def test_generate_calls_create(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+        "homeassistant.components.backup.manager.BackupManager.async_initiate_backup",
         return_value=NewBackup(backup_job_id="abc123"),
     ) as generate_backup:
         await client.send_json_auto_id({"type": "backup/generate"} | params)
