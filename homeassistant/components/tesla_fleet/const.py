@@ -33,8 +33,6 @@ MODELS = {
     "3": "Model 3",
     "X": "Model X",
     "Y": "Model Y",
-    "C": "Cybertruck",
-    "T": "Semi",
 }
 
 
