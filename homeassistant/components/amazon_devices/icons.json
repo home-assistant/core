@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "response_style": {
-        "default": "mdi:account-voice"
-      }
-    }
-  }
-}

@@ -35,9 +35,9 @@
     }
   },
   "entity": {
-    "sensor": {
-      "response_style": {
-        "name": "Response style"
+    "binary_sensor": {
+      "bluetooth": {
+        "name": "Bluetooth state"
       }
     }
   }
