@@ -93,7 +93,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=feed_title,
             data=user_input,
-            options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
+            options={CONF_MAX_ENTRIES: DEFAULT_MAX_ENTRIES},
         )
 
     async def async_step_reconfigure(
