@@ -20,9 +20,9 @@ from .manager import (
     Backup,
     BackupManager,
     BackupPlatformProtocol,
-    BackupProgress,
     BackupReaderWriter,
     CoreBackupReaderWriter,
+    CreateBackupEvent,
     NewBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -36,8 +36,8 @@ __all__ = [
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
-    "BackupProgress",
     "BackupReaderWriter",
+    "CreateBackupEvent",
     "Folder",
     "LocalBackupAgent",
     "NewBackup",

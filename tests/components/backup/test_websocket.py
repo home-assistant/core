@@ -12,7 +12,11 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.backup import AgentBackup, BackupAgentError, Folder
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
-from homeassistant.components.backup.manager import BackupEvent, NewBackup
+from homeassistant.components.backup.manager import (
+    CreateBackupEvent,
+    CreateBackupState,
+    NewBackup,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -321,7 +325,7 @@ async def test_generate(
     await client.send_json_auto_id(
         {"type": "backup/generate", **{"agent_ids": ["backup.local"]} | (data or {})}
     )
-    for _ in range(2):
+    for _ in range(6):
         assert await client.receive_json() == snapshot
 
 
@@ -1568,7 +1572,6 @@ async def test_subscribe_event(
     await setup_backup_integration(hass, with_hassio=False)
 
     manager = hass.data[DATA_MANAGER]
-    manager.backup_event = BackupEvent(event_type="test")
 
     client = await hass_ws_client(hass)
 
@@ -1576,5 +1579,7 @@ async def test_subscribe_event(
     assert await client.receive_json() == snapshot
     assert await client.receive_json() == snapshot
 
-    manager.async_on_backup_event(BackupEvent(event_type="test2"))
+    manager.async_on_backup_event(
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+    )
     assert await client.receive_json() == snapshot
