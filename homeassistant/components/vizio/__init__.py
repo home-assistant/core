@@ -9,8 +9,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -33,7 +34,10 @@ def validate_apps(config: ConfigType) -> ConfigType:
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [vol.All(VIZIO_SCHEMA, validate_apps)])},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.All(cv.ensure_list, [vol.All(VIZIO_SCHEMA, validate_apps)])},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -49,6 +53,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
                 )
             )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "VIZIO SmartCast",
+            },
+        )
 
     return True
 
