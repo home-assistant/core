@@ -245,6 +245,9 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==27.0.3
 
+# homeassistant.components.compit
+aiofiles==24.1.0
+
 # homeassistant.components.flo
 aioflo==2021.11.0
 

@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CompitClimate platform from a config entry."""
 
-    coordinator: CompitDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CompitDataUpdateCoordinator = entry.runtime_data
 
     async_add_devices(
         [

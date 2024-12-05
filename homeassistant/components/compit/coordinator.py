@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
