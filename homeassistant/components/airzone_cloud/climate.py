@@ -177,7 +177,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def _init_attributes(self) -> None:
         """Init common climate device attributes."""
