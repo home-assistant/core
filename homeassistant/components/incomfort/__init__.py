@@ -4,30 +4,14 @@ from __future__ import annotations
 
 from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator, async_connect_gateway
 from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
-                vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = (
     Platform.WATER_HEATER,
