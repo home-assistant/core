@@ -6,7 +6,7 @@ from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
 import pytest
 
-from homeassistant.components.incomfort import DOMAIN
+from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant

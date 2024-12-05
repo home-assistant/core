@@ -10,7 +10,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DOMAIN  # noqa: F401  # ignore unused
 from .coordinator import InComfortDataCoordinator, async_connect_gateway
 from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
 
