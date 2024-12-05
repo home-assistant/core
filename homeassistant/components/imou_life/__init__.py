@@ -16,24 +16,19 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """加载插件"""
     _LOGGER.info("starting setup imou")
     imou_client = ImouOpenApiClient(
         config.data.get(PARAM_APP_ID),
         config.data.get(PARAM_APP_SECRET),
         config.data.get(PARAM_API_URL),
     )
-    # 创建设备管理器
     device_manager = ImouDeviceManager(imou_client)
     imou_device_manager = ImouHaDeviceManager(device_manager)
-    # 创建更新协调器
     imou_coordinator = ImouDataUpdateCoordinator(hass, imou_device_manager)
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = imou_coordinator
-    # 加载coordinator
     await imou_coordinator.async_config_entry_first_refresh()
-    # 加载platform
     await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     config.add_update_listener(async_reload_entry)
     return True

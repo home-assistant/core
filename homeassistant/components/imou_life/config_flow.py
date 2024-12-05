@@ -1,4 +1,4 @@
-"""Xonfig flow for Imou."""
+"""config flow for Imou."""
 import logging
 from typing import Any
 
