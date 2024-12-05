@@ -271,7 +271,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
-            # Turn HVAC Off by writing self._hvac_off_value to the On/Off register, or self._hvac_on_value otherwise.
+            # Turn HVAC Off by writing self._hvac_off_value to the On/Off
+            # register, or self._hvac_on_value otherwise.
             if self._hvac_onoff_write_registers:
                 await self._hub.async_pb_call(
                     self._slave,
