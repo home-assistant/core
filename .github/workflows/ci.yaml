@@ -233,26 +233,21 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.3.0
+        id: uv
+        uses: astral-sh/setup-uv@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache@v4.1.2
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
+          enable-cache: true
+          cache-suffix: ${{ env.CACHE_VERSION }}_pre-commit
+          cache-dependency-glob: |
+            **/.pre-commit-config.yaml
+            **/requirements_test.txt
       - name: Create Python virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+        if: steps.uv.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          . venv/bin/activate
+          uv venv
+          . .venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -266,7 +261,7 @@ jobs:
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          . venv/bin/activate
+          . .venv/bin/activate
           pre-commit install-hooks
 
   lint-ruff-format:
@@ -490,6 +485,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: cache-uv
         uses: actions/cache@v4.1.2
         with:
           path: ${{ env.UV_CACHE_DIR }}
@@ -550,6 +546,9 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Minimize uv cache
+        if: steps.cache-uv.outputs.cache-hit != 'true'
+        run: uv cache prune --ci
 
   hassfest:
     name: Check hassfest
