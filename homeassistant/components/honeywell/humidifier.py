@@ -26,7 +26,7 @@ DEHUMIDIFIER_KEY = "dehumidifier"
 
 @dataclass(frozen=True, kw_only=True)
 class HoneywellHumidifierEntityDescription(HumidifierEntityDescription):
-    """Describes a Honeywell sensor entity."""
+    """Describes a Honeywell humidifier entity."""
 
     current_humidity: Callable[[Device], Any]
     current_set_humidity: Callable[[Device], Any]
@@ -93,7 +93,9 @@ class HoneywellHumidifier(HumidifierEntity):
     entity_description: HoneywellHumidifierEntityDescription
     _attr_has_entity_name = True
 
-    def __init__(self, device, description) -> None:
+    def __init__(
+        self, device: Device, description: HoneywellHumidifierEntityDescription
+    ) -> None:
         """Initialize the (De)Humidifier."""
         self._device = device
         self.entity_description = description

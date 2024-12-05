@@ -64,10 +64,10 @@
     },
     "humidifier": {
       "humidifier": {
-        "name": "Humidifier"
+        "name": "[%key:component::humidifier::title%]"
       },
       "dehumidifier": {
-        "name": "Dehumidifier"
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
       }
     }
   },
