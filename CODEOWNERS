@@ -90,6 +90,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/amazon_devices/ @chemelli74
+/tests/components/amazon_devices/ @chemelli74
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
