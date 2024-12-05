@@ -1564,62 +1564,6 @@ async def test_async_beolink_join(
     assert states == snapshot(exclude=props("media_position_updated_at"))
 
 
-# async def test_async_beolink_join(
-#     hass: HomeAssistant,
-#     snapshot: SnapshotAssertion,
-#     mock_mozart_client: AsyncMock,
-#     mock_config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test async_beolink_join with defined JID."""
-
-#     mock_config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-#     await hass.services.async_call(
-#         DOMAIN,
-#         "beolink_join",
-#         {
-#             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-#             "beolink_jid": TEST_JID_2,
-#         },
-#         blocking=True,
-#     )
-
-#     mock_mozart_client.join_beolink_peer.assert_called_once_with(jid=TEST_JID_2)
-
-#     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-#     assert states == snapshot(exclude=props("media_position_updated_at"))
-
-# async def test_async_beolink_join_source(
-#     hass: HomeAssistant,
-#     snapshot: SnapshotAssertion,
-#     mock_mozart_client: AsyncMock,
-#     mock_config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test async_beolink_join with defined JID and source."""
-
-#     mock_config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-#     await hass.services.async_call(
-#         DOMAIN,
-#         "beolink_join",
-#         {
-#             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-#             "beolink_jid": TEST_JID_2,
-#             "source": TEST_SOURCE.id,
-#         },
-#         blocking=True,
-#     )
-
-#     mock_mozart_client.join_beolink_peer.assert_called_once_with(
-#         jid=TEST_JID_2, source=TEST_SOURCE.id
-#     )
-
-#     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-#     assert states == snapshot(exclude=props("media_position_updated_at"))
-
-
 @pytest.mark.parametrize(
     (
         "parameter",
