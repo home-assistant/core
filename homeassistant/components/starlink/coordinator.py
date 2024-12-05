@@ -64,8 +64,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         status = status_data(channel_context)
         location = location_data(channel_context)
         sleep = get_sleep_config(channel_context)
-        history = history_stats(parse_samples=-1, context=channel_context)
-        return StarlinkData(location, sleep, *status, history[-1])
+        statistics = history_stats(parse_samples=-1, context=channel_context)
+        return StarlinkData(location, sleep, *status, statistics[-1])
 
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
