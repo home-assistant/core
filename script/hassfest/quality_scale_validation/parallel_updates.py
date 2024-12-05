@@ -29,7 +29,7 @@ def validate(integration: Integration) -> list[str] | None:
 
         if not _has_parallel_updates_defined(module):
             errors.append(
-                "Integration does not set `PARALLEL_UPDATES` in {module_file}"
+                f"Integration does not set `PARALLEL_UPDATES` in {module_file}"
             )
 
     return errors
