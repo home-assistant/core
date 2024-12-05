@@ -2,7 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Please enter your credentials for https://inext.compit.pl/",
+        "description": "Use your https://inext.compit.pl/ account",
+        "title": "Please enter your credentials.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
