@@ -210,3 +210,6 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+# Prefix for Beolink Converter NL/ML in async_beolink_join custom service
+BL_CONVERTER_PREFIX = "bc_nlml_"

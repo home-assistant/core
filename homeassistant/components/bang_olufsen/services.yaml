@@ -52,7 +52,19 @@ beolink_join:
           required: false
           example: tidal
           selector:
-            text:
+            select:
+              translation_key: "source_ids"
+              options:
+                - deezer
+                - spotify
+                - tidal
+                - beoradio
+                - RADIO
+                - TP1
+                - TP2
+                - CD
+                - AUX_A
+                - PH
 
 beolink_leave:
   target:

@@ -29,6 +29,22 @@
       }
     }
   },
+  "selector": {
+    "source_ids": {
+      "options": {
+        "deezer": "Deezer",
+        "spotify": "Spotify",
+        "tidal": "Mozart Tidal",
+        "beoradio": "ASE Beoradio",
+        "bc_nlml_radio": "Beolink Converter NL/ML RADIO",
+        "bc_nlml_tp1": "Beolink Converter NL/ML TP1",
+        "bc_nlml_tp2": "Beolink Converter NL/ML TP2",
+        "bc_nlml_cd": "Beolink Converter NL/ML CD",
+        "bc_nlml_aux_a": "Beolink Converter NL/ML AUX_A",
+        "bc_nlml_ph": "Beolink Converter NL/ML PH"
+      }
+    }
+  },
   "services": {
     "beolink_allstandby": {
       "name": "Beolink all standby",
@@ -63,8 +79,8 @@
           "description": "Manually specify Beolink JID to join."
         },
         "source_id": {
-          "name": "Source ID",
-          "description": "Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required."
+          "name": "Source",
+          "description": "Specify which source to join, behavior varies between platforms. Source names prefaced by a platform name can only be used when connecting to that platform. A defined Beolink JID is required"
         }
       },
       "sections": {

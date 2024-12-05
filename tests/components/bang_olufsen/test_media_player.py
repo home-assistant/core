@@ -1546,7 +1546,7 @@ async def test_async_beolink_join(
     service_parameters: dict[str, str],
     method_parameters: dict[str, str],
 ) -> None:
-    """Test async_beolink_join with defined JID."""
+    """Test async_beolink_join with defined JID and JID and source."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
