@@ -116,15 +116,20 @@ async def test_duplicate_entry_reconfiguration(
     mock_powerfox_client: AsyncMock,
 ) -> None:
     """Test abort when setting up duplicate entry on reconfiguration."""
+    # Add two config entries
     mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    mock_config_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "new@powerfox.test", CONF_PASSWORD: "new-password"},
+    )
+    mock_config_entry_2.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries()) == 2
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
-
+    # Reconfigure the second entry
+    result = await mock_config_entry_2.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "new-password"},
+        user_input={CONF_EMAIL: "test@powerfox.test", CONF_PASSWORD: "test-password"},
     )
 
     assert result.get("type") is FlowResultType.ABORT
