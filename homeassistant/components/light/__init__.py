@@ -1235,7 +1235,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
                 data[ATTR_BRIGHTNESS] = None
-        elif supported_features_value & SUPPORT_BRIGHTNESS:
+        elif supported_features_value & _DEPRECATED_SUPPORT_BRIGHTNESS.value:
             # Backwards compatibility for ambiguous / incomplete states
             # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
@@ -1256,7 +1256,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
-        elif supported_features_value & SUPPORT_COLOR_TEMP:
+        elif supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
             # Backwards compatibility
             # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
@@ -1312,11 +1312,14 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()
 
-        if supported_features_value & SUPPORT_COLOR_TEMP:
+        if supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
             supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if supported_features_value & SUPPORT_COLOR:
+        if supported_features_value & _DEPRECATED_SUPPORT_COLOR.value:
             supported_color_modes.add(ColorMode.HS)
-        if not supported_color_modes and supported_features_value & SUPPORT_BRIGHTNESS:
+        if (
+            not supported_color_modes
+            and supported_features_value & _DEPRECATED_SUPPORT_BRIGHTNESS.value
+        ):
             supported_color_modes = {ColorMode.BRIGHTNESS}
 
         if not supported_color_modes:

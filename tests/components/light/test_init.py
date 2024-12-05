@@ -1,7 +1,7 @@
 """The tests for the Light component."""
 
-from typing import Literal
 from types import ModuleType
+from typing import Literal
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
