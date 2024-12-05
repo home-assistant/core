@@ -29,7 +29,11 @@ def is_virtual_env() -> bool:
 @cache
 def is_docker_env() -> bool:
     """Return True if we run in a docker env."""
-    return Path("/.dockerenv").exists()
+    return (
+        Path("/run/.containerenv").exists()
+        or Path("/.dockerenv").exists()
+        or os.environ.get("container")
+    )
 
 
 def get_installed_versions(specifiers: set[str]) -> set[str]:
