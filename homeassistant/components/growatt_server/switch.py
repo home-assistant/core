@@ -87,6 +87,13 @@ class GrowattSwitch(CoordinatorEntity, SwitchEntity):
             # fetching all data with coordinator.async_refresh() to off-load the API
             self.coordinator.set_value(self.entity_description, "1")
             self.async_write_ha_state()
+        else:
+            _LOGGER.error(
+                "Turn on switch %d failed, msg: %s, error: %s",
+                self.entity_description.key,
+                res.get("msg"),
+                res.get("error"),
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -104,6 +111,13 @@ class GrowattSwitch(CoordinatorEntity, SwitchEntity):
             # fetching all data with coordinator.async_refresh() to off-load the API
             self.coordinator.set_value(self.entity_description, "0")
             self.async_write_ha_state()
+        else:
+            _LOGGER.error(
+                "Turn off switch %d failed, msg: %s, error: %s",
+                self.entity_description.key,
+                res.get("msg"),
+                res.get("error"),
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:

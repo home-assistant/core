@@ -516,5 +516,37 @@
         "name": "Charge from Grid"
       }
     }
+  },
+  "services": {
+    "update_tlx_inverter_time_segment": {
+      "name": "Update TLX Inverter Time Segment",
+      "description": "Update a TLX inverter time segment.",
+      "fields": {
+        "serial_number": {
+          "name": "Serial Number",
+          "description": "The serial number of the inverter."
+        },
+        "segment_id": {
+          "name": "Segment ID",
+          "description": "The ID of the time segment (1-9)."
+        },
+        "batt_mode": {
+          "name": "Battery Mode",
+          "description": "The battery mode (load-first, battery-first, grid-first)."
+        },
+        "start_time": {
+          "name": "Start Time",
+          "description": "The start time of the segment (HH:MM)."
+        },
+        "end_time": {
+          "name": "End Time",
+          "description": "The end time of the segment (HH:MM)."
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether the segment is enabled (true/false)."
+        }
+      }
+    }
   }
 }

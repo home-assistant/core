@@ -320,3 +320,30 @@ class GrowattCoordinator(DataUpdateCoordinator):
             entity_description.key,
         )
         self.data[entity_description.api_key] = value
+
+    async def update_tlx_inverter_time_segment(
+        self, segment_id, batt_mode, start_time, end_time, enabled
+    ):
+        """Update a TLX inverter time segment."""
+        response = await self.hass.async_add_executor_job(
+            self.api.update_tlx_inverter_time_segment,
+            self.device_id,
+            segment_id,
+            batt_mode,
+            start_time,
+            end_time,
+            enabled,
+        )
+        if response.get("success"):
+            _LOGGER.info(
+                "Successfully updated TLX inverter time segment %s for serial number %s",
+                segment_id,
+                self.device_id,
+            )
+        else:
+            _LOGGER.error(
+                "Failed to update TLX inverter time segment %s for serial number %s: %s",
+                segment_id,
+                self.device_id,
+                response.get("msg"),
+            )

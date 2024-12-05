@@ -131,10 +131,11 @@ class GrowattNumber(CoordinatorEntity, NumberEntity):
             self.async_write_ha_state()
         else:
             _LOGGER.error(
-                "Set parameter: %s to value: %s failed msg: %s",
+                "Set parameter: %s to value: %s failed msg: %s, error: %s",
                 self.entity_description.key,
                 value,
                 res.get("msg"),
+                res.get("error"),
             )
 
     @callback

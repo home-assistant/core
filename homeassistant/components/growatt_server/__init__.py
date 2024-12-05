@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 
 import growattServer
@@ -9,9 +10,10 @@ import growattServer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
 from .const import (
+    BATT_MODE_MAP,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
@@ -84,7 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Create a coordinator for each supported device type
     for device in devices:
-        if device["deviceType"] not in ["inverter", "tlx", "storage", "mix"]:
+        device_type = device["deviceType"]
+        if device_type not in ["inverter", "tlx", "storage", "mix"]:
             continue
         device_coordinator = GrowattCoordinator(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
@@ -93,6 +96,61 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.data[DOMAIN][config_entry.entry_id]["devices"][device["deviceSn"]] = (
             device_coordinator
         )
+
+        if device_type == "tlx":
+
+            async def handle_update_tlx_inverter_time_segment(
+                call, device_coordinator=device_coordinator
+            ):
+                segment_id = call.data["segment_id"]
+                batt_mode_str = call.data["batt_mode"]
+                start_time_str = call.data["start_time"]
+                end_time_str = call.data["end_time"]
+                enabled = call.data["enabled"]
+
+                if not (1 <= segment_id <= 9):
+                    raise HomeAssistantError("segment_id must be between 1 and 9")
+
+                # Convert batt_mode to the corresponding constant
+                batt_mode = BATT_MODE_MAP.get(batt_mode_str)
+                if batt_mode is None:
+                    _LOGGER.error("Invalid battery mode: %s", batt_mode_str)
+                    raise HomeAssistantError(f"Invalid battery mode: {batt_mode_str}")
+
+                try:
+                    # Convert start_time and end_time to datetime.time objects
+                    start_time = datetime.strptime(start_time_str, "%H:%M").time()
+                    end_time = datetime.strptime(end_time_str, "%H:%M").time()
+                except ValueError:
+                    _LOGGER.error("Start_time and end_time must in HH:MM format")
+                    raise HomeAssistantError(
+                        "start_time and end_time must be in HH:MM format"
+                    ) from None
+
+                if not isinstance(enabled, bool):
+                    raise HomeAssistantError(
+                        "enabled must be a boolean value (True or False)"
+                    )
+
+                try:
+                    await device_coordinator.update_tlx_inverter_time_segment(
+                        segment_id,
+                        batt_mode,
+                        start_time,
+                        end_time,
+                        enabled,
+                    )
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.error("Error updating TLX inverter time segment: %s", err)
+                    raise HomeAssistantError(
+                        f"Error updating TLX inverter time segment: {err}"
+                    ) from None
+
+            hass.services.async_register(
+                DOMAIN,
+                "update_tlx_inverter_time_segment",
+                handle_update_tlx_inverter_time_segment,
+            )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
