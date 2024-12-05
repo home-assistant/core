@@ -33,7 +33,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: |

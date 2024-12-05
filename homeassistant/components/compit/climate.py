@@ -86,35 +86,37 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         self._hvac_mode: HVACMode | None = None
         self.set_initial_values()
 
-    def set_initial_values(self):
+    def set_initial_values(self) -> None:
         """Set initial values for the climate device."""
 
         preset_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybpracytermostatu"
         )
         if preset_mode is not None:
-            self._preset_mode = next(
+            preset = next(
                 (
                     item
                     for item in self.available_presets.details
                     if item.state == preset_mode.value
                 ),
                 None,
-            ).state
+            )
+            self._preset_mode = preset.state if preset is not None else None
         else:
             self._preset_mode = None
         fan_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybaero"
         )
         if fan_mode is not None:
-            self._fan_mode = next(
+            fan = next(
                 (
                     item
                     for item in self.available_fan_modes.details
                     if item.state == fan_mode.value
                 ),
                 None,
-            ).state
+            )
+            self._fan_mode = fan.state if fan is not None else None
         else:
             self._fan_mode = None
 
@@ -156,7 +158,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if value is None:
             return None
-        return value.value
+        return float(value.value) if value is not None else None
 
     @property
     def target_temperature(self) -> float | None:
@@ -166,7 +168,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if value is None:
             return None
-        return value.value
+        return float(value.value) if value is not None else None
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
