@@ -2357,13 +2357,6 @@ async def test_light_state_color_conversion(hass: HomeAssistant) -> None:
     entity2.rgb_color = "Invalid"  # Should be ignored
     entity2.xy_color = (0.1, 0.8)
 
-    entity3 = entities[3]
-    entity3.hs_color = (240, 100)
-    entity3.supported_features = light.SUPPORT_COLOR
-    # Set color modes to none to trigger backwards compatibility in LightEntity
-    entity3.supported_color_modes = None
-    entity3.color_mode = None
-
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -2384,12 +2377,6 @@ async def test_light_state_color_conversion(hass: HomeAssistant) -> None:
     assert state.attributes["hs_color"] == (125.176, 100.0)
     assert state.attributes["rgb_color"] == (0, 255, 22)
     assert state.attributes["xy_color"] == (0.1, 0.8)
-
-    state = hass.states.get(entity3.entity_id)
-    assert state.attributes["color_mode"] == light.ColorMode.HS
-    assert state.attributes["hs_color"] == (240, 100)
-    assert state.attributes["rgb_color"] == (0, 0, 255)
-    assert state.attributes["xy_color"] == (0.136, 0.04)
 
 
 async def test_services_filter_parameters(
