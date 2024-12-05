@@ -734,7 +734,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "no_ip",
     "noaa_tides",
     "nobo_hub",
-    "nordpool",
     "norway_air",
     "notify_events",
     "notion",
