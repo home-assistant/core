@@ -310,7 +310,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "drop_connect",
     "dsmr",
     "dsmr_reader",
-    "dte_energy_bridge",
     "dublin_bus_transport",
     "duckdns",
     "duke_energy",
