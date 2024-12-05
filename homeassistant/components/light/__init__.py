@@ -1285,24 +1285,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 type(self),
                 report_issue,
             )
-        supported_features = self.supported_features
-        supported_features_value = supported_features.value
-        supported_color_modes: set[ColorMode] = set()
-
-        if supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
-            supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if supported_features_value & _DEPRECATED_SUPPORT_COLOR.value:
-            supported_color_modes.add(ColorMode.HS)
-        if (
-            not supported_color_modes
-            and supported_features_value & _DEPRECATED_SUPPORT_BRIGHTNESS.value
-        ):
-            supported_color_modes = {ColorMode.BRIGHTNESS}
-
-        if not supported_color_modes:
-            supported_color_modes = {ColorMode.ONOFF}
-
-        return supported_color_modes
+        return {ColorMode.ONOFF}
 
     @cached_property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
