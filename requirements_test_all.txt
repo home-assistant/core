@@ -172,6 +172,9 @@ aioairzone-cloud==0.6.10
 # homeassistant.components.airzone
 aioairzone==0.9.7
 
+# homeassistant.components.amazon_devices
+aioamazondevices==0.13.0
+
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
 aioambient==2024.08.0
