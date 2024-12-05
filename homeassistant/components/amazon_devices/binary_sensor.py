@@ -30,7 +30,6 @@ class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSORS: Final = (
     AmazonBinarySensorEntityDescription(
         key="online",
-        translation_key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         is_on_fn=lambda _device: _device.online,
     ),
