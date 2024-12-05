@@ -586,9 +586,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             self.native_unit_of_measurement,
         )
 
-    def _get_duration(self, data: time, unit: UnitOfTime) -> float | None:
-        if unit == UnitOfTime.MINUTES:
-            return (data.hour * 60) + data.minute
+    def _get_duration(self, data: time, unit: str | None) -> float:
         if unit == UnitOfTime.SECONDS:
             return (data.hour * 3600) + (data.minute * 60) + data.second
-        return 0
+        return (data.hour * 60) + data.minute
