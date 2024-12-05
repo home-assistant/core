@@ -405,8 +405,7 @@ def _create_tuples(
 
 @pytest.mark.parametrize(
     ("enum", "constant_prefix", "remove_in_version"),
-    _create_tuples(lock.LockEntityFeature, "SUPPORT_", "2025.1")
-    + _create_tuples(lock.LockState, "STATE_", "2025.10"),
+    _create_tuples(lock.LockState, "STATE_", "2025.10"),
 )
 def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,

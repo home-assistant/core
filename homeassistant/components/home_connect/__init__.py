@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import re
 from typing import Any, cast
 
 from requests import HTTPError
@@ -43,6 +44,8 @@ from .const import (
 type HomeConnectConfigEntry = ConfigEntry[api.ConfigEntryAuth]
 
 _LOGGER = logging.getLogger(__name__)
+
+RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -85,6 +88,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
@@ -336,3 +340,14 @@ def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any
         if len(err.args) > 0 and isinstance(err.args[0], str)
         else "?",
     }
+
+
+def bsh_key_to_translation_key(bsh_key: str) -> str:
+    """Convert a BSH key to a translation key format.
+
+    This function takes a BSH key, such as `Dishcare.Dishwasher.Program.Eco50`,
+    and converts it to a translation key format, such as `dishcare_dishwasher_bsh_key_eco50`.
+    """
+    return "_".join(
+        RE_CAMEL_CASE.sub("_", split) for split in bsh_key.split(".")
+    ).lower()

@@ -16,6 +16,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .const import DATA_DEFAULT_ENTITY, DOMAIN
+from .models import ConversationInput
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
@@ -62,7 +63,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     async def call_action(
-        sentence: str, result: RecognizeResult, device_id: str | None
+        user_input: ConversationInput, result: RecognizeResult
     ) -> str | None:
         """Call action with right context."""
 
@@ -83,12 +84,13 @@ async def async_attach_trigger(
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
-            "sentence": sentence,
+            "sentence": user_input.text,
             "details": details,
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
-            "device_id": device_id,
+            "device_id": user_input.device_id,
+            "user_input": user_input.as_dict(),
         }
 
         # Wait for the automation to complete

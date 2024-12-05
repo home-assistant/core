@@ -91,38 +91,6 @@
     'state': 'on',
   })
 # ---
-# name: test_device
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'GS012345',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'La Marzocco',
-    'model': <MachineModel.GS3_AV: 'GS3 AV'>,
-    'model_id': <MachineModel.GS3_AV: 'GS3 AV'>,
-    'name': 'GS012345',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': 'GS012345',
-    'suggested_area': None,
-    'sw_version': '1.40',
-    'via_device_id': None,
-  })
-# ---
 # name: test_switches[-set_power-kwargs0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
