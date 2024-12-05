@@ -7,7 +7,7 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
@@ -80,7 +80,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 time_to_seconds(value),
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_setting",
                 translation_placeholders={
