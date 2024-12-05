@@ -155,7 +155,6 @@ class ClimateAehW4a1(ClimateEntity):
     _attr_target_temperature_step = 1
     _previous_state: HVACMode | str | None = None
     _on: str | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Initialize the climate device."""
