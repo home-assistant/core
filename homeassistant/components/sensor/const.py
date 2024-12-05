@@ -566,7 +566,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
-        UnitOfPower.TERA_WATT
+        UnitOfPower.TERA_WATT,
     },
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
