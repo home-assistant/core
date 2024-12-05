@@ -64,4 +64,4 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
             or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        return brightness_to_value((0, 100), brightness)
+        return round(brightness_to_value((0, 100), brightness))

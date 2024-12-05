@@ -62,7 +62,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
 
-    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
+    if "amc:api" not in entry.data["token"]["scope"]:
+        # We raise ConfigEntryAuthFailed here because the websocket can't be used
+        # without the scope. So only polling would be possible.
+        raise ConfigEntryAuthFailed
+
+    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api)
     await coordinator.async_config_entry_first_refresh()
     available_devices = list(coordinator.data)
     cleanup_removed_devices(hass, coordinator.config_entry, available_devices)
@@ -73,11 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         coordinator.client_listen(hass, entry, automower_api),
         "websocket_task",
     )
-
-    if "amc:api" not in entry.data["token"]["scope"]:
-        # We raise ConfigEntryAuthFailed here because the websocket can't be used
-        # without the scope. So only polling would be possible.
-        raise ConfigEntryAuthFailed
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
