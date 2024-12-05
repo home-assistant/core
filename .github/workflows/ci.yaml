@@ -547,7 +547,7 @@ jobs:
         run: |
           ./script/check_dirty
       - name: Minimize uv cache
-        if: steps.cache-uv.outputs.cache-hit != 'true'
+        if: steps.cache-uv.conclusion == 'success' && steps.cache-uv.outputs.cache-hit != 'true'
         run: uv cache prune --ci
 
   hassfest:
