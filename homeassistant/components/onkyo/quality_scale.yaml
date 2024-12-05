@@ -21,9 +21,9 @@ rules:
   docs-installation-instructions: done
   docs-removal-instructions: todo
   entity-event-setup:
-    status: exempt
+    status: done
     comment: |
-      Entities of this integration do not explicitly subscribe to events.
+      Currently we store created entities in hass.data. That should be removed in the future.
   entity-unique-id: done
   has-entity-name: todo
   runtime-data: done
