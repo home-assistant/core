@@ -133,16 +133,6 @@ async def async_set_yellow_settings(
     )
 
 
-@api_data
-async def async_reboot_host(hass: HomeAssistant) -> dict:
-    """Reboot the host.
-
-    Returns an empty dict.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    return await hassio.send_command("/host/reboot", method="post", timeout=60)
-
-
 class HassIO:
     """Small API wrapper for Hass.io."""
 

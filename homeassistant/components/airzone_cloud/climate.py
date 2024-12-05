@@ -194,12 +194,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
 
-        if (
-            self.get_airzone_value(AZD_SPEED) is not None
-            and self.get_airzone_value(AZD_SPEEDS) is not None
-        ):
-            self._initialize_fan_speeds()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
@@ -251,6 +245,15 @@ class AirzoneDeviceClimate(AirzoneClimate):
     )
     _speeds: dict[int, str]
     _speeds_reverse: dict[str, int]
+
+    def _init_attributes(self) -> None:
+        """Init common climate device attributes."""
+        super()._init_attributes()
+        if (
+            self.get_airzone_value(AZD_SPEED) is not None
+            and self.get_airzone_value(AZD_SPEEDS) is not None
+        ):
+            self._initialize_fan_speeds()
 
     def _initialize_fan_speeds(self) -> None:
         """Initialize fan speeds."""

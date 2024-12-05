@@ -49,7 +49,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
+  discovery-update-info: done
   discovery:
     status: done
     comment: |
