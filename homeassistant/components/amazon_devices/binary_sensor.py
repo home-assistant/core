@@ -72,7 +72,7 @@ class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator, serial_num)
         self.entity_description = description
-        self._attr_unique_id = f"{self.device.serial_number}-{description.key}"
+        self._attr_unique_id = f"{serial_num}-{description.key}"
 
     @property
     def is_on(self) -> bool:
