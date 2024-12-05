@@ -59,12 +59,12 @@ beolink_join:
                 - spotify
                 - tidal
                 - beoradio
-                - RADIO
-                - TP1
-                - TP2
-                - CD
-                - AUX_A
-                - PH
+                - bc_nlml_radio
+                - bc_nlml_tp1
+                - bc_nlml_tp2
+                - bc_nlml_cd
+                - bc_nlml_aux_a
+                - bc_nlml_ph
 
 beolink_leave:
   target:
