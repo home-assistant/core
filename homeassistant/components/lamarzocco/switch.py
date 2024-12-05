@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from pylamarzocco.const import BoilerType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription

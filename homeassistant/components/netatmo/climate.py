@@ -192,7 +192,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_name = None
     _away: bool | None = None
     _connected: bool | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     _away_temperature: float | None = None
     _hg_temperature: float | None = None
