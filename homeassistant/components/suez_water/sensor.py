@@ -53,11 +53,11 @@ SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ConfigEntry[SuezWaterCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     counter_id = entry.data[CONF_COUNTER_ID]
 
     async_add_entities(
