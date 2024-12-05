@@ -1,0 +1,37 @@
+diff a/homeassistant/components/androidtv/__init__.py b/homeassistant/components/androidtv/__init__.py	(rejected hunks)
+@@ -61,7 +61,6 @@
+     InvalidResponseError,
+     TcpTimeoutException,
+ )
+-ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
+ 
+ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+ RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
+@@ -100,7 +99,6 @@
+         CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+     )
+     if CONF_ADB_SERVER_IP not in config:
+-        # Use "adb_shell" (Python ADB implementation)
+         if not os.path.isfile(adbkey):
+             # Generate ADB key files
+             keygen(adbkey)
+@@ -110,7 +108,6 @@
+         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+ 
+     else:
+-        # Use "pure-python-adb" (communicate with ADB server)
+         signer = None
+         adb_log = (
+             "using ADB server at"
+@@ -191,10 +188,7 @@
+     """Set up Android Debug Bridge platform."""
+ 
+     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
+-    if CONF_ADB_SERVER_IP not in entry.data:
+-        exceptions = ADB_PYTHON_EXCEPTIONS
+-    else:
+-        exceptions = ADB_TCP_EXCEPTIONS
++    exceptions = ADB_PYTHON_EXCEPTIONS
+ 
+     try:
+         aftv, error_message = await async_connect_androidtv(

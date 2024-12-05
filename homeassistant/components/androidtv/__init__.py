@@ -61,6 +61,7 @@ ADB_PYTHON_EXCEPTIONS: tuple = (
     InvalidResponseError,
     TcpTimeoutException,
 )
+ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
@@ -99,6 +100,7 @@ def _setup_androidtv(
         CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey")
     )
     if CONF_ADB_SERVER_IP not in config:
+        # Use "adb_shell" (Python ADB implementation)
         if not os.path.isfile(adbkey):
             # Generate ADB key files
             keygen(adbkey)
@@ -108,6 +110,7 @@ def _setup_androidtv(
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
+        # Communicate via ADB server)
         signer = None
         adb_log = (
             "using ADB server at"
@@ -188,7 +191,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
     """Set up Android Debug Bridge platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    exceptions = ADB_PYTHON_EXCEPTIONS
+    if CONF_ADB_SERVER_IP not in entry.data:
+        exceptions = ADB_PYTHON_EXCEPTIONS
+    else:
+        exceptions = ADB_TCP_EXCEPTIONS
 
     try:
         aftv, error_message = await async_connect_androidtv(

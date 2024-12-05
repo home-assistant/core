@@ -22,7 +22,12 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import ADB_PYTHON_EXCEPTIONS, AndroidTVConfigEntry, get_androidtv_mac
+from . import (
+    ADB_PYTHON_EXCEPTIONS,
+    ADB_TCP_EXCEPTIONS,
+    AndroidTVConfigEntry,
+    get_androidtv_mac,
+)
 from .const import DEVICE_ANDROIDTV, DOMAIN
 
 PREFIX_ANDROIDTV = "Android TV"
@@ -141,4 +146,10 @@ class AndroidTVEntity(Entity):
         if mac := get_androidtv_mac(info):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
-        self.exceptions = ADB_PYTHON_EXCEPTIONS
+        # ADB exceptions to catch
+        if not self.aftv.adb_server_ip:
+            # Using "adb_shell" (Python ADB implementation)
+            self.exceptions = ADB_PYTHON_EXCEPTIONS
+        else:
+            # Communicate via ADB server
+            self.exceptions = ADB_TCP_EXCEPTIONS
