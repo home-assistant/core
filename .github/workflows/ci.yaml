@@ -233,21 +233,26 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: uv
-        uses: astral-sh/setup-uv@v4
+        id: python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          enable-cache: true
-          cache-suffix: ${{ env.CACHE_VERSION }}_pre-commit
-          cache-dependency-glob: |
-            **/.pre-commit-config.yaml
-            **/requirements_test.txt
+          check-latest: true
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v4.1.2
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
-        if: steps.uv.outputs.cache-hit != 'true'
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          uv venv
-          . .venv/bin/activate
+          python -m venv venv
+          . venv/bin/activate
           python --version
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -261,7 +266,7 @@ jobs:
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          . .venv/bin/activate
+          . venv/bin/activate
           pre-commit install-hooks
 
   lint-ruff-format:
