@@ -92,12 +92,12 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         preset_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybpracytermostatu"
         )
-        if preset_mode is not None:
+        if preset_mode is not None and self.available_presets.details is not None:
             preset = next(
                 (
                     item
                     for item in self.available_presets.details
-                    if item.state == preset_mode.value
+                    if item is not None and item.state == preset_mode.value
                 ),
                 None,
             )
@@ -107,12 +107,12 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         fan_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybaero"
         )
-        if fan_mode is not None:
+        if fan_mode is not None and self.available_fan_modes.details is not None:
             fan = next(
                 (
                     item
                     for item in self.available_fan_modes.details
-                    if item.state == fan_mode.value
+                    if item is not None and item.state == fan_mode.value
                 ),
                 None,
             )
@@ -226,7 +226,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if val is None:
             return None
-        return val.description
+        return str(val.description)
 
     @property
     def fan_mode(self) -> str | None:
@@ -248,7 +248,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if val is None:
             return None
-        return val.description
+        return str(val.description)
 
     @property
     def hvac_mode(self) -> HVACMode | None:

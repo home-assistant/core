@@ -68,19 +68,24 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
+        reauth_entry_data = reauth_entry.data
 
         if user_input:
             session = async_create_clientsession(self.hass)
 
             api = CompitAPI(
-                reauth_entry[CONF_EMAIL], user_input[CONF_PASSWORD], session
+                reauth_entry_data[CONF_EMAIL], user_input[CONF_PASSWORD], session
             )
             try:
                 success = await api.authenticate()
                 if success and success.gates:
-                    await self.async_set_unique_id(f"compit_{reauth_entry[CONF_EMAIL]}")
+                    await self.async_set_unique_id(
+                        f"compit_{reauth_entry_data[CONF_EMAIL]}"
+                    )
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(title="Compit", data=user_input)
+                    return self.async_update_reload_and_abort(
+                        title=reauth_entry.title, data=user_input
+                    )
                 errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
