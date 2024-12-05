@@ -95,7 +95,7 @@ async def _mock_backup_generation(
     ]
 
     backup, _ = await manager.backup_task
-    await manager.backup_post_task
+    await manager.backup_finish_task
     assert progress == [
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
         CreateBackupEvent(
@@ -293,7 +293,9 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
     event = asyncio.Event()
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.state = CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+    manager.last_event = CreateBackupEvent(
+        stage=None, state=CreateBackupState.IN_PROGRESS
+    )
     with pytest.raises(HomeAssistantError, match="Backup manager busy"):
         await manager.async_create_backup(
             agent_ids=[LOCAL_AGENT_ID],

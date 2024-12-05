@@ -343,10 +343,10 @@ async def handle_subscribe_events(
 ) -> None:
     """Subscribe to backup events."""
 
-    def on_event(progress: ManagerStateEvent) -> None:
-        connection.send_message(websocket_api.event_message(msg["id"], progress))
+    def on_event(event: ManagerStateEvent) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], event))
 
     manager = hass.data[DATA_MANAGER]
-    on_event(manager.state)
+    on_event(manager.last_event)
     connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])

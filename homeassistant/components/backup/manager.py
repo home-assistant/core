@@ -229,16 +229,15 @@ class BackupManager:
         self._reader_writer = reader_writer
 
         # Tasks and flags tracking backup and restore progress
-        # self.backup_starting = False
         self.backup_task: asyncio.Task[tuple[AgentBackup, Path]] | None = None
-        self.backup_post_task: asyncio.Task[None] | None = None
+        self.backup_finish_task: asyncio.Task[None] | None = None
 
         # Backup schedule and retention listeners
         self.remove_next_backup_event: Callable[[], None] | None = None
         self.remove_next_delete_event: Callable[[], None] | None = None
 
         # Latest backup event and backup event subscribers
-        self.state: ManagerStateEvent = IdleEvent()
+        self.last_event: ManagerStateEvent = IdleEvent()
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
 
     async def async_setup(self) -> None:
@@ -247,9 +246,9 @@ class BackupManager:
         await self.load_platforms()
 
     @property
-    def busy(self) -> bool:
-        """Return if the backup manager is busy."""
-        return not isinstance(self.state, IdleEvent)
+    def state(self) -> BackupManagerState:
+        """Return the state of the backup manager."""
+        return self.last_event.manager_state
 
     @property
     def temp_backup_dir(self) -> Path:
@@ -482,7 +481,7 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> None:
         """Receive and store a backup file from upload."""
-        if self.busy:
+        if self.state is not BackupManagerState.IDLE:
             raise HomeAssistantError("Backup manager busy")
         self.async_on_backup_event(
             ReceiveBackupEvent(stage=None, state=ReceiveBackupState.IN_PROGRESS)
@@ -569,7 +568,7 @@ class BackupManager:
         password: str | None,
     ) -> NewBackup:
         """Initiate generating a backup."""
-        if self.busy:
+        if self.state is not BackupManagerState.IDLE:
             raise HomeAssistantError("Backup manager busy")
 
         self.async_on_backup_event(
@@ -627,7 +626,7 @@ class BackupManager:
             on_progress=self.async_on_backup_event,
             password=password,
         )
-        self.backup_post_task = self.hass.async_create_task(
+        self.backup_finish_task = self.hass.async_create_task(
             self._async_finish_backup(agent_ids),
             name="backup_manager_finish_backup",
         )
@@ -678,8 +677,8 @@ class BackupManager:
             )
         finally:
             self.backup_task = None
-            self.backup_post_task = None
-            self.state = IdleEvent()
+            self.backup_finish_task = None
+            self.last_event = IdleEvent()
 
     async def async_restore_backup(
         self,
@@ -693,7 +692,7 @@ class BackupManager:
         restore_homeassistant: bool,
     ) -> None:
         """Initiate restoring a backup."""
-        if self.busy:
+        if self.state is not BackupManagerState.IDLE:
             raise HomeAssistantError("Backup manager busy")
 
         self.async_on_backup_event(
@@ -768,7 +767,7 @@ class BackupManager:
         event: ManagerStateEvent,
     ) -> None:
         """Forward event to subscribers."""
-        self.state = event
+        self.last_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
