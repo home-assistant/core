@@ -2,12 +2,13 @@
 
 from datetime import timedelta
 
-from aioamazondevices import AmazonDevice, AmazonEchoApi, exceptions
+from aioamazondevices import AmazonDevice, AmazonEchoApi, CannotConnect
+from aioamazondevices.exceptions import CannotAuthenticate, CannotRetrieveData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
@@ -47,7 +48,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
-        except (exceptions.CannotConnect, exceptions.CannotRetrieveData) as err:
+        except (CannotConnect, CannotRetrieveData) as err:
             raise UpdateFailed(repr(err)) from err
-        except exceptions.CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed from err
+        except CannotAuthenticate as err:
+            raise ConfigEntryError("Could not authenticate") from err
