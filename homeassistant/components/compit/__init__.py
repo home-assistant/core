@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import CompitDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

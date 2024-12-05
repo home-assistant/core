@@ -92,7 +92,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         preset_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybpracytermostatu"
         )
-        if preset_mode is not None and self.available_presets.details is not None:
+        if preset_mode and self.available_presets and self.available_presets.details:
             preset = next(
                 (
                     item
@@ -107,7 +107,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         fan_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
             "__trybaero"
         )
-        if fan_mode is not None and self.available_fan_modes.details is not None:
+        if fan_mode and self.available_fan_modes and self.available_fan_modes.details:
             fan = next(
                 (
                     item

@@ -79,12 +79,8 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 success = await api.authenticate()
                 if success and success.gates:
-                    await self.async_set_unique_id(
-                        f"compit_{reauth_entry_data[CONF_EMAIL]}"
-                    )
-                    self._abort_if_unique_id_configured()
                     return self.async_update_reload_and_abort(
-                        title=reauth_entry.title, data=user_input
+                        reauth_entry, data_updates=user_input
                     )
                 errors["base"] = "invalid_auth"
             except CannotConnect:
@@ -97,7 +93,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
-            description_placeholders={CONF_EMAIL: reauth_entry[CONF_EMAIL]},
+            description_placeholders={CONF_EMAIL: reauth_entry_data[CONF_EMAIL]},
             errors=errors,
         )
 
