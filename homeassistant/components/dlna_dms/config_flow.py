@@ -11,11 +11,18 @@ from async_upnp_client.profiles.dlna import DmsDevice
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.typing import VolDictType
 
-from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
+from .const import CONF_RETRY, CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
 from .util import generate_source_id
 
 LOGGER = logging.getLogger(__name__)
@@ -37,6 +44,15 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._location: str | None = None
         self._usn: str | None = None
         self._name: str | None = None
+        self._options: dict[str, Any] = {}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Define the config flow to handle options."""
+        return DlnaDmsOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,7 +148,9 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_ID: self._usn,
             CONF_SOURCE_ID: generate_source_id(self.hass, self._name),
         }
-        return self.async_create_entry(title=self._name, data=data)
+        return self.async_create_entry(
+            title=self._name, data=data, options=self._options
+        )
 
     async def _async_parse_discovery(
         self, discovery_info: ssdp.SsdpServiceInfo, raise_on_progress: bool = True
@@ -183,3 +201,42 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
         }
         return [disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids]
+
+
+class DlnaDmsOptionsFlowHandler(OptionsFlow):
+    """Handle a DLNA DMS options flow.
+
+    Configures the single instance and updates the existing config entry.
+    """
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+        # Don't modify existing (read-only) options -- copy and update instead
+        options = dict(self.config_entry.options)
+
+        if user_input is not None:
+            LOGGER.debug("user_input: %s", user_input)
+            retry = user_input.get(CONF_RETRY) or False
+
+            options[CONF_RETRY] = retry
+
+            # Save if there's no errors, else fall through and show the form again
+            if not errors:
+                return self.async_create_entry(title="", data=options)
+
+        fields: VolDictType = {
+            vol.Required(CONF_RETRY, default=options.get(CONF_RETRY, False)): bool,
+        }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+        )
