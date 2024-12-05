@@ -131,17 +131,21 @@ async def test_services(
     )
     await hass.async_block_till_done()
 
-    ent1, ent2, _ = mock_light_entities
+    ent1, ent2, ent3 = mock_light_entities
     ent1.supported_color_modes = [light.ColorMode.HS]
-    ent2.supported_color_modes = [light.ColorMode.HS]
+    ent3.supported_color_modes = [light.ColorMode.HS]
     ent1.supported_features = light.LightEntityFeature.TRANSITION
     ent2.supported_features = (
+        light.LightEntityFeature.EFFECT | light.LightEntityFeature.TRANSITION
+    )
+    ent3.supported_features = (
         light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
     )
 
     # Test init
     assert light.is_on(hass, ent1.entity_id)
     assert not light.is_on(hass, ent2.entity_id)
+    assert not light.is_on(hass, ent3.entity_id)
 
     # Test basic turn_on, turn_off, toggle services
     await hass.services.async_call(
@@ -161,6 +165,7 @@ async def test_services(
 
     assert light.is_on(hass, ent1.entity_id)
     assert light.is_on(hass, ent2.entity_id)
+    assert light.is_on(hass, ent3.entity_id)
 
     # turn off all lights
     await hass.services.async_call(
@@ -172,6 +177,7 @@ async def test_services(
 
     assert not light.is_on(hass, ent1.entity_id)
     assert not light.is_on(hass, ent2.entity_id)
+    assert not light.is_on(hass, ent3.entity_id)
 
     # turn off all lights by setting brightness to 0
     await hass.services.async_call(
@@ -186,6 +192,7 @@ async def test_services(
 
     assert not light.is_on(hass, ent1.entity_id)
     assert not light.is_on(hass, ent2.entity_id)
+    assert not light.is_on(hass, ent3.entity_id)
 
     # toggle all lights
     await hass.services.async_call(
@@ -194,6 +201,7 @@ async def test_services(
 
     assert light.is_on(hass, ent1.entity_id)
     assert light.is_on(hass, ent2.entity_id)
+    assert light.is_on(hass, ent3.entity_id)
 
     # toggle all lights
     await hass.services.async_call(
@@ -202,6 +210,7 @@ async def test_services(
 
     assert not light.is_on(hass, ent1.entity_id)
     assert not light.is_on(hass, ent2.entity_id)
+    assert not light.is_on(hass, ent3.entity_id)
 
     # Ensure all attributes process correctly
     await hass.services.async_call(
@@ -220,6 +229,16 @@ async def test_services(
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ent2.entity_id,
+            light.ATTR_EFFECT: "fun_effect",
+            light.ATTR_RGB_COLOR: (255, 255, 255),
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ent3.entity_id,
             light.ATTR_FLASH: "short",
             light.ATTR_XY_COLOR: (0.4, 0.6),
         },
@@ -234,6 +253,9 @@ async def test_services(
     }
 
     _, data = ent2.last_call("turn_on")
+    assert data == {light.ATTR_EFFECT: "fun_effect"}
+
+    _, data = ent3.last_call("turn_on")
     assert data == {light.ATTR_FLASH: "short", light.ATTR_HS_COLOR: (71.059, 100)}
 
     # Ensure attributes are filtered when light is turned off
@@ -254,6 +276,16 @@ async def test_services(
         {
             ATTR_ENTITY_ID: ent2.entity_id,
             light.ATTR_BRIGHTNESS: 0,
+            light.ATTR_RGB_COLOR: (255, 255, 255),
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ent3.entity_id,
+            light.ATTR_BRIGHTNESS: 0,
             light.ATTR_XY_COLOR: (0.4, 0.6),
         },
         blocking=True,
@@ -261,11 +293,15 @@ async def test_services(
 
     assert not light.is_on(hass, ent1.entity_id)
     assert not light.is_on(hass, ent2.entity_id)
+    assert not light.is_on(hass, ent3.entity_id)
 
     _, data = ent1.last_call("turn_off")
     assert data == {light.ATTR_TRANSITION: 10}
 
     _, data = ent2.last_call("turn_off")
+    assert data == {}
+
+    _, data = ent3.last_call("turn_off")
     assert data == {}
 
     # One of the light profiles
@@ -279,6 +315,18 @@ async def test_services(
         {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: profile.name},
         blocking=True,
     )
+    # Specify a profile and a brightness attribute to overwrite it
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ent2.entity_id,
+            light.ATTR_PROFILE: profile.name,
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_TRANSITION: 1,
+        },
+        blocking=True,
+    )
 
     _, data = ent1.last_call("turn_on")
     assert data == {
@@ -287,19 +335,24 @@ async def test_services(
         light.ATTR_TRANSITION: profile.transition,
     }
 
+    _, data = ent2.last_call("turn_on")
+    assert data == {
+        light.ATTR_TRANSITION: 1,
+    }
+
     # Test toggle with parameters
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TOGGLE,
         {
-            ATTR_ENTITY_ID: ent2.entity_id,
+            ATTR_ENTITY_ID: ent3.entity_id,
             light.ATTR_PROFILE: profile.name,
             light.ATTR_BRIGHTNESS_PCT: 100,
         },
         blocking=True,
     )
 
-    _, data = ent2.last_call("turn_on")
+    _, data = ent3.last_call("turn_on")
     assert data == {
         light.ATTR_BRIGHTNESS: 255,
         light.ATTR_HS_COLOR: profile.hs_color,
@@ -310,13 +363,13 @@ async def test_services(
         light.DOMAIN,
         SERVICE_TOGGLE,
         {
-            ATTR_ENTITY_ID: ent2.entity_id,
+            ATTR_ENTITY_ID: ent3.entity_id,
             light.ATTR_TRANSITION: 4,
         },
         blocking=True,
     )
 
-    _, data = ent2.last_call("turn_off")
+    _, data = ent3.last_call("turn_off")
     assert data == {
         light.ATTR_TRANSITION: 4,
     }
@@ -331,12 +384,18 @@ async def test_services(
         {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: -1},
         blocking=True,
     )
-
     with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_RGB_COLOR: [255, None, 2]},
+            {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_XY_COLOR: ["bla-di-bla", 5]},
+            blocking=True,
+        )
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            light.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ent3.entity_id, light.ATTR_RGB_COLOR: [255, None, 2]},
             blocking=True,
         )
 
@@ -344,6 +403,9 @@ async def test_services(
     assert data == {}
 
     _, data = ent2.last_call("turn_on")
+    assert data == {}
+
+    _, data = ent3.last_call("turn_on")
     assert data == {}
 
     # faulty attributes will not trigger a service call
