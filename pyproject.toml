@@ -527,8 +527,6 @@ filterwarnings = [
     # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
-    # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
-    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
 

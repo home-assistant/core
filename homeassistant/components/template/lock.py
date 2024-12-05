@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
@@ -89,7 +88,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         super().__init__(
             hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
         )
-        self._state: str | bool | LockState | None = None
+        self._state: LockState | None = None
         name = self._attr_name
         assert name
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
@@ -107,7 +106,7 @@ class TemplateLock(TemplateEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._state in ("true", STATE_ON, LockState.LOCKED)
+        return self._state == LockState.LOCKED
 
     @property
     def is_jammed(self) -> bool:
@@ -130,7 +129,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         return self._state == LockState.OPEN
 
     @callback
-    def _update_state(self, result):
+    def _update_state(self, result: str | TemplateError) -> None:
         """Update the state from the template."""
         super()._update_state(result)
         if isinstance(result, TemplateError):
@@ -142,7 +141,23 @@ class TemplateLock(TemplateEntity, LockEntity):
             return
 
         if isinstance(result, str):
-            self._state = result.lower()
+            if result.lower() in (
+                "true",
+                "on",
+                "locked",
+            ):
+                self._state = LockState.LOCKED
+            elif result.lower() in (
+                "false",
+                "off",
+                "unlocked",
+            ):
+                self._state = LockState.UNLOCKED
+            else:
+                try:
+                    self._state = LockState(result.lower())
+                except ValueError:
+                    self._state = None
             return
 
         self._state = None
@@ -189,7 +204,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._optimistic:
-            self._state = True
+            self._state = LockState.LOCKED
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
@@ -205,7 +220,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._optimistic:
-            self._state = False
+            self._state = LockState.UNLOCKED
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}

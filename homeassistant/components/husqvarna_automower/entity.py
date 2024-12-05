@@ -133,7 +133,7 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaAvailableEntity(AutomowerAvailableEntity):
-    """Base entity for work work areas."""
+    """Base entity for work areas."""
 
     def __init__(
         self,
@@ -164,4 +164,4 @@ class WorkAreaAvailableEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
-    """Base entity work work areas with control function."""
+    """Base entity for work areas with control function."""

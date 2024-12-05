@@ -110,7 +110,7 @@ def _setup_androidtv(
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
-        # Use "pure-python-adb" (communicate with ADB server)
+        # Communicate via ADB server
         signer = None
         adb_log = (
             "using ADB server at"

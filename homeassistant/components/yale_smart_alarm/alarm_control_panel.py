@@ -47,7 +47,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._attr_unique_id = coordinator.entry.entry_id
+        self._attr_unique_id = coordinator.config_entry.entry_id
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -84,7 +84,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_alarm",
                 translation_placeholders={
-                    "name": self.coordinator.entry.data[CONF_NAME],
+                    "name": self.coordinator.config_entry.data[CONF_NAME],
                     "error": str(error),
                 },
             ) from error

@@ -902,7 +902,7 @@ def resolve_period(
             start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
                 month=1, day=1
             )
-            end_time = (start_time + timedelta(days=365)).replace(day=1)
+            end_time = (start_time + timedelta(days=366)).replace(day=1)
 
         start_time = dt_util.as_utc(start_time)
         end_time = dt_util.as_utc(end_time)

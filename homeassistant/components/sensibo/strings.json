@@ -500,9 +500,6 @@
     "no_target_temperature_in_features": {
       "message": "Current mode doesn't support setting target temperature"
     },
-    "no_target_temperature": {
-      "message": "No target temperature provided"
-    },
     "no_fan_level_in_features": {
       "message": "Current mode doesn't support setting fan level"
     },

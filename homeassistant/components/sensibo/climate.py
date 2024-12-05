@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -108,7 +108,7 @@ AC_STATE_TO_DATA = {
 }
 
 
-def _find_valid_target_temp(target: int, valid_targets: list[int]) -> int:
+def _find_valid_target_temp(target: float, valid_targets: list[int]) -> int:
     if target <= valid_targets[0]:
         return valid_targets[0]
     if target >= valid_targets[-1]:
@@ -320,12 +320,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 translation_key="no_target_temperature_in_features",
             )
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_target_temperature",
-            )
-
+        temperature: float = kwargs[ATTR_TEMPERATURE]
         if temperature == self.target_temperature:
             return
 
