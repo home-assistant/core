@@ -20,10 +20,6 @@ from .const import (
 )
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
-# coordinator is used to get all data centralized.
-# Set parallel updates default to 1 for all platform action updates.
-PARALLEL_UPDATES = 1
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Set up Enphase Envoy from a config entry."""
