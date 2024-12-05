@@ -904,6 +904,143 @@ async def test_light_turn_on_auth(
         )
 
 
+async def test_light_brightness_step(hass: HomeAssistant) -> None:
+    """Test that light context works."""
+    entities = [
+        MockLight("Test_0", STATE_ON),
+        MockLight("Test_1", STATE_ON),
+    ]
+
+    setup_test_component_platform(hass, light.DOMAIN, entities)
+
+    entity0 = entities[0]
+    entity0.supported_color_modes = {light.ColorMode.BRIGHTNESS}
+    entity0.color_mode = light.ColorMode.BRIGHTNESS
+    entity0.brightness = 100
+    entity1 = entities[1]
+    entity1.supported_color_modes = {light.ColorMode.BRIGHTNESS}
+    entity1.color_mode = light.ColorMode.BRIGHTNESS
+    entity1.brightness = 50
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+    state = hass.states.get(entity1.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 50
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id, entity1.entity_id], "brightness_step": -10},
+        blocking=True,
+    )
+
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 90  # 100 - 10
+    _, data = entity1.last_call("turn_on")
+    assert data["brightness"] == 40  # 50 - 10
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity0.entity_id, entity1.entity_id],
+            "brightness_step_pct": 10,
+        },
+        blocking=True,
+    )
+
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 116  # 90 + (255 * 0.10)
+    _, data = entity1.last_call("turn_on")
+    assert data["brightness"] == 66  # 40 + (255 * 0.10)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": entity0.entity_id,
+            "brightness_step": -126,
+        },
+        blocking=True,
+    )
+
+    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_light_brightness_pct_conversion(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+) -> None:
+    """Test that light brightness percent conversion."""
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
+    entity = mock_light_entities[0]
+    entity.supported_color_modes = {light.ColorMode.BRIGHTNESS}
+    entity.color_mode = light.ColorMode.BRIGHTNESS
+    entity.brightness = 100
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 1},
+        blocking=True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 3
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 2},
+        blocking=True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 5
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 50},
+        blocking=True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 128
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 99},
+        blocking=True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 252
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 100},
+        blocking=True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 255
+
+
 async def test_profiles(hass: HomeAssistant) -> None:
     """Test profiles loading."""
     profiles = orig_Profiles(hass)
