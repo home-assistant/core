@@ -70,7 +70,7 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
 TRIGGER_CALLBACK_TYPE = Callable[
-    [str, RecognizeResult, str | None], Awaitable[str | None]
+    [ConversationInput, RecognizeResult], Awaitable[str | None]
 ]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
@@ -711,7 +711,7 @@ class DefaultAgent(ConversationEntity):
             for name_tuple in self._get_entity_name_tuples(exposed=False):
                 self._unexposed_names_trie.insert(
                     name_tuple[0].lower(),
-                    TextSlotValue.from_tuple(name_tuple),
+                    TextSlotValue.from_tuple(name_tuple, allow_template=False),
                 )
 
         # Build filtered slot list
@@ -1286,9 +1286,7 @@ class DefaultAgent(ConversationEntity):
 
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self._trigger_sentences[trigger_id].callback(
-                user_input.text, trigger_result, user_input.device_id
-            )
+            self._trigger_sentences[trigger_id].callback(user_input, trigger_result)
             for trigger_id, trigger_result in result.matched_triggers.items()
         ]
 

@@ -151,12 +151,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.error_text
 
     @property
-    def operating_mode(self) -> str | None:
-        """Operating mode."""
-        op_mode = self.sharkiq.get_property_value(Properties.OPERATING_MODE)
-        return OPERATING_STATE_MAP.get(op_mode)
-
-    @property
     def recharging_to_resume(self) -> int | None:
         """Return True if vacuum set to recharge and resume cleaning."""
         return self.sharkiq.get_property_value(Properties.RECHARGING_TO_RESUME)
@@ -171,7 +165,8 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """
         if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return STATE_DOCKED
-        return self.operating_mode
+        op_mode = self.sharkiq.get_property_value(Properties.OPERATING_MODE)
+        return OPERATING_STATE_MAP.get(op_mode)
 
     @property
     def available(self) -> bool:
