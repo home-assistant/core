@@ -27,8 +27,8 @@ from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
@@ -370,3 +370,71 @@ class Analytics:
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
         )
+
+
+@callback
+def async_devices_payload(hass: HomeAssistant) -> dict:
+    """Return the devices payload."""
+    integrations_without_model_id: set[str] = set()
+    devices: list[dict[str, Any]] = []
+    dev_reg = dr.async_get(hass)
+    ignored_integrations = {
+        "bluetooth",
+        "esphome",
+        "hassio",
+        "mqtt",
+    }
+    # Devices that need via device info set
+    new_indexes: dict[str, int] = {}
+    via_devices: dict[str, str] = {}
+
+    for device in dev_reg.devices.values():
+        # Ignore services
+        if device.entry_type:
+            continue
+
+        if not device.primary_config_entry:
+            continue
+
+        config_entry = hass.config_entries.async_get_entry(device.primary_config_entry)
+
+        if config_entry is None:
+            continue
+
+        if config_entry.domain in ignored_integrations:
+            continue
+
+        if not device.model_id:
+            integrations_without_model_id.add(config_entry.domain)
+            continue
+
+        if not device.manufacturer:
+            continue
+
+        new_indexes[device.id] = len(devices)
+        devices.append(
+            {
+                "integration": config_entry.domain,
+                "manufacturer": device.manufacturer,
+                "model_id": device.model_id,
+                "model": device.model,
+                "sw_version": device.sw_version,
+                "hw_version": device.hw_version,
+                "has_suggested_area": device.suggested_area is not None,
+                "has_configuration_url": device.configuration_url is not None,
+                "via_device": None,
+            }
+        )
+        if device.via_device_id:
+            via_devices[device.id] = device.via_device_id
+
+    for from_device, via_device in via_devices.items():
+        if via_device not in new_indexes:
+            continue
+        devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
+
+    return {
+        "version": "home-assistant:1",
+        "no_model_id": sorted(integrations_without_model_id),
+        "devices": devices,
+    }
