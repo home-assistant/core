@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from lmcloud.models import LaMarzoccoWakeUpSleepEntry
+from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant

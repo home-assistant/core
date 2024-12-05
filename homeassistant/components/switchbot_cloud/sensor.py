@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -27,6 +28,7 @@ from .entity import SwitchBotCloudEntity
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_BATTERY = "battery"
+SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
@@ -119,6 +121,32 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        ),
+    ),
+    "MeterPro(CO2)": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_HUMIDITY,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_BATTERY,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_CO2,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.CO2,
         ),
     ),
 }

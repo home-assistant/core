@@ -87,6 +87,9 @@ def make_device_data(
             "Meter",
             "MeterPlus",
             "WoIOSensor",
+            "Hub 2",
+            "MeterPro",
+            "MeterPro(CO2)",
             "Relay Switch 1PM",
         ]:
             devices_data.sensors.append(
