@@ -205,8 +205,3 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
-
-# 0.22.0 causes CI failures on Python 3.13
-# python3 -X dev -m pytest tests/components/matrix
-# python3 -X dev -m pytest tests/components/zha
-rpds-py==0.21.0
