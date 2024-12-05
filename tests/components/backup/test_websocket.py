@@ -740,7 +740,7 @@ async def test_agents_download_unknown_agent(
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
-            "schedule": "daily",
+            "schedule": {"state": "daily"},
         },
         {
             "create_backup": {
@@ -754,7 +754,7 @@ async def test_agents_download_unknown_agent(
             },
             "retention": {"copies": 3, "days": None},
             "last_automatic_backup": None,
-            "schedule": "never",
+            "schedule": {"state": "never"},
         },
         {
             "create_backup": {
@@ -770,7 +770,7 @@ async def test_agents_download_unknown_agent(
             "last_automatic_backup": datetime.fromisoformat(
                 "2024-10-26T04:45:00+01:00"
             ),
-            "schedule": "never",
+            "schedule": {"state": "never"},
         },
         {
             "create_backup": {
@@ -784,7 +784,7 @@ async def test_agents_download_unknown_agent(
             },
             "retention": {"copies": None, "days": None},
             "last_automatic_backup": None,
-            "schedule": "mon",
+            "schedule": {"state": "mon"},
         },
         {
             "create_backup": {
@@ -798,7 +798,7 @@ async def test_agents_download_unknown_agent(
             },
             "retention": {"copies": None, "days": None},
             "last_automatic_backup": None,
-            "schedule": "sat",
+            "schedule": {"state": "sat"},
         },
     ],
 )
@@ -966,10 +966,13 @@ async def test_config_update_errors(
     (
         "command",
         "last_automatic_backup",
-        "move_to_time",
+        "time_1",
+        "time_2",
         "backup_time",
-        "backup_calls",
+        "backup_calls_1",
+        "backup_calls_2",
         "call_args",
+        "create_backup_side_effect",
     ),
     [
         (
@@ -980,9 +983,12 @@ async def test_config_update_errors(
             },
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
+            2,
             BACKUP_CALL,
+            None,
         ),
         (
             {
@@ -992,9 +998,12 @@ async def test_config_update_errors(
             },
             "2024-11-11T04:45:00+01:00",
             "2024-11-18T04:45:00+01:00",
+            "2024-11-25T04:45:00+01:00",
             "2024-11-18T04:45:00+01:00",
             1,
+            2,
             BACKUP_CALL,
+            None,
         ),
         (
             {
@@ -1004,8 +1013,11 @@ async def test_config_update_errors(
             },
             "2024-11-11T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2034-11-11T13:00:00+01:00",
             "2024-11-11T04:45:00+01:00",
             0,
+            0,
+            None,
             None,
         ),
         (
@@ -1016,9 +1028,12 @@ async def test_config_update_errors(
             },
             "2024-10-26T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
+            2,
             BACKUP_CALL,
+            None,
         ),
         (
             {
@@ -1028,9 +1043,12 @@ async def test_config_update_errors(
             },
             "2024-10-26T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
             1,
+            1,
             BACKUP_CALL,
+            None,
         ),
         (
             {
@@ -1040,9 +1058,27 @@ async def test_config_update_errors(
             },
             "2024-10-26T04:45:00+01:00",
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2034-11-12T12:00:00+01:00",
             "2024-10-26T04:45:00+01:00",
             0,
+            0,
             None,
+            None,
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": "daily",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
+            "2024-11-11T04:45:00+01:00",
+            1,
+            2,
+            BACKUP_CALL,
+            [Exception("Boom"), None],
         ),
     ],
 )
@@ -1054,10 +1090,13 @@ async def test_config_schedule_logic(
     create_backup: AsyncMock,
     command: dict[str, Any],
     last_automatic_backup: str,
-    move_to_time: str,
+    time_1: str,
+    time_2: str,
     backup_time: str,
-    backup_calls: int,
+    backup_calls_1: int,
+    backup_calls_2: int,
     call_args: Any,
+    create_backup_side_effect: list[Exception | None] | None,
 ) -> None:
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
@@ -1073,13 +1112,14 @@ async def test_config_schedule_logic(
         },
         "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
-        "schedule": "daily",
+        "schedule": {"state": "daily"},
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
         "key": DOMAIN,
         "version": 1,
     }
+    create_backup.side_effect = create_backup_side_effect
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
@@ -1091,14 +1131,22 @@ async def test_config_schedule_logic(
 
     assert result["success"]
 
-    freezer.move_to(move_to_time)
+    freezer.move_to(time_1)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert create_backup.call_count == backup_calls
+
+    assert create_backup.call_count == backup_calls_1
     assert create_backup.call_args == call_args
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+
+    freezer.move_to(time_2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert create_backup.call_count == backup_calls_2
+    assert create_backup.call_args == call_args
 
 
 @pytest.mark.parametrize(
@@ -1329,7 +1377,7 @@ async def test_config_retention_copies_logic(
         },
         "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_backup_time),
-        "schedule": "daily",
+        "schedule": {"state": "daily"},
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1531,7 +1579,7 @@ async def test_config_retention_days_logic(
         },
         "retention": {"copies": None, "days": None},
         "last_automatic_backup": datetime.fromisoformat(last_backup_time),
-        "schedule": "never",
+        "schedule": {"state": "never"},
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
