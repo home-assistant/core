@@ -940,7 +940,7 @@ async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
     ("supported_features", "extra_expected_attributes"),
     [
         (
-            0,
+            UpdateEntityFeature(0),
             [
                 {},
                 {},
