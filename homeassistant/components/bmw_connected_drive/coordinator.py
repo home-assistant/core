@@ -27,34 +27,40 @@ from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN, SCAN_I
 _LOGGER = logging.getLogger(__name__)
 
 
+type BMWConfigEntry = ConfigEntry[BMWDataUpdateCoordinator]
+
+
 class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching BMW data."""
 
     account: MyBMWAccount
+    config_entry: BMWConfigEntry
 
-    def __init__(self, hass: HomeAssistant, *, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, *, config_entry: ConfigEntry) -> None:
         """Initialize account-wide BMW data updater."""
         self.account = MyBMWAccount(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            get_region_from_name(entry.data[CONF_REGION]),
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            get_region_from_name(config_entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
             verify=get_default_context(),
         )
-        self.read_only = entry.options[CONF_READ_ONLY]
-        self._entry = entry
+        self.read_only: bool = config_entry.options[CONF_READ_ONLY]
 
-        if CONF_REFRESH_TOKEN in entry.data:
+        if CONF_REFRESH_TOKEN in config_entry.data:
             self.account.set_refresh_token(
-                refresh_token=entry.data[CONF_REFRESH_TOKEN],
-                gcid=entry.data.get(CONF_GCID),
+                refresh_token=config_entry.data[CONF_REFRESH_TOKEN],
+                gcid=config_entry.data.get(CONF_GCID),
             )
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{entry.data['username']}",
-            update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
+            config_entry=config_entry,
+            name=f"{DOMAIN}-{config_entry.data[CONF_USERNAME]}",
+            update_interval=timedelta(
+                seconds=SCAN_INTERVALS[config_entry.data[CONF_REGION]]
+            ),
         )
 
         # Default to false on init so _async_update_data logic works
@@ -84,18 +90,13 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
-            _LOGGER.debug(
-                "bimmer_connected: refresh token %s > %s",
-                old_refresh_token,
-                self.account.refresh_token,
-            )
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""
         data = {
-            **self._entry.data,
+            **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
         }
         if not refresh_token:
             data.pop(CONF_REFRESH_TOKEN)
-        self.hass.config_entries.async_update_entry(self._entry, data=data)
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
