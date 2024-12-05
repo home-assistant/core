@@ -9,7 +9,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,6 +27,9 @@ from .entity import SwitchBotCloudEntity
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_BATTERY = "battery"
+SENSOR_TYPE_POWER = "power"
+SENSOR_TYPE_VOLTAGE = "voltage"
+SENSOR_TYPE_CURRENT = "electricCurrent"
 
 METER_PLUS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -43,6 +52,77 @@ METER_PLUS_SENSOR_DESCRIPTIONS = (
     ),
 )
 
+SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
+    "Meter": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_HUMIDITY,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_BATTERY,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
+    "MeterPlus": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_HUMIDITY,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_BATTERY,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
+    "WoIOSensor": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_BATTERY,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
+    "Relay Switch 1PM": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_POWER,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_VOLTAGE,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_CURRENT,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        ),
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -55,7 +135,7 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBotCloudSensor(data.api, device, coordinator, description)
         for device, coordinator in data.devices.sensors
-        for description in METER_PLUS_SENSOR_DESCRIPTIONS
+        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
     )
 
 
