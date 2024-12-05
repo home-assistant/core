@@ -2,14 +2,14 @@
   "config": {
     "step": {
       "user": {
-        "title": "[%key:common::config_flow::step::user::title%]",
+        "title": "Please enter your credentials for https://inext.compit.pl/",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "reauth_confirm": {
-        "description": "[%key:common::config_flow::step::reauth_confirm::description%]",
+        "description": "Please update your password for {email}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
