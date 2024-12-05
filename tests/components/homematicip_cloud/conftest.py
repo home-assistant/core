@@ -130,7 +130,7 @@ def simple_mock_home_fixture():
         connected=True,
         currentAPVersion="2.0.36",
         init=AsyncMock(),
-        get_current_state=AsyncMock(),
+        get_current_state_async=AsyncMock(),
     )
 
     with patch(
