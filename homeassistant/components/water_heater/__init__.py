@@ -25,12 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -69,18 +63,6 @@ class WaterHeaterEntityFeature(IntFlag):
     AWAY_MODE = 4
     ON_OFF = 8
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the WaterHeaterEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TARGET_TEMPERATURE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.TARGET_TEMPERATURE, "2025.1"
-)
-_DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.OPERATION_MODE, "2025.1"
-)
-_DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
-)
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -437,11 +419,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
