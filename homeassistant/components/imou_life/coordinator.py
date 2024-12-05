@@ -6,7 +6,7 @@ import async_timeout
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .device import ImouHaDeviceManager
+from pyimouapi.ha_device import ImouHaDeviceManager
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,9 +7,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ImouDataUpdateCoordinator
-from .base import ImouEntity
+from .entity import ImouEntity
 from .const import DOMAIN, PARAM_MOTION_DETECT, PARAM_STORAGE_USED
-from .device import ImouHaDevice
+from pyimouapi.ha_device import ImouHaDevice
 from pyimouapi.exceptions import ImouException
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

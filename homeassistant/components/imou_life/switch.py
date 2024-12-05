@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import ImouEntity
+from .entity import ImouEntity
 from .const import DOMAIN
 from pyimouapi.exceptions import ImouException
 

@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ImouDataUpdateCoordinator
 from .const import PARAM_RESTART_DEVICE, DOMAIN, PARAM_STATUS
-from .device import ImouHaDevice, DeviceStatus
+from pyimouapi.ha_device import ImouHaDevice, DeviceStatus
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

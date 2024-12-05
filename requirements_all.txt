@@ -1967,7 +1967,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.imou_life
-pyimouapi==1.0.3
+pyimouapi==1.0.4
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
