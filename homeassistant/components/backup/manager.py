@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
-from tempfile import TemporaryDirectory
 import time
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -389,24 +388,10 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> None:
         """Receive and store a backup file from upload."""
-        temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
-        target_temp_file = Path(
-            temp_dir_handler.name, contents.filename or "backup.tar"
-        )
+        target_temp_file = Path(self.temp_backup_dir, contents.filename or "backup.tar")
+        await self.hass.async_add_executor_job(make_backup_dir, self.temp_backup_dir)
 
         await receive_file(self.hass, contents, target_temp_file)
-
-        def _copy_and_cleanup(
-            local_file_paths: list[Path], backup: AgentBackup
-        ) -> Path:
-            if local_file_paths:
-                tar_file_path = local_file_paths[0]
-            else:
-                tar_file_path = self.temp_backup_dir / f"{backup.backup_id}.tar"
-            for local_path in local_file_paths:
-                shutil.copy(target_temp_file, local_path)
-            temp_dir_handler.cleanup()
-            return tar_file_path
 
         try:
             backup = await self.hass.async_add_executor_job(
@@ -421,9 +406,18 @@ class BackupManager:
             for agent_id in agent_ids
             if agent_id in self.local_backup_agents
         ]
-        tar_file_path = await self.hass.async_add_executor_job(
-            _copy_and_cleanup, local_file_paths, backup
-        )
+        if local_file_paths:
+
+            def _copy_to_local_agents(local_file_paths: list[Path]) -> Path:
+                for local_path in local_file_paths:
+                    shutil.copy(target_temp_file, local_path)
+                return local_file_paths[0]
+
+            tar_file_path = await self.hass.async_add_executor_job(
+                _copy_to_local_agents, local_file_paths
+            )
+        else:
+            tar_file_path = target_temp_file
         await self._async_upload_backup(
             backup=backup, agent_ids=agent_ids, path=tar_file_path
         )

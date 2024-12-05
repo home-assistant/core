@@ -184,6 +184,8 @@ async def test_agent_upload(
 
     supervisor_client.backups.reload.assert_not_called()
     with (
+        patch("pathlib.Path.mkdir"),
+        patch("pathlib.Path.open"),
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,
