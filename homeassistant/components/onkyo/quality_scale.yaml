@@ -7,10 +7,7 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: |
-      The data_descriptions are missing.
+  config-flow: done
   config-flow-test-coverage:
     status: todo
     comment: |
