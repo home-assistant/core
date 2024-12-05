@@ -6,9 +6,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from httpx import AsyncClient
-from pylamarzocco.client_cloud import LaMarzoccoCloudClient
-from pylamarzocco.client_local import LaMarzoccoLocalClient
+from aiohttp import ClientSession
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -58,7 +58,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    _client: AsyncClient
+    _client: ClientSession
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -82,8 +82,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
                 **self._discovered,
             }
-            self._client = create_async_httpx_client(self.hass)
 
+            self._client = async_create_clientsession(self.hass)
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
