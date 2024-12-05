@@ -39,7 +39,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    _max_entries: int | None = None
 
     @staticmethod
     @callback
