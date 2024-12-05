@@ -759,7 +759,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "oncue",
     "ondilo_ico",
     "onewire",
-    "onkyo",
     "onvif",
     "open_meteo",
     "openai_conversation",
