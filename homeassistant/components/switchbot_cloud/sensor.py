@@ -123,6 +123,40 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
             native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         ),
     ),
+    "Hub 2": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_HUMIDITY,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
+    "MeterPro": (
+        SensorEntityDescription(
+            key=SENSOR_TYPE_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_HUMIDITY,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        SensorEntityDescription(
+            key=SENSOR_TYPE_BATTERY,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
     "MeterPro(CO2)": (
         SensorEntityDescription(
             key=SENSOR_TYPE_TEMPERATURE,
