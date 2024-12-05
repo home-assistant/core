@@ -374,7 +374,7 @@ def filter_turn_off_params(
     if not params:
         return params
 
-    supported_features = light.supported_features_compat
+    supported_features = light.supported_features
 
     if LightEntityFeature.FLASH not in supported_features:
         params.pop(ATTR_FLASH, None)
@@ -386,7 +386,7 @@ def filter_turn_off_params(
 
 def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[str, Any]:
     """Filter out params not supported by the light."""
-    supported_features = light.supported_features_compat
+    supported_features = light.supported_features
 
     if LightEntityFeature.EFFECT not in supported_features:
         params.pop(ATTR_EFFECT, None)
@@ -1049,7 +1049,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         supported_color_modes = self._light_internal_supported_color_modes
 
         if ColorMode.COLOR_TEMP in supported_color_modes:
@@ -1211,7 +1211,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         supported_color_modes = self.supported_color_modes
         legacy_supported_color_modes = (
             supported_color_modes or self._light_internal_supported_color_modes
@@ -1308,7 +1308,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 type(self),
                 report_issue,
             )
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()
 
@@ -1336,37 +1336,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> LightEntityFeature:
-        """Return the supported features as LightEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is not int:  # noqa: E721
-            return features
-        new_features = LightEntityFeature(features)
-        if self._deprecated_supported_features_reported is True:
-            return new_features
-        self._deprecated_supported_features_reported = True
-        report_issue = self._suggest_report_issue()
-        report_issue += (
-            " and reference "
-            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
-        )
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is using deprecated supported features"
-                " values which will be removed in HA Core 2025.1. Instead it should use"
-                " %s and color modes, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            repr(new_features),
-            report_issue,
-        )
-        return new_features
 
     def __should_report_light_issue(self) -> bool:
         """Return if light color mode issues should be reported."""
