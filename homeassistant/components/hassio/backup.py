@@ -16,8 +16,8 @@ from homeassistant.components.backup import (
     BackupReaderWriter,
     CreateBackupEvent,
     Folder,
-    LocalBackupAgent,
     NewBackup,
+    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -33,8 +33,8 @@ async def async_get_backup_agents(
     return [SupervisorLocalBackupAgent(hass)]
 
 
-class SupervisorLocalBackupAgent(LocalBackupAgent):
-    """Local backup agent for supervised installations."""
+class SupervisorLocalBackupAgent(BackupAgent):
+    """Backup agent for supervised installations."""
 
     name = "local"
 
@@ -137,7 +137,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         include_homeassistant: bool,
         on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
         include_addons_set = set(include_addons) if include_addons else None
         include_folders_set = (
@@ -169,8 +169,18 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
     async def _async_wait_for_backup(
         self, backup: supervisor_backups.NewBackup
-    ) -> tuple[AgentBackup, Path]:
+    ) -> WrittenBackup:
         """Wait for a backup to complete."""
+        raise NotImplementedError
+
+    async def async_receive_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        suggested_filename: str,
+    ) -> WrittenBackup:
+        """Receive a backup."""
         raise NotImplementedError
 
     async def async_restore_backup(
@@ -178,6 +188,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_id: str,
         *,
         agent_id: str,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
         restore_database: bool,

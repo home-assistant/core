@@ -200,8 +200,8 @@ async def test_agent_upload(
             data={"file": StringIO("test")},
         )
 
-    assert resp.status == 201
-    supervisor_client.backups.reload.assert_called_once()
+    assert resp.status == 500
+    supervisor_client.backups.reload.assert_not_called()
 
 
 @pytest.mark.usefixtures("hassio_client")
