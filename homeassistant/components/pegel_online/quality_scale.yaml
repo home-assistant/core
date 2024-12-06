@@ -70,7 +70,9 @@ rules:
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: not needed
+    comment: |
+      each config entry represents only one named measurement station,
+      so when the user wants to add another one, they can just add another config entry
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
