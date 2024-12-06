@@ -1,0 +1,76 @@
+rules:
+  # Bronze
+  config-flow:
+    status: done
+    comment: Integration uses an OAuth config flow.
+  brands: done
+  dependency-transparency: todo
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: todo
+    comment: |
+      Actions are current setup in `async_setup_entry` and need to be moved
+      to `async_setup`.
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  test-before-setup:
+    status: todo
+    comment: |
+      The integration does not test the connection in `async_setup` but
+      instead does this in the calendar platform only, which can be improved.
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions: done
+  runtime-data:
+    status: todo
+    comment: |
+      The integration stores config entry data in `hass.data` and should be
+      updated to use `runtime_data`.
+
+  # Silver
+  log-when-unavailable: todo
+  config-entry-unloading: todo
+  reauthentication-flow: todo
+  action-exceptions: todo
+  docs-installation-parameters: todo
+  integration-owner: todo
+  parallel-updates: todo
+  test-coverage: todo
+  docs-configuration-parameters: todo
+  entity-unavailable: todo
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: todo
+  icon-translations: todo
+  docs-known-limitations: todo
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: todo
+  strict-typing: todo
+  inject-websession: todo
