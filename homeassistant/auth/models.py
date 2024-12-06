@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 import secrets
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 import uuid
 
 import attr
 from attr import Attribute
 from attr.setters import validate
+from multidict import CIMultiDictProxy
 from propcache import cached_property
 
 from homeassistant.const import __version__
@@ -28,12 +29,20 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class AuthFlowContext(FlowContext, total=False):
     """Typed context dict for auth flow."""
 
+    headers: CIMultiDictProxy[str]
     credential_only: bool
     ip_address: IPv4Address | IPv6Address
     redirect_uri: str
 
 
 AuthFlowResult = FlowResult[AuthFlowContext, tuple[str, str]]
+
+
+class RefreshFlowContext(TypedDict, total=False):
+    """Typed context dict for refresh flow."""
+
+    headers: CIMultiDictProxy[str]
+    ip_address: IPv4Address | IPv6Address
 
 
 @attr.s(slots=True)

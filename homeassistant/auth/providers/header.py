@@ -1,14 +1,16 @@
-"""Trusted Networks auth provider.
+"""Header auth provider.
 
-It shows list of users if access from trusted network.
-Abort login flow if not access from trusted network.
+It shows list of users if accessed with a configured header.
+Abort login flow if not accessed with a configured header.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_network
-from typing import Any, cast
+import hashlib
+import hmac
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from typing import cast
 
 import voluptuous as vol
 
@@ -31,28 +33,14 @@ from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 type IPAddress = IPv4Address | IPv6Address
 type IPNetwork = IPv4Network | IPv6Network
 
-CONF_TRUSTED_NETWORKS = "trusted_networks"
-CONF_TRUSTED_USERS = "trusted_users"
-CONF_GROUP = "group"
+HEADER_NAME = "x-homeassistant-token"
+CONF_HEADER = "header"
+CONF_TOKEN_SHA256 = "token_sha256"
 CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_TRUSTED_NETWORKS): vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_TRUSTED_USERS, default={}): vol.Schema(
-            # we only validate the format of user_id or group_id
-            {
-                ip_network: vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.Or(
-                            cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): str}),
-                        )
-                    ],
-                )
-            }
-        ),
+        vol.Required(CONF_TOKEN_SHA256): cv.string,
         vol.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
     },
     extra=vol.PREVENT_EXTRA,
@@ -63,77 +51,36 @@ class InvalidUserError(HomeAssistantError):
     """Raised when try to login as invalid user."""
 
 
-@AUTH_PROVIDERS.register("trusted_networks")
-class TrustedNetworksAuthProvider(AuthProvider):
-    """Trusted Networks auth provider.
+@AUTH_PROVIDERS.register("header")
+class HeaderAuthProvider(AuthProvider):
+    """Header auth provider.
 
-    Allow passwordless access from trusted network.
+    Allow passwordless access using header.
     """
 
-    DEFAULT_TITLE = "Trusted Networks"
+    DEFAULT_TITLE = "Header"
 
     @property
-    def trusted_networks(self) -> list[IPNetwork]:
-        """Return trusted networks."""
-        return cast(list[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
-
-    @property
-    def trusted_users(self) -> dict[IPNetwork, Any]:
-        """Return trusted users per network."""
-        return cast(dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
-
-    @property
-    def trusted_proxies(self) -> list[IPNetwork]:
-        """Return trusted proxies in the system."""
-        if not self.hass.http:
-            return []
-
-        return [
-            ip_network(trusted_proxy)
-            for trusted_proxy in self.hass.http.trusted_proxies
-        ]
+    def token_sha256(self) -> str:
+        """Return expected header value."""
+        return cast(str, self.config[CONF_TOKEN_SHA256])
 
     @property
     def support_mfa(self) -> bool:
-        """Trusted Networks auth provider does not support MFA."""
+        """Header auth provider does not support MFA."""
         return False
 
     async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
-        ip_addr = cast(IPAddress, context.get("ip_address"))
+        header = context["headers"].get(HEADER_NAME)
         users = await self.store.async_get_users()
         available_users = [
             user for user in users if not user.system_generated and user.is_active
         ]
-        for ip_net, user_or_group_list in self.trusted_users.items():
-            if ip_addr not in ip_net:
-                continue
-
-            user_list = [
-                user_id for user_id in user_or_group_list if isinstance(user_id, str)
-            ]
-            group_list = [
-                group[CONF_GROUP]
-                for group in user_or_group_list
-                if isinstance(group, dict)
-            ]
-            flattened_group_list = [
-                group for sublist in group_list for group in sublist
-            ]
-            available_users = [
-                user
-                for user in available_users
-                if (
-                    user.id in user_list
-                    or any(group.id in flattened_group_list for group in user.groups)
-                )
-            ]
-            break
-
-        return TrustedNetworksLoginFlow(
+        return HeaderLoginFlow(
             self,
-            ip_addr,
+            header,
             {user.id: user.name for user in available_users},
             self.config[CONF_ALLOW_BYPASS_LOGIN],
         )
@@ -171,27 +118,24 @@ class TrustedNetworksAuthProvider(AuthProvider):
     ) -> UserMeta:
         """Return extra user metadata for credentials.
 
-        Trusted network auth provider should never create new user.
+        Header auth provider should never create new user.
         """
         raise NotImplementedError
 
     @callback
-    def async_validate_access(self, ip_addr: IPAddress) -> None:
-        """Make sure the access from trusted networks.
+    def async_validate_access(self, header: str | None) -> None:
+        """Make sure the access is with the correct header.
 
         Raise InvalidAuthError if not.
-        Raise InvalidAuthError if trusted_networks is not configured.
         """
-        if not self.trusted_networks:
-            raise InvalidAuthError("trusted_networks is not configured")
 
-        if not any(
-            ip_addr in trusted_network for trusted_network in self.trusted_networks
-        ):
-            raise InvalidAuthError("Not in trusted_networks")
+        if not header:
+            raise InvalidAuthError("Can't allow access without header")
 
-        if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
-            raise InvalidAuthError("Can't allow access from a proxy server")
+        hashed = hashlib.sha256(header.encode("utf-8")).hexdigest()
+
+        if not hmac.compare_digest(hashed, self.token_sha256):
+            raise InvalidAuthError("Can't allow access without header")
 
         if is_cloud_connection(self.hass):
             raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
@@ -203,27 +147,26 @@ class TrustedNetworksAuthProvider(AuthProvider):
         context: RefreshFlowContext,
     ) -> None:
         """Verify a refresh token is still valid."""
-        if context.get("ip_address") is None:
-            raise InvalidAuthError(
-                "Unknown remote ip can't be used for trusted network provider."
-            )
-        self.async_validate_access(context["ip_address"])
+        if context.get("headers") is None:
+            raise InvalidAuthError("Headers needed for headers auth provider.")
+
+        self.async_validate_access(context["headers"].get(HEADER_NAME))
 
 
-class TrustedNetworksLoginFlow(LoginFlow):
+class HeaderLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     def __init__(
         self,
-        auth_provider: TrustedNetworksAuthProvider,
-        ip_addr: IPAddress,
+        auth_provider: HeaderAuthProvider,
+        header: str | None,
         available_users: dict[str, str | None],
         allow_bypass_login: bool,
     ) -> None:
         """Initialize the login flow."""
         super().__init__(auth_provider)
         self._available_users = available_users
-        self._ip_address = ip_addr
+        self._header = header
         self._allow_bypass_login = allow_bypass_login
 
     async def async_step_init(
@@ -231,9 +174,9 @@ class TrustedNetworksLoginFlow(LoginFlow):
     ) -> AuthFlowResult:
         """Handle the step of the form."""
         try:
-            cast(
-                TrustedNetworksAuthProvider, self._auth_provider
-            ).async_validate_access(self._ip_address)
+            cast(HeaderAuthProvider, self._auth_provider).async_validate_access(
+                self._header
+            )
 
         except InvalidAuthError:
             return self.async_abort(reason="not_allowed")

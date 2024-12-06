@@ -89,6 +89,7 @@ class AuthPhase:
                 self._send_message,
                 refresh_token.user,
                 refresh_token,
+                self._request,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(
