@@ -1,0 +1,138 @@
+{
+  "title": "Ohme",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Configure your Ohme account.",
+        "data": {
+          "email": "Email address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
+    },
+    "abort": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Update your Ohme account information.",
+        "data": {
+          "email": "Email address",
+          "password": "Password",
+          "never_session_specific": "Never update an ongoing session",
+          "never_collapse_slots": "Don't collapse charge slots",
+          "interval_chargesessions": "Charge sessions refresh rate (minutes)",
+          "interval_accountinfo": "Account info refresh rate (minutes)",
+          "interval_advanced": "Advanced settings refresh rate (minutes)",
+          "interval_schedules": "Schedules refresh rate (minutes)"
+        },
+        "data_description": {
+          "password": "If you are not changing your credentials, leave the password field empty.",
+          "never_session_specific": "When adjusting charge percentage, charge target or preconditioning settings, the schedule will always be updated even if a charge session is in progress.",
+          "never_collapse_slots": "By default, adjacent slots are merged into one. This option shows every slot, as shown in the Ohme app.",
+          "interval_schedules": "Details on which entities are updated by each coordinator are in the README."
+        }
+      }
+    },
+    "error": {
+      "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
+    },
+    "abort": {}
+  },
+  "issues": {},
+  "entity": {
+    "binary_sensor": {
+      "car_connected": {
+        "name": "Car Connected"
+      },
+      "car_charging": {
+        "name": "Car Charging"
+      },
+      "pending_approval": {
+        "name": "Pending Approval"
+      },
+      "slot_active": {
+        "name": "Charge Slot Active"
+      },
+      "charger_online": {
+        "name": "Charger Online"
+      }
+    },
+    "button": {
+      "approve_charge": {
+        "name": "Approve Charge"
+      }
+    },
+    "number": {
+      "target_percentage": {
+        "name": "Target Percentage"
+      },
+      "preconditioning": {
+        "name": "Preconditioning"
+      },
+      "price_cap": {
+        "name": "Price Cap"
+      }
+    },
+    "sensor": {
+      "power_draw": {
+        "name": "Power Draw"
+      },
+      "current_draw": {
+        "name": "Current Draw"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "ct_reading": {
+        "name": "CT Reading"
+      },
+      "energy": {
+        "name": "Energy"
+      },
+      "next_slot_start": {
+        "name": "Next Charge Slot Start"
+      },
+      "next_slot_end": {
+        "name": "Next Charge Slot End"
+      },
+      "charge_slots": {
+        "name": "Charge Slots"
+      },
+      "battery_soc": {
+        "name": "Battery SOC"
+      }
+    },
+    "switch": {
+      "pause_charge": {
+        "name": "Pause Charge"
+      },
+      "max_charge": {
+        "name": "Max Charge"
+      },
+      "lock_buttons": {
+        "name": "Lock Buttons"
+      },
+      "require_approval": {
+        "name": "Require Approval"
+      },
+      "sleep_when_inactive": {
+        "name": "Sleep When Inactive"
+      },
+      "solar_mode": {
+        "name": "Solar Boost"
+      },
+      "enable_price_cap": {
+        "name": "Enable Price Cap"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target Time"
+      }
+    }
+  }
+}
