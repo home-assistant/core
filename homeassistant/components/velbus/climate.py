@@ -42,7 +42,6 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_preset_modes = list(PRESET_MODES)
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def target_temperature(self) -> float | None:

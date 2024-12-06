@@ -1635,7 +1635,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.12
+pylamarzocco==1.3.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2241,7 +2241,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.8.4
+tesla-fleet-api==0.8.5
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
