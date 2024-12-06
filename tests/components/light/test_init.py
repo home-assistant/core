@@ -1,5 +1,6 @@
 """The tests for the Light component."""
 
+from types import ModuleType
 from typing import Literal
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -29,6 +30,9 @@ from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant,
+    import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
 
@@ -2802,3 +2806,55 @@ def test_report_invalid_color_modes(
     entity._async_calculate_state()
     expected_warning = "sets invalid supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    "module",
+    [light],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "constant_value"),
+    [("SUPPORT_BRIGHTNESS", 1), ("SUPPORT_COLOR_TEMP", 2), ("SUPPORT_COLOR", 16)],
+)
+def test_deprecated_support_light_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    constant_value: int,
+) -> None:
+    """Test deprecated format constants."""
+    import_and_test_deprecated_constant(
+        caplog, light, constant_name, "supported_color_modes", constant_value, "2026.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(light.LightEntityFeature),
+)
+def test_deprecated_support_light_constants_enums(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: light.LightEntityFeature,
+) -> None:
+    """Test deprecated support light constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, light, entity_feature, "SUPPORT_", "2026.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(light.ColorMode),
+)
+def test_deprecated_color_mode_constants_enums(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: light.LightEntityFeature,
+) -> None:
+    """Test deprecated support light constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, light, entity_feature, "COLOR_MODE_", "2026.1"
+    )
