@@ -1050,3 +1050,6 @@ async def test_virtual_domain_context(manager: MockFlowManager) -> None:
         },
         data=data,
     )
+    entry = manager.mock_created_entries[0]
+    assert entry["handler"] == "test"
+    assert entry["title"] == "hello"
