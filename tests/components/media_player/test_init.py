@@ -117,10 +117,7 @@ def test_deprecated_constants_const(
     ],
 )
 def test_support_properties(property_suffix: str) -> None:
-    """Test support_*** properties.
-
-    These seem unused in the codebase, but might be used by custom components.
-    """
+    """Test support_*** properties explicitely."""
 
     all_features = media_player.MediaPlayerEntityFeature(653887)
     feature = media_player.MediaPlayerEntityFeature[property_suffix.upper()]
