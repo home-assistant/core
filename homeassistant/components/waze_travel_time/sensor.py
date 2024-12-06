@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
-    UnitOfLength,
     UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -28,7 +27,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import async_get_travel_times
 from .const import (
@@ -44,7 +42,6 @@ from .const import (
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
     DOMAIN,
-    IMPERIAL_UNITS,
     SEMAPHORE,
 )
 
@@ -201,6 +198,7 @@ class WazeTravelTimeData:
                 avoid_subscription_roads,
                 avoid_ferries,
                 realtime,
+                self.config_entry.options[CONF_UNITS],
                 incl_filter,
                 excl_filter,
             )
@@ -211,14 +209,5 @@ class WazeTravelTimeData:
                 return
 
             self.duration = route.duration
-            distance = route.distance
-
-            if self.config_entry.options[CONF_UNITS] == IMPERIAL_UNITS:
-                # Convert to miles.
-                self.distance = DistanceConverter.convert(
-                    distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
-                )
-            else:
-                self.distance = distance
-
+            self.distance = route.distance
             self.route = route.name
