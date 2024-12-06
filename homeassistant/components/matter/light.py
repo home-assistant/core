@@ -258,7 +258,7 @@ class MatterLight(MatterEntity, LightEntity):
         """Get color mode from matter."""
 
         color_mode = self.get_matter_attribute_value(
-            clusters.ColorControl.Attributes.ColorModeEnum
+            clusters.ColorControl.Attributes.ColorMode
         )
 
         assert color_mode is not None
@@ -346,21 +346,21 @@ class MatterLight(MatterEntity, LightEntity):
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
                 ):
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
                 ):
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
