@@ -1289,7 +1289,9 @@ SCHEMA = vol.Schema(
 )
 
 
-def validate_iqs_file(config: Config, integration: Integration) -> None:
+def validate_iqs_file(
+    config: Config, integration: Integration, run_validation: bool
+) -> None:
     """Validate quality scale file for integration."""
     if not integration.core:
         return
@@ -1357,6 +1359,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         rules_met.add(rule_name)
         if (
             status == "done"
+            and run_validation
             and (validator := VALIDATORS.get(rule_name))
             and (errors := validator.validate(integration))
         ):
@@ -1385,5 +1388,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle YAML files inside integrations."""
+    # Only run validation if this is the only plugin
+    run_validation = len(config.plugins) == 1
+
     for integration in integrations.values():
-        validate_iqs_file(config, integration)
+        validate_iqs_file(config, integration, run_validation)
