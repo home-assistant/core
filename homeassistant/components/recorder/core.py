@@ -1242,8 +1242,30 @@ class Recorder(threading.Thread):
         move_away_broken_database(dburl_to_path(self.db_url))
         self.recorder_runs_manager.reset()
         self._setup_recorder()
+        self._notify_db_corruption()
+
         if setup_run:
             self._setup_run()
+
+    def _notify_db_corruption(self) -> None:
+        """Notify users of SQLite database corruption.
+
+        Create a persistent notification and fire a 'recorder_database_corrupt' event to inform
+        users that their recorder database has been rebuilt due to database corruption.
+        """
+        persistent_notification.create(
+            self.hass,
+            (
+                "Corruption was detected in the recorder SQLite database and a"
+                " new database has been created. See"
+                " [this page](https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures) for more information."
+            ),
+            "Database corrupt",
+            "recorder_database_corrupt",
+        )
+
+        # Send an event to the bus
+        self.hass.bus.fire("recorder_database_corrupt")
 
     def _close_event_session(self) -> None:
         """Close the event session."""
