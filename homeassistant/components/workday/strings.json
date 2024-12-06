@@ -24,7 +24,7 @@
           "category": "Additional category as holiday"
         },
         "data_description": {
-          "excludes": "Select which weekdays to exclude as workdays. The key `holidays` adds all days according to the settings below.",
+          "excludes": "Select which weekdays to exclude as workdays.\nThe key `holidays` adds those for the configured country, customizable by all the settings below. Read the documentation on how to use them correctly.",
           "days_offset": "Days offset from current day",
           "workdays": "Select which weekdays to include as possible workdays.",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
