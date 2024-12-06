@@ -7,7 +7,7 @@ from tests.common import MockConfigEntry
 user_input = {
     "app_id": "test_app_id",
     "app_secret": "test_app_secret",
-    "api_url": "openapi.imoulife.com"
+    "api_url": "openapi-sg.easy4ip.com"
 }
 
 

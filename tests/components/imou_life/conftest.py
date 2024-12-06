@@ -1,8 +1,8 @@
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
-from pyimouapi import ImouOpenApiClient
+from pyimouapi import ImouOpenApiClient, InvalidAppIdOrSecretException
 
 imou_token_return = {
     "accessToken": "test_token",
@@ -22,5 +22,20 @@ def imou_config_flow() -> Generator[MagicMock]:
             "test_app_secret",
             "openapi.imoulife.com"
         )
-        instance.async_get_token = MagicMock(return_value=imou_token_return)
+        instance.async_get_token = AsyncMock(return_value=imou_token_return)
+        yield mock_client
+
+
+@pytest.fixture
+def imou_config_flow_exception() -> Generator[MagicMock]:
+    with (
+        patch.object(ImouOpenApiClient, "async_get_token", return_value=True),
+        patch("homeassistant.components.imou_life.config_flow.ImouOpenApiClient") as mock_client
+    ):
+        instance = mock_client.return_value = ImouOpenApiClient(
+            "test_app_id",
+            "test_app_secret",
+            "openapi.imoulife.com"
+        )
+        instance.async_get_token = AsyncMock(side_effect=InvalidAppIdOrSecretException())
         yield mock_client
