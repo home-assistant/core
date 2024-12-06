@@ -188,7 +188,7 @@
         "name": "{chem} dosing state"
       },
       "chem_last_dose_time": {
-        "name": "{chem} last dose duration"
+        "name": "{chem} last dose time"
       },
       "chem_last_dose_volume": {
         "name": "{chem} last dose volume"
