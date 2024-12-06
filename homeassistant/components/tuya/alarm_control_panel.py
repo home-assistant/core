@@ -116,6 +116,14 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             return None
         return STATE_MAPPING.get(status)
 
+    @property
+    def changed_by(self) -> str | None:
+        """Last change triggered by."""
+        status = self.device.status.get(self.entity_description.key)
+        if status == Mode.SOS:
+            return self.device.status.get(DPCode.ALARM_MESSAGE)
+        return None
+
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
         self._send_command(
