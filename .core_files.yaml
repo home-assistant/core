@@ -53,6 +53,7 @@ base_platforms: &base_platforms
   - homeassistant/components/valve/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
+  - homeassistant/components/open_street_map/**
 
 # Extra components that trigger the full suite
 components: &components

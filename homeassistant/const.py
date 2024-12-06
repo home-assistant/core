@@ -81,6 +81,7 @@ class Platform(StrEnum):
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
+    OPEN_STREET_MAP = "open_street_map"
 
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}

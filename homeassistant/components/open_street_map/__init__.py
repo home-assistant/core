@@ -80,12 +80,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     # Register the search service
-    # hass.services.async_register(
-    #     DOMAIN,
-    #     "search",
-    #     async_handle_search,
-    #     schema=vol.Schema({vol.Required("query"): str}),
-    # )
+    hass.services.async_register(
+        DOMAIN,
+        "search",
+        async_handle_search,
+        schema=vol.Schema({vol.Required("query"): str}),
+    )
 
     # # Register the get_coordinates service. Not sure if this is needed
     # hass.services.async_register(

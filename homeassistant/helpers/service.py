@@ -103,6 +103,7 @@ def _base_components() -> dict[str, ModuleType]:
         update,
         vacuum,
         water_heater,
+        open_street_map,
     )
 
     return {
@@ -123,6 +124,7 @@ def _base_components() -> dict[str, ModuleType]:
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
+        "open_street_map": open_street_map,
     }
 
 

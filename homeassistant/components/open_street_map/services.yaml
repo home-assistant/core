@@ -2,11 +2,12 @@ search:
   target:
     entity:
       domain: open_street_map
-  description: "Search for an address or place using OpenStreetMap."
   fields:
     query:
       description: "The search term (address, coordinates, etc.)."
       example: "Korsvägen 1, Gothenburg"
+      selector:
+        text:
 # get_address_coordinates:
 #   target:
 #     entity:
