@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from slack import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -43,7 +43,7 @@ async def async_setup_entry(
 class SlackSensorEntity(SlackEntity, SensorEntity):
     """Representation of a Slack sensor."""
 
-    _client: WebClient
+    _client: AsyncWebClient
 
     async def async_update(self) -> None:
         """Get the latest status."""
