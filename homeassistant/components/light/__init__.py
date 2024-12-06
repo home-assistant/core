@@ -7,9 +7,10 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
+from functools import partial
 import logging
 import os
-from typing import Any, Self, cast, final
+from typing import Any, Final, Self, cast, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -24,6 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -51,12 +59,24 @@ class LightEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the LightEntityFeature enum instead.
-SUPPORT_BRIGHTNESS = 1  # Deprecated, replaced by color modes
-SUPPORT_COLOR_TEMP = 2  # Deprecated, replaced by color modes
-SUPPORT_EFFECT = 4
-SUPPORT_FLASH = 8
-SUPPORT_COLOR = 16  # Deprecated, replaced by color modes
-SUPPORT_TRANSITION = 32
+_DEPRECATED_SUPPORT_BRIGHTNESS: Final = DeprecatedConstant(
+    1, "supported_color_modes", "2026.1"
+)  # Deprecated, replaced by color modes
+_DEPRECATED_SUPPORT_COLOR_TEMP: Final = DeprecatedConstant(
+    2, "supported_color_modes", "2026.1"
+)  # Deprecated, replaced by color modes
+_DEPRECATED_SUPPORT_EFFECT: Final = DeprecatedConstantEnum(
+    LightEntityFeature.EFFECT, "2026.1"
+)
+_DEPRECATED_SUPPORT_FLASH: Final = DeprecatedConstantEnum(
+    LightEntityFeature.FLASH, "2026.1"
+)
+_DEPRECATED_SUPPORT_COLOR: Final = DeprecatedConstant(
+    16, "supported_color_modes", "2026.1"
+)  # Deprecated, replaced by color modes
+_DEPRECATED_SUPPORT_TRANSITION: Final = DeprecatedConstantEnum(
+    LightEntityFeature.TRANSITION, "2026.1"
+)
 
 # Color mode of the light
 ATTR_COLOR_MODE = "color_mode"
@@ -85,16 +105,22 @@ class ColorMode(StrEnum):
 
 # These COLOR_MODE_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the LightEntityFeature enum instead.
-COLOR_MODE_UNKNOWN = "unknown"
-COLOR_MODE_ONOFF = "onoff"
-COLOR_MODE_BRIGHTNESS = "brightness"
-COLOR_MODE_COLOR_TEMP = "color_temp"
-COLOR_MODE_HS = "hs"
-COLOR_MODE_XY = "xy"
-COLOR_MODE_RGB = "rgb"
-COLOR_MODE_RGBW = "rgbw"
-COLOR_MODE_RGBWW = "rgbww"
-COLOR_MODE_WHITE = "white"
+_DEPRECATED_COLOR_MODE_UNKNOWN: Final = DeprecatedConstantEnum(
+    ColorMode.UNKNOWN, "2026.1"
+)
+_DEPRECATED_COLOR_MODE_ONOFF: Final = DeprecatedConstantEnum(ColorMode.ONOFF, "2026.1")
+_DEPRECATED_COLOR_MODE_BRIGHTNESS: Final = DeprecatedConstantEnum(
+    ColorMode.BRIGHTNESS, "2026.1"
+)
+_DEPRECATED_COLOR_MODE_COLOR_TEMP: Final = DeprecatedConstantEnum(
+    ColorMode.COLOR_TEMP, "2026.1"
+)
+_DEPRECATED_COLOR_MODE_HS: Final = DeprecatedConstantEnum(ColorMode.HS, "2026.1")
+_DEPRECATED_COLOR_MODE_XY: Final = DeprecatedConstantEnum(ColorMode.XY, "2026.1")
+_DEPRECATED_COLOR_MODE_RGB: Final = DeprecatedConstantEnum(ColorMode.RGB, "2026.1")
+_DEPRECATED_COLOR_MODE_RGBW: Final = DeprecatedConstantEnum(ColorMode.RGBW, "2026.1")
+_DEPRECATED_COLOR_MODE_RGBWW: Final = DeprecatedConstantEnum(ColorMode.RGBWW, "2026.1")
+_DEPRECATED_COLOR_MODE_WHITE: Final = DeprecatedConstantEnum(ColorMode.WHITE, "2026.1")
 
 VALID_COLOR_MODES = {
     ColorMode.ONOFF,
@@ -1209,7 +1235,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
                 data[ATTR_BRIGHTNESS] = None
-        elif supported_features_value & SUPPORT_BRIGHTNESS:
+        elif supported_features_value & _DEPRECATED_SUPPORT_BRIGHTNESS.value:
             # Backwards compatibility for ambiguous / incomplete states
             # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
@@ -1230,7 +1256,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
-        elif supported_features_value & SUPPORT_COLOR_TEMP:
+        elif supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
             # Backwards compatibility
             # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
@@ -1286,11 +1312,14 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()
 
-        if supported_features_value & SUPPORT_COLOR_TEMP:
+        if supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
             supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if supported_features_value & SUPPORT_COLOR:
+        if supported_features_value & _DEPRECATED_SUPPORT_COLOR.value:
             supported_color_modes.add(ColorMode.HS)
-        if not supported_color_modes and supported_features_value & SUPPORT_BRIGHTNESS:
+        if (
+            not supported_color_modes
+            and supported_features_value & _DEPRECATED_SUPPORT_BRIGHTNESS.value
+        ):
             supported_color_modes = {ColorMode.BRIGHTNESS}
 
         if not supported_color_modes:
@@ -1345,3 +1374,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return True
         # philips_js has known issues, we don't need users to open issues
         return self.platform.platform_name not in {"philips_js"}
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
