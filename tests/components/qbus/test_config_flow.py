@@ -8,7 +8,7 @@ from qbusmqttapi.state import QbusMqttGatewayState
 from homeassistant.components.qbus.config_flow import QbusFlowHandler
 from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL
 from homeassistant.components.qbus.qbus import QbusConfigContainer
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 
@@ -145,7 +145,7 @@ async def test_handle_gateway_topic_when_online(
 
     assert mock_publish.called
     assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "invalid_discovery_info"
+    assert result.get("reason") == "discovery_in_progress"
 
 
 async def test_handle_gateway_topic_when_offline(
@@ -167,7 +167,7 @@ async def test_handle_gateway_topic_when_offline(
 
     assert mock_publish.called is False
     assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "invalid_discovery_info"
+    assert result.get("reason") == "discovery_in_progress"
 
 
 async def test_handle_config_topic(
@@ -194,7 +194,7 @@ async def test_handle_config_topic(
     assert mock_store.called
     assert mock_publish.called
     assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "invalid_discovery_info"
+    assert result.get("reason") == "discovery_in_progress"
 
 
 async def test_handle_device_topic_success(
@@ -217,7 +217,7 @@ async def test_handle_device_topic_success(
         patch.object(
             qbus_config_flow,
             "async_step_discovery_confirm",
-            return_value=FlowResult(type=FlowResultType.FORM),
+            return_value={"type": FlowResultType.FORM},
         ) as mock_step_discovery,
     ):
         result = await qbus_config_flow._async_handle_device_topic(
