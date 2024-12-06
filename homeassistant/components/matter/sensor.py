@@ -652,6 +652,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="TankVolume",
+            translation_key="tank_volume",
+            device_class=SensorDeviceClass.VOLUME_STORAGE,
             native_unit_of_measurement=UnitOfVolume.LITERS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
