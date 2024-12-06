@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import httpx
 from pyenphase import Envoy
 
@@ -47,9 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         hass.config_entries.async_update_entry(entry, unique_id=envoy.serial_number)
 
     if entry.unique_id != envoy.serial_number:
-        if TYPE_CHECKING:
-            assert entry.unique_id is not None
-            assert envoy.serial_number is not None
         # If the serial number of the device does not match the unique_id
         # of the config entry, it likely means the DHCP lease has expired
         # and the device has been assigned a new IP address. We need to
@@ -60,8 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
             translation_key="unexpected_device",
             translation_placeholders={
                 "host": host,
-                "expected_serial": entry.unique_id,
-                "actual_serial": envoy.serial_number,
+                "expected_serial": str(entry.unique_id),
+                "actual_serial": str(envoy.serial_number),
             },
         )
 
