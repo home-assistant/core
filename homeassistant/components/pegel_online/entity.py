@@ -13,7 +13,6 @@ class PegelOnlineEntity(CoordinatorEntity[PegelOnlineDataUpdateCoordinator]):
     """Representation of a PEGELONLINE entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
     def __init__(self, coordinator: PegelOnlineDataUpdateCoordinator) -> None:
         """Initialize a PEGELONLINE entity."""
