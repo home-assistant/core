@@ -74,10 +74,10 @@ SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
-# These STATE_* constants are deprecated as of Home Assistant 2024.11.
+# These STATE_* constants are deprecated as of Home Assistant 2025.1.
 # Please use the VacuumActivity enum instead.
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2025.12")
-_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2025.12")
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
+_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
 
 
 class VacuumEntityFeature(IntFlag):
@@ -349,7 +349,7 @@ class StateVacuumEntity(
             return activity
         if self._attr_state is not None:
             # Backwards compatibility for integrations that set state directly
-            # Should be removed in 2025.12
+            # Should be removed in 2026.1
             if TYPE_CHECKING:
                 assert isinstance(self._attr_state, str)
             return self._attr_state
