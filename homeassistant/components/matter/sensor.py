@@ -656,7 +656,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="TankVolume",
+            key="WaterHeaterManagementTankVolume",
             translation_key="tank_volume",
             device_class=SensorDeviceClass.VOLUME_STORAGE,
             native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -668,7 +668,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="TankPercentage",
+            key="WaterHeaterManagementTankPercentage",
+            translation_key="tank_percentage",
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
