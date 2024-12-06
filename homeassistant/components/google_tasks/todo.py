@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -39,8 +39,10 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
     else:
         result["status"] = TodoItemStatus.NEEDS_ACTION
     if (due := item.due) is not None:
-        # due API field is a timestamp string, but with only date resolution
-        result["due"] = dt_util.start_of_local_day(due).isoformat()
+        # due API field is a timestamp string, but with only date resolution.
+        # The time portion of the date is always discarded by the API, so we
+        # always set to UTC.
+        result["due"] = dt_util.start_of_local_day(due).replace(tzinfo=UTC).isoformat()
     else:
         result["due"] = None
     result["notes"] = item.description
@@ -51,6 +53,8 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
     """Convert tasks API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("due")) is not None:
+        # Due dates are returned always in UTC so we only need to
+        # parse the date portion which will be interpreted as a a local date.
         due = datetime.fromisoformat(due_str).date()
     return TodoItem(
         summary=item["title"],
