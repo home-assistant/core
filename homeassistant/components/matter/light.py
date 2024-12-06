@@ -39,7 +39,7 @@ from .util import (
 COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperature: ColorMode.COLOR_TEMP,
+    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # there's a bug in (at least) Espressif's implementation of light transitions
