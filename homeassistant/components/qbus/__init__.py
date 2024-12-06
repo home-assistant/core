@@ -56,4 +56,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> boo
 async def async_remove_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Remove a config entry."""
     _LOGGER.debug("Removing entry %s", entry.entry_id)
-    entry.runtime_data.coordinator.remove()
+    entry.runtime_data.coordinator.shutdown()

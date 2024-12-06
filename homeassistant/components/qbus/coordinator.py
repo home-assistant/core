@@ -71,12 +71,6 @@ class QbusDataCoordinator:
         self._device_activated = False
         self._subscribed_to_device_state = False
 
-    def remove(self) -> None:
-        """Remove Qbus coordinator."""
-        _LOGGER.debug("Removing coordinator")
-
-        self.shutdown()
-
     def register_platform(
         self,
         qbus_type: str,
