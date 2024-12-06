@@ -417,7 +417,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "freedompro",
     "fritzbox",
     "fritzbox_callmonitor",
-    "fronius",
     "frontier_silicon",
     "fujitsu_fglair",
     "fujitsu_hvac",
