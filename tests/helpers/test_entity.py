@@ -6,6 +6,7 @@ import dataclasses
 from datetime import timedelta
 from enum import IntFlag
 import logging
+import re
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -100,6 +101,8 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
 
     ent = AsyncEntity()
     ent.hass = hass
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
 
     await ent.async_update_ha_state(True)
 
@@ -124,6 +127,8 @@ async def test_device_class(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.overwrite_hidden_true"
     ent.hass = hass
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -150,6 +155,9 @@ async def test_warn_slow_update(
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
 
     fast_update_time = 0.0000001
 
@@ -341,6 +349,9 @@ async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
 
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent_1, ent_2])
+
     try:
         ent_1.async_schedule_update_ha_state(True)
         ent_2.async_schedule_update_ha_state(True)
@@ -382,6 +393,9 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
 
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent_1, ent_2])
+
     try:
         ent_1.async_schedule_update_ha_state(True)
         ent_2.async_schedule_update_ha_state(True)
@@ -412,7 +426,6 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.parallel_updates = test_semaphore
 
         async def async_update(self) -> None:
             """Test update."""
@@ -422,6 +435,10 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
     ent_3 = AsyncEntity("sensor.test_3", 3)
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    platform.parallel_updates = test_semaphore
+    await platform.async_add_entities([ent_1, ent_2, ent_3])
 
     await test_lock.acquire()
 
@@ -488,7 +505,6 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.parallel_updates = test_semaphore
 
         async def async_update(self) -> None:
             """Test update."""
@@ -499,6 +515,10 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     ent_2 = AsyncEntity("sensor.test_2", 2)
     ent_3 = AsyncEntity("sensor.test_3", 3)
     ent_4 = AsyncEntity("sensor.test_4", 4)
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    platform.parallel_updates = test_semaphore
+    await platform.async_add_entities([ent_1, ent_2, ent_3, ent_4])
 
     await test_lock.acquire()
 
@@ -557,13 +577,16 @@ async def test_async_parallel_updates_with_one_using_executor(
             """Initialize sync test entity."""
             self.entity_id = entity_id
             self.hass = hass
-            self.parallel_updates = test_semaphore
 
         def update(self) -> None:
             """Test update."""
             locked.append(self.parallel_updates.locked())
 
     entities = [SyncEntity(f"sensor.test_{i}") for i in range(3)]
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    platform.parallel_updates = test_semaphore
+    await platform.async_add_entities(entities)
 
     await asyncio.gather(
         *[
@@ -583,6 +606,8 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
     ent.async_write_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
     await ent.async_remove()
@@ -659,6 +684,8 @@ async def test_set_context(hass: HomeAssistant) -> None:
     ent.hass = hass
     ent.entity_id = "hello.world"
     ent.async_set_context(context)
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
     ent.async_write_ha_state()
     assert hass.states.get("hello.world").context == context
 
@@ -671,6 +698,8 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+        await platform.async_add_entities([ent])
         ent.async_set_context(context)
         ent.async_write_ha_state()
 
@@ -757,6 +786,8 @@ async def test_capability_attrs(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+        await platform.async_add_entities([ent])
         ent.async_write_ha_state()
 
     state = hass.states.get("hello.world")
@@ -896,6 +927,8 @@ async def test_float_conversion(hass: HomeAssistant) -> None:
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
+        platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+        await platform.async_add_entities([ent])
         ent.async_write_ha_state()
 
     state = hass.states.get("hello.world")
@@ -909,6 +942,9 @@ async def test_attribution_attribute(hass: HomeAssistant) -> None:
     mock_entity.hass = hass
     mock_entity.entity_id = "hello.world"
     mock_entity._attr_attribution = "Home Assistant"
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
 
     mock_entity.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
@@ -963,11 +999,14 @@ def test_entity_category_schema_error(value) -> None:
         schema(value)
 
 
-async def test_entity_description_fallback() -> None:
+async def test_entity_description_fallback(hass: HomeAssistant) -> None:
     """Test entity description has same defaults as entity."""
     ent = entity.Entity()
     ent_with_description = entity.Entity()
     ent_with_description.entity_description = entity.EntityDescription(key="test")
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent, ent_with_description])
 
     for field in dataclasses.fields(entity.EntityDescription._dataclass):
         if field.name == "key":
@@ -1665,31 +1704,23 @@ async def test_warn_using_async_update_ha_state(
     assert error_message not in caplog.text
 
 
-async def test_warn_no_platform(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we warn am entity does not have a platform."""
+async def test_raise_if_no_platform(hass: HomeAssistant) -> None:
+    """Test we raise if entity does not have a platform."""
     ent = entity.Entity()
     ent.hass = hass
-    ent.platform = MockEntityPlatform(hass)
     ent.entity_id = "hello.world"
-    error_message = "does not have a platform"
 
-    # Without a platform, it should trigger the warning
-    ent.platform = None
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message in caplog.text
-
-    # Without a platform, it should not trigger the warning again
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message not in caplog.text
-
-    # No warning if the entity has a platform
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message not in caplog.text
+    # Without a platform, it should raise
+    error = re.escape(
+        "Detected code that Entity hello.world (<class 'homeassistant.helpers.entity.Entity'>)"
+        " does not have a platform,this may be caused by adding it manually instead"
+        " of with an EntityComponent helper. Please report this issue"
+    )
+    with pytest.raises(
+        RuntimeError,
+        match=error,
+    ):
+        ent.async_write_ha_state()
 
 
 async def test_invalid_state(
@@ -1699,6 +1730,9 @@ async def test_invalid_state(
     ent = entity.Entity()
     ent.entity_id = "test.test"
     ent.hass = hass
+
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
 
     ent._attr_state = "x" * 255
     ent.async_write_ha_state()
@@ -1726,13 +1760,6 @@ async def test_suggest_report_issue_built_in(
     mock_entity = entity.Entity()
     mock_entity.entity_id = "comp_test.test_entity"
 
-    suggestion = mock_entity._suggest_report_issue()
-    assert suggestion == (
-        "create a bug report at https://github.com/home-assistant/core/issues"
-        "?q=is%3Aopen+is%3Aissue"
-    )
-
-    mock_integration(hass, MockModule(domain="test"), built_in=True)
     platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
     await platform.async_add_entities([mock_entity])
 
@@ -1756,20 +1783,27 @@ async def test_suggest_report_issue_custom_component(
     mock_entity = CustomComponentEntity()
     mock_entity.entity_id = "comp_test.test_entity"
 
-    suggestion = mock_entity._suggest_report_issue()
-    assert suggestion == "report it to the custom integration author"
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="test", partial_manifest={"issue_tracker": "https://some_url"}
-        ),
-        built_in=False,
-    )
     platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
     await platform.async_add_entities([mock_entity])
 
     suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == "report it to the author of the 'test' custom integration"
+
+    mock_entity2 = CustomComponentEntity()
+    mock_entity2.entity_id = "comp_test.test_entity2"
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="test2", partial_manifest={"issue_tracker": "https://some_url"}
+        ),
+        built_in=False,
+    )
+    platform = MockEntityPlatform(hass, domain="comp_test2", platform_name="test2")
+    await platform.async_add_entities([mock_entity2])
+    await hass.async_block_till_done()
+
+    suggestion = mock_entity2._suggest_report_issue()
     assert suggestion == "create a bug report at https://some_url"
 
 
@@ -2629,18 +2663,27 @@ async def test_async_write_ha_state_thread_safety(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.any"
     ent.hass = hass
-    ent.async_write_ha_state()
-    assert hass.states.get(ent.entity_id)
 
     ent2 = entity.Entity()
     ent2.entity_id = "test.any2"
     ent2.hass = hass
+
+    platform = MockEntityPlatform(hass, domain="test")
+    await platform.async_add_entities([ent, ent2])
+
+    ent._attr_state = "test"
+    ent2._attr_state = "test"
+
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id).state == "test"
+
     with pytest.raises(
         RuntimeError,
         match="Detected code that calls async_write_ha_state from a thread.",
     ):
         await hass.async_add_executor_job(ent2.async_write_ha_state)
-    assert not hass.states.get(ent2.entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ent2.entity_id).state != "test"
 
 
 async def test_async_write_ha_state_thread_safety_always(
