@@ -165,3 +165,63 @@
     'state': 'unknown',
   })
 # ---
+# name: test_all_entities[climate.model1_thermostatic_radiator_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+      ]),
+      'max_temp': 30,
+      'min_temp': 8,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.model1_thermostatic_radiator_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostatic radiator valve',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'trv',
+    'unique_id': 'gateway1_deviceId1-trv',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.model1_thermostatic_radiator_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'model1 Thermostatic radiator valve',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 30,
+      'min_temp': 8,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.model1_thermostatic_radiator_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
