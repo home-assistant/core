@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch, AsyncMock
 import pytest
 from pyimouapi import ImouOpenApiClient, InvalidAppIdOrSecretException
 
-imou_token_return = {
+IMOU_TOKEN_RETURN = {
     "accessToken": "test_token",
     "expireTime": 3600,
     "currentDomain": "https://openapi.imoulife.com:443"
@@ -22,7 +22,7 @@ def imou_config_flow() -> Generator[MagicMock]:
             "test_app_secret",
             "openapi.imoulife.com"
         )
-        instance.async_get_token = AsyncMock(return_value=imou_token_return)
+        instance.async_get_token = AsyncMock(return_value=IMOU_TOKEN_RETURN)
         yield mock_client
 
 
