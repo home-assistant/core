@@ -19,9 +19,5 @@ PARAM_OPTIONS = "options"
 PARAM_RESTART_DEVICE = "restart_device"
 
 PLATFORMS = [
-    "select",
-    "sensor",
-    "switch",
-    "camera",
     "button"
 ]
