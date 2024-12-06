@@ -52,7 +52,6 @@
           'agent_id': 'domain.test',
         }),
       ]),
-      'syncing': False,
     }),
     'success': True,
     'type': 'result',
@@ -1396,7 +1395,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
       ]),
       'last_automatic_backup': None,
@@ -1422,7 +1420,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
       ]),
       'last_automatic_backup': None,
@@ -1437,7 +1434,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1487,7 +1483,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
       ]),
       'last_automatic_backup': None,
@@ -1502,7 +1497,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1552,7 +1546,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1591,7 +1584,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1636,7 +1628,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1670,7 +1661,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1721,7 +1711,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -1956,18 +1945,17 @@
 # ---
 # name: test_generate[None]
   dict({
+    'event': dict({
+      'manager_state': 'idle',
+    }),
     'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
+    'type': 'event',
   })
 # ---
 # name: test_generate[None].1
   dict({
-    'id': 2,
-    'result': dict({
-      'backup_job_id': '27f5c632',
-    }),
+    'id': 1,
+    'result': None,
     'success': True,
     'type': 'result',
   })
@@ -1975,10 +1963,52 @@
 # name: test_generate[None].2
   dict({
     'event': dict({
-      'done': True,
-      'event_type': 'backup_progress',
+      'manager_state': 'create_backup',
       'stage': None,
-      'success': True,
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[None].3
+  dict({
+    'id': 2,
+    'result': dict({
+      'backup_job_id': '27f5c632',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[None].4
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'home_assistant',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[None].5
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'upload_to_agents',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[None].6
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': None,
+      'state': 'completed',
     }),
     'id': 1,
     'type': 'event',
@@ -1986,18 +2016,17 @@
 # ---
 # name: test_generate[data1]
   dict({
+    'event': dict({
+      'manager_state': 'idle',
+    }),
     'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
+    'type': 'event',
   })
 # ---
 # name: test_generate[data1].1
   dict({
-    'id': 2,
-    'result': dict({
-      'backup_job_id': '27f5c632',
-    }),
+    'id': 1,
+    'result': None,
     'success': True,
     'type': 'result',
   })
@@ -2005,24 +2034,15 @@
 # name: test_generate[data1].2
   dict({
     'event': dict({
-      'done': True,
-      'event_type': 'backup_progress',
+      'manager_state': 'create_backup',
       'stage': None,
-      'success': True,
+      'state': 'in_progress',
     }),
     'id': 1,
     'type': 'event',
   })
 # ---
-# name: test_generate[data2]
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
-  })
-# ---
-# name: test_generate[data2].1
+# name: test_generate[data1].3
   dict({
     'id': 2,
     'result': dict({
@@ -2032,13 +2052,105 @@
     'type': 'result',
   })
 # ---
+# name: test_generate[data1].4
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'home_assistant',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data1].5
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'upload_to_agents',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data1].6
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': None,
+      'state': 'completed',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data2]
+  dict({
+    'event': dict({
+      'manager_state': 'idle',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data2].1
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_generate[data2].2
   dict({
     'event': dict({
-      'done': True,
-      'event_type': 'backup_progress',
+      'manager_state': 'create_backup',
       'stage': None,
-      'success': True,
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data2].3
+  dict({
+    'id': 2,
+    'result': dict({
+      'backup_job_id': '27f5c632',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[data2].4
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'home_assistant',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data2].5
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': 'upload_to_agents',
+      'state': 'in_progress',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[data2].6
+  dict({
+    'event': dict({
+      'manager_state': 'create_backup',
+      'stage': None,
+      'state': 'completed',
     }),
     'id': 1,
     'type': 'event',
@@ -2050,7 +2162,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -2089,7 +2200,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -2128,7 +2238,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -2168,7 +2277,6 @@
     'result': dict({
       'agent_errors': dict({
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -2227,7 +2335,6 @@
       'agent_errors': dict({
         'domain.test': 'The backup agent is unreachable.',
       }),
-      'backing_up': False,
       'backups': list([
         dict({
           'addons': list([
@@ -2324,7 +2431,7 @@
 # name: test_subscribe_event
   dict({
     'event': dict({
-      'event_type': 'test',
+      'manager_state': 'idle',
     }),
     'id': 1,
     'type': 'event',
@@ -2341,7 +2448,9 @@
 # name: test_subscribe_event.2
   dict({
     'event': dict({
-      'event_type': 'test2',
+      'manager_state': 'create_backup',
+      'stage': None,
+      'state': 'in_progress',
     }),
     'id': 1,
     'type': 'event',

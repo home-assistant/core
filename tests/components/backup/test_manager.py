@@ -23,9 +23,11 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
-    BackupEvent,
-    BackupProgress,
     CoreBackupReaderWriter,
+    CreateBackupEvent,
+    CreateBackupStage,
+    CreateBackupState,
+    ManagerStateEvent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -69,9 +71,9 @@ async def _mock_backup_generation(
     """Mock backup generator."""
 
     agent_ids = agent_ids or [LOCAL_AGENT_ID]
-    progress: list[BackupProgress] = []
+    progress: list[ManagerStateEvent] = []
 
-    def on_progress(_progress: BackupEvent) -> None:
+    def on_progress(_progress: ManagerStateEvent) -> None:
         """Mock progress callback."""
         progress.append(_progress)
 
@@ -88,11 +90,23 @@ async def _mock_backup_generation(
         password=password,
     )
     assert manager.backup_task is not None
-    assert progress == []
+    assert progress == [
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+    ]
 
     backup, _ = await manager.backup_task
-    await manager.finish_backup_task
-    assert progress == [BackupProgress(done=True, stage=None, success=True)]
+    await manager.backup_finish_task
+    assert progress == [
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
+        CreateBackupEvent(
+            stage=CreateBackupStage.HOME_ASSISTANT, state=CreateBackupState.IN_PROGRESS
+        ),
+        CreateBackupEvent(
+            stage=CreateBackupStage.UPLOAD_TO_AGENTS,
+            state=CreateBackupState.IN_PROGRESS,
+        ),
+        CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED),
+    ]
 
     assert mocked_json_bytes.call_count == 1
     backup_json_dict = mocked_json_bytes.call_args[0][0]
@@ -279,8 +293,10 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
     event = asyncio.Event()
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.backup_task = hass.async_create_task(event.wait())
-    with pytest.raises(HomeAssistantError, match="Backup already in progress"):
+    manager.last_event = CreateBackupEvent(
+        stage=None, state=CreateBackupState.IN_PROGRESS
+    )
+    with pytest.raises(HomeAssistantError, match="Backup manager busy"):
         await manager.async_create_backup(
             agent_ids=[LOCAL_AGENT_ID],
             include_addons=[],

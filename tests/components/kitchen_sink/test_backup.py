@@ -55,7 +55,6 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
-        "syncing": False,
     }
 
 
