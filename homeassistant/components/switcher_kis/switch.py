@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
-from aioswitcher.api import Command, ShutterChildLock, SwitcherApi, SwitcherBaseResponse
+from aioswitcher.api import Command, ShutterChildLock
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherShutter
 import voluptuous as vol
 
@@ -117,35 +117,6 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         self.control_result = None
         self.async_write_ha_state()
 
-    async def _async_call_api(self, api: str, *args: Any) -> None:
-        """Call Switcher API."""
-        _LOGGER.debug(
-            "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
-        )
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherApi(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-            ) as swapi:
-                response = await getattr(swapi, api)(*args)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            _LOGGER.error(
-                "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.coordinator.name,
-                api,
-                args,
-                response or error,
-            )
-            self.coordinator.last_update_success = False
-
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
@@ -224,34 +195,6 @@ class SwitchereShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         """When device updates, clear control result that overrides state."""
         self.control_result = None
         self.async_write_ha_state()
-
-    async def _async_call_api(self, api: str, *args: Any) -> None:
-        """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherApi(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-                self.coordinator.token,
-            ) as swapi:
-                response = await getattr(swapi, api)(*args)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            _LOGGER.error(
-                "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.coordinator.name,
-                api,
-                args,
-                response or error,
-            )
-            self.coordinator.last_update_success = False
 
     @property
     def is_on(self) -> bool:
