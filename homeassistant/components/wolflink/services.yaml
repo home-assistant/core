@@ -1,0 +1,29 @@
+set_value:
+  name: "Set Value"
+  description: "Set a custom value on the Wolf SmartSet System. You find these values in the network-tab when you change parameters on the webpage (www.wolf-smartset.com)"
+  fields:
+    value_id:
+      required: true
+      example: "27011400001"
+      selector:
+        text:
+          multiline: false
+    state:
+      required: true
+      example: "18"
+      selector:
+        text:
+          multiline: false
+    gateway_id:
+      required: false
+      example: 30400
+      selector:
+        number:
+          mode: box
+    system_id:
+      required: false
+      example: 42350
+      selector:
+        number:
+          mode: box
+
