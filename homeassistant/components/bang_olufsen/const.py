@@ -211,5 +211,17 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
-# Prefix for Beolink Converter NL/ML in async_beolink_join custom service
-BL_CONVERTER_PREFIX = "bc_nlml_"
+# Translation dict for converting "human friendly" Beolink join source ids to the actual source ids,
+# needed on the Mozart, ASE or Beolink Converter NL/ML devices
+BEOLINK_JOIN_SOURCE_MAP = {
+    "ase_beoradio": "beoradio",
+    "ase_mozart_deezer": "deezer",
+    "ase_mozart_spotify": "spotify",
+    "beolink_converter_aux_a": "AUX_A",
+    "beolink_converter_cd": "CD",
+    "beolink_converter_ph": "PH",
+    "beolink_converter_radio": "RADIO",
+    "beolink_converter_tp1": "TP1",
+    "beolink_converter_tp2": "TP2",
+    "mozart_tidal": "tidal",
+}

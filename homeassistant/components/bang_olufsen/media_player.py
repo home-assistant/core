@@ -74,7 +74,7 @@ from .const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
-    BL_CONVERTER_PREFIX,
+    BEOLINK_JOIN_SOURCE_MAP,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
@@ -138,7 +138,7 @@ async def async_setup_entry(
         name="beolink_join",
         schema={
             vol.Optional("beolink_jid"): jid_regex,
-            vol.Optional("source_id"): str,
+            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCE_MAP.keys()),
         },
         func="async_beolink_join",
     )
@@ -1001,12 +1001,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             await self._client.join_beolink_peer(jid=beolink_jid)
         # Join a peer and select specific source
         elif beolink_jid and source_id:
-            # Home Assistant does not support the "raw" Beolink Converter NL/ML source ids in strings.json
-            # So they have the be transformed to be compatible and now have to be capatilized in order to work
-            if BL_CONVERTER_PREFIX in source_id:
-                source_id = source_id.removeprefix(BL_CONVERTER_PREFIX).upper()
-
-            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
+            # Convert the received source ID to one that Mozart, ASE or Beolink Converter NL/ML devices understand
+            await self._client.join_beolink_peer(
+                jid=beolink_jid, source=BEOLINK_JOIN_SOURCE_MAP[source_id]
+            )
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
