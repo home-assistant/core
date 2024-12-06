@@ -973,7 +973,8 @@ class Entity(
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
 
-        # Break if entity is not loaded using EntityComponent, introduced in 2025.1
+        # Break if entity is not loaded using EntityComponent
+        # behavior changed from logging in in 2025.1
         if self.platform is None:
             report_usage(  # type: ignore[unreachable]
                 f"Entity {self.entity_id} ({type(self)}) does not have a platform,"
