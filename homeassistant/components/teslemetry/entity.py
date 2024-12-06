@@ -139,6 +139,8 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Live entity."""
 
+        assert data.live_coordinator
+
         self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
@@ -197,6 +199,8 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
+
+        assert data.live_coordinator
 
         self.api = data.api
         self.din = din
