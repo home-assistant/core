@@ -8,18 +8,22 @@ from enum import StrEnum
 
 from bring_api import BringUserSettingsResponse
 from bring_api.const import BRING_SUPPORTED_LOCALES
+from bring_api.types import BringList
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BringConfigEntry
+from .const import DOMAIN
 from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
@@ -63,7 +67,7 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         translation_key=BringSensor.LIST_LANGUAGE,
         value_fn=(
             lambda lst, settings: x.lower()
-            if (x := list_language(lst["listUuid"], settings))
+            if (x := list_language(lst["uuid"], settings))
             else None
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -88,16 +92,49 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    async_add_entities(
-        BringSensorEntity(
-            coordinator,
-            bring_list,
-            description,
-        )
-        for description in SENSOR_DESCRIPTIONS
-        for bring_list in coordinator.data.values()
-    )
+    @callback
+    def add_entities() -> None:
+        """Add or remove sensor entities."""
+        nonlocal lists_added
+        entities: list[BringSensorEntity] = []
+        entity_registry = er.async_get(hass)
+
+        for bring_list in coordinator.lists:
+            if bring_list["listUuid"] not in lists_added:
+                entities.extend(
+                    BringSensorEntity(
+                        coordinator,
+                        bring_list,
+                        description,
+                    )
+                    for description in SENSOR_DESCRIPTIONS
+                )
+            lists_added.add(bring_list["listUuid"])
+
+        user = {x["listUuid"] for x in coordinator.user_settings["userlistsettings"]}
+        for list_uuid in user | lists_added:
+            if any(
+                bring_list["listUuid"] == list_uuid for bring_list in coordinator.lists
+            ):
+                continue
+
+            for description in SENSOR_DESCRIPTIONS:
+                if entity_id := entity_registry.async_get_entity_id(
+                    SENSOR_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_{list_uuid}_{description.key}",
+                ):
+                    entity_registry.async_remove(entity_id)
+
+            lists_added.discard(list_uuid)
+
+        if entities:
+            async_add_entities(entities)
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class BringSensorEntity(BringBaseEntity, SensorEntity):
@@ -108,7 +145,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
+        bring_list: BringList,
         entity_description: BringSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -120,7 +157,11 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 
-        return self.entity_description.value_fn(
-            self.coordinator.data[self._list_uuid],
-            self.coordinator.user_settings,
-        )
+        if list_data := next(
+            filter(lambda x: x["uuid"] == self._list_uuid, self.coordinator.data), None
+        ):
+            return self.entity_description.value_fn(
+                list_data,
+                self.coordinator.user_settings,
+            )
+        return None
