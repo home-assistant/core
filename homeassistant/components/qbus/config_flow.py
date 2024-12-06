@@ -102,7 +102,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # Abort to wait for config topic
-        return self.async_abort(reason="invalid_discovery_info")
+        return self.async_abort(reason="discovery_in_progress")
 
     async def _async_handle_config_topic(
         self, discovery_info: MqttServiceInfo
@@ -119,7 +119,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await mqtt.async_publish(self.hass, request.topic, request.payload)
 
         # Abort to wait for device topic
-        return self.async_abort(reason="invalid_discovery_info")
+        return self.async_abort(reason="discovery_in_progress")
 
     async def _async_handle_device_topic(
         self, discovery_info: MqttServiceInfo
