@@ -1488,7 +1488,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.13.7
 
 # homeassistant.components.deako
-pydeako==0.5.4
+pydeako==0.6.0
 
 # homeassistant.components.deconz
 pydeconz==118
