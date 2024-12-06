@@ -100,7 +100,8 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
-    ALARM_MESSAGE = "alarm_msg"
+    ALARM_MESSAGE = "alarm_message"
+    ALARM_MSG = "alarm_msg"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit

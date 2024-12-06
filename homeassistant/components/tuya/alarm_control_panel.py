@@ -121,7 +121,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Last change triggered by."""
         status = self.device.status.get(self.entity_description.key)
         if status == Mode.SOS:
-            return self.device.status.get(DPCode.ALARM_MESSAGE)
+            return self.device.status.get(DPCode.ALARM_MSG)
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
