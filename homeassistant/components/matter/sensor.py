@@ -687,7 +687,9 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,),
+        required_attributes=(
+            clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
