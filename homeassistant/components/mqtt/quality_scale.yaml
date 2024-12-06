@@ -29,9 +29,12 @@ rules:
       MQTT broker, this happens during integration setup,
       and only one config entry is allowed.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: >
+      We choose to early exit the entry as it can take some time for the client
+      to connect. Waiting for the client would increase the overall setup time.
   unique-config-entry: done
-
   # Silver
   config-entry-unloading: done
   log-when-unavailable: done

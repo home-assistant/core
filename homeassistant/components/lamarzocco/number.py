@@ -11,8 +11,8 @@ from pylamarzocco.const import (
     PhysicalKey,
     PrebrewMode,
 )
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.number import (
