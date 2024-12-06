@@ -1137,7 +1137,9 @@ class ConfigEntry(Generic[_DataT]):
         )
 
     @callback
-    def async_create_task[_R](
+    def async_create_task[
+        _R
+    ](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1161,7 +1163,9 @@ class ConfigEntry(Generic[_DataT]):
         return task
 
     @callback
-    def async_create_background_task[_R](
+    def async_create_background_task[
+        _R
+    ](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1509,13 +1513,15 @@ class ConfigEntriesFlowManager(
             title=result["title"],
             unique_id=flow.unique_id,
             version=result["version"],
-            virtual_integration_domain=result.context.get("virtual_integration_domain"),
+            virtual_integration_domain=flow.context["virtual_integration_domain"],
         )
 
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
-            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
+            await self.config_entries._async_remove(
+                existing_entry.entry_id
+            )  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
