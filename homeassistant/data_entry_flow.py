@@ -121,7 +121,7 @@ class FlowContext(TypedDict, total=False):
 
     show_advanced_options: bool
     source: str
-    virtual_integration_domain: str | None
+    virtual_domain: str | None
 
 
 class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
@@ -642,9 +642,9 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return self.context.get("show_advanced_options", False)  # type: ignore[return-value]
 
     @property
-    def virtual_integration_domain(self) -> str | None:
+    def virtual_domain(self) -> str | None:
         """Virtual integration name."""
-        return self.context.get("virtual_integration_domain", None)  # type: ignore[return-value]
+        return self.context.get("virtual_domain", None)  # type: ignore[return-value]
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None

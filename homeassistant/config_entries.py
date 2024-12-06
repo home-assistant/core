@@ -349,7 +349,7 @@ class ConfigEntry(Generic[_DataT]):
     created_at: datetime
     modified_at: datetime
     discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-    virtual_integration_domain: str | None
+    virtual_domain: str | None
 
     def __init__(
         self,
@@ -370,7 +370,7 @@ class ConfigEntry(Generic[_DataT]):
         title: str,
         unique_id: str | None,
         version: int,
-        virtual_integration_domain: str | None = None,
+        virtual_domain: str | None = None,
     ) -> None:
         """Initialize a config entry."""
         _setter = object.__setattr__
@@ -383,7 +383,7 @@ class ConfigEntry(Generic[_DataT]):
 
         # Domain the configuration belongs to
         _setter(self, "domain", domain)
-        _setter(self, "virtual_integration_domain", virtual_integration_domain)
+        _setter(self, "virtual_domain", virtual_domain)
 
         # Title of the configuration
         _setter(self, "title", title)
@@ -1509,7 +1509,7 @@ class ConfigEntriesFlowManager(
             title=result["title"],
             unique_id=flow.unique_id,
             version=result["version"],
-            virtual_integration_domain=flow.context["virtual_integration_domain"],
+            virtual_domain=flow.context.get("virtual_domain"),
         )
 
         if existing_entry is not None:
