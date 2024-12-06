@@ -121,6 +121,7 @@ class FlowContext(TypedDict, total=False):
 
     show_advanced_options: bool
     source: str
+    virtual_integration_domain: str | None
 
 
 class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
@@ -581,17 +582,19 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     ) -> list[_FlowResultT]:
         """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
         return [
-            self._flow_result(
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                context=flow.context,
-                step_id=flow.cur_step["step_id"],
-            )
-            if flow.cur_step
-            else self._flow_result(
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                context=flow.context,
+            (
+                self._flow_result(
+                    flow_id=flow.flow_id,
+                    handler=flow.handler,
+                    context=flow.context,
+                    step_id=flow.cur_step["step_id"],
+                )
+                if flow.cur_step
+                else self._flow_result(
+                    flow_id=flow.flow_id,
+                    handler=flow.handler,
+                    context=flow.context,
+                )
             )
             for flow in flows
             if include_uninitialized or flow.cur_step is not None
@@ -637,6 +640,11 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
         return self.context.get("show_advanced_options", False)  # type: ignore[return-value]
+
+    @property
+    def virtual_integration_domain(self) -> str | None:
+        """Virtual integration name."""
+        return self.context.get("virtual_integration_domain", None)  # type: ignore[return-value]
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
