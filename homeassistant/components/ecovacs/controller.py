@@ -99,8 +99,8 @@ class EcovacsController:
             for device_config in devices.not_supported:
                 _LOGGER.warning(
                     (
-                        'Device "%s" not supported. Please add support for it to '
-                        "https://github.com/DeebotUniverse/client.py: %s"
+                        'Device "%s" not supported. More information at '
+                        "https://github.com/DeebotUniverse/client.py/issues/612: %s"
                     ),
                     device_config["deviceName"],
                     device_config,
