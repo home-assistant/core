@@ -58,6 +58,7 @@ SUPPORTED_CORE_SENSORS = [
         key=VALUE.AIR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_temperature",
     ),
 ]
 
