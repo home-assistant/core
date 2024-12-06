@@ -82,8 +82,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             name=None,
             password=call.data.get(CONF_PASSWORD),
         )
-        if backup_task := backup_manager.backup_task:
-            await backup_task
 
     hass.services.async_register(
         DOMAIN,

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
@@ -28,6 +27,8 @@ from homeassistant.components.backup.manager import (
     CreateBackupStage,
     CreateBackupState,
     ManagerStateEvent,
+    NewBackup,
+    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -77,9 +78,9 @@ async def _mock_backup_generation(
         """Mock progress callback."""
         progress.append(_progress)
 
-    assert manager.backup_task is None
+    assert manager._backup_task is None
     manager.async_subscribe_events(on_progress)
-    await manager.async_create_backup(
+    await manager.async_initiate_backup(
         agent_ids=agent_ids,
         include_addons=[],
         include_all_addons=False,
@@ -89,13 +90,13 @@ async def _mock_backup_generation(
         name=name,
         password=password,
     )
-    assert manager.backup_task is not None
+    assert manager._backup_task is not None
     assert progress == [
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
     ]
 
-    finished_backup = await manager.backup_task
-    await manager.backup_finish_task
+    finished_backup = await manager._backup_task
+    await manager._backup_finish_task
     assert progress == [
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
         CreateBackupEvent(
@@ -289,9 +290,52 @@ async def test_getting_backup_that_does_not_exist(
         ) in caplog.text
 
 
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_async_create_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mocked_json_bytes: Mock,
+    mocked_tarfile: Mock,
+) -> None:
+    """Test create backup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    new_backup = NewBackup(backup_job_id="time-123")
+    backup_task = AsyncMock(
+        return_value=WrittenBackup(
+            backup=TEST_BACKUP_ABC123,
+            open_stream=AsyncMock(),
+            release_stream=AsyncMock(),
+        ),
+    )()  # call it so that it can be awaited
+
+    with patch(
+        "homeassistant.components.backup.manager.CoreBackupReaderWriter.async_create_backup",
+        return_value=(new_backup, backup_task),
+    ) as create_backup:
+        await hass.services.async_call(
+            DOMAIN,
+            "create",
+            blocking=True,
+        )
+
+    assert create_backup.called
+    assert create_backup.call_args == call(
+        agent_ids=["backup.local"],
+        backup_name="Core 2025.1.0",
+        include_addons=None,
+        include_all_addons=False,
+        include_database=True,
+        include_folders=None,
+        include_homeassistant=True,
+        on_progress=ANY,
+        password=None,
+    )
+
+
 async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
-    event = asyncio.Event()
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     manager.last_event = CreateBackupEvent(
         stage=None, state=CreateBackupState.IN_PROGRESS
@@ -307,7 +351,6 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
             name=None,
             password=None,
         )
-    event.set()
 
 
 @pytest.mark.parametrize(
@@ -364,7 +407,7 @@ async def test_async_create_backup_wrong_parameters(
         {"password": "abc123"},
     ],
 )
-async def test_async_create_backup(
+async def test_async_initiate_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
