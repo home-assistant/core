@@ -5,6 +5,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/d
 
 import ast
 
+from script.hassfest import ast_parse_module
 from script.hassfest.model import Integration
 
 DIAGNOSTICS_FUNCTIONS = {
@@ -31,7 +32,7 @@ def validate(integration: Integration) -> list[str] | None:
             "(is missing diagnostics.py)",
         ]
 
-    diagnostics = ast.parse(diagnostics_file.read_text())
+    diagnostics = ast_parse_module(diagnostics_file)
 
     if not _has_diagnostics_function(diagnostics):
         return [
