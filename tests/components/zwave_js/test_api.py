@@ -5204,9 +5204,8 @@ async def test_subscribe_s2_inclusion(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 1,
             TYPE: "zwave_js/subscribe_s2_inclusion",
             ENTRY_ID: entry.entry_id,
         }
@@ -5237,9 +5236,8 @@ async def test_subscribe_s2_inclusion(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 2,
             TYPE: "zwave_js/subscribe_s2_inclusion",
             ENTRY_ID: entry.entry_id,
         }
@@ -5248,3 +5246,14 @@ async def test_subscribe_s2_inclusion(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+    # Test invalid config entry id
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_s2_inclusion",
+            ENTRY_ID: "INVALID",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
