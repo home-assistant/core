@@ -128,8 +128,6 @@ async def async_setup_entry(
 class FibaroThermostat(FibaroEntity, ClimateEntity):
     """Representation of a Fibaro Thermostat."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
     def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)

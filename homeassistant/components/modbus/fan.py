@@ -38,8 +38,6 @@ async def async_setup_platform(
 class ModbusFan(BaseSwitch, FanEntity):
     """Class representing a Modbus fan."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
     def __init__(
         self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
     ) -> None:
