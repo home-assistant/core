@@ -260,9 +260,12 @@ async def backup_agents_download(
         )
         return
     try:
-        path = manager.temp_backup_dir / f"{msg["backup_id"]}.tar"
+        # Note: We should remove this WS command, it's only used in tests,
+        # tests can instead call GET /api/backup/download/{backup_id}
+        temp_backup_dir = manager._reader_writer.temp_backup_dir  # noqa: SLF001
+        path = temp_backup_dir / f"{msg["backup_id"]}.tar"
         stream = await agent.async_download_backup(msg["backup_id"])
-        await hass.async_add_executor_job(make_backup_dir, manager.temp_backup_dir)
+        await hass.async_add_executor_job(make_backup_dir, temp_backup_dir)
         f = await hass.async_add_executor_job(path.open, "wb")
         try:
             async for chunk in stream:

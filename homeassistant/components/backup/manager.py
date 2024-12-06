@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import hashlib
@@ -43,7 +43,7 @@ from .const import (
     LOGGER,
 )
 from .models import AgentBackup, Folder
-from .util import make_backup_dir, read_backup, receive_file
+from .util import make_backup_dir, read_backup
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -58,6 +58,15 @@ class Backup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class WrittenBackup:
+    """Written backup class."""
+
+    backup: AgentBackup
+    open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]
+    release_stream: Callable[[], Coroutine[Any, Any, None]]
 
 
 class BackupManagerState(StrEnum):
@@ -197,8 +206,18 @@ class BackupReaderWriter(abc.ABC):
         include_homeassistant: bool,
         on_progress: Callable[[ManagerStateEvent], None],
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
+
+    @abc.abstractmethod
+    async def async_receive_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        suggested_filename: str,
+    ) -> WrittenBackup:
+        """Receive a backup."""
 
     @abc.abstractmethod
     async def async_restore_backup(
@@ -206,6 +225,7 @@ class BackupReaderWriter(abc.ABC):
         backup_id: str,
         *,
         agent_id: str,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
         restore_database: bool,
@@ -229,7 +249,7 @@ class BackupManager:
         self._reader_writer = reader_writer
 
         # Tasks and flags tracking backup and restore progress
-        self.backup_task: asyncio.Task[tuple[AgentBackup, Path]] | None = None
+        self.backup_task: asyncio.Task[WrittenBackup] | None = None
         self.backup_finish_task: asyncio.Task[None] | None = None
 
         # Backup schedule and retention listeners
@@ -249,11 +269,6 @@ class BackupManager:
     def state(self) -> BackupManagerState:
         """Return the state of the backup manager."""
         return self.last_event.manager_state
-
-    @property
-    def temp_backup_dir(self) -> Path:
-        """Return the temporary backup directory."""
-        return self._reader_writer.temp_backup_dir
 
     @callback
     def _add_platform_pre_post_handler(
@@ -342,26 +357,15 @@ class BackupManager:
         *,
         backup: AgentBackup,
         agent_ids: list[str],
-        path: Path,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
     ) -> None:
         """Upload a backup to selected agents."""
         LOGGER.debug("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
-        async def send_backup() -> AsyncGenerator[bytes]:
-            f = await self.hass.async_add_executor_job(path.open, "rb")
-            try:
-                while chunk := await self.hass.async_add_executor_job(f.read, 2**20):
-                    yield chunk
-            finally:
-                await self.hass.async_add_executor_job(f.close)
-
-        async def open_backup() -> AsyncGenerator[bytes]:
-            return send_backup()
-
         sync_backup_results = await asyncio.gather(
             *(
                 self.backup_agents[agent_id].async_upload_backup(
-                    open_stream=open_backup,
+                    open_stream=open_stream,
                     backup=backup,
                 )
                 for agent_id in agent_ids
@@ -507,42 +511,18 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> None:
         """Receive and store a backup file from upload."""
-        target_temp_file = Path(self.temp_backup_dir, contents.filename or "backup.tar")
-        await self.hass.async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-
+        contents.chunk_size = BUF_SIZE
         self.async_on_backup_event(
             ReceiveBackupEvent(
                 stage=ReceiveBackupStage.RECEIVE_FILE,
                 state=ReceiveBackupState.IN_PROGRESS,
             )
         )
-        await receive_file(self.hass, contents, target_temp_file)
-
-        try:
-            backup = await self.hass.async_add_executor_job(
-                read_backup, target_temp_file
-            )
-        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
-            LOGGER.warning("Unable to parse backup %s: %s", target_temp_file, err)
-            return
-
-        local_file_paths = [
-            self.local_backup_agents[agent_id].get_backup_path(backup.backup_id)
-            for agent_id in agent_ids
-            if agent_id in self.local_backup_agents
-        ]
-        if local_file_paths:
-
-            def _copy_to_local_agents(local_file_paths: list[Path]) -> Path:
-                for local_path in local_file_paths:
-                    shutil.copy(target_temp_file, local_path)
-                return local_file_paths[0]
-
-            tar_file_path = await self.hass.async_add_executor_job(
-                _copy_to_local_agents, local_file_paths
-            )
-        else:
-            tar_file_path = target_temp_file
+        written_backup = await self._reader_writer.async_receive_backup(
+            agent_ids=agent_ids,
+            stream=contents,
+            suggested_filename=contents.filename or "backup.tar",
+        )
         self.async_on_backup_event(
             ReceiveBackupEvent(
                 stage=ReceiveBackupStage.UPLOAD_TO_AGENTS,
@@ -550,10 +530,11 @@ class BackupManager:
             )
         )
         await self._async_upload_backup(
-            backup=backup, agent_ids=agent_ids, path=tar_file_path
+            backup=written_backup.backup,
+            agent_ids=agent_ids,
+            open_stream=written_backup.open_stream,
         )
-        if not local_file_paths:
-            await self.hass.async_add_executor_job(tar_file_path.unlink, True)
+        await written_backup.release_stream()
 
     async def async_create_backup(
         self,
@@ -636,7 +617,7 @@ class BackupManager:
         if TYPE_CHECKING:
             assert self.backup_task is not None
         try:
-            backup, tar_file_path = await self.backup_task
+            written_backup = await self.backup_task
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Generating backup failed", exc_info=err)
             self.async_on_backup_event(
@@ -645,22 +626,9 @@ class BackupManager:
         else:
             LOGGER.debug(
                 "Generated new backup with backup_id %s, uploading to agents %s",
-                backup.backup_id,
+                written_backup.backup.backup_id,
                 agent_ids,
             )
-            local_file_paths = [
-                self.local_backup_agents[agent_id].get_backup_path(backup.backup_id)
-                for agent_id in agent_ids
-                if agent_id in self.local_backup_agents
-            ]
-            keep_path = False
-            for local_path in local_file_paths:
-                if local_path == tar_file_path:
-                    keep_path = True
-                    continue
-                await self.hass.async_add_executor_job(
-                    shutil.copy, tar_file_path, local_path
-                )
             self.async_on_backup_event(
                 CreateBackupEvent(
                     stage=CreateBackupStage.UPLOAD_TO_AGENTS,
@@ -668,10 +636,11 @@ class BackupManager:
                 )
             )
             await self._async_upload_backup(
-                backup=backup, agent_ids=agent_ids, path=tar_file_path
+                backup=written_backup.backup,
+                agent_ids=agent_ids,
+                open_stream=written_backup.open_stream,
             )
-            if not keep_path:
-                await self.hass.async_add_executor_job(tar_file_path.unlink, True)
+            await written_backup.release_stream()
             self.async_on_backup_event(
                 CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED)
             )
@@ -727,32 +696,18 @@ class BackupManager:
         restore_homeassistant: bool,
     ) -> None:
         """Initiate restoring a backup."""
-        if agent_id in self.local_backup_agents:
-            local_agent = self.local_backup_agents[agent_id]
-            if not await local_agent.async_get_backup(backup_id):
-                raise HomeAssistantError(
-                    f"Backup {backup_id} not found in agent {agent_id}"
-                )
-        else:
-            path = self.temp_backup_dir / f"{backup_id}.tar"
-            agent = self.backup_agents[agent_id]
-            if not await agent.async_get_backup(backup_id):
-                raise HomeAssistantError(
-                    f"Backup {backup_id} not found in agent {agent_id}"
-                )
-            stream = await agent.async_download_backup(backup_id)
-            await self.hass.async_add_executor_job(
-                make_backup_dir, self.temp_backup_dir
+        agent = self.backup_agents[agent_id]
+        if not await agent.async_get_backup(backup_id):
+            raise HomeAssistantError(
+                f"Backup {backup_id} not found in agent {agent_id}"
             )
-            f = await self.hass.async_add_executor_job(path.open, "wb")
-            try:
-                async for chunk in stream:
-                    await self.hass.async_add_executor_job(f.write, chunk)
-            finally:
-                await self.hass.async_add_executor_job(f.close)
+
+        async def open_backup() -> AsyncIterator[bytes]:
+            return await agent.async_download_backup(backup_id)
 
         await self._reader_writer.async_restore_backup(
             backup_id=backup_id,
+            open_stream=open_backup,
             agent_id=agent_id,
             password=password,
             restore_addons=restore_addons,
@@ -788,6 +743,8 @@ class BackupManager:
 class CoreBackupReaderWriter(BackupReaderWriter):
     """Class for reading and writing backups in core and container installations."""
 
+    _local_agent_id = f"{DOMAIN}.local"
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup reader/writer."""
         self._hass = hass
@@ -805,7 +762,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_homeassistant: bool,
         on_progress: Callable[[ManagerStateEvent], None],
         password: str | None,
-    ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
+    ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Initiate generating a backup."""
         date_str = dt_util.now().isoformat()
         backup_id = _generate_backup_id(date_str, backup_name)
@@ -843,15 +800,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         on_progress: Callable[[ManagerStateEvent], None],
         password: str | None,
-    ) -> tuple[AgentBackup, Path]:
+    ) -> WrittenBackup:
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
 
         suggested_tar_file_path = None
-        for agent_id in agent_ids:
-            if local_agent := manager.local_backup_agents.get(agent_id):
-                suggested_tar_file_path = local_agent.get_backup_path(backup_id)
-                break
+        if self._local_agent_id in agent_ids:
+            local_agent = manager.local_backup_agents[self._local_agent_id]
+            suggested_tar_file_path = local_agent.get_backup_path(backup_id)
 
         on_progress(
             CreateBackupEvent(
@@ -896,7 +852,28 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 protected=password is not None,
                 size=size_in_bytes,
             )
-            return (backup, tar_file_path)
+
+            async_add_executor_job = self._hass.async_add_executor_job
+
+            async def send_backup() -> AsyncIterator[bytes]:
+                f = await async_add_executor_job(tar_file_path.open, "rb")
+                try:
+                    while chunk := await async_add_executor_job(f.read, 2**20):
+                        yield chunk
+                finally:
+                    await async_add_executor_job(f.close)
+
+            async def open_backup() -> AsyncIterator[bytes]:
+                return send_backup()
+
+            async def remove_backup() -> None:
+                if not suggested_tar_file_path:
+                    return
+                await async_add_executor_job(suggested_tar_file_path.unlink, True)
+
+            return WrittenBackup(
+                backup=backup, open_stream=open_backup, release_stream=remove_backup
+            )
         finally:
             # Inform integrations the backup is done
             await manager.async_post_backup_actions()
@@ -940,9 +917,63 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 )
         return (tar_file_path, tar_file_path.stat().st_size)
 
+    async def async_receive_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        suggested_filename: str,
+    ) -> WrittenBackup:
+        """Receive a backup."""
+        temp_file = Path(self.temp_backup_dir, suggested_filename)
+
+        async_add_executor_job = self._hass.async_add_executor_job
+        await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
+        f = await async_add_executor_job(temp_file.open, "wb")
+        try:
+            async for chunk in stream:
+                await async_add_executor_job(f.write, chunk)
+        finally:
+            await async_add_executor_job(f.close)
+
+        try:
+            backup = await async_add_executor_job(read_backup, temp_file)
+        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+            LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
+            raise
+
+        manager = self._hass.data[DATA_MANAGER]
+        if self._local_agent_id in agent_ids:
+            local_agent = manager.local_backup_agents[self._local_agent_id]
+            tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            await async_add_executor_job(shutil.move, temp_file, tar_file_path)
+        else:
+            tar_file_path = temp_file
+
+        async def send_backup() -> AsyncIterator[bytes]:
+            f = await async_add_executor_job(tar_file_path.open, "rb")
+            try:
+                while chunk := await async_add_executor_job(f.read, 2**20):
+                    yield chunk
+            finally:
+                await async_add_executor_job(f.close)
+
+        async def open_backup() -> AsyncIterator[bytes]:
+            return send_backup()
+
+        async def remove_backup() -> None:
+            if self._local_agent_id in agent_ids:
+                return
+            await async_add_executor_job(temp_file.unlink, True)
+
+        return WrittenBackup(
+            backup=backup, open_stream=open_backup, release_stream=remove_backup
+        )
+
     async def async_restore_backup(
         self,
         backup_id: str,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         *,
         agent_id: str,
         password: str | None,
@@ -972,7 +1003,17 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             path = local_agent.get_backup_path(backup_id)
             remove_after_restore = False
         else:
+            async_add_executor_job = self._hass.async_add_executor_job
             path = self.temp_backup_dir / f"{backup_id}.tar"
+            stream = await open_stream()
+            await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
+            f = await async_add_executor_job(path.open, "wb")
+            try:
+                async for chunk in stream:
+                    await async_add_executor_job(f.write, chunk)
+            finally:
+                await async_add_executor_job(f.close)
+
             remove_after_restore = True
 
         def _write_restore_file() -> None:
