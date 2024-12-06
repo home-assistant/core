@@ -47,9 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> boo
     """Unload a config entry."""
     _LOGGER.debug("Unloading entry %s", entry.entry_id)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry.runtime_data.coordinator.shutdown()
 
     return unload_ok
