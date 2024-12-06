@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import SpotifyConfigEntry
+from .coordinator import SpotifyConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

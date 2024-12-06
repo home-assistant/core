@@ -206,6 +206,53 @@
     'state': 'off',
   })
 # ---
+# name: test_states[binary_sensor.my_device_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.my_device_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_detected',
+    'unique_id': '123456789ABCDEFGH_motion_detected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.my_device_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'my_device Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_device_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_states[binary_sensor.my_device_overheated-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

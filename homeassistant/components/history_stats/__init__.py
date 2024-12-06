@@ -41,7 +41,7 @@ async def async_setup_entry(
         Template(end, hass) if end else None,
         duration,
     )
-    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, entry.title)
+    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, entry, entry.title)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

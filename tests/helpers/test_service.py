@@ -347,6 +347,13 @@ def label_mock(hass: HomeAssistant) -> None:
         platform="test",
         device_id=device_has_label1.id,
     )
+    entity_with_label1_from_device_and_different_area = er.RegistryEntry(
+        entity_id="light.with_label1_from_device_diff_area",
+        unique_id="with_label1_from_device_diff_area",
+        platform="test",
+        device_id=device_has_label1.id,
+        area_id=area_without_labels.id,
+    )
     entity_with_label1_and_label2_from_device = er.RegistryEntry(
         entity_id="light.with_label1_and_label2_from_device",
         unique_id="with_label1_and_label2_from_device",
@@ -373,6 +380,7 @@ def label_mock(hass: HomeAssistant) -> None:
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
             entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
             entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
             entity_with_my_label.entity_id: entity_with_my_label,
             entity_with_no_labels.entity_id: entity_with_no_labels,
@@ -754,6 +762,7 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
 
     assert {
         "light.with_label1_from_device",
+        "light.with_label1_from_device_diff_area",
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
     } == await service.async_extract_entity_ids(hass, call)
@@ -1265,6 +1274,8 @@ async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
+    # Set up homeassistant component to fetch the translations
+    await async_setup_component(hass, "homeassistant", {})
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
@@ -1284,7 +1295,11 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
-    with pytest.raises(exceptions.HomeAssistantError):
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match="Entity light.living_room does not "
+        "support action test_domain.test_service",
+    ):
         await service.entity_service_call(
             hass,
             mock_entities,

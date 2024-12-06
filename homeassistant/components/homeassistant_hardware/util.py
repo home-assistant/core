@@ -9,9 +9,10 @@ from typing import cast
 
 from universal_silabs_flasher.const import ApplicationType
 
-from homeassistant.components.hassio import AddonError, AddonState, is_hassio
+from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 
 from .const import (

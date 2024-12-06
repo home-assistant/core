@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, f
 from propcache import cached_property
 import voluptuous as vol
 
-from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
@@ -49,6 +48,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     get_release_channel,
 )
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidStateError,
@@ -337,7 +337,9 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
-                if getattr(o, private_attr_name, _SENTINEL) == val:
+                if (
+                    old_val := getattr(o, private_attr_name, _SENTINEL)
+                ) == val and type(old_val) is type(val):
                     return
                 setattr(o, private_attr_name, val)
                 # Invalidate the cache of the cached property
@@ -643,6 +645,22 @@ class Entity(
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
+        )
+
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
         )
 
     def _substitute_name_placeholders(self, name: str) -> str:

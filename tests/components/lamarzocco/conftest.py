@@ -2,21 +2,36 @@
 
 from collections.abc import Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -31,6 +46,7 @@ def mock_config_entry(
         data=USER_INPUT
         | {
             CONF_MODEL: mock_lamarzocco.model,
+            CONF_ADDRESS: "00:00:00:00:00:00",
             CONF_HOST: "host",
             CONF_TOKEN: "token",
             CONF_NAME: "GS3",
@@ -75,11 +91,11 @@ def device_fixture() -> MachineModel:
 
 
 @pytest.fixture
-def mock_device_info() -> LaMarzoccoDeviceInfo:
+def mock_device_info(device_fixture: MachineModel) -> LaMarzoccoDeviceInfo:
     """Return a mocked La Marzocco device info."""
     return LaMarzoccoDeviceInfo(
-        model=MachineModel.GS3_AV,
-        serial_number="GS01234",
+        model=device_fixture,
+        serial_number=SERIAL_DICT[device_fixture],
         name="GS3",
         communication_key="token",
     )
@@ -157,5 +173,5 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
     return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS01234", details={"path": "path"}, rssi=50
+        "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )

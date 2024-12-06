@@ -164,7 +164,10 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {"username": "user"}
+    assert result["description_placeholders"] == {
+        "username": "user",
+        "name": "Mock Title",
+    }
 
     with patch(
         "homeassistant.components.transmission.async_setup_entry",
@@ -194,7 +197,10 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {"username": "user"}
+    assert result["description_placeholders"] == {
+        "username": "user",
+        "name": "Mock Title",
+    }
 
     mock_api.side_effect = TransmissionAuthError()
     result2 = await hass.config_entries.flow.async_configure(
@@ -222,7 +228,10 @@ async def test_reauth_failed_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {"username": "user"}
+    assert result["description_placeholders"] == {
+        "username": "user",
+        "name": "Mock Title",
+    }
 
     mock_api.side_effect = TransmissionConnectError()
     result2 = await hass.config_entries.flow.async_configure(

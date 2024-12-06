@@ -202,7 +202,8 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] is None
 
     set_node_attribute_typed(
         matter_node,
@@ -215,7 +216,8 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress") == 50
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 50
 
     set_node_attribute_typed(
         matter_node,

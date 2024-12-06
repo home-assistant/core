@@ -8,10 +8,15 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation import (
+    ConversationInput,
+    async_handle_intents,
+    async_handle_sentence_triggers,
+    default_agent,
+)
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -229,3 +234,97 @@ async def test_prepare_agent(
         await conversation.async_prepare_agent(hass, agent_id, "en")
 
     assert len(mock_prepare.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("response_template", "expected_response"),
+    [("response {{ trigger.device_id }}", "response 1234"), ("", "")],
+)
+async def test_async_handle_sentence_triggers(
+    hass: HomeAssistant, response_template: str, expected_response: str
+) -> None:
+    """Test handling sentence triggers with async_handle_sentence_triggers."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["my trigger"],
+                },
+                "action": {
+                    "set_conversation_response": response_template,
+                },
+            }
+        },
+    )
+
+    # Device id will be available in response template
+    device_id = "1234"
+    actual_response = await async_handle_sentence_triggers(
+        hass,
+        ConversationInput(
+            text="my trigger",
+            context=Context(),
+            conversation_id=None,
+            device_id=device_id,
+            language=hass.config.language,
+        ),
+    )
+    assert actual_response == expected_response
+
+
+async def test_async_handle_intents(hass: HomeAssistant) -> None:
+    """Test handling registered intents with async_handle_intents."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.was_handled = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.was_handled = True
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    # Registered intent will be handled
+    result = await async_handle_intents(
+        hass,
+        ConversationInput(
+            text="I'd like to order a stout",
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            language=hass.config.language,
+        ),
+    )
+    assert result is not None
+    assert result.intent is not None
+    assert result.intent.intent_type == handler.intent_type
+    assert handler.was_handled
+
+    # No error messages, just None as a result
+    result = await async_handle_intents(
+        hass,
+        ConversationInput(
+            text="this sentence does not exist",
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            language=hass.config.language,
+        ),
+    )
+    assert result is None

@@ -52,7 +52,9 @@ def mock_nice_go() -> Generator[AsyncMock]:
                 attr=barrier["attr"],
                 state=BarrierState(
                     **barrier["state"],
-                    connectionState=ConnectionState(**barrier["connectionState"]),
+                    connectionState=ConnectionState(**barrier["connectionState"])
+                    if barrier.get("connectionState")
+                    else None,
                 ),
                 api=client,
             )

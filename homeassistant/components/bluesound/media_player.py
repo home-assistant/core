@@ -7,7 +7,7 @@ from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -24,18 +24,8 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_HOSTS,
-    CONF_NAME,
-    CONF_PORT,
-)
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-)
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -48,16 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    ATTR_BLUESOUND_GROUP,
-    ATTR_MASTER,
-    DOMAIN,
-    INTEGRATION_TITLE,
-    SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
-    SERVICE_SET_TIMER,
-    SERVICE_UNJOIN,
-)
+from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN, INTEGRATION_TITLE
 from .utils import format_unique_id
 
 if TYPE_CHECKING:
@@ -91,29 +72,6 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         )
     }
 )
-
-BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
-
-
-class ServiceMethodDetails(NamedTuple):
-    """Details for SERVICE_TO_METHOD mapping."""
-
-    method: str
-    schema: vol.Schema
-
-
-SERVICE_TO_METHOD = {
-    SERVICE_JOIN: ServiceMethodDetails(method="async_join", schema=BS_JOIN_SCHEMA),
-    SERVICE_UNJOIN: ServiceMethodDetails(method="async_unjoin", schema=BS_SCHEMA),
-    SERVICE_SET_TIMER: ServiceMethodDetails(
-        method="async_increase_timer", schema=BS_SCHEMA
-    ),
-    SERVICE_CLEAR_TIMER: ServiceMethodDetails(
-        method="async_clear_timer", schema=BS_SCHEMA
-    ),
-}
 
 
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
@@ -157,33 +115,6 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
             "integration_title": INTEGRATION_TITLE,
         },
     )
-
-
-def setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Bluesound component."""
-
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Map services to method of Bluesound devices."""
-        if not (method := SERVICE_TO_METHOD.get(service.service)):
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        if entity_ids := service.data.get(ATTR_ENTITY_ID):
-            target_players = [
-                player for player in hass.data[DOMAIN] if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DOMAIN]
-
-        for player in target_players:
-            await getattr(player, method.method)(**params)
-
-    for service, method in SERVICE_TO_METHOD.items():
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=method.schema
-        )
 
 
 async def async_setup_entry(
@@ -361,14 +292,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = dt_util.utcnow()
             self._status = status
 
-            group_name = status.group_name
-            if group_name != self._group_name:
-                _LOGGER.debug("Group name change detected on device: %s", self.id)
-                self._group_name = group_name
-
-                # rebuild ordered list of entity_ids that are in the group, master is first
-                self._group_list = self.rebuild_bluesound_group()
-
             self.async_write_ha_state()
         except PlayerUnreachableError:
             self._attr_available = False
@@ -391,6 +314,8 @@ class BluesoundPlayer(MediaPlayerEntity):
         )
 
         self._sync_status = sync_status
+
+        self._group_list = self.rebuild_bluesound_group()
 
         if sync_status.master is not None:
             self._is_master = False
@@ -433,12 +358,13 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.is_grouped and not self.is_master:
             return MediaPlayerState.IDLE
 
-        status = self._status.state
-        if status in ("pause", "stop"):
-            return MediaPlayerState.PAUSED
-        if status in ("stream", "play"):
-            return MediaPlayerState.PLAYING
-        return MediaPlayerState.IDLE
+        match self._status.state:
+            case "pause":
+                return MediaPlayerState.PAUSED
+            case "stream" | "play":
+                return MediaPlayerState.PLAYING
+            case _:
+                return MediaPlayerState.IDLE
 
     @property
     def media_title(self) -> str | None:
@@ -554,6 +480,11 @@ class BluesoundPlayer(MediaPlayerEntity):
     def bluesound_device_name(self) -> str | None:
         """Return the device name as returned by the device."""
         return self._bluesound_device_name
+
+    @property
+    def sync_status(self) -> SyncStatus:
+        """Return the sync status."""
+        return self._sync_status
 
     @property
     def source_list(self) -> list[str] | None:
@@ -682,21 +613,32 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     def rebuild_bluesound_group(self) -> list[str]:
         """Rebuild the list of entities in speaker group."""
-        if self._group_name is None:
+        if self.sync_status.master is None and self.sync_status.slaves is None:
             return []
 
-        device_group = self._group_name.split("+")
+        player_entities: list[BluesoundPlayer] = self.hass.data[DATA_BLUESOUND]
 
-        sorted_entities: list[BluesoundPlayer] = sorted(
-            self.hass.data[DATA_BLUESOUND],
-            key=lambda entity: entity.is_master,
-            reverse=True,
-        )
-        return [
-            cast(str, entity.name)
-            for entity in sorted_entities
-            if entity.bluesound_device_name in device_group
+        leader_sync_status: SyncStatus | None = None
+        if self.sync_status.master is None:
+            leader_sync_status = self.sync_status
+        else:
+            required_id = f"{self.sync_status.master.ip}:{self.sync_status.master.port}"
+            for x in player_entities:
+                if x.sync_status.id == required_id:
+                    leader_sync_status = x.sync_status
+                    break
+
+        if leader_sync_status is None or leader_sync_status.slaves is None:
+            return []
+
+        follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.slaves]
+        follower_names = [
+            x.sync_status.name
+            for x in player_entities
+            if x.sync_status.id in follower_ids
         ]
+        follower_names.insert(0, leader_sync_status.name)
+        return follower_names
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
@@ -833,7 +775,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
-        volume = int(volume * 100)
+        volume = int(round(volume * 100))
         volume = min(100, volume)
         volume = max(0, volume)
 

@@ -1,10 +1,13 @@
 {
   "entity": {
     "switch": {
-      "other1": { "name": "Other 1" },
+      "other1": { "name": "Other 1", "unit_of_measurement": "units" },
       "other2": { "name": "Other 2" },
       "other3": { "name": "Other 3" },
-      "other4": { "name": "Other 4" },
+      "other4": {
+        "name": "Other 4",
+        "unit_of_measurement": "quantities"
+      },
       "outlet": { "name": "Outlet {placeholder}" }
     }
   },

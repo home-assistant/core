@@ -49,6 +49,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_unused_ignores": "true",
     "enable_error_code": ", ".join(  # noqa: FLY002
         [
+            "deprecated",
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",
