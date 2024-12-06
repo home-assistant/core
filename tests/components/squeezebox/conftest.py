@@ -114,6 +114,11 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
+async def mock_async_play_announcement(media_id: str) -> bool:
+    """Mock the announcement."""
+    return True
+
+
 async def mock_async_browse(
     media_type: MediaType, limit: int, browse_id: tuple | None = None
 ) -> dict | None:
@@ -212,6 +217,9 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
+        )
+        mock_player.async_play_announcement = AsyncMock(
+            side_effect=mock_async_play_announcement
         )
         mock_player.name = TEST_PLAYER_NAME
         mock_player.player_id = uuid
