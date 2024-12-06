@@ -4,8 +4,11 @@ import time
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from qbusmqttapi.const import KEY_OUTPUT_ID, KEY_OUTPUT_REF_ID
+from qbusmqttapi.discovery import QbusMqttOutput
 
 from homeassistant.components.qbus.config_flow import QbusFlowHandler
+from homeassistant.components.qbus.switch import QbusSwitch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -29,6 +32,22 @@ def qbus_config_flow_with_device(hass: HomeAssistant) -> QbusFlowHandler:
     config_flow.context = Mock()
     config_flow._device = Mock(id="UL1", serial_number="000001")
     return config_flow
+
+
+@pytest.fixture
+def qbus_switch_1(hass: HomeAssistant) -> QbusSwitch:
+    """Create Qbus switch handler ."""
+    mqtt_output = QbusMqttOutput(
+        {KEY_OUTPUT_ID: "UL10", KEY_OUTPUT_REF_ID: "000001/10"},
+        Mock(id="UL1", serial_number="000001", mac="00:11:22:33:44:55"),
+    )
+
+    qbus_switch = QbusSwitch(mqtt_output)
+    qbus_switch.hass = hass
+    qbus_switch.unique_id = "ctd_000001_10"
+    qbus_switch.entity_id = "switch.qbus_000001_10"
+
+    return qbus_switch
 
 
 @pytest.fixture
