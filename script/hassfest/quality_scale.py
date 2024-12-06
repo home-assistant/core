@@ -473,7 +473,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "gstreamer",
     "gtfs",
     "guardian",
-    "habitica",
     "harman_kardon_avr",
     "harmony",
     "hassio",
