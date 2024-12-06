@@ -77,6 +77,8 @@ CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
 
 CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
     {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("collapsed"): bool,
         vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
     }
