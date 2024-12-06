@@ -2,11 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: done
-    comment: |
-      only actions implemented are platform native ones.
-      switch.turn_on, switch.turn_off, switch.toggle,
-      number.set_value
-      select.select.
+    comment: only actions implemented are platform native ones.
   appropriate-polling:
     status: done
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
@@ -43,11 +39,7 @@ rules:
     comment: |
       needs to raise appropriate error when exception occurs.
       Pending https://github.com/pyenphase/pyenphase/pull/194
-  config-entry-unloading:
-    status: done
-    comment: |
-      implements async_unload_entry in _init_.py which cancels a daily scheduled job created at load
-      registers entry.async_on_unload to for at reload.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
     comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
