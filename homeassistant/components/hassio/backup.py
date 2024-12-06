@@ -13,8 +13,8 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
-    BackupProgress,
     BackupReaderWriter,
+    CreateBackupEvent,
     Folder,
     LocalBackupAgent,
     NewBackup,
@@ -135,7 +135,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[BackupProgress], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[tuple[AgentBackup, Path]]]:
         """Create a backup."""

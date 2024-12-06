@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import BackupEvent
+from .manager import ManagerStateEvent
 from .models import Folder
 from .util import make_backup_dir
 
@@ -53,7 +53,6 @@ async def handle_info(
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
             "backups": list(backups.values()),
-            "backing_up": manager.backup_task is not None,
             "last_automatic_backup": manager.config.data.last_automatic_backup,
         },
     )
@@ -235,7 +234,6 @@ async def backup_agents_info(
         msg["id"],
         {
             "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
-            "syncing": manager.syncing,
         },
     )
 
@@ -345,11 +343,10 @@ async def handle_subscribe_events(
 ) -> None:
     """Subscribe to backup events."""
 
-    def on_event(progress: BackupEvent) -> None:
-        connection.send_message(websocket_api.event_message(msg["id"], progress))
+    def on_event(event: ManagerStateEvent) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], event))
 
     manager = hass.data[DATA_MANAGER]
-    if manager.backup_event:
-        on_event(manager.backup_event)
+    on_event(manager.last_event)
     connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])

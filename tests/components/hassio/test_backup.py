@@ -98,7 +98,6 @@ async def test_agent_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [{"agent_id": "hassio.local"}],
-        "syncing": False,
     }
 
 
