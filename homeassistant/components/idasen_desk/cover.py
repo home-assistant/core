@@ -17,10 +17,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
+from .entity import IdasenDeskEntity
 
 
 async def async_setup_entry(
@@ -35,7 +35,7 @@ async def async_setup_entry(
     )
 
 
-class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
+class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     """Representation of Idasen Desk device."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
@@ -45,7 +45,6 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "desk"
 
@@ -56,17 +55,8 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
         coordinator: IdasenDeskCoordinator,
     ) -> None:
         """Initialize an Idasen Desk cover."""
-        super().__init__(coordinator)
-        self._desk = coordinator.desk
-        self._attr_unique_id = address
-        self._attr_device_info = device_info
-
+        super().__init__(address, device_info, coordinator)
         self._attr_current_cover_position = self._desk.height_percent
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._desk.is_connected is True
 
     @property
     def is_closed(self) -> bool:
