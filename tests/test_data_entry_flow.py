@@ -1025,3 +1025,28 @@ def test_nested_section_in_serializer() -> None:
                 {"collapsed": False},
             )
         )
+
+
+async def test_virtual_domain_context(manager: MockFlowManager) -> None:
+    """Test virtual domain is available within flow."""
+
+    VIRTUAL_DOMAIN = "my_domain"
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, info):
+            assert self.virtual_domain == VIRTUAL_DOMAIN
+            return self.async_create_entry(title=info["id"], data=info)
+
+    data = {"id": "hello", "token": "secret"}
+
+    await manager.async_init(
+        "test",
+        context={
+            "source": config_entries.SOURCE_USER,
+            "virtual_domain": VIRTUAL_DOMAIN,
+        },
+        data=data,
+    )
