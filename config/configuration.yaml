@@ -22,7 +22,7 @@ panel_custom:
     url_path: openstreetmap
     sidebar_title: OpenStreetMap
     sidebar_icon: mdi:map
-    module_url: /local/osm-panel.js
+    module_url: /local/openStreetMap-panel.js
     config:
       # Data you want to make available to panel
       hello: world

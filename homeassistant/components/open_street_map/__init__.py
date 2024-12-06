@@ -63,7 +63,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    frontend.async_register_built_in_panel(hass, "map", "Map", "mdi:map")
+    frontend.async_register_built_in_panel(
+        hass, "open_street_map", "OpenStreetMap", "mdi:map"
+    )
 
     websocket_api.async_register_command(hass, handle_event_search)
     hass.states.async_set(f"{DOMAIN}.integration", "loaded")
