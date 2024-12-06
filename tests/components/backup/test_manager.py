@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
@@ -29,6 +28,7 @@ from homeassistant.components.backup.manager import (
     CreateBackupState,
     ManagerStateEvent,
     NewBackup,
+    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -303,9 +303,10 @@ async def test_async_create_backup(
 
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
-        return_value=(
-            TEST_BACKUP_ABC123,
-            Path(hass.config.path("backups"), TEST_BACKUP_PATH_ABC123),
+        return_value=WrittenBackup(
+            backup=TEST_BACKUP_ABC123,
+            open_stream=AsyncMock(),
+            release_stream=AsyncMock(),
         ),
     )()  # call it so that it can be awaited
 
