@@ -165,7 +165,7 @@ async def handle_create(
 ) -> None:
     """Generate a backup."""
 
-    backup = await hass.data[DATA_MANAGER].async_create_backup(
+    backup = await hass.data[DATA_MANAGER].async_initiate_backup(
         agent_ids=msg["agent_ids"],
         include_addons=msg.get("include_addons"),
         include_all_addons=msg["include_all_addons"],
