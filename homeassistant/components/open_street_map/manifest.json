@@ -3,12 +3,9 @@
   "name": "OpenStreetMap",
   "codeowners": ["@EmmaStalberg"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/open_street_map",
-  "homekit": {},
+  "integration_type": "entity",
   "iot_class": "cloud_polling",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "version": 0
+  "quality_scale": "internal"
 }

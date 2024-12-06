@@ -1,0 +1,138 @@
+"""Constants for the OpenStreetMap integration."""
+
+from enum import IntFlag
+
+from homeassistant.const import Platform
+
+
+class OSMEntityFeature(IntFlag):
+    """Supported features of the osm entity."""
+
+    LOCATION_SEARCH = 1
+
+
+DOMAIN = "open_street_map"
+
+PLATFORM = Platform.SENSOR
+ENTITY_ID_FORMAT = Platform.SENSOR + ".{}"
+EVENT_TYPE = DOMAIN + "_state_update"
+DEFAULT_ICON = "mdi:map"
+DEFAULT_MAP_ZOOM = 18
+DEFAULT_USE_GPS = True
+
+ATTR_NATIVE_VALUE = "native_value"
+CONF_MAP_ZOOM = "map_zoom"
+CONF_USE_GPS = "use_gps_accuracy"
+CONF_DEVICETRACKER_ID = "devicetracker_id"
+CONF_EXTENDED_ATTR = "extended_attr"
+
+ATTR_PLACE_NAME = "place_name"
+ATTR_STREET = "street"
+ATTR_STREET_NUMBER = "street_number"
+ATTR_PLACE_NEIGHBOURHOOD = "neighbourhood"
+ATTR_CITY = "city"
+ATTR_CITY_CLEAN = "city_clean"
+ATTR_COUNTRY_CODE = "country_code"
+ATTR_COUNTRY = "country"
+ATTR_DEVICETRACKER_ID = "devicetracker_entityid"
+ATTR_PLACE_TYPE = "place_type"
+ATTR_POSTAL_CODE = "postal_code"
+ATTR_POSTAL_TOWN = "postal_town"
+ATTR_REGION = "state_province"
+ATTR_STATE_ABBR = "state_abbr"
+ATTR_FORMATTED_ADDRESS = "formatted_address"
+ATTR_FORMATTED_PLACE = "formatted_place"
+ATTR_PLACE_CATEGORY = "place_category"
+CONF_LANGUAGE = "language"
+ATTR_LATITUDE = "current_latitude"
+ATTR_LATITUDE_OLD = "previous_latitude"
+ATTR_LOCATION = "current_location"
+ATTR_LOCATION_PREVIOUS = "previous_location"
+ATTR_LONGITUDE = "current_longitude"
+ATTR_LONGITUDE_OLD = "previous_longitude"
+ATTR_MAP_LINK = "map_link"
+ATTR_LAST_PLACE_NAME = "last_place_name"
+ATTR_DISTANCE_FROM_CURRENT_LOCATION_KM = "distance_from_current_location_km"
+ATTR_DISTANCE_FROM_CURRENT_LOCATION_M = "distance_from_current_location_m"
+ATTR_DISTANCE_FROM_CURRENT_LOCATION_MI = "distance_from_current_location_mi"
+ATTR_DIRECTION_OF_TRAVEL = "direction_of_travel"
+ATTR_OSM_DETAILS_DICT = "osm_details_dict"
+ATTR_OSM_DICT = "osm_dict"
+ATTR_OSM_ID = "osm_id"
+ATTR_OSM_TYPE = "osm_type"
+ATTR_PICTURE = "entity_picture"
+ATTR_DISPLAY_OPTIONS = "display_options"
+ATTR_STREET_REF = "street_ref"
+ATTR_PLACE_NAME_NO_DUPE = "place_name_no_dupe"
+ATTR_WIKIDATA_DICT = "wikidata_dict"
+ATTR_WIKIDATA_ID = "wikidata_id"
+ATTR_PREVIOUS_STATE = "previous_state"
+
+EXTRA_STATE_ATTRIBUTE_LIST = [
+    ATTR_PLACE_NAME,
+    ATTR_STREET_NUMBER,
+    ATTR_STREET,
+    ATTR_PLACE_NEIGHBOURHOOD,
+    ATTR_CITY,
+    ATTR_POSTAL_TOWN,
+    ATTR_POSTAL_CODE,
+    ATTR_REGION,
+    ATTR_STATE_ABBR,
+    ATTR_COUNTRY,
+    ATTR_COUNTRY_CODE,
+    ATTR_FORMATTED_PLACE,
+    ATTR_FORMATTED_ADDRESS,
+    ATTR_PLACE_TYPE,
+    ATTR_PLACE_CATEGORY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_LATITUDE_OLD,
+    ATTR_LONGITUDE_OLD,
+    ATTR_DEVICETRACKER_ID,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_KM,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_M,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_MI,
+    ATTR_LAST_PLACE_NAME,
+    ATTR_DIRECTION_OF_TRAVEL,
+    ATTR_OSM_ID,
+    ATTR_OSM_TYPE,
+    ATTR_MAP_LINK,
+    ATTR_PICTURE,
+    ATTR_DISPLAY_OPTIONS,
+]
+
+PLACE_NAME_DUPLICATE_LIST = [
+    ATTR_STREET,
+    ATTR_STREET_REF,
+    ATTR_PLACE_NEIGHBOURHOOD,
+    ATTR_CITY,
+    ATTR_POSTAL_TOWN,
+    ATTR_POSTAL_CODE,
+    ATTR_REGION,
+    ATTR_COUNTRY,
+    ATTR_PLACE_TYPE,
+    ATTR_PLACE_CATEGORY,
+]
+
+EXTENDED_ATTRIBUTE_LIST = [
+    ATTR_WIKIDATA_ID,
+    ATTR_OSM_DICT,
+    ATTR_OSM_DETAILS_DICT,
+    ATTR_WIKIDATA_DICT,
+]
+
+EVENT_ATTRIBUTE_LIST = [
+    ATTR_PLACE_NAME,
+    ATTR_LAST_PLACE_NAME,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_KM,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_M,
+    ATTR_DISTANCE_FROM_CURRENT_LOCATION_MI,
+    ATTR_DIRECTION_OF_TRAVEL,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_LATITUDE_OLD,
+    ATTR_LONGITUDE_OLD,
+    ATTR_MAP_LINK,
+    ATTR_OSM_ID,
+    ATTR_OSM_TYPE,
+]

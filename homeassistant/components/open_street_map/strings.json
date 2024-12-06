@@ -1,4 +1,5 @@
 {
+  "title": "open_street_map",
   "config": {
     "step": {
       "user": {
@@ -17,5 +18,20 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "search": {
+      "name": "Search",
+      "description": "Search location based on keywords.",
+      "fields": {
+        "query": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "The keywords."
+        }
+      }
+    }
+  },
+  "entity": {
+    "open_street_map": {}
   }
 }

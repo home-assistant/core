@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
+
 import voluptuous as vol
 
 # from homeassistant import config_entries
 # from homeassistant.config_entries import ConfigEntry
+from homeassistant.components import frontend, websocket_api
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import _LOGGER, HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+# from homeassistant.util.hass_dict import HassKey
+from .const import DOMAIN, OSMEntityFeature
 from .search import (
     get_address_coordinates,
     get_Coordinates,
@@ -26,44 +35,98 @@ PLATFORMS: list[Platform] = []
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+DOMAIN_DATA = "open_street_map_data"
+
+# DOMAIN_DATA: HassKey[EntityComponent[OSMEntity]] = HassKey(DOMAIN)
+
 # TODO Create ConfigEntry type alias with API object
 # TODO Rename type alias and update all entry annotations
 # type OpenStreetMapConfigEntry = ConfigEntry[MyApi]  # noqa: F821
+SCAN_INTERVAL = timedelta(seconds=60)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OpenStreetMap integration."""
-    # Initialize the domain-specific data
-    hass.data[DOMAIN] = {}
+    component = hass.data[DOMAIN_DATA] = EntityComponent[OSMEntity][
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    ]
 
-    # Optionally, set a state or initialize any service here
+    await component.async_setup(config)
+
+    frontend.async_register_built_in_panel(hass, "map", "Map", "mdi:map")
+
+    websocket_api.async_register_command(hass, handle_event_search)
     hass.states.async_set(f"{DOMAIN}.integration", "loaded")
+    component.async_register_entity_service(
+        "search",
+        vol.Schema({vol.Required("query"): cv.string}),
+        _async_search_event,
+        [OSMEntityFeature.LOCATION_SEARCH],
+    )
 
     # Register the search service
-    hass.services.async_register(
-        DOMAIN,
-        "search",
-        async_handle_search,
-        schema=vol.Schema({vol.Required("query"): str}),
-    )
+    # hass.services.async_register(
+    #     DOMAIN,
+    #     "search",
+    #     async_handle_search,
+    #     schema=vol.Schema({vol.Required("query"): str}),
+    # )
 
-    # Register the get_coordinates service. Not sure if this is needed
-    hass.services.async_register(
-        DOMAIN,
-        "get_coordinates",
-        async_handle_get_coordinates,
-        schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
-    )
+    # # Register the get_coordinates service. Not sure if this is needed
+    # hass.services.async_register(
+    #     DOMAIN,
+    #     "get_coordinates",
+    #     async_handle_get_coordinates,
+    #     schema=cv.make_entity_service_schema({vol.Required("json_data"): cv.Any}),
+    # )
 
-    # Register the get_address_coordinates service
-    hass.services.async_register(
-        DOMAIN,
-        "get_address_coordinates",
-        async_handle_get_address_coordinates,
-        schema=cv.make_entity_service_schema({vol.Required("query"): str}),
-    )
-
+    # # Register the get_address_coordinates service
+    # hass.services.async_register(
+    #     DOMAIN,
+    #     "get_address_coordinates",
+    #     async_handle_get_address_coordinates,
+    #     schema=cv.make_entity_service_schema({vol.Required("query"): str}),
+    # )
     return True
+
+
+async def _async_search_event(entity: OSMEntity, service_call: ServiceCall) -> str:
+    """Service call wrapper to set osm."""
+    return await entity.async_search_event(service_call.data["query"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "osm/event/search",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        vol.Required("query"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def handle_event_search(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle search event from websocket."""
+    if not (entity := hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], "Entity not found", "Entity not found")
+        return
+
+    try:
+        result = await entity.async_search_event(msg["query"])
+    except HomeAssistantError as ex:
+        connection.send_error(msg["id"], "failed", str(ex))
+    else:
+        connection.send_result(msg["id"], {"result": result})
 
 
 # TODO uncomment this code and fix the todos. Note! Need to uncomment the imports as well
@@ -167,3 +230,20 @@ async def async_handle_get_address_coordinates(
         return {"error": "No query provided"}
 
     return get_address_coordinates(query)
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {"location"}
+
+
+class OSMEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+    """Implementation of an OSM sensor."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the shopping list."""
+        self.hass = hass
+
+    async def async_search_event(self, msg: str) -> str:
+        """Search with keywords."""
+        if not msg:
+            return "Query is missing or empty"
+        return search_address(msg)
