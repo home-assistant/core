@@ -2,6 +2,7 @@
 
 ATTR_AWAY_TEMP = "away_temp"
 ATTR_COMFORT_TEMP = "comfort_temp"
+ATTR_MAX_HEATING_POWER = "max_heating_power"
 ATTR_ROOM_NAME = "room_name"
 ATTR_SLEEP_TEMP = "sleep_temp"
 BATTERY = "battery"
@@ -17,5 +18,6 @@ MANUFACTURER = "Mill"
 MAX_TEMP = 35
 MIN_TEMP = 5
 SERVICE_SET_ROOM_TEMP = "set_room_temperature"
+SERVICE_MAX_HEATING_POWER = "max_heating_power"
 TEMPERATURE = "current_temp"
 TVOC = "tvoc"
