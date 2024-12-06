@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "token": "Token",
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "user_agent": "User agent"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the ComfoConnect device.",
+          "token": "The token you want to use when registering with the device. This is a random 32 char hexadecimal string.",
+          "pin": "The pin code to use when registering. You only need to change this if you have changed the factory default pin.",
+          "user_agent": "The name you want to supply when registering with the device."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_token": "The token should be 32 characters long."
+    }
+  }
+}
