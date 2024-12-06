@@ -94,7 +94,7 @@ async def _mock_backup_generation(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
     ]
 
-    backup, _ = await manager.backup_task
+    finished_backup = await manager.backup_task
     await manager.backup_finish_task
     assert progress == [
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
@@ -124,6 +124,7 @@ async def _mock_backup_generation(
         "type": "partial",
         "version": 2,
     }
+    backup = finished_backup.backup
     assert isinstance(backup, AgentBackup)
     assert backup == AgentBackup(
         addons=[],
@@ -171,8 +172,7 @@ async def _setup_backup_platform(
 
 async def test_constructor(hass: HomeAssistant) -> None:
     """Test BackupManager constructor."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    assert manager.temp_backup_dir.as_posix() == hass.config.path("tmp_backups")
+    BackupManager(hass, CoreBackupReaderWriter(hass))
 
 
 async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
@@ -526,6 +526,7 @@ async def test_async_receive_backup_local(
 ) -> None:
     """Test receiving a backup file."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    hass.data[DATA_MANAGER] = manager
 
     await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
@@ -540,7 +541,7 @@ async def test_async_receive_backup_local(
 
     with (
         patch("pathlib.Path.open", open_mock),
-        patch("shutil.copy") as copy_mock,
+        patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
             return_value=TEST_BACKUP_ABC123,
@@ -561,8 +562,8 @@ async def test_async_receive_backup_local(
             ),
         )
         assert open_mock.call_count == 1
-        assert copy_mock.call_count == 1
-        assert copy_mock.mock_calls[0].args[1].name == "abc123.tar"
+        assert move_mock.call_count == 1
+        assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
 async def test_async_receive_backup_remote(
@@ -571,6 +572,7 @@ async def test_async_receive_backup_remote(
 ) -> None:
     """Test receiving a backup file."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    hass.data[DATA_MANAGER] = manager
     remote_agent = BackupAgentTest("remote", backups=[])
 
     await _setup_backup_platform(
