@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==27.0.3
+aioesphomeapi==28.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -628,7 +628,7 @@ dbus-fast==2.24.3
 debugpy==1.8.6
 
 # homeassistant.components.ecovacs
-deebot-client==9.1.0
+deebot-client==9.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -699,7 +699,7 @@ elgato==5.1.2
 elkm1-lib==2.2.10
 
 # homeassistant.components.elmax
-elmax-api==0.0.6.1
+elmax-api==0.0.6.3
 
 # homeassistant.components.elvia
 elvia==0.1.0
@@ -928,7 +928,7 @@ habitipy==0.3.3
 habluetooth==3.6.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.85.0
+hass-nabucasa==0.86.0
 
 # homeassistant.components.conversation
 hassil==2.0.5
@@ -956,7 +956,7 @@ hole==0.8.0
 holidays==0.62
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.4
+home-assistant-frontend==20241127.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.4
@@ -1488,7 +1488,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.13.7
 
 # homeassistant.components.deako
-pydeako==0.5.4
+pydeako==0.6.0
 
 # homeassistant.components.deconz
 pydeconz==118
@@ -1889,7 +1889,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.8.0
+python-kasa[speedups]==0.8.1
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.20
@@ -2086,7 +2086,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.7.1
+samsungtvws[async,encrypted]==2.7.2
 
 # homeassistant.components.sanix
 sanix==1.0.6
@@ -2238,7 +2238,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.8.4
+tesla-fleet-api==0.8.5
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2322,7 +2322,7 @@ unifi-discovery==1.2.0
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
-upb-lib==0.5.8
+upb-lib==0.5.9
 
 # homeassistant.components.upcloud
 upcloud-api==2.6.0
