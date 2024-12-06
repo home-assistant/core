@@ -92,21 +92,21 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api2(API_SET_POSITON, 0, self._cover_id)
+        await self._async_call_api(API_SET_POSITON, 0, self._cover_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api2(API_SET_POSITON, 100, self._cover_id)
+        await self._async_call_api(API_SET_POSITON, 100, self._cover_id)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api2(
+        await self._async_call_api(
             API_SET_POSITON, kwargs[ATTR_POSITION], self._cover_id
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._async_call_api2(API_STOP, self._cover_id)
+        await self._async_call_api(API_STOP, self._cover_id)
 
 
 class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):

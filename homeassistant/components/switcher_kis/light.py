@@ -79,13 +79,13 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._async_call_api2(API_SET_LIGHT, DeviceState.ON, self._light_id)
+        await self._async_call_api(API_SET_LIGHT, DeviceState.ON, self._light_id)
         self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._async_call_api2(API_SET_LIGHT, DeviceState.OFF, self._light_id)
+        await self._async_call_api(API_SET_LIGHT, DeviceState.OFF, self._light_id)
         self.control_result = False
         self.async_write_ha_state()
 

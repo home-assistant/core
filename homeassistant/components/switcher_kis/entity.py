@@ -46,34 +46,6 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
             error = repr(err)
 
         if error or not response or not response.successful:
-            _LOGGER.error(
-                "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.coordinator.name,
-                api,
-                args,
-                response or error,
-            )
-            self.coordinator.last_update_success = False
-
-    async def _async_call_api2(self, api: str, *args: Any) -> None:
-        """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherApi(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-                self.coordinator.token,
-            ) as swapi:
-                response = await getattr(swapi, api)(*args)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
             self.coordinator.last_update_success = False
             self.async_write_ha_state()
             raise HomeAssistantError(
