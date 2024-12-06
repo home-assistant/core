@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 # from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN, OSMEntityFeature
@@ -35,9 +36,9 @@ PLATFORMS: list[Platform] = []
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-DOMAIN_DATA = "open_street_map_data"
+# DOMAIN_DATA = "open_street_map_data"
 
-# DOMAIN_DATA: HassKey[EntityComponent[OSMEntity]] = HassKey(DOMAIN)
+DOMAIN_DATA: HassKey[EntityComponent[OSMEntity]] = HassKey(DOMAIN)
 
 # TODO Create ConfigEntry type alias with API object
 # TODO Rename type alias and update all entry annotations
@@ -47,7 +48,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    websocket_api.async_register_command(hass, handle_event_search)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,16 +60,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OpenStreetMap integration."""
+    _LOGGER.log("[OSM]Home Assistant connected.")
     component = hass.data[DOMAIN_DATA] = EntityComponent[OSMEntity][
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     ]
 
-    await component.async_setup(config)
-
     frontend.async_register_built_in_panel(
-        hass, "open_street_map", "OpenStreetMap", "mdi:map"
+        hass, "openstreetmap", "OpenStreetMap", "mdi:map"
     )
-
     websocket_api.async_register_command(hass, handle_event_search)
     hass.states.async_set(f"{DOMAIN}.integration", "loaded")
     component.async_register_entity_service(
@@ -75,6 +76,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_search_event,
         [OSMEntityFeature.LOCATION_SEARCH],
     )
+
+    await component.async_setup(config)
 
     # Register the search service
     # hass.services.async_register(
