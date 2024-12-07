@@ -17,6 +17,9 @@ from . import ImapConfigEntry
 from .const import DOMAIN
 from .coordinator import ImapDataUpdateCoordinator
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
     key="imap_mail_count",
     entity_category=EntityCategory.DIAGNOSTIC,
