@@ -1,7 +1,7 @@
 {
   "domain": "imou_life",
   "name": "Imou Life",
-  "version": "0.0.1",
+  "quality_scale": "silver",
   "documentation": "https://www.home-assistant.io/integrations/imou_life",
   "dependencies": [],
   "requirements": [
