@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.ohme.sensor import VoltageSensor
 import pytest
+
+from homeassistant.components.ohme.sensor import VoltageSensor
 
 
 @pytest.fixture

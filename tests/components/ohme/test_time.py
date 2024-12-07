@@ -3,15 +3,16 @@
 from datetime import time as dt_time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from custom_components.ohme.const import (
+import pytest
+
+from homeassistant.components.ohme.const import (
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DOMAIN,
 )
-from custom_components.ohme.time import TargetTime, async_setup_entry
-import pytest
+from homeassistant.components.ohme.time import TargetTime, async_setup_entry
 
 
 @pytest.fixture
@@ -86,11 +87,15 @@ async def test_async_added_to_hass(target_time_entity) -> None:
 @pytest.mark.asyncio
 async def test_async_set_value(target_time_entity) -> None:
     """Test async_set_value."""
-    with patch("custom_components.ohme.time.session_in_progress", return_value=True):
+    with patch(
+        "homeassistant.components.ohme.time.session_in_progress", return_value=True
+    ):
         await target_time_entity.async_set_value(dt_time(12, 30))
         assert target_time_entity._client.async_apply_session_rule.called
 
-    with patch("custom_components.ohme.time.session_in_progress", return_value=False):
+    with patch(
+        "homeassistant.components.ohme.time.session_in_progress", return_value=False
+    ):
         await target_time_entity.async_set_value(dt_time(12, 30))
         assert target_time_entity._client.async_update_schedule.called
 

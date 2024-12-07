@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from custom_components.ohme.const import (
+import pytest
+
+from homeassistant.components.ohme.const import (
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
@@ -10,13 +12,12 @@ from custom_components.ohme.const import (
     DATA_COORDINATORS,
     DOMAIN,
 )
-from custom_components.ohme.number import (
+from homeassistant.components.ohme.number import (
     PreconditioningNumber,
     PriceCapNumber,
     TargetPercentNumber,
     async_setup_entry,
 )
-import pytest
 
 
 @pytest.fixture
@@ -73,7 +74,9 @@ async def test_target_percent_number(mock_hass) -> None:
 
     number = TargetPercentNumber(coordinator, coordinator_schedules, mock_hass, client)
 
-    with patch("custom_components.ohme.number.session_in_progress", return_value=True):
+    with patch(
+        "homeassistant.components.ohme.number.session_in_progress", return_value=True
+    ):
         await number.async_added_to_hass()
         await number.async_set_native_value(50)
 
@@ -95,7 +98,9 @@ async def test_preconditioning_number(mock_hass) -> None:
         coordinator, coordinator_schedules, mock_hass, client
     )
 
-    with patch("custom_components.ohme.number.session_in_progress", return_value=True):
+    with patch(
+        "homeassistant.components.ohme.number.session_in_progress", return_value=True
+    ):
         await number.async_added_to_hass()
         await number.async_set_native_value(30)
 

@@ -2,8 +2,7 @@
 
 from unittest import mock
 
-from custom_components.ohme import config_flow
-
+from homeassistant.components.ohme import config_flow
 from homeassistant.core import HomeAssistant
 
 

@@ -2,14 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from custom_components.ohme.const import (
+import pytest
+
+from homeassistant.components.ohme.const import (
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DOMAIN,
 )
-from custom_components.ohme.switch import (
+from homeassistant.components.ohme.switch import (
     OhmeConfigurationSwitch,
     OhmeMaxChargeSwitch,
     OhmePauseChargeSwitch,
@@ -17,8 +19,6 @@ from custom_components.ohme.switch import (
     OhmeSolarBoostSwitch,
     async_setup_entry,
 )
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 

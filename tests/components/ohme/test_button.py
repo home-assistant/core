@@ -2,14 +2,18 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from custom_components.ohme.button import OhmeApproveChargeButton, async_setup_entry
-from custom_components.ohme.const import (
+import pytest
+
+from homeassistant.components.ohme.button import (
+    OhmeApproveChargeButton,
+    async_setup_entry,
+)
+from homeassistant.components.ohme.const import (
     COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DOMAIN,
 )
-import pytest
 
 
 @pytest.fixture

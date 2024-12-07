@@ -2,21 +2,21 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.ohme.binary_sensor import (
+import pytest
+
+from homeassistant.components.ohme.binary_sensor import (
     ChargerOnlineBinarySensor,
     ChargingBinarySensor,
     ConnectedBinarySensor,
     PendingApprovalBinarySensor,
 )
-from custom_components.ohme.const import (
+from homeassistant.components.ohme.const import (
     COORDINATOR_ADVANCED,
     COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DOMAIN,
 )
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
