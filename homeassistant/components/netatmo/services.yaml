@@ -46,6 +46,29 @@ set_preset_mode_with_end_datetime:
       selector:
         datetime:
 
+set_scheduled_room_temperature:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    zone_name:
+      required: true
+      selector:
+        select:
+          options:
+            - Eco
+            - Comfort
+            - Comfort+
+            - Night
+    temperature:
+      example: 20
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 30
+
 set_temperature_with_end_datetime:
   target:
     entity:
