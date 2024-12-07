@@ -29,7 +29,9 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = CONFIG_VERSION
 
-    async def async_step_user(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """First config step."""
 
         errors = {}
@@ -68,7 +70,7 @@ class OhmeOptionsFlow(OptionsFlow):
         errors = {}
         # If form filled
         if options is not None:
-            data = self._config_entry.data
+            data: dict[str, Any] = dict(self._config_entry.data)
 
             # Update credentials
             if "email" in options and "password" in options:
