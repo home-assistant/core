@@ -113,6 +113,7 @@ async def async_setup_entry(
             zctrl,
             entry.options.get(OPTION_INPUT_SOURCES_IGNORE),
             entry.options.get(OPTION_INPUT_SOURCES),
+            entry.entry_id,
         )
 
         media_players.append(entity)
@@ -240,6 +241,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         zctrl: RXV,
         source_ignore: list[str] | None,
         source_names: dict[str, str] | None,
+        config_entry_id: str,
     ) -> None:
         """Initialize the Yamaha Receiver."""
         self.zctrl = zctrl
@@ -253,17 +255,15 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self._play_status = None
         self._name = name
         self._zone = zctrl.zone
-        if self.zctrl.serial_number is not None:
-            # Since not all receivers will have a serial number and set a unique id
-            # the default name of the integration may not be changed
-            # to avoid a breaking change.
-            self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._attr_unique_id)},
-                manufacturer=BRAND,
-                name=name + " " + zctrl.zone,
-                model=zctrl.model_name,
-            )
+        self._attr_unique_id = (
+            f"{self.zctrl.serial_number or config_entry_id}_{self._zone}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer=BRAND,
+            name=name + " " + zctrl.zone,
+            model=zctrl.model_name,
+        )
 
     def update(self) -> None:
         """Get the latest details from the device."""

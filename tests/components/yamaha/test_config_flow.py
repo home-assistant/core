@@ -85,6 +85,16 @@ def mock_get_device_info_mc_exception():
 
 
 @pytest.fixture
+def mock_get_device_info_mc_ctrl_url():
+    """Mock raising an unexpected Exception."""
+    with (
+        patch("rxv.RXV", return_value=Mock(serial_number=None)),
+        patch("rxv.ssdp.rxv_details", return_value=None),
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_ssdp_yamaha():
     """Mock that the SSDP detected device is a Yamaha device."""
     with patch(
@@ -190,6 +200,29 @@ async def test_user_input_device_not_found(
     )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "cannot_connect"
+
+
+async def test_user_input_device_with_ctrl_url(
+    hass: HomeAssistant, mock_get_device_info_mc_ctrl_url
+) -> None:
+    """Test when user specifies a non-existing device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "127.0.0.1"},
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert isinstance(result2["result"], ConfigEntry)
+    assert result2["data"] == {
+        "host": "127.0.0.1",
+        "serial": None,
+        "upnp_description": "http://127.0.0.1:49154/MediaRenderer/desc.xml",
+    }
 
 
 async def test_user_input_non_yamaha_device_found(

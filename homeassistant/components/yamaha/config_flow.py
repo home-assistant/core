@@ -60,7 +60,6 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
 
         host = user_input[CONF_HOST]
-        serial_number = None
 
         # Check if device is a Yamaha receiver
         try:
@@ -72,11 +71,13 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
-            if info is None or (serial_number := info.serial_number) is None:
+            if info is None:
                 return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(serial_number, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
+            if (serial_number := info.serial_number) is None:
+                await self._async_handle_discovery_without_unique_id()
+            else:
+                await self.async_set_unique_id(serial_number, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=DEFAULT_NAME,
