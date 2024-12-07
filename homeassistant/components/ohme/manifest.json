@@ -6,6 +6,5 @@
   "dependencies": [],
   "documentation": "https://github.com/dan-r/HomeAssistant-Ohme",
   "iot_class": "cloud_polling",
-  "requirements": ["ohme==1.0.2"],
-  "version": "1.1.1"
+  "requirements": ["ohme==1.0.2"]
 }
