@@ -40,7 +40,8 @@
 # name: test_all_entities[sensor.my_home_station_air_density-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'friendly_name': 'My Home Station Air density',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'kg/m³',
@@ -94,7 +95,8 @@
 # name: test_all_entities[sensor.my_home_station_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Dew point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -149,7 +151,8 @@
 # name: test_all_entities[sensor.my_home_station_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Feels like',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -204,7 +207,8 @@
 # name: test_all_entities[sensor.my_home_station_heat_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Heat index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -256,7 +260,8 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'friendly_name': 'My Home Station Lightning count',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -306,7 +311,8 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_1_hr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'friendly_name': 'My Home Station Lightning count last 1 hr',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -356,7 +362,8 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_3_hr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'friendly_name': 'My Home Station Lightning count last 3 hr',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -406,7 +413,8 @@
 # name: test_all_entities[sensor.my_home_station_lightning_last_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'distance',
       'friendly_name': 'My Home Station Lightning last distance',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -456,7 +464,8 @@
 # name: test_all_entities[sensor.my_home_station_lightning_last_strike-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'timestamp',
       'friendly_name': 'My Home Station Lightning last strike',
     }),
@@ -512,7 +521,8 @@
 # name: test_all_entities[sensor.my_home_station_pressure_barometric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'atmospheric_pressure',
       'friendly_name': 'My Home Station Pressure barometric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -570,7 +580,8 @@
 # name: test_all_entities[sensor.my_home_station_pressure_sea_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'atmospheric_pressure',
       'friendly_name': 'My Home Station Pressure sea level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -625,7 +636,8 @@
 # name: test_all_entities[sensor.my_home_station_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -680,7 +692,8 @@
 # name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Wet bulb globe temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -735,7 +748,8 @@
 # name: test_all_entities[sensor.my_home_station_wet_bulb_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Wet bulb temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -790,7 +804,8 @@
 # name: test_all_entities[sensor.my_home_station_wind_chill-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'Data source': 'REST API',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'device_class': 'temperature',
       'friendly_name': 'My Home Station Wind chill',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -802,5 +817,344 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.5',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wind direction',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_direction',
+    'unique_id': '24432_123456_wind_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'friendly_name': 'My Home Station Wind direction',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_gust-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_gust',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': 'mdi:weather-dust',
+    'original_name': 'Wind gust',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_gust',
+    'unique_id': '24432_123456_wind_gust',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_gust-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'wind_speed',
+      'friendly_name': 'My Home Station Wind gust',
+      'icon': 'mdi:weather-dust',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_gust',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_lull-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_lull',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': 'mdi:weather-windy-variant',
+    'original_name': 'Wind lull',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_lull',
+    'unique_id': '24432_123456_wind_lull',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_lull-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'wind_speed',
+      'friendly_name': 'My Home Station Wind lull',
+      'icon': 'mdi:weather-windy-variant',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_lull',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_sample_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_home_station_wind_sample_interval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wind sample interval',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_sample_interval',
+    'unique_id': '24432_123456_wind_sample_interval',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_sample_interval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'friendly_name': 'My Home Station Wind sample interval',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_sample_interval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '24432_123456_wind_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'wind_speed',
+      'friendly_name': 'My Home Station Wind speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_speed_avg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_speed_avg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed (avg)',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_avg',
+    'unique_id': '24432_123456_wind_avg',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_speed_avg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'wind_speed',
+      'friendly_name': 'My Home Station Wind speed (avg)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_speed_avg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
