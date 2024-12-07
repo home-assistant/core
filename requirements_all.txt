@@ -726,7 +726,7 @@ datapoint==0.9.9
 dbus-fast==2.24.3
 
 # homeassistant.components.debugpy
-debugpy==1.8.6
+debugpy==1.8.8
 
 # homeassistant.components.decora_wifi
 # decora-wifi==1.4
@@ -993,7 +993,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.1
+go2rtc-client==0.1.2
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1127,7 +1127,7 @@ hole==0.8.0
 holidays==0.62
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.5
+home-assistant-frontend==20241127.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.4
@@ -1832,7 +1832,7 @@ pycountry==24.6.1
 pycsspeechtts==1.0.8
 
 # homeassistant.components.cups
-# pycups==1.9.73
+# pycups==2.0.4
 
 # homeassistant.components.daikin
 pydaikin==2.13.7
@@ -2203,7 +2203,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.4
+pyrisco==0.6.5
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2362,7 +2362,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.8.0
+python-kasa[speedups]==0.8.1
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.20
@@ -2411,7 +2411,7 @@ python-smarttub==0.0.38
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.17.7
+python-tado==0.17.6
 
 # homeassistant.components.technove
 python-technove==1.3.1
@@ -2858,7 +2858,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.5
+total-connect-client==2024.12
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
