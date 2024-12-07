@@ -313,3 +313,35 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+
+@pytest.mark.parametrize("node_fixture", ["water_heater"])
+async def test_water_heater(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test water heater sensor."""
+    # TankVolume
+    state = hass.states.get("sensor.mock_water_heater_tank_volume")
+    assert state
+    assert state.state == "100"
+
+    set_node_attribute(matter_node, 1, 148, 2, 200)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_water_heater_tank_volume")
+    assert state
+    assert state.state == "200"
+
+    # TankPercentage
+    state = hass.states.get("sensor.mock_water_heater_tank_percentage")
+    assert state
+    assert state.state == "20"
+
+    set_node_attribute(matter_node, 1, 148, 4, 40)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_water_heater_tank_percentage")
+    assert state
+    assert state.state == "40"
