@@ -365,6 +365,9 @@
     },
     "item_not_found": {
       "message": "Unable to use {item}, you don't own this item."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for {account}."
     }
   },
   "issues": {
