@@ -27,16 +27,19 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_INITIAL = "initial"
 ATTR_STEP = "step"
+ATTR_WRAP_AROUND = "wrap_around"
 ATTR_MINIMUM = "minimum"
 ATTR_MAXIMUM = "maximum"
 VALUE = "value"
 
 CONF_INITIAL = "initial"
 CONF_RESTORE = "restore"
+CONF_WRAP_AROUND = "wrap_around"
 CONF_STEP = "step"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
+DEFAULT_WRAP_AROUND = False
 DOMAIN = "counter"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -57,12 +60,23 @@ STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
     vol.Optional(CONF_RESTORE, default=True): cv.boolean,
     vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+    vol.Optional(CONF_WRAP_AROUND, default=False): cv.boolean,
 }
 
 
 def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     if value is None:
         return {}
+    return value
+
+
+def _require_minimum_and_maximum_with_wrap_around[_T](
+    value: _T | None,
+) -> _T | dict[str, Any]:
+    if value[CONF_WRAP_AROUND] is True:
+        if value[CONF_MINIMUM] is None or value[CONF_MAXIMUM] is None:
+            raise vol.Invalid("minimum and maximum are required for wrap around option")
+
     return value
 
 
@@ -85,7 +99,11 @@ CONFIG_SCHEMA = vol.Schema(
                     ),
                     vol.Optional(CONF_RESTORE, default=True): cv.boolean,
                     vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+                    vol.Optional(
+                        CONF_WRAP_AROUND, default=DEFAULT_WRAP_AROUND
+                    ): cv.boolean,
                 },
+                _require_minimum_and_maximum_with_wrap_around,
             )
         )
     },
@@ -207,6 +225,8 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
         if self._config[CONF_MAXIMUM] is not None:
             ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
+        if self._config[CONF_WRAP_AROUND] is not None:
+            ret[CONF_WRAP_AROUND] = self._config[CONF_WRAP_AROUND]
         return ret
 
     @property
@@ -216,6 +236,17 @@ class Counter(collection.CollectionEntity, RestoreEntity):
 
     def compute_next_state(self, state: int | None) -> int | None:
         """Keep the state within the range of min/max values."""
+
+        if (
+            self._config[CONF_WRAP_AROUND]
+            and self._config[CONF_MINIMUM] is not None
+            and self._config[CONF_MAXIMUM] is not None
+        ):
+            if state > self._config[CONF_MAXIMUM]:
+                state = self._config[CONF_MINIMUM]
+            if state < self._config[CONF_MINIMUM]:
+                state = self._config[CONF_MAXIMUM]
+
         if self._config[CONF_MINIMUM] is not None:
             state = max(self._config[CONF_MINIMUM], state)
         if self._config[CONF_MAXIMUM] is not None:

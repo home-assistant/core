@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.counter import (
     ATTR_EDITABLE,
@@ -11,6 +12,7 @@ from homeassistant.components.counter import (
     ATTR_MAXIMUM,
     ATTR_MINIMUM,
     ATTR_STEP,
+    ATTR_WRAP_AROUND,
     CONF_ICON,
     CONF_INITIAL,
     CONF_MAXIMUM,
@@ -23,6 +25,7 @@ from homeassistant.components.counter import (
     DOMAIN,
     SERVICE_SET_VALUE,
     VALUE,
+    CONFIG_SCHEMA,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
@@ -55,6 +58,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
                             "maximum": 100,
                             "minimum": 3,
                             "step": 2,
+                            "wrap_around": False,
                             "restore": False,
                         }
                     ]
@@ -127,6 +131,29 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
     assert state_3.attributes.get(ATTR_INITIAL) == DEFAULT_INITIAL
     assert state_3.attributes.get(ATTR_STEP) == DEFAULT_STEP
+
+
+async def test_config_wrap_around(hass: HomeAssistant) -> None:
+    """Test wrap around configuration validation."""
+
+    with pytest.raises(
+        vol.Invalid, match="minimum and maximum are required for wrap around option"
+    ):
+        CONFIG_SCHEMA({"counter": {"my_counter": {"wrap_around": True}}})
+
+    with pytest.raises(
+        vol.Invalid, match="minimum and maximum are required for wrap around option"
+    ):
+        CONFIG_SCHEMA({"counter": {"my_counter": {"wrap_around": True, "minimum": 0}}})
+
+    with pytest.raises(
+        vol.Invalid, match="minimum and maximum are required for wrap around option"
+    ):
+        CONFIG_SCHEMA({"counter": {"my_counter": {"wrap_around": True, "maximum": 0}}})
+
+    CONFIG_SCHEMA(
+        {"counter": {"my_counter": {"wrap_around": True, "minimum": 0, "maximum": 0}}}
+    )
 
 
 async def test_methods(hass: HomeAssistant) -> None:
@@ -434,12 +461,73 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "-1"
 
 
+async def test_counter_wrap_around(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test that wrapping around works."""
+    assert await async_setup_component(
+        hass,
+        "counter",
+        {
+            "counter": {
+                "test": {
+                    "minimum": "0",
+                    "maximum": "1",
+                    "initial": "0",
+                    "wrap_around": True,
+                }
+            }
+        },
+    )
+
+    initial_state = hass.states.get("counter.test")
+    assert initial_state is not None
+    assert initial_state.state == "0"
+
+    await hass.services.async_call(
+        "counter",
+        "increment",
+        {"entity_id": initial_state.entity_id},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    counting_up_state = hass.states.get("counter.test")
+    assert counting_up_state is not None
+    assert counting_up_state.state == "1"
+
+    await hass.services.async_call(
+        "counter",
+        "increment",
+        {"entity_id": initial_state.entity_id},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    wrapped_around_max_state = hass.states.get("counter.test")
+    assert wrapped_around_max_state is not None
+    assert wrapped_around_max_state.state == "0"
+
+    await hass.services.async_call(
+        "counter",
+        "decrement",
+        {"entity_id": initial_state.entity_id},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    wrapped_around_min_state = hass.states.get("counter.test")
+    assert wrapped_around_min_state is not None
+    assert wrapped_around_min_state.state == "1"
+
+
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert int(state.state) == 10
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ATTR_WRAP_AROUND) == False
     assert state.attributes.get(ATTR_EDITABLE)
 
 
@@ -545,6 +633,7 @@ async def test_update_min_max(
         "name": "from storage",
         "maximum": 100,
         "minimum": 10,
+        "wrap_around": False,
         "step": 3,
         "restore": True,
     }
