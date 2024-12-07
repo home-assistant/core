@@ -41,7 +41,9 @@ async def _async_migrate_unique_ids(
     """Migrate entities when the mac address gets discovered."""
 
     @callback
-    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+    def _async_migrator_mac_detected(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
         updates = None
 
         unique_id = entry.unique_id
@@ -70,7 +72,11 @@ async def _async_migrate_unique_ids(
         }
         hass.config_entries.async_update_entry(entry, **updates)
 
-        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+        await er.async_migrate_entries(
+            hass, entry.entry_id, _async_migrator_mac_detected
+        )
+    elif entry.unique_id == "":
+        hass.config_entries.async_update_entry(entry, unique_id=None)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
