@@ -17,7 +17,7 @@ def _has_parallel_updates_defined(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
     """Validate that the integration sets PARALLEL_UPDATES constant."""
 
     errors = []
