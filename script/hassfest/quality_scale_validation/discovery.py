@@ -5,6 +5,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/d
 
 import ast
 
+from script.hassfest import ast_parse_module
 from script.hassfest.model import Integration
 
 MANIFEST_KEYS = [
@@ -49,7 +50,7 @@ def validate(integration: Integration) -> list[str] | None:
         return None
 
     # Fallback => check config_flow step
-    config_flow = ast.parse(config_flow_file.read_text())
+    config_flow = ast_parse_module(config_flow_file)
     if not (_has_discovery_function(config_flow)):
         return [
             f"Integration is missing one of {CONFIG_FLOW_STEPS} "

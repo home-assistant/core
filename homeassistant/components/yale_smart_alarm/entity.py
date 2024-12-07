@@ -2,7 +2,7 @@
 
 from yalesmartalarmclient import YaleLock
 
-from homeassistant.const import CONF_NAME, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -61,7 +61,7 @@ class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             identifiers={(DOMAIN, coordinator.config_entry.data[CONF_USERNAME])},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=coordinator.config_entry.data[CONF_NAME],
+            name=coordinator.config_entry.title,
             connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
             sw_version=panel_info["version"],
         )

@@ -13,6 +13,9 @@ from homeassistant.util import dt as dt_util
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 CALENDAR_KEY = "auto_on_off_schedule"
 
 DAY_OF_WEEK = [
