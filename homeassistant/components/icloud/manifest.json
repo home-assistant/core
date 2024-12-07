@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/icloud",
   "iot_class": "cloud_polling",
-  "loggers": ["keyrings.alt", "pyicloud"],
-  "requirements": ["pyicloud==1.0.0"]
+  "loggers": ["keyrings.alt", "icloud"],
+  "requirements": ["srp"],
+  "version": "2.0.0"
 }

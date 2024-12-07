@@ -7,13 +7,13 @@ import logging
 import operator
 from typing import Any
 
-from pyicloud import PyiCloudService
-from pyicloud.exceptions import (
+from .pyicloud_ipd.base import PyiCloudService
+from .pyicloud_ipd.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-from pyicloud.services.findmyiphone import AppleDevice
+from .pyicloud_ipd.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
