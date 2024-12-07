@@ -3,9 +3,10 @@
 from collections.abc import Callable, Generator
 import logging
 from typing import NamedTuple
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
+from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
 from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.models import Producer
@@ -17,7 +18,7 @@ from go2rtc_client.ws import (
     WsError,
 )
 import pytest
-from webrtc_models import RTCIceCandidate
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
@@ -36,10 +37,12 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    RECOMMENDED_VERSION,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -199,6 +202,7 @@ async def init_test_integration(
 
 async def _test_setup_and_signaling(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     config: ConfigType,
@@ -207,10 +211,11 @@ async def _test_setup_and_signaling(
 ) -> None:
     """Test the go2rtc config entry."""
     entity_id = camera.entity_id
-    assert camera.frontend_stream_type == StreamType.HLS
+    assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state == ConfigEntryState.LOADED
@@ -238,7 +243,11 @@ async def _test_setup_and_signaling(
     await test()
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id, ["rtsp://stream", f"ffmpeg:{camera.entity_id}#audio=opus"]
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
     )
 
     # Stream exists but the source is different
@@ -252,7 +261,11 @@ async def _test_setup_and_signaling(
     await test()
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id, ["rtsp://stream", f"ffmpeg:{camera.entity_id}#audio=opus"]
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
     )
 
     # If the stream is already added, the stream should not be added again.
@@ -296,8 +309,9 @@ async def _test_setup_and_signaling(
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
-async def test_setup_managed(
+async def test_setup_go_binary(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: AsyncMock,
@@ -308,131 +322,21 @@ async def test_setup_managed(
     config: ConfigType,
     ui_enabled: bool,
 ) -> None:
-    """Test the go2rtc setup with managed go2rtc instance."""
+    """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
-    camera = init_test_integration
 
-    entity_id = camera.entity_id
-    stream_name_original = f"{camera.entity_id}_original"
-    assert camera.frontend_stream_type == StreamType.HLS
+    def after_setup() -> None:
+        server.assert_called_once_with(hass, "/usr/bin/go2rtc", enable_ui=ui_enabled)
+        server_start.assert_called_once()
 
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    assert config_entries[0].state == ConfigEntryState.LOADED
-    server.assert_called_once_with(hass, "/usr/bin/go2rtc", enable_ui=ui_enabled)
-    server_start.assert_called_once()
-
-    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
-
-    async def test() -> None:
-        await camera.async_handle_async_webrtc_offer(
-            OFFER_SDP, "session_id", receive_message_callback
-        )
-        ws_client.send.assert_called_once_with(
-            WebRTCOffer(
-                OFFER_SDP,
-                camera.async_get_webrtc_client_configuration().configuration.ice_servers,
-            )
-        )
-        ws_client.subscribe.assert_called_once()
-
-        # Simulate the answer from the go2rtc server
-        callback = ws_client.subscribe.call_args[0][0]
-        callback(WebRTCAnswer(ANSWER_SDP))
-        receive_message_callback.assert_called_once_with(HAWebRTCAnswer(ANSWER_SDP))
-
-    await test()
-
-    stream_added_calls = [
-        call(stream_name_original, "rtsp://stream"),
-        call(
-            entity_id,
-            [
-                f"rtsp://127.0.0.1:18554/{stream_name_original}",
-                f"ffmpeg:{stream_name_original}#audio=opus",
-            ],
-        ),
-    ]
-    assert rest_client.streams.add.call_args_list == stream_added_calls
-
-    # Stream original missing
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        entity_id: Stream(
-            [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
-                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
-            ]
-        )
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    assert rest_client.streams.add.call_args_list == stream_added_calls
-
-    # Stream original source different
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        stream_name_original: Stream([Producer("rtsp://different")]),
-        entity_id: Stream(
-            [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
-                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
-            ]
-        ),
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    assert rest_client.streams.add.call_args_list == stream_added_calls
-
-    # Stream source different
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        stream_name_original: Stream([Producer("rtsp://stream")]),
-        entity_id: Stream([Producer("rtsp://different")]),
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    assert rest_client.streams.add.call_args_list == stream_added_calls
-
-    # If the stream is already added, the stream should not be added again.
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        stream_name_original: Stream([Producer("rtsp://stream")]),
-        entity_id: Stream(
-            [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
-                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
-            ]
-        ),
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    rest_client.streams.add.assert_not_called()
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-
-    # Set stream source to None and provider should be skipped
-    rest_client.streams.list.return_value = {}
-    receive_message_callback.reset_mock()
-    camera.set_stream_source(None)
-    await camera.async_handle_async_webrtc_offer(
-        OFFER_SDP, "session_id", receive_message_callback
-    )
-    receive_message_callback.assert_called_once_with(
-        WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+    await _test_setup_and_signaling(
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     await hass.async_stop()
@@ -448,8 +352,9 @@ async def test_setup_managed(
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
-async def test_setup_self_hosted(
+async def test_setup(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: Mock,
@@ -458,83 +363,22 @@ async def test_setup_self_hosted(
     mock_is_docker_env: Mock,
     has_go2rtc_entry: bool,
 ) -> None:
-    """Test the go2rtc with selfhosted go2rtc instance."""
+    """Test the go2rtc config entry without binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
 
     config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
-    camera = init_test_integration
 
-    entity_id = camera.entity_id
-    assert camera.frontend_stream_type == StreamType.HLS
+    def after_setup() -> None:
+        server.assert_not_called()
 
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    assert config_entries[0].state == ConfigEntryState.LOADED
-    server.assert_not_called()
-
-    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
-
-    async def test() -> None:
-        await camera.async_handle_async_webrtc_offer(
-            OFFER_SDP, "session_id", receive_message_callback
-        )
-        ws_client.send.assert_called_once_with(
-            WebRTCOffer(
-                OFFER_SDP,
-                camera.async_get_webrtc_client_configuration().configuration.ice_servers,
-            )
-        )
-        ws_client.subscribe.assert_called_once()
-
-        # Simulate the answer from the go2rtc server
-        callback = ws_client.subscribe.call_args[0][0]
-        callback(WebRTCAnswer(ANSWER_SDP))
-        receive_message_callback.assert_called_once_with(HAWebRTCAnswer(ANSWER_SDP))
-
-    await test()
-
-    rest_client.streams.add.assert_called_once_with(
-        entity_id, ["rtsp://stream", f"ffmpeg:{camera.entity_id}#audio=opus"]
-    )
-
-    # Stream exists but the source is different
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://different")])
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    rest_client.streams.add.assert_called_once_with(
-        entity_id, ["rtsp://stream", f"ffmpeg:{camera.entity_id}#audio=opus"]
-    )
-
-    # If the stream is already added, the stream should not be added again.
-    rest_client.streams.add.reset_mock()
-    rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://stream")])
-    }
-
-    receive_message_callback.reset_mock()
-    ws_client.reset_mock()
-    await test()
-
-    rest_client.streams.add.assert_not_called()
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-
-    # Set stream source to None and provider should be skipped
-    rest_client.streams.list.return_value = {}
-    receive_message_callback.reset_mock()
-    camera.set_stream_source(None)
-    await camera.async_handle_async_webrtc_offer(
-        OFFER_SDP, "session_id", receive_message_callback
-    )
-    receive_message_callback.assert_called_once_with(
-        WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+    await _test_setup_and_signaling(
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     mock_get_binary.assert_not_called()
@@ -579,7 +423,7 @@ async def message_callbacks(
     [
         (
             WebRTCCandidate("candidate"),
-            HAWebRTCCandidate(RTCIceCandidate("candidate")),
+            HAWebRTCCandidate(RTCIceCandidateInit("candidate")),
         ),
         (
             WebRTCAnswer(ANSWER_SDP),
@@ -615,7 +459,7 @@ async def test_on_candidate(
     session_id = "session_id"
 
     # Session doesn't exist
-    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
+    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidateInit("candidate"))
     assert (
         "homeassistant.components.go2rtc",
         logging.DEBUG,
@@ -635,7 +479,7 @@ async def test_on_candidate(
     )
     ws_client.reset_mock()
 
-    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
+    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidateInit("candidate"))
     ws_client.send.assert_called_once_with(WebRTCCandidate("candidate"))
     assert caplog.record_tuples == []
 
@@ -886,3 +730,30 @@ async def test_config_entry_remove(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
+@pytest.mark.usefixtures("server")
+async def test_setup_with_recommended_version_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    rest_client: AsyncMock,
+    config: ConfigType,
+) -> None:
+    """Test setup integration entry fails."""
+    rest_client.validate_server_version.return_value = AwesomeVersion("1.9.5")
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify the issue is created
+    issue = issue_registry.async_get_issue(DOMAIN, "recommended_version")
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.issue_id == "recommended_version"
+    assert issue.translation_key == "recommended_version"
+    assert issue.translation_placeholders == {
+        "recommended_version": RECOMMENDED_VERSION,
+        "current_version": "1.9.5",
+    }

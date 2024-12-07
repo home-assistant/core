@@ -431,7 +431,9 @@ async def test_dock_vacuum(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None, None)
 
-    trt = trait.DockTrait(hass, State("vacuum.bla", vacuum.STATE_IDLE), BASIC_CONFIG)
+    trt = trait.DockTrait(
+        hass, State("vacuum.bla", vacuum.VacuumActivity.IDLE), BASIC_CONFIG
+    )
 
     assert trt.sync_attributes() == {}
 
@@ -454,7 +456,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_IDLE,
+            vacuum.VacuumActivity.IDLE,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
@@ -485,7 +487,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_DOCKED,
+            vacuum.VacuumActivity.DOCKED,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
@@ -511,7 +513,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_CLEANING,
+            vacuum.VacuumActivity.CLEANING,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
@@ -551,7 +553,7 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_PAUSED,
+            vacuum.VacuumActivity.PAUSED,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
@@ -4066,6 +4068,93 @@ async def test_sensorstate(
     assert (
         trait.SensorStateTrait.supported(
             sensor.DOMAIN, None, sensor.SensorDeviceClass.MONETARY, None
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    ("state", "identifier"),
+    [
+        (STATE_ON, 0),
+        (STATE_OFF, 1),
+        (STATE_UNKNOWN, 2),
+    ],
+)
+@pytest.mark.parametrize(
+    ("device_class", "name", "states"),
+    [
+        (
+            binary_sensor.BinarySensorDeviceClass.CO,
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.SMOKE,
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.MOISTURE,
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    ],
+)
+async def test_binary_sensorstate(
+    hass: HomeAssistant,
+    state: str,
+    identifier: int,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+    name: str,
+    states: list[str],
+) -> None:
+    """Test SensorState trait support for binary sensor domain."""
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert trait.SensorStateTrait.supported(
+        binary_sensor.DOMAIN, None, device_class, None
+    )
+
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "binary_sensor.test",
+            state,
+            {
+                "device_class": device_class,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "sensorStatesSupported": [
+            {
+                "name": name,
+                "descriptiveCapabilities": {
+                    "availableStates": states,
+                },
+            }
+        ]
+    }
+    assert trt.query_attributes() == {
+        "currentSensorStateData": [
+            {
+                "name": name,
+                "currentSensorState": states[identifier],
+                "rawValue": None,
+            },
+        ]
+    }
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert (
+        trait.SensorStateTrait.supported(
+            binary_sensor.DOMAIN,
+            None,
+            binary_sensor.BinarySensorDeviceClass.TAMPER,
+            None,
         )
         is False
     )

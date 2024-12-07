@@ -33,7 +33,7 @@ async def test_update_success(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.runtime_data.coordinator.last_update_success is True
+    assert config_entry.runtime_data.last_update_success is True
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -48,7 +48,7 @@ async def test_update_failed(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     assert coordinator.last_update_success is True
 
@@ -77,7 +77,7 @@ async def test_update_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     assert coordinator.last_update_success is True
 
@@ -146,7 +146,7 @@ async def test_captcha_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     assert coordinator.last_update_success is True
 

@@ -30,6 +30,9 @@ from . import IronOSConfigEntry
 from .const import OHM
 from .entity import IronOSBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class PinecilSensor(StrEnum):
     """Pinecil Sensors."""
@@ -107,6 +110,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=OHM,
         value_fn=lambda data: data.tip_resistance,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
@@ -137,10 +141,10 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
     IronOSSensorEntityDescription(
         key=PinecilSensor.TIP_VOLTAGE,
         translation_key=PinecilSensor.TIP_VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MICROVOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=3,
+        suggested_display_precision=0,
         value_fn=lambda data: data.tip_voltage,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -180,7 +184,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     async_add_entities(
         IronOSSensorEntity(coordinator, description)

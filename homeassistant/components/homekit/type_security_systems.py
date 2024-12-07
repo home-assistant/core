@@ -18,6 +18,8 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import State, callback
 
@@ -152,12 +154,12 @@ class SecuritySystem(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
-        hass_state = None
-        if new_state and new_state.state == "None":
-            # Bail out early for no state
+        hass_state: str | AlarmControlPanelState = new_state.state
+        if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
+            # Bail out early for no state, unknown or unavailable
             return
-        if new_state and new_state.state is not None:
-            hass_state = AlarmControlPanelState(new_state.state)
+        if hass_state is not None:
+            hass_state = AlarmControlPanelState(hass_state)
         if (
             hass_state
             and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None

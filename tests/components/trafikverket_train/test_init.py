@@ -28,13 +28,14 @@ async def test_unload_entry(
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="321",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
@@ -64,12 +65,13 @@ async def test_auth_failed(
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="321",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
+        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
         side_effect=InvalidAuthentication,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -94,12 +96,13 @@ async def test_no_stations(
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="321",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
+        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
         side_effect=NoTrainStationFound,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -121,7 +124,8 @@ async def test_migrate_entity_unique_id(
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="321",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -135,7 +139,7 @@ async def test_migrate_entity_unique_id(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
@@ -149,3 +153,69 @@ async def test_migrate_entity_unique_id(
 
     entity = entity_registry.async_get(entity.entity_id)
     assert entity.unique_id == f"{entry.entry_id}-departure_time"
+
+
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    get_trains: list[TrainStopModel],
+) -> None:
+    """Test migrate entry unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        options=OPTIONS_CONFIG,
+        version=1,
+        minor_version=1,
+        entry_id="1",
+        unique_id="321",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.unique_id is None
+
+
+async def test_migrate_entry_from_future_version_fails(
+    hass: HomeAssistant,
+    get_trains: list[TrainStopModel],
+) -> None:
+    """Test migrate entry from future version fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        options=OPTIONS_CONFIG,
+        version=2,
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
