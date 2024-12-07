@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 
 from aiorussound import Controller
+from aiorussound.const import FeatureFlag
 from aiorussound.models import PlayStatus, Source
 from aiorussound.rio import ZoneControlSurface
+from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -153,7 +155,18 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def source_list(self):
         """Return a list of available input sources."""
-        return [x.name for x in self._sources.values()]
+        available_sources = (
+            [
+                source
+                for source_id, source in self._sources.items()
+                if source_id in self._zone.enabled_sources
+            ]
+            if is_feature_supported(
+                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            )
+            else self._sources.values()
+        )
+        return [x.name for x in available_sources]
 
     @property
     def media_title(self):
