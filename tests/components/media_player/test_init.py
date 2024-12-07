@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
+    MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
