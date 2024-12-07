@@ -402,7 +402,7 @@ aiotedee==0.2.20
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==80
+aiounifi==81
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
