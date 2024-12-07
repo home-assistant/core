@@ -1,21 +1,24 @@
 """Platform for time integration."""
 
 from __future__ import annotations
+
 import asyncio
+from datetime import time as dt_time
 import logging
+
 from homeassistant.components.time import TimeEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+
+from .base import OhmeEntity
 from .const import (
-    DOMAIN,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
+    DATA_CLIENT,
+    DATA_COORDINATORS,
+    DOMAIN,
 )
 from .utils import session_in_progress
-from datetime import time as dt_time
-from .base import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
-    """Setup switches and configure coordinator."""
+    """Set up switches and configure coordinator."""
     account_id = config_entry.data["email"]
 
     coordinators = hass.data[DOMAIN][account_id][DATA_COORDINATORS]

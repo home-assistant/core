@@ -1,8 +1,9 @@
 """Tests for sensor entities."""
 
-import pytest
 from unittest.mock import MagicMock
+
 from custom_components.ohme.sensor import VoltageSensor
+import pytest
 
 
 @pytest.fixture

@@ -1,16 +1,17 @@
 """Tests for time entity."""
 
-import pytest
 from datetime import time as dt_time
 from unittest.mock import AsyncMock, MagicMock, patch
-from custom_components.ohme.time import async_setup_entry, TargetTime
+
 from custom_components.ohme.const import (
-    DOMAIN,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
+    DATA_CLIENT,
+    DATA_COORDINATORS,
+    DOMAIN,
 )
+from custom_components.ohme.time import TargetTime, async_setup_entry
+import pytest
 
 
 @pytest.fixture

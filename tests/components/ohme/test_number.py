@@ -1,22 +1,22 @@
 """Tests for number entities."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
 from custom_components.ohme.const import (
-    DOMAIN,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
+    DATA_CLIENT,
+    DATA_COORDINATORS,
+    DOMAIN,
 )
-
 from custom_components.ohme.number import (
-    async_setup_entry,
-    TargetPercentNumber,
     PreconditioningNumber,
     PriceCapNumber,
+    TargetPercentNumber,
+    async_setup_entry,
 )
+import pytest
 
 
 @pytest.fixture

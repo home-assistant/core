@@ -1,9 +1,10 @@
 """Common utility functions."""
 
-from functools import reduce
 import datetime
-from .const import DOMAIN, DATA_OPTIONS
-import pytz
+from functools import reduce
+from zoneinfo import ZoneInfo
+
+from .const import DATA_OPTIONS, DOMAIN
 
 
 def next_slot(hass, account_id, data):
@@ -55,12 +56,12 @@ def slot_list(data):
                 "start": datetime.datetime.fromtimestamp(
                     slot["startTimeMs"] / 1000, tz=datetime.UTC
                 )
-                .replace(tzinfo=pytz.utc, microsecond=0)
+                .replace(tzinfo=ZoneInfo("UTC"), microsecond=0)
                 .astimezone(),
                 "end": datetime.datetime.fromtimestamp(
                     slot["endTimeMs"] / 1000, tz=datetime.UTC
                 )
-                .replace(tzinfo=pytz.utc, microsecond=0)
+                .replace(tzinfo=ZoneInfo("UTC"), microsecond=0)
                 .astimezone(),
                 "charge_in_kwh": -(
                     (slot["estimatedSoc"]["wh"] - wh_tally) / 1000
@@ -79,9 +80,10 @@ def slot_list_str(hass, account_id, slots):
     """Convert slot list to string."""
 
     # Convert list to tuples of times
-    t_slots = []
-    for slot in slots:
-        t_slots.append((slot["start"].strftime("%H:%M"), slot["end"].strftime("%H:%M")))
+    t_slots = [
+        (slot["start"].strftime("%H:%M"), slot["end"].strftime("%H:%M"))
+        for slot in slots
+    ]
 
     state = []
 
@@ -129,9 +131,10 @@ def time_next_occurs(hour, minute):
 
 
 def session_in_progress(hass, account_id, data):
-    """Is there a session in progress?
+    """Is there a session in progress.
 
-    Used to check if we should update the current session rather than the first schedule."""
+    Used to check if we should update the current session rather than the first schedule.
+    """
     # If config option set, never update session specific schedule
     if get_option(hass, account_id, "never_session_specific"):
         return False

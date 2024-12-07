@@ -1,9 +1,7 @@
 {
   "domain": "ohme",
   "name": "Ohme",
-  "codeowners": [
-    "@dan-r"
-  ],
+  "codeowners": ["@dan-r"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/dan-r/HomeAssistant-Ohme",

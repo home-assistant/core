@@ -1,15 +1,16 @@
 """Platform for button."""
 
 from __future__ import annotations
-import logging
+
 import asyncio
+import logging
 
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.button import ButtonEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, DATA_CLIENT, DATA_COORDINATORS, COORDINATOR_CHARGESESSIONS
 from .base import OhmeEntity
+from .const import COORDINATOR_CHARGESESSIONS, DATA_CLIENT, DATA_COORDINATORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
-    """Setup switches."""
+    """Set up switches."""
     account_id = config_entry.data["email"]
 
     client = hass.data[DOMAIN][account_id][DATA_CLIENT]

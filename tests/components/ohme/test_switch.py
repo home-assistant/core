@@ -1,25 +1,26 @@
 """Tests for switch entities."""
 
-import pytest
 from unittest.mock import AsyncMock
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
 from custom_components.ohme.const import (
-    DOMAIN,
+    COORDINATOR_ACCOUNTINFO,
+    COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_ACCOUNTINFO,
+    DOMAIN,
 )
-
 from custom_components.ohme.switch import (
-    async_setup_entry,
-    OhmePauseChargeSwitch,
-    OhmeMaxChargeSwitch,
     OhmeConfigurationSwitch,
-    OhmeSolarBoostSwitch,
+    OhmeMaxChargeSwitch,
+    OhmePauseChargeSwitch,
     OhmePriceCapSwitch,
+    OhmeSolarBoostSwitch,
+    async_setup_entry,
 )
+import pytest
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @pytest.fixture
@@ -139,7 +140,7 @@ async def test_ohme_solar_boost_switch(mock_hass, mock_client, mock_coordinator)
 
 @pytest.mark.asyncio
 async def test_ohme_price_cap_switch(mock_hass, mock_client, mock_coordinator):
-    """Test OhmePrice"""
+    """Test OhmePrice."""
     switch = OhmePriceCapSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
     mock_client.async_change_price_cap.assert_called_once_with(enabled=True)

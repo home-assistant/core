@@ -1,14 +1,15 @@
 """Tests for buttons."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from custom_components.ohme.button import async_setup_entry, OhmeApproveChargeButton
+
+from custom_components.ohme.button import OhmeApproveChargeButton, async_setup_entry
 from custom_components.ohme.const import (
-    DOMAIN,
+    COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
-    COORDINATOR_CHARGESESSIONS,
+    DOMAIN,
 )
+import pytest
 
 
 @pytest.fixture

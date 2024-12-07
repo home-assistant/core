@@ -1,33 +1,36 @@
 """Platform for sensor integration."""
 
 from __future__ import annotations
+
+import logging
+import math
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
-    SensorStateClass,
     SensorEntity,
+    SensorStateClass,
 )
-import math
-import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    UnitOfPower,
-    UnitOfEnergy,
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utcnow
+
+from .base import OhmeEntity
 from .const import (
-    DOMAIN,
+    COORDINATOR_ADVANCED,
+    COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DATA_SLOTS,
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_ADVANCED,
+    DOMAIN,
 )
 from .utils import next_slot, slot_list, slot_list_str
-from .base import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities,
 ):
-    """Setup sensors and configure coordinator."""
+    """Set up sensors and configure coordinator."""
     account_id = config_entry.data["email"]
 
     client = hass.data[DOMAIN][account_id][DATA_CLIENT]
@@ -281,10 +284,9 @@ class BatterySOCSensor(OhmeEntity, SensorEntity):
         nearest = math.ceil((self._state or 0) / 10.0) * 10
         if nearest == 0:
             return "mdi:battery-outline"
-        elif nearest == 100:
+        if nearest == 100:
             return "mdi:battery"
-        else:
-            return "mdi:battery-" + str(nearest)
+        return "mdi:battery-" + str(nearest)
 
     @callback
     def _handle_coordinator_update(self) -> None:

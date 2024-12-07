@@ -1,25 +1,28 @@
 """The ohme integration."""
 
 import logging
+
+from ohme import OhmeApiClient
+
 from homeassistant import core
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+
 from .const import (
-    DOMAIN,
     CONFIG_VERSION,
-    ENTITY_TYPES,
     DATA_CLIENT,
     DATA_COORDINATORS,
     DATA_OPTIONS,
+    DOMAIN,
+    ENTITY_TYPES,
     LEGACY_MAPPING,
 )
-from ohme import OhmeApiClient
 from .coordinator import (
-    OhmeChargeSessionsCoordinator,
     OhmeAccountInfoCoordinator,
     OhmeAdvancedSettingsCoordinator,
     OhmeChargeSchedulesCoordinator,
+    OhmeChargeSessionsCoordinator,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ async def async_update_listener(hass, entry):
 
 
 async def async_setup_entry(hass, entry):
-    """Called from the config flow."""
+    """Set up Ohme from a config entry."""
 
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique IDs from old format."""
@@ -130,7 +133,7 @@ async def async_unload_entry(hass, entry):
 async def async_migrate_entry(hass: core.HomeAssistant, config_entry) -> bool:
     """Migrate old entry."""
     # Version number has gone backwards
-    if CONFIG_VERSION < config_entry.version:
+    if config_entry.version > CONFIG_VERSION:
         _LOGGER.error(
             "Backwards migration not possible. Please update the integration."
         )

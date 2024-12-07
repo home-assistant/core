@@ -1,22 +1,23 @@
 """Platform for switch integration."""
 
 from __future__ import annotations
-import logging
-import asyncio
 
-from homeassistant.core import callback, HomeAssistant
-from homeassistant.config_entries import ConfigEntry
+import asyncio
+import logging
+
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utcnow
 
+from .base import OhmeEntity
 from .const import (
-    DOMAIN,
+    COORDINATOR_ACCOUNTINFO,
+    COORDINATOR_CHARGESESSIONS,
     DATA_CLIENT,
     DATA_COORDINATORS,
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_ACCOUNTINFO,
+    DOMAIN,
 )
-from .base import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
-    """Setup switches and configure coordinator."""
+    """Set up switches and configure coordinator."""
     account_id = config_entry.data["email"]
 
     coordinators = hass.data[DOMAIN][account_id][DATA_COORDINATORS]
@@ -91,7 +92,8 @@ class OhmePauseChargeSwitch(OhmeEntity, SwitchEntity):
         """Determine if charge is paused.
 
         We handle this differently to the sensors as the state of this switch
-        is evaluated only when new data is fetched to stop the switch flicking back then forth."""
+        is evaluated only when new data is fetched to stop the switch flicking back then forth.
+        """
         if self.coordinator.data is None:
             self._attr_is_on = False
         else:
@@ -146,7 +148,8 @@ class OhmeMaxChargeSwitch(OhmeEntity, SwitchEntity):
     async def async_turn_off(self):
         """Stop max charging.
 
-        We are not changing anything, just applying the last rule. No need to supply anything."""
+        We are not changing anything, just applying the last rule. No need to supply anything.
+        """
         await self._client.async_max_charge(False)
 
         await asyncio.sleep(1)

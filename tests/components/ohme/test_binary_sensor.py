@@ -1,23 +1,24 @@
 """Tests for binary sensors."""
 
-import pytest
 from unittest.mock import MagicMock
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from custom_components.ohme.const import (
-    DOMAIN,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_ADVANCED,
-)
 
 from custom_components.ohme.binary_sensor import (
-    ConnectedBinarySensor,
-    ChargingBinarySensor,
-    PendingApprovalBinarySensor,
     ChargerOnlineBinarySensor,
+    ChargingBinarySensor,
+    ConnectedBinarySensor,
+    PendingApprovalBinarySensor,
 )
+from custom_components.ohme.const import (
+    COORDINATOR_ADVANCED,
+    COORDINATOR_CHARGESESSIONS,
+    DATA_CLIENT,
+    DATA_COORDINATORS,
+    DOMAIN,
+)
+import pytest
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @pytest.fixture
