@@ -224,6 +224,9 @@
     "service_not_found": {
       "message": "Action {domain}.{service} not found."
     },
+    "service_not_supported": {
+      "message": "Entity {entity_id} does not support action {domain}.{service}."
+    },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
     },
