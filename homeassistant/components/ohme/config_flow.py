@@ -1,5 +1,7 @@
 """UI configuration flow."""
 
+from typing import Any
+
 from ohme import OhmeApiClient
 import voluptuous as vol
 
@@ -27,7 +29,7 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = CONFIG_VERSION
 
-    async def async_step_user(self, user_input) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """First config step."""
 
         errors = {}
@@ -47,9 +49,10 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    def async_get_options_flow(self: ConfigEntry) -> OptionsFlow:
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry[Any]) -> OptionsFlow:
         """Return options flow."""
-        return OhmeOptionsFlow(self)
+        return OhmeOptionsFlow(config_entry)
 
 
 class OhmeOptionsFlow(OptionsFlow):

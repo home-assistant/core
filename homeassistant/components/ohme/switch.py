@@ -8,6 +8,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -23,8 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches and configure coordinator."""
     account_id = config_entry.data["email"]
 
@@ -167,7 +170,7 @@ class OhmeConfigurationSwitch(OhmeEntity, SwitchEntity):
         translation_key,
         icon,
         config_key,
-    ):
+    ) -> None:
         """Initialise switch."""
         self._attr_icon = f"mdi:{icon}"
         self._attr_translation_key = translation_key
