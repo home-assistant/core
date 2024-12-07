@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import PARAM_APP_ID, PARAM_APP_SECRET, PARAM_API_URL, PLATFORMS, DOMAIN
 from .coordinator import ImouDataUpdateCoordinator
 from pyimouapi.ha_device import ImouHaDeviceManager
-from pyimouapi.device import ImouDeviceManager, ImouDevice
+from pyimouapi.device import ImouDeviceManager
 from pyimouapi.openapi import ImouOpenApiClient
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

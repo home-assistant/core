@@ -20,36 +20,6 @@
     }
   },
   "entity": {
-    "sensor": {
-      "storage_used": {
-        "name": "Storage Used"
-      },
-      "status": {
-        "name": "Status"
-      }
-    },
-    "select": {
-      "night_vision_mode": {
-        "name": "Night Vision Mode"
-      }
-    },
-    "switch": {
-      "motion_detect": {
-        "name": "Motion Detect"
-      },
-      "ab_alarm_sound": {
-        "name": "Abnormal Sound Alarm"
-      },
-      "close_camera": {
-        "name": "Close Camera"
-      },
-      "white_light": {
-        "name": "White Light"
-      },
-      "audio_encode_control": {
-        "name": "Audio Encode Control"
-      }
-    },
     "button": {
       "ptz_up": {
         "name": "Ptz Up"
@@ -65,11 +35,6 @@
       },
       "restart_device": {
         "name": "Restart Device"
-      }
-    },
-    "camera": {
-      "camera": {
-        "name": "Camera"
       }
     }
   }
