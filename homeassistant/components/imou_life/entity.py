@@ -1,3 +1,4 @@
+"""An abstract class commom to all IMOU entities."""
 import logging
 
 from homeassistant.components.button import ButtonDeviceClass

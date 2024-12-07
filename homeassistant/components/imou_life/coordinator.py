@@ -1,3 +1,4 @@
+"""Provides the imou DataUpdateCoordinator."""
 import asyncio
 import logging
 from datetime import timedelta

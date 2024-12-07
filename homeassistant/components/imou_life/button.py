@@ -1,3 +1,4 @@
+"""Support for Imou button controls"""
 import logging
 
 from homeassistant.components.button import ButtonEntity

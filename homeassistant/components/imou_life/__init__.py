@@ -1,3 +1,4 @@
+"""Support for Imou camera"""
 import asyncio
 import logging
 
