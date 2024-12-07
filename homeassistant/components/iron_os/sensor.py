@@ -30,6 +30,9 @@ from . import IronOSConfigEntry
 from .const import OHM
 from .entity import IronOSBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class PinecilSensor(StrEnum):
     """Pinecil Sensors."""
