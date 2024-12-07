@@ -196,6 +196,12 @@
     },
     "transformation": {
       "service": "mdi:flask-round-bottom"
+    },
+    "get_tasks": {
+      "service": "mdi:calendar-export",
+      "sections": {
+        "filter": "mdi:calendar-filter"
+      }
     }
   }
 }
