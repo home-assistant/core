@@ -55,5 +55,8 @@ async def test_load_backups(
     client = await hass_ws_client(hass)
     read_backup.side_effect = side_effect
 
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    assert await client.receive_json() == snapshot
+
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot

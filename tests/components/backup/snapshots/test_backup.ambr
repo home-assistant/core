@@ -3,6 +3,20 @@
   dict({
     'id': 1,
     'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[None].1
+  dict({
+    'id': 2,
+    'result': dict({
       'agent_errors': dict({
       }),
       'backups': list([
@@ -41,6 +55,20 @@
   dict({
     'id': 1,
     'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect1].1
+  dict({
+    'id': 2,
+    'result': dict({
       'agent_errors': dict({
       }),
       'backups': list([
@@ -54,6 +82,20 @@
 # name: test_load_backups[side_effect2]
   dict({
     'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect2].1
+  dict({
+    'id': 2,
     'result': dict({
       'agent_errors': dict({
       }),
@@ -69,6 +111,20 @@
   dict({
     'id': 1,
     'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect3].1
+  dict({
+    'id': 2,
+    'result': dict({
       'agent_errors': dict({
       }),
       'backups': list([
@@ -82,6 +138,20 @@
 # name: test_load_backups[side_effect4]
   dict({
     'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect4].1
+  dict({
+    'id': 2,
     'result': dict({
       'agent_errors': dict({
       }),

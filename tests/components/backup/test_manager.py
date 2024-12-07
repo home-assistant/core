@@ -420,30 +420,6 @@ async def test_loading_platforms(
     assert "Loaded 1 platforms" in caplog.text
 
 
-async def test_loading_agents(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup agents."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
-
-    await _setup_backup_platform(
-        hass,
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[BackupAgentTest("test")]),
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    assert len(manager.backup_agents) == 1
-
-    assert "Loaded 1 agents" in caplog.text
-    assert "some_domain.test" in manager.backup_agents
-
-
 async def test_not_loading_bad_platforms(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
