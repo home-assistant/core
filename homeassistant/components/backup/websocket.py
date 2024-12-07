@@ -292,7 +292,7 @@ async def handle_config_info(
     connection.send_result(
         msg["id"],
         {
-            "config": manager.config.data,
+            "config": manager.config.data.to_dict(),
         },
     )
 

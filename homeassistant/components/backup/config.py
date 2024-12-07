@@ -39,7 +39,7 @@ class StoredBackupConfig(TypedDict):
     create_backup: StoredCreateBackupConfig
     retention: StoredRetentionConfig
     last_automatic_backup: datetime | None
-    schedule: ScheduleState
+    schedule: StoredBackupSchedule
 
 
 @dataclass(kw_only=True)
@@ -76,7 +76,7 @@ class BackupConfigData:
                 days=retention["days"],
             ),
             last_automatic_backup=data["last_automatic_backup"],
-            schedule=BackupSchedule(state=ScheduleState(data["schedule"])),
+            schedule=BackupSchedule(state=ScheduleState(data["schedule"]["state"])),
         )
 
     def to_dict(self) -> StoredBackupConfig:
@@ -85,7 +85,7 @@ class BackupConfigData:
             create_backup=self.create_backup.to_dict(),
             retention=self.retention.to_dict(),
             last_automatic_backup=self.last_automatic_backup,
-            schedule=self.schedule.state,
+            schedule=self.schedule.to_dict(),
         )
 
 
@@ -139,7 +139,7 @@ class BackupConfig:
                 self.data.retention.apply(self._manager)
         if schedule is not UNDEFINED:
             new_schedule = BackupSchedule(state=schedule)
-            if new_schedule != self.data.schedule:
+            if new_schedule.to_dict() != self.data.schedule.to_dict():
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
 
@@ -222,6 +222,12 @@ class RetentionParametersDict(TypedDict, total=False):
     days: int | None
 
 
+class StoredBackupSchedule(TypedDict):
+    """Represent the stored backup schedule configuration."""
+
+    state: ScheduleState
+
+
 class ScheduleState(StrEnum):
     """Represent the schedule state."""
 
@@ -241,6 +247,7 @@ class BackupSchedule:
     """Represent the backup schedule."""
 
     state: ScheduleState = ScheduleState.NEVER
+    cron_event: CronSim | None = field(init=False, default=None)
 
     @callback
     def apply(
@@ -272,37 +279,48 @@ class BackupSchedule:
         """Schedule the next backup."""
         self._unschedule_next(manager)
         now = dt_util.now()
-        seed_time = manager.config.data.last_automatic_backup or now
-        cron_event = CronSim(cron_pattern, seed_time)
+        if (cron_event := self.cron_event) is None:
+            seed_time = manager.config.data.last_automatic_backup or now
+            cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 
         if next_time < now:
-            # schedule a backup at next daily time if we missed
-            # the last scheduled backup
+            # schedule a backup at next daily time once
+            # if we missed the last scheduled backup
             cron_event = CronSim(CRON_PATTERN_DAILY, now)
             next_time = next(cron_event)
+            # reseed the cron event attribute
+            # add a day to the next time to avoid scheduling at the same time again
+            self.cron_event = CronSim(cron_pattern, now + timedelta(days=1))
 
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
             manager.remove_next_backup_event = None
             config_data = manager.config.data
-            config_data.last_automatic_backup = dt_util.now()
-            manager.config.save()
             self._schedule_next(cron_pattern, manager)
 
-            # Create the backup
-            await manager.async_create_backup(
-                agent_ids=config_data.create_backup.agent_ids,
-                include_addons=config_data.create_backup.include_addons,
-                include_all_addons=config_data.create_backup.include_all_addons,
-                include_database=config_data.create_backup.include_database,
-                include_folders=config_data.create_backup.include_folders,
-                include_homeassistant=True,  # always include HA
-                name=config_data.create_backup.name,
-                password=config_data.create_backup.password,
-            )
+            # create the backup
+            try:
+                await manager.async_create_backup(
+                    agent_ids=config_data.create_backup.agent_ids,
+                    include_addons=config_data.create_backup.include_addons,
+                    include_all_addons=config_data.create_backup.include_all_addons,
+                    include_database=config_data.create_backup.include_database,
+                    include_folders=config_data.create_backup.include_folders,
+                    include_homeassistant=True,  # always include HA
+                    name=config_data.create_backup.name,
+                    password=config_data.create_backup.password,
+                )
+            except Exception:  # noqa: BLE001
+                # another more specific exception will be added
+                # and handled in the future
+                LOGGER.exception("Unexpected error creating automatic backup")
+            else:
+                # create backup was successful, update last_automatic_backup
+                config_data.last_automatic_backup = dt_util.now()
+                manager.config.save()
 
-            # Delete old backups more numerous than copies
+            # delete old backups more numerous than copies
 
             def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
                 """Return oldest backups more numerous than copies to delete."""
@@ -322,6 +340,10 @@ class BackupSchedule:
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )
+
+    def to_dict(self) -> StoredBackupSchedule:
+        """Convert backup schedule to a dict."""
+        return StoredBackupSchedule(state=self.state)
 
     @callback
     def _unschedule_next(self, manager: BackupManager) -> None:
