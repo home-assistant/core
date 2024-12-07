@@ -486,7 +486,7 @@ class BackupManager:
     ) -> None:
         """Receive and store a backup file from upload."""
         if self.state is not BackupManagerState.IDLE:
-            raise HomeAssistantError("Backup manager busy")
+            raise HomeAssistantError(f"Backup manager busy: {self.state}")
         self.async_on_backup_event(
             ReceiveBackupEvent(stage=None, state=ReceiveBackupState.IN_PROGRESS)
         )
@@ -577,7 +577,7 @@ class BackupManager:
     ) -> NewBackup:
         """Initiate generating a backup."""
         if self.state is not BackupManagerState.IDLE:
-            raise HomeAssistantError("Backup manager busy")
+            raise HomeAssistantError(f"Backup manager busy: {self.state}")
 
         self.async_on_backup_event(
             CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
@@ -689,7 +689,7 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         if self.state is not BackupManagerState.IDLE:
-            raise HomeAssistantError("Backup manager busy")
+            raise HomeAssistantError(f"Backup manager busy: {self.state}")
 
         self.async_on_backup_event(
             RestoreBackupEvent(stage=None, state=RestoreBackupState.IN_PROGRESS)
@@ -749,6 +749,8 @@ class BackupManager:
         event: ManagerStateEvent,
     ) -> None:
         """Forward event to subscribers."""
+        if (current_state := self.state) != (new_state := event.manager_state):
+            LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
