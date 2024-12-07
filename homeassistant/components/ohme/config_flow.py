@@ -1,3 +1,5 @@
+"""UI configuration flow."""
+
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from .const import (
@@ -20,6 +22,8 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = CONFIG_VERSION
 
     async def async_step_user(self, info):
+        """First config step."""
+
         errors = {}
 
         if info is not None:
@@ -35,17 +39,21 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    def async_get_options_flow(entry):
-        return OhmeOptionsFlow(entry)
+    def async_get_options_flow(self):
+        """Return options flow."""
+        return OhmeOptionsFlow(self)
 
 
 class OhmeOptionsFlow(OptionsFlow):
     """Options flow."""
 
     def __init__(self, entry) -> None:
+        """Initialize options flow and store config entry."""
         self._config_entry = entry
 
     async def async_step_init(self, options):
+        """First step of options flow."""
+
         errors = {}
         # If form filled
         if options is not None:

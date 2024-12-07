@@ -1,8 +1,10 @@
+"""Platform for time integration."""
+
 from __future__ import annotations
 import asyncio
 import logging
 from homeassistant.components.time import TimeEntity
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback, HomeAssistant
 from .const import (
     DOMAIN,
@@ -19,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Setup switches and configure coordinator."""
     account_id = config_entry.data["email"]
@@ -47,6 +49,7 @@ class TargetTime(OhmeEntity, TimeEntity):
     _attr_icon = "mdi:alarm-check"
 
     def __init__(self, coordinator, coordinator_schedules, hass: HomeAssistant, client):
+        """Initialise target time sensor."""
         super().__init__(coordinator, hass, client)
 
         self.coordinator_schedules = coordinator_schedules
@@ -78,7 +81,7 @@ class TargetTime(OhmeEntity, TimeEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         # Read with the same logic as setting
         target = None
         if session_in_progress(self.hass, self._client.email, self.coordinator.data):
@@ -94,4 +97,5 @@ class TargetTime(OhmeEntity, TimeEntity):
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state

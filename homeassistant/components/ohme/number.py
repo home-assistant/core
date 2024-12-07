@@ -1,9 +1,11 @@
+"""Platform for number."""
+
 from __future__ import annotations
 import asyncio
 from homeassistant.components.number import NumberEntity, NumberDeviceClass
 from homeassistant.components.number.const import NumberMode, PERCENTAGE
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.core import callback, HomeAssistant
 from .const import (
     DOMAIN,
@@ -18,7 +20,7 @@ from .base import OhmeEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Setup switches and configure coordinator."""
     account_id = config_entry.data["email"]
@@ -59,6 +61,7 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
     _attr_suggested_display_precision = 0
 
     def __init__(self, coordinator, coordinator_schedules, hass: HomeAssistant, client):
+        """Initialise the entity and set up a second coordinator."""
         super().__init__(coordinator, hass, client)
         self.coordinator_schedules = coordinator_schedules
 
@@ -85,7 +88,7 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         # Set with the same logic as reading
         if session_in_progress(self.hass, self._client.email, self.coordinator.data):
             target = round(self.coordinator.data["appliedRule"]["targetPercent"])
@@ -96,6 +99,7 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state
 
 
@@ -111,6 +115,7 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
     _attr_native_max_value = 60
 
     def __init__(self, coordinator, coordinator_schedules, hass: HomeAssistant, client):
+        """Initialise the entity and set up a second coordinator."""
         super().__init__(coordinator, hass, client)
         self.coordinator_schedules = coordinator_schedules
 
@@ -147,7 +152,7 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         precondition = None
         # Set with the same logic as reading
         if session_in_progress(self.hass, self._client.email, self.coordinator.data):
@@ -175,6 +180,7 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state
 
 
@@ -206,16 +212,17 @@ class PriceCapNumber(OhmeEntity, NumberEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         if self.coordinator.data is not None:
             try:
                 self._state = self.coordinator.data["userSettings"]["chargeSettings"][
                     0
                 ]["value"]
-            except:
+            except (IndexError, KeyError):
                 self._state = None
         self.async_write_ha_state()
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state

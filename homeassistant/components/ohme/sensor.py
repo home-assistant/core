@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
 )
 import math
 import logging
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPower,
     UnitOfEnergy,
@@ -17,7 +17,6 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util.dt import utcnow
 from .const import (
     DOMAIN,
@@ -27,16 +26,15 @@ from .const import (
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_ADVANCED,
 )
-from .coordinator import OhmeChargeSessionsCoordinator, OhmeAdvancedSettingsCoordinator
-from .utils import next_slot, get_option, slot_list, slot_list_str
+from .utils import next_slot, slot_list, slot_list_str
 from .base import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
     async_add_entities,
 ):
     """Setup sensors and configure coordinator."""
@@ -73,7 +71,7 @@ class PowerDrawSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         if self.coordinator.data and self.coordinator.data["power"]:
             return self.coordinator.data["power"]["watt"]
         return 0
@@ -89,7 +87,7 @@ class CurrentDrawSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         if self.coordinator.data and self.coordinator.data["power"]:
             return self.coordinator.data["power"]["amp"]
         return 0
@@ -105,7 +103,7 @@ class VoltageSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         if self.coordinator.data and self.coordinator.data["power"]:
             return self.coordinator.data["power"]["volt"]
         return None
@@ -121,7 +119,7 @@ class CTSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         return self.coordinator.data["clampAmps"]
 
 
@@ -144,7 +142,7 @@ class EnergyUsageSensor(OhmeEntity, SensorEntity):
             new_state = 0
             try:
                 new_state = self.coordinator.data["chargeGraph"]["now"]["y"]
-            except BaseException:
+            except KeyError:
                 _LOGGER.debug(
                     "EnergyUsageSensor: ChargeGraph reading failed, falling back to batterySoc"
                 )
@@ -172,6 +170,7 @@ class EnergyUsageSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state
 
 
@@ -289,7 +288,7 @@ class BatterySOCSensor(OhmeEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Get value from data returned from API by coordinator"""
+        """Get value from data returned from API by coordinator."""
         if (
             self.coordinator.data
             and self.coordinator.data["car"]
@@ -309,4 +308,5 @@ class BatterySOCSensor(OhmeEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the state of the entity."""
         return self._state

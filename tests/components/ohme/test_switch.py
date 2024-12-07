@@ -1,5 +1,7 @@
+"""Tests for switch entities."""
+
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from custom_components.ohme.const import (
@@ -22,11 +24,13 @@ from custom_components.ohme.switch import (
 
 @pytest.fixture
 def mock_hass():
+    """Fixture for creating a mock Home Assistant instance."""
     return AsyncMock(spec=HomeAssistant)
 
 
 @pytest.fixture
 def mock_client():
+    """Fixture for creating a mock client."""
     client = AsyncMock()
     client.cap_available.return_value = True
     client.solar_capable.return_value = True
@@ -40,16 +44,19 @@ def mock_client():
 
 @pytest.fixture
 def mock_coordinator():
+    """Fixture for creating a mock coordinator."""
     return AsyncMock(spec=DataUpdateCoordinator)
 
 
 @pytest.fixture
 def mock_config_entry():
+    """Fixture for creating a mock config entry."""
     return AsyncMock(data={"email": "test@example.com"})
 
 
 @pytest.fixture
 def setup_hass_data(mock_hass, mock_client, mock_coordinator):
+    """Fixture for setting up Home Assistant data."""
     mock_hass.data = {
         DOMAIN: {
             "test@example.com": {
@@ -65,6 +72,7 @@ def setup_hass_data(mock_hass, mock_client, mock_coordinator):
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data):
+    """Test async_setup_entry."""
     async_add_entities = AsyncMock()
     await async_setup_entry(mock_hass, mock_config_entry, async_add_entities)
     assert async_add_entities.call_count == 1
@@ -73,6 +81,7 @@ async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data):
 
 @pytest.mark.asyncio
 async def test_ohme_pause_charge_switch(mock_hass, mock_client, mock_coordinator):
+    """Test OhmePauseChargeSwitch."""
     switch = OhmePauseChargeSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
     mock_client.async_pause_charge.assert_called_once()
@@ -82,6 +91,7 @@ async def test_ohme_pause_charge_switch(mock_hass, mock_client, mock_coordinator
 
 @pytest.mark.asyncio
 async def test_ohme_max_charge_switch(mock_hass, mock_client, mock_coordinator):
+    """Test OhmeMaxChargeSwitch."""
     switch = OhmeMaxChargeSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
     mock_client.async_max_charge.assert_called_once_with(True)
@@ -92,6 +102,7 @@ async def test_ohme_max_charge_switch(mock_hass, mock_client, mock_coordinator):
 
 @pytest.mark.asyncio
 async def test_ohme_configuration_switch(mock_hass, mock_client, mock_coordinator):
+    """Test OhmeConfigurationSwitch."""
     switch = OhmeConfigurationSwitch(
         mock_coordinator,
         mock_hass,
@@ -113,6 +124,7 @@ async def test_ohme_configuration_switch(mock_hass, mock_client, mock_coordinato
 
 @pytest.mark.asyncio
 async def test_ohme_solar_boost_switch(mock_hass, mock_client, mock_coordinator):
+    """Test OhmeSolarBoostSwitch."""
     switch = OhmeSolarBoostSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
     mock_client.async_set_configuration_value.assert_called_once_with(
@@ -127,6 +139,7 @@ async def test_ohme_solar_boost_switch(mock_hass, mock_client, mock_coordinator)
 
 @pytest.mark.asyncio
 async def test_ohme_price_cap_switch(mock_hass, mock_client, mock_coordinator):
+    """Test OhmePrice"""
     switch = OhmePriceCapSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
     mock_client.async_change_price_cap.assert_called_once_with(enabled=True)

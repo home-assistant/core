@@ -1,3 +1,5 @@
+"""Tests for sensor entities."""
+
 import pytest
 from unittest.mock import MagicMock
 from custom_components.ohme.sensor import VoltageSensor
@@ -6,8 +8,7 @@ from custom_components.ohme.sensor import VoltageSensor
 @pytest.fixture
 def mock_coordinator():
     """Fixture for creating a mock coordinator."""
-    coordinator = MagicMock()
-    return coordinator
+    return MagicMock()
 
 
 @pytest.fixture

@@ -1,3 +1,5 @@
+"""Base class for entities."""
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 

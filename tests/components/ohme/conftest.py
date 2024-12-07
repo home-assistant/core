@@ -11,4 +11,5 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 def enable_external_sockets():
+    """Enable external sockets for custom integrations."""
     pytest_socket.enable_socket()

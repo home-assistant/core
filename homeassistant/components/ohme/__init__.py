@@ -1,8 +1,17 @@
+"""The ohme integration."""
+
 import logging
 from homeassistant import core
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from .const import *
-from .utils import get_option
+from .const import (
+    DOMAIN,
+    CONFIG_VERSION,
+    ENTITY_TYPES,
+    DATA_CLIENT,
+    DATA_COORDINATORS,
+    DATA_OPTIONS,
+    LEGACY_MAPPING,
+)
 from ohme import OhmeApiClient
 from .coordinator import (
     OhmeChargeSessionsCoordinator,
@@ -21,7 +30,7 @@ async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
 
 
 async def async_setup_dependencies(hass, entry):
-    """Instantiate client and refresh session"""
+    """Instantiate client and refresh session."""
     client = OhmeApiClient(entry.data["email"], entry.data["password"])
     account_id = entry.data["email"]
 
@@ -41,7 +50,7 @@ async def async_update_listener(hass, entry):
 
 
 async def async_setup_entry(hass, entry):
-    """This is called from the config flow."""
+    """Called from the config flow."""
 
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique IDs from old format."""
@@ -49,10 +58,7 @@ async def async_setup_entry(hass, entry):
             parts = entry.unique_id.split("_")
             legacy_id = "_".join(parts[2:])
 
-            if legacy_id in LEGACY_MAPPING:
-                new_id = LEGACY_MAPPING[legacy_id]
-            else:
-                new_id = legacy_id
+            new_id = LEGACY_MAPPING.get(legacy_id, legacy_id)
 
             new_id = f"{parts[1]}_{new_id}"
 
@@ -90,7 +96,7 @@ async def async_setup_entry(hass, entry):
         # Catch failures if this is an 'optional' coordinator
         try:
             await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady as ex:
+        except ConfigEntryNotReady:
             allow_failure = False
             for optional in coordinators_optional:
                 allow_failure = (
@@ -99,10 +105,11 @@ async def async_setup_entry(hass, entry):
 
             if allow_failure:
                 _LOGGER.error(
-                    f"{coordinator.__class__.__name__} failed to setup. This coordinator is optional so the integration will still function, but please raise an issue if this persists."
+                    "%s failed to setup. This coordinator is optional so the integration will still function, but please raise an issue if this persists.",
+                    coordinator.__class__.__name__,
                 )
             else:
-                raise ex
+                raise
 
     hass.data[DOMAIN][account_id][DATA_COORDINATORS] = coordinators
 

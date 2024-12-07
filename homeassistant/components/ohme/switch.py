@@ -1,11 +1,11 @@
+"""Platform for switch integration."""
+
 from __future__ import annotations
 import logging
 import asyncio
 
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.helpers.entity import generate_entity_id
-
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.util.dt import utcnow
 
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Setup switches and configure coordinator."""
     account_id = config_entry.data["email"]
@@ -89,6 +89,7 @@ class OhmePauseChargeSwitch(OhmeEntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Determine if charge is paused.
+
         We handle this differently to the sensors as the state of this switch
         is evaluated only when new data is fetched to stop the switch flicking back then forth."""
         if self.coordinator.data is None:
@@ -144,6 +145,7 @@ class OhmeMaxChargeSwitch(OhmeEntity, SwitchEntity):
 
     async def async_turn_off(self):
         """Stop max charging.
+
         We are not changing anything, just applying the last rule. No need to supply anything."""
         await self._client.async_max_charge(False)
 
@@ -163,6 +165,7 @@ class OhmeConfigurationSwitch(OhmeEntity, SwitchEntity):
         icon,
         config_key,
     ):
+        """Initialise switch."""
         self._attr_icon = f"mdi:{icon}"
         self._attr_translation_key = translation_key
         self._config_key = config_key

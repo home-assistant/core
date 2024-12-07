@@ -1,6 +1,7 @@
+"""Tests for number entities."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from homeassistant.core import HomeAssistant
 from custom_components.ohme.const import (
     DOMAIN,
     DATA_CLIENT,
@@ -20,7 +21,8 @@ from custom_components.ohme.number import (
 
 @pytest.fixture
 def mock_hass():
-    hass = MagicMock(
+    """Fixture for creating a mock Home Assistant instance."""
+    return MagicMock(
         data={
             DOMAIN: {
                 "test@example.com": {
@@ -35,27 +37,30 @@ def mock_hass():
             }
         }
     )
-    return hass
 
 
 @pytest.fixture
 def mock_config_entry():
+    """Fixture for creating a mock config entry."""
     return AsyncMock(data={"email": "test@example.com"})
 
 
 @pytest.fixture
 def mock_async_add_entities():
+    """Fixture for creating a mock async_add_entities."""
     return AsyncMock()
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(mock_hass, mock_config_entry, mock_async_add_entities):
+    """Test async_setup_entry."""
     await async_setup_entry(mock_hass, mock_config_entry, mock_async_add_entities)
     assert mock_async_add_entities.call_count == 1
 
 
 @pytest.mark.asyncio
 async def test_target_percent_number(mock_hass):
+    """Test TargetPercentNumber."""
     coordinator = mock_hass.data[DOMAIN]["test@example.com"][DATA_COORDINATORS][
         COORDINATOR_CHARGESESSIONS
     ]
@@ -75,6 +80,7 @@ async def test_target_percent_number(mock_hass):
 
 @pytest.mark.asyncio
 async def test_preconditioning_number(mock_hass):
+    """Test PreconditioningNumber."""
     coordinator = mock_hass.data[DOMAIN]["test@example.com"][DATA_COORDINATORS][
         COORDINATOR_CHARGESESSIONS
     ]
@@ -96,6 +102,7 @@ async def test_preconditioning_number(mock_hass):
 
 @pytest.mark.asyncio
 async def test_price_cap_number(mock_hass):
+    """Test PriceCapNumber."""
     coordinator = mock_hass.data[DOMAIN]["test@example.com"][DATA_COORDINATORS][
         COORDINATOR_ACCOUNTINFO
     ]

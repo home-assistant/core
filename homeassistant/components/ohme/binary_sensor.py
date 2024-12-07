@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Platform for binary_sensor."""
 
 from __future__ import annotations
 import logging
@@ -6,9 +6,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util.dt import utcnow
 from .const import (
     DOMAIN,
@@ -18,6 +17,7 @@ from .const import (
     COORDINATOR_ADVANCED,
     DATA_CLIENT,
 )
+from .coordinator import OhmeChargeSessionsCoordinator
 from .utils import in_slot
 from .base import OhmeEntity
 
@@ -25,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
     async_add_entities,
 ):
     """Setup sensors and configure coordinator."""
@@ -59,6 +59,8 @@ class ConnectedBinarySensor(OhmeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
+        """Calculate state."""
+
         if self.coordinator.data is None:
             self._state = False
         else:
@@ -88,10 +90,13 @@ class ChargingBinarySensor(OhmeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
+        """Return state."""
+
         return self._state
 
     def _calculate_state(self) -> bool:
         """Some trickery to get the charge state to update quickly."""
+
         power = self.coordinator.data["power"]["watt"]
 
         # If no last reading or no batterySoc/power, fallback to power > 0
@@ -176,6 +181,7 @@ class ChargingBinarySensor(OhmeEntity, BinarySensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update data."""
+
         # Don't accept updates if 5s hasnt passed
         # State calculations use deltas that may be unreliable to check if requests are too often
         if self._last_updated and (
@@ -229,11 +235,7 @@ class CurrentSlotBinarySensor(OhmeEntity, BinarySensorEntity):
     def extra_state_attributes(self):
         """Attributes of the sensor."""
         now = utcnow()
-        slots = (
-            self._hass.data[DOMAIN][self._client.email][DATA_SLOTS]
-            if DATA_SLOTS in self._hass.data[DOMAIN][self._client.email]
-            else []
-        )
+        slots = self._hass.data[DOMAIN][self._client.email].get(DATA_SLOTS, [])
 
         return {
             "planned_dispatches": [x for x in slots if not x["end"] or x["end"] > now],
@@ -242,6 +244,8 @@ class CurrentSlotBinarySensor(OhmeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
+        """Return state."""
+
         return self._state
 
     @callback
@@ -268,6 +272,8 @@ class ChargerOnlineBinarySensor(OhmeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
+        """Calculate state."""
+
         if self.coordinator.data and self.coordinator.data["online"]:
             return True
         elif self.coordinator.data:

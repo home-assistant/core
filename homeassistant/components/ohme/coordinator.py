@@ -1,7 +1,10 @@
+"""Ohme coordinators."""
+
 from datetime import timedelta
 import logging
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from ohme import ApiException
 
 from .const import (
     DOMAIN,
@@ -41,8 +44,8 @@ class OhmeChargeSessionsCoordinator(DataUpdateCoordinator):
         try:
             return await self._client.async_get_charge_sessions()
 
-        except BaseException:
-            raise UpdateFailed("Error communicating with API")
+        except ApiException as e:
+            raise UpdateFailed("Error communicating with API") from e
 
 
 class OhmeAccountInfoCoordinator(DataUpdateCoordinator):
@@ -70,8 +73,8 @@ class OhmeAccountInfoCoordinator(DataUpdateCoordinator):
         try:
             return await self._client.async_get_account_info()
 
-        except BaseException:
-            raise UpdateFailed("Error communicating with API")
+        except ApiException as e:
+            raise UpdateFailed("Error communicating with API") from e
 
 
 class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator):
@@ -96,8 +99,8 @@ class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator):
         try:
             return await self._client.async_get_advanced_settings()
 
-        except BaseException:
-            raise UpdateFailed("Error communicating with API")
+        except ApiException as e:
+            raise UpdateFailed("Error communicating with API") from e
 
 
 class OhmeChargeSchedulesCoordinator(DataUpdateCoordinator):
@@ -122,5 +125,5 @@ class OhmeChargeSchedulesCoordinator(DataUpdateCoordinator):
         try:
             return await self._client.async_get_schedule()
 
-        except BaseException:
-            raise UpdateFailed("Error communicating with API")
+        except ApiException as e:
+            raise UpdateFailed("Error communicating with API") from e

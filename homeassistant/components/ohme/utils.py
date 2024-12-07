@@ -1,9 +1,9 @@
+"""Common utility functions."""
+
 from functools import reduce
-from datetime import datetime, timedelta
+import datetime
 from .const import DOMAIN, DATA_OPTIONS
 import pytz
-# import logging
-# _LOGGER = logging.getLogger(__name__)
 
 
 def next_slot(hass, account_id, data):
@@ -17,12 +17,12 @@ def next_slot(hass, account_id, data):
     # Loop through slots
     for slot in slots:
         # Only take the first slot start/end that matches. These are in order.
-        if end is None and slot["end"] > datetime.now().astimezone():
+        if end is None and slot["end"] > datetime.datetime.now().astimezone():
             end = slot["end"]
 
         if (
             start is None
-            and slot["start"] > datetime.now().astimezone()
+            and slot["start"] > datetime.datetime.now().astimezone()
             and slot["start"] != end
         ):
             start = slot["start"]
@@ -52,10 +52,14 @@ def slot_list(data):
     for slot in session_slots:
         slots.append(
             {
-                "start": datetime.utcfromtimestamp(slot["startTimeMs"] / 1000)
+                "start": datetime.datetime.fromtimestamp(
+                    slot["startTimeMs"] / 1000, tz=datetime.UTC
+                )
                 .replace(tzinfo=pytz.utc, microsecond=0)
                 .astimezone(),
-                "end": datetime.utcfromtimestamp(slot["endTimeMs"] / 1000)
+                "end": datetime.datetime.fromtimestamp(
+                    slot["endTimeMs"] / 1000, tz=datetime.UTC
+                )
                 .replace(tzinfo=pytz.utc, microsecond=0)
                 .astimezone(),
                 "charge_in_kwh": -(
@@ -99,15 +103,15 @@ def slot_list_str(hass, account_id, slots):
 
 
 def in_slot(data):
-    """Are we currently in a charge slot?"""
+    """Are we currently in a charge slot."""
     slots = slot_list(data)
 
     # Loop through slots
     for slot in slots:
         # If we are in one
         if (
-            slot["start"] < datetime.now().astimezone()
-            and slot["end"] > datetime.now().astimezone()
+            slot["start"] < datetime.datetime.now().astimezone()
+            and slot["end"] > datetime.datetime.now().astimezone()
         ):
             return True
 
@@ -116,16 +120,17 @@ def in_slot(data):
 
 def time_next_occurs(hour, minute):
     """Find when this time next occurs."""
-    current = datetime.now()
+    current = datetime.datetime.now()
     target = current.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if target <= datetime.now():
-        target = target + timedelta(days=1)
+    if target <= datetime.datetime.now():
+        target = target + datetime.timedelta(days=1)
 
     return target
 
 
 def session_in_progress(hass, account_id, data):
     """Is there a session in progress?
+
     Used to check if we should update the current session rather than the first schedule."""
     # If config option set, never update session specific schedule
     if get_option(hass, account_id, "never_session_specific"):
