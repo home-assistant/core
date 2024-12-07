@@ -69,5 +69,10 @@
       "title": "The Onkyo YAML configuration import failed",
       "description": "Configuring Onkyo using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Cannot select input source \"{invalid_source}\" for entity: {entity_id}."
+    }
   }
 }
