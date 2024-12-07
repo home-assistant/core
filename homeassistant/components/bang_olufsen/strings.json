@@ -32,16 +32,16 @@
   "selector": {
     "source_ids": {
       "options": {
-        "ase_beoradio": "ASE Beoradio",
-        "ase_mozart_deezer": "ASE / Mozart Deezer",
-        "ase_mozart_spotify": "ASE / Mozart Spotify",
-        "beolink_converter_aux_a": "Beolink Converter NL/ML AUX_A",
-        "beolink_converter_cd": "Beolink Converter NL/ML CD",
-        "beolink_converter_ph": "Beolink Converter NL/ML PH",
-        "beolink_converter_radio": "Beolink Converter NL/ML RADIO",
-        "beolink_converter_tp1": "Beolink Converter NL/ML TP1",
-        "beolink_converter_tp2": "Beolink Converter NL/ML TP2",
-        "mozart_tidal": "Mozart Tidal"
+        "beoradio": "ASE Beoradio",
+        "deezer": "ASE / Mozart Deezer",
+        "spotify": "ASE / Mozart Spotify",
+        "tidal": "Mozart Tidal",
+        "aux_a": "Beolink Converter NL/ML AUX_A",
+        "cd": "Beolink Converter NL/ML CD",
+        "ph": "Beolink Converter NL/ML PH",
+        "radio": "Beolink Converter NL/ML RADIO",
+        "tp1": "Beolink Converter NL/ML TP1",
+        "tp2": "Beolink Converter NL/ML TP2"
       }
     }
   },

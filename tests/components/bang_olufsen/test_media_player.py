@@ -1537,8 +1537,13 @@ async def test_async_unjoin_player(
         ),
         # Defined JID and source
         (
-            {"beolink_jid": TEST_JID_2, "source_id": "mozart_tidal"},
-            {"jid": TEST_JID_2, "source": "tidal"},
+            {"beolink_jid": TEST_JID_2, "source_id": TEST_SOURCE.id},
+            {"jid": TEST_JID_2, "source": TEST_SOURCE.id},
+        ),
+        # Defined JID and Beolink Converter NL/ML source
+        (
+            {"beolink_jid": TEST_JID_2, "source_id": "cd"},
+            {"jid": TEST_JID_2, "source": "CD"},
         ),
     ],
 )
