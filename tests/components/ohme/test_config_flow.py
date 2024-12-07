@@ -1,9 +1,10 @@
 """Tests for the config flow."""
 
 from unittest import mock
-from homeassistant.core import HomeAssistant
 
 from custom_components.ohme import config_flow
+
+from homeassistant.core import HomeAssistant
 
 
 async def test_step_account(hass: HomeAssistant) -> None:

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import asyncio
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity
-from homeassistant.components.number.const import PERCENTAGE, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.components.number.const import PERCENTAGE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import OhmeEntity
 from .const import (
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
@@ -19,12 +19,15 @@ from .const import (
     DATA_COORDINATORS,
     DOMAIN,
 )
+from .entity import OhmeEntity
 from .utils import session_in_progress
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches and configure coordinator."""
     account_id = config_entry.data["email"]
 
@@ -63,7 +66,9 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_suggested_display_precision = 0
 
-    def __init__(self, coordinator, coordinator_schedules, hass: HomeAssistant, client):
+    def __init__(
+        self, coordinator, coordinator_schedules, hass: HomeAssistant, client
+    ) -> None:
         """Initialise the entity and set up a second coordinator."""
         super().__init__(coordinator, hass, client)
         self.coordinator_schedules = coordinator_schedules
@@ -117,7 +122,9 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
     _attr_native_step = 5
     _attr_native_max_value = 60
 
-    def __init__(self, coordinator, coordinator_schedules, hass: HomeAssistant, client):
+    def __init__(
+        self, coordinator, coordinator_schedules, hass: HomeAssistant, client
+    ) -> None:
         """Initialise the entity and set up a second coordinator."""
         super().__init__(coordinator, hass, client)
         self.coordinator_schedules = coordinator_schedules

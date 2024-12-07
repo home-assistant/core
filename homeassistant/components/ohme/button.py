@@ -8,16 +8,19 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import OhmeEntity
 from .const import COORDINATOR_CHARGESESSIONS, DATA_CLIENT, DATA_COORDINATORS, DOMAIN
+from .entity import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches."""
     account_id = config_entry.data["email"]
 

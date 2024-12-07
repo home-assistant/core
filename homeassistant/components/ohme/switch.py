@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utcnow
 
-from .base import OhmeEntity
 from .const import (
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
@@ -18,6 +17,7 @@ from .const import (
     DATA_COORDINATORS,
     DOMAIN,
 )
+from .entity import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
 

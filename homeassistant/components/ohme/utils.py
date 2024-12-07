@@ -89,11 +89,11 @@ def slot_list_str(hass, account_id, slots):
 
     if not get_option(hass, account_id, "never_collapse_slots", False):
         # Collapse slots so consecutive slots become one
-        for i in range(len(t_slots)):
-            if not state or state[-1][1] != t_slots[i][0]:
-                state.append(t_slots[i])
+        for _i, slot in enumerate(t_slots):
+            if not state or state[-1][1] != slot[0]:
+                state.append(slot)
             else:
-                state[-1] = (state[-1][0], t_slots[i][1])
+                state[-1] = (state[-1][0], slot[1])
     else:
         state = t_slots
 

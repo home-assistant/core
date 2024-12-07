@@ -10,9 +10,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .base import OhmeEntity
 from .const import (
     COORDINATOR_ADVANCED,
     COORDINATOR_CHARGESESSIONS,
@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import OhmeChargeSessionsCoordinator
+from .entity import OhmeEntity
 from .utils import in_slot
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors and configure coordinator."""
     account_id = config_entry.data["email"]
     client = hass.data[DOMAIN][account_id][DATA_CLIENT]
@@ -81,7 +82,7 @@ class ChargingBinarySensor(OhmeEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator: OhmeChargeSessionsCoordinator, hass: HomeAssistant, client
-    ):
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator, hass, client)
 

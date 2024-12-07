@@ -5,6 +5,7 @@ import logging
 from ohme import OhmeApiClient
 
 from homeassistant import core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
@@ -103,7 +104,7 @@ async def async_setup_entry(hass, entry):
 
             if allow_failure:
                 _LOGGER.error(
-                    "%s failed to setup. This coordinator is optional so the integration will still function, but please raise an issue if this persists.",
+                    "%s failed to setup. This coordinator is optional so the integration will still function, but please raise an issue if this persists",
                     coordinator.__class__.__name__,
                 )
             else:
@@ -125,13 +126,13 @@ async def async_unload_entry(hass, entry):
     return await hass.config_entries.async_unload_platforms(entry, ENTITY_TYPES)
 
 
-async def async_migrate_entry(hass: core.HomeAssistant, config_entry) -> bool:
+async def async_migrate_entry(
+    hass: core.HomeAssistant, config_entry: ConfigEntry
+) -> bool:
     """Migrate old entry."""
     # Version number has gone backwards
     if config_entry.version > CONFIG_VERSION:
-        _LOGGER.error(
-            "Backwards migration not possible. Please update the integration."
-        )
+        _LOGGER.error("Backwards migration not possible. Please update the integration")
         return False
 
     # Version number has gone up

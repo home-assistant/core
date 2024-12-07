@@ -19,9 +19,9 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .base import OhmeEntity
 from .const import (
     COORDINATOR_ADVANCED,
     COORDINATOR_CHARGESESSIONS,
@@ -30,6 +30,7 @@ from .const import (
     DATA_SLOTS,
     DOMAIN,
 )
+from .entity import OhmeEntity
 from .utils import next_slot, slot_list, slot_list_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,8 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors and configure coordinator."""
     account_id = config_entry.data["email"]
 

@@ -3,7 +3,12 @@
 from ohme import OhmeApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 
 from .const import (
     CONFIG_VERSION,
@@ -22,25 +27,27 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = CONFIG_VERSION
 
-    async def async_step_user(self, info):
+    async def async_step_user(self, user_input) -> ConfigFlowResult:
         """First config step."""
 
         errors = {}
 
-        if info is not None:
-            await self.async_set_unique_id(info["email"])
+        if user_input is not None:
+            await self.async_set_unique_id(user_input["email"])
             self._abort_if_unique_id_configured()
-            instance = OhmeApiClient(info["email"], info["password"])
+            instance = OhmeApiClient(user_input["email"], user_input["password"])
             if await instance.async_refresh_session() is None:
                 errors["base"] = "auth_error"
             else:
-                return self.async_create_entry(title=info["email"], data=info)
+                return self.async_create_entry(
+                    title=user_input["email"], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    def async_get_options_flow(self):
+    def async_get_options_flow(self: ConfigEntry) -> OptionsFlow:
         """Return options flow."""
         return OhmeOptionsFlow(self)
 
@@ -52,7 +59,7 @@ class OhmeOptionsFlow(OptionsFlow):
         """Initialize options flow and store config entry."""
         self._config_entry = entry
 
-    async def async_step_init(self, options):
+    async def async_step_init(self, options) -> ConfigFlowResult:
         """First step of options flow."""
 
         errors = {}
