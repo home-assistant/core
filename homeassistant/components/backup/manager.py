@@ -708,8 +708,9 @@ class BackupManager:
             self.async_on_backup_event(
                 RestoreBackupEvent(stage=None, state=RestoreBackupState.FAILED)
             )
-            self.async_on_backup_event(IdleEvent())
             raise
+        finally:
+            self.async_on_backup_event(IdleEvent())
 
     async def _async_restore_backup(
         self,
