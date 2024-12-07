@@ -81,3 +81,7 @@ class MBBinarySensor(MicroBeesEntity, BinarySensorEntity):
     def sensor(self) -> Sensor:
         """Return the BinarySensor."""
         return self.coordinator.data.sensors[self.sensor_id]
+
+    async def async_update_callback(self) -> None:
+        """Handle updates from the coordinator."""
+        self.async_write_ha_state()
