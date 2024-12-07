@@ -27,11 +27,6 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
-    """Set up the Ohme EV Charger component."""
-    return True
-
-
 async def async_setup_dependencies(hass, entry):
     """Instantiate client and refresh session."""
     client = OhmeApiClient(entry.data["email"], entry.data["password"])

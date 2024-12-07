@@ -281,7 +281,7 @@ class ChargerOnlineBinarySensor(OhmeEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self):
         """Calculate state."""
 
         if self.coordinator.data and self.coordinator.data["online"]:
