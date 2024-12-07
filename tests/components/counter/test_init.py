@@ -6,6 +6,9 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
+)
 from homeassistant.components.counter import (
     ATTR_EDITABLE,
     ATTR_INITIAL,
@@ -741,3 +744,30 @@ async def test_create(
     assert ATTR_MINIMUM not in state.attributes
     assert ATTR_MAXIMUM not in state.attributes
     assert state.attributes[ATTR_STEP] == 1
+
+
+async def test_create_without_name(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
+) -> None:
+    """Ensure counter cannot be created without a counter name via the WS."""
+
+    items = []
+
+    assert await storage_setup(items)
+
+    counter_id = "new_counter_without_name"
+    input_entity_id = f"{DOMAIN}.{counter_id}"
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, counter_id) is None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 6, "type": f"{DOMAIN}/create"})
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == ERR_INVALID_FORMAT

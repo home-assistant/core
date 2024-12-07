@@ -52,10 +52,10 @@ SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS: VolDictType = {
+BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
-    vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
+    vol.Optional(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
     vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
     vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
     vol.Optional(CONF_RESTORE, default=True): cv.boolean,
@@ -85,24 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: cv.schema_with_slug_keys(
             vol.All(
                 _none_to_empty_dict,
-                {
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(
-                        CONF_INITIAL, default=DEFAULT_INITIAL
-                    ): cv.positive_int,
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
-                        None, vol.Coerce(int)
-                    ),
-                    vol.Optional(CONF_MINIMUM, default=None): vol.Any(
-                        None, vol.Coerce(int)
-                    ),
-                    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-                    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
-                    vol.Optional(
-                        CONF_WRAP_AROUND, default=DEFAULT_WRAP_AROUND
-                    ): cv.boolean,
-                },
+                BASE_SCHEMA,
                 _require_minimum_and_maximum_with_wrap_around,
             )
         )
@@ -137,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.DictStorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, BASE_SCHEMA, BASE_SCHEMA
     ).async_setup(hass)
 
     component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
@@ -155,7 +138,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class CounterStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(
+        vol.All(
+            BASE_SCHEMA,
+            {
+                vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
+            },
+            _require_minimum_and_maximum_with_wrap_around,
+        ),
+        extra=vol.ALLOW_EXTRA,
+    )
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
@@ -168,8 +160,8 @@ class CounterStorageCollection(collection.DictStorageCollection):
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: item[CONF_ID]} | update_data
+        self.CREATE_UPDATE_SCHEMA(update_data)
+        return item | update_data
 
 
 class Counter(collection.CollectionEntity, RestoreEntity):
