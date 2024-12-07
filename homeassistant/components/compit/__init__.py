@@ -8,6 +8,7 @@ from compit_inext_api import CompitAPI, DeviceDefinitionsLoader
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
@@ -25,7 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         system_info = await api.authenticate()
 
         if system_info is False:
-            return False
+            raise ConfigEntryAuthFailed(
+                f"Invalid credentials for {entry.data["email"]}"
+            )
 
         device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
             hass.config.language
@@ -40,9 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     except ValueError as e:
         _LOGGER.error("Value error: %s", e)
-        return False
-    except Exception as e:  # noqa: BLE001
-        _LOGGER.error("Unexpected exception: %s", e)
         return False
     return True
 

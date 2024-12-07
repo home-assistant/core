@@ -27,7 +27,6 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
         """Initialize."""
         self.devices: dict[int, DeviceInstance] = {}
         self.api = api
-        self.platforms: list[str] = []
         self.gates = gates
         self.device_definitions = device_definitions
 
