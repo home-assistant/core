@@ -78,7 +78,7 @@ def _check_typed_config_entry(integration: Integration) -> list[str]:
         module_file = integration.path / f"{file}.py"
         if not module_file.exists():
             continue
-        module = ast.parse(module_file.read_text())
+        module = ast_parse_module(module_file.read_text())
         for function, position in functions.items():
             if not (async_function := _get_async_function(module, function)):
                 continue
@@ -87,7 +87,7 @@ def _check_typed_config_entry(integration: Integration) -> list[str]:
 
     # Check config_flow annotations
     config_flow_file = integration.path / "config_flow.py"
-    config_flow = ast.parse(config_flow_file.read_text())
+    config_flow = ast_parse_module(config_flow_file.read_text())
     for node in config_flow.body:
         if not isinstance(node, ast.ClassDef):
             continue
@@ -105,7 +105,7 @@ def _check_typed_config_entry(integration: Integration) -> list[str]:
 def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
     """Validate correct use of ConfigEntry.runtime_data."""
     init_file = integration.path / "__init__.py"
-    init = ast.parse(init_file.read_text())
+    init = ast_parse_module(init_file.read_text())
 
     # Should not happen, but better to be safe
     if not (async_setup_entry := _get_async_function(init, "async_setup_entry")):
