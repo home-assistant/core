@@ -28,9 +28,8 @@ from . import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
-    DOMAIN,
-    ColorMode,
 )
+from .const import DOMAIN, ColorMode
 
 _LOGGER = logging.getLogger(__name__)
 
