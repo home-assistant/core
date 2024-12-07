@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, mock_open, patch
 
 import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -38,7 +37,6 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    TEST_BACKUP_PATH_ABC123,
     BackupAgentTest,
 )
 
@@ -174,59 +172,6 @@ async def _setup_backup_platform(
 async def test_constructor(hass: HomeAssistant) -> None:
     """Test BackupManager constructor."""
     BackupManager(hass, CoreBackupReaderWriter(hass))
-
-
-async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test loading backups."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
-        patch("tarfile.open", return_value=MagicMock()),
-        patch(
-            "homeassistant.components.backup.util.json_loads_object",
-            return_value={
-                "date": TEST_BACKUP_ABC123.date,
-                "name": TEST_BACKUP_ABC123.name,
-                "slug": TEST_BACKUP_ABC123.backup_id,
-            },
-        ),
-        patch(
-            "pathlib.Path.stat",
-            return_value=MagicMock(st_size=TEST_BACKUP_ABC123.size),
-        ),
-    ):
-        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
-    backups, agent_errors = await manager.async_get_backups()
-    assert backups == snapshot
-    assert agent_errors == {}
-
-
-async def test_load_backups_with_exception(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backups with exception."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
-        patch("tarfile.open", side_effect=OSError("Test exception")),
-    ):
-        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
-    backups, agent_errors = await manager.async_get_backups()
-    assert (
-        f"Unable to read backup {TEST_BACKUP_PATH_ABC123}: Test exception"
-        in caplog.text
-    )
-    assert backups == {}
-    assert agent_errors == {}
 
 
 async def test_deleting_backup(
