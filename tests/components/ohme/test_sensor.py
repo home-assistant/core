@@ -20,19 +20,23 @@ def voltage_sensor(mock_coordinator):
     return VoltageSensor(mock_coordinator, hass, client)
 
 
-def test_voltage_sensor_native_value_with_data(voltage_sensor, mock_coordinator):
+def test_voltage_sensor_native_value_with_data(
+    voltage_sensor, mock_coordinator
+) -> None:
     """Test native_value when coordinator has data."""
     mock_coordinator.data = {"power": {"volt": 230}}
     assert voltage_sensor.native_value == 230
 
 
-def test_voltage_sensor_native_value_no_data(voltage_sensor, mock_coordinator):
+def test_voltage_sensor_native_value_no_data(voltage_sensor, mock_coordinator) -> None:
     """Test native_value when coordinator has no data."""
     mock_coordinator.data = None
     assert voltage_sensor.native_value is None
 
 
-def test_voltage_sensor_native_value_no_power_data(voltage_sensor, mock_coordinator):
+def test_voltage_sensor_native_value_no_power_data(
+    voltage_sensor, mock_coordinator
+) -> None:
     """Test native_value when coordinator has no power data."""
     mock_coordinator.data = {"power": None}
     assert voltage_sensor.native_value is None

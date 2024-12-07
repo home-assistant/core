@@ -72,7 +72,7 @@ def setup_hass_data(mock_hass, mock_client, mock_coordinator):
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data):
+async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data) -> None:
     """Test async_setup_entry."""
     async_add_entities = AsyncMock()
     await async_setup_entry(mock_hass, mock_config_entry, async_add_entities)
@@ -81,7 +81,9 @@ async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data):
 
 
 @pytest.mark.asyncio
-async def test_ohme_pause_charge_switch(mock_hass, mock_client, mock_coordinator):
+async def test_ohme_pause_charge_switch(
+    mock_hass, mock_client, mock_coordinator
+) -> None:
     """Test OhmePauseChargeSwitch."""
     switch = OhmePauseChargeSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
@@ -91,7 +93,7 @@ async def test_ohme_pause_charge_switch(mock_hass, mock_client, mock_coordinator
 
 
 @pytest.mark.asyncio
-async def test_ohme_max_charge_switch(mock_hass, mock_client, mock_coordinator):
+async def test_ohme_max_charge_switch(mock_hass, mock_client, mock_coordinator) -> None:
     """Test OhmeMaxChargeSwitch."""
     switch = OhmeMaxChargeSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
@@ -102,7 +104,9 @@ async def test_ohme_max_charge_switch(mock_hass, mock_client, mock_coordinator):
 
 
 @pytest.mark.asyncio
-async def test_ohme_configuration_switch(mock_hass, mock_client, mock_coordinator):
+async def test_ohme_configuration_switch(
+    mock_hass, mock_client, mock_coordinator
+) -> None:
     """Test OhmeConfigurationSwitch."""
     switch = OhmeConfigurationSwitch(
         mock_coordinator,
@@ -124,7 +128,9 @@ async def test_ohme_configuration_switch(mock_hass, mock_client, mock_coordinato
 
 
 @pytest.mark.asyncio
-async def test_ohme_solar_boost_switch(mock_hass, mock_client, mock_coordinator):
+async def test_ohme_solar_boost_switch(
+    mock_hass, mock_client, mock_coordinator
+) -> None:
     """Test OhmeSolarBoostSwitch."""
     switch = OhmeSolarBoostSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()
@@ -139,7 +145,7 @@ async def test_ohme_solar_boost_switch(mock_hass, mock_client, mock_coordinator)
 
 
 @pytest.mark.asyncio
-async def test_ohme_price_cap_switch(mock_hass, mock_client, mock_coordinator):
+async def test_ohme_price_cap_switch(mock_hass, mock_client, mock_coordinator) -> None:
     """Test OhmePrice."""
     switch = OhmePriceCapSwitch(mock_coordinator, mock_hass, mock_client)
     await switch.async_turn_on()

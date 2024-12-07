@@ -1,11 +1,12 @@
 """Tests for the config flow."""
 
 from unittest import mock
+from homeassistant.core import HomeAssistant
 
 from custom_components.ohme import config_flow
 
 
-async def test_step_account(hass):
+async def test_step_account(hass: HomeAssistant) -> None:
     """Test the initialization of the form in the first step of the config flow."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
