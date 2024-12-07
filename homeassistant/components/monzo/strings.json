@@ -31,6 +31,38 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "services": {
+    "pot_transfer": {
+      "name": "Pot transfer",
+      "description": "Move money between a pot and your current or joint account.",
+      "fields": {
+        "transfer_account": {
+          "name": "Transfer account",
+          "description": "The current or joint account to transfer from or to (default: current account)."
+        },
+        "transfer_pots": {
+          "name": "Transfer account",
+          "description": "The pot to transfer from or to."
+        },
+        "transfer_type": {
+          "name": "Transfer type",
+          "description": "Deposit into or withdraw from the pot"
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "The amount of money to transfer in GBP."
+        }
+      }
+    }
+  },
+  "selector": {
+    "transfer_type": {
+      "options": {
+        "deposit": "Deposit to pot",
+        "withdraw": "Withdraw from pot"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "balance": {
@@ -42,6 +74,17 @@
       "pot_balance": {
         "name": "[%key:component::monzo::entity::sensor::balance::name%]"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "Pot transfer failed: No device found with id {device_id}."
+    },
+    "invalid_device_model": {
+      "message": "Pot transfer failed: Device {device_name} is not one of {valid_types}."
+    },
+    "external_transfer_failure": {
+      "message": "One or more pot transfers failed due to an external error."
     }
   }
 }
