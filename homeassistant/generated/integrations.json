@@ -1374,12 +1374,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "dte_energy_bridge": {
-      "name": "DTE Energy Bridge",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "dublin_bus_transport": {
       "name": "Dublin Bus",
       "integration_type": "hub",
@@ -4151,7 +4145,7 @@
     "niko_home_control": {
       "name": "Niko Home Control",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "nilu": {
@@ -4769,6 +4763,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "powerfox": {
+      "name": "Powerfox",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "hub",
@@ -5126,7 +5126,7 @@
       "iot_class": "local_polling"
     },
     "reolink": {
-      "name": "Reolink IP NVR/camera",
+      "name": "Reolink",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -5604,12 +5604,6 @@
       "name": "SIMU LiveIn2",
       "integration_type": "virtual",
       "supported_by": "overkiz"
-    },
-    "simulated": {
-      "name": "Simulated",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "sinch": {
       "name": "Sinch SMS",
