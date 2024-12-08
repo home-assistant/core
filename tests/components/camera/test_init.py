@@ -52,9 +52,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 @pytest.fixture(name="image_mock_url")
 async def image_mock_url_fixture(hass: HomeAssistant) -> None:
     """Fixture for get_image tests."""
-    await async_setup_component(
-        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
-    )
+    await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
 
