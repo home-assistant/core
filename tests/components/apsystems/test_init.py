@@ -18,6 +18,21 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 SCAN_INTERVAL = datetime.timedelta(seconds=12)
 
 
+@pytest.mark.usefixtures("mock_apsystems")
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload entry."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_setup_failed(
     hass: HomeAssistant,
     mock_apsystems: AsyncMock,
@@ -37,7 +52,7 @@ async def test_update(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test update failed."""
+    """Test update data with an inverter error and recover."""
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
