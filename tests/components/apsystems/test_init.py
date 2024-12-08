@@ -25,12 +25,11 @@ async def test_load_unload_entry(
 ) -> None:
     """Test load and unload entry."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_failed(
@@ -54,8 +53,8 @@ async def test_update(
 ) -> None:
     """Test update data with an inverter error and recover."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.LOADED
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Inverter returned an error" not in caplog.text
     mock_apsystems.get_output_data.side_effect = InverterReturnedError
     freezer.tick(SCAN_INTERVAL)
