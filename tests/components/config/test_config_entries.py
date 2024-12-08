@@ -137,6 +137,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -145,6 +146,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": True,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": True,
             "title": "Test 1",
         },
@@ -155,6 +157,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
@@ -163,6 +166,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -173,6 +177,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -181,6 +186,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -191,6 +197,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -199,6 +206,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -209,6 +217,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -217,6 +226,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -575,6 +585,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -583,6 +594,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test Entry",
         },
@@ -590,6 +602,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
         "description_placeholders": None,
         "options": {},
         "minor_version": 1,
+        "subentries": [],
     }
 
 
@@ -658,6 +671,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": timestamp,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -666,6 +680,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "user-title",
             },
@@ -673,6 +688,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "description_placeholders": None,
             "options": {},
             "minor_version": 1,
+            "subentries": [],
         }
 
 
@@ -1092,6 +1108,253 @@ async def test_options_flow_with_invalid_data(
         assert data == {"errors": {"choices": "invalid is not a valid option"}}
 
 
+async def test_subentry_flow(hass: HomeAssistant, client) -> None:
+    """Test we can start a subentry flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+                async def async_step_user(self, user_input=None):
+                    raise NotImplementedError
+
+            return SubentryFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": "test1",
+        "step_id": "user",
+        "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
+        "description_placeholders": {"enabled": "Set to true to be true"},
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/subentries/flow", "post"),
+        ("/api/config/config_entries/subentries/flow/1", "get"),
+        ("/api/config/config_entries/subentries/flow/1", "post"),
+    ],
+)
+async def test_subentry_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on subentry flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+            return SubentryFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
+    """Test we can finish a two step subentry flow."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+                async def async_step_init(self, user_input=None):
+                    return await self.async_step_finish()
+
+                async def async_step_finish(self, user_input=None):
+                    if user_input:
+                        return self.async_create_entry(
+                            title="Mock title", data=user_input, unique_id="test"
+                        )
+
+                    return self.async_show_form(
+                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                    )
+
+            return SubentryFlowHandler()
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data["flow_id"]
+        expected_data = {
+            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "description_placeholders": None,
+            "errors": None,
+            "flow_id": flow_id,
+            "handler": "test1",
+            "last_step": None,
+            "preview": None,
+            "step_id": "finish",
+            "type": "form",
+        }
+        assert data == expected_data
+
+        resp = await client.get(f"/api/config/config_entries/subentries/flow/{flow_id}")
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data == expected_data
+
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data == {
+            "description_placeholders": None,
+            "description": None,
+            "flow_id": flow_id,
+            "handler": "test1",
+            "title": "Mock title",
+            "type": "create_entry",
+            "unique_id": "test",
+        }
+
+
+async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
+    """Test a subentry flow with invalid_data."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+                async def async_step_init(self, user_input=None):
+                    return self.async_show_form(
+                        step_id="finish",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(
+                                    "choices", default=["invalid", "valid"]
+                                ): cv.multi_select({"valid": "Valid"})
+                            }
+                        ),
+                    )
+
+                async def async_step_finish(self, user_input=None):
+                    return self.async_create_entry(
+                        title="Enable disable", data=user_input
+                    )
+
+            return SubentryFlowHandler()
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data.pop("flow_id")
+        assert data == {
+            "type": "form",
+            "handler": "test1",
+            "step_id": "finish",
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
+            "description_placeholders": None,
+            "errors": None,
+            "last_step": None,
+            "preview": None,
+        }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"choices": ["valid", "invalid"]},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {"errors": {"choices": "invalid is not a valid option"}}
+
+
 @pytest.mark.usefixtures("freezer")
 async def test_get_single(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -1124,6 +1387,7 @@ async def test_get_single(
         "error_reason_translation_key": None,
         "error_reason_translation_placeholders": None,
         "modified_at": timestamp,
+        "num_subentries": 0,
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "reason": None,
@@ -1132,6 +1396,7 @@ async def test_get_single(
         "supports_options": False,
         "supports_reconfigure": False,
         "supports_remove_device": False,
+        "supports_subentries": False,
         "supports_unload": False,
         "title": "Mock Title",
     }
@@ -1488,6 +1753,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1496,6 +1762,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -1507,6 +1774,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
@@ -1515,6 +1783,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -1526,6 +1795,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1534,6 +1804,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -1545,6 +1816,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1553,6 +1825,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -1564,6 +1837,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1572,6 +1846,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -1594,6 +1869,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1602,6 +1878,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         }
@@ -1623,6 +1900,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1631,6 +1909,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -1642,6 +1921,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1650,6 +1930,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -1671,6 +1952,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1679,6 +1961,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -1690,6 +1973,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1698,6 +1982,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -1725,6 +2010,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1733,6 +2019,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -1744,6 +2031,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
@@ -1752,6 +2040,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -1763,6 +2052,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1771,6 +2061,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -1782,6 +2073,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1790,6 +2082,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -1801,6 +2094,7 @@ async def test_get_matching_entries_ws(
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
@@ -1809,6 +2103,7 @@ async def test_get_matching_entries_ws(
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
+            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -1908,6 +2203,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -1916,6 +2212,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 1",
             },
@@ -1930,6 +2227,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": "Unsupported API",
@@ -1938,6 +2236,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 2",
             },
@@ -1952,6 +2251,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -1960,6 +2260,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
@@ -1980,6 +2281,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -1988,6 +2290,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2009,6 +2312,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2017,6 +2321,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2037,6 +2342,7 @@ async def test_subscribe_entries_ws(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2045,6 +2351,7 @@ async def test_subscribe_entries_ws(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2127,6 +2434,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2135,6 +2443,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 1",
             },
@@ -2149,6 +2458,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2157,6 +2467,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
@@ -2179,6 +2490,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2187,6 +2499,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2205,6 +2518,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2213,6 +2527,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed too",
             },
@@ -2235,6 +2550,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2243,6 +2559,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2263,6 +2580,7 @@ async def test_subscribe_entries_ws_filtered(
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
@@ -2271,6 +2589,7 @@ async def test_subscribe_entries_ws_filtered(
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
+                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2478,3 +2797,133 @@ async def test_does_not_support_reconfigure(
         response
         == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
     )
+
+
+async def test_list_subentries(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can list subentries."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                title="Mock title",
+                unique_id="test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [
+        {"subentry_id": "mock_id", "title": "Mock title", "unique_id": "test"},
+    ]
+
+    # Try listing subentries for an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": "no_such_entry",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+
+async def test_delete_subentry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can delete a subentry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"}, subentry_id="mock_id", title="Mock title"
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is None
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+
+    # Try deleting the subentry again
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
+    }
+
+    # Try deleting subentry from an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": "no_such_entry",
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }

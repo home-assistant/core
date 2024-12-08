@@ -9,6 +9,17 @@
       }
     }
   },
+  "config_subentries": {
+    "step": {
+      "add_sensor": {
+        "description": "Configure the new sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "Initial state"
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
