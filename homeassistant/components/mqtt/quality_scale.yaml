@@ -90,9 +90,9 @@ rules:
       This is not possible because the integrations generates entities
       based on a user supplied config or discovery.
   reconfiguration-flow:
-    status: exempt
+    status: done
     comment: >
-      This integration is reconfigured via options flow.
+      This integration can also be reconfigured via options flow.
   dynamic-devices:
     status: done
     comment: |
