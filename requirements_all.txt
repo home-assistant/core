@@ -1185,6 +1185,9 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.8.5
 
+# homeassistant.components.imeon_inverter
+imeon_inverter_api==0.3.8
+
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.6
 
