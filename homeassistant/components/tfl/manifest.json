@@ -1,0 +1,10 @@
+{
+  "domain": "tfl",
+  "name": "Transport for London",
+  "codeowners": ["@pwheel"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tfl",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["tflwrapper==1.1.8"]
+}
