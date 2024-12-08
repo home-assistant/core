@@ -255,9 +255,6 @@ class ManualTriggerEntity(TriggerBaseEntity):
         """
 
         run_variables: dict[str, Any] = {"value": value}
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
         # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
@@ -267,14 +264,6 @@ class ManualTriggerEntity(TriggerBaseEntity):
             **(run_variables or {}),
         }
         self._render_availability_template(variables)
-
-        self.async_write_ha_state()
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
-
-        variables["this"] = this
-
         self._render_templates(variables)
 
 
