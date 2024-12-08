@@ -11,8 +11,9 @@ import time
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
-from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import voluptuous as vol
+from zabbix_utils import ItemValue, Sender, ZabbixAPI
+from zabbix_utils.exceptions import APIRequestError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -42,6 +43,7 @@ CONF_PUBLISH_STATES_HOST = "publish_states_host"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
+DEFAULT_SENDER_PORT = 10051
 
 TIMEOUT = 5
 RETRY_DELAY = 20
@@ -86,7 +88,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         zapi = ZabbixAPI(url=url, user=username, password=password)
         _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
-    except ZabbixAPIException as login_exception:
+    except APIRequestError as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False
     except HTTPError as http_error:
@@ -104,7 +106,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def event_to_metrics(
         event: Event, float_keys: set[str], string_keys: set[str]
-    ) -> list[ZabbixMetric] | None:
+    ) -> list[ItemValue] | None:
         """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
         if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
@@ -145,14 +147,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         float_keys.update(floats)
         if len(float_keys) != float_keys_count:
             floats_discovery = [{"{#KEY}": float_key} for float_key in float_keys]
-            metric = ZabbixMetric(
+            metric = ItemValue(
                 publish_states_host,
                 "homeassistant.floats_discovery",
                 json.dumps(floats_discovery),
             )
             metrics.append(metric)
         for key, value in floats.items():
-            metric = ZabbixMetric(
+            metric = ItemValue(
                 publish_states_host, f"homeassistant.float[{key}]", value
             )
             metrics.append(metric)
@@ -161,7 +163,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return metrics
 
     if publish_states_host:
-        zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
+        zabbix_sender = Sender(server=conf[CONF_HOST], port=DEFAULT_SENDER_PORT)
         instance = ZabbixThread(zabbix_sender, event_to_metrics)
         instance.setup(hass)
 
@@ -175,10 +177,8 @@ class ZabbixThread(threading.Thread):
 
     def __init__(
         self,
-        zabbix_sender: ZabbixSender,
-        event_to_metrics: Callable[
-            [Event, set[str], set[str]], list[ZabbixMetric] | None
-        ],
+        zabbix_sender: Sender,
+        event_to_metrics: Callable[[Event, set[str], set[str]], list[ItemValue] | None],
     ) -> None:
         """Initialize the listener."""
         threading.Thread.__init__(self, name="Zabbix")
@@ -208,12 +208,12 @@ class ZabbixThread(threading.Thread):
         item = (time.monotonic(), event)
         self.queue.put(item)
 
-    def get_metrics(self) -> tuple[int, list[ZabbixMetric]]:
+    def get_metrics(self) -> tuple[int, list[ItemValue]]:
         """Return a batch of events formatted for writing."""
         queue_seconds = QUEUE_BACKLOG_SECONDS + self.MAX_TRIES * RETRY_DELAY
 
         count = 0
-        metrics: list[ZabbixMetric] = []
+        metrics: list[ItemValue] = []
 
         dropped = 0
 
@@ -243,7 +243,7 @@ class ZabbixThread(threading.Thread):
 
         return count, metrics
 
-    def write_to_zabbix(self, metrics: list[ZabbixMetric]) -> None:
+    def write_to_zabbix(self, metrics: list[ItemValue]) -> None:
         """Write preprocessed events to zabbix, with retry."""
 
         for retry in range(self.MAX_TRIES + 1):
