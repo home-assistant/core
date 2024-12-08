@@ -17,6 +17,7 @@ pyproject.toml @home-assistant/core
 requirements_test.txt @home-assistant/core
 /.devcontainer/ @home-assistant/core
 /.github/ @home-assistant/core
+/.github/workflows/wheel_build/requirements_wheel.txt @home-assistant/core @cdce8p
 /.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
 /homeassistant/auth/ @home-assistant/core

@@ -1,5 +1,13 @@
 version: 2
 updates:
+  - package-ecosystem: pip
+    directory: "/.github/workflows/wheel_build"
+    schedule:
+      interval: daily
+      time: "03:00"
+    commit-message:
+      prefix: "[wheel] "
+    open-pull-requests-limit: 10
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

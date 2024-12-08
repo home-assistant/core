@@ -8,7 +8,9 @@ on:
       - dev
       - rc
       - master
-  pull_request: ~
+  pull_request:
+    paths-ignore:
+      - ".github/workflows/wheel_build/requirements_wheels.txt"
   workflow_dispatch:
     inputs:
       full:
