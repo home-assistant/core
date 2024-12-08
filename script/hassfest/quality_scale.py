@@ -355,7 +355,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "energyzero",
     "enigma2",
     "enocean",
-    "enphase_envoy",
     "entur_public_transport",
     "environment_canada",
     "envisalink",
