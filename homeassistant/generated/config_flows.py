@@ -544,6 +544,7 @@ FLOWS = {
         "skybell",
         "slack",
         "sleepiq",
+        "slide_local",
         "slimproto",
         "sma",
         "smappee",
