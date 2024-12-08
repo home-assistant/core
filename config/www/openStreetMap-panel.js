@@ -9,8 +9,9 @@ class OpenStreetMapPanel extends HTMLElement {
     set hass(hass) {
         // Create the card container
         if (!this.content) {
-            this.content = document.createElement("hui-osm-card");
+            this.content = document.createElement("open-street-map-panel");
             this.appendChild(this.content);
+            this.offsetHeight;
         }
 
         // Pass configuration to the OSM card
