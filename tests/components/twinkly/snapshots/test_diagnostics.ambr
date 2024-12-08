@@ -37,6 +37,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Twinkly',
       'unique_id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
       'version': 1,

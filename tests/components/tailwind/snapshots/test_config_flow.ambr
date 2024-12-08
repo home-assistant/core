@@ -32,10 +32,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Tailwind iQ3',
       'unique_id': '3c:e9:0e:6d:21:84',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Tailwind iQ3',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -78,10 +82,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'Tailwind iQ3',
       'unique_id': '3c:e9:0e:6d:21:84',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Tailwind iQ3',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
