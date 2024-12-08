@@ -17,7 +17,12 @@ from homeassistant.components.humidifier import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from tests.common import MockConfigEntry, MockEntity, setup_test_component_platform
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    setup_test_component_platform,
+)
 
 
 class MockHumidifierEntity(MockEntity, HumidifierEntity):
@@ -51,7 +56,10 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     assert humidifier.turn_off.called
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockHumidifierEntity(HumidifierEntity):
@@ -63,6 +71,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockHumidifierEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is HumidifierEntityFeature(1)
     assert "MockHumidifierEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

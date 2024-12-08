@@ -41,6 +41,7 @@ from homeassistant.util import dt as dt_util
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
+    MockEntityPlatform,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -51,9 +52,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 @pytest.fixture(name="image_mock_url")
 async def image_mock_url_fixture(hass: HomeAssistant) -> None:
     """Fixture for get_image tests."""
-    await async_setup_component(
-        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
-    )
+    await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
 
@@ -826,7 +825,9 @@ def test_deprecated_state_constants(
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockCamera(camera.Camera):
@@ -836,6 +837,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockCamera()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is camera.CameraEntityFeature(1)
     assert "MockCamera" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

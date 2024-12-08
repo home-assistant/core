@@ -31,6 +31,7 @@ from .conftest import MockAlarmControlPanel
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockModule,
     mock_integration,
     setup_test_component_platform,
@@ -54,13 +55,17 @@ async def help_test_async_alarm_control_panel_service(
     await hass.async_block_till_done()
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockAlarmControlPanelEntity(alarm_control_panel.AlarmControlPanelEntity):
         _attr_supported_features = 1
 
     entity = MockAlarmControlPanelEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert (
         entity.supported_features
         is alarm_control_panel.AlarmControlPanelEntityFeature(1)

@@ -21,7 +21,11 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    MockEntityPlatform,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -449,7 +453,9 @@ async def test_get_async_get_browse_image_quoting(
         mock_browse_image.assert_called_with("album", media_content_id, None)
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockMediaPlayerEntity(MediaPlayerEntity):
@@ -459,6 +465,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockMediaPlayerEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
     assert "MockMediaPlayerEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

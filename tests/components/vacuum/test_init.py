@@ -33,6 +33,7 @@ from .common import async_start
 from tests.common import (
     MockConfigEntry,
     MockEntity,
+    MockEntityPlatform,
     MockModule,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -288,6 +289,8 @@ async def test_supported_features_compat(hass: HomeAssistant) -> None:
         _attr_fan_speed_list = ["silent", "normal", "pet hair"]
 
     entity = _LegacyConstantsStateVacuum()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert isinstance(entity.supported_features, int)
     assert entity.supported_features == int(features)
     assert entity.supported_features_compat is (
