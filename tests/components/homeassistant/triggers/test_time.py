@@ -654,10 +654,6 @@ def test_schema_valid(conf) -> None:
         {"platform": "time", "at": "binary_sensor.bla"},
         {"platform": "time", "at": 745},
         {"platform": "time", "at": "25:00"},
-        {
-            "platform": "time",
-            "at": {"entity_id": "input_datetime.bla", "offset": "0:10"},
-        },
         {"platform": "time", "at": {"entity_id": "13:00:00", "offset": "0:10"}},
     ],
 )

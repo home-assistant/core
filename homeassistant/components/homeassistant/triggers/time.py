@@ -42,7 +42,7 @@ _TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
 _TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["input_datetime", "sensor"]),
         vol.Optional(CONF_OFFSET): cv.time_period,
     }
 )
