@@ -22,8 +22,6 @@ from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 API_SET_POSITON = "set_position"
 API_STOP = "stop_shutter"
 

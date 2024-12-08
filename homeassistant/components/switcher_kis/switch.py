@@ -72,11 +72,10 @@ async def async_setup_entry(
         entities: list[SwitchEntity] = []
 
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
-            async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
+            entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
-            async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
-
-        if coordinator.data.device_type.category in (
+            entities.append(SwitcherWaterHeaterSwitchEntity(coordinator))
+        elif coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
             DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
