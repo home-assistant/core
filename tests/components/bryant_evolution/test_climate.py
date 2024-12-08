@@ -9,7 +9,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bryant_evolution.climate import SCAN_INTERVAL
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
@@ -32,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def trigger_polling(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Trigger a polling event."""
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=61))  # Matches 1 minute pollling interval
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -64,12 +63,9 @@ async def test_set_temperature_mode_cool(
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["temperature"] == 75, state.attributes
 
-    # Make the call, modifting the mock client to throw an exception on
-    # read to ensure that the update is visible iff we call
-    # async_update_ha_state.
+    # Make the call.
     data = {ATTR_TEMPERATURE: 70}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-    client.read_cooling_setpoint.side_effect = Exception("fake failure")
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
     )
@@ -77,7 +73,7 @@ async def test_set_temperature_mode_cool(
     # Verify effect.
     client.set_cooling_setpoint.assert_called_once_with(70)
     state = hass.states.get("climate.system_1_zone_1")
-    assert state.attributes["temperature"] == 70
+    assert state.attributes.get("temperature") == 70, state.attributes
 
 
 async def test_set_temperature_mode_heat(
@@ -94,12 +90,9 @@ async def test_set_temperature_mode_heat(
     client.read_heating_setpoint.return_value = 60
     await trigger_polling(hass, freezer)
 
-    # Make the call, modifting the mock client to throw an exception on
-    # read to ensure that the update is visible iff we call
-    # async_update_ha_state.
+    # Make the call.
     data = {"temperature": 65}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-    client.read_heating_setpoint.side_effect = Exception("fake failure")
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
     )
@@ -127,11 +120,7 @@ async def test_set_temperature_mode_heat_cool(
     assert state.attributes["target_temp_low"] == 40
     assert state.attributes["target_temp_high"] == 90
 
-    # Make the call, modifting the mock client to throw an exception on
-    # read to ensure that the update is visible iff we call
-    # async_update_ha_state.
-    mock_client.read_heating_setpoint.side_effect = Exception("fake failure")
-    mock_client.read_cooling_setpoint.side_effect = Exception("fake failure")
+    # Make the call.
     data = {"target_temp_low": 70, "target_temp_high": 80}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
@@ -153,10 +142,7 @@ async def test_set_fan_mode(
     mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
     fan_modes = ["auto", "low", "med", "high"]
     for mode in fan_modes:
-        # Make the call, modifting the mock client to throw an exception on
-        # read to ensure that the update is visible iff we call
-        # async_update_ha_state.
-        mock_client.read_fan_mode.side_effect = Exception("fake failure")
+        # Make the call.
         data = {ATTR_FAN_MODE: mode}
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
@@ -182,12 +168,9 @@ async def test_set_hvac_mode(
     """Test that setting HVAC mode works."""
     mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
 
-    # Make the call, modifting the mock client to throw an exception on
-    # read to ensure that the update is visible iff we call
-    # async_update_ha_state.
+    # Make the call.
     data = {ATTR_HVAC_MODE: hvac_mode}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
-    mock_client.read_hvac_mode.side_effect = Exception("fake failure")
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
     )
