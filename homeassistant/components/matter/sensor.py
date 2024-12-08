@@ -140,6 +140,22 @@ class MatterOperationalStateSensor(MatterSensor):
         )
 
 
+class MatterOperationalStatePhaseSensor(MatterSensor):
+    """Representation of a sensor for Matter Operational State."""
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        phase_list = self.get_matter_attribute_value(
+            clusters.OperationalState.Attributes.PhaseList
+        )
+        current_phase = self.get_matter_attribute_value(
+            clusters.OperationalState.Attributes.CurrentPhase
+        )
+        current_phase_str = phase_list[current_phase]
+        self.current_phase = current_phase_str
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -658,6 +674,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.OperationalState.Attributes.OperationalState,
             clusters.OperationalState.Attributes.OperationalStateList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalStateCurrentPhase",
+            native_unit_of_measurement=None,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="current_phase",
+        ),
+        entity_class=MatterOperationalStatePhaseSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.CurrentPhase,
+            clusters.OperationalState.Attributes.PhaseList,
         ),
     ),
 ]
