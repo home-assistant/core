@@ -128,7 +128,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         qbus_config = await QbusConfigContainer.async_get_or_request_config(self.hass)
 
         if qbus_config is None:
-            _LOGGER.warning("Qbus config not ready")
+            _LOGGER.error("Qbus config not ready")
             return self.async_abort(reason="invalid_discovery_info")
 
         device_id = discovery_info.topic.split("/")[2]
