@@ -284,5 +284,13 @@
         "name": "Relay"
       }
     }
+  },
+  "exceptions": {
+    "invalid_temperature_change_requested": {
+      "message": "Invalid temperature change requested."
+    },
+    "unsupported_hvac_mode_requested": {
+      "message": "Unsupported mode {hvac_mode} requested, valid modes are: {hvac_modes}."
+    }
   }
 }
