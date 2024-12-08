@@ -24,6 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_HEATING_TYPE,
     DEFAULT_CACHE_DURATION,
     DEVICE_LIST,
     DOMAIN,
@@ -35,6 +36,35 @@ from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry.version, entry.minor_version
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+            data={
+                CONF_CLIENT_ID: entry.data[CONF_CLIENT_ID],
+                CONF_USERNAME: entry.data[CONF_USERNAME],
+                CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            },
+            options={CONF_HEATING_TYPE: entry.data[CONF_HEATING_TYPE]},
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            entry.version,
+            entry.minor_version,
+        )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -54,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_migrate_devices_and_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -99,6 +131,11 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ViCareDevice(config=device_config, api=get_device(entry, device_config))
         for device_config in device_config_list
     ]
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
