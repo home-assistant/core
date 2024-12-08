@@ -2,12 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "description": "The latitude and longitude will be used to find the closest weather station.",
         "title": "Connect to the UK Met Office",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with DataHub API",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
@@ -16,7 +21,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
