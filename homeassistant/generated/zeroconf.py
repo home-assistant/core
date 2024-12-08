@@ -543,6 +543,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },

@@ -8,8 +8,10 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, HomeAssistantError
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
     set_node_attribute,
@@ -35,6 +37,8 @@ async def test_vacuum_actions(
     matter_node: MatterNode,
 ) -> None:
     """Test vacuum entity actions."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
     entity_id = "vacuum.mock_vacuum"
     state = hass.states.get(entity_id)
     assert state
@@ -96,8 +100,8 @@ async def test_vacuum_actions(
     # test stop action
     # stop command is not supported by the vacuum fixture
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity vacuum.mock_vacuum does not support this service.",
+        ServiceNotSupported,
+        match="Entity vacuum.mock_vacuum does not support action vacuum.stop",
     ):
         await hass.services.async_call(
             "vacuum",

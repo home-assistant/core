@@ -7,7 +7,7 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -22,6 +22,7 @@ from .const import (
     BSH_ACTIVE_PROGRAM,
     BSH_SELECTED_PROGRAM,
     DOMAIN,
+    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
 )
 from .entity import HomeConnectEntity
 
@@ -289,12 +290,12 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key = "start_program"
             else:
                 translation_key = "select_program"
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "program": bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: bsh_key,
                 },
             ) from err
         self.async_entity_update()
