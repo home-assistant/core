@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pylamarzocco.const import BoilerType, MachineModel, PhysicalKey
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +18,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
