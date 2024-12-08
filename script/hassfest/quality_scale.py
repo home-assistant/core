@@ -990,7 +990,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "steam_online",
     "steamist",
     "stiebel_eltron",
-    "stookalert",
     "stream",
     "streamlabswater",
     "subaru",
