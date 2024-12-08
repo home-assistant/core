@@ -351,8 +351,8 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             )
             for slot, slot_status in self._selected_tunnel.tunnelling_slots.items()
         )
-        default_endpoint = self.initial_data.get(
-            CONF_KNX_TUNNEL_ENDPOINT_IA, CONF_KNX_AUTOMATIC
+        default_endpoint = (
+            self.initial_data.get(CONF_KNX_TUNNEL_ENDPOINT_IA) or CONF_KNX_AUTOMATIC
         )
         return self.async_show_form(
             step_id="tcp_tunnel_endpoint",
@@ -715,8 +715,8 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             )
             for endpoint in self._tunnel_endpoints
         )
-        default_endpoint = self.initial_data.get(
-            CONF_KNX_TUNNEL_ENDPOINT_IA, CONF_KNX_AUTOMATIC
+        default_endpoint = (
+            self.initial_data.get(CONF_KNX_TUNNEL_ENDPOINT_IA) or CONF_KNX_AUTOMATIC
         )
         return self.async_show_form(
             step_id="knxkeys_tunnel_select",
