@@ -15,7 +15,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -25,7 +26,9 @@ from .helpers import future_timestamp, static_datetime
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_with_config(hass: HomeAssistant) -> None:
+async def test_setup_with_config(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setup component with config."""
     assert hass.state is CoreState.running
 
@@ -54,6 +57,10 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_cert_expiry"
+    )
 
 
 async def test_update_unique_id(hass: HomeAssistant) -> None:
