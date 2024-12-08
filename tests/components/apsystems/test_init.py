@@ -61,7 +61,7 @@ async def test_update(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert "Inverter returned an error" in caplog.text
+    assert "Error fetching APSystems Data data:" in caplog.text
     caplog.clear()
     mock_apsystems.get_output_data.side_effect = None
     freezer.tick(SCAN_INTERVAL)
