@@ -69,9 +69,6 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
         vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
             NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
-            NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
-        ),
     }
 )
 
