@@ -1,0 +1,11 @@
+{
+  "domain": "mawaqit",
+  "name": "MAWAQIT",
+  "codeowners": ["@MAWAQIT", "@moha-tah", "@Yeyvo"],
+  "config_flow": true,
+  "documentation": "https://github.com/mawaqit/home-assistant",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/mawaqit/home-assistant/issues",
+  "requirements": ["mawaqit==1.0.0"]
+}

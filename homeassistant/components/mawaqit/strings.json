@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood.",
+      "one_instance_allowed": "A single MAWAQIT entry is necessary. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry.",
+      "configuration_kept": "You have chosen to keep the existing configuration."
+    },
+    "error": {
+      "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
+      "wrong_credential": "Wrong login or password, please retry.",
+      "no_mosque_found_keyword": "No mosque found with this keyword."
+    },
+    "step": {
+      "keep_or_reset": {
+        "title": "Another instance of MAWAQIT is already configured",
+        "data": {
+          "choice": "You can eather chose to keep the existing configuration or to reset it :",
+          "keep": "Keep the existing configuration",
+          "reset": "Reset to configure a new mosque"
+        }
+      },
+      "keyword_search": {
+        "title": "Search for your mosque",
+        "description": "Search for a mosque by entering a keyword :",
+        "data": {
+          "Keyword": "Search"
+        }
+      },
+      "search_method": {
+        "title": "Choose the method to find your mosque",
+        "data": {
+          "search_method_choice": "chose the search method :"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Multiple mosques are available around you, select one :",
+          "uuid": "Mosque"
+        },
+        "title": "Your favourite mosque"
+      },
+      "select_server": {
+        "data": {
+          "password": "Password",
+          "server": "Server",
+          "username": "Email"
+        },
+        "description": "Multiple mosques available, select one :",
+        "title": "Select your favourite mosque"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "server": "Server",
+          "username": "E-mail"
+        },
+        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosques to your location will be suggested and you will choose your favourite one.",
+        "title": "login to MAWAQIT"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Change your mosque :"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Search for the nearest mosques to your location",
+        "search_method_keyword": "Search for a mosque by keyword"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "Keep the existing configuration",
+        "reset": "Reset to configure a new mosque"
+      }
+    }
+  },
+  "title": "MAWAQIT integration"
+}
