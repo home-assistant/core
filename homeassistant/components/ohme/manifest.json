@@ -1,0 +1,10 @@
+{
+  "domain": "ohme",
+  "name": "Ohme",
+  "codeowners": ["@dan-r"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/dan-r/HomeAssistant-Ohme",
+  "iot_class": "cloud_polling",
+  "requirements": ["ohme==1.0.4"]
+}
