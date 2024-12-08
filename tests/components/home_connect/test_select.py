@@ -53,23 +53,26 @@ async def test_select(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "program_to_set"),
+    ("entity_id", "bsh_key", "value", "program_to_set"),
     [
         (
             "select.washer_selected_program",
-            {BSH_SELECTED_PROGRAM: {"value": PROGRAM}},
+            BSH_SELECTED_PROGRAM,
+            PROGRAM,
             "dishcare_dishwasher_program_eco_50",
         ),
         (
             "select.washer_active_program",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
+            BSH_ACTIVE_PROGRAM,
+            PROGRAM,
             "dishcare_dishwasher_program_eco_50",
         ),
     ],
 )
 async def test_select_functionality(
     entity_id: str,
-    status: dict,
+    bsh_key: str,
+    value: str,
     program_to_set: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
@@ -88,14 +91,16 @@ async def test_select_functionality(
     assert await integration_setup()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    appliance.status.update(status)
+    appliance.status.update({bsh_key: {"value": value}})
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
         blocking=True,
     )
-    assert hass.states.is_state(entity_id, program_to_set)
+    state_obj = hass.states.get(entity_id)
+    assert state_obj.state == program_to_set
+    assert state_obj.attributes.get("program_key") == value
 
 
 @pytest.mark.parametrize(
