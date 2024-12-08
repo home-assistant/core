@@ -1864,6 +1864,9 @@ pytautulli==23.1.1
 # homeassistant.components.motionmount
 python-MotionMount==2.2.0
 
+# homeassistant.components.aidot
+python-aidot==0.1.2
+
 # homeassistant.components.awair
 python-awair==0.2.4
 
