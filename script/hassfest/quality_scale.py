@@ -1350,16 +1350,19 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
 
+    rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue
         rules_met.add(rule_name)
-        if (
-            status == "done"
-            and (validator := VALIDATORS.get(rule_name))
-            and (errors := validator.validate(integration))
+        if status == "done":
+            rules_done.add(rule_name)
+
+    for rule_name in rules_done:
+        if (validator := VALIDATORS.get(rule_name)) and (
+            errors := validator.validate(integration, rules_done=rules_done)
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")

@@ -24,7 +24,7 @@ def _strict_typing_components() -> set[str]:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
     """Validate that the integration has strict typing enabled."""
 
     if integration.domain not in _strict_typing_components():

@@ -17,7 +17,7 @@ def _has_unload_entry_function(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
     """Validate that the integration has a config flow."""
 
     init_file = integration.path / "__init__.py"
