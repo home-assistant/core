@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zimi",
+        "description": "Specify details of your Zimi Cloud Connect device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "mac": "MAC"
+        },
+        "data_description": {
+          "host": "Optional - If not entered HA will attempt to discover on LAN.",
+          "port": "Optional - If not entered HA will attempt to use the default value.",
+          "mac": "Mandatory - You can find the MAC on the back of your Zimi Cloud Connect."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout": "Connection timed out]",
+      "duplicate_entry": "Duplicate configuration entry: {error_detail}",
+      "invalid_host": "Invalid host name",
+      "invalid_mac": "Invalid MAC address",
+      "mismatched_mac": "Configured MAC mismatch: {error_detail}",
+      "connection_refused": "Connection refused",
+      "discovery_failure": "ZCC discovery on LAN failed - specify host and try again."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
