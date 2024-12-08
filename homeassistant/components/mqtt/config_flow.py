@@ -111,22 +111,17 @@ SET_CLIENT_CERT = "set_client_cert"
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
-PORT_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
-    vol.Coerce(int),
+PORT_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535, step=1)
 )
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-QOS_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
-    vol.Coerce(int),
+QOS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2, step=1)
 )
-KEEPALIVE_SELECTOR = vol.All(
-    NumberSelector(
-        NumberSelectorConfig(
-            mode=NumberSelectorMode.BOX, min=15, step="any", unit_of_measurement="sec"
-        )
-    ),
-    vol.Coerce(int),
+KEEPALIVE_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX, min=15, step=1, unit_of_measurement="sec"
+    )
 )
 PROTOCOL_SELECTOR = SelectSelector(
     SelectSelectorConfig(

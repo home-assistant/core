@@ -1028,7 +1028,7 @@ class NumberSelectorConfig(TypedDict, total=False):
 
     min: float
     max: float
-    step: float | Literal["any"]
+    step: float | int | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
 
@@ -1063,9 +1063,11 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
-                # user input is not rounded
-                vol.Optional("step", default=1): vol.Any(
-                    "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
+                # if step is an integer, a validation of integer will be enforced
+                vol.Optional("step", default=1.0): vol.Any(
+                    "any",
+                    vol.All(int, vol.Range(min=1)),
+                    vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
@@ -1080,9 +1082,14 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> float:
+    def __call__(self, data: Any) -> float | int:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
+
+        if (step := self.config["step"]) != "any" and isinstance(step, int):
+            if not value.is_integer():
+                raise vol.Invalid(f"Value must be an integer when step is {step}")
+            value = int(value)
 
         if "min" in self.config and value < self.config["min"]:
             raise vol.Invalid(f"Value {value} is too small")
