@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
-from .helpers import future_timestamp, static_datetime
+from .helpers import datetime_today, future_timestamp
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -79,7 +79,7 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 
-@freeze_time(static_datetime())
+@freeze_time(datetime_today())
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
