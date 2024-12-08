@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
+from random import randint, uniform
 from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
@@ -48,8 +49,10 @@ from homeassistant.const import (
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR_EACH,
     CONF_IF,
+    CONF_MINIMUM_DELAY,
     CONF_MODE,
     CONF_PARALLEL,
+    CONF_RANDOMIZE,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
@@ -629,9 +632,43 @@ class _ScriptRun:
             )
             raise _AbortScript from ex
 
+    def _get_delay(self) -> timedelta:
+        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
+        randomize = self._action.get(CONF_RANDOMIZE, False)
+
+        if not randomize:
+            return delay_delta
+
+        # If no minimum delay is provided, the minimum delay will be 0
+        min_delay_delta = (
+            self._get_pos_time_period_template(CONF_MINIMUM_DELAY)
+            if CONF_MINIMUM_DELAY in self._action
+            else timedelta()
+        )
+
+        if min_delay_delta > delay_delta:
+            self._log(
+                "The minimum delay (%s) cannot exceed the maximum delay (%s)",
+                min_delay_delta,
+                delay_delta,
+                level=logging.ERROR,
+            )
+            raise _AbortScript
+
+        min_delay = min_delay_delta.total_seconds()
+        max_delay = delay_delta.total_seconds()
+
+        # Do not generate a delay with millisecond precision if the boundaries
+        # do not use milliseconds themselves.
+        if min_delay_delta.microseconds == 0 and delay_delta.microseconds == 0:
+            return timedelta(seconds=randint(int(min_delay), int(max_delay)))
+
+        # Round to 3 decimals for millisecond precision
+        return timedelta(seconds=round(uniform(min_delay, max_delay), 3))
+
     async def _async_delay_step(self) -> None:
         """Handle delay."""
-        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
+        delay_delta = self._get_delay()
 
         self._step_log(f"delay {delay_delta}")
 

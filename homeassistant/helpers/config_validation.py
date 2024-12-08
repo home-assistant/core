@@ -64,8 +64,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
+    CONF_MINIMUM_DELAY,
     CONF_PARALLEL,
     CONF_PLATFORM,
+    CONF_RANDOMIZE,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
@@ -1840,6 +1842,8 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DELAY): positive_time_period_template,
+        vol.Optional(CONF_RANDOMIZE): boolean,
+        vol.Optional(CONF_MINIMUM_DELAY): positive_time_period_template,
     }
 )
 
