@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
