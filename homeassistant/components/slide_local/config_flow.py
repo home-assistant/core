@@ -45,8 +45,8 @@ API_VERSION_SELECTOR = SelectSelector(
 )
 
 
-class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Fyta."""
+class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for slide_local."""
 
     _entry: SlideConfigEntry | None = None
     _mac: str = ""
