@@ -19,6 +19,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
     UnitOfTime,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -119,5 +120,19 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
+    ),
+    StarlinkSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda data: data.consumption["latest_power"],
+    ),
+    StarlinkSensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT_HOUR,
+        value_fn=lambda data: data.consumption["total_energy"],
     ),
 )
