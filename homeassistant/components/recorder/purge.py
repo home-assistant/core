@@ -116,8 +116,7 @@ def purge_old_data(
 
         # This purge cycle is finished, clean up old event types and
         # recorder runs
-        if instance.event_type_manager.active:
-            _purge_old_event_types(instance, session)
+        _purge_old_event_types(instance, session)
 
         if instance.states_meta_manager.active:
             _purge_old_entity_ids(instance, session)

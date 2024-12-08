@@ -9,7 +9,6 @@ from solarlog_cli.solarlog_exceptions import (
     SolarLogError,
 )
 
-from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -35,20 +34,12 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result["flow_id"],
         {CONF_HOST: HOST, CONF_HAS_PWD: False},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == HOST
     assert result2["data"][CONF_HOST] == "http://1.1.1.1"
     assert result2["data"][CONF_HAS_PWD] is False
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-def init_config_flow(hass: HomeAssistant) -> config_flow.SolarLogConfigFlow:
-    """Init a configuration flow."""
-    flow = config_flow.SolarLogConfigFlow()
-    flow.hass = hass
-    return flow
 
 
 @pytest.mark.usefixtures("test_connect")
@@ -68,7 +59,6 @@ async def test_user(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: HOST, CONF_HAS_PWD: False}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
@@ -97,17 +87,19 @@ async def test_form_exceptions(
     mock_solarlog_connector: AsyncMock,
 ) -> None:
     """Test we can handle Form exceptions."""
-    flow = init_config_flow(hass)
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     mock_solarlog_connector.test_connection.side_effect = exception1
 
     # tests with connection error
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_HAS_PWD: False})
-    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: HOST, CONF_HAS_PWD: False}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -117,14 +109,16 @@ async def test_form_exceptions(
     mock_solarlog_connector.test_connection.side_effect = None
     mock_solarlog_connector.test_extended_data_available.side_effect = exception2
 
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_HAS_PWD: True})
-    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: HOST, CONF_HAS_PWD: True}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "password"
 
-    result = await flow.async_step_password({CONF_PASSWORD: "pwd"})
-    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "pwd"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "password"
@@ -132,18 +126,10 @@ async def test_form_exceptions(
 
     mock_solarlog_connector.test_extended_data_available.side_effect = None
 
-    # tests with all provided (no password)
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_HAS_PWD: False})
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_HAS_PWD] is False
-
-    # tests with all provided (password)
-    result = await flow.async_step_password({CONF_PASSWORD: "pwd"})
-    await hass.async_block_till_done()
+    # tests with all provided
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "pwd"}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
@@ -205,7 +191,6 @@ async def test_reconfigure_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HAS_PWD: True, CONF_PASSWORD: password}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -257,7 +242,6 @@ async def test_reauth(
         result["flow_id"],
         {CONF_PASSWORD: "other_pwd"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -270,7 +254,6 @@ async def test_reauth(
         result["flow_id"],
         {CONF_PASSWORD: "other_pwd"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
