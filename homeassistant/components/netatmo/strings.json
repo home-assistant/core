@@ -116,11 +116,11 @@
     },
     "set_scheduled_room_temperature": {
       "name": "Set scheduled room temperature",
-      "description": "Sets the desired room temperature for the given zone. The zone name must match a zone configured at Netatmo.",
+      "description": "Sets the desired room temperature for the given zone and the active schedule. The zone name must match a zone configured at Netatmo.",
       "fields": {
         "zone_name": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::zone_name%]",
-          "description": "Schedule name."
+          "description": "Zone name."
         },
         "temperature": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature%]",
