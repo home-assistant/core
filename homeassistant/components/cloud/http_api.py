@@ -101,6 +101,11 @@ def async_setup(hass: HomeAssistant) -> None:
 
     _CLOUD_ERRORS.update(
         {
+            auth.InvalidTotpCode: (HTTPStatus.BAD_REQUEST, "Invalid TOTP code."),
+            auth.MFARequired: (
+                HTTPStatus.UNAUTHORIZED,
+                "Multi-factor authentication required.",
+            ),
             auth.UserNotFound: (HTTPStatus.BAD_REQUEST, "User does not exist."),
             auth.UserNotConfirmed: (HTTPStatus.BAD_REQUEST, "Email not confirmed."),
             auth.UserExists: (
@@ -212,13 +217,19 @@ class CloudLoginView(HomeAssistantView):
     @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
-        vol.Schema({vol.Required("email"): str, vol.Required("password"): str})
+        vol.Schema(
+            {
+                vol.Required("email"): str,
+                vol.Required("password"): str,
+                vol.Optional("code"): str,
+            }
+        )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
-        await cloud.login(data["email"], data["password"])
+        await cloud.login(data["email"], data["password"], data.get("code"))
 
         if "assist_pipeline" in hass.config.components:
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
