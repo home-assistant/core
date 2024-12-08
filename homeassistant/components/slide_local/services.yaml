@@ -1,0 +1,29 @@
+calibrate:
+  target:
+    entity:
+      domain: cover
+  fields:
+    entity_id:
+      example: "cover.slide_bedroom"
+      required: true
+      selector:
+        entity:
+          integration: slide_local
+          domain: cover
+touchgo:
+  target:
+    entity:
+      domain: cover
+  fields:
+    entity_id:
+      example: "cover.slide_bedroom"
+      required: true
+      selector:
+        entity:
+          integration: slide_local
+          domain: cover
+    touchgo:
+      required: true
+      example: true
+      selector:
+        boolean:

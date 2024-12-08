@@ -5664,6 +5664,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "slide_local": {
+      "name": "Slide (local API)",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "slimproto": {
       "name": "SlimProto (Squeezebox players)",
       "integration_type": "hub",
