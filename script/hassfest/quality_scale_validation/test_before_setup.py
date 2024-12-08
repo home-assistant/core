@@ -5,6 +5,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/t
 
 import ast
 
+from script.hassfest import ast_parse_module
 from script.hassfest.model import Integration
 
 _VALID_EXCEPTIONS = {
@@ -50,7 +51,7 @@ def _get_setup_entry_function(module: ast.Module) -> ast.AsyncFunctionDef | None
 def validate(integration: Integration) -> list[str] | None:
     """Validate correct use of ConfigEntry.runtime_data."""
     init_file = integration.path / "__init__.py"
-    init = ast.parse(init_file.read_text())
+    init = ast_parse_module(init_file)
 
     # Should not happen, but better to be safe
     if not (async_setup_entry := _get_setup_entry_function(init)):
