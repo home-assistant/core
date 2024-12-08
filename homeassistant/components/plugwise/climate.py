@@ -226,15 +226,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        for temperature in data.values():
-            if temperature is None or not (
-                self._attr_min_temp <= temperature <= self._attr_max_temp
-            ):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_temperature_change_requested",
-                )
-
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
