@@ -26,6 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_MAX_SUB_INTERVAL,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT_PREFIX,
@@ -103,6 +104,9 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
             selector.SelectSelectorConfig(
                 options=TIME_UNITS, translation_key="time_unit"
             ),
+        ),
+        vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
+            selector.DurationSelectorConfig(allow_negative=False)
         ),
     }
 
