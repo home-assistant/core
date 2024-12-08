@@ -90,7 +90,6 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_target_temperature_step = 1
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

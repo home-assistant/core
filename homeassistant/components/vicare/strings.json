@@ -97,13 +97,22 @@
         "name": "Comfort temperature"
       },
       "normal_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::normal_temperature::name%]"
+        "name": "Normal heating temperature"
       },
       "reduced_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::reduced_temperature::name%]"
+        "name": "Reduced heating temperature"
       },
       "comfort_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
+        "name": "Comfort heating temperature"
+      },
+      "normal_cooling_temperature": {
+        "name": "Normal cooling temperature"
+      },
+      "reduced_cooling_temperature": {
+        "name": "Reduced cooling temperature"
+      },
+      "comfort_cooling_temperature": {
+        "name": "Comfort cooling temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature"

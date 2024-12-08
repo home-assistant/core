@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientSession
 from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
+from evohomeasync2.controlsystem import ControlSystem
 from evohomeasync2.zone import Zone
 import pytest
 
@@ -178,12 +179,27 @@ async def evohome(
 
 
 @pytest.fixture
+async def ctl_id(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: MagicMock,
+) -> AsyncGenerator[str]:
+    """Return the entity_id of the evohome integration's controller."""
+
+    async for mock_client in setup_evohome(hass, config, install=install):
+        evo: EvohomeClient = mock_client.return_value
+        ctl: ControlSystem = evo._get_single_tcs()
+
+        yield f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
+
+
+@pytest.fixture
 async def zone_id(
     hass: HomeAssistant,
     config: dict[str, str],
     install: MagicMock,
 ) -> AsyncGenerator[str]:
-    """Return the entity_id of the evohome integration' first Climate zone."""
+    """Return the entity_id of the evohome integration's first zone."""
 
     async for mock_client in setup_evohome(hass, config, install=install):
         evo: EvohomeClient = mock_client.return_value

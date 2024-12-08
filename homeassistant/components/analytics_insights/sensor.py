@@ -29,6 +29,20 @@ class AnalyticsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[AnalyticsData], StateType]
 
 
+def get_addon_entity_description(
+    name_slug: str,
+) -> AnalyticsSensorEntityDescription:
+    """Get addon entity description."""
+    return AnalyticsSensorEntityDescription(
+        key=f"addon_{name_slug}_active_installations",
+        translation_key="addons",
+        name=name_slug,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.addons.get(name_slug),
+    )
+
+
 def get_core_integration_entity_description(
     domain: str, name: str
 ) -> AnalyticsSensorEntityDescription:
@@ -89,6 +103,13 @@ async def async_setup_entry(
         analytics_data.coordinator
     )
     entities: list[HomeassistantAnalyticsSensor] = []
+    entities.extend(
+        HomeassistantAnalyticsSensor(
+            coordinator,
+            get_addon_entity_description(addon_name_slug),
+        )
+        for addon_name_slug in coordinator.data.addons
+    )
     entities.extend(
         HomeassistantAnalyticsSensor(
             coordinator,

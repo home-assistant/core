@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import lru_cache, partial
+from functools import lru_cache
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -32,13 +32,7 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
-from .frame import report
+from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -84,16 +78,6 @@ class DeviceEntryDisabler(StrEnum):
     CONFIG_ENTRY = "config_entry"
     INTEGRATION = "integration"
     USER = "user"
-
-
-# DISABLED_* are deprecated, to be removed in 2022.3
-_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
-    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
-)
-_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
-    DeviceEntryDisabler.INTEGRATION, "2025.1"
-)
-_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -822,21 +806,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            via = self.async_get_device(identifiers={via_device})
+            if (via := self.async_get_device(identifiers={via_device})) is None:
+                report_usage(
+                    "calls `device_registry.async_get_or_create` referencing a "
+                    f"non existing `via_device` {via_device}, "
+                    f"with device info: {device_info}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2025.12.0",
+                )
+
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
-
-        if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry entry_type. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryType instead"
-                ),
-                error_if_core=False,
-            )
-            entry_type = DeviceEntryType(entry_type)
 
         device = self.async_update_device(
             device.id,
@@ -923,19 +904,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
             )
-
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, DeviceEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry disabled_by. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = DeviceEntryDisabler(disabled_by)
 
         if (
             suggested_area is not None
@@ -1496,11 +1464,3 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

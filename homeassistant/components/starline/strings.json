@@ -63,6 +63,9 @@
       },
       "moving_ban": {
         "name": "Moving ban"
+      },
+      "is_running": {
+        "name": "Running"
       }
     },
     "device_tracker": {
@@ -121,6 +124,12 @@
     "button": {
       "horn": {
         "name": "Horn"
+      },
+      "flex": {
+        "name": "Flex logic {num}"
+      },
+      "panic": {
+        "name": "Panic mode"
       }
     }
   },

@@ -269,7 +269,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
     _available = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

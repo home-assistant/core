@@ -55,6 +55,7 @@
       'options': list([
         'registered',
         'shared',
+        'invitation',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -92,6 +93,7 @@
       'options': list([
         'registered',
         'shared',
+        'invitation',
       ]),
     }),
     'context': <ANY>,
@@ -344,6 +346,7 @@
       'options': list([
         'registered',
         'shared',
+        'invitation',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -381,6 +384,7 @@
       'options': list([
         'registered',
         'shared',
+        'invitation',
       ]),
     }),
     'context': <ANY>,

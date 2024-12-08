@@ -8,15 +8,11 @@ import pytest
 
 from homeassistant.components.heos import (
     ControllerManager,
+    HeosRuntimeData,
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.heos.const import (
-    DATA_CONTROLLER_MANAGER,
-    DATA_SOURCE_MANAGER,
-    DOMAIN,
-)
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.heos.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -92,10 +88,6 @@ async def test_async_setup_entry_loads_platforms(
         assert controller.get_favorites.call_count == 1
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert hass.data[DOMAIN][DATA_CONTROLLER_MANAGER].controller == controller
-    assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
-    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == favorites
-    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
 
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(
@@ -121,10 +113,6 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
         assert controller.get_favorites.call_count == 0
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
-    assert hass.data[DOMAIN][DATA_CONTROLLER_MANAGER].controller == controller
-    assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
-    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
-    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
     assert (
         "127.0.0.1 is not logged in to a HEOS account and will be unable to retrieve "
         "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account"
@@ -163,7 +151,8 @@ async def test_async_setup_entry_player_failure(
 async def test_unload_entry(hass: HomeAssistant, config_entry, controller) -> None:
     """Test entries are unloaded correctly."""
     controller_manager = Mock(ControllerManager)
-    hass.data[DOMAIN] = {DATA_CONTROLLER_MANAGER: controller_manager}
+    config_entry.runtime_data = HeosRuntimeData(controller_manager, None, None, {})
+
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as unload:
@@ -186,7 +175,7 @@ async def test_update_sources_retry(
     assert await async_setup_component(hass, DOMAIN, config)
     controller.get_favorites.reset_mock()
     controller.get_input_sources.reset_mock()
-    source_manager = hass.data[DOMAIN][DATA_SOURCE_MANAGER]
+    source_manager = config_entry.runtime_data.source_manager
     source_manager.retry_delay = 0
     source_manager.max_retry_attempts = 1
     controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)

@@ -18,13 +18,11 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
-    CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
     CONF_NAME,
     CONF_PATH,
-    CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -60,7 +58,6 @@ from homeassistant.helpers.script import (
     ScriptRunResult,
     script_stack_cv,
 )
-from homeassistant.helpers.selector import selector
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
@@ -74,7 +71,6 @@ from .const import (
     ATTR_LAST_TRIGGERED,
     ATTR_VARIABLES,
     CONF_FIELDS,
-    CONF_REQUIRED,
     CONF_TRACE,
     DOMAIN,
     ENTITY_ID_FORMAT,
@@ -734,40 +730,11 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
         unique_id = self.unique_id
         hass = self.hass
-
-        service_schema = {}
-        for field_name, field_info in self.fields.items():
-            key_cls = vol.Required if field_info[CONF_REQUIRED] else vol.Optional
-            key_kwargs = {}
-            if CONF_DEFAULT in field_info:
-                key_kwargs["default"] = field_info[CONF_DEFAULT]
-
-            if CONF_SELECTOR in field_info:
-                validator: Any = selector(field_info[CONF_SELECTOR])
-
-                # Default values need to match the validator.
-                # When they don't match, we will not enforce validation
-                if CONF_DEFAULT in field_info:
-                    try:
-                        validator(field_info[CONF_DEFAULT])
-                    except vol.Invalid:
-                        logging.getLogger(f"{__name__}.{self._attr_unique_id}").warning(
-                            "Field %s has invalid default value %s",
-                            field_name,
-                            field_info[CONF_DEFAULT],
-                        )
-                        validator = cv.match_all
-
-            else:
-                validator = cv.match_all
-
-            service_schema[key_cls(field_name, **key_kwargs)] = validator
-
         hass.services.async_register(
             DOMAIN,
             unique_id,
             self._service_handler,
-            schema=vol.Schema(service_schema, extra=vol.ALLOW_EXTRA),
+            schema=SCRIPT_SERVICE_SCHEMA,
             supports_response=SupportsResponse.OPTIONAL,
         )
 

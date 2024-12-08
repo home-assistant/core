@@ -108,10 +108,6 @@ def _host_is_same(host1: str, host2: str) -> bool:
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize vizio options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -184,7 +180,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
-        return VizioOptionsConfigFlow(config_entry)
+        return VizioOptionsConfigFlow()
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -235,7 +231,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "existing_config_entry_found"
 
             if not errors:
-                if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
+                if self._must_show_form and self.source == SOURCE_ZEROCONF:
                     # Discovery should always display the config form before trying to
                     # create entry so that user can update default config options
                     self._must_show_form = False
@@ -255,7 +251,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if not errors:
                         return await self._create_entry(user_input)
-                elif self._must_show_form and self.context["source"] == SOURCE_IMPORT:
+                elif self._must_show_form and self.source == SOURCE_IMPORT:
                     # Import should always display the config form if CONF_ACCESS_TOKEN
                     # wasn't included but is needed so that the user can choose to update
                     # their configuration.yaml or to proceed with config flow pairing. We
@@ -276,7 +272,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = self._user_schema or _get_config_schema()
 
-        if errors and self.context["source"] == SOURCE_IMPORT:
+        if errors and self.source == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
             _LOGGER.error(
                 "Importing from configuration.yaml failed: %s",
@@ -438,7 +434,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
                 self._must_show_form = True
 
-                if self.context["source"] == SOURCE_IMPORT:
+                if self.source == SOURCE_IMPORT:
                     # If user is pairing via config import, show different message
                     return await self.async_step_pairing_complete_import()
 

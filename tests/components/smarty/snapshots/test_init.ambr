@@ -8,7 +8,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 111,
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -27,7 +27,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 127,
     'via_device_id': None,
   })
 # ---

@@ -93,10 +93,6 @@ async def test_form_connect_timeout(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.hydrawise.config.error.invalid_auth"],
-)
 async def test_form_not_authorized_error(
     hass: HomeAssistant, mock_pydrawise: AsyncMock, user: User
 ) -> None:

@@ -7,8 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
-  "quality_scale": "platinum",
-  "requirements": ["aiounifi==80"],
+  "requirements": ["aiounifi==81"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",
