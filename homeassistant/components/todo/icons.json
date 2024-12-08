@@ -14,6 +14,9 @@
     "remove_completed_items": {
       "service": "mdi:clipboard-remove"
     },
+    "remove_all_items": {
+      "service": "mdi:clipboard-off"
+    },
     "remove_item": {
       "service": "mdi:clipboard-minus"
     },
