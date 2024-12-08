@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_API_KEY,
@@ -63,16 +64,8 @@ def async_get_entry_for_service_call(
     raise ValueError(f"No api for API key: {call_data_api_key}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SabNzbd Component."""
-
-    sab_api = await get_client(hass, entry.data)
-    if not sab_api:
-        raise ConfigEntryNotReady
-
-    coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
 
     @callback
     def extract_api(
@@ -151,6 +144,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> b
             continue
 
         hass.services.async_register(DOMAIN, service, method, schema=schema)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
+    """Set up the SabNzbd Component."""
+
+    sab_api = await get_client(hass, entry.data)
+    if not sab_api:
+        raise ConfigEntryNotReady
+
+    coordinator = SabnzbdUpdateCoordinator(hass, entry, sab_api)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
