@@ -42,7 +42,7 @@ async def test_number_entities(
     assert snapshot == device_entry
 
     # Test unknown handling
-    assert state.state == "100.0"
+    assert state.state == "100"
 
     mock_homewizardenergy.state.return_value.brightness = None
 

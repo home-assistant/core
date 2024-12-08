@@ -174,7 +174,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         PRESET_TEMPORARY_HOLD,
         PRESET_VACATION_HOLD,
     ]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
