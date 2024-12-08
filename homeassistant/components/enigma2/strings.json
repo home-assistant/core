@@ -39,5 +39,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "is_recording": {
+        "name": "Recording"
+      }
+    }
   }
 }
