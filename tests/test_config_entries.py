@@ -7616,3 +7616,63 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
     assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "Custom title"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_log"),
+    [
+        ("some_integration", True),
+        ("mobile_app", False),
+    ],
+)
+async def test_create_entry_existing_unique_id(
+    hass: HomeAssistant,
+    domain: str,
+    expected_log: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain=domain,
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule(domain, async_setup_entry=mock_setup_entry))
+    mock_platform(hass, f"{domain}.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with (
+        mock_config_flow(domain, TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    log_text = (
+        f"Detected that integration '{domain}' creates a config entry "
+        "when another entry with the same unique ID exists. Please "
+        "create a bug report at https:"
+    )
+    assert (log_text in caplog.text) == expected_log
