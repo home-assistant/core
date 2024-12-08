@@ -1610,6 +1610,9 @@ pyiss==1.0.1
 # homeassistant.components.isy994
 pyisy==3.1.14
 
+# homeassistant.components.ituran
+pyituran==0.1.3
+
 # homeassistant.components.jvc_projector
 pyjvcprojector==1.1.2
 
