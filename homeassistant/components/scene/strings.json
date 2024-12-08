@@ -8,6 +8,10 @@
         "transition": {
           "name": "Transition",
           "description": "Time it takes the devices to transition into the states defined in the scene."
+        },
+        "entity_filter": {
+          "name": "Entity Filter",
+          "description": "Apply the scene to only the entities listed."
         }
       }
     },
