@@ -1045,10 +1045,17 @@ async def test_restore_subscriptions_on_reconnect(
     mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_disconnect(None, None, 0)
 
+    # Test to subscribe orther topic while the client is not connected
+    await mqtt.async_subscribe(hass, "test/other", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    assert ("test/other", 0) not in help_all_subscribe_calls(mqtt_client_mock)
+
     mock_debouncer.clear()
     mqtt_client_mock.on_connect(None, None, None, 0)
     await mock_debouncer.wait()
+    # Assert all subscriptions are performed at the broker
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
+    assert ("test/other", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
 
 @pytest.mark.parametrize(

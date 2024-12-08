@@ -308,7 +308,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called late added light',
+          'speech': 'Sorry, I am not aware of any area called late added',
         }),
       }),
     }),
@@ -378,7 +378,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any area called kitchen',
         }),
       }),
     }),
@@ -428,7 +428,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called renamed light',
+          'speech': 'Sorry, I am not aware of any area called renamed',
         }),
       }),
     }),

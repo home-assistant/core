@@ -150,7 +150,6 @@ class EvoClimateEntity(EvoDevice, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
 
 class EvoZone(EvoChild, EvoClimateEntity):
