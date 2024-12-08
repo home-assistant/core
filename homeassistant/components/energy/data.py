@@ -291,6 +291,7 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
         vol.Optional("name"): str,
+        vol.Optional("parent_stat"): str,
     }
 )
 
