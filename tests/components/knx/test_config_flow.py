@@ -7,6 +7,7 @@ import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
+from xknx.knxip.dib import TunnelingSlotStatus
 from xknx.secure.keyring import sync_load_keyring
 from xknx.telegram import IndividualAddress
 
@@ -105,6 +106,7 @@ def _gateway_descriptor(
     port: int,
     supports_tunnelling_tcp: bool = False,
     requires_secure: bool = False,
+    slots: bool = True,
 ) -> GatewayDescriptor:
     """Get mock gw descriptor."""
     descriptor = GatewayDescriptor(
@@ -120,6 +122,12 @@ def _gateway_descriptor(
     )
     descriptor.tunnelling_requires_secure = requires_secure
     descriptor.routing_requires_secure = requires_secure
+    if supports_tunnelling_tcp and slots:
+        descriptor.tunnelling_slots = {
+            IndividualAddress("1.0.240"): TunnelingSlotStatus(True, True, True),
+            IndividualAddress("1.0.241"): TunnelingSlotStatus(True, True, False),
+            IndividualAddress("1.0.242"): TunnelingSlotStatus(True, True, True),
+        }
     return descriptor
 
 
@@ -791,12 +799,14 @@ async def test_tunneling_setup_for_multiple_found_gateways(
     hass: HomeAssistant, knx_setup
 ) -> None:
     """Test tunneling if multiple gateways are found."""
-    gateway = _gateway_descriptor("192.168.0.1", 3675)
-    gateway2 = _gateway_descriptor("192.168.1.100", 3675)
+    gateway_udp = _gateway_descriptor("192.168.0.1", 3675)
+    gateway_tcp = _gateway_descriptor("192.168.1.100", 3675, True)
     with patch(
         "homeassistant.components.knx.config_flow.GatewayScanner"
     ) as gateway_scanner_mock:
-        gateway_scanner_mock.return_value = GatewayScannerMock([gateway, gateway2])
+        gateway_scanner_mock.return_value = GatewayScannerMock(
+            [gateway_udp, gateway_tcp]
+        )
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -815,7 +825,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(
 
     result = await hass.config_entries.flow.async_configure(
         tunnel_flow["flow_id"],
-        {CONF_KNX_GATEWAY: str(gateway)},
+        {CONF_KNX_GATEWAY: str(gateway_udp)},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -826,6 +836,110 @@ async def test_tunneling_setup_for_multiple_found_gateways(
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+        CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+        CONF_KNX_SECURE_USER_ID: None,
+        CONF_KNX_SECURE_USER_PASSWORD: None,
+    }
+    knx_setup.assert_called_once()
+
+
+async def test_tunneling_setup_tcp_endpoint_select_skip(
+    hass: HomeAssistant, knx_setup
+) -> None:
+    """Test tunneling TCP endpoint selection skipped if no slot info found."""
+    gateway_udp = _gateway_descriptor("192.168.0.1", 3675)
+    gateway_tcp_no_slots = _gateway_descriptor("192.168.1.100", 3675, True, slots=False)
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock(
+            [gateway_udp, gateway_tcp_no_slots]
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert not result["errors"]
+
+    tunnel_flow = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+        },
+    )
+    assert tunnel_flow["type"] is FlowResultType.FORM
+    assert tunnel_flow["step_id"] == "tunnel"
+    assert not tunnel_flow["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        tunnel_flow["flow_id"],
+        {CONF_KNX_GATEWAY: str(gateway_tcp_no_slots)},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 3675,
+        CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
+        CONF_KNX_ROUTE_BACK: False,
+        CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+        CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+        CONF_KNX_SECURE_USER_ID: None,
+        CONF_KNX_SECURE_USER_PASSWORD: None,
+    }
+    knx_setup.assert_called_once()
+
+
+async def test_tunneling_setup_tcp_endpoint_select(
+    hass: HomeAssistant, knx_setup
+) -> None:
+    """Test tunneling TCP endpoint selection."""
+    gateway_tcp = _gateway_descriptor("192.168.1.100", 3675, True)
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock([gateway_tcp])
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert not result["errors"]
+
+    tunnel_flow = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+        },
+    )
+    assert tunnel_flow["type"] is FlowResultType.FORM
+    assert tunnel_flow["step_id"] == "tunnel"
+    assert not tunnel_flow["errors"]
+
+    endpoint_flow = await hass.config_entries.flow.async_configure(
+        tunnel_flow["flow_id"],
+        {CONF_KNX_GATEWAY: str(gateway_tcp)},
+    )
+
+    assert endpoint_flow["type"] is FlowResultType.FORM
+    assert endpoint_flow["step_id"] == "tcp_tunnel_endpoint"
+    assert not endpoint_flow["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        endpoint_flow["flow_id"],
+        {CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.242"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "1.0.242 @ 1.0.0 - Test @ 192.168.1.100:3675"
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 3675,
+        CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
+        CONF_KNX_ROUTE_BACK: False,
+        CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.242",
         CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
