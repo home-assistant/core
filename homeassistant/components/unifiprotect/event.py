@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from uiprotect.data import Camera, EventType, ProtectAdoptableDeviceModel
+from uiprotect.data.user import UlpUser
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -21,8 +21,28 @@ from .const import (
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
 )
-from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
+from .data import (
+    Camera,
+    EventType,
+    ProtectAdoptableDeviceModel,
+    ProtectData,
+    ProtectDeviceType,
+    UFPConfigEntry,
+)
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+from .utils import Bootstrap
+
+
+def _getActiveUlpUser(bootstrap: Bootstrap, ulp_id: str) -> UlpUser | None:
+    """Get the active ULP user based on the event data."""
+    return next(
+        (
+            uu
+            for uu in bootstrap.ulp_users.values()
+            if uu.ulp_id == ulp_id and uu.status == "ACTIVE"
+        ),
+        None,
+    )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -81,6 +101,22 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
             event_data = {ATTR_EVENT_ID: event.id}
             if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
                 event_data["nfc_id"] = event.metadata.nfc.nfc_id
+                keyring = next(
+                    (
+                        kr
+                        for kr in self.data.api.bootstrap.keyrings.values()
+                        if kr.registry_type == "nfc"
+                        and kr.registry_id == event_data["nfc_id"]
+                    ),
+                    None,
+                )
+                ulp_usr = (
+                    _getActiveUlpUser(self.data.api.bootstrap, keyring.ulp_user)
+                    if keyring
+                    else None
+                )
+                event_data["full_name"] = ulp_usr.full_name if ulp_usr else ""
+                event_data["ulp_id"] = ulp_usr.ulp_id if ulp_usr else ""
 
             self._trigger_event(EVENT_TYPE_NFC_SCANNED, event_data)
             self.async_write_ha_state()
@@ -110,16 +146,26 @@ class ProtectDeviceFingerprintEventEntity(
             and event.type is EventType.FINGERPRINT_IDENTIFIED
         ):
             event_data = {ATTR_EVENT_ID: event.id}
+            event_identified = EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED
+            event_data["ulp_id"] = ""
+            event_data["full_name"] = ""
             if (
                 event.metadata
                 and event.metadata.fingerprint
                 and event.metadata.fingerprint.ulp_id
             ):
-                event_data["ulp_id"] = event.metadata.fingerprint.ulp_id
                 event_identified = EVENT_TYPE_FINGERPRINT_IDENTIFIED
-            else:
-                event_data["ulp_id"] = ""
-                event_identified = EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED
+                event_data["ulp_id"] = (
+                    event.metadata.fingerprint.ulp_id
+                    if event.metadata.fingerprint.ulp_id
+                    else ""
+                )
+                ulp_usr = (
+                    _getActiveUlpUser(self.data.api.bootstrap, event_data["ulp_id"])
+                    if event_data["ulp_id"]
+                    else None
+                )
+                event_data["full_name"] = ulp_usr.full_name if ulp_usr else ""
 
             self._trigger_event(event_identified, event_data)
             self.async_write_ha_state()
