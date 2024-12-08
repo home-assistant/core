@@ -28,7 +28,7 @@ def get_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main():
+def main() -> int:
     """Scaffold an integration."""
     if not Path("requirements_all.txt").is_file():
         print("Run from project root")
