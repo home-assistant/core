@@ -1,7 +1,12 @@
 {
   "common": {
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
     "jid_options_name": "JID options",
-    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity."
+    "long_press_release": "Release of long press",
+    "long_press_timeout": "Long press",
+    "short_press_release": "Release of short press",
+    "very_long_press_release": "Release of very long press",
+    "very_long_press_timeout": "Very long press"
   },
   "config": {
     "error": {
@@ -26,6 +31,150 @@
       "zeroconf_confirm": {
         "title": "Setup Bang & Olufsen device",
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "bluetooth": {
+        "name": "Bluetooth",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "microphone": {
+        "name": "Microphone",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "next": {
+        "name": "Next",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "playpause": {
+        "name": "Play / Pause",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset1": {
+        "name": "Favourite 1",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset2": {
+        "name": "Favourite 2",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset3": {
+        "name": "Favourite 3",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset4": {
+        "name": "Favourite 4",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "previous": {
+        "name": "Previous",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "volume": {
+        "name": "Volume",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
       }
     }
   },
