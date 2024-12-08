@@ -6,7 +6,7 @@ from io import BufferedReader
 import logging
 from typing import Any
 
-from notifications_android_tv import Notifications
+from notifications_android_tv.notifications import ConnectError, Notifications
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -59,9 +59,9 @@ async def async_get_service(
     """Get the NFAndroidTV notification service."""
     if discovery_info is None:
         return None
-    notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
+
     return NFAndroidTVNotificationService(
-        notify,
+        discovery_info[CONF_HOST],
         hass.config.is_allowed_path,
     )
 
@@ -71,15 +71,23 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        notify: Notifications,
+        host: str,
         is_allowed_path: Any,
     ) -> None:
         """Initialize the service."""
-        self.notify = notify
+        self.host = host
         self.is_allowed_path = is_allowed_path
+        self.notify: Notifications | None = None
 
     def send_message(self, message: str, **kwargs: Any) -> None:
-        """Send a message to a Android TV device."""
+        """Send a message to an Android TV device."""
+        if self.notify is None:
+            try:
+                self.notify = Notifications(self.host)
+            except ConnectError:
+                _LOGGER.warning("Failed to connect to host: %s", self.host)
+                return
+
         data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         duration = None
@@ -178,18 +186,22 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         translation_key="invalid_notification_icon",
                         translation_placeholders={"type": type(icondata).__name__},
                     )
-        self.notify.send(
-            message,
-            title=title,
-            duration=duration,
-            fontsize=fontsize,
-            position=position,
-            bkgcolor=bkgcolor,
-            transparency=transparency,
-            interrupt=interrupt,
-            icon=icon,
-            image_file=image_file,
-        )
+
+        try:
+            self.notify.send(
+                message,
+                title=title,
+                duration=duration,
+                fontsize=fontsize,
+                position=position,
+                bkgcolor=bkgcolor,
+                transparency=transparency,
+                interrupt=interrupt,
+                icon=icon,
+                image_file=image_file,
+            )
+        except ConnectError:
+            _LOGGER.warning("Failed to connect to host: %s", self.host)
 
     def load_file(
         self,
