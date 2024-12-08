@@ -103,12 +103,16 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             (self._attr_supported_features or 0)
             | CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
         )
         self._current_position_value = current_value
         self._target_position_value = target_value or self.get_zwave_value(
             TARGET_VALUE_PROPERTY, value_property_key=current_value.property_key
         )
+        if (
+            self._target_position_value
+            and self._target_position_value.metadata.writeable
+        ):
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         if stop_value:
             self._stop_position_value = stop_value
