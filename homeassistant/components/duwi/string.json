@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Developer Authentication",
+        "description": "Please enter\n your authentication information, your **App Key** and **App Secret**.\n Your Duwi Smart account information **Phone Number** and **Password**.",
+        "data": {
+          "app_key": "App Key",
+          "app_secret": "App Secret",
+          "phone": "Phone Number",
+          "password": "Password"
+        }
+      },
+      "select_house": {
+        "title": "Select Your House",
+        "description": "You can select the house you own (previously added houses have been excluded).",
+        "data": {
+          "house_no": "Your Owned House"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "Exception occurred with App Key or App Secret error, status code: {code}",
+      "invalid_auth": "Invalid authentication {code}",
+      "fetch_house_info_error": "An exception occurred while fetching house information, status code: {code}",
+      "no_houses_found_error": "No addable houses found in this account",
+      "sys_error": "System error, status code: {code}",
+      "unknown_error": "Unknown error, status code: {code}"
+    }
+  },
+  "entity": {
+    "climate": {
+      "duwi_climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "Auto",
+              "extreme_strong": "Extreme Strong",
+              "super_strong": "Super Strong",
+              "strong": "Strong",
+              "super_high": "Super High",
+              "high": "High",
+              "mid_high": "Mid High",
+              "mid": "Mid",
+              "mid_low": "Mid Low",
+              "low": "Low",
+              "super_low": "Super Low",
+              "extreme_low": "Extreme Low",
+              "super_quiet": "Super Quiet",
+              "stop": "Stop"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "mode": "Lock Mode",
+              "mode_wind": "Lock Mode & Wind Speed",
+              "mode_wind_temp": "Lock Mode & Wind Speed & Temperature",
+              "child": "Child Lock",
+              "lock": "Full Lock",
+              "half_lock": "Half Lock",
+              "unlock": "Unlock",
+              "auto": "Auto",
+              "manual": "Manual",
+              "timing": "Timing",
+              "heat_exchange": "Heat Exchange",
+              "common": "Common",
+              "indoor_loop": "Indoor Loop",
+              "outdoor_loop": "Outdoor Loop",
+              "air": "Ventilation",
+              "wet": "Dehumidification",
+              "fresh": "Fresh Air",
+              "fresh_wet": "Fresh Air Dehumidification",
+              "program": "Program",
+              "ventilate": "Ventilate",
+              "exhaust": "Exhaust",
+              "smart": "Smart",
+              "powerful": "Powerful",
+              "cold_room": "Cold Room",
+              "heat_room": "Warm Room",
+              "energy_recycle": "Energy Saving",
+              "night": "Night",
+              "holiday": "Holiday",
+              "sleep": "Sleep",
+              "clean": "Purify",
+              "pass": "Bypass",
+              "pipeline_clean": "Pipeline Cleaning",
+              "frost": "Defrost",
+              "max": "MAX"
+            }
+          }
+        }
+      }
+    }
+  }
+}

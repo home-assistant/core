@@ -366,6 +366,8 @@ build.json @home-assistant/supervisor
 /tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
+/homeassistant/components/duwi/ @duwi2024
+/tests/components/duwi/ @duwi2024
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234

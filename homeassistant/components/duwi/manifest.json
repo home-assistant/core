@@ -1,0 +1,12 @@
+{
+  "domain": "duwi",
+  "name": "Duwi",
+  "codeowners": ["@duwi2024"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/duwi",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/home-assistant/core/issues",
+  "loggers": ["duwi"],
+  "requirements": ["duwi-smarthome-sdk==0.7.8"]
+}
