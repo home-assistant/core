@@ -207,8 +207,25 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 CONF_KNX_AUTOMATIC: CONF_KNX_AUTOMATIC.capitalize()
             } | supported_connection_types
 
+        _current_conn = self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
+        default_connection_type = (
+            CONF_KNX_TUNNELING
+            if _current_conn
+            in (
+                CONF_KNX_TUNNELING,
+                CONF_KNX_TUNNELING_TCP,
+                CONF_KNX_TUNNELING_TCP_SECURE,
+            )
+            else CONF_KNX_ROUTING
+            if _current_conn in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE)
+            else CONF_KNX_AUTOMATIC
+            if CONF_KNX_AUTOMATIC in supported_connection_types
+            else CONF_KNX_TUNNELING
+        )
         fields = {
-            vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
+            vol.Required(
+                CONF_KNX_CONNECTION_TYPE, default=default_connection_type
+            ): vol.In(supported_connection_types)
         }
         return self.async_show_form(
             step_id="connection_type", data_schema=vol.Schema(fields)
