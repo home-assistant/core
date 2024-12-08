@@ -4,7 +4,7 @@
       "service": "mdi:restart"
     },
     "touchgo": {
-      "service": "mdi:restart"
+      "service": "mdi:hand-wave"
     }
   }
 }
