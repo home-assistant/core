@@ -6,27 +6,12 @@ import pytest
 
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import MOCK_SPEAKER_CONFIG, MOCK_USER_VALID_TV_CONFIG, UNIQUE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-@pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_setup_component(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test component setup."""
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: MOCK_USER_VALID_TV_CONFIG}
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_vizio")
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")

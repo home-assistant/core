@@ -4,72 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
-from homeassistant.const import Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_DEVICE_CLASS, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_APPS, CONF_DEVICE_CLASS, DOMAIN, VIZIO_SCHEMA
+from .const import CONF_APPS, DOMAIN
 from .coordinator import VizioAppsDataUpdateCoordinator
 
-
-def validate_apps(config: ConfigType) -> ConfigType:
-    """Validate CONF_APPS is only used when CONF_DEVICE_CLASS is MediaPlayerDeviceClass.TV."""
-    if (
-        config.get(CONF_APPS) is not None
-        and config[CONF_DEVICE_CLASS] != MediaPlayerDeviceClass.TV
-    ):
-        raise vol.Invalid(
-            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is"
-            f" '{MediaPlayerDeviceClass.TV}'"
-        )
-
-    return config
-
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.All(cv.ensure_list, [vol.All(VIZIO_SCHEMA, validate_apps)])},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = [Platform.MEDIA_PLAYER]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Component setup, run import config flow for each entry in config."""
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.7.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "VIZIO SmartCast",
-            },
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
