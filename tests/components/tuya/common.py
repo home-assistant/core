@@ -1,6 +1,11 @@
 """Test code shared between test files."""
 
+from tuya_sharing import CustomerDevice, DeviceFunction, DeviceStatusRange
 from tuyaha.devices import climate, light, switch
+
+from homeassistant.components.tuya import DOMAIN
+
+from tests.common import load_json_object_fixture
 
 CLIMATE_ID = "1"
 CLIMATE_DATA = {
@@ -54,6 +59,16 @@ TUYA_DEVICES = [
     light.TuyaLight(LIGHT_DATA_FAKE1, None),
     light.TuyaLight(LIGHT_DATA_FAKE2, None),
 ]
+
+
+async def load_device_from_json(filename: str) -> CustomerDevice:
+    """Load json from file and cast it to CustomerDevice with correct functions and status_range."""
+    device = CustomerDevice(**load_json_object_fixture(filename, DOMAIN))
+    device.function = {k: DeviceFunction(**v) for k, v in device.function.items()}
+    device.status_range = {
+        k: DeviceStatusRange(**v) for k, v in device.status_range.items()
+    }
+    return device
 
 
 class MockTuya:
