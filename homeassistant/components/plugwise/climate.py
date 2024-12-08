@@ -188,17 +188,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._previous_action_mode(self.coordinator)
 
         # Adam provides the hvac_action for each thermostat
-        if self._gateway["smile_name"] == "Adam":
-            if (control_state := self.device.get("control_state")) == "cooling":
-                return HVACAction.COOLING
-            if control_state == "heating":
-                return HVACAction.HEATING
-            if control_state == "preheating":
-                return HVACAction.PREHEATING
-            if control_state == "off":
-                return HVACAction.IDLE
-
-            return HVACAction.IDLE
+        if (action := self.device.get("control_state")) is not None:
+            return HVACAction(action)
 
         # Anna
         heater: str = self._gateway["heater_id"]
