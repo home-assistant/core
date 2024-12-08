@@ -164,6 +164,7 @@ class _TemplateAttribute:
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool | None = False,
+        use_reported: bool = False,
     ) -> None:
         """Template attribute."""
         self._entity = entity
@@ -173,6 +174,7 @@ class _TemplateAttribute:
         self.on_update = on_update
         self.async_update = None
         self.none_on_template_error = none_on_template_error
+        self.use_reported = use_reported
 
     @callback
     def async_setup(self) -> None:
@@ -394,6 +396,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
+        use_reported: bool = False,
     ) -> None:
         """Call in the constructor to add a template linked to a attribute.
 
@@ -412,6 +415,8 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             if the template or validator resulted in an error.
         none_on_template_error
             If True, the attribute will be set to None if the template errors.
+        use_reported
+            If True, also update the attribute on reported values (not only changed).
 
         """
         if self.hass is None:
@@ -419,7 +424,13 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         if template.hass is None:
             raise ValueError("template.hass cannot be None")
         template_attribute = _TemplateAttribute(
-            self, attribute, template, validator, on_update, none_on_template_error
+            self,
+            attribute,
+            template,
+            validator,
+            on_update,
+            none_on_template_error,
+            use_reported,
         )
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(template_attribute)
@@ -492,7 +503,13 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         }
 
         for template, attributes in self._template_attrs.items():
-            template_var_tup = TrackTemplate(template, variables)
+            use_reported = False
+            for attribute in attributes:
+                if attribute.use_reported:
+                    use_reported = True
+            template_var_tup = TrackTemplate(
+                template, variables, use_reported=use_reported
+            )
             is_availability_template = False
             for attribute in attributes:
                 if attribute._attribute == "_attr_available":  # noqa: SLF001
