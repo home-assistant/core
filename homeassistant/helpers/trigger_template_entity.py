@@ -179,9 +179,8 @@ class TriggerBaseEntity(Entity):
     def _render_availability_template(self, variables: dict[str, Any]) -> None:
         """Render availability template."""
         rendered = dict(self._static_rendered)
-        self._rendered = self._static_rendered
+        key = CONF_AVAILABILITY
         try:
-            key = CONF_AVAILABILITY
             if key in self._to_render_simple:
                 rendered[key] = self._config[key].async_render(
                     variables,
