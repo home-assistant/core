@@ -2980,6 +2980,9 @@ watchdog==2.3.1
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
 
+# homeassistant.components.watergate
+watergate-local-api==2024.2.1
+
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.0.6
 
