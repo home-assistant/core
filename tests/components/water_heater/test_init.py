@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockModule,
     MockPlatform,
     async_mock_service,
@@ -208,7 +209,7 @@ async def test_operation_mode_validation(
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
 
 
-def test_deprecated_supported_features_ints(
+async def test_deprecated_supported_features_ints(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test deprecated supported features ints."""
@@ -221,6 +222,8 @@ def test_deprecated_supported_features_ints(
 
     entity = MockWaterHeaterEntity()
     entity.hass = hass
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
     assert "MockWaterHeaterEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

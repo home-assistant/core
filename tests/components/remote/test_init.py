@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service
+from tests.common import MockEntityPlatform, async_mock_service
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
@@ -144,7 +144,10 @@ async def test_delete_command(hass: HomeAssistant) -> None:
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockRemote(remote.RemoteEntity):
@@ -154,6 +157,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockRemote()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is remote.RemoteEntityFeature(1)
     assert "MockRemote" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

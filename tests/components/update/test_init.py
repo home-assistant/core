@@ -896,7 +896,9 @@ async def test_name(hass: HomeAssistant) -> None:
     assert expected.items() <= state.attributes.items()
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockUpdateEntity(UpdateEntity):
@@ -906,6 +908,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockUpdateEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features_compat is UpdateEntityFeature(1)
     assert "MockUpdateEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

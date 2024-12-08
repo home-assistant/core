@@ -13,6 +13,8 @@ from homeassistant.components.siren import (
 from homeassistant.components.siren.const import SirenEntityFeature
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockEntityPlatform
+
 
 class MockSirenEntity(SirenEntity):
     """Mock siren device to use in tests."""
@@ -108,13 +110,17 @@ async def test_missing_tones_dict(hass: HomeAssistant) -> None:
         process_turn_on_params(siren, {"tone": 3})
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockSirenEntity(siren.SirenEntity):
         _attr_supported_features = 1
 
     entity = MockSirenEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     assert entity.supported_features is siren.SirenEntityFeature(1)
     assert "MockSirenEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
