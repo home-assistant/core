@@ -151,9 +151,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[CONF_HUB] == Server.ATLANTIC_COZYTOUCH and not isinstance(
-                    exception, CozyTouchBadCredentialsException
-                ):
+                if user_input[CONF_HUB] in {
+                    Server.ATLANTIC_COZYTOUCH,
+                    Server.SAUTER_COZYTOUCH,
+                    Server.THERMOR_COZYTOUCH,
+                } and not isinstance(exception, CozyTouchBadCredentialsException):
                     description_placeholders["unsupported_device"] = "CozyTouch"
                     errors["base"] = "unsupported_hardware"
                 else:
