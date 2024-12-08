@@ -44,21 +44,13 @@ API_VERSION_SELECTOR = SelectSelector(
     )
 )
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_API_VERSION, default="2"): API_VERSION_SELECTOR,
-        vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
-    }
-)
-
 
 class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fyta."""
 
     _entry: SlideConfigEntry | None = None
     _mac: str = ""
+    _ip: str = ""
 
     VERSION = 1
     MINOR_VERSION = 1
@@ -92,7 +84,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors = {}
-        if user_input:
+        if user_input is not None and user_input.get(CONF_API_VERSION) is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             user_input[CONF_API_VERSION] = int(user_input[CONF_API_VERSION])
 
@@ -103,9 +95,19 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_HOST], data=user_input
                 )
 
+        if user_input is not None and user_input.get(CONF_HOST) is not None:
+            self._ip = user_input[CONF_HOST]
+
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self._ip): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_VERSION, default="2"): API_VERSION_SELECTOR,
+                    vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
+                }
+            ),
             errors=errors,
         )
 
@@ -118,5 +120,6 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
         self._mac = format_mac(discovery_info.macaddress)
+        self._ip = discovery_info.ip
 
         return await self.async_step_user()

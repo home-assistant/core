@@ -15,6 +15,8 @@ from homeassistant.core import HomeAssistant
 
 from .models import SlideConfigEntry, SlideData
 
+PLATFORMS = [Platform.COVER]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> bool:
     """Set up the slide_local integration."""
@@ -33,6 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> boo
 
     entry.runtime_data = SlideData(api, api_version, host, mac, password)
 
-    await hass.config_entries.async_forward_entry_setups(entry, Platform.COVER)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
