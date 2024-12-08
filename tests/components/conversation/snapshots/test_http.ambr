@@ -535,7 +535,7 @@
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on [all] <light> in <area>',
+        'sentence_template': '<turn> on [<all>] <light> <in> <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
@@ -606,7 +606,7 @@
           'name': 'OrderBeer',
         }),
         'match': True,
-        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'sentence_template': "[I'd like to ]order a {beer_style} [please]",
         'slots': dict({
           'beer_style': 'lager',
         }),

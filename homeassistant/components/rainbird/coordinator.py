@@ -15,13 +15,13 @@ from pyrainbird.async_client import (
 )
 from pyrainbird.data import ModelAndVersion, Schedule
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .types import RainbirdConfigEntry
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
@@ -140,7 +140,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
 class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     """Coordinator for rainbird irrigation schedule calls."""
 
-    config_entry: ConfigEntry
+    config_entry: RainbirdConfigEntry
 
     def __init__(
         self,

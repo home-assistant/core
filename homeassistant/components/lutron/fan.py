@@ -51,7 +51,6 @@ class LutronFan(LutronDevice, FanEntity):
     )
     _lutron_device: Output
     _prev_percentage: int | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
