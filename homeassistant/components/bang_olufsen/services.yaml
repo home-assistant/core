@@ -48,6 +48,23 @@ beolink_join:
           example: 1111.2222222.33333333@products.bang-olufsen.com
           selector:
             text:
+        source_id:
+          required: false
+          example: tidal
+          selector:
+            select:
+              translation_key: "source_ids"
+              options:
+                - ase_mozart_deezer
+                - ase_mozart_spotify
+                - mozart_tidal
+                - ase_beoradio
+                - beolink_converter_radio
+                - beolink_converter_tp1
+                - beolink_converter_tp2
+                - beolink_converter_cd
+                - beolink_converter_aux_a
+                - beolink_converter_ph
 
 beolink_leave:
   target:
