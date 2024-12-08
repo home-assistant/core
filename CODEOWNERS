@@ -1358,6 +1358,7 @@ build.json @home-assistant/supervisor
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
 /homeassistant/components/slide_local/ @dontinelli
+/tests/components/slide_local/ @dontinelli
 /homeassistant/components/slimproto/ @marcelveldt
 /tests/components/slimproto/ @marcelveldt
 /homeassistant/components/sma/ @kellerza @rklomp

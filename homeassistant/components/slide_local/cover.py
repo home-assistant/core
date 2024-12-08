@@ -30,7 +30,6 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -54,6 +53,8 @@ COVER_PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -94,9 +95,12 @@ async def async_setup_entry(
         slide_info = await entry.runtime_data.api.slide_info(entry.runtime_data.host)
     except (ClientConnectionError, ClientTimeoutError) as err:
         # https://developers.home-assistant.io/docs/integration_setup_failures/
-        raise ConfigEntryNotReady(
-            f"Unable to setup Slide '{entry.runtime_data.host}': {err}"
-        ) from err
+
+        _LOGGER.error(
+            "Unable to get information from Slide '%s': %s",
+            entry.runtime_data.host,
+            str(err),
+        )
 
     if slide_info is None:
         _LOGGER.error("Unable to setup Slide '%s'", entry.runtime_data.host)
