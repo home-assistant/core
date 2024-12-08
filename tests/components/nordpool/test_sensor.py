@@ -28,12 +28,7 @@ async def test_sensor(
 
 @pytest.mark.freeze_time("2024-11-05T23:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_no_next_price(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
+async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Nord Pool sensor."""
 
     current_price = hass.states.get("sensor.nord_pool_se3_current_price")
@@ -51,10 +46,7 @@ async def test_sensor_no_next_price(
 @pytest.mark.freeze_time("2024-11-05T00:00:00+01:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_no_previous_price(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, load_int: ConfigEntry
 ) -> None:
     """Test the Nord Pool sensor."""
 
