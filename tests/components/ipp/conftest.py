@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyipp import Printer
 import pytest
 
-from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_PROTO_LEGACY, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -33,6 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: True,
             CONF_BASE_PATH: "/ipp/print",
             CONF_UUID: "cfe92100-67c4-11d4-a45f-f8d027761251",
+            CONF_PROTO_LEGACY: False,
         },
         unique_id="cfe92100-67c4-11d4-a45f-f8d027761251",
     )
