@@ -284,6 +284,8 @@ build.json @home-assistant/supervisor
 /tests/components/control4/ @lawtancool
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam
 /tests/components/conversation/ @home-assistant/core @synesthesiam
+/homeassistant/components/cookidoo/ @miaucl
+/tests/components/cookidoo/ @miaucl
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
 /homeassistant/components/counter/ @fabaff
