@@ -35,11 +35,9 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    API_LOCAL,
     ATTR_TOUCHGO,
     CONF_INVERT_POSITION,
     DEFAULT_OFFSET,
-    DOMAIN,
     SERVICE_CALIBRATE,
     SERVICE_TOUCHGO,
 )
@@ -112,7 +110,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SlideCoverLocal(
-                    hass.data[DOMAIN][API_LOCAL],
+                    entry.runtime_data.api,
                     slide_info,
                     entry.runtime_data.host,
                     entry.data[CONF_MAC],
