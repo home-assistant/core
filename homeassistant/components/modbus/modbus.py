@@ -309,6 +309,10 @@ class ModbusHub:
         async with self._lock:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
+                if not self._client or not self._client.connected:
+                    err = f"{self.name} connect failed for unknown reasons. See pymodbus debug logs for further details."
+                    self._log_error(err, error_state=False)
+                    return
             except ModbusException as exception_error:
                 err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
                 self._log_error(err, error_state=False)
@@ -367,6 +371,7 @@ class ModbusHub:
                 self._client = None
                 message = f"modbus {self.name} communication closed"
                 _LOGGER.info(message)
+                await asyncio.sleep(1)
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
