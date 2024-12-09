@@ -301,11 +301,9 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
-        state = (
-            None
-            if isinstance(result, TemplateError)
-            else template.result_as_boolean(result)
-        )
+        state: bool | None = None
+        if result is not None and not isinstance(result, TemplateError):
+            state = template.result_as_boolean(result)
 
         if state == self._attr_is_on:
             return
