@@ -30,7 +30,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_hs_to_xy, color_temperature_kelvin_to_mired
+from homeassistant.util.color import (
+    color_hs_to_xy,
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
@@ -256,9 +260,11 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         return self._device.brightness
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        return self._device.color_temp
+        if self._device.color_temp is None:
+            return None
+        return color_temperature_mired_to_kelvin(self._device.color_temp)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -340,14 +346,18 @@ class DeconzLight(DeconzBaseLight[Light]):
     """Representation of a deCONZ light."""
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self._device.max_color_temp or super().max_mireds
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        if max_color_temp_mireds := self._device.max_color_temp:
+            return color_temperature_mired_to_kelvin(max_color_temp_mireds)
+        return super().min_color_temp_kelvin
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._device.min_color_temp or super().min_mireds
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        if min_color_temp_mireds := self._device.min_color_temp:
+            return color_temperature_mired_to_kelvin(min_color_temp_mireds)
+        return super().max_color_temp_kelvin
 
     @callback
     def async_update_callback(self) -> None:
