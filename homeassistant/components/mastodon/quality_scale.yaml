@@ -39,7 +39,10 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
+  parallel-updates:
+    status: todo
+    comment: |
+      Does not set parallel-updates on notify platform.
   reauthentication-flow:
     status: todo
     comment: |
