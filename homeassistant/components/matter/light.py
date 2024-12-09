@@ -373,12 +373,16 @@ class MatterLight(MatterEntity, LightEntity):
                         clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                     )
                     if min_mireds > 0:
-                        self._attr_min_mireds = min_mireds
+                        self._attr_max_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(min_mireds)
+                        )
                     max_mireds = self.get_matter_attribute_value(
                         clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
                     if max_mireds > 0:
-                        self._attr_max_mireds = max_mireds
+                        self._attr_min_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(max_mireds)
+                        )
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -405,7 +409,9 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_brightness = self._get_brightness()
 
         if self._supports_color_temperature:
-            self._attr_color_temp = self._get_color_temperature()
+            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                self._get_color_temperature()
+            )
 
         if self._supports_color:
             self._attr_color_mode = color_mode = self._get_color_mode()
