@@ -48,6 +48,7 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
             },
         },
         entry_id="myuplink_test",
+        unique_id="uid",
     )
     config_entry.add_to_hass(hass)
     return config_entry

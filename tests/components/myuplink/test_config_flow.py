@@ -22,6 +22,25 @@ from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
 CURRENT_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
+UNIQUE_ID = "uid"
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant) -> str:
+    """Return a valid access token."""
+    return config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [
+                "WRITESYSTEM",
+                "READSYSTEM",
+                "offline_access",
+            ],
+            "ou_code": "NA",
+        },
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -29,6 +48,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    access_token: str,
     setup_credentials,
 ) -> None:
     """Check full flow."""
@@ -59,7 +79,7 @@ async def test_full_flow(
         OAUTH2_TOKEN,
         json={
             "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "access_token": access_token,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -81,6 +101,7 @@ async def test_flow_reauth(
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
     mock_config_entry: MockConfigEntry,
+    access_token: str,
     expires_at: float,
 ) -> None:
     """Test reauth step."""
@@ -89,7 +110,7 @@ async def test_flow_reauth(
     OLD_SCOPE_TOKEN = {
         "auth_implementation": DOMAIN,
         "token": {
-            "access_token": "Fake_token",
+            "access_token": access_token,
             "scope": OLD_SCOPE,
             "expires_in": 86399,
             "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
@@ -137,7 +158,7 @@ async def test_flow_reauth(
         OAUTH2_TOKEN,
         json={
             "refresh_token": "updated-refresh-token",
-            "access_token": "updated-access-token",
+            "access_token": access_token,
             "type": "Bearer",
             "expires_in": "60",
             "scope": CURRENT_SCOPE,
