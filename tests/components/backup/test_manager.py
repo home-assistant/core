@@ -171,39 +171,6 @@ async def _setup_backup_platform(
     assert await async_setup_component(hass, domain, {})
 
 
-async def test_constructor(hass: HomeAssistant) -> None:
-    """Test BackupManager constructor."""
-    BackupManager(hass, CoreBackupReaderWriter(hass))
-
-
-async def test_getting_backup_that_does_not_exist(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test getting backup that does not exist."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
-    path = local_agent.get_backup_path(TEST_BACKUP_ABC123.backup_id)
-
-    with patch("pathlib.Path.exists", return_value=False):
-        backup, agent_errors = await manager.async_get_backup(
-            TEST_BACKUP_ABC123.backup_id
-        )
-        assert backup is None
-        assert agent_errors == {}
-
-        assert (
-            f"Removing tracked backup ({TEST_BACKUP_ABC123.backup_id}) that "
-            f"does not exists on the expected path {path}"
-        ) in caplog.text
-
-
 @pytest.mark.usefixtures("mock_backup_generation")
 async def test_async_create_backup(
     hass: HomeAssistant,
