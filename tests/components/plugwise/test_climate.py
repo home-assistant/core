@@ -31,15 +31,13 @@ async def test_adam_climate_entity_attributes(
     state = hass.states.get("climate.woonkamer")
     assert state
     assert state.state == HVACMode.AUTO
+    assert state.attributes["hvac_action"] == "heating"
     assert state.attributes["hvac_modes"] == [HVACMode.AUTO, HVACMode.HEAT]
-    # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
-
     assert "preset_modes" in state.attributes
     assert "no_frost" in state.attributes["preset_modes"]
     assert "home" in state.attributes["preset_modes"]
-
-    assert state.attributes["current_temperature"] == 20.9
     assert state.attributes["preset_mode"] == "home"
+    assert state.attributes["current_temperature"] == 20.9
     assert state.attributes["supported_features"] == 17
     assert state.attributes["temperature"] == 21.5
     assert state.attributes["min_temp"] == 0.0
@@ -49,15 +47,13 @@ async def test_adam_climate_entity_attributes(
     state = hass.states.get("climate.jessie")
     assert state
     assert state.state == HVACMode.AUTO
+    assert state.attributes["hvac_action"] == "idle"
     assert state.attributes["hvac_modes"] == [HVACMode.AUTO, HVACMode.HEAT]
-    # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
-
     assert "preset_modes" in state.attributes
     assert "no_frost" in state.attributes["preset_modes"]
     assert "home" in state.attributes["preset_modes"]
-
-    assert state.attributes["current_temperature"] == 17.2
     assert state.attributes["preset_mode"] == "asleep"
+    assert state.attributes["current_temperature"] == 17.2
     assert state.attributes["temperature"] == 15.0
     assert state.attributes["min_temp"] == 0.0
     assert state.attributes["max_temp"] == 35.0
@@ -233,7 +229,7 @@ async def test_adam_climate_entity_climate_changes(
         "c50f167537524366a5af7aa3942feb1e", "off"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
