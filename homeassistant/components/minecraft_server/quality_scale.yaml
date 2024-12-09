@@ -3,18 +3,14 @@ rules:
   action-setup:
     status: exempt
     comment: Integration doesn't provide any service actions.
-  appropriate-polling:
-    status: done
-    comment: Default polling interval is set to 60s.
+  appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Check removal and replacement of name in config flow with the title (server address).
   config-flow-test-coverage: done
-  dependency-transparency:
-    status: done
-    comment: |
-      mcstatus uses Apache License (Version 2.0), releases are available on PyPI, CI pipeline is used
-      and version on PyPI corresponds to tagged releases on https://github.com/py-mine/mcstatus.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration doesn't provide any service actions.
