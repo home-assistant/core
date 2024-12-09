@@ -14,7 +14,9 @@ rules:
   action-setup:
     status: exempt
     comment: Plugwise integration has no custom actions
-  common-modules: done
+  common-modules:
+    status: todo
+    comment: Investigation with Core PR 132748 towards introduction in Core PR 66079 (async_added_to_hass in entity)
   docs-high-level-description:
     status: todo
     comment: Rewrite top section, docs PR prepared waiting for 36087 merge
