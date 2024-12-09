@@ -70,7 +70,9 @@ class ChargingBinarySensor(OhmeEntity, BinarySensorEntity):
         """Return state."""
 
         return bool(
-            self.coordinator.data and self.coordinator.data["power"]["watt"] > 0
+            self.coordinator.data
+            and self.coordinator.data["power"]
+            and self.coordinator.data["power"]["watt"] > 0
         )
 
 
