@@ -8,11 +8,11 @@
           "counter_id": "Meter id"
         },
         "data_description": {
-          "username": "Enter your login associated with your Tout sur mon eau account",
-          "password": "Enter your password associated with your Tout sur mon eau account",
+          "username": "Enter your login associated with your {tout_sur_mon_eau} account",
+          "password": "Enter your password associated with your {tout_sur_mon_eau} account",
           "counter_id": "Enter your meter id (ex: 12345678). Should be found automatically during setup, if not see integration documentation for more information"
         },
-        "description": "Connect your suez water Tout sur mon Eau account to retrieve your water consumption"
+        "description": "Connect your suez water {tout_sur_mon_eau} account to retrieve your water consumption"
       }
     },
     "error": {
