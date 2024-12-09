@@ -46,6 +46,7 @@ class TadoConnector:
         self.tado = None
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
+        self.circuits: list[dict[Any, Any]] = []
         self.data: dict[str, dict] = {
             "device": {},
             "mobile_device": {},
@@ -65,6 +66,7 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.get_zones()
         self.devices = self.tado.get_devices()
+        self.circuits = self.tado.get_heating_circuits()
         tado_home = self.tado.get_me()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
@@ -80,6 +82,7 @@ class TadoConnector:
         self.update_mobile_devices()
         self.update_zones()
         self.update_home()
+        self.update_circuits()
 
     def update_mobile_devices(self) -> None:
         """Update the mobile devices."""
@@ -219,6 +222,16 @@ class TadoConnector:
             )
             return
 
+    def update_circuits(self) -> None:
+        """Update the heating circuits data from Tado."""
+        try:
+            self.circuits = self.tado.get_heating_circuits()
+        except RuntimeError:
+            _LOGGER.error(
+                "Unable to connect to Tado while updating heating circuits"
+            )
+            return
+
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""
         return self.tado.get_capabilities(zone_id)
@@ -330,3 +343,11 @@ class TadoConnector:
             return self.tado.set_eiq_meter_readings(date=dt, reading=reading)
         except RequestException as exc:
             raise HomeAssistantError("Could not set meter reading") from exc
+
+    def set_zone_heating_circuit(self, zone, heater):
+        """Set zone heating circuit for zone."""
+        try:
+            self.tado.set_zone_heating_circuit(zone, heater)
+
+        except RequestException as exc:
+            raise HomeAssistantError("Could not set zone heating circuit") from exc
