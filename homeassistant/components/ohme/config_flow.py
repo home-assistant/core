@@ -14,10 +14,8 @@ from homeassistant.config_entries import (
 
 from .const import (
     CONFIG_VERSION,
-    DEFAULT_INTERVAL_ACCOUNTINFO,
     DEFAULT_INTERVAL_ADVANCED,
     DEFAULT_INTERVAL_CHARGESESSIONS,
-    DEFAULT_INTERVAL_SCHEDULES,
     DOMAIN,
 )
 
@@ -125,28 +123,12 @@ class OhmeOptionsFlow(OptionsFlow):
                         vol.Clamp(min=DEFAULT_INTERVAL_CHARGESESSIONS),
                     ),
                     vol.Required(
-                        "interval_accountinfo",
-                        default=self._config_entry.options.get(
-                            "interval_accountinfo", DEFAULT_INTERVAL_ACCOUNTINFO
-                        ),
-                    ): vol.All(
-                        vol.Coerce(float), vol.Clamp(min=DEFAULT_INTERVAL_ACCOUNTINFO)
-                    ),
-                    vol.Required(
                         "interval_advanced",
                         default=self._config_entry.options.get(
                             "interval_advanced", DEFAULT_INTERVAL_ADVANCED
                         ),
                     ): vol.All(
                         vol.Coerce(float), vol.Clamp(min=DEFAULT_INTERVAL_ADVANCED)
-                    ),
-                    vol.Required(
-                        "interval_schedules",
-                        default=self._config_entry.options.get(
-                            "interval_schedules", DEFAULT_INTERVAL_SCHEDULES
-                        ),
-                    ): vol.All(
-                        vol.Coerce(float), vol.Clamp(min=DEFAULT_INTERVAL_SCHEDULES)
                     ),
                 }
             ),

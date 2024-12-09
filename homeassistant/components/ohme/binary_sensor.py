@@ -9,13 +9,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from .const import COORDINATOR_ADVANCED, COORDINATOR_CHARGESESSIONS
 from .entity import OhmeEntity
-from .utils import in_slot
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +33,6 @@ async def async_setup_entry(
         ConnectedBinarySensor(coordinator, hass, client),
         ChargingBinarySensor(coordinator, hass, client),
         PendingApprovalBinarySensor(coordinator, hass, client),
-        CurrentSlotBinarySensor(coordinator, hass, client),
         ChargerOnlineBinarySensor(coordinator_advanced, hass, client),
     ]
 
@@ -90,44 +87,6 @@ class PendingApprovalBinarySensor(OhmeEntity, BinarySensorEntity):
             self.coordinator.data
             and self.coordinator.data["mode"] == "PENDING_APPROVAL"
         )
-
-
-class CurrentSlotBinarySensor(OhmeEntity, BinarySensorEntity):
-    """Binary sensor for if we are currently in a smart charge slot."""
-
-    _attr_translation_key = "slot_active"
-    _attr_icon = "mdi:calendar-check"
-
-    @property
-    def extra_state_attributes(self):
-        """Attributes of the sensor."""
-        now = utcnow()
-        slots = self.platform.config_entry.runtime_data.slots
-
-        return {
-            "planned_dispatches": [x for x in slots if not x["end"] or x["end"] > now],
-            "completed_dispatches": [x for x in slots if x["end"] < now],
-        }
-
-    @property
-    def is_on(self) -> bool:
-        """Return state."""
-
-        return self._state
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Are we in a charge slot? This is a bit slow so we only update on coordinator data update."""
-        if self.coordinator.data is None:
-            self._state = None
-        elif self.coordinator.data["mode"] == "DISCONNECTED":
-            self._state = False
-        else:
-            self._state = in_slot(self.coordinator.data)
-
-        self._last_updated = utcnow()
-
-        self.async_write_ha_state()
 
 
 class ChargerOnlineBinarySensor(OhmeEntity, BinarySensorEntity):

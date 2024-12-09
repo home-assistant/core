@@ -7,12 +7,7 @@ from ohme import ApiException
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEFAULT_INTERVAL_ACCOUNTINFO,
-    DEFAULT_INTERVAL_ADVANCED,
-    DEFAULT_INTERVAL_CHARGESESSIONS,
-    DEFAULT_INTERVAL_SCHEDULES,
-)
+from .const import DEFAULT_INTERVAL_ADVANCED, DEFAULT_INTERVAL_CHARGESESSIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,32 +38,6 @@ class OhmeChargeSessionsCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Error communicating with API") from e
 
 
-class OhmeAccountInfoCoordinator(DataUpdateCoordinator):
-    """Coordinator to pull charger settings."""
-
-    def __init__(self, hass, config_entry):
-        """Initialise coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Ohme Account Info",
-            update_interval=timedelta(
-                minutes=config_entry.options.get(
-                    "interval_accountinfo", DEFAULT_INTERVAL_ACCOUNTINFO
-                )
-            ),
-        )
-        self._client = config_entry.runtime_data.client
-
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            return await self._client.async_get_account_info()
-
-        except ApiException as e:
-            raise UpdateFailed("Error communicating with API") from e
-
-
 class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator):
     """Coordinator to pull CT clamp reading."""
 
@@ -90,32 +59,6 @@ class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint."""
         try:
             return await self._client.async_get_advanced_settings()
-
-        except ApiException as e:
-            raise UpdateFailed("Error communicating with API") from e
-
-
-class OhmeChargeSchedulesCoordinator(DataUpdateCoordinator):
-    """Coordinator to pull charge schedules."""
-
-    def __init__(self, hass, config_entry):
-        """Initialise coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Ohme Charge Schedules",
-            update_interval=timedelta(
-                minutes=config_entry.options.get(
-                    "interval_schedules", DEFAULT_INTERVAL_SCHEDULES
-                )
-            ),
-        )
-        self._client = config_entry.runtime_data.client
-
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            return await self._client.async_get_schedule()
 
         except ApiException as e:
             raise UpdateFailed("Error communicating with API") from e

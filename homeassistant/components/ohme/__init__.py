@@ -11,12 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONFIG_VERSION, ENTITY_TYPES
-from .coordinator import (
-    OhmeAccountInfoCoordinator,
-    OhmeAdvancedSettingsCoordinator,
-    OhmeChargeSchedulesCoordinator,
-    OhmeChargeSessionsCoordinator,
-)
+from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +24,6 @@ class OhmeRuntimeData:
 
     client: OhmeApiClient
     coordinators: list[DataUpdateCoordinator]
-    slots: list[dict]
-    # other_data: dict[str, Any]
 
 
 async def async_update_listener(hass, entry):
@@ -45,7 +38,7 @@ async def async_setup_entry(hass, entry):
 
     client = OhmeApiClient(entry.data["email"], entry.data["password"])
 
-    entry.runtime_data = OhmeRuntimeData(client, [], [])
+    entry.runtime_data = OhmeRuntimeData(client, [])
 
     await client.async_create_session()
     await client.async_update_device_info()
@@ -54,15 +47,9 @@ async def async_setup_entry(hass, entry):
         OhmeChargeSessionsCoordinator(
             hass=hass, config_entry=entry
         ),  # COORDINATOR_CHARGESESSIONS
-        OhmeAccountInfoCoordinator(
-            hass=hass, config_entry=entry
-        ),  # COORDINATOR_ACCOUNTINFO
         OhmeAdvancedSettingsCoordinator(
             hass=hass, config_entry=entry
         ),  # COORDINATOR_ADVANCED
-        OhmeChargeSchedulesCoordinator(
-            hass=hass, config_entry=entry
-        ),  # COORDINATOR_SCHEDULES
     ]
 
     # We can function without these so setup can continue
