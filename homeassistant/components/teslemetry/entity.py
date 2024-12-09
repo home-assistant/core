@@ -75,11 +75,6 @@ class TeslemetryEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
-    @property
-    def has(self) -> bool:
-        """Return True if a specific value is in coordinator data."""
-        return self.key in self.coordinator.data
-
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
