@@ -56,7 +56,6 @@ def mock_legacy_pydrawise(
 
 @pytest.fixture
 def mock_pydrawise(
-    mock_auth: AsyncMock,
     user: User,
     controller: Controller,
     zones: list[Zone],
@@ -76,10 +75,16 @@ def mock_pydrawise(
 
 
 @pytest.fixture
-def mock_auth() -> Generator[AsyncMock]:
-    """Mock pydrawise Auth."""
+def mock_auth_cls() -> Generator[AsyncMock]:
+    """Mock pydrawise Auth class."""
     with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
-        yield mock_auth.return_value
+        yield mock_auth
+
+
+@pytest.fixture
+def mock_auth(mock_auth_cls: AsyncMock) -> AsyncMock:
+    """Mock pydrawise Auth."""
+    return mock_auth_cls.return_value
 
 
 @pytest.fixture

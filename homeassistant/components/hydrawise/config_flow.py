@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 from aiohttp import ClientError
-from pydrawise import auth, client
+from pydrawise import auth as pydrawise_auth, client
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
@@ -29,14 +29,18 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         on_failure: Callable[[str], ConfigFlowResult],
     ) -> ConfigFlowResult:
         """Create the config entry."""
-
         # Verify that the provided credentials work."""
-        api = client.Hydrawise(auth.Auth(username, password))
         try:
-            # Don't fetch zones because we don't need them yet.
-            user = await api.get_user(fetch_zones=False)
+            auth = pydrawise_auth.Auth(username, password)
         except NotAuthorizedError:
             return on_failure("invalid_auth")
+        except TimeoutError:
+            return on_failure("timeout_connect")
+
+        try:
+            api = client.Hydrawise(auth)
+            # Don't fetch zones because we don't need them yet.
+            user = await api.get_user(fetch_zones=False)
         except TimeoutError:
             return on_failure("timeout_connect")
         except ClientError as ex:
