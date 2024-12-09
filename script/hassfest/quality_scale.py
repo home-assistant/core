@@ -389,7 +389,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
-    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
