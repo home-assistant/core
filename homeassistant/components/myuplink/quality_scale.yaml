@@ -39,7 +39,7 @@ rules:
     comment: No configuration parameters
   docs-installation-parameters:
     status: exempt
-    comment: No configuration parameters
+    comment: No installation parameters
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
