@@ -40,14 +40,14 @@
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "pending": "Pending",
-          "firmware_mismatch": "Firmware Mismatch",
+          "firmware_mismatch": "Firmware mismatch",
           "upgrading": "Upgrading",
           "provisioning": "Provisioning",
-          "heartbeat_missed": "Heartbeat Missed",
+          "heartbeat_missed": "Heartbeat missed",
           "adopting": "Adopting",
           "deleting": "Deleting",
-          "inform_error": "Inform Error",
-          "adoption_failed": "Adoption Failed",
+          "inform_error": "Inform error",
+          "adoption_failed": "Adoption failed",
           "isolated": "Isolated",
           "unknown": "Unknown"
         }
