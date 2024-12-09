@@ -129,6 +129,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         value_fn=lambda data: data.usage["upload_usage"],
     ),
     StarlinkSensorEntityDescription(
@@ -137,6 +138,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         value_fn=lambda data: data.usage["download_usage"],
     ),
     StarlinkSensorEntityDescription(
