@@ -5,12 +5,14 @@ from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from teslemetry_stream import Signal
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, TeslemetryState
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -236,3 +238,48 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
         return self.key in self.coordinator.data.get("wall_connectors", {}).get(
             self.din, {}
         )
+
+
+class TeslemetryVehicleStreamEntity(Entity):
+    """Parent class for Teslemetry Vehicle Stream entities."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, data: TeslemetryVehicleData, key: str, streaming_key: Signal
+    ) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+        self.streaming_key = streaming_key
+        self.coordinator = data.coordinator
+        self.stream = data.stream
+        self.vin = data.vin
+        self.add_field = data.stream.get_vehicle(self.vin).add_field
+
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{data.vin}-{key}"
+        self._attr_device_info = data.device
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # Listen for this field in the stream
+        self.async_on_remove(
+            self.stream.async_add_listener(
+                self._handle_stream_update,
+                {"vin": self.vin, "data": {self.streaming_key: None}},
+            )
+        )
+        # Ensure this field is enabled on the vehicle
+        self.hass.async_create_task(self.add_field(self.streaming_key))
+
+    def _handle_stream_update(self, data: dict[str, Any]) -> None:
+        """Handle updated data from the stream."""
+        # Listener filter ensures this value exists
+        self._async_value_from_stream(data["data"][self.streaming_key])
+        # Getting any stream data means the vehicle is awake
+        self.coordinator.data["state"] = TeslemetryState.ONLINE
+        self.async_write_ha_state()
+
+    def _async_value_from_stream(self, value: Any) -> None:
+        """Update the entity with the latest value from the stream."""
+        raise NotImplementedError
