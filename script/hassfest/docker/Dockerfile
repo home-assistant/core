@@ -4,6 +4,7 @@
 FROM python:3.13-alpine
 
 ENV \
+    container=oci \
     UV_SYSTEM_PYTHON=true \
     UV_EXTRA_INDEX_URL="https://wheels.home-assistant.io/musllinux-index/"
 
