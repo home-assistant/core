@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from io import StringIO
 import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, call, mock_open, patch
@@ -41,6 +42,7 @@ from .common import (
 )
 
 from tests.common import MockPlatform, mock_platform
+from tests.typing import ClientSessionGenerator
 
 _EXPECTED_FILES = [
     "test.txt",
@@ -451,23 +453,14 @@ async def test_exception_platform_post(
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
-async def test_async_receive_backup_local(
+async def test_receive_backup_local(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test receiving a backup file."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    size = 2 * 2**16
-    protocol = Mock(_reading_paused=False)
-    stream = aiohttp.StreamReader(protocol, 2**16)
-    stream.feed_data(b"0" * size + b"\r\n--:--")
-    stream.feed_eof()
-
+    """Test receive backup local."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_client()
     open_mock = mock_open()
 
     with (
@@ -478,23 +471,15 @@ async def test_async_receive_backup_local(
             return_value=TEST_BACKUP_ABC123,
         ),
     ):
-        await manager.async_receive_backup(
-            agent_ids=[LOCAL_AGENT_ID],
-            contents=aiohttp.BodyPartReader(
-                b"--:",
-                CIMultiDictProxy(
-                    CIMultiDict(
-                        {
-                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
-                        }
-                    )
-                ),
-                stream,
-            ),
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
         )
-        assert open_mock.call_count == 1
-        assert move_mock.call_count == 1
-        assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
+
+    assert resp.status == 201
+    assert open_mock.call_count == 1
+    assert move_mock.call_count == 1
+    assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
 async def test_async_receive_backup_remote(

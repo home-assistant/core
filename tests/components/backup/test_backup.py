@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from io import StringIO
 import json
 from pathlib import Path
 from tarfile import TarError
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from syrupy import SnapshotAssertion
@@ -17,7 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_BACKUP_ABC123, TEST_BACKUP_PATH_ABC123
 
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="read_backup")
@@ -69,6 +70,35 @@ async def test_load_backups(
     # load and list backups
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
+
+
+async def test_upload(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test upload backup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    open_mock = mock_open()
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch("shutil.move") as move_mock,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert open_mock.call_count == 1
+    assert move_mock.call_count == 1
+    assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
 @pytest.mark.usefixtures("read_backup")
