@@ -408,9 +408,12 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if self._supports_color_temperature:
+        if (
+            self._supports_color_temperature
+            and (color_temperature := self._get_color_temperature()) > 0
+        ):
             self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                self._get_color_temperature()
+                color_temperature
             )
 
         if self._supports_color:
