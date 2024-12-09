@@ -253,7 +253,8 @@ class SlotListSensor(OhmeEntity, SensorEntity):
             slots = slot_list(self.coordinator.data)
 
             # Store slots for external use
-            self.platform.config_entry.runtime_data.slots = slots
+            if self.platform.config_entry is not None:
+                self.platform.config_entry.runtime_data.slots = slots
 
             # Convert list to text
             self._state = slot_list_str(self.platform.config_entry, slots)

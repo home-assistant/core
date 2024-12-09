@@ -1,12 +1,15 @@
 """Provide common fixtures."""
 
-import pytest
-from unittest.mock import AsyncMock, patch
 import asyncio
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.common import MockConfigEntry, load_json_value_fixture
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.ohme.const import DOMAIN
-import json
+
+from tests.common import load_json_value_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 @pytest.fixture(name="mock_session")
 def mock_session():
@@ -15,27 +18,25 @@ def mock_session():
 
     mocker.post(
         "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword",
-        json={"idToken":"", "refreshToken":""}
+        json={"idToken": "", "refreshToken": ""},
     )
 
     mocker.get(
-        "/v1/users/me/account",
-        json=load_json_value_fixture("account.json", DOMAIN)
+        "/v1/users/me/account", json=load_json_value_fixture("account.json", DOMAIN)
     )
 
     mocker.get(
         "/v1/chargeSessions",
-        json=load_json_value_fixture("charge_sessions.json", DOMAIN)
+        json=load_json_value_fixture("charge_sessions.json", DOMAIN),
     )
 
     mocker.get(
-        "/v1/chargeRules",
-        json=load_json_value_fixture("charge_rules.json", DOMAIN)
+        "/v1/chargeRules", json=load_json_value_fixture("charge_rules.json", DOMAIN)
     )
 
     mocker.get(
         "/v1/chargeDevices/chargerid/advancedSettings",
-        json=load_json_value_fixture("advanced_settings.json", DOMAIN)
+        json=load_json_value_fixture("advanced_settings.json", DOMAIN),
     )
 
     with patch(
