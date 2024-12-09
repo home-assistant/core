@@ -364,7 +364,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     """Takes no action."""
 
     intent_type = intent.INTENT_NEVERMIND
-    description = "Cancels the current request and does nothing"
+    description = "Cancel the current conversation if it was started by mistake or the user wants it to stop."
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Do nothing and produces an empty response."""
