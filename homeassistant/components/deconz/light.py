@@ -12,7 +12,7 @@ from pydeconz.models.light.light import Light, LightAlert, LightColorMode, Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
@@ -30,7 +30,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_hs_to_xy
+from homeassistant.util.color import color_hs_to_xy, color_temperature_kelvin_to_mired
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
@@ -284,8 +284,10 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         if ATTR_BRIGHTNESS in kwargs:
             data["brightness"] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs:
-            data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data["color_temperature"] = color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
         if ATTR_HS_COLOR in kwargs:
             if ColorMode.XY in self._attr_supported_color_modes:
