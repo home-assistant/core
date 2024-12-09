@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pynecil import LiveDataResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,7 +14,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -54,6 +54,7 @@ async def test_tip_on_off(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pynecil: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tip_connected binary sensor on/off states."""
 
@@ -69,6 +70,7 @@ async def test_tip_on_off(
         live_temp=479,
         max_tip_temp_ability=460,
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
 
     assert hass.states.get("binary_sensor.pinecil_soldering_tip").state == STATE_OFF
