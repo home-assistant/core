@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from . import AbodeSystem
 from .const import DOMAIN
@@ -80,10 +79,10 @@ class AbodeLight(AbodeDevice, LightEntity):
         return None
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of the light."""
         if self._device.has_color:
-            return color_temperature_kelvin_to_mired(self._device.color_temp)
+            return int(self._device.color_temp)
         return None
 
     @property
