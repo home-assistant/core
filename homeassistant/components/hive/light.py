@@ -44,7 +44,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
     _attr_min_color_temp_kelvin = 2700  # 370 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 154 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialise hive light."""
