@@ -40,6 +40,8 @@ from .const import (
     DOMAIN,
     FORGOT_PASSWORD_URL,
     HABITICANS_URL,
+    SECTION_REAUTH_API_KEY,
+    SECTION_REAUTH_LOGIN,
     SIGN_UP_URL,
     SITE_DATA_URL,
     X_CLIENT,
@@ -73,7 +75,7 @@ STEP_LOGIN_DATA_SCHEMA = vol.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("reauth_login"): data_entry_flow.section(
+        vol.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_USERNAME): TextSelector(
@@ -92,7 +94,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
             ),
             {"collapsed": False},
         ),
-        vol.Required("reauth_api_key"): data_entry_flow.section(
+        vol.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_API_KEY): str,
@@ -215,11 +217,11 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry: HabiticaConfigEntry = self._get_reauth_entry()
 
         if user_input is not None:
-            if user_input["reauth_login"].get(CONF_USERNAME) and user_input[
-                "reauth_login"
+            if user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME) and user_input[
+                SECTION_REAUTH_LOGIN
             ].get(CONF_PASSWORD):
                 errors, login, _ = await self.validate_login(
-                    {**reauth_entry.data, **user_input["reauth_login"]}
+                    {**reauth_entry.data, **user_input[SECTION_REAUTH_LOGIN]}
                 )
                 if not errors and login is not None:
                     await self.async_set_unique_id(str(login.id))
@@ -228,17 +230,17 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                         reauth_entry,
                         data_updates={CONF_API_KEY: login.apiToken},
                     )
-            elif user_input["reauth_api_key"].get(CONF_API_KEY):
+            elif user_input[SECTION_REAUTH_API_KEY].get(CONF_API_KEY):
                 errors, user = await self.validate_api_key(
                     {
                         **reauth_entry.data,
-                        **user_input["reauth_api_key"],
+                        **user_input[SECTION_REAUTH_API_KEY],
                     }
                 )
                 if not errors and user is not None:
                     return self.async_update_reload_and_abort(
                         reauth_entry,
-                        data_updates=user_input["reauth_api_key"],
+                        data_updates=user_input[SECTION_REAUTH_API_KEY],
                     )
             else:
                 errors["base"] = "invalid_credentials"
@@ -249,7 +251,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA,
                 suggested_values={
                     CONF_USERNAME: (
-                        user_input["reauth_login"].get(CONF_USERNAME)
+                        user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME)
                         if user_input
                         else None,
                     )
@@ -296,7 +298,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate authentication with api key."""
         errors: dict[str, str] = {}
         session = async_get_clientsession(
-            self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+            self.hass, verify_ssl=user_input.get(CONF_VERIFY_SSL, True)
         )
         api = Habitica(
             session=session,

@@ -276,7 +276,7 @@ async def test_form_advanced_already_configured(
     ],
     ids=["reauth with login details", "rauth with api key"],
 )
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_flow_reauth(
     hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, Any]
 ) -> None:
@@ -300,7 +300,7 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries()) == 1
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_flow_reauth_invalid_credentials(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
