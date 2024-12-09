@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -20,19 +20,24 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import api
 from .const import (
+    ATTR_ALLOWED_VALUES,
+    ATTR_BSH_KEY,
     ATTR_KEY,
     ATTR_PROGRAM,
     ATTR_UNIT,
     ATTR_VALUE,
+    BSH_COMMON_OPTION_DURATION,
     BSH_PAUSE,
     BSH_RESUME,
     DOMAIN,
     OLD_NEW_UNIQUE_ID_SUFFIX_MAP,
+    PROGRAM_ENUM_OPTIONS,
     SERVICE_OPTION_ACTIVE,
     SERVICE_OPTION_SELECTED,
     SERVICE_PAUSE_PROGRAM,
@@ -40,9 +45,12 @@ from .const import (
     SERVICE_SELECT_PROGRAM,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    TRANSLATION_KEYS_PROGRAMS_MAP,
+    bsh_key_to_translation_key,
 )
 
 type HomeConnectConfigEntry = ConfigEntry[api.ConfigEntryAuth]
@@ -55,6 +63,52 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+
+ATTR_SCHEMA = "schema"
+ATTR_CUSTOM_OPTIONS = "custom_options"
+ATTR_START = "start"
+ATTR_FORCE_SELECTED_ACTIVE = "force_selected_active"
+
+OPTION_COFFEE_MILK_RATIO = "ConsumerProducts.CoffeeMaker.Option.CoffeeMilkRatio"
+
+PROGRAM_OPTIONS = {
+    bsh_key_to_translation_key(key): {
+        ATTR_BSH_KEY: key,
+        ATTR_SCHEMA: value,
+    }
+    for key, value in {
+        "ConsumerProducts.CoffeeMaker.Option.FillQuantity": int,
+        "ConsumerProducts.CoffeeMaker.Option.MultipleBeverages": bool,
+        OPTION_COFFEE_MILK_RATIO: int,
+        "Dishcare.Dishwasher.Option.IntensivZone": bool,
+        "Dishcare.Dishwasher.Option.BrillianceDry": bool,
+        "Dishcare.Dishwasher.Option.VarioSpeedPlus": bool,
+        "Dishcare.Dishwasher.Option.SilenceOnDemand": bool,
+        "Dishcare.Dishwasher.Option.HalfLoad": bool,
+        "Dishcare.Dishwasher.Option.ExtraDry": bool,
+        "Dishcare.Dishwasher.Option.HygienePlus": bool,
+        "Dishcare.Dishwasher.Option.EcoDry": bool,
+        "Dishcare.Dishwasher.Option.ZeoliteDry": bool,
+        "Cooking.Oven.Option.SetpointTemperature": int,
+        "Cooking.Oven.Option.FastPreHeat": bool,
+        "LaundryCare.Washer.Option.IDos1Active": bool,
+        "LaundryCare.Washer.Option.IDos2Active": bool,
+    }.items()
+}
+
+TIME_PROGRAM_OPTIONS = {
+    bsh_key_to_translation_key(key): {
+        ATTR_BSH_KEY: key,
+        ATTR_SCHEMA: value,
+    }
+    for key, value in {
+        "BSH.Common.Option.StartInRelative": cv.time_period_str,
+        BSH_COMMON_OPTION_DURATION: cv.time_period_str,
+        "BSH.Common.Option.FinishInRelative": cv.time_period_str,
+    }.items()
+}
+
+
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
@@ -63,17 +117,55 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_OPTION_SCHEMA = vol.Schema(
-    {
+SERVICE_OPTIONS_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Required(ATTR_DEVICE_ID): str,
+            vol.Optional(ATTR_CUSTOM_OPTIONS): vol.All(
+                [
+                    vol.Schema(
+                        {
+                            vol.Required(ATTR_KEY): str,
+                            vol.Required(ATTR_VALUE): vol.Any(int, str, bool),
+                            vol.Optional(ATTR_UNIT): str,
+                        }
+                    )
+                ]
+            ),
+        }
+    )
+    .extend(
+        {
+            vol.Optional(key): vol.In(
+                cast(dict[str, str], value[ATTR_ALLOWED_VALUES]).keys()
+            )
+            for key, value in PROGRAM_ENUM_OPTIONS.items()
+        }
+    )
+    .extend(
+        {
+            vol.Optional(key): value[ATTR_SCHEMA]
+            for key, value in cast(
+                dict[str, dict[str, Any]], PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
+            ).items()
+        }
+    )
+)
+
+SERVICE_SET_OPTION_SCHEMA = vol.Any(
+    {  # DEPRECATED: Remove in 2025.6.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
-    }
+    },
+    {
+        **SERVICE_OPTIONS_SCHEMA.schema,
+    },
 )
 
 SERVICE_PROGRAM_SCHEMA = vol.Any(
-    {
+    {  # DEPRECATED: Remove in 2025.6.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): str,
         vol.Required(ATTR_KEY): str,
@@ -81,8 +173,9 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
         vol.Optional(ATTR_UNIT): str,
     },
     {
-        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): str,
+        vol.Optional(ATTR_START): bool,
+        **SERVICE_OPTIONS_SCHEMA.schema,
     },
 )
 
@@ -165,110 +258,202 @@ async def _run_appliance_service[*_Ts](
     method: str,
     *args: *_Ts,
     error_translation_key: str,
-    error_translation_placeholders: dict[str, str],
+    error_translation_placeholders: dict[str, str] | None = None,
 ) -> None:
     try:
-        await hass.async_add_executor_job(getattr(appliance, method), args)
+        await hass.async_add_executor_job(getattr(appliance, method), *args)
     except api.HomeConnectError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=error_translation_key,
             translation_placeholders={
                 **get_dict_from_home_connect_error(err),
-                **error_translation_placeholders,
+                **(error_translation_placeholders or {}),
             },
         ) from err
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call, method):
+    async def _async_service_program(call: ServiceCall, method: str):
         """Execute calls to services taking a program."""
-        program = call.data[ATTR_PROGRAM]
-        device_id = call.data[ATTR_DEVICE_ID]
+        data = dict(call.data)
+        program = data.pop(ATTR_PROGRAM)
+        if program in TRANSLATION_KEYS_PROGRAMS_MAP:
+            program = TRANSLATION_KEYS_PROGRAMS_MAP[program]
+        device_id = data.pop(ATTR_DEVICE_ID)
 
-        options = []
-
-        option_key = call.data.get(ATTR_KEY)
-        if option_key is not None:
-            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data[ATTR_VALUE]}
-
-            option_unit = call.data.get(ATTR_UNIT)
-            if option_unit is not None:
-                option[ATTR_UNIT] = option_unit
-
-            options.append(option)
         await _run_appliance_service(
             hass,
             _get_appliance_or_raise_service_validation_error(hass, device_id),
             method,
             program,
-            options,
+            get_options(data),
             error_translation_key=method,
             error_translation_placeholders={
                 SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program,
             },
         )
 
-    async def _async_service_command(call, command):
+    def get_options(data: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return a dict with the options ready to be sent to Home Connect API."""
+        options: list[dict[str, Any]] = []
+
+        custom_options: list[dict[str, Any]] = data.pop(ATTR_CUSTOM_OPTIONS, None)
+        if custom_options is not None:
+            options.extend(custom_options)
+
+        if ATTR_KEY in data and ATTR_VALUE in data:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "moved_program_options_keys",
+                breaks_in_ha_version="2025.6.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="moved_program_options_keys",
+                translation_placeholders={
+                    "old_action": "\n".join(
+                        [
+                            "```yaml",
+                            f"action: {DOMAIN}.{SERVICE_SELECT_PROGRAM}",
+                            "data:",
+                            f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                            f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
+                            f'  {ATTR_KEY}: "BSH.Common.Option.StartInRelative"',
+                            f'  {ATTR_VALUE}: "1800"',
+                            f'  {ATTR_UNIT}: "seconds"',
+                            "```",
+                        ]
+                    ),
+                    "action_options": "\n  ".join(
+                        [
+                            "```yaml",
+                            f"action: {DOMAIN}.{SERVICE_SELECT_PROGRAM}",
+                            "data:",
+                            f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                            f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
+                            f"  {bsh_key_to_translation_key("BSH.Common.Option.StartInRelative")}: 1800",
+                            "```",
+                        ]
+                    ),
+                    "action_custom_options": "\n  ".join(
+                        [
+                            "```yaml",
+                            f"action: {DOMAIN}.{SERVICE_SELECT_PROGRAM}",
+                            "data:",
+                            f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                            f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
+                            f"  {ATTR_CUSTOM_OPTIONS}:",
+                            f'    - {ATTR_KEY}: "BSH.Common.Option.StartInRelative"',
+                            f"      {ATTR_VALUE}: 1800",
+                            f'      {ATTR_UNIT}: "seconds"',
+                            "```",
+                        ]
+                    ),
+                },
+            )
+            if ATTR_UNIT in data:
+                options.append(
+                    {
+                        ATTR_KEY: data.pop(ATTR_KEY),
+                        ATTR_VALUE: data.pop(ATTR_VALUE),
+                        ATTR_UNIT: data.pop(ATTR_UNIT),
+                    }
+                )
+            else:
+                options.append(
+                    {ATTR_KEY: data.pop(ATTR_KEY), ATTR_VALUE: data.pop(ATTR_VALUE)}
+                )
+
+        for option, value in data.items():
+            if option in PROGRAM_ENUM_OPTIONS:
+                bsh_option_key = PROGRAM_ENUM_OPTIONS[option][ATTR_BSH_KEY]
+                bsh_value_key = PROGRAM_ENUM_OPTIONS[option][ATTR_ALLOWED_VALUES][value]
+                options.append({ATTR_KEY: bsh_option_key, ATTR_VALUE: bsh_value_key})
+            elif option in PROGRAM_OPTIONS:
+                bsh_key = PROGRAM_OPTIONS[option][ATTR_BSH_KEY]
+                if bsh_key == OPTION_COFFEE_MILK_RATIO:
+                    value = f"ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.{int(value)}Percent"
+                options.append({ATTR_KEY: bsh_key, ATTR_VALUE: value})
+            elif option in TIME_PROGRAM_OPTIONS:
+                bsh_key = TIME_PROGRAM_OPTIONS[option][ATTR_BSH_KEY]
+                value = int(cast(timedelta, value).total_seconds())
+                options.append({ATTR_KEY: bsh_key, ATTR_VALUE: value})
+        return options
+
+    async def _async_service_command(call: ServiceCall, command: str) -> None:
         """Execute calls to services executing a command."""
+        device_id = call.data[ATTR_DEVICE_ID]
+
+        await _run_appliance_service(
+            hass,
+            _get_appliance_or_raise_service_validation_error(hass, device_id),
+            "execute_command",
+            command,
+            error_translation_key="execute_command",
+            error_translation_placeholders={
+                "command": command,
+            },
+        )
+
+    async def async_service_set_program_options(call: ServiceCall, method: str) -> None:
+        """Execute calls to services setting program options."""
+        data = dict(call.data)
+        device_id = data.pop(ATTR_DEVICE_ID)
+
+        await _run_appliance_service(
+            hass,
+            _get_appliance_or_raise_service_validation_error(hass, device_id),
+            "put",
+            f"/programs/{method}/options",
+            {"data": {"options": get_options(data)}},
+            error_translation_key="set_program_options",
+        )
+
+    async def async_service_option_active(call: ServiceCall) -> None:
+        """Service for setting an option for an active program."""
+        await async_service_set_program_options(call, "active")
+
+    async def async_service_option_selected(call: ServiceCall) -> None:
+        """Service for setting an option for a selected program."""
+        await async_service_set_program_options(call, "selected")
+
+    async def async_service_setting(call: ServiceCall) -> None:
+        """Service for changing a setting."""
+        key = call.data[ATTR_KEY]
+        value = call.data[ATTR_VALUE]
         device_id = call.data[ATTR_DEVICE_ID]
 
         appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
         await _run_appliance_service(
             hass,
             appliance,
-            "execute_command",
-            command,
-            error_translation_key="execute_command",
-            error_translation_placeholders={"command": command},
-        )
-
-    async def _async_service_key_value(call, method):
-        """Execute calls to services taking a key and value."""
-        key = call.data[ATTR_KEY]
-        value = call.data[ATTR_VALUE]
-        unit = call.data.get(ATTR_UNIT)
-        device_id = call.data[ATTR_DEVICE_ID]
-
-        await _run_appliance_service(
-            hass,
-            _get_appliance_or_raise_service_validation_error(hass, device_id),
-            method,
-            *((key, value) if unit is None else (key, value, unit)),
-            error_translation_key=method,
+            "set_setting",
+            key,
+            value,
+            error_translation_key="set_setting",
             error_translation_placeholders={
                 SVE_TRANSLATION_PLACEHOLDER_KEY: key,
-                SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                SVE_TRANSLATION_PLACEHOLDER_VALUE: value,
+                SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: appliance.name,
             },
         )
 
-    async def async_service_option_active(call):
-        """Service for setting an option for an active program."""
-        await _async_service_key_value(call, "set_options_active_program")
-
-    async def async_service_option_selected(call):
-        """Service for setting an option for a selected program."""
-        await _async_service_key_value(call, "set_options_selected_program")
-
-    async def async_service_setting(call):
-        """Service for changing a setting."""
-        await _async_service_key_value(call, "set_setting")
-
-    async def async_service_pause_program(call):
+    async def async_service_pause_program(call: ServiceCall):
         """Service for pausing a program."""
         await _async_service_command(call, BSH_PAUSE)
 
-    async def async_service_resume_program(call):
+    async def async_service_resume_program(call: ServiceCall):
         """Service for resuming a paused program."""
         await _async_service_command(call, BSH_RESUME)
 
-    async def async_service_select_program(call):
+    async def async_service_select_program(call: ServiceCall) -> None:
         """Service for selecting a program."""
         await _async_service_program(call, "select_program")
 
-    async def async_service_start_program(call):
+    async def async_service_start_program(call: ServiceCall):
         """Service for starting a program."""
         await _async_service_program(call, "start_program")
 
@@ -276,13 +461,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_OPTION_ACTIVE,
         async_service_option_active,
-        schema=SERVICE_OPTION_SCHEMA,
+        schema=SERVICE_SET_OPTION_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPTION_SELECTED,
         async_service_option_selected,
-        schema=SERVICE_OPTION_SCHEMA,
+        schema=SERVICE_SET_OPTION_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SETTING, async_service_setting, schema=SERVICE_SETTING_SCHEMA
@@ -393,14 +578,3 @@ def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any
         if len(err.args) > 0 and isinstance(err.args[0], str)
         else "?",
     }
-
-
-def bsh_key_to_translation_key(bsh_key: str) -> str:
-    """Convert a BSH key to a translation key format.
-
-    This function takes a BSH key, such as `Dishcare.Dishwasher.Program.Eco50`,
-    and converts it to a translation key format, such as `dishcare_dishwasher_bsh_key_eco50`.
-    """
-    return "_".join(
-        RE_CAMEL_CASE.sub("_", split) for split in bsh_key.split(".")
-    ).lower()
