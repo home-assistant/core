@@ -365,22 +365,28 @@ async def test_loading_platforms(
     assert "Loaded 1 platforms" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "platform_mock",
+    [
+        Mock(async_pre_backup=AsyncMock(), spec=["async_pre_backup"]),
+        Mock(async_post_backup=AsyncMock(), spec=["async_post_backup"]),
+        Mock(spec=[]),
+    ],
+)
 async def test_not_loading_bad_platforms(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    platform_mock: Mock,
 ) -> None:
-    """Test loading backup platforms."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
-
-    await _setup_backup_platform(hass)
-    await manager.load_platforms()
+    """Test not loading bad backup platforms."""
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=platform_mock,
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert len(manager.platforms) == 0
-
-    assert "Loaded 0 platforms" in caplog.text
+    assert platform_mock.mock_calls == []
 
 
 async def test_exception_platform_pre(
