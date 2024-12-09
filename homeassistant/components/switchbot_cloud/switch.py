@@ -78,4 +78,9 @@ def _async_make_entity(
         return SwitchBotCloudRemoteSwitch(api, device, coordinator)
     if "Plug" in device.device_type:
         return SwitchBotCloudPlugSwitch(api, device, coordinator)
+    if device.device_type in [
+        "Relay Switch 1PM",
+        "Relay Switch 1",
+    ]:
+        return SwitchBotCloudSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
