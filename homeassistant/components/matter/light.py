@@ -425,7 +425,7 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-        elif self._attr_color_temp is not None:
+        elif self._attr_color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif self._attr_brightness is not None:
             self._attr_color_mode = ColorMode.BRIGHTNESS
