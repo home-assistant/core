@@ -55,16 +55,16 @@ beolink_join:
             select:
               translation_key: "source_ids"
               options:
-                - ase_mozart_deezer
-                - ase_mozart_spotify
-                - mozart_tidal
-                - ase_beoradio
-                - beolink_converter_radio
-                - beolink_converter_tp1
-                - beolink_converter_tp2
-                - beolink_converter_cd
-                - beolink_converter_aux_a
-                - beolink_converter_ph
+                - beoradio
+                - deezer
+                - spotify
+                - tidal
+                - radio
+                - tp1
+                - tp2
+                - cd
+                - aux_a
+                - ph
 
 beolink_leave:
   target:
