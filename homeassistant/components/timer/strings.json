@@ -48,7 +48,7 @@
     },
     "cancel": {
       "name": "Cancel",
-      "description": "Resets the timer's duration to the last known initial value without firing the timer finished event."
+      "description": "Resets a timer's duration to the last known initial value without firing the timer finished event."
     },
     "finish": {
       "name": "Finish",
