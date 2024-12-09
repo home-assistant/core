@@ -24,6 +24,7 @@ from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupStage,
     CreateBackupState,
+    IdleEvent,
     ManagerStateEvent,
     NewBackup,
     WrittenBackup,
@@ -105,6 +106,7 @@ async def _mock_backup_generation(
             state=CreateBackupState.IN_PROGRESS,
         ),
         CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED),
+        IdleEvent(),
     ]
 
     assert mocked_json_bytes.call_count == 1
