@@ -32,7 +32,7 @@ def is_docker_env() -> bool:
     return (
         Path("/run/.containerenv").exists()
         or Path("/.dockerenv").exists()
-        or os.environ.get("container")
+        or os.environ.get("container")  # noqa: SIM112
     )
 
 
