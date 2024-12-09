@@ -5,40 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
-    CoverDeviceClass,
-    CoverEntity,
-)
-from homeassistant.const import (
-    CONF_API_VERSION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.const import CONF_HOST, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DEFAULT_OFFSET
 from .coordinator import SlideCoordinator
 from .entity import SlideEntity
-
-COVER_PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-        vol.Optional(CONF_API_VERSION, default=2): cv.byte,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +32,7 @@ async def async_setup_entry(
         entry.data[CONF_HOST],
     )
 
-    coordinator: SlideCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     if coordinator.data.get("mac") == "":
         _LOGGER.error(
@@ -86,7 +61,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SlideCoordinator,
         entry: SlideConfigEntry,
     ) -> None:
         """Initialize the cover."""
@@ -94,7 +69,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
 
         self._attr_name = coordinator.data["device_name"]
         self._invert = entry.data[CONF_INVERT_POSITION]
-        self._attr_unique_id = f"{coordinator.data["mac"]}-cover"
+        self._attr_unique_id = coordinator.data["mac"]
 
     @property
     def is_opening(self) -> bool:

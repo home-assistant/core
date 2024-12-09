@@ -1,9 +1,9 @@
 """Entities for slide_local integration."""
 
+from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import SlideCoordinator
 
 
@@ -21,7 +21,7 @@ class SlideEntity(CoordinatorEntity[SlideCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             manufacturer="Innovation in Motion",
-            identifiers={(DOMAIN, coordinator.data["mac"])},
+            connections={(CONF_MAC, coordinator.data["mac"])},
             name=coordinator.data["device_name"],
             sw_version=coordinator.api_version,
             serial_number=coordinator.data["mac"],
