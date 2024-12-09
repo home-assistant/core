@@ -21,7 +21,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
 
 from .const import DATA_BROKERS, DOMAIN
 from .entity import SmartThingsEntity
@@ -79,12 +78,12 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     # SmartThings does not expose this attribute, instead it's
     # implemented within each device-type handler.  This value is the
     # lowest kelvin found supported across 20+ handlers.
-    _attr_max_mireds = 500  # 2000K
+    _attr_min_color_temp_kelvin = 2000  # 500 mireds
 
     # SmartThings does not expose this attribute, instead it's
     # implemented within each device-type handler.  This value is the
     # highest kelvin found supported across 20+ handlers.
-    _attr_min_mireds = 111  # 9000K
+    _attr_max_color_temp_kelvin = 9000  # 111 mireds
 
     def __init__(self, device):
         """Initialize a SmartThingsLight."""
@@ -164,9 +163,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
             )
         # Color Temperature
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
-            self._attr_color_temp = color_util.color_temperature_kelvin_to_mired(
-                self._device.status.color_temperature
-            )
+            self._attr_color_temp_kelvin = self._device.status.color_temperature
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
             self._attr_hs_color = (
