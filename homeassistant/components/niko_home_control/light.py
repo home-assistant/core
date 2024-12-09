@@ -88,8 +88,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Niko Home Control light entry."""
     niko_data = entry.runtime_data
-    _LOGGER.debug("Setting up lights")
-    _LOGGER.debug("Lights: %s", niko_data.nhc.lights)
     return async_add_entities(
         NikoHomeControlLight(light, niko_data) for light in niko_data.nhc.lights
     )
