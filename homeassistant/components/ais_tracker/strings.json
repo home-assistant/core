@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "port": "Port to listen on for udp messages",
+          "mmsis": "List of mmsis to filter on"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "course": {
+        "name": "Course"
+      },
+      "heading": {
+        "name": "Heading"
+      },
+      "maneuver": {
+        "name": "Maneuver"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "turn": {
+        "name": "Turn"
+      }
+    }
+  }
+}
