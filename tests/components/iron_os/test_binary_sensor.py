@@ -72,5 +72,6 @@ async def test_tip_on_off(
     )
     freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.pinecil_soldering_tip").state == STATE_OFF
