@@ -12,6 +12,7 @@ from plugwise.exceptions import (
 )
 import pytest
 
+from homeassistant.components.plugwise import config_flow
 from homeassistant.components.plugwise.const import DEFAULT_PORT, DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -128,6 +129,26 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1
 
+    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
+    assert entries[0].unique_id == "smile12345"
+
+    # Reinitialize flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: TEST_HOST,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "already_configured"
+
 
 @pytest.mark.parametrize(
     ("discovery", "username"),
@@ -171,6 +192,25 @@ async def test_zeroconf_flow(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
+    assert entries[0].unique_id == "smile12345"
+
+    # Reinitialize flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY,
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: TEST_PASSWORD},
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "already_configured"
 
 
 async def test_zeroconf_flow_stretch(
