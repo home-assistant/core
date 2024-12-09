@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IdasenDeskCoordinator
+from . import DeskData, IdasenDeskCoordinator
 
 
 class IdasenDeskEntity(CoordinatorEntity[IdasenDeskCoordinator]):
@@ -16,15 +16,17 @@ class IdasenDeskEntity(CoordinatorEntity[IdasenDeskCoordinator]):
     def __init__(
         self,
         unique_id: str,
-        device_info: DeviceInfo,
-        coordinator: IdasenDeskCoordinator,
+        desk_data: DeskData,
     ) -> None:
         """Initialize the IdasenDesk sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(desk_data.coordinator)
 
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
-        self._desk = coordinator.desk
+        self._attr_device_info = dr.DeviceInfo(
+            name=desk_data.device_name,
+            connections={(dr.CONNECTION_BLUETOOTH, desk_data.address)},
+        )
+        self._desk = desk_data.coordinator.desk
 
     @property
     def available(self) -> bool:

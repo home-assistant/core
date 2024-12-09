@@ -11,16 +11,9 @@ from idasen_ha.errors import AuthFailedError
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_ADDRESS,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import IdasenDeskCoordinator
@@ -35,7 +28,7 @@ class DeskData:
     """Data for the Idasen Desk integration."""
 
     address: str
-    device_info: DeviceInfo
+    device_name: str
     coordinator: IdasenDeskCoordinator
 
 
@@ -44,12 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data[CONF_ADDRESS].upper()
 
     coordinator = IdasenDeskCoordinator(hass, _LOGGER, entry.title, address)
-    device_info = DeviceInfo(
-        name=entry.title,
-        connections={(dr.CONNECTION_BLUETOOTH, address)},
-    )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = DeskData(
-        address, device_info, coordinator
+        address, entry.title, coordinator
     )
 
     try:
@@ -92,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.device_info[ATTR_NAME]:
+    if entry.title != data.device_name:
         await hass.config_entries.async_reload(entry.entry_id)
 
 

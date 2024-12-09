@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeskData, IdasenDeskCoordinator
@@ -52,10 +51,7 @@ async def async_setup_entry(
     """Set up Idasen Desk sensors."""
     data: DeskData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        IdasenDeskSensor(
-            data.address, data.device_info, data.coordinator, sensor_description
-        )
-        for sensor_description in SENSORS
+        IdasenDeskSensor(data, sensor_description) for sensor_description in SENSORS
     )
 
 
@@ -65,14 +61,10 @@ class IdasenDeskSensor(IdasenDeskEntity, SensorEntity):
     entity_description: IdasenDeskSensorDescription
 
     def __init__(
-        self,
-        address: str,
-        device_info: DeviceInfo,
-        coordinator: IdasenDeskCoordinator,
-        description: IdasenDeskSensorDescription,
+        self, desk_data: DeskData, description: IdasenDeskSensorDescription
     ) -> None:
         """Initialize the IdasenDesk sensor entity."""
-        super().__init__(f"{description.key}-{address}", device_info, coordinator)
+        super().__init__(f"{description.key}-{desk_data.address}", desk_data)
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
