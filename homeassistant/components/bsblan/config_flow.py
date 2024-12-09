@@ -31,7 +31,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
-        self._discovered_device: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,11 +52,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
 
-        self.host = str(
-            getattr(discovery_info, "ip_address", None)
-            or (discovery_info.ip_addresses[0] if discovery_info.ip_addresses else None)
-            or discovery_info.hostname
-        )
+        self.host = str(discovery_info.ip_address)
         self.port = discovery_info.port or DEFAULT_PORT
 
         # Check if the device is already configured
@@ -67,12 +62,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 and entry.data.get(CONF_PORT) == self.port
             ):
                 return self.async_abort(reason="already_configured")
-
-        # Store discovery info for later use
-        self._discovered_device = {
-            CONF_HOST: self.host,
-            CONF_PORT: self.port,
-        }
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
