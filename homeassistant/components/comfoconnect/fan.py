@@ -21,14 +21,17 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from . import (
+    SIGNAL_COMFOCONNECT_UPDATE_RECEIVED,
+    ComfoConnectBridge,
+    ComfoConnectConfigEntry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,16 +48,15 @@ PRESET_MODE_AUTO = "auto"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ComfoConnectConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ComfoConnect fan platform."""
-    ccb = hass.data[DOMAIN]
+    ccb = entry.runtime_data
 
-    add_entities([ComfoConnectFan(ccb)], True)
+    async_add_entities([ComfoConnectFan(ccb)])
 
 
 class ComfoConnectFan(FanEntity):
