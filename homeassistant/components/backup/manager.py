@@ -676,7 +676,7 @@ class BackupManager:
         finally:
             self._backup_task = None
             self._backup_finish_task = None
-            self.last_event = IdleEvent()
+            self.async_on_backup_event(IdleEvent())
 
     async def async_restore_backup(
         self,
