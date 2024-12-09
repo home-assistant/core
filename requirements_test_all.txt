@@ -381,7 +381,7 @@ aiotedee==0.2.20
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==80
+aiounifi==81
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
@@ -962,7 +962,7 @@ home-assistant-intents==2024.12.4
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.3
+homematicip==1.1.5
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1332,7 +1332,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.1
+plugwise==1.6.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1635,7 +1635,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.3.2
+pylamarzocco==1.3.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2277,7 +2277,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.5
+total-connect-client==2024.12
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.4.3
@@ -2298,7 +2298,7 @@ ttn_client==1.2.0
 tuya-device-sharing-sdk==0.2.1
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.1.0
+twentemilieu==2.2.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2313,7 +2313,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.5
+uiprotect==6.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2436,7 +2436,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.1
+yalexs-ble==2.5.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -2467,7 +2467,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.41
+zha==0.0.42
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
