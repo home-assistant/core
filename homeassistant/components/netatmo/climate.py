@@ -39,7 +39,9 @@ from .const import (
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
     ATTR_TARGET_TEMPERATURE,
+    ATTR_TEMPERATURE as NETATMO_ATTR_TEMPERATURE,
     ATTR_TIME_PERIOD,
+    ATTR_ZONE_NAME,
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
@@ -50,6 +52,7 @@ from .const import (
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
+    SERVICE_SET_SCHEDULED_ROOM_TEMPERATURE,
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
@@ -176,6 +179,14 @@ async def async_setup_entry(
         SERVICE_CLEAR_TEMPERATURE_SETTING,
         None,
         "_async_service_clear_temperature_setting",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_SCHEDULED_ROOM_TEMPERATURE,
+        {
+            vol.Required(ATTR_ZONE_NAME): cv.string,
+            vol.Required(NETATMO_ATTR_TEMPERATURE): vol.Coerce(float),
+        },
+        "_async_service_set_scheduled_room_temperature",
     )
 
 
@@ -508,3 +519,46 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     async def _async_service_clear_temperature_setting(self, **kwargs: Any) -> None:
         _LOGGER.debug("Clearing %s temperature setting", self.device.entity_id)
         await self.device.async_therm_home()
+
+    async def _async_service_set_scheduled_room_temperature(
+        self, **kwargs: Any
+    ) -> None:
+        temperature = kwargs[ATTR_TEMPERATURE]
+        zone_name = kwargs[ATTR_ZONE_NAME]
+
+        schedule = self._get_active_schedule()
+        if not schedule:
+            _LOGGER.error("Could not determine active schedule")
+            return
+
+        selected_zone = None
+        for zone in schedule.zones:
+            if zone.name == zone_name:
+                selected_zone = zone
+                break
+
+        if not selected_zone:
+            _LOGGER.error("%s is not a valid zone", zone_name)
+            return
+
+        await self.device.home.async_set_schedule_temperatures(
+            zone_id=selected_zone.entity_id, temps={self.device.entity_id: temperature}
+        )
+        _LOGGER.debug(
+            "Setting temperature for room %s to %s for zone %s",
+            self.device.entity_id,
+            temperature,
+            selected_zone.entity_id,
+        )
+
+        # manually set temperature in home assistant and netatmo
+        self._attr_target_temperature = temperature
+        for room in selected_zone.rooms:
+            if room.entity_id == self.device.entity_id:
+                room.therm_setpoint_temperature = temperature
+                break
+
+        self.async_write_ha_state()
+
+    def _get_active_schedule(self) -> Any:
+        return self.device.home.get_selected_schedule()
