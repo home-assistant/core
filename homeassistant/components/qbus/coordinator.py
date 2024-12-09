@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
@@ -15,7 +16,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import CONF_SERIAL
+from .const import CONF_SERIAL_NUMBER
 from .entity import QbusEntity
 from .qbus import QbusConfigContainer
 
@@ -93,7 +94,7 @@ class QbusDataCoordinator:
 
     async def async_update_config(self, config: QbusDiscovery) -> None:
         """Process the new config."""
-        serial = self._entry.data.get(CONF_SERIAL, "")
+        serial = self._entry.data.get(CONF_SERIAL_NUMBER, "")
         device = config.get_device_by_serial(serial)
 
         if device is None:
@@ -172,7 +173,7 @@ class QbusDataCoordinator:
         self._request_entity_states()
 
     def _request_entity_states(self) -> None:
-        async def request_state(_) -> None:
+        async def request_state(_: datetime) -> None:
             request = self._message_factory.create_state_request(
                 self._registered_entity_ids
             )
@@ -183,7 +184,7 @@ class QbusDataCoordinator:
             async_call_later(self._hass, self._WAIT_TIME, request_state)
 
     def _request_device_state(self, device: QbusMqttDevice) -> None:
-        async def request_device_state(_) -> None:
+        async def request_device_state(_: datetime) -> None:
             request = self._message_factory.create_device_state_request(device)
             await mqtt.async_publish(self._hass, request.topic, request.payload)
 

@@ -13,7 +13,7 @@ from homeassistant.components.mqtt import client as mqtt
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from .const import CONF_ID, CONF_SERIAL, DOMAIN
+from .const import CONF_ID, CONF_SERIAL_NUMBER, DOMAIN
 from .qbus import QbusConfigContainer
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=f"Controller {self._device.serial_number}",
                 data={
-                    CONF_SERIAL: self._device.serial_number,
+                    CONF_SERIAL_NUMBER: self._device.serial_number,
                     CONF_ID: self._device.id,
                 },
             )
@@ -77,7 +77,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_SERIAL: self._device.serial_number,
+                CONF_SERIAL_NUMBER: self._device.serial_number,
             },
         )
 
@@ -150,7 +150,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_SERIAL: self._device.serial_number,
+                    CONF_SERIAL_NUMBER: self._device.serial_number,
                 }
             }
         )

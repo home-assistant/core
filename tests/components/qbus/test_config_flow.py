@@ -6,7 +6,7 @@ from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
 from qbusmqttapi.state import QbusMqttGatewayState
 
 from homeassistant.components.qbus.config_flow import QbusFlowHandler
-from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL
+from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL_NUMBER
 from homeassistant.components.qbus.qbus import QbusConfigContainer
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -288,7 +288,7 @@ async def test_step_discovery_confirm_create_entry(
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         CONF_ID: "UL1",
-        CONF_SERIAL: "000001",
+        CONF_SERIAL_NUMBER: "000001",
     }
 
 
