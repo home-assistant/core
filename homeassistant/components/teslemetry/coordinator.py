@@ -6,18 +6,16 @@ from typing import Any
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
-    Forbidden,
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
-    VehicleOffline,
 )
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslemetryState
+from .const import ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
 
 VEHICLE_INTERVAL = timedelta(seconds=30)
@@ -59,22 +57,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update vehicle data using Teslemetry API."""
 
         try:
-            if self.data["state"] != TeslemetryState.ONLINE:
-                response = await self.api.vehicle()
-                self.data["state"] = response["response"]["state"]
+            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
 
-            if self.data["state"] != TeslemetryState.ONLINE:
-                return self.data
-
-            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
-            data = response["response"]
-
-        except VehicleOffline:
-            self.data["state"] = TeslemetryState.OFFLINE
-            return self.data
-        except InvalidToken as e:
-            raise ConfigEntryAuthFailed from e
-        except SubscriptionRequired as e:
+        except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -100,7 +85,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         try:
             data = (await self.api.live_status())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -132,7 +117,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -158,7 +143,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e

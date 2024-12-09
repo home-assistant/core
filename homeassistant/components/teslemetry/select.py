@@ -90,10 +90,12 @@ async def async_setup_entry(
                 )
                 for description in SEAT_HEATER_DESCRIPTIONS
                 for vehicle in entry.runtime_data.vehicles
+                if description.key in vehicle.coordinator.data
             ),
             (
                 TeslemetryWheelHeaterSelectEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
+                if "climate_state_steering_wheel_heat_level" in vehicle.coordinator.data
             ),
             (
                 TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)

@@ -24,7 +24,6 @@
       "battery_range": 266.87,
       "charge_amps": 16,
       "charge_current_request": 16,
-      "charge_current_request_max": 16,
       "charge_enable_request": true,
       "charge_energy_added": 0,
       "charge_limit_soc": 80,

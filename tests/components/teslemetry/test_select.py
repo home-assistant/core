@@ -1,11 +1,10 @@
 """Test the Teslemetry select platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -13,7 +12,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.teslemetry.select import LOW
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,18 +30,6 @@ async def test_select(
 
     entry = await setup_platform(hass, [Platform.SELECT])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_select_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the select entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.SELECT])
-    state = hass.states.get("select.test_seat_heater_front_left")
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
