@@ -88,9 +88,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Niko Home Control light entry."""
     niko_data = entry.runtime_data
-
-    async_add_entities(
-        NikoHomeControlLight(light, niko_data) for light in niko_data.nhc.list_actions()
+    _LOGGER.debug("Setting up lights")
+    _LOGGER.debug("Lights: %s", niko_data.nhc.lights)
+    return async_add_entities(
+        NikoHomeControlLight(light, niko_data) for light in niko_data.nhc.lights
     )
 
 
@@ -106,7 +107,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = light.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if light._state["type"] == 2:  # noqa: SLF001
+        if light.type == 2:  # noqa: SLF001
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 

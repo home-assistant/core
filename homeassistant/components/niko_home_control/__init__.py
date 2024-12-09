@@ -18,7 +18,6 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 type NikoHomeControlConfigEntry = ConfigEntry[NikoHomeControlData]
 
-
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
@@ -29,6 +28,7 @@ async def async_setup_entry(
     """Set Niko Home Control from a config entry."""
     try:
         controller = NHCController(entry.data[CONF_HOST], 8000)
+        await controller.connect()
         niko_data = NikoHomeControlData(hass, controller)
         await niko_data.async_update()
     except NetcatError as err:
@@ -75,8 +75,11 @@ class NikoHomeControlData:
 
     def get_state(self, aid):
         """Find and filter state based on action id."""
+        _LOGGER.debug("Fetching state for %s", aid)
+
         for state in self.data:
-            if state["id"] == aid:
-                return state["value1"]
+            _LOGGER.debug("State: %s", state)
+            if state.id == aid:
+                return state.state
         _LOGGER.error("Failed to retrieve state off unknown light")
         return None
