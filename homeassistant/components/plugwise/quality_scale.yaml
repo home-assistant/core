@@ -19,7 +19,7 @@ rules:
     comment: Verify entity for async_added_to_hass usage (discard?)
   docs-high-level-description:
     status: todo
-    comment: Rewrite top section, docs PR prepared
+    comment: Rewrite top section, docs PR prepared waiting for 36087 merge
   docs-installation-instructions:
     status: todo
     comment: Docs PR 36087
@@ -56,9 +56,7 @@ rules:
   discovery: done
   stale-devices: done
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: Add coordinator, util exceptions (climate done in core 132175)
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: todo
@@ -70,23 +68,23 @@ rules:
     comment: This integration does not have repairs
   docs-use-cases:
     status: todo
-    comment: Check for completeness, PR prepared
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   docs-supported-devices:
     status: todo
-    comment: The list is there but could be improved for readability, PR prepared
+    comment: The list is there but could be improved for readability, PR prepared waiting for 36087 merge
   docs-supported-functions:
     status: todo
-    comment: Check for completeness
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   docs-data-update: done
   docs-known-limitations:
     status: todo
     comment: Partial in 36087 but could be more elaborate
   docs-troubleshooting:
     status: todo
-    comment: Check for completeness, PR prepared
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   docs-examples:
     status: todo
-    comment: Check for completeness
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   ## Platinum
   async-dependency: done
   inject-websession: done
