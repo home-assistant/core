@@ -1,0 +1,61 @@
+      - type: markdown
+        style: |
+          ha-card {
+            height: auto;
+            min-height: 100px;
+            padding: 16px;
+            margin: 8px;
+            background: var(--card-background-color);
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+            animation-delay: 0.5s;
+          }
+          @keyframes fadeIn {
+            to {
+              opacity: 1;
+            }
+          }
+          ha-markdown {
+            font-size: 14px !important;
+            line-height: 1.8 !important;
+            min-height: 400px;
+          }
+        content: |-
+          {% if states('sensor.tesla_rated_battery_range_mi') != 'unavailable'
+             and states('sensor.dongle_40_4c_ca_4c_13_f4_soc') != 'unavailable' %}
+            {% set range_threshold = states('input_number.tesla_range_threshold') | float(120) %}
+            {% set priority_range_threshold = states('input_number.tesla_priority_range_threshold') | float(100) %}
+            {% set high_battery_threshold = states('input_number.tesla_high_battery_threshold') | float(80) %}
+            {% set low_battery_threshold = states('input_number.tesla_low_battery_threshold') | float(20) %}
+            {% set solar_production = states('sensor.dongle_40_4c_ca_4c_13_f4_pall') | float(0) %}
+            {% set home_consumption = states('sensor.dongle_40_4c_ca_4c_13_f4_pload') | float(0) %}
+            {% set home_buffer_watts = states('input_number.tesla_home_power_buffer') | float(500) %}
+            {% set solar_excess = solar_production - home_buffer_watts - home_consumption %}
+            {% set excess_pv_energy = solar_excess / 240 %}
+            {% set car_range = states('sensor.tesla_rated_battery_range_mi') | float(0) %}
+            {% set house_battery_soc = states('sensor.dongle_40_4c_ca_4c_13_f4_soc') | float(0) %}
+            {% set actual_charging_current = states('sensor.tesla_charger_actual_current') | float(0) %}
+            🚙 Range: {{ car_range | round(1) }} mi
+            🔋 Added: {{ states('sensor.tesla_charge_energy_added') | float(0) | round(1) }} kWh{% if car_range < priority_range_threshold %}
+            ⚠️ Car: Priority Charging needed (below {{ priority_range_threshold }}mi){%- elif car_range < range_threshold -%}
+            📊 Car: Normal Charging mode (below {{ range_threshold }}mi){% else %}
+            ⛽ Car: Conservative Charging (above {{ range_threshold }}mi){% endif %}
+            🚗 Set Amps: {{ states('number.tesla_ble_5ae9cc_charging_amps') | float(0) }}A{% set manual_charging = is_state('input_boolean.tesla_manual_charging_active', 'on') %}
+            ⚡ Manual Grid Charging: {{ "On" if manual_charging else "Off" }}
+            👀 EV Charging: {% if actual_charging_current > 0 %}Yes {{ (actual_charging_current * 240) | round }}W{% else %}No{% endif %}
+
+            🏡 Battery: {{ house_battery_soc | round(1) }}%
+            🪫 Discharge Level: {{ states('number.dongle_40_4c_ca_4c_13_f4_eod') | float(10) }}%{% if house_battery_soc < low_battery_threshold %}
+            ⚠️ House: Prioritizing Home Battery (below {{ low_battery_threshold }}%){% elif house_battery_soc < high_battery_threshold %}
+            📊 House: Moderate Charging mode (below {{ high_battery_threshold }}%){% else %}
+            ✅ House: Increased Car Charging enabled (above {{ high_battery_threshold }}%){% endif %}
+            👀 Battery Charging: {% if is_state('binary_sensor.home_battery_charging_status', 'on') %}Yes {{ state_attr('binary_sensor.home_battery_charging_status', 'power') | float(0) | round }}W{% else %}No{% endif %}
+
+            🌞 Harvest: {{ solar_production | round }}W
+            🏠 Use: {{ home_consumption | round }}W
+            🛟 Buffer: {{ home_buffer_watts | round }}W
+            ➕ Excess: {{ solar_excess | round }}W
+            🔌 Available for car: {{ excess_pv_energy | round(1) }}A
+          {% else %}
+            Loading data...
+          {% endif %}

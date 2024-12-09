@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_consumption": "Home Consumption",
+                    "pv_production": "PV Production",
+                    "home_battery_soc": "Home Battery SOC",
+                    "tesla_ble_device": "Tesla BLE Device",
+                    "fast_charge_button": "Fast Charge Button"
+                }
+            }
+        }
+    }
+}

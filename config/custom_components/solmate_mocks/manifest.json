@@ -1,0 +1,17 @@
+{
+  "domain": "solmate_mocks",
+  "name": "Solmate Mocks",
+  "codeowners": [
+    "@skrul"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/solmate_mocks",
+  "homekit": {},
+  "iot_class": "calculated",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": "0.0.1",
+  "integration_type": "device"
+}

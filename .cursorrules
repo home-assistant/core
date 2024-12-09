@@ -1,0 +1,19 @@
+For this project I am working on a custom integration for Home Assistant called Solmate. This custom integration aims to help users with solar power systems to intelligently use surplus power generation to charge their Tesla vehicles. Note that this repository includes the entire code base of Home Assistant and the custom integration is located in the `config/custom_components/solmate` directory.
+
+To use Solmate, the user will need to have the following available in their Home Assistant instance:
+
+- Sensors for home power consumption, photovoltaic power generation, and battery charge level.
+- A ESPHome device running the esphome-tesla-ble firmware for controlling the Tesla charging status an charging rate over BLE.
+
+Users will be able to influence the charging schedule with the following options:
+
+- Set a home battery SoC threshold at which home battery charging will be prioritized over Tesla charging.
+- Provide a buffer value (in watts) that will be added to the home consumption to allow home consumption fluctuations to be compensated for.
+
+The custom integration will also include a mock integration for testing purposes. This mock integration will allow users to test the custom integration without having to set up the required hardware.
+
+The basic logic of the custom integration is as follows:
+
+- Upon any change in the various power sensors, determine whether to charge the car and at what rate based on the various power values and the user-defined settings.
+- If the car is to be charged, update the charging rate over BLE and start charging the car (if not already charging).
+- If the car is not to be charged, stop charging the car (if currently charging).
