@@ -1,4 +1,37 @@
 # serializer version: 1
+# name: test_delete_backup[found_backups0-True-1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_backup[found_backups1-False-0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_backup[found_backups2-True-0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_load_backups[None]
   dict({
     'id': 1,
