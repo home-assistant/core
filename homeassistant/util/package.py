@@ -15,8 +15,6 @@ from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
 
-from homeassistant.helpers.system_info import is_official_image
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -35,7 +33,6 @@ def is_docker_env() -> bool:
         Path("/run/.containerenv").exists()
         or Path("/.dockerenv").exists()
         or os.environ.get("container")  # noqa: SIM112
-        or is_official_image()
     )
 
 
