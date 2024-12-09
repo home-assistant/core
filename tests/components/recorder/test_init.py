@@ -1687,8 +1687,18 @@ async def test_database_corruption_while_running(
     recorder_mock: Recorder,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
+    # Setup listener for DB corruption event
+    corruption_events = 0
+
+    def handle_corruption_event(event):
+        nonlocal corruption_events
+        corruption_events += 1
+
+    hass.bus.async_listen("recorder_database_corrupt", handle_corruption_event)
+
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1703,10 +1713,15 @@ async def test_database_corruption_while_running(
     )
 
     await async_wait_recording_done(hass)
-    with patch.object(
-        get_instance(hass).event_session,
-        "close",
-        side_effect=OperationalError("statement", {}, []),
+    with (
+        patch.object(
+            get_instance(hass).event_session,
+            "close",
+            side_effect=OperationalError("statement", {}, []),
+        ),
+        patch(
+            "homeassistant.components.recorder.core.persistent_notification.create"
+        ) as notify_create_mock,
     ):
         await async_wait_recording_done(hass)
         test_db_file = recorder_db_url.removeprefix("sqlite:///")
@@ -1727,6 +1742,16 @@ async def test_database_corruption_while_running(
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
     assert "Connected to recorder database" in caplog.text
+
+    # Check that we tried to create a persistent notification
+    assert notify_create_mock.call_count == 1
+    assert (
+        "Corruption was detected in the recorder SQLite database and a new database has been create"
+        in notify_create_mock.call_args.args[1]
+    )
+
+    # Check the DB corruption event was fired
+    assert corruption_events == 1
 
     # This state should go into the new database
     hass.states.async_set("test.two", "on", {})
