@@ -24,6 +24,8 @@ from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class BringSensorEntityDescription(SensorEntityDescription):
