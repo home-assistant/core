@@ -37,8 +37,8 @@
     "sensor": {
       "device_state": {
         "state": {
-          "disconnected": "Disconnected",
-          "connected": "Connected",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
           "pending": "Pending",
           "firmware_mismatch": "Firmware Mismatch",
           "upgrading": "Upgrading",
