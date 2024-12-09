@@ -29,7 +29,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 
@@ -204,13 +204,13 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 }
 
 SERVICE_VALIDATION_ERROR_MAPPING = {
-    "set_option_active": r"Error.*set.*program.*options.*",
-    "set_option_selected": r"Error.*set.*program.*options.*",
-    "change_setting": r"Error.*assign.*value.*setting.*",
-    "pause_program": r"Error.*execute.*command.*",
-    "resume_program": r"Error.*execute.*command.*",
-    "select_program": r"Error.*select.*program.*",
-    "start_program": r"Error.*start.*program.*",
+    "set_option_active": r"Error.*setting.*program.*options.*",
+    "set_option_selected": r"Error.*setting.*program.*options.*",
+    "change_setting": r"Error.*assigning.*value.*setting.*",
+    "pause_program": r"Error.*executing.*command.*",
+    "resume_program": r"Error.*executing.*command.*",
+    "select_program": r"Error.*selecting.*program.*",
+    "start_program": r"Error.*starting.*program.*",
 }
 
 
@@ -414,7 +414,7 @@ async def test_service_keys_deprecation(
                 "service": "select_program",
                 "service_data": {
                     "device_id": "DEVICE_ID",
-                    "program": "dishcare_dishwasher_program_eco50",
+                    "program": "dishcare_dishwasher_program_eco_50",
                     "b_s_h_common_option_start_in_relative": "00:30:00",
                 },
             },
@@ -527,8 +527,40 @@ async def test_recognized_options(
     assert method_mock.call_args[0] == expected_args
 
 
+@pytest.mark.parametrize(
+    "service_call",
+    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+)
 @pytest.mark.usefixtures("bypass_throttle")
 async def test_services_exception_device_id(
+    service_call: list[dict[str, Any]],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    problematic_appliance: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Raise a HomeAssistantError when there is an API error."""
+    get_appliances.return_value = [problematic_appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, problematic_appliance.haId)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(**service_call)
+
+
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_services_appliance_not_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -536,7 +568,7 @@ async def test_services_exception_device_id(
     get_appliances: MagicMock,
     appliance: Mock,
 ) -> None:
-    """Raise a ValueError when device id does not match."""
+    """Raise a ServiceValidationError when device id does not match."""
     get_appliances.return_value = [appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
@@ -546,7 +578,7 @@ async def test_services_exception_device_id(
 
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ServiceValidationError, match=r"Appliance.*not found"):
         await hass.services.async_call(**service_call)
 
 
@@ -580,7 +612,7 @@ async def test_services_exception(
 
     service_name = service_call["service"]
     with pytest.raises(
-        ServiceValidationError,
+        HomeAssistantError,
         match=SERVICE_VALIDATION_ERROR_MAPPING[service_name],
     ):
         await hass.services.async_call(**service_call)

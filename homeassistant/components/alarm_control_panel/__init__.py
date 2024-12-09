@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final, final
 
@@ -27,11 +26,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -39,15 +33,7 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
-    _DEPRECATED_FORMAT_NUMBER,
-    _DEPRECATED_FORMAT_TEXT,
-    _DEPRECATED_SUPPORT_ALARM_ARM_AWAY,
-    _DEPRECATED_SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    _DEPRECATED_SUPPORT_ALARM_ARM_HOME,
-    _DEPRECATED_SUPPORT_ALARM_ARM_NIGHT,
-    _DEPRECATED_SUPPORT_ALARM_ARM_VACATION,
-    _DEPRECATED_SUPPORT_ALARM_TRIGGER,
+from .const import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     DOMAIN,
@@ -369,12 +355,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @cached_property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        features = self._attr_supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = AlarmControlPanelEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
+        return self._attr_supported_features
 
     @final
     @property
@@ -412,13 +393,3 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             self._alarm_control_panel_option_default_code = default_code
             return
         self._alarm_control_panel_option_default_code = None
-
-
-# As we import constants of the const module here, we need to add the following
-# functions to check for deprecated constants again
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

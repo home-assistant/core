@@ -104,7 +104,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     route_back: bool  # not required
     host: str  # only required for tunnelling
     port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None
+    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required

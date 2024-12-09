@@ -129,10 +129,12 @@ ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
+SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
+
 SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
 SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
 SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
-SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY = "setting_key"
+SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
 SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
 
 RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
@@ -262,12 +264,12 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
         "Cooking.Oven.Program.HeatingMode.HotAir80Steam",
         "Cooking.Oven.Program.HeatingMode.HotAir100Steam",
         "Cooking.Oven.Program.HeatingMode.SabbathProgramme",
-        "Cooking.Oven.Program.Microwave90Watt",
-        "Cooking.Oven.Program.Microwave180Watt",
-        "Cooking.Oven.Program.Microwave360Watt",
-        "Cooking.Oven.Program.Microwave600Watt",
-        "Cooking.Oven.Program.Microwave900Watt",
-        "Cooking.Oven.Program.Microwave1000Watt",
+        "Cooking.Oven.Program.Microwave.90Watt",
+        "Cooking.Oven.Program.Microwave.180Watt",
+        "Cooking.Oven.Program.Microwave.360Watt",
+        "Cooking.Oven.Program.Microwave.600Watt",
+        "Cooking.Oven.Program.Microwave.900Watt",
+        "Cooking.Oven.Program.Microwave.1000Watt",
         "Cooking.Oven.Program.Microwave.Max",
         "Cooking.Oven.Program.HeatingMode.WarmingDrawer",
         "LaundryCare.Washer.Program.Cotton",
