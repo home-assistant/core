@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
 from hass_nabucasa import thingtalk
-from hass_nabucasa.auth import Unauthenticated, UnknownError
+from hass_nabucasa.auth import (
+    InvalidTotpCode,
+    MFARequired,
+    Unauthenticated,
+    UnknownError,
+)
 from hass_nabucasa.const import STATE_CONNECTED
 from hass_nabucasa.voice import TTS_VOICES
 import pytest
@@ -376,6 +381,57 @@ async def test_login_view_invalid_credentials(
     )
 
     assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_view_mfa_required_totp_not_provided(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required and no code is provided."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired
+
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_view_invalid_totp_code(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required and invalid code is provided."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = InvalidTotpCode
+
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "password": "my_password", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_login_view_valid_totp_provided(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in with valid TOTP code."""
+    cloud_client = await hass_client()
+
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "password": "my_password", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
 
 
 async def test_login_view_unknown_error(
