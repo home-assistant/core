@@ -167,21 +167,19 @@ async def test_zeroconf(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "zeroconf_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "127.0.0.2",
-            CONF_PASSWORD: "pwd",
-            CONF_API_VERSION: "2",
-            CONF_INVERT_POSITION: False,
+            CONF_INVERT_POSITION: True,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.2"
     assert result["data"][CONF_HOST] == "127.0.0.2"
+    assert result["data"][CONF_INVERT_POSITION]
     assert result["result"].unique_id == "12:34:56:78:90:ab"
 
 
@@ -190,7 +188,9 @@ async def test_zeroconf_duplicate_entry(
 ) -> None:
     """Test starting a flow from discovery."""
 
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST}).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: HOST}, unique_id="12:34:56:78:90:ab"
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA

@@ -16,6 +16,16 @@
           "ip_address": "The hostname or IP address of your local Slide",
           "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). NOTE: With api_version 2 you can fill in anything here, it is not used by the local API."
         }
+      },
+      "zeroconf_confirm": {
+        "title": "Comfirm details for Slide (local API)",
+        "description": "Provide information to connect to the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Invert the position of the slide covers"
+        }
       }
     },
     "abort": {

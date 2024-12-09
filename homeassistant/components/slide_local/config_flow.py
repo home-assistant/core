@@ -26,7 +26,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +47,6 @@ API_VERSION_SELECTOR = SelectSelector(
 class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for slide_local."""
 
-    _entry: SlideConfigEntry | None = None
     _mac: str = ""
     _host: str = ""
 
@@ -62,19 +60,19 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         slide = SlideLocalApi()
         await slide.slide_add(
             user_input[CONF_HOST],
-            user_input[CONF_PASSWORD],
+            user_input.get(CONF_PASSWORD, ""),
             user_input[CONF_API_VERSION],
         )
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-            self._mac = result.get("mac", "")
+            self._mac = result["mac"]
         except (ClientConnectionError, ClientTimeoutError):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.error(e)
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Exception occurred")
             return {"base": "unknown"}
 
         return {}
@@ -84,11 +82,12 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors = {}
-        if user_input is not None and user_input.get(CONF_API_VERSION) is not None:
+        if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             user_input[CONF_API_VERSION] = int(user_input[CONF_API_VERSION])
 
             if not (errors := await self.async_test_connection(user_input)):
+                await self.async_set_unique_id(self._mac)
                 user_input |= {CONF_MAC: format_mac(self._mac)}
 
                 return self.async_create_entry(
@@ -122,8 +121,32 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._mac)
 
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
-        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
         self._host = discovery_info.host
 
-        return await self.async_step_user()
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the zeroconf_confirm step."""
+        errors = {}
+        if user_input is not None:
+            user_input |= {CONF_HOST: self._host}
+            user_input |= {CONF_API_VERSION: 2}
+            user_input |= {CONF_MAC: format_mac(self._mac)}
+
+            if not (errors := await self.async_test_connection(user_input)):
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
+                }
+            ),
+            errors=errors,
+        )
