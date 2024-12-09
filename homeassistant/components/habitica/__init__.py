@@ -43,6 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Habitica service."""
 
     async_setup_services(hass)
+
     return True
 
 

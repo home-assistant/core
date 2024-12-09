@@ -24,7 +24,10 @@ from dateutil.rrule import (
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
@@ -189,3 +192,28 @@ def get_attributes_total(
     return floor(
         sum(value for value in get_attribute_points(user, content, attribute).values())
     )
+
+
+def lookup_task(
+    tasks: list[dict], search: str, service: str = "unknown"
+) -> dict[str, Any]:
+    """Lookup a task by it's name, task ID or alias."""
+    task_type = {
+        "update_todo": "todo",
+        "update_habit": "habit",
+        "update_reward": "reward",
+        "update_daily": "daily",
+    }
+    try:
+        return next(
+            task
+            for task in tasks
+            if task_type.get(service, task["type"]) == task["type"]
+            and (search in (task["id"], task.get("alias")) or search == task["text"])
+        )
+    except StopIteration as e:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="task_not_found",
+            translation_placeholders={"task": f"'{search}'"},
+        ) from e
