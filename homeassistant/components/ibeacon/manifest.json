@@ -14,5 +14,6 @@
   "iot_class": "local_push",
   "loggers": ["bleak"],
   "requirements": ["ibeacon-ble==1.2.0"],
-  "single_config_entry": true
+  "single_config_entry": true,
+  "version": "0.0.1"
 }
