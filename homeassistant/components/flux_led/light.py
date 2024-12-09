@@ -30,7 +30,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from .const import (
     CONF_COLORS,
@@ -202,8 +201,8 @@ class FluxLight(
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, base_unique_id, None)
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
+        self._attr_min_color_temp_kelvin = self._device.min_temp
+        self._attr_max_color_temp_kelvin = self._device.max_temp
         self._attr_supported_color_modes = _hass_color_modes(self._device)
         custom_effects: list[str] = []
         if custom_effect_colors:
@@ -219,9 +218,9 @@ class FluxLight(
         return self._device.brightness
 
     @property
-    def color_temp(self) -> int:
-        """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self._device.color_temp)
+    def color_temp_kelvin(self) -> int:
+        """Return the kelvin value of this light."""
+        return self._device.color_temp
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
