@@ -318,22 +318,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="panel_relay_status"
+            translation_key="overall_relay_status"
         ),
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS_1,
             entity_category=EntityCategory.CONFIG,
-            translation_key="panel_relay_status_1"
+            translation_key="relay_status_1"
         ),
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS_2,
             entity_category=EntityCategory.CONFIG,
-            translation_key="panel_relay_status_2"
+            translation_key="relay_status_2"
         ),
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS_3,
             entity_category=EntityCategory.CONFIG,
-            translation_key="panel_relay_status_3"
+            translation_key="relay_status_3"
         )
     ),
 }

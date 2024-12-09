@@ -449,7 +449,7 @@
           "168h": "168h"
         }
       },
-      "panel_relay_status": {
+      "overall_relay_status": {
         "name": "Overall relay behavior",
         "state": {
           "memory": "Remember last state",
@@ -457,28 +457,28 @@
           "on": "[%key:common::state::on%]"
         }
       },
-      "panel_relay_status_1": {
+      "relay_status_1": {
         "name": "Relay 1 behavior",
         "state": {
-          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
-          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
-          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
+          "memory": "[%key:component::tuya::entity::select::overall_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::overall_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::overall_relay_status::state::on%]"
         }
       },
-      "panel_relay_status_2": {
+      "relay_status_2": {
         "name": "Relay 2 behavior",
         "state": {
-          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
-          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
-          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
+          "memory": "[%key:component::tuya::entity::select::overall_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::overall_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::overall_relay_status::state::on%]"
         }
       },
-      "panel_relay_status_3": {
+      "relay_status_3": {
         "name": "Relay 3 behavior",
         "state": {
-          "memory": "[%key:component::tuya::entity::select::panel_relay_status::state::memory%]",
-          "off": "[%key:component::tuya::entity::select::panel_relay_status::state::off%]",
-          "on": "[%key:component::tuya::entity::select::panel_relay_status::state::on%]"
+          "memory": "[%key:component::tuya::entity::select::overall_relay_status::state::memory%]",
+          "off": "[%key:component::tuya::entity::select::overall_relay_status::state::off%]",
+          "on": "[%key:component::tuya::entity::select::overall_relay_status::state::on%]"
         }
       }
     },
