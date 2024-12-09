@@ -7,8 +7,6 @@ import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, call, mock_open, patch
 
-import aiohttp
-from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import (
@@ -169,6 +167,7 @@ async def _setup_backup_platform(
     """Set up a mock domain."""
     mock_platform(hass, f"{domain}.backup", platform or MockPlatform())
     assert await async_setup_component(hass, domain, {})
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -420,15 +419,26 @@ async def test_exception_platform_post(
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
-async def test_receive_backup_local(
+async def test_receive_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test receive backup local."""
+    """Test receive backup and upload to the local and a remote agent."""
+    remote_agent = BackupAgentTest("remote", backups=[])
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
-    open_mock = mock_open()
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
 
     with (
         patch("pathlib.Path.open", open_mock),
@@ -439,71 +449,17 @@ async def test_receive_backup_local(
         ),
     ):
         resp = await client.post(
-            "/api/backup/upload?agent_id=backup.local",
-            data={"file": StringIO("test")},
+            "/api/backup/upload?agent_id=backup.local&agent_id=test.remote",
+            data={"file": StringIO(upload_data)},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert open_mock.call_count == 1
+    assert open_mock.call_count == 2
     assert move_mock.call_count == 1
     assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
-
-
-async def test_async_receive_backup_remote(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test receiving a backup file."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    await _setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
-    )
-    await manager.load_platforms()
-
-    size = 2 * 2**16
-    protocol = Mock(_reading_paused=False)
-    stream = aiohttp.StreamReader(protocol, 2**16)
-    stream.feed_data(b"0" * size + b"\r\n--:--")
-    stream.feed_eof()
-
-    open_mock = mock_open()
-
-    assert remote_agent._backups == {}
-    with (
-        patch("pathlib.Path.open", open_mock),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
-    ):
-        open_mock.return_value.read.side_effect = [b"0" * size, b""]
-        await manager.async_receive_backup(
-            agent_ids=["test.remote"],
-            contents=aiohttp.BodyPartReader(
-                b"--:",
-                CIMultiDictProxy(
-                    CIMultiDict(
-                        {
-                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
-                        }
-                    )
-                ),
-                stream,
-            ),
-        )
-        assert open_mock.call_count == 2
-        assert remote_agent._backups == {
-            TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123
-        }
-        assert remote_agent._backup_data == b"0" * size
+    assert remote_agent._backups == {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
+    assert remote_agent._backup_data == upload_data.encode(encoding="utf-8")
 
 
 @pytest.mark.parametrize(

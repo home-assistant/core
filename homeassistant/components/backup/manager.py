@@ -312,6 +312,10 @@ class BackupManager:
         """Add a backup platform manager."""
         self._add_platform_pre_post_handler(integration_domain, platform)
         await self._async_add_platform_agents(integration_domain, platform)
+        LOGGER.debug("Backup platform %s loaded", integration_domain)
+        LOGGER.debug("%s platforms loaded in total", len(self.platforms))
+        LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
+        LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""

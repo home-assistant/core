@@ -163,7 +163,7 @@ async def test_details(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     remote_agents: list[str],
-    backups: dict[str, AgentBackup],
+    backups: dict[str, list[AgentBackup]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup info."""
@@ -229,7 +229,7 @@ async def test_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     remote_agents: list[str],
-    backups: dict[str, AgentBackup],
+    backups: dict[str, list[AgentBackup]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test deleting a backup file."""
@@ -512,7 +512,7 @@ async def test_generate_with_default_settings_calls_create(
 async def test_restore_local_agent(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    backups: dict[str, AgentBackup],
+    backups: dict[str, list[AgentBackup]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""
@@ -548,7 +548,7 @@ async def test_restore_remote_agent(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     remote_agents: list[str],
-    backups: dict[str, AgentBackup],
+    backups: dict[str, list[AgentBackup]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""
