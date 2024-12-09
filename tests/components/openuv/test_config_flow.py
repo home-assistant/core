@@ -52,6 +52,7 @@ async def test_create_entry(hass: HomeAssistant, client, config, mock_pyopenuv) 
         CONF_ELEVATION: TEST_ELEVATION,
         CONF_LATITUDE: TEST_LATITUDE,
         CONF_LONGITUDE: TEST_LONGITUDE,
+        "skin_type": "None",
     }
 
 
@@ -87,12 +88,22 @@ async def test_options_flow(
     assert get_schema_marker(result["data_schema"], CONF_TO_WINDOW).description == {
         "suggested_value": 3.5
     }
+    assert get_schema_marker(result["data_schema"], "skin_type").default() == "None"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+        result["flow_id"],
+        user_input={
+            CONF_FROM_WINDOW: 3.5,
+            CONF_TO_WINDOW: 2.0,
+            "skin_type": "None",
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+    assert config_entry.options == {
+        CONF_FROM_WINDOW: 3.5,
+        CONF_TO_WINDOW: 2.0,
+        "skin_type": "None",
+    }
 
     # Subsequent schema uses previous input for suggested values:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -104,6 +115,7 @@ async def test_options_flow(
     assert get_schema_marker(result["data_schema"], CONF_TO_WINDOW).description == {
         "suggested_value": 2.0
     }
+    assert get_schema_marker(result["data_schema"], "skin_type").default() == "None"
 
 
 async def test_step_reauth(
