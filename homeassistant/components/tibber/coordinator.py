@@ -40,30 +40,49 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=f"Tibber {tibber_connection.name}",
-            update_interval=timedelta(minutes=20),
+            update_interval=timedelta(minutes=1),
         )
         self._tibber_connection = tibber_connection
 
+        now = dt_util.now() - timedelta(hours=1)
+        self._last_fetch_timestamp = now
+        self._last_price_timestamp = now
+
     async def _async_update_data(self) -> None:
         """Update data via API."""
-        try:
-            await self._tibber_connection.fetch_consumption_data_active_homes()
-            await self._tibber_connection.fetch_production_data_active_homes()
-            await self._insert_statistics()
+        now = dt_util.now()
 
-            await asyncio.gather(
-                *[
-                    tibber_home.update_info_and_price_info()
-                    for tibber_home in self._tibber_connection.get_homes(
-                        only_active=True
-                    )
-                ],
-            )
+        try:
+            if now - self._last_fetch_timestamp >= timedelta(minutes=20):
+                await self._tibber_connection.fetch_consumption_data_active_homes()
+                await self._tibber_connection.fetch_production_data_active_homes()
+                await self._insert_statistics()
+                self._last_fetch_timestamp = now
+
+            if now - self._last_price_timestamp >= timedelta(hours=1):
+                await asyncio.gather(
+                    *[
+                        tibber_home.update_info_and_price_info()
+                        for tibber_home in self._tibber_connection.get_homes(
+                            only_active=True
+                        )
+                    ],
+                )
+                # Align on the hour (+ max 1 min)
+                self._last_price_timestamp = now.replace(
+                    minute=0, second=0, microsecond=0
+                )
 
         except tibber.RetryableHttpExceptionError as err:
+            # Update timestamps to prevent rapid retries and raise error.
+            self._last_fetch_timestamp = now
+            self._last_price_timestamp = now
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+
         except tibber.FatalHttpExceptionError:
-            # Fatal error. Reload config entry to show correct error.
+            self._last_fetch_timestamp = now
+            self._last_price_timestamp = now
+            # Fatal error. Update timestamps to prevent rapid retries and reload config entry to show correct error.
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
