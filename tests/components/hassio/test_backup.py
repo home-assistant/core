@@ -135,8 +135,8 @@ async def test_agent_list_backups(
     ]
 
 
-@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
-async def test_agents_download(
+@pytest.mark.usefixtures("hassio_client")
+async def test_agent_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     supervisor_client: AsyncMock,
@@ -144,6 +144,8 @@ async def test_agents_download(
     """Test agent download backup, when cloud user is logged in."""
     client = await hass_client()
     backup_id = "abc123"
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
     resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=hassio.local")
     assert resp.status == 500
