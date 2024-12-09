@@ -230,12 +230,18 @@ async def get_doorbell_user(hass: HomeAssistant, call: ServiceCall) -> ServiceRe
     """Get the user of the doorbell."""
     camera = _async_get_ufp_camera(hass, call)
     ulp_users = camera.api.bootstrap.ulp_users
-    return {
-        "users": [
-            {"ulp_id": user.ulp_id, "full_name": user.full_name}
-            for user in ulp_users.values()
-        ]
-    }
+    keys = [
+        {
+            "full_name": user.full_name,
+            "status": user.status,
+            "ulp_id": key.ulp_user,
+            "typ": key.registry_type,
+            "typ_id": key.registry_id,
+        }
+        for key in camera.api.bootstrap.keyrings.as_list()
+        if (user := ulp_users.by_ulp_id(key.ulp_user))
+    ]
+    return {"keys": keys}  # type: ignore[dict-item]
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -252,24 +258,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
             SERVICE_ADD_DOORBELL_TEXT,
             functools.partial(add_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
+            SupportsResponse.NONE,
         ),
         (
             SERVICE_REMOVE_DOORBELL_TEXT,
             functools.partial(remove_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
+            SupportsResponse.NONE,
         ),
         (
             SERVICE_SET_CHIME_PAIRED,
             functools.partial(set_chime_paired_doorbells, hass),
             CHIME_PAIRED_SCHEMA,
+            SupportsResponse.NONE,
         ),
         (
             SERVICE_REMOVE_PRIVACY_ZONE,
             functools.partial(remove_privacy_zone, hass),
             REMOVE_PRIVACY_ZONE_SCHEMA,
+            SupportsResponse.NONE,
         ),
     ]
-    for name, method, schema in services:
+    for name, method, schema, supports_response in services:
         if hass.services.has_service(DOMAIN, name):
             continue
-        hass.services.async_register(DOMAIN, name, method, schema=schema)
+        hass.services.async_register(DOMAIN, name, method, schema, supports_response)
