@@ -104,7 +104,8 @@ class WyomingConversationEntity(
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
                 await client.write_event(
                     Transcript(
-                        user_input.text, context={"conversation_id": conversation_id}
+                        user_input.text,
+                        context={"home_assistant": user_input.as_dict()},
                     ).event()
                 )
 
