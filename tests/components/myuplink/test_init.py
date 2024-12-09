@@ -2,7 +2,7 @@
 
 import http
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -172,13 +172,9 @@ async def test_oaut2_scope_failure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an incorrect OAuth2 scope fails."""
-    with patch(
-        "homeassistant.components.myuplink.OAUTH2_SCOPES",
-        [
-            "wrong_scope",
-        ],
-    ):
-        await setup_integration(hass, mock_config_entry)
+
+    mock_config_entry.data["token"]["scope"] = "wrong_scope"
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
