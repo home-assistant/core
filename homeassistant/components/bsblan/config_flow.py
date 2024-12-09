@@ -60,6 +60,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         self.port = discovery_info.port or DEFAULT_PORT
 
+        # Check if the device is already configured
+        for entry in self._async_current_entries():
+            if (
+                entry.data.get(CONF_HOST) == self.host
+                and entry.data.get(CONF_PORT) == self.port
+            ):
+                return self.async_abort(reason="already_configured")
+
         # Store discovery info for later use
         self._discovered_device = {
             CONF_HOST: self.host,
