@@ -14,7 +14,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from . import BAFConfigEntry
 from .entity import BAFEntity
@@ -74,20 +73,14 @@ class BAFStandaloneLight(BAFLight):
     def __init__(self, device: Device) -> None:
         """Init a standalone light."""
         super().__init__(device)
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(
-            device.light_warmest_color_temperature
-        )
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(
-            device.light_coolest_color_temperature
-        )
+        self._attr_max_color_temp_kelvin = device.light_warmest_color_temperature
+        self._attr_min_color_temp_kelvin = device.light_coolest_color_temperature
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         super()._async_update_attrs()
-        self._attr_color_temp = color_temperature_kelvin_to_mired(
-            self._device.light_color_temperature
-        )
+        self._attr_color_temp_kelvin = self._device.light_color_temperature
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
