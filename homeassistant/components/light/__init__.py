@@ -961,7 +961,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @cached_property
     def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
+        """Return the CT color value in mireds.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_color_temp
 
     @property
@@ -974,13 +977,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @cached_property
     def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
+        """Return the coldest color_temp that this light supports.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_min_mireds
 
     @final
     @cached_property
     def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
+        """Return the warmest color_temp that this light supports.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_max_mireds
 
     @property
