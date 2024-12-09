@@ -203,13 +203,13 @@ async def test_doorbell_nfc_scanned(
     mock_keyring.registry_id = test_nfc_id
     mock_keyring.registry_type = "nfc"
     mock_keyring.ulp_user = ulp_id
-    ufp.api.bootstrap.keyrings["1234"] = mock_keyring
+    ufp.api.bootstrap.keyrings.add(mock_keyring)
 
     mock_ulp_user = Mock()
     mock_ulp_user.ulp_id = ulp_id
     mock_ulp_user.full_name = test_user_full_name
     mock_ulp_user.status = "ACTIVE"
-    ufp.api.bootstrap.ulp_users[ulp_id] = mock_ulp_user
+    ufp.api.bootstrap.ulp_users.add(mock_ulp_user)
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
@@ -278,13 +278,13 @@ async def test_doorbell_nfc_scanned_ulpusr_deactivated(
     mock_keyring.registry_id = test_nfc_id
     mock_keyring.registry_type = "nfc"
     mock_keyring.ulp_user = ulp_id
-    ufp.api.bootstrap.keyrings["1234"] = mock_keyring
+    ufp.api.bootstrap.keyrings.add(mock_keyring)
 
     mock_ulp_user = Mock()
     mock_ulp_user.ulp_id = ulp_id
     mock_ulp_user.full_name = test_user_full_name
     mock_ulp_user.status = "DEACTIVATED"
-    ufp.api.bootstrap.ulp_users[ulp_id] = mock_ulp_user
+    ufp.api.bootstrap.ulp_users.add(mock_ulp_user)
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
@@ -299,7 +299,8 @@ async def test_doorbell_nfc_scanned_ulpusr_deactivated(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
     assert state.attributes["nfc_id"] == "test_nfc_id"
-    assert state.attributes["full_name"] == ""
+    assert state.attributes["full_name"] == "Test User"
+    assert state.attributes["user_status"] == "DEACTIVATED"
 
     unsub()
 
@@ -352,7 +353,7 @@ async def test_doorbell_nfc_scanned_no_ulpusr(
     mock_keyring.registry_id = test_nfc_id
     mock_keyring.registry_type = "nfc"
     mock_keyring.ulp_user = ulp_id
-    ufp.api.bootstrap.keyrings["1234"] = mock_keyring
+    ufp.api.bootstrap.keyrings.add(mock_keyring)
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
@@ -481,7 +482,7 @@ async def test_doorbell_fingerprint_identified(
     mock_ulp_user.ulp_id = ulp_id
     mock_ulp_user.full_name = test_user_full_name
     mock_ulp_user.status = "ACTIVE"
-    ufp.api.bootstrap.ulp_users[ulp_id] = mock_ulp_user
+    ufp.api.bootstrap.ulp_users.add(mock_ulp_user)
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
@@ -549,7 +550,7 @@ async def test_doorbell_fingerprint_identified_user_deactivated(
     mock_ulp_user.ulp_id = ulp_id
     mock_ulp_user.full_name = test_user_full_name
     mock_ulp_user.status = "DEACTIVATED"
-    ufp.api.bootstrap.ulp_users[ulp_id] = mock_ulp_user
+    ufp.api.bootstrap.ulp_users.add(mock_ulp_user)
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
@@ -564,7 +565,8 @@ async def test_doorbell_fingerprint_identified_user_deactivated(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
     assert state.attributes["ulp_id"] == ulp_id
-    assert state.attributes["full_name"] == ""
+    assert state.attributes["full_name"] == "Test User"
+    assert state.attributes["user_status"] == "DEACTIVATED"
 
     unsub()
 
