@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -71,9 +71,8 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             new_brightness = int(round(percentage_brightness / 5.0) * 5.0)
             if new_brightness == 0:
                 new_brightness = 5
-        if ATTR_COLOR_TEMP in kwargs:
-            tmp_new_color_temp = kwargs[ATTR_COLOR_TEMP]
-            new_color_temp = round(1000000 / tmp_new_color_temp)
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            new_color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
         if ATTR_HS_COLOR in kwargs:
             get_new_color = kwargs[ATTR_HS_COLOR]
             hue = int(get_new_color[0])
