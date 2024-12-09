@@ -118,8 +118,6 @@ class SupervisorLocalBackupAgent(BackupAgent):
 class SupervisorBackupReaderWriter(BackupReaderWriter):
     """Class for reading and writing backups in supervised installations."""
 
-    temp_backup_dir = Path("/cloud_backups")
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup reader/writer."""
         self._hass = hass

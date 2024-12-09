@@ -135,28 +135,20 @@ async def test_agent_list_backups(
     ]
 
 
-@pytest.mark.usefixtures("hassio_client")
-async def test_agent_download(
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_download(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test agent download backup."""
-    client = await hass_ws_client(hass)
+    """Test agent download backup, when cloud user is logged in."""
+    client = await hass_client()
     backup_id = "abc123"
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "hassio.local",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "backup_agents_download"
-    assert response["error"]["message"] == "Not yet supported by supervisor"
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=hassio.local")
+    assert resp.status == 500
+    content = await resp.content.read()
+    assert "Not yet supported by supervisor" in content.decode()
 
 
 @pytest.mark.usefixtures("hassio_client")
