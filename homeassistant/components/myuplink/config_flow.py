@@ -57,7 +57,7 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(uid)
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            self._abort_if_unique_id_mismatch(reason="account_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
