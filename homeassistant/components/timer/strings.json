@@ -38,7 +38,7 @@
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "Optional duration to restart the timer with."
+          "description": "Custom duration to restart the timer with."
         }
       }
     },
