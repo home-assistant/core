@@ -62,7 +62,7 @@ def get_trackable_device_info(trackable: GeocachingTrackable) -> DeviceInfo:
 # pylint: disable=hass-enforce-class-module
 # Base class for a cache entity.
 # Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
-class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity):
+class GeoEntityBaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity):
     """Base class for cache entities."""
 
     _attr_has_entity_name = True
@@ -93,7 +93,7 @@ class GeoEntity_BaseCache(CoordinatorEntity[GeocachingDataUpdateCoordinator], En
 # pylint: disable=hass-enforce-class-module
 # Base class for a trackable entity.
 # Sets the device, ID and translation settings to correctly group the entity to the correct trackable device and give it the correct name.
-class GeoEntity_BaseTrackable(
+class GeoEntityBaseTrackable(
     CoordinatorEntity[GeocachingDataUpdateCoordinator], Entity
 ):
     """Base class for trackable entities."""
@@ -124,7 +124,7 @@ class GeoEntity_BaseTrackable(
 
 # pylint: disable=hass-enforce-class-module
 # A tracker entity that allows us to show caches on a map.
-class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
+class GeoEntityCacheLocation(GeoEntityBaseCache, TrackerEntity):
     """Entity for a cache GPS location."""
 
     def __init__(
@@ -160,7 +160,7 @@ class GeoEntity_Cache_Location(GeoEntity_BaseCache, TrackerEntity):
 
 # pylint: disable=hass-enforce-class-module
 # A tracker entity that allows us to show caches on a map.
-class GeoEntity_Trackable_Location(GeoEntity_BaseTrackable, TrackerEntity):
+class GeoEntityTrackableLocation(GeoEntityBaseTrackable, TrackerEntity):
     """Entity for a trackable GPS location."""
 
     def __init__(
@@ -302,7 +302,7 @@ TRACKABLE_SENSORS: tuple[GeocachingTrackableEntityDescription, ...] = (
 
 
 # pylint: disable=hass-enforce-class-module
-class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
+class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
     """Representation of a cache sensor."""
 
     entity_description: GeocachingCacheSensorDescription
@@ -326,7 +326,7 @@ class GeoEntity_Cache_SensorEntity(GeoEntity_BaseCache, SensorEntity):
 
 
 # pylint: disable=hass-enforce-class-module
-class GeoEntity_Trackable_SensorEntity(GeoEntity_BaseTrackable, SensorEntity):
+class GeoEntityTrackableSensorEntity(GeoEntityBaseTrackable, SensorEntity):
     """Representation of a trackable sensor."""
 
     entity_description: GeocachingTrackableEntityDescription
@@ -352,17 +352,17 @@ def get_cache_entities(
     coordinator: GeocachingDataUpdateCoordinator,
     cache: GeocachingCache,
     category: GeocacheCategory,
-) -> list[GeoEntity_BaseCache]:
+) -> list[GeoEntityBaseCache]:
     """Generate all entities for a single cache."""
-    entities: list[GeoEntity_BaseCache] = []
+    entities: list[GeoEntityBaseCache] = []
 
     # Tracker entities
-    entities.extend([GeoEntity_Cache_Location(coordinator, cache, category)])
+    entities.extend([GeoEntityCacheLocation(coordinator, cache, category)])
 
     # Sensor entities
     entities.extend(
         [
-            GeoEntity_Cache_SensorEntity(coordinator, cache, description, category)
+            GeoEntityCacheSensorEntity(coordinator, cache, description, category)
             for description in CACHE_SENSORS
         ]
     )
@@ -372,18 +372,18 @@ def get_cache_entities(
 
 def get_trackable_entities(
     coordinator: GeocachingDataUpdateCoordinator, trackable: GeocachingTrackable
-) -> list[GeoEntity_BaseTrackable]:
+) -> list[GeoEntityBaseTrackable]:
     """Generate all entities for a single trackable."""
 
-    entities: list[GeoEntity_BaseTrackable] = []
+    entities: list[GeoEntityBaseTrackable] = []
 
     # Tracker entities
-    entities.extend([GeoEntity_Trackable_Location(coordinator, trackable)])
+    entities.extend([GeoEntityTrackableLocation(coordinator, trackable)])
 
     # Sensor entities
     entities.extend(
         [
-            GeoEntity_Trackable_SensorEntity(coordinator, trackable, description)
+            GeoEntityTrackableSensorEntity(coordinator, trackable, description)
             for description in TRACKABLE_SENSORS
         ]
     )
