@@ -75,7 +75,7 @@
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'protected': False,
-          'size': 0.0,
+          'size': 0,
         }),
       ]),
       'last_automatic_backup': None,

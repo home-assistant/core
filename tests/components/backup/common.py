@@ -16,7 +16,6 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
-from homeassistant.components.backup.manager import Backup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -35,7 +34,7 @@ TEST_BACKUP_ABC123 = AgentBackup(
     homeassistant_version="2024.12.0",
     name="Test",
     protected=False,
-    size=0.0,
+    size=0,
 )
 TEST_BACKUP_PATH_ABC123 = Path("abc123.tar")
 
@@ -49,7 +48,7 @@ TEST_BACKUP_DEF456 = AgentBackup(
     homeassistant_version="2024.12.0",
     name="Test 2",
     protected=False,
-    size=1.0,
+    size=1,
 )
 
 TEST_DOMAIN = "test"
@@ -73,11 +72,11 @@ class BackupAgentTest(BackupAgent):
                     homeassistant_version="2024.12.0",
                     name="Test",
                     protected=False,
-                    size=13.37,
+                    size=13,
                 )
             ]
 
-        self._backup_data = None
+        self._backup_data: bytearray | None = None
         self._backups = {backup.backup_id: backup for backup in backups}
 
     async def async_download_backup(
@@ -127,7 +126,7 @@ async def setup_backup_integration(
     with_hassio: bool = False,
     configuration: ConfigType | None = None,
     *,
-    backups: dict[str, list[Backup]] | None = None,
+    backups: dict[str, list[AgentBackup]] | None = None,
     remote_agents: list[str] | None = None,
 ) -> bool:
     """Set up the Backup integration."""
