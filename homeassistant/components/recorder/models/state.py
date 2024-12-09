@@ -111,6 +111,14 @@ class LazyState(State):
             assert ts is not None
         return ts
 
+    @cached_property
+    def last_reported_timestamp(self) -> float:  # type: ignore[override]
+        """Last reported timestamp."""
+        ts = self._last_reported_ts or self._last_updated_ts
+        if TYPE_CHECKING:
+            assert ts is not None
+        return ts
+
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 
