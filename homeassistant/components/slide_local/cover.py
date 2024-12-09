@@ -124,9 +124,9 @@ class SlideCoverLocal(CoverEntity):
     ) -> None:
         """Initialize the cover."""
         self._api = api
+        self._attr_name = slide_info.get("device_name", host)
         self._id = host
         self._invert = invert
-        self._name = slide_info.get("device_name", host)
         self._slide: dict[str, Any] = {}
         self._slide["pos"] = None
         self._slide["state"] = None
@@ -135,16 +135,6 @@ class SlideCoverLocal(CoverEntity):
         self._unique_id = mac
 
         self.parsedata(slide_info)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the device unique id."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the device name."""
-        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
