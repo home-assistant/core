@@ -47,19 +47,22 @@ class ZimiLight(LightEntity):
         """Initialize a ZimiLight."""
 
         self._attr_unique_id = light.identifier
-        self._attr_name = light.name.strip()
         self._attr_should_poll = False
+        self._attr_has_entity_name = True
+        self._attr_name = None
         self._light = light
         self._light.subscribe(self)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.identifier)},
-            name=self._attr_name,
+            name=self._light.name.strip(),
+            manufacturer=api.brand,
+            model=self._light.type,
             suggested_area=self._light.room,
             via_device=(DOMAIN, api.mac),
         )
-        _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
+        _LOGGER.debug("Initialising %s in %s", self._light.name, self._light.room)
 
     @property
     def available(self) -> bool:
@@ -75,22 +78,17 @@ class ZimiLight(LightEntity):
         """Instruct the light to turn on (with optional brightness)."""
 
         _LOGGER.debug(
-            "Sending turn_on(brightness=%d) for %s",
-            kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255,
-            self.name,
+            "Sending turn_on() for %s in %s", self._light.name, self._light.room
         )
 
-        if self._light.type == "dimmer":
-            await self._light.set_brightness(
-                kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255
-            )
-        else:
-            await self._light.turn_on()
+        await self._light.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
-        _LOGGER.debug("Sending turn_off() for %s", self.name)
+        _LOGGER.debug(
+            "Sending turn_off() for %s in %s", self._light.name, self._light.room
+        )
 
         await self._light.turn_off()
 
@@ -102,8 +100,9 @@ class ZimiLight(LightEntity):
     def notify(self, _observable):
         """Receive notification from light device that state has changed."""
 
-        _LOGGER.debug("Received notification() for %s", self.name)
-        self._attr_name = self._light.name.strip()
+        _LOGGER.debug(
+            "Received notification() for %s in %s", self._light.name, self._light.room
+        )
         self.schedule_update_ha_state(force_refresh=True)
 
     def update(self) -> None:
@@ -120,6 +119,18 @@ class ZimiDimmer(ZimiLight):
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         if self._light.type != "dimmer":
             raise ValueError("ZimiDimmer needs a dimmable light")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the light to turn on (with optional brightness)."""
+
+        _LOGGER.debug(
+            "Sending turn_on(brightness=%d) for %s in %s",
+            kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255,
+            self._light.name,
+            self._light.room,
+        )
+
+        await self._light.set_brightness(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255)
 
     @property
     def brightness(self) -> int | None:

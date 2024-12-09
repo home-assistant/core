@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, PLATFORMS
 from .helpers import async_connect_to_controller
@@ -52,11 +53,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.mac)},
         manufacturer=api.brand,
-        name=f"Zimi({api.host}:{api.port})",
+        name=f"ZCC ({api.host}:{api.port})",
         model=api.product,
         model_id="Zimi Cloud Connect",
-        hw_version=f"{api.mac}",
-        sw_version=f"{api.firmware_version} (API {api.api_version})",
+        hw_version=f"{api.firmware_version}",
+        sw_version=f"{api.api_version}",
+        serial_number=format_mac(api.mac),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
