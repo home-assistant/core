@@ -50,3 +50,6 @@ HEALER = "healer"
 MAGE = "wizard"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
+
+SECTION_REAUTH_LOGIN = "reauth_login"
+SECTION_REAUTH_API_KEY = "reauth_api_key"
