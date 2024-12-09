@@ -1,4 +1,38 @@
 {
+  "entity": {
+    "event": {
+      "bluetooth": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "microphone": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "next": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "playpause": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "preset1": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "preset2": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "preset3": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "preset4": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "previous": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "volume": {
+        "default": "mdi:gesture-tap-button"
+      }
+    }
+  },
   "services": {
     "beolink_join": { "service": "mdi:location-enter" },
     "beolink_expand": { "service": "mdi:location-enter" },
