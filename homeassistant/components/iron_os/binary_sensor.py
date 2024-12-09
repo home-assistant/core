@@ -16,6 +16,9 @@ from . import IronOSConfigEntry
 from .coordinator import IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class PinecilBinarySensor(StrEnum):
     """Pinecil Binary Sensors."""
