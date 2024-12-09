@@ -43,6 +43,9 @@ async def async_setup_entry(
 class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
+    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 154 Mireds
+
     def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialise hive light."""
         super().__init__(hive, hive_device)
@@ -55,9 +58,6 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         elif self.device["hiveType"] == "colourtuneablelight":
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_color_mode = ColorMode.UNKNOWN
-
-        self._attr_min_color_temp_kelvin = 2702  # 370 mireds
-        self._attr_max_color_temp_kelvin = 6535  # 153 mireds
 
     @refresh_system
     async def async_turn_on(self, **kwargs: Any) -> None:
