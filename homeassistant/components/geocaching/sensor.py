@@ -95,13 +95,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Geocaching sensor entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: GeocachingDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         GeocachingSensor(coordinator, description) for description in SENSORS
     )
 
-    # TODO: Switch to fetch nearby caches function from API when available | pylint: disable=fixme
-    status: GeocachingStatus = await coordinator._async_update_data()  # noqa: SLF001
+    status: GeocachingStatus = await coordinator.fetch_new_status()
     entities: list[Entity] = []
     # Add entities for nearby caches
     for cache in status.nearby_caches:

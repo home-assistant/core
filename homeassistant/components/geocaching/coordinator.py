@@ -102,7 +102,8 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
-    async def _async_update_data(self) -> GeocachingStatus:
+    async def fetch_new_status(self) -> GeocachingStatus:
+        """Fetch the latest Geocaching status."""
         try:
             # If the settings have not been verified yet, do so now
             if not self.verified:
@@ -113,3 +114,6 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             raise UpdateFailed(error) from error
         except GeocachingApiError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
+
+    async def _async_update_data(self) -> GeocachingStatus:
+        return await self.fetch_new_status()
