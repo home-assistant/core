@@ -800,7 +800,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_reported.timestamp())
+            self.ages.append(new_state.last_reported_timestamp)
             self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
@@ -955,12 +955,13 @@ class StatisticsSensor(SensorEntity):
                 # Preserve the most recent entry if it is the only value.
                 # Do not schedule another purge. When a new source
                 # value is inserted it will restart purge cycle.
-                _LOGGER.debug(
-                    "%s: skipping purge cycle for last record with datetime %s(%s)",
-                    self.entity_id,
-                    dt_util.as_local(dt_util.utc_from_timestamp(self.ages[0])),
-                    (dt_util.utcnow() - dt_util.utc_from_timestamp(self.ages[0])),
-                )
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug(
+                        "%s: skipping purge cycle for last record with datetime %s(%s)",
+                        self.entity_id,
+                        dt_util.as_local(dt_util.utc_from_timestamp(self.ages[0])),
+                        (dt_util.utcnow() - dt_util.utc_from_timestamp(self.ages[0])),
+                    )
                 return None
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
@@ -985,11 +986,12 @@ class StatisticsSensor(SensorEntity):
         # By basing updates off the timestamps of sampled data we avoid updating
         # when none of the observed entities change.
         if timestamp := self._async_next_to_purge_timestamp():
-            _LOGGER.debug(
-                "%s: scheduling update at %s",
-                self.entity_id,
-                dt_util.utc_from_timestamp(timestamp),
-            )
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "%s: scheduling update at %s",
+                    self.entity_id,
+                    dt_util.utc_from_timestamp(timestamp),
+                )
             self._async_cancel_update_listener()
             self._update_listener = async_track_point_in_utc_time(
                 self.hass,
