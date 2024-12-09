@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -326,12 +326,12 @@ class Luminary(LightEntity):
             self._rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._luminary.set_rgb(*self._rgb_color, transition)
 
-        if ATTR_COLOR_TEMP in kwargs:
-            self._color_temp = kwargs[ATTR_COLOR_TEMP]
-            self._luminary.set_temperature(
-                int(color_util.color_temperature_mired_to_kelvin(self._color_temp)),
-                transition,
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._color_temp = color_util.color_temperature_kelvin_to_mired(
+                color_temp_kelvin
             )
+            self._luminary.set_temperature(color_temp_kelvin, transition)
 
         self._is_on = True
         if ATTR_BRIGHTNESS in kwargs:
