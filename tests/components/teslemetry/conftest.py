@@ -115,3 +115,30 @@ def mock_listen():
         "homeassistant.components.teslemetry.TeslemetryStream.listen",
     ) as mock_listen:
         yield mock_listen
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_get_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStreamVehicle.get_config",
+    ) as mock_stream_get_config:
+        yield mock_stream_get_config
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_update_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStreamVehicle.update_config",
+    ) as mock_stream_update_config:
+        yield mock_stream_update_config
+
+
+def mock_stream_connected():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.connected",
+        return_value=True,
+    ) as mock_stream_connected:
+        yield mock_stream_connected
