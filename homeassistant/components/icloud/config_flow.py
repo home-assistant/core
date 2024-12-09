@@ -7,8 +7,8 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any
 
-from pyicloud import PyiCloudService
-from pyicloud.exceptions import (
+from .pyicloud_ipd.base import PyiCloudService
+from .pyicloud_ipd.exceptions import (
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
