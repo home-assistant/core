@@ -575,7 +575,6 @@ FLOWS = {
         "starlink",
         "steam_online",
         "steamist",
-        "stookalert",
         "stookwijzer",
         "streamlabswater",
         "subaru",

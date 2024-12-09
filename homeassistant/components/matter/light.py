@@ -372,7 +372,7 @@ class MatterLight(MatterEntity, LightEntity):
                     max_mireds = self.get_matter_attribute_value(
                         clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
-                    if min_mireds > 0:
+                    if max_mireds > 0:
                         self._attr_max_mireds = max_mireds
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
