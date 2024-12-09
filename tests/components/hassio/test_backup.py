@@ -151,11 +151,13 @@ async def test_agent_download(
     backup_id = "abc123"
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
+        iter((b"backup data",))
+    )
 
     resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=hassio.local")
-    assert resp.status == 500
-    content = await resp.content.read()
-    assert "Not yet supported by supervisor" in content.decode()
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
 
 
 @pytest.mark.usefixtures("hassio_client")
@@ -167,6 +169,7 @@ async def test_agent_upload(
     """Test agent upload backup."""
     client = await hass_client()
     backup_id = "test-backup"
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
@@ -199,7 +202,7 @@ async def test_agent_upload(
             data={"file": StringIO("test")},
         )
 
-    assert resp.status == 500
+    assert resp.status == 201
     supervisor_client.backups.reload.assert_not_called()
 
 
@@ -221,9 +224,9 @@ async def test_agent_delete_backup(
     )
     response = await client.receive_json()
 
-    assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
-    assert response["error"]["message"] == "Unknown error"
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
 
 
 @pytest.mark.usefixtures("hassio_client")
@@ -234,11 +237,25 @@ async def test_reader_writer_create(
 ) -> None:
     """Test generating a backup."""
     client = await hass_ws_client(hass)
-
     supervisor_client.backups.partial_backup.return_value.job_id = "abc123"
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
     await client.send_json_auto_id(
         {"type": "backup/generate", "agent_ids": ["hassio.local"], "name": "Test"}
     )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"backup_job_id": "abc123"}
@@ -251,11 +268,37 @@ async def test_reader_writer_create(
             folders=None,
             homeassistant_exclude_database=False,
             homeassistant=True,
-            location=None,
+            location={None},
             name="Test",
             password=None,
         )
     )
+
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {"done": True, "uuid": "abc123", "reference": "test_slug"},
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "completed",
+    }
 
 
 @pytest.mark.usefixtures("hassio_client")
@@ -266,14 +309,25 @@ async def test_reader_writer_restore(
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
+    supervisor_client.backups.partial_restore.return_value.job_id = "abc123"
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
 
     await client.send_json_auto_id(
         {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
     )
     response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] is None
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
 
     supervisor_client.backups.partial_restore.assert_called_once_with(
         "abc123",
@@ -285,6 +339,25 @@ async def test_reader_writer_restore(
             password=None,
         ),
     )
+
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {"done": True, "uuid": "abc123"},
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
 
 
 @pytest.mark.parametrize(
@@ -311,6 +384,7 @@ async def test_reader_writer_restore_wrong_parameters(
     """Test trigger restore."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
     default_parameters = {
         "type": "backup/restore",
