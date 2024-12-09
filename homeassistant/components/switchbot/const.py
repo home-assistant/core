@@ -30,6 +30,7 @@ class SupportedModels(StrEnum):
     LOCK_PRO = "lock_pro"
     BLIND_TILT = "blind_tilt"
     HUB2 = "hub2"
+    KEYPAD = "keypad"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -44,6 +45,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_PRO: SupportedModels.LOCK_PRO,
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
     SwitchbotModel.HUB2: SupportedModels.HUB2,
+    SwitchbotModel.KEYPAD: SupportedModels.KEYPAD,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
