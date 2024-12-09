@@ -1,9 +1,9 @@
 rules:
   # Bronze
-  config-flow: todo
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   runtime-data:
     status: todo
     comment: coordinator is created during setup, should be stored in runtime_data
