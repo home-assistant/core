@@ -346,6 +346,8 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
 
 
 async def test_lazy_state_handles_same_last_updated_and_last_changed(
@@ -379,3 +381,5 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
