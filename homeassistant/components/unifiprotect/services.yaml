@@ -53,3 +53,10 @@ remove_privacy_zone:
       required: true
       selector:
         text:
+get_doorbell_user:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
