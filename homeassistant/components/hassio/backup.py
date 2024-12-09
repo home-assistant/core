@@ -305,7 +305,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         if not agent_id.startswith(DOMAIN):
             # Download the backup to the supervisor. Supervisor will clean up the backup
-            # to days after the restore is done.
+            # two days after the restore is done.
             await self.async_receive_backup(
                 agent_ids=[],
                 stream=await open_stream(),
