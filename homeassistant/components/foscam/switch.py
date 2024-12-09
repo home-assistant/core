@@ -41,7 +41,7 @@ class FoscamSleepSwitch(FoscamEntity, SwitchEntity):
         """Initialize a Foscam Sleep Switch."""
         super().__init__(coordinator, config_entry.entry_id)
 
-        self._attr_unique_id = "sleep_switch"
+        self._attr_unique_id = f"{config_entry.entry_id}_sleep_switch"
         self._attr_translation_key = "sleep_switch"
         self._attr_has_entity_name = True
 
