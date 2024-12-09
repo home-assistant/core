@@ -452,7 +452,7 @@ async def test_receive_backup(
             "/api/backup/upload?agent_id=backup.local&agent_id=test.remote",
             data={"file": StringIO(upload_data)},
         )
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     assert resp.status == 201
     assert open_mock.call_count == 2
