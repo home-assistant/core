@@ -62,5 +62,4 @@ DEVICE_STATES = {
     DeviceState.INFORM_ERROR: "inform_error",
     DeviceState.ADOPTION_FALIED: "adoption_failed",
     DeviceState.ISOLATED: "isolated",
-    DeviceState.UNKNOWN: "unknown",
 }

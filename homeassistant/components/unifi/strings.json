@@ -48,8 +48,7 @@
           "deleting": "Deleting",
           "inform_error": "Inform error",
           "adoption_failed": "Adoption failed",
-          "isolated": "Isolated",
-          "unknown": "Unknown"
+          "isolated": "Isolated"
         }
       }
     }

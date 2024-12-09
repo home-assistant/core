@@ -30,6 +30,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
@@ -891,7 +892,9 @@ async def test_device_state(
     for i in list(map(int, DeviceState)):
         device["state"] = i
         mock_websocket_message(message=MessageKey.DEVICE, data=device)
-        assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]
+        assert hass.states.get("sensor.device_state").state == DEVICE_STATES.get(
+            i, STATE_UNKNOWN
+        )
 
 
 @pytest.mark.parametrize(
