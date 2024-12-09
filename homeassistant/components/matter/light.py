@@ -9,7 +9,7 @@ from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -131,12 +132,16 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_color_temp(self, color_temp: int, transition: float = 0.0) -> None:
+    async def _set_color_temp(
+        self, color_temp_kelvin: int, transition: float = 0.0
+    ) -> None:
         """Set color temperature."""
-
+        color_temp_mired = color_util.color_temperature_kelvin_to_mired(
+            color_temp_kelvin
+        )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp,
+                colorTemperatureMireds=color_temp_mired,
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
@@ -286,7 +291,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition = kwargs.get(ATTR_TRANSITION, 0)
         if self._transitions_disabled:
@@ -298,10 +303,10 @@ class MatterLight(MatterEntity, LightEntity):
             elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
                 await self._set_xy_color(xy_color, transition)
             elif (
-                color_temp is not None
+                color_temp_kelvin is not None
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
             ):
-                await self._set_color_temp(color_temp, transition)
+                await self._set_color_temp(color_temp_kelvin, transition)
 
         if brightness is not None and self._supports_brightness:
             await self._set_brightness(brightness, transition)
