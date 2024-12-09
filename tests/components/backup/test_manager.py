@@ -374,49 +374,67 @@ async def test_not_loading_bad_platforms(
 
 
 async def test_exception_platform_pre(
-    hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test exception in pre step."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.loaded_backups = True
 
     async def _mock_step(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
+    remote_agent = BackupAgentTest("remote", backups=[])
     await _setup_backup_platform(
         hass,
+        domain="test",
         platform=Mock(
             async_pre_backup=_mock_step,
             async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
         ),
     )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
+    await hass.services.async_call(
+        DOMAIN,
+        "create",
+        blocking=True,
+    )
+
+    assert "Generating backup failed" in caplog.text
+    assert "Test exception" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_backup_generation")
 async def test_exception_platform_post(
-    hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test exception in post step."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.loaded_backups = True
 
     async def _mock_step(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
+    remote_agent = BackupAgentTest("remote", backups=[])
     await _setup_backup_platform(
         hass,
+        domain="test",
         platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=_mock_step,
-            async_get_backup_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
         ),
     )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
+    await hass.services.async_call(
+        DOMAIN,
+        "create",
+        blocking=True,
+    )
+
+    assert "Generating backup failed" in caplog.text
+    assert "Test exception" in caplog.text
 
 
 async def test_receive_backup(
