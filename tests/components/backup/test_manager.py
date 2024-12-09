@@ -453,9 +453,56 @@ async def test_exception_platform_post(
     assert "Test exception" in caplog.text
 
 
+@pytest.mark.parametrize(
+    (
+        "agent_id_params",
+        "open_call_count",
+        "move_call_count",
+        "move_path_names",
+        "remote_agent_backups",
+        "remote_agent_backup_data",
+        "temp_file_unlink_call_count",
+    ),
+    [
+        (
+            "agent_id=backup.local&agent_id=test.remote",
+            2,
+            1,
+            ["abc123.tar"],
+            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            b"test",
+            0,
+        ),
+        (
+            "agent_id=backup.local",
+            1,
+            1,
+            ["abc123.tar"],
+            {},
+            None,
+            0,
+        ),
+        (
+            "agent_id=test.remote",
+            2,
+            0,
+            [],
+            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            b"test",
+            1,
+        ),
+    ],
+)
 async def test_receive_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    agent_id_params: str,
+    open_call_count: int,
+    move_call_count: int,
+    move_path_names: list[str],
+    remote_agent_backups: dict[str, AgentBackup],
+    remote_agent_backup_data: bytes | None,
+    temp_file_unlink_call_count: int,
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
     remote_agent = BackupAgentTest("remote", backups=[])
@@ -481,19 +528,22 @@ async def test_receive_backup(
             "homeassistant.components.backup.manager.read_backup",
             return_value=TEST_BACKUP_ABC123,
         ),
+        patch("pathlib.Path.unlink") as unlink_mock,
     ):
         resp = await client.post(
-            "/api/backup/upload?agent_id=backup.local&agent_id=test.remote",
+            f"/api/backup/upload?{agent_id_params}",
             data={"file": StringIO(upload_data)},
         )
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert open_mock.call_count == 2
-    assert move_mock.call_count == 1
-    assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
-    assert remote_agent._backups == {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    assert remote_agent._backup_data == upload_data.encode(encoding="utf-8")
+    assert open_mock.call_count == open_call_count
+    assert move_mock.call_count == move_call_count
+    for index, name in enumerate(move_path_names):
+        assert move_mock.call_args_list[index].args[1].name == name
+    assert remote_agent._backups == remote_agent_backups
+    assert remote_agent._backup_data == remote_agent_backup_data
+    assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
