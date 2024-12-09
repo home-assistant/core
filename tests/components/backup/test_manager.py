@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from io import StringIO
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, mock_open, patch
 
 import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -38,11 +38,11 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    TEST_BACKUP_PATH_ABC123,
     BackupAgentTest,
 )
 
 from tests.common import MockPlatform, mock_platform
+from tests.typing import ClientSessionGenerator
 
 _EXPECTED_FILES = [
     "test.txt",
@@ -169,125 +169,6 @@ async def _setup_backup_platform(
     """Set up a mock domain."""
     mock_platform(hass, f"{domain}.backup", platform or MockPlatform())
     assert await async_setup_component(hass, domain, {})
-
-
-async def test_constructor(hass: HomeAssistant) -> None:
-    """Test BackupManager constructor."""
-    BackupManager(hass, CoreBackupReaderWriter(hass))
-
-
-async def test_load_backups(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test loading backups."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
-        patch("tarfile.open", return_value=MagicMock()),
-        patch(
-            "homeassistant.components.backup.util.json_loads_object",
-            return_value={
-                "date": TEST_BACKUP_ABC123.date,
-                "name": TEST_BACKUP_ABC123.name,
-                "slug": TEST_BACKUP_ABC123.backup_id,
-            },
-        ),
-        patch(
-            "pathlib.Path.stat",
-            return_value=MagicMock(st_size=TEST_BACKUP_ABC123.size),
-        ),
-    ):
-        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
-    backups, agent_errors = await manager.async_get_backups()
-    assert backups == snapshot
-    assert agent_errors == {}
-
-
-async def test_load_backups_with_exception(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backups with exception."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]),
-        patch("tarfile.open", side_effect=OSError("Test exception")),
-    ):
-        await manager.backup_agents[LOCAL_AGENT_ID]._load_backups()
-    backups, agent_errors = await manager.async_get_backups()
-    assert (
-        f"Unable to read backup {TEST_BACKUP_PATH_ABC123}: Test exception"
-        in caplog.text
-    )
-    assert backups == {}
-    assert agent_errors == {}
-
-
-async def test_deleting_backup(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test deleting backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
-
-    with patch("pathlib.Path.exists", return_value=True):
-        await manager.async_delete_backup(TEST_BACKUP_ABC123.backup_id)
-    assert "Deleted backup located at" in caplog.text
-
-
-async def test_deleting_non_existing_backup(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test deleting not existing backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    await manager.async_delete_backup("non_existing")
-    assert "Deleted backup located at" not in caplog.text
-
-
-async def test_getting_backup_that_does_not_exist(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test getting backup that does not exist."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
-    path = local_agent.get_backup_path(TEST_BACKUP_ABC123.backup_id)
-
-    with patch("pathlib.Path.exists", return_value=False):
-        backup, agent_errors = await manager.async_get_backup(
-            TEST_BACKUP_ABC123.backup_id
-        )
-        assert backup is None
-        assert agent_errors == {}
-
-        assert (
-            f"Removing tracked backup ({TEST_BACKUP_ABC123.backup_id}) that "
-            f"does not exists on the expected path {path}"
-        ) in caplog.text
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -475,30 +356,6 @@ async def test_loading_platforms(
     assert "Loaded 1 platforms" in caplog.text
 
 
-async def test_loading_agents(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup agents."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
-
-    await _setup_backup_platform(
-        hass,
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[BackupAgentTest("test")]),
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    assert len(manager.backup_agents) == 1
-
-    assert "Loaded 1 agents" in caplog.text
-    assert "some_domain.test" in manager.backup_agents
-
-
 async def test_not_loading_bad_platforms(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -563,23 +420,14 @@ async def test_exception_platform_post(
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
-async def test_async_receive_backup_local(
+async def test_receive_backup_local(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test receiving a backup file."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
-
-    size = 2 * 2**16
-    protocol = Mock(_reading_paused=False)
-    stream = aiohttp.StreamReader(protocol, 2**16)
-    stream.feed_data(b"0" * size + b"\r\n--:--")
-    stream.feed_eof()
-
+    """Test receive backup local."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_client()
     open_mock = mock_open()
 
     with (
@@ -590,23 +438,15 @@ async def test_async_receive_backup_local(
             return_value=TEST_BACKUP_ABC123,
         ),
     ):
-        await manager.async_receive_backup(
-            agent_ids=[LOCAL_AGENT_ID],
-            contents=aiohttp.BodyPartReader(
-                b"--:",
-                CIMultiDictProxy(
-                    CIMultiDict(
-                        {
-                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
-                        }
-                    )
-                ),
-                stream,
-            ),
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
         )
-        assert open_mock.call_count == 1
-        assert move_mock.call_count == 1
-        assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
+
+    assert resp.status == 201
+    assert open_mock.call_count == 1
+    assert move_mock.call_count == 1
+    assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
 async def test_async_receive_backup_remote(
