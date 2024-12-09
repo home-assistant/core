@@ -191,8 +191,6 @@ class BackupPlatformProtocol(Protocol):
 class BackupReaderWriter(abc.ABC):
     """Abstract class for reading and writing backups."""
 
-    temp_backup_dir: Path
-
     @abc.abstractmethod
     async def async_create_backup(
         self,

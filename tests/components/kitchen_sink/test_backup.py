@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -88,31 +88,14 @@ async def test_agents_list_backups(
 
 async def test_agents_download(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test agent download backup."""
-    client = await hass_ws_client(hass)
-    backup_id = "abc123"
+    """Test downloading a backup."""
+    client = await hass_client()
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        mocked_write = Mock()
-        mocked_open.return_value.write = mocked_write
-        await client.send_json_auto_id(
-            {
-                "type": "backup/agents/download",
-                "agent_id": "kitchen_sink.syncer",
-                "backup_id": backup_id,
-            }
-        )
-        response = await client.receive_json()
-        mocked_write.assert_called_once_with(b"backup data")
-
-    assert response["success"]
-    assert f"Downloading backup {backup_id}" in caplog.text
+    resp = await client.get("/api/backup/download/abc123?agent_id=kitchen_sink.syncer")
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
 
 
 async def test_agents_upload(

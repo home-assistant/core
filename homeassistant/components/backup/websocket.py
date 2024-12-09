@@ -11,13 +11,11 @@ from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
 from .manager import ManagerStateEvent
 from .models import Folder
-from .util import make_backup_dir
 
 
 @callback
 def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) -> None:
     """Register websocket commands."""
-    websocket_api.async_register_command(hass, backup_agents_download)
     websocket_api.async_register_command(hass, backup_agents_info)
 
     if with_hassio:
@@ -236,47 +234,6 @@ async def backup_agents_info(
             "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
         },
     )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "backup/agents/download",
-        vol.Required("agent_id"): str,
-        vol.Required("backup_id"): str,
-    }
-)
-@websocket_api.async_response
-async def backup_agents_download(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Download an uploaded backup."""
-    manager = hass.data[DATA_MANAGER]
-    if not (agent := manager.backup_agents.get(msg["agent_id"])):
-        connection.send_error(
-            msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
-        )
-        return
-    try:
-        # Note: We should remove this WS command, it's only used in tests,
-        # tests can instead call GET /api/backup/download/{backup_id}
-        temp_backup_dir = manager._reader_writer.temp_backup_dir  # noqa: SLF001
-        path = temp_backup_dir / f"{msg["backup_id"]}.tar"
-        stream = await agent.async_download_backup(msg["backup_id"])
-        await hass.async_add_executor_job(make_backup_dir, temp_backup_dir)
-        f = await hass.async_add_executor_job(path.open, "wb")
-        try:
-            async for chunk in stream:
-                await hass.async_add_executor_job(f.write, chunk)
-        finally:
-            await hass.async_add_executor_job(f.close)
-    except Exception as err:  # noqa: BLE001
-        connection.send_error(msg["id"], "backup_agents_download", str(err))
-        return
-
-    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

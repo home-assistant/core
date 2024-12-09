@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -641,83 +641,6 @@ async def test_agents_info(
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
-    assert await client.receive_json() == snapshot
-
-
-async def test_agents_download(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test WS command to start downloading a backup."""
-    await setup_backup_integration(hass, with_hassio=False)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    with (
-        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
-        mocked_write = Mock()
-        mocked_open.return_value.write = mocked_write
-        await client.send_json_auto_id(
-            {
-                "type": "backup/agents/download",
-                "agent_id": "domain.test",
-                "backup_id": "abc123",
-            }
-        )
-        assert await client.receive_json() == snapshot
-        download_mock.assert_called_once_with("abc123")
-        mocked_write.assert_called_once_with(b"backup data")
-
-
-async def test_agents_download_exception(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test WS command to start downloading a backup throwing an exception."""
-    await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "domain.test",
-            "backup_id": "abc123",
-        }
-    )
-    with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
-        download_mock.side_effect = Exception("Boom")
-        assert await client.receive_json() == snapshot
-
-
-async def test_agents_download_unknown_agent(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test downloading a backup with an unknown agent."""
-    await setup_backup_integration(hass)
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "domain.test",
-            "backup_id": "abc123",
-        }
-    )
     assert await client.receive_json() == snapshot
 
 
