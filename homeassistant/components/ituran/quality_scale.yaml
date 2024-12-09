@@ -35,7 +35,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates:
     status: exempt
     comment: |

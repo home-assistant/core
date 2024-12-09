@@ -7,7 +7,7 @@
           "phone_number": "Mobile phone number"
         },
         "data_description": {
-          "id_or_passport": "The goverment ID or passport number provided when registering with Ituran.",
+          "id_or_passport": "The government ID or passport number provided when registering with Ituran.",
           "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number."
         }
       },
@@ -18,6 +18,10 @@
         "data_description": {
           "otp": "A one-time-password sent as a text message to the mobile phone number provided before."
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "A new one-time password will be sent to {phone_number}."
       }
     },
     "error": {
@@ -27,15 +31,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
   "exceptions": {
     "api_error": {
-      "message": "An error occured while communicating with the Ituran service."
+      "message": "An error occurred while communicating with the Ituran service."
     },
     "auth_error": {
-      "message": "Failed authenticating with the Ituran service, please remove and re-add integration."
+      "message": "Failed authenticating with the Ituran service, please reauthenticate the integration."
     }
   }
 }
