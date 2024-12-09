@@ -11,6 +11,7 @@ from homeassistant.components.heos.const import (
     SERVICE_SIGN_OUT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -89,6 +90,22 @@ async def test_sign_in_unknown_error(
 
     controller.sign_in.assert_called_once_with("test@test.com", "password")
     assert "Unable to sign in" in caplog.text
+
+
+async def test_sign_in_raises_error_when_entry_not_loaded(
+    hass: HomeAssistant, config_entry, controller
+) -> None:
+    """Connection failure raises ConfigEntryNotReady."""
+    controller.connect.side_effect = HeosError()
+    await setup_component(hass, config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SIGN_IN,
+            {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
+            blocking=True,
+        )
 
 
 async def test_sign_out(hass: HomeAssistant, config_entry, controller) -> None:
