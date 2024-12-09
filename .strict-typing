@@ -362,6 +362,7 @@ homeassistant.components.p1_monitor.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
+homeassistant.components.person.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
