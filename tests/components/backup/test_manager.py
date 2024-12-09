@@ -248,14 +248,17 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
         ({"include_homeassistant": False}, "Home Assistant must be included in backup"),
     ],
 )
-async def test_async_create_backup_wrong_parameters(
-    hass: HomeAssistant, parameters: dict[str, Any], expected_error: str
+async def test_create_backup_wrong_parameters(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    parameters: dict[str, Any],
+    expected_error: str,
 ) -> None:
-    """Test generate backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    """Test create backup with wrong parameters."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
+    ws_client = await hass_ws_client(hass)
 
     default_parameters = {
         "agent_ids": [LOCAL_AGENT_ID],
@@ -264,12 +267,16 @@ async def test_async_create_backup_wrong_parameters(
         "include_database": True,
         "include_folders": [],
         "include_homeassistant": True,
-        "name": None,
-        "password": None,
     }
 
-    with pytest.raises(HomeAssistantError, match=expected_error):
-        await manager.async_create_backup(**(default_parameters | parameters))
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate"} | default_parameters | parameters
+    )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is False
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == expected_error
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
