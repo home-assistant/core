@@ -401,7 +401,7 @@ async def test_generate_calls_create(
     params: dict[str, Any],
     expected_extra_call_params: dict[str, Any],
 ) -> None:
-    """Test translation of WS parameter to backup/generate to async_create_backup."""
+    """Test translation of WS parameter to backup/generate to async_initiate_backup."""
     await setup_backup_integration(hass, with_hassio=False)
 
     client = await hass_ws_client(hass)
@@ -428,6 +428,78 @@ async def test_generate_calls_create(
             }
             | expected_extra_call_params
         )
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("create_backup_settings", "expected_call_params"),
+    [
+        (
+            {},
+            {
+                "agent_ids": [],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media"],
+                "include_homeassistant": True,
+                "name": "test-name",
+                "password": "test-password",
+            },
+        ),
+    ],
+)
+async def test_generate_with_default_settings_calls_create(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    create_backup_settings: dict[str, Any],
+    expected_call_params: dict[str, Any],
+) -> None:
+    """Test backup/generate_with_stored_settings calls async_initiate_backup."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+    freezer.move_to("2024-11-13 12:01:00+01:00")
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {"type": "backup/config/update", "create_backup": create_backup_settings}
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_initiate_backup",
+        return_value=NewBackup(backup_job_id="abc123"),
+    ) as generate_backup:
+        await client.send_json_auto_id({"type": "backup/generate_with_stored_settings"})
+        result = await client.receive_json()
+        assert result["success"]
+        assert result["result"] == {"backup_job_id": "abc123"}
+        generate_backup.assert_called_once_with(**expected_call_params)
 
 
 @pytest.mark.parametrize(

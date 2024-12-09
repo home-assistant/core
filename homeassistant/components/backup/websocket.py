@@ -27,6 +27,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
+    websocket_api.async_register_command(hass, handle_create_with_stored_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
     websocket_api.async_register_command(hass, handle_subscribe_events)
