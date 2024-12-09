@@ -19,7 +19,6 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
-    ATTR_ID,
     CONF_API_VERSION,
     CONF_HOST,
     CONF_MAC,
@@ -135,11 +134,6 @@ class SlideCoverLocal(CoverEntity):
         self._unique_id = mac
 
         self.parsedata(slide_info)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {ATTR_ID: self._id, ATTR_TOUCHGO: self._slide["touchgo"]}
 
     @property
     def is_opening(self) -> bool:
