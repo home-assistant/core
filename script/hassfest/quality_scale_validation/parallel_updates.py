@@ -6,6 +6,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/p
 import ast
 
 from homeassistant.const import Platform
+from script.hassfest import ast_parse_module
 from script.hassfest.model import Integration
 
 
@@ -25,7 +26,7 @@ def validate(integration: Integration) -> list[str] | None:
         module_file = integration.path / f"{platform}.py"
         if not module_file.exists():
             continue
-        module = ast.parse(module_file.read_text())
+        module = ast_parse_module(module_file)
 
         if not _has_parallel_updates_defined(module):
             errors.append(
