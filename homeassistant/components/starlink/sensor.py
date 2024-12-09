@@ -18,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTime,
 )
@@ -132,7 +133,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data.consumption["total_energy"],
     ),
 )
