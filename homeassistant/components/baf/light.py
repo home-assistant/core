@@ -8,16 +8,13 @@ from aiobafi6 import Device, OffOnAuto
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from . import BAFConfigEntry
 from .entity import BAFEntity
@@ -94,8 +91,6 @@ class BAFStandaloneLight(BAFLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-            self._device.light_color_temperature = color_temperature_mired_to_kelvin(
-                color_temp
-            )
+        if (color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+            self._device.light_color_temperature = color_temp
         await super().async_turn_on(**kwargs)
