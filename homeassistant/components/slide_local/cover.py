@@ -30,17 +30,11 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_TOUCHGO,
-    CONF_INVERT_POSITION,
-    DEFAULT_OFFSET,
-    SERVICE_CALIBRATE,
-    SERVICE_TOUCHGO,
-)
-from .models import SlideConfigEntry
+from . import SlideConfigEntry
+from .const import ATTR_TOUCHGO, CONF_INVERT_POSITION, DEFAULT_OFFSET
 
 COVER_PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
@@ -66,44 +60,31 @@ async def async_setup_entry(
 
     _LOGGER.debug("Initializing Slide cover(s)")
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CALIBRATE,
-        None,
-        "async_calibrate",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TOUCHGO,
-        {vol.Required(ATTR_TOUCHGO): cv.boolean},
-        "async_touchgo",
-    )
-
     _LOGGER.debug(
         "Trying to setup Slide '%s', config=%s",
         entry.data[CONF_HOST],
         str(entry),
     )
 
-    await entry.runtime_data.api.slide_add(
+    await entry.runtime_data.slide_add(
         entry.data[CONF_HOST],
         entry.data[CONF_PASSWORD],
         entry.data[CONF_API_VERSION],
     )
 
     try:
-        slide_info = await entry.runtime_data.api.slide_info(entry.runtime_data.host)
+        slide_info = await entry.runtime_data.slide_info(entry.data[CONF_HOST])
     except (ClientConnectionError, ClientTimeoutError) as err:
         # https://developers.home-assistant.io/docs/integration_setup_failures/
 
         _LOGGER.error(
             "Unable to get information from Slide '%s': %s",
-            entry.runtime_data.host,
+            entry.data[CONF_HOST],
             str(err),
         )
 
     if slide_info is None:
-        _LOGGER.error("Unable to setup Slide '%s'", entry.runtime_data.host)
+        _LOGGER.error("Unable to setup Slide '%s'", entry.data[CONF_HOST])
     elif slide_info.get("mac") is None:
         _LOGGER.error(
             "Unable to setup Slide Local '%s', the MAC is missing in the slide response (%s)",
@@ -114,16 +95,16 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SlideCoverLocal(
-                    entry.runtime_data.api,
+                    entry.runtime_data,
                     slide_info,
-                    entry.runtime_data.host,
+                    entry.data[CONF_HOST],
                     entry.data[CONF_MAC],
                     entry.data[CONF_INVERT_POSITION],
                 )
             ]
         )
 
-        _LOGGER.debug("Setup Slide '%s' successful", entry.runtime_data.host)
+        _LOGGER.debug("Setup Slide '%s' successful", entry.data[CONF_HOST])
 
 
 class SlideCoverLocal(CoverEntity):

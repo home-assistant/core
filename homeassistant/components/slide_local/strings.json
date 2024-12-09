@@ -27,30 +27,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "services": {
-    "calibrate": {
-      "name": "Calibrate",
-      "description": "Calibrate a Slide.",
-      "fields": {
-        "entity_id": {
-          "description": "Entity id of the Slide cover to calibrate.",
-          "name": "Entity"
-        }
-      }
-    },
-    "touchgo": {
-      "name": "TouchGo",
-      "description": "Enable or disable Touch Go of the Slide.",
-      "fields": {
-        "entity_id": {
-          "description": "Entity id of the Slide cover to enable/disable Touch Go.",
-          "name": "Entity"
-        },
-        "touchgo": {
-          "description": "Touch Go value, can be enable or disable.",
-          "name": "TouchGo"
-        }
-      }
+  "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Error while loading the config entry."
     }
   }
 }

@@ -26,8 +26,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
-from .models import SlideConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

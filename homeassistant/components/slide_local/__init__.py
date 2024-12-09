@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
-from goslideapi import GoSlideLocal as SlideLocalApi
+import logging
 
-from homeassistant.const import (
-    CONF_API_VERSION,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PASSWORD,
-    Platform,
+from goslideapi.goslideapi import (
+    ClientConnectionError,
+    ClientTimeoutError,
+    GoSlideLocal as SlideLocalApi,
 )
-from homeassistant.core import HomeAssistant
 
-from .models import SlideConfigEntry, SlideData
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+from .const import DOMAIN
+
+type SlideConfigEntry = ConfigEntry[SlideLocalApi]
+
 
 PLATFORMS = [Platform.COVER]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> bool:
@@ -23,18 +30,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> boo
 
     api_version = entry.data[CONF_API_VERSION]
     host = entry.data[CONF_HOST]
-    mac = entry.data[CONF_MAC]
     password = entry.data[CONF_PASSWORD]
 
     api = SlideLocalApi()
     await api.slide_add(
-        api_version,
         host,
         password,
+        api_version,
     )
 
-    entry.runtime_data = SlideData(api, api_version, host, mac, password)
+    try:
+        slide_info = await api.slide_info(host)
+    except (ClientConnectionError, ClientTimeoutError) as err:
+        # https://developers.home-assistant.io/docs/integration_setup_failures/
+
+        _LOGGER.debug(
+            "Unable to get information from Slide '%s': %s",
+            host,
+            str(err),
+        )
+
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="config_entry_not_ready"
+        ) from err
+
+    if slide_info is None or slide_info.get("mac") is None:
+        _LOGGER.error(
+            "Unable to setup Slide Local '%s', the MAC is missing in the slide response (%s)"
+        )
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="config_entry_not_ready"
+        )
+
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
