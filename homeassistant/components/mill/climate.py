@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
@@ -23,12 +24,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_AWAY_TEMP,
     ATTR_COMFORT_TEMP,
+    ATTR_MAX_HEATING_POWER,
     ATTR_ROOM_NAME,
     ATTR_SLEEP_TEMP,
     CLOUD,
@@ -38,6 +43,7 @@ from .const import (
     MANUFACTURER,
     MAX_TEMP,
     MIN_TEMP,
+    SERVICE_MAX_HEATING_POWER,
     SERVICE_SET_ROOM_TEMP,
 )
 from .coordinator import MillDataUpdateCoordinator
@@ -84,6 +90,21 @@ async def async_setup_entry(
         DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
     )
 
+    async def max_heating_power(entity: MillHeater, service: ServiceCall) -> None:
+        """Limit heating power."""
+        await mill_data_coordinator.mill_data_connection.max_heating_power(
+            entity.heater_id, service.data[ATTR_MAX_HEATING_POWER]
+        )
+
+    async_get_current_platform().async_register_entity_service(
+        SERVICE_MAX_HEATING_POWER,
+        schema={
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(ATTR_MAX_HEATING_POWER): vol.Range(min=0, max=2000),
+        },
+        func=max_heating_power,
+    )
+
 
 class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
@@ -110,7 +131,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 
         self._available = False
 
-        self._id = heater.device_id
+        self.heater_id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
@@ -126,7 +147,10 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
-            self._id, float(temperature)
+            self.heater_id, float(temperature)
+        )
+        await self.coordinator.mill_data_connection.fetch_historic_energy_usage(
+            self.heater_id
         )
         await self.coordinator.async_request_refresh()
 
@@ -134,12 +158,12 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.mill_data_connection.heater_control(
-                self._id, power_status=True
+                self.heater_id, power_status=True
             )
             await self.coordinator.async_request_refresh()
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.heater_control(
-                self._id, power_status=False
+                self.heater_id, power_status=False
             )
             await self.coordinator.async_request_refresh()
 
@@ -151,7 +175,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attr(self.coordinator.data[self._id])
+        self._update_attr(self.coordinator.data[self.heater_id])
         self.async_write_ha_state()
 
     @callback
