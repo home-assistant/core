@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -30,10 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from .const import (
     CONF_COLORS,
@@ -67,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MODE_ATTRS = {
     ATTR_EFFECT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -304,8 +301,7 @@ class FluxLight(
             await self._async_set_effect(effect, brightness)
             return
         # Handle switch to CCT Color Mode
-        if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
-            color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+        if color_temp_kelvin := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
             if (
                 ATTR_BRIGHTNESS not in kwargs
                 and self.color_mode in MULTI_BRIGHTNESS_COLOR_MODES
