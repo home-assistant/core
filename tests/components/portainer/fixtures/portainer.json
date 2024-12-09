@@ -1,0 +1,653 @@
+[
+  {
+    "Id": 2,
+    "Name": "local",
+    "Type": 1,
+    "URL": "unix:///var/run/docker.sock",
+    "GroupId": 1,
+    "PublicURL": "",
+    "Gpus": [],
+    "TLSConfig": {
+      "TLS": false,
+      "TLSSkipVerify": false
+    },
+    "AzureCredentials": {
+      "ApplicationID": "",
+      "TenantID": "",
+      "AuthenticationKey": ""
+    },
+    "TagIds": [],
+    "Status": 1,
+    "Snapshots": [
+      {
+        "Time": 1720723506,
+        "DockerVersion": "26.1.3",
+        "Swarm": false,
+        "TotalCPU": 4,
+        "TotalMemory": 4118179840,
+        "RunningContainerCount": 12,
+        "StoppedContainerCount": 0,
+        "HealthyContainerCount": 2,
+        "UnhealthyContainerCount": 0,
+        "VolumeCount": 1,
+        "ImageCount": 10,
+        "ServiceCount": 0,
+        "StackCount": 4,
+        "DockerSnapshotRaw": {
+          "Containers": [
+            {
+              "Id": "cd1939dc524aca2ff7e3b1afdc80c3609466ec79b80dd0cb6ffed65df3c66088",
+              "Names": ["/linkding"],
+              "Image": "sissbruecker/linkding:latest",
+              "ImageID": "sha256:8b0c5593a17fdc3fba722993d7d796250f51af30247c1d8f7b444c888a088baf",
+              "Command": "./bootstrap.sh",
+              "Created": 1720183268,
+              "Ports": [],
+              "Labels": {
+                "com.docker.compose.config-hash": "559d5e376ba375bc97352ad6e8a2fb1cca1e4f9a5ca0080ca37c5f6c772df805",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "ts-linkding:service_started:true",
+                "com.docker.compose.image": "sha256:8b0c5593a17fdc3fba722993d7d796250f51af30247c1d8f7b444c888a088baf",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "linkding",
+                "com.docker.compose.project.config_files": "/data/compose/11/docker-compose.yml",
+                "com.docker.compose.project.working_dir": "/data/compose/11",
+                "com.docker.compose.replace": "c06e150b81741bf722c6fcaca4068e235cf34f951ceab8794d2efd2f4235fac9",
+                "com.docker.compose.service": "linkding",
+                "com.docker.compose.version": "2.20.2"
+              },
+              "State": "running",
+              "Status": "Up 3 days (healthy)",
+              "HostConfig": {
+                "NetworkMode": "container:e194753bd70cbe8a8c8d5747c3fb5b5e3626f0960609e6244ddc0db2912147f8"
+              },
+              "NetworkSettings": {
+                "Networks": {}
+              },
+              "Mounts": [
+                {
+                  "Type": "bind",
+                  "Source": "/data/compose/11/data",
+                  "Destination": "/etc/linkding/data",
+                  "Mode": "rw",
+                  "RW": true,
+                  "Propagation": "rprivate"
+                }
+              ]
+            },
+            {
+              "Id": "e194753bd70cbe8a8c8d5747c3fb5b5e3626f0960609e6244ddc0db2912147f8",
+              "Names": ["/ts-linkding"],
+              "Image": "tailscale/tailscale:latest",
+              "ImageID": "sha256:cc68fa53184cd75800f713b30748bc1f33cc333d9698286c832971b0453c21f4",
+              "Command": "/usr/local/bin/containerboot",
+              "Created": 1720183095,
+              "Ports": [],
+              "Labels": {
+                "com.docker.compose.config-hash": "bae4e9d4dc2b9786986dd3541614aa94f194da5a622251976fb19187a942500f",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "",
+                "com.docker.compose.image": "sha256:cc68fa53184cd75800f713b30748bc1f33cc333d9698286c832971b0453c21f4",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "linkding",
+                "com.docker.compose.project.config_files": "/data/compose/11/docker-compose.yml",
+                "com.docker.compose.project.working_dir": "/data/compose/11",
+                "com.docker.compose.service": "ts-linkding",
+                "com.docker.compose.version": "2.20.2"
+              },
+              "State": "running",
+              "Status": "Up 3 days",
+              "HostConfig": {
+                "NetworkMode": "linkding_default"
+              },
+              "NetworkSettings": {
+                "Networks": {
+                  "linkding_default": {
+                    "IPAMConfig": "None",
+                    "Links": "None",
+                    "Aliases": "None",
+                    "NetworkID": "bb6cb523743f49ad61a1a794e41557df6ee25c8178947ea23a48c8910aa81ef7",
+                    "EndpointID": "921ba759c54caf8d025910490f5e71949d54c0892f1856eca9c4b3556445564b",
+                    "Gateway": "172.25.0.1",
+                    "IPAddress": "172.25.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:19:00:02",
+                    "DriverOpts": "None"
+                  }
+                }
+              },
+              "Mounts": [
+                {
+                  "Type": "bind",
+                  "Source": "/home/thomas/docker_data/linkding/ts-config/config",
+                  "Destination": "/config",
+                  "Mode": "rw",
+                  "RW": true,
+                  "Propagation": "rprivate"
+                },
+                {
+                  "Type": "bind",
+                  "Source": "/dev/net/tun",
+                  "Destination": "/dev/net/tun",
+                  "Mode": "rw",
+                  "RW": true,
+                  "Propagation": "rprivate"
+                },
+                {
+                  "Type": "bind",
+                  "Source": "/home/thomas/docker_data/linkding/ts-data",
+                  "Destination": "/var/lib/tailscale",
+                  "Mode": "rw",
+                  "RW": true,
+                  "Propagation": "rprivate"
+                }
+              ]
+            },
+            {
+              "Id": "7c20c78e1734a50af2d881aace4a2f760d249e2f1db7157f1ffb431f12ed12dd",
+              "Names": ["/portainer"],
+              "Image": "portainer/portainer-ce:latest",
+              "ImageID": "sha256:a3f85c245ec38eacdd9b749659c351a1d2601a08fa784c9c4b7200b83c64eb0c",
+              "Command": "/portainer",
+              "Created": 1718119328,
+              "Ports": [
+                {
+                  "IP": "0.0.0.0",
+                  "PrivatePort": 9000,
+                  "PublicPort": 9000,
+                  "Type": "tcp"
+                },
+                {
+                  "IP": "::",
+                  "PrivatePort": 9000,
+                  "PublicPort": 9000,
+                  "Type": "tcp"
+                },
+                {
+                  "IP": "0.0.0.0",
+                  "PrivatePort": 9443,
+                  "PublicPort": 9443,
+                  "Type": "tcp"
+                },
+                {
+                  "IP": "::",
+                  "PrivatePort": 9443,
+                  "PublicPort": 9443,
+                  "Type": "tcp"
+                },
+                {
+                  "IP": "0.0.0.0",
+                  "PrivatePort": 8000,
+                  "PublicPort": 8000,
+                  "Type": "tcp"
+                },
+                {
+                  "IP": "::",
+                  "PrivatePort": 8000,
+                  "PublicPort": 8000,
+                  "Type": "tcp"
+                }
+              ],
+              "Labels": {
+                "com.docker.desktop.extension.api.version": ">= 0.2.2",
+                "com.docker.desktop.extension.icon": "https://portainer-io-assets.sfo2.cdn.digitaloceanspaces.com/logos/portainer.png",
+                "com.docker.extension.additional-urls": "[{\"title\":\"Website\",\"url\":\"https://www.portainer.io?utm_campaign=DockerCon&utm_source=DockerDesktop\"},{\"title\":\"Documentation\",\"url\":\"https://docs.portainer.io\"},{\"title\":\"Support\",\"url\":\"https://join.slack.com/t/portainer/shared_invite/zt-txh3ljab-52QHTyjCqbe5RibC2lcjKA\"}]",
+                "com.docker.extension.detailed-description": "<p data-renderer-start-pos=\"226\">Portainer&rsquo;s Docker Desktop extension gives you access to all of Portainer&rsquo;s rich management functionality within your docker desktop experience.</p><h2 data-renderer-start-pos=\"374\">With Portainer you can:</h2><ul><li>See all your running containers</li><li>Easily view all of your container logs</li><li>Console into containers</li><li>Easily deploy your code into containers using a simple form</li><li>Turn your YAML into custom templates for easy reuse</li></ul><h2 data-renderer-start-pos=\"660\">About Portainer&nbsp;</h2><p data-renderer-start-pos=\"680\">Portainer is the worlds&rsquo; most popular universal container management platform with more than 650,000 active monthly users. Portainer can be used to manage Docker Standalone, Kubernetes, Docker Swarm and Nomad environments through a single common interface. It includes a simple GitOps automation engine and a Kube API.&nbsp;</p><p data-renderer-start-pos=\"1006\">Portainer Business Edition is our fully supported commercial grade product for business-wide use. It includes all the functionality that businesses need to manage containers at scale. Visit <a class=\"sc-jKJlTe dPfAtb\" href=\"http://portainer.io/\" title=\"http://Portainer.io\" data-renderer-mark=\"true\">Portainer.io</a> to learn more about Portainer Business and <a class=\"sc-jKJlTe dPfAtb\" href=\"http://portainer.io/take-3?utm_campaign=DockerCon&amp;utm_source=Docker%20Desktop\" title=\"http://portainer.io/take-3?utm_campaign=DockerCon&amp;utm_source=Docker%20Desktop\" data-renderer-mark=\"true\">get 3 free nodes.</a></p>",
+                "com.docker.extension.publisher-url": "https://www.portainer.io",
+                "com.docker.extension.screenshots": "[{\"alt\": \"screenshot one\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-1.png\"},{\"alt\": \"screenshot two\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-2.png\"},{\"alt\": \"screenshot three\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-3.png\"},{\"alt\": \"screenshot four\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-4.png\"},{\"alt\": \"screenshot five\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-5.png\"},{\"alt\": \"screenshot six\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-6.png\"},{\"alt\": \"screenshot seven\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-7.png\"},{\"alt\": \"screenshot eight\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-8.png\"},{\"alt\": \"screenshot nine\", \"url\": \"https://portainer-io-assets.sfo2.digitaloceanspaces.com/screenshots/docker-extension-9.png\"}]",
+                "io.portainer.server": "true",
+                "org.opencontainers.image.description": "Docker container management made simple, with the world’s most popular GUI-based container management platform.",
+                "org.opencontainers.image.title": "Portainer",
+                "org.opencontainers.image.vendor": "Portainer.io"
+              },
+              "State": "running",
+              "Status": "Up 3 days",
+              "HostConfig": {
+                "NetworkMode": "bridge"
+              },
+              "NetworkSettings": {
+                "Networks": {
+                  "bridge": {
+                    "IPAMConfig": "None",
+                    "Links": "None",
+                    "Aliases": "None",
+                    "NetworkID": "1e5175533787ab79e46e680ae78c89149b6f0128c18fe2055c9f2fedfd7fd335",
+                    "EndpointID": "c38f908032fbf886270c4b66f617f1a9788020f8892d831725579bf6e0498d3f",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:02",
+                    "DriverOpts": "None"
+                  }
+                }
+              },
+              "Mounts": [
+                {
+                  "Type": "volume",
+                  "Name": "portainer_data",
+                  "Source": "/var/lib/docker/volumes/portainer_data/_data",
+                  "Destination": "/data",
+                  "Driver": "local",
+                  "Mode": "z",
+                  "RW": true,
+                  "Propagation": ""
+                },
+                {
+                  "Type": "bind",
+                  "Source": "/var/run/docker.sock",
+                  "Destination": "/var/run/docker.sock",
+                  "Mode": "",
+                  "RW": true,
+                  "Propagation": "rprivate"
+                }
+              ]
+            }
+          ],
+          "Volumes": {
+            "Volumes": [
+              {
+                "CreatedAt": "2024-06-11T12:12:27+02:00",
+                "Driver": "local",
+                "Labels": "None",
+                "Mountpoint": "/var/lib/docker/volumes/portainer_data/_data",
+                "Name": "portainer_data",
+                "Options": "None",
+                "Scope": "local"
+              }
+            ],
+            "Warnings": "None"
+          },
+          "Networks": [
+            {
+              "Name": "linkding_default",
+              "Id": "bb6cb523743f49ad61a1a794e41557df6ee25c8178947ea23a48c8910aa81ef7",
+              "Created": "2024-07-05T14:38:15.867234984+02:00",
+              "Scope": "local",
+              "Driver": "bridge",
+              "EnableIPv6": false,
+              "IPAM": {
+                "Driver": "default",
+                "Options": "None",
+                "Config": [
+                  {
+                    "Subnet": "172.25.0.0/16",
+                    "Gateway": "172.25.0.1"
+                  }
+                ]
+              },
+              "Internal": false,
+              "Attachable": false,
+              "Ingress": false,
+              "ConfigFrom": {
+                "Network": ""
+              },
+              "ConfigOnly": false,
+              "Containers": {},
+              "Options": {},
+              "Labels": {
+                "com.docker.compose.network": "default",
+                "com.docker.compose.project": "linkding",
+                "com.docker.compose.version": "2.20.2"
+              }
+            },
+            {
+              "Name": "none",
+              "Id": "223761738e1b4824e407df717b1fc6cf14578f362026fd6b50ed4c0560de5b76",
+              "Created": "2024-06-11T12:11:41.78972318+02:00",
+              "Scope": "local",
+              "Driver": "null",
+              "EnableIPv6": false,
+              "IPAM": {
+                "Driver": "default",
+                "Options": "None",
+                "Config": "None"
+              },
+              "Internal": false,
+              "Attachable": false,
+              "Ingress": false,
+              "ConfigFrom": {
+                "Network": ""
+              },
+              "ConfigOnly": false,
+              "Containers": {},
+              "Options": {},
+              "Labels": {}
+            },
+            {
+              "Name": "bridge",
+              "Id": "1e5175533787ab79e46e680ae78c89149b6f0128c18fe2055c9f2fedfd7fd335",
+              "Created": "2024-07-08T06:55:03.753390229+02:00",
+              "Scope": "local",
+              "Driver": "bridge",
+              "EnableIPv6": false,
+              "IPAM": {
+                "Driver": "default",
+                "Options": "None",
+                "Config": [
+                  {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                  }
+                ]
+              },
+              "Internal": false,
+              "Attachable": false,
+              "Ingress": false,
+              "ConfigFrom": {
+                "Network": ""
+              },
+              "ConfigOnly": false,
+              "Containers": {},
+              "Options": {
+                "com.docker.network.bridge.default_bridge": "true",
+                "com.docker.network.bridge.enable_icc": "true",
+                "com.docker.network.bridge.enable_ip_masquerade": "true",
+                "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+                "com.docker.network.bridge.name": "docker0",
+                "com.docker.network.driver.mtu": "1500"
+              },
+              "Labels": {}
+            },
+            {
+              "Name": "host",
+              "Id": "6634b524c5ea67676f606dc7e7a023e77863c486704b85b1294cbbbd7b614047",
+              "Created": "2024-06-11T12:11:41.800287014+02:00",
+              "Scope": "local",
+              "Driver": "host",
+              "EnableIPv6": false,
+              "IPAM": {
+                "Driver": "default",
+                "Options": "None",
+                "Config": "None"
+              },
+              "Internal": false,
+              "Attachable": false,
+              "Ingress": false,
+              "ConfigFrom": {
+                "Network": ""
+              },
+              "ConfigOnly": false,
+              "Containers": {},
+              "Options": {},
+              "Labels": {}
+            }
+          ],
+          "Images": [
+            {
+              "Containers": -1,
+              "Created": 1718835327,
+              "Id": "sha256:cc68fa53184cd75800f713b30748bc1f33cc333d9698286c832971b0453c21f4",
+              "Labels": "None",
+              "ParentId": "",
+              "RepoDigests": [
+                "tailscale/tailscale@sha256:a0d1a9ed2abfacf905c0e3423aea00181064162e548f875f422a03924b9cc5c4"
+              ],
+              "RepoTags": ["tailscale/tailscale:latest"],
+              "SharedSize": -1,
+              "Size": 83127096,
+              "VirtualSize": 83127096
+            },
+            {
+              "Containers": -1,
+              "Created": 1718531164,
+              "Id": "sha256:8b0c5593a17fdc3fba722993d7d796250f51af30247c1d8f7b444c888a088baf",
+              "Labels": "None",
+              "ParentId": "",
+              "RepoDigests": [
+                "sissbruecker/linkding@sha256:328c06bcb76128b653828c681d7d648baef7e8453d2d6e25f90bb31d72f997af"
+              ],
+              "RepoTags": ["sissbruecker/linkding:latest"],
+              "SharedSize": -1,
+              "Size": 479540708,
+              "VirtualSize": 479540708
+            }
+          ],
+          "Info": {
+            "ID": "faaa3215-e284-4a1d-9089-d9c6c28c290e",
+            "Containers": 2,
+            "ContainersRunning": 2,
+            "ContainersPaused": 0,
+            "ContainersStopped": 0,
+            "Images": 10,
+            "Driver": "overlay2",
+            "DriverStatus": [
+              ["Backing Filesystem", "extfs"],
+              ["Supports d_type", "true"],
+              ["Using metacopy", "false"],
+              ["Native Overlay Diff", "true"],
+              ["userxattr", "false"]
+            ],
+            "Plugins": {
+              "Volume": ["local"],
+              "Network": [
+                "bridge",
+                "host",
+                "ipvlan",
+                "macvlan",
+                "null",
+                "overlay"
+              ],
+              "Authorization": "None",
+              "Log": [
+                "awslogs",
+                "fluentd",
+                "gcplogs",
+                "gelf",
+                "journald",
+                "json-file",
+                "local",
+                "splunk",
+                "syslog"
+              ]
+            },
+            "MemoryLimit": true,
+            "SwapLimit": true,
+            "CpuCfsPeriod": true,
+            "CpuCfsQuota": true,
+            "CPUShares": true,
+            "CPUSet": true,
+            "PidsLimit": true,
+            "IPv4Forwarding": true,
+            "BridgeNfIptables": true,
+            "BridgeNfIp6tables": true,
+            "Debug": false,
+            "NFd": 107,
+            "OomKillDisable": false,
+            "NGoroutines": 116,
+            "SystemTime": "2024-07-11T20:45:06.822929374+02:00",
+            "LoggingDriver": "json-file",
+            "CgroupDriver": "cgroupfs",
+            "CgroupVersion": "2",
+            "NEventsListener": 0,
+            "KernelVersion": "6.6.32-0-virt",
+            "OperatingSystem": "Alpine Linux v3.20",
+            "OSVersion": "3.20.0",
+            "OSType": "linux",
+            "Architecture": "x86_64",
+            "IndexServerAddress": "https://index.docker.io/v1/",
+            "RegistryConfig": {
+              "AllowNondistributableArtifactsCIDRs": "None",
+              "AllowNondistributableArtifactsHostnames": "None",
+              "InsecureRegistryCIDRs": ["127.0.0.0/8"],
+              "IndexConfigs": {
+                "docker.io": {
+                  "Name": "docker.io",
+                  "Mirrors": [],
+                  "Secure": true,
+                  "Official": true
+                }
+              },
+              "Mirrors": "None"
+            },
+            "NCPU": 4,
+            "MemTotal": 4118179840,
+            "GenericResources": "None",
+            "DockerRootDir": "/var/lib/docker",
+            "HttpProxy": "",
+            "HttpsProxy": "",
+            "NoProxy": "",
+            "Name": "service",
+            "Labels": [],
+            "ExperimentalBuild": false,
+            "ServerVersion": "26.1.3",
+            "Runtimes": {
+              "io.containerd.runc.v2": {
+                "path": "runc"
+              },
+              "runc": {
+                "path": "runc"
+              }
+            },
+            "DefaultRuntime": "runc",
+            "Swarm": {
+              "NodeID": "",
+              "NodeAddr": "",
+              "LocalNodeState": "inactive",
+              "ControlAvailable": false,
+              "Error": "",
+              "RemoteManagers": "None"
+            },
+            "LiveRestoreEnabled": false,
+            "Isolation": "",
+            "InitBinary": "docker-init",
+            "ContainerdCommit": {
+              "ID": "3a4de459a68952ffb703bbe7f2290861a75b6b67",
+              "Expected": "3a4de459a68952ffb703bbe7f2290861a75b6b67"
+            },
+            "RuncCommit": {
+              "ID": "51d5e94601ceffbbd85688df1c928ecccbfa4685",
+              "Expected": "51d5e94601ceffbbd85688df1c928ecccbfa4685"
+            },
+            "InitCommit": {
+              "ID": "",
+              "Expected": ""
+            },
+            "SecurityOptions": [
+              "name=seccomp,profile=builtin",
+              "name=cgroupns"
+            ],
+            "Warnings": "None"
+          },
+          "Version": {
+            "Platform": {
+              "Name": ""
+            },
+            "Components": [
+              {
+                "Name": "Engine",
+                "Version": "26.1.3",
+                "Details": {
+                  "ApiVersion": "1.45",
+                  "Arch": "amd64",
+                  "BuildTime": "2024-06-05T13:36:39.000000000+00:00",
+                  "Experimental": "false",
+                  "GitCommit": "8e96db1c328d0467b015768e42a62c0f834970bb",
+                  "GoVersion": "go1.22.4",
+                  "KernelVersion": "6.6.32-0-virt",
+                  "MinAPIVersion": "1.24",
+                  "Os": "linux"
+                }
+              },
+              {
+                "Name": "containerd",
+                "Version": "v1.7.17",
+                "Details": {
+                  "GitCommit": "3a4de459a68952ffb703bbe7f2290861a75b6b67"
+                }
+              },
+              {
+                "Name": "runc",
+                "Version": "1.1.12",
+                "Details": {
+                  "GitCommit": "51d5e94601ceffbbd85688df1c928ecccbfa4685"
+                }
+              },
+              {
+                "Name": "docker-init",
+                "Version": "0.19.0",
+                "Details": {
+                  "GitCommit": ""
+                }
+              }
+            ],
+            "Version": "26.1.3",
+            "ApiVersion": "1.45",
+            "MinAPIVersion": "1.24",
+            "GitCommit": "8e96db1c328d0467b015768e42a62c0f834970bb",
+            "GoVersion": "go1.22.4",
+            "Os": "linux",
+            "Arch": "amd64",
+            "KernelVersion": "6.6.32-0-virt",
+            "BuildTime": "2024-06-05T13:36:39.000000000+00:00"
+          }
+        },
+        "NodeCount": 0,
+        "GpuUseAll": false,
+        "GpuUseList": []
+      }
+    ],
+    "UserAccessPolicies": {},
+    "TeamAccessPolicies": {},
+    "EdgeKey": "",
+    "EdgeCheckinInterval": 5,
+    "Kubernetes": {
+      "Snapshots": [],
+      "Configuration": {
+        "UseLoadBalancer": false,
+        "UseServerMetrics": false,
+        "EnableResourceOverCommit": false,
+        "ResourceOverCommitPercentage": 0,
+        "StorageClasses": [],
+        "IngressClasses": [],
+        "RestrictDefaultNamespace": false,
+        "IngressAvailabilityPerNamespace": false,
+        "AllowNoneIngressClass": false
+      },
+      "Flags": {
+        "IsServerMetricsDetected": false,
+        "IsServerIngressClassDetected": false,
+        "IsServerStorageDetected": false
+      }
+    },
+    "ComposeSyntaxMaxVersion": "3.9",
+    "SecuritySettings": {
+      "allowBindMountsForRegularUsers": true,
+      "allowPrivilegedModeForRegularUsers": true,
+      "allowVolumeBrowserForRegularUsers": false,
+      "allowHostNamespaceForRegularUsers": true,
+      "allowDeviceMappingForRegularUsers": true,
+      "allowStackManagementForRegularUsers": true,
+      "allowContainerCapabilitiesForRegularUsers": true,
+      "allowSysctlSettingForRegularUsers": true,
+      "enableHostManagementFeatures": false
+    },
+    "LastCheckInDate": 0,
+    "QueryDate": 0,
+    "Heartbeat": false,
+    "UserTrusted": false,
+    "PostInitMigrations": {
+      "MigrateIngresses": false,
+      "MigrateGPUs": false
+    },
+    "Edge": {
+      "AsyncMode": false,
+      "PingInterval": 0,
+      "SnapshotInterval": 0,
+      "CommandInterval": 0
+    },
+    "Agent": {
+      "Version": ""
+    },
+    "EnableGPUManagement": false,
+    "AuthorizedUsers": "None",
+    "AuthorizedTeams": "None",
+    "Tags": "None",
+    "IsEdgeDevice": false
+  }
+]

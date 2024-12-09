@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Portainer instance.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "The URL of the device running your Portainer instance. e.g. `https://192.168.178.4:9443`",
+          "access_token": "The access token from the Portainer admin panel. e.g. prt_xxxxx"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "container_state": {
+        "name": "{container}",
+        "state": {
+          "created": "Created",
+          "dead": "Dead",
+          "exited": "Exited",
+          "paused": "Paused",
+          "restarting": "Restarting",
+          "running": "Running"
+        }
+      }
+    }
+  }
+}
