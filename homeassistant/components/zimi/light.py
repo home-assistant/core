@@ -51,12 +51,8 @@ class ZimiLight(LightEntity):
         self._attr_should_poll = False
         self._light = light
         self._light.subscribe(self)
-        if self._light.type == "dimmer":
-            self._attr_color_mode = ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        else:
-            self._attr_color_mode = ColorMode.ONOFF
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.identifier)},
             name=self._attr_name,
@@ -120,6 +116,8 @@ class ZimiDimmer(ZimiLight):
     def __init__(self, light: ControlPointDevice, api: ControlPoint) -> None:
         """Initialize a ZimiDimmer."""
         super().__init__(light, api)
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         if self._light.type != "dimmer":
             raise ValueError("ZimiDimmer needs a dimmable light")
 
