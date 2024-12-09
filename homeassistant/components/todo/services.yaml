@@ -109,3 +109,9 @@ remove_completed_items:
       domain: todo
       supported_features:
         - todo.TodoListEntityFeature.DELETE_TODO_ITEM
+remove_all_items:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM
