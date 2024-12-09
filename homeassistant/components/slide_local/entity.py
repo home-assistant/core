@@ -24,6 +24,8 @@ class SlideEntity(CoordinatorEntity[SlideCoordinator]):
             identifiers={(DOMAIN, coordinator.data["mac"])},
             name=coordinator.data["device_name"],
             sw_version=coordinator.api_version,
+            serial_number=coordinator.data["mac"],
+            configuration_url=f"http://{coordinator.host}",
         )
 
     @property

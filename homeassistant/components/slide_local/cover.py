@@ -52,14 +52,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up cover(s) for Slide platform."""
 
-    _LOGGER.debug("Initializing Slide cover(s)")
-
-    coordinator: SlideCoordinator = entry.runtime_data
-
     _LOGGER.debug(
-        "Trying to setup Slide '%s'",
+        "Initializing Slide cover '%s'",
         entry.data[CONF_HOST],
     )
+
+    coordinator: SlideCoordinator = entry.runtime_data
 
     if coordinator.data.get("mac") == "":
         _LOGGER.error(
@@ -85,7 +83,6 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
 
     _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.CURTAIN
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -95,10 +92,9 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         """Initialize the cover."""
         super().__init__(coordinator)
 
-        self._attr_name = "Slide"
-
+        self._attr_name = coordinator.data["device_name"]
         self._invert = entry.data[CONF_INVERT_POSITION]
-        self._unique_id = f"{coordinator.data["mac"]}-cover"
+        self._attr_unique_id = f"{coordinator.data["mac"]}-cover"
 
     @property
     def is_opening(self) -> bool:

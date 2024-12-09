@@ -10,16 +10,15 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SlideCoordinator
 
-type SlideConfigEntry = ConfigEntry[SlideLocalApi]
-
-
 PLATFORMS = [Platform.COVER]
+type SlideConfigEntry = ConfigEntry[SlideLocalApi]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> bool:
     """Set up the slide_local integration."""
 
     coordinator = SlideCoordinator(hass, entry)
+
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from . import SlideConfigEntry
 
 
-class SlideCoordinator(DataUpdateCoordinator[SlideLocalApi]):
+class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get and update the latest data."""
 
     def __init__(self, hass: HomeAssistant, entry: SlideConfigEntry) -> None:
@@ -73,6 +73,8 @@ class SlideCoordinator(DataUpdateCoordinator[SlideLocalApi]):
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
             )
+
+        _LOGGER.debug("Slide coordinator initialized")
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the data from the Slide device."""
