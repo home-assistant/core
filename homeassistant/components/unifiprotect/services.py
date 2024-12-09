@@ -233,10 +233,10 @@ async def get_doorbell_user(hass: HomeAssistant, call: ServiceCall) -> ServiceRe
     keys = [
         {
             "full_name": user.full_name,
-            "status": user.status,
-            "ulp_id": key.ulp_user,
-            "typ": key.registry_type,
-            "typ_id": key.registry_id,
+            "user_status": user.status,
+            "key_type": key.registry_type,
+            **({"nfc_id": key.registry_id} if key.registry_type == "nfc" else {}),
+            "user_ulp_id": key.ulp_user,
         }
         for key in camera.api.bootstrap.keyrings.as_list()
         if (user := ulp_users.by_ulp_id(key.ulp_user))
