@@ -20,7 +20,7 @@
         }
       },
       "change_password": {
-        "description": "Update your MyBMW/MINI Connected password for account `{username}` in  region `{region}`.",
+        "description": "Update your MyBMW/MINI Connected password for account `{username}` in region `{region}`.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
