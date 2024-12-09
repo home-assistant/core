@@ -2983,6 +2983,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "ituran": {
+      "name": "Ituran",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "izone": {
       "name": "iZone",
       "integration_type": "hub",
@@ -6891,6 +6897,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "watergate": {
+      "name": "Watergate",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "watttime": {
       "name": "WattTime",
