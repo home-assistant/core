@@ -30,6 +30,7 @@ from . import (
     WOHAND_SERVICE_INFO,
     WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
     WOLOCK_SERVICE_INFO,
+    WORELAY_SWITCH_1PM_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     init_integration,
     patch_async_setup_entry,
@@ -153,6 +154,49 @@ async def test_bluetooth_discovery_lock_key(hass: HomeAssistant) -> None:
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a encrypted device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WORELAY_SWITCH_1PM_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "key"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "key"
+    assert result["errors"] == {}
+
+    # There is currently no universal way to verify an encryption key.
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Relay Switch 1PM EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "relay_switch_1pm",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -845,3 +889,158 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
+
+
+async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
+    """Test the user initiated form for a relay switch 1pm."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WORELAY_SWITCH_1PM_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "key"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "key"
+    assert result["errors"] == {}
+
+    # There is currently no universal way to verify an encryption key.
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Relay Switch 1PM EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "relay_switch_1pm",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
+    """Test the user initiated form for a relay switch 1pm."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WORELAY_SWITCH_1PM_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.async_retrieve_encryption_key",
+        side_effect=SwitchbotAuthenticationError("error from api"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "auth_failed"}
+    assert "error from api" in result["description_placeholders"]["error_detail"]
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "homeassistant.components.switchbot.config_flow.SwitchbotLock.async_retrieve_encryption_key",
+            return_value={
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Relay Switch 1PM EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "relay_switch_1pm",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
+    hass: HomeAssistant,
+) -> None:
+    """Test the user initiated form for a relay switch 1pm when the switchbot api is down."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WORELAY_SWITCH_1PM_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.async_retrieve_encryption_key",
+        side_effect=SwitchbotAccountConnectionError("Switchbot API down"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_error"
+    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
