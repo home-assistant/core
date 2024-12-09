@@ -108,6 +108,19 @@ async def test_config_entry_not_ready(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_auth_failed(
+    hass: HomeAssistant, config_entry: MockConfigEntry, habitica: AsyncMock
+) -> None:
+    """Test config entry auth failed setup error."""
+
+    habitica.get_user.side_effect = ERROR_NOT_AUTHORIZED
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_coordinator_update_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
