@@ -49,6 +49,8 @@ SERVICE_SPEED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 @callback
 def async_get_entry_for_service_call(
@@ -140,9 +142,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         (SERVICE_RESUME, async_resume_queue, SERVICE_BASE_SCHEMA),
         (SERVICE_SET_SPEED, async_set_queue_speed, SERVICE_SPEED_SCHEMA),
     ):
-        if hass.services.has_service(DOMAIN, service):
-            continue
-
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     return True
