@@ -7,7 +7,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -38,8 +38,8 @@ rules:
     status: exempt
     comment: No configuration parameters
   docs-installation-parameters:
-    status: exempt
-    comment: No installation parameters
+    status: done
+    comment: Described in installation instructions
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -47,7 +47,9 @@ rules:
     status: exempt
     comment: Handled by coordinator
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: PR is pending review
 
   # Gold
   devices: done
@@ -67,21 +69,20 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      New devices will be added at restart of HA.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations:
-    status: exempt
+    status: done
     comment: |
       Datapoint names are read from the API metadata and used as entity names in HA.
       It is not feasible to use the API names as translation keys as they can change between
       firmware and API upgrades and the number of appliance models and firmware releases are huge.
       Entity names translations are therefore not implemented for the time being.
-  exception-translations: done
+  exception-translations:
+    status: todo
+    comment: PR pending review \#191937
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
