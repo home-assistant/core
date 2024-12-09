@@ -65,7 +65,6 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
 
     _attr_preset_modes = PRESET_MODES
     _attr_hvac_modes = HVAC_MODES
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

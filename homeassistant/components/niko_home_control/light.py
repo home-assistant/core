@@ -1,4 +1,4 @@
-"""Support for Niko Home Control."""
+"""Light platform Niko Home Control."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import nikohomecontrol
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -16,18 +15,22 @@ from homeassistant.components.light import (
     LightEntity,
     brightness_supported,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+
+from . import NikoHomeControlConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=30)
 
+# delete after 2025.7.0
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
@@ -38,20 +41,56 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    host = config[CONF_HOST]
-
-    try:
-        nhc = nikohomecontrol.NikoHomeControl(
-            {"ip": host, "port": 8000, "timeout": 20000}
+    # Start import flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") == FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2025.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Niko Home Control",
+            },
         )
-        niko_data = NikoHomeControlData(hass, nhc)
-        await niko_data.async_update()
-    except OSError as err:
-        _LOGGER.error("Unable to access %s (%s)", host, err)
-        raise PlatformNotReady from err
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.7.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Niko Home Control",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NikoHomeControlConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Niko Home Control light entry."""
+    niko_data = entry.runtime_data
 
     async_add_entities(
-        [NikoHomeControlLight(light, niko_data) for light in nhc.list_actions()], True
+        NikoHomeControlLight(light, niko_data) for light in niko_data.nhc.list_actions()
     )
 
 
@@ -88,36 +127,3 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = state != 0
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = state * 2.55
-
-
-class NikoHomeControlData:
-    """The class for handling data retrieval."""
-
-    def __init__(self, hass, nhc):
-        """Set up Niko Home Control Data object."""
-        self._nhc = nhc
-        self.hass = hass
-        self.available = True
-        self.data = {}
-        self._system_info = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from the NikoHomeControl API."""
-        _LOGGER.debug("Fetching async state in bulk")
-        try:
-            self.data = await self.hass.async_add_executor_job(
-                self._nhc.list_actions_raw
-            )
-            self.available = True
-        except OSError as ex:
-            _LOGGER.error("Unable to retrieve data from Niko, %s", str(ex))
-            self.available = False
-
-    def get_state(self, aid):
-        """Find and filter state based on action id."""
-        for state in self.data:
-            if state["id"] == aid:
-                return state["value1"]
-        _LOGGER.error("Failed to retrieve state off unknown light")
-        return None

@@ -64,7 +64,6 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
