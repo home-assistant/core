@@ -242,119 +242,73 @@ async def test_agents_get_backup(
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_get_download_details: Mock,
 ) -> None:
     """Test agent download backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_client()
     backup_id = "23e64aec"
 
     aioclient_mock.get(
         mock_get_download_details.return_value["url"], content=b"backup data"
     )
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        mocked_write = Mock()
-        mocked_open.return_value.write = mocked_write
-        await client.send_json_auto_id(
-            {
-                "type": "backup/agents/download",
-                "agent_id": "cloud.cloud",
-                "backup_id": backup_id,
-            }
-        )
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"] is None
-    mocked_write.assert_called_once_with(b"backup data")
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
 
 
 @pytest.mark.parametrize("side_effect", [ClientError, CloudError])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download_fail_cloud(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
     mock_get_download_details: Mock,
     side_effect: Exception,
 ) -> None:
     """Test agent download backup, when cloud user is logged in."""
-    client = await hass_ws_client(hass)
+    client = await hass_client()
     backup_id = "23e64aec"
     mock_get_download_details.side_effect = side_effect
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "cloud.cloud",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "backup_agents_download",
-        "message": "Failed to get download details",
-    }
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
+    assert resp.status == 500
+    content = await resp.content.read()
+    assert "Failed to get download details" in content.decode()
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download_fail_get(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_get_download_details: Mock,
 ) -> None:
     """Test agent download backup, when cloud user is logged in."""
-    client = await hass_ws_client(hass)
+    client = await hass_client()
     backup_id = "23e64aec"
 
     aioclient_mock.get(mock_get_download_details.return_value["url"], status=500)
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "cloud.cloud",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "backup_agents_download",
-        "message": "Failed to download backup",
-    }
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
+    assert resp.status == 500
+    content = await resp.content.read()
+    assert "Failed to download backup" in content.decode()
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download_not_found(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test agent download backup raises error if not found."""
-    client = await hass_ws_client(hass)
+    client = await hass_client()
     backup_id = "1234"
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/agents/download",
-            "agent_id": "cloud.cloud",
-            "backup_id": backup_id,
-        }
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "backup_agents_download",
-        "message": "Backup not found",
-    }
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
+    assert resp.status == 404
+    assert await resp.content.read() == b""
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")

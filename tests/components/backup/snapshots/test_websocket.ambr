@@ -10,36 +10,6 @@
     'type': 'result',
   })
 # ---
-# name: test_agents_download
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
-  })
-# ---
-# name: test_agents_download_exception
-  dict({
-    'error': dict({
-      'code': 'backup_agents_download',
-      'message': 'Boom',
-    }),
-    'id': 1,
-    'success': False,
-    'type': 'result',
-  })
-# ---
-# name: test_agents_download_unknown_agent
-  dict({
-    'error': dict({
-      'code': 'unknown_agent',
-      'message': 'Agent domain.test not found',
-    }),
-    'id': 1,
-    'success': False,
-    'type': 'result',
-  })
-# ---
 # name: test_agents_info
   dict({
     'id': 1,
