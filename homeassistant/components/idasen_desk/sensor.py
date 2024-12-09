@@ -15,12 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
+from .entity import IdasenDeskEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,44 +51,26 @@ async def async_setup_entry(
     """Set up Idasen Desk sensors."""
     data: DeskData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        IdasenDeskSensor(
-            data.address, data.device_info, data.coordinator, sensor_description
-        )
-        for sensor_description in SENSORS
+        IdasenDeskSensor(data, sensor_description) for sensor_description in SENSORS
     )
 
 
-class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
+class IdasenDeskSensor(IdasenDeskEntity, SensorEntity):
     """IdasenDesk sensor."""
 
     entity_description: IdasenDeskSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
-        self,
-        address: str,
-        device_info: DeviceInfo,
-        coordinator: IdasenDeskCoordinator,
-        description: IdasenDeskSensorDescription,
+        self, desk_data: DeskData, description: IdasenDeskSensorDescription
     ) -> None:
         """Initialize the IdasenDesk sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(f"{description.key}-{desk_data.address}", desk_data)
         self.entity_description = description
-
-        self._attr_unique_id = f"{description.key}-{address}"
-        self._attr_device_info = device_info
-        self._address = address
-        self._desk = coordinator.desk
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._update_native_value()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._desk.is_connected is True
 
     @callback
     def _handle_coordinator_update(self, *args: Any) -> None:

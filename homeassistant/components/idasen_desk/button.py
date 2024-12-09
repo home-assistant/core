@@ -9,11 +9,11 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
+from .entity import IdasenDeskEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,13 +50,10 @@ async def async_setup_entry(
 ) -> None:
     """Set buttons for device."""
     data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        IdasenDeskButton(data.address, data.device_info, data.coordinator, button)
-        for button in BUTTONS
-    )
+    async_add_entities(IdasenDeskButton(data, button) for button in BUTTONS)
 
 
-class IdasenDeskButton(ButtonEntity):
+class IdasenDeskButton(IdasenDeskEntity, ButtonEntity):
     """Defines a IdasenDesk button."""
 
     entity_description: IdasenDeskButtonDescription
@@ -64,18 +61,14 @@ class IdasenDeskButton(ButtonEntity):
 
     def __init__(
         self,
-        address: str,
-        device_info: DeviceInfo,
-        coordinator: IdasenDeskCoordinator,
+        desk_data: DeskData,
         description: IdasenDeskButtonDescription,
     ) -> None:
         """Initialize the IdasenDesk button entity."""
+        super().__init__(f"{description.key}-{desk_data.address}", desk_data)
         self.entity_description = description
-
-        self._attr_unique_id = f"{description.key}-{address}"
-        self._attr_device_info = device_info
-        self._address = address
-        self._coordinator = coordinator
+        self._address = desk_data.address
+        self._coordinator = desk_data.coordinator
 
     async def async_press(self) -> None:
         """Triggers the IdasenDesk button press service."""
@@ -85,3 +78,8 @@ class IdasenDeskButton(ButtonEntity):
             self._address,
         )
         await self.entity_description.press_action(self._coordinator)()
+
+    @property
+    def available(self) -> bool:
+        """Connect/disconnect buttons should always be available."""
+        return True
