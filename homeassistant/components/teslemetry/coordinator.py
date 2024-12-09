@@ -39,7 +39,6 @@ ENDPOINTS = [
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
-    updated_once: bool
     last_active: datetime
 
     def __init__(
@@ -54,7 +53,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
         self.data = flatten(product)
-        self.updated_once = False
         self.last_active = datetime.now()
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -81,15 +79,11 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        self.updated_once = True
-
         return flatten(data)
 
 
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Teslemetry API."""
-
-    updated_once: bool
 
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
@@ -122,8 +116,6 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Teslemetry API."""
 
-    updated_once: bool
-
     def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
@@ -151,8 +143,6 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Teslemetry API."""
 
-    updated_once: bool
-
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
@@ -172,8 +162,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-
-        self.updated_once = True
 
         # Add all time periods together
         output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
