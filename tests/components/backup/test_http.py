@@ -110,7 +110,7 @@ async def test_uploading_a_backup_file(
 @pytest.mark.parametrize(
     ("error", "message"),
     [
-        (OSError("Boom!"), "Can't write backup file Boom!"),
+        (OSError("Boom!"), "Can't write backup file: Boom!"),
         (asyncio.CancelledError("Boom!"), ""),
     ],
 )
