@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
@@ -22,7 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,9 +117,11 @@ class OppleLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs and self.brightness != kwargs[ATTR_BRIGHTNESS]:
             self._device.brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs and self.color_temp != kwargs[ATTR_COLOR_TEMP]:
-            color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            self._device.color_temperature = color_temp
+        if (
+            ATTR_COLOR_TEMP_KELVIN in kwargs
+            and self.color_temp_kelvin != kwargs[ATTR_COLOR_TEMP_KELVIN]
+        ):
+            self._device.color_temperature = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
