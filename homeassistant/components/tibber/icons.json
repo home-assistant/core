@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "electricity_price": {
+        "default": "mdi:currency-usd"
+      },
       "electricity_price_excl_tax": {
         "default": "mdi:currency-usd"
       }

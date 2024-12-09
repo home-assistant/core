@@ -373,7 +373,6 @@ class TibberSensorElPrice(TibberSensor):
 
         self._attr_available = False
         self._attr_native_unit_of_measurement = self._tibber_home.price_unit
-        self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
