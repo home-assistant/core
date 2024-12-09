@@ -773,19 +773,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> MediaPlayerEntityFeature:
-        """Return the supported features as MediaPlayerEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = MediaPlayerEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     def turn_on(self) -> None:
         """Turn the media player on."""
         raise NotImplementedError
@@ -925,87 +912,85 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def support_play(self) -> bool:
         """Boolean if play is supported."""
-        return MediaPlayerEntityFeature.PLAY in self.supported_features_compat
+        return MediaPlayerEntityFeature.PLAY in self.supported_features
 
     @final
     @property
     def support_pause(self) -> bool:
         """Boolean if pause is supported."""
-        return MediaPlayerEntityFeature.PAUSE in self.supported_features_compat
+        return MediaPlayerEntityFeature.PAUSE in self.supported_features
 
     @final
     @property
     def support_stop(self) -> bool:
         """Boolean if stop is supported."""
-        return MediaPlayerEntityFeature.STOP in self.supported_features_compat
+        return MediaPlayerEntityFeature.STOP in self.supported_features
 
     @final
     @property
     def support_seek(self) -> bool:
         """Boolean if seek is supported."""
-        return MediaPlayerEntityFeature.SEEK in self.supported_features_compat
+        return MediaPlayerEntityFeature.SEEK in self.supported_features
 
     @final
     @property
     def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
-        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
 
     @final
     @property
     def support_volume_mute(self) -> bool:
         """Boolean if muting volume is supported."""
-        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features_compat
+        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features
 
     @final
     @property
     def support_previous_track(self) -> bool:
         """Boolean if previous track command supported."""
-        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features_compat
+        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features
 
     @final
     @property
     def support_next_track(self) -> bool:
         """Boolean if next track command supported."""
-        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features_compat
+        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features
 
     @final
     @property
     def support_play_media(self) -> bool:
         """Boolean if play media command supported."""
-        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features_compat
+        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features
 
     @final
     @property
     def support_select_source(self) -> bool:
         """Boolean if select source command supported."""
-        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features_compat
+        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features
 
     @final
     @property
     def support_select_sound_mode(self) -> bool:
         """Boolean if select sound mode command supported."""
-        return (
-            MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features_compat
-        )
+        return MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features
 
     @final
     @property
     def support_clear_playlist(self) -> bool:
         """Boolean if clear playlist command supported."""
-        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features_compat
+        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features
 
     @final
     @property
     def support_shuffle_set(self) -> bool:
         """Boolean if shuffle is supported."""
-        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features_compat
+        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features
 
     @final
     @property
     def support_grouping(self) -> bool:
         """Boolean if player grouping is supported."""
-        return MediaPlayerEntityFeature.GROUPING in self.supported_features_compat
+        return MediaPlayerEntityFeature.GROUPING in self.supported_features
 
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
@@ -1034,7 +1019,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level < 1
-            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 min(1, self.volume_level + self.volume_step)
@@ -1052,7 +1037,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level > 0
-            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 max(0, self.volume_level - self.volume_step)
@@ -1095,7 +1080,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
 
         if (
             source_list := self.source_list
@@ -1301,7 +1286,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features_compat:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
