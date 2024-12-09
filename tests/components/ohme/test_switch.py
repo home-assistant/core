@@ -4,13 +4,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.ohme.const import (
-    COORDINATOR_ACCOUNTINFO,
-    COORDINATOR_CHARGESESSIONS,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
-)
 from homeassistant.components.ohme.switch import (
     OhmeConfigurationSwitch,
     OhmeMaxChargeSwitch,
@@ -55,24 +48,8 @@ def mock_config_entry():
     return AsyncMock(data={"email": "test@example.com"})
 
 
-@pytest.fixture
-def setup_hass_data(mock_hass, mock_client, mock_coordinator):
-    """Fixture for setting up Home Assistant data."""
-    mock_hass.data = {
-        DOMAIN: {
-            "test@example.com": {
-                DATA_CLIENT: mock_client,
-                DATA_COORDINATORS: {
-                    COORDINATOR_CHARGESESSIONS: mock_coordinator,
-                    COORDINATOR_ACCOUNTINFO: mock_coordinator,
-                },
-            }
-        }
-    }
-
-
 @pytest.mark.asyncio
-async def test_async_setup_entry(mock_hass, mock_config_entry, setup_hass_data) -> None:
+async def test_async_setup_entry(mock_hass, mock_config_entry) -> None:
     """Test async_setup_entry."""
     async_add_entities = AsyncMock()
     await async_setup_entry(mock_hass, mock_config_entry, async_add_entities)

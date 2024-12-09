@@ -22,14 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    COORDINATOR_ADVANCED,
-    COORDINATOR_CHARGESESSIONS,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DATA_SLOTS,
-    DOMAIN,
-)
+from .const import COORDINATOR_ADVANCED, COORDINATOR_CHARGESESSIONS
 from .entity import OhmeEntity
 from .utils import next_slot, slot_list, slot_list_str
 
@@ -42,10 +35,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors and configure coordinator."""
-    account_id = config_entry.data["email"]
 
-    client = hass.data[DOMAIN][account_id][DATA_CLIENT]
-    coordinators = hass.data[DOMAIN][account_id][DATA_COORDINATORS]
+    client = config_entry.runtime_data.client
+    coordinators = config_entry.runtime_data.coordinators
 
     coordinator = coordinators[COORDINATOR_CHARGESESSIONS]
     adv_coordinator = coordinators[COORDINATOR_ADVANCED]
@@ -132,7 +124,6 @@ class EnergyUsageSensor(OhmeEntity, SensorEntity):
 
     _attr_translation_key = "energy"
     _attr_icon = "mdi:lightning-bolt-circle"
-    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_suggested_display_precision = 1
@@ -199,9 +190,9 @@ class NextSlotStartSensor(OhmeEntity, SensorEntity):
         ):
             self._state = None
         else:
-            self._state = next_slot(
-                self._hass, self._client.email, self.coordinator.data
-            )["start"]
+            self._state = next_slot(self.platform.config_entry, self.coordinator.data)[
+                "start"
+            ]
 
         self._last_updated = utcnow()
 
@@ -229,9 +220,9 @@ class NextSlotEndSensor(OhmeEntity, SensorEntity):
         ):
             self._state = None
         else:
-            self._state = next_slot(
-                self._hass, self._client.email, self.coordinator.data
-            )["end"]
+            self._state = next_slot(self.platform.config_entry, self.coordinator.data)[
+                "end"
+            ]
 
         self._last_updated = utcnow()
 
@@ -262,10 +253,10 @@ class SlotListSensor(OhmeEntity, SensorEntity):
             slots = slot_list(self.coordinator.data)
 
             # Store slots for external use
-            self._hass.data[DOMAIN][self._client.email][DATA_SLOTS] = slots
+            self.platform.config_entry.runtime_data.slots = slots
 
             # Convert list to text
-            self._state = slot_list_str(self._hass, self._client.email, slots)
+            self._state = slot_list_str(self.platform.config_entry, slots)
 
         self._last_updated = utcnow()
         self.async_write_ha_state()

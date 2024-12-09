@@ -14,9 +14,6 @@ from .const import (
     COORDINATOR_ACCOUNTINFO,
     COORDINATOR_CHARGESESSIONS,
     COORDINATOR_SCHEDULES,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
 )
 from .entity import OhmeEntity
 from .utils import session_in_progress
@@ -28,10 +25,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches and configure coordinator."""
-    account_id = config_entry.data["email"]
 
-    coordinators = hass.data[DOMAIN][account_id][DATA_COORDINATORS]
-    client = hass.data[DOMAIN][account_id][DATA_CLIENT]
+    coordinators = config_entry.runtime_data.coordinators
+    client = config_entry.runtime_data.client
 
     numbers = [
         TargetPercentNumber(
@@ -84,7 +80,7 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         # If session in progress, update this session, if not update the first schedule
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             await self._client.async_apply_session_rule(target_percent=int(value))
             await asyncio.sleep(1)
             await self.coordinator.async_refresh()
@@ -97,7 +93,7 @@ class TargetPercentNumber(OhmeEntity, NumberEntity):
     def _handle_coordinator_update(self) -> None:
         """Get value from data returned from API by coordinator."""
         # Set with the same logic as reading
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             target = round(self.coordinator.data["appliedRule"]["targetPercent"])
         elif self.coordinator_schedules.data:
             target = round(self.coordinator_schedules.data["targetPercent"])
@@ -140,7 +136,7 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         # If session in progress, update this session, if not update the first schedule
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             if value == 0:
                 await self._client.async_apply_session_rule(pre_condition=False)
             else:
@@ -164,7 +160,7 @@ class PreconditioningNumber(OhmeEntity, NumberEntity):
         """Get value from data returned from API by coordinator."""
         precondition = None
         # Set with the same logic as reading
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             enabled = self.coordinator.data["appliedRule"].get(
                 "preconditioningEnabled", False
             )

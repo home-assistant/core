@@ -1,5 +1,6 @@
 """The ohme integration."""
 
+from dataclasses import dataclass
 import logging
 
 from ohme import OhmeApiClient
@@ -8,16 +9,9 @@ from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONFIG_VERSION,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DATA_OPTIONS,
-    DOMAIN,
-    ENTITY_TYPES,
-    LEGACY_MAPPING,
-)
+from .const import CONFIG_VERSION, ENTITY_TYPES, LEGACY_MAPPING
 from .coordinator import (
     OhmeAccountInfoCoordinator,
     OhmeAdvancedSettingsCoordinator,
@@ -27,15 +21,24 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type OhmeConfigEntry = ConfigEntry[OhmeConfigEntry]
 
-async def async_setup_dependencies(hass, entry):
+
+@dataclass
+class OhmeRuntimeData:
+    """Store volatile data."""
+
+    client: OhmeApiClient
+    coordinators: list[DataUpdateCoordinator]
+    slots: list[dict]
+    # other_data: dict[str, Any]
+
+
+async def async_setup_dependencies(hass: core.HomeAssistant, entry: OhmeConfigEntry):
     """Instantiate client and refresh session."""
     client = OhmeApiClient(entry.data["email"], entry.data["password"])
-    account_id = entry.data["email"]
 
-    hass.data[DOMAIN][account_id][DATA_CLIENT] = client
-
-    hass.data[DOMAIN][account_id][DATA_OPTIONS] = entry.options
+    entry.runtime_data = OhmeRuntimeData(client, [], [])
 
     await client.async_create_session()
     await client.async_update_device_info()
@@ -66,25 +69,20 @@ async def async_setup_entry(hass, entry):
 
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
 
-    account_id = entry.data["email"]
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(account_id, {})
-
     await async_setup_dependencies(hass, entry)
 
     coordinators = [
         OhmeChargeSessionsCoordinator(
-            hass=hass, account_id=account_id
+            hass=hass, config_entry=entry
         ),  # COORDINATOR_CHARGESESSIONS
         OhmeAccountInfoCoordinator(
-            hass=hass, account_id=account_id
+            hass=hass, config_entry=entry
         ),  # COORDINATOR_ACCOUNTINFO
         OhmeAdvancedSettingsCoordinator(
-            hass=hass, account_id=account_id
+            hass=hass, config_entry=entry
         ),  # COORDINATOR_ADVANCED
         OhmeChargeSchedulesCoordinator(
-            hass=hass, account_id=account_id
+            hass=hass, config_entry=entry
         ),  # COORDINATOR_SCHEDULES
     ]
 
@@ -110,7 +108,7 @@ async def async_setup_entry(hass, entry):
             else:
                 raise
 
-    hass.data[DOMAIN][account_id][DATA_COORDINATORS] = coordinators
+    entry.runtime_data.coordinators = coordinators
 
     # Setup entities
     await hass.config_entries.async_forward_entry_setups(entry, ENTITY_TYPES)

@@ -752,7 +752,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "octoprint",
     "oem",
     "ohmconnect",
-    "ohme",
     "ollama",
     "ombi",
     "omnilogic",

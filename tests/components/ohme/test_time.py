@@ -5,37 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.ohme.const import (
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_SCHEDULES,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
-)
 from homeassistant.components.ohme.time import TargetTime, async_setup_entry
-
-
-@pytest.fixture
-def mock_hass():
-    """Fixture for creating a mock Home Assistant instance."""
-    hass = MagicMock()
-    hass.data = {
-        DOMAIN: {
-            "test@example.com": {
-                DATA_COORDINATORS: [
-                    MagicMock(async_refresh=AsyncMock()),
-                    MagicMock(async_refresh=AsyncMock()),
-                    MagicMock(async_refresh=AsyncMock()),
-                    MagicMock(async_refresh=AsyncMock()),
-                ],
-                DATA_CLIENT: MagicMock(
-                    async_apply_session_rule=AsyncMock(),
-                    async_update_schedule=AsyncMock(),
-                ),
-            }
-        }
-    }
-    return hass
 
 
 @pytest.fixture
@@ -44,32 +14,20 @@ def mock_config_entry():
     return AsyncMock(data={"email": "test@example.com"})
 
 
-@pytest.fixture
-def mock_async_add_entities():
-    """Fixture for creating a mock async_add_entities."""
-    return AsyncMock()
-
-
 @pytest.mark.asyncio
-async def test_async_setup_entry(
-    mock_hass, mock_config_entry, mock_async_add_entities
-) -> None:
+async def test_async_setup_entry(mock_config_entry) -> None:
     """Test async_setup_entry."""
-    await async_setup_entry(mock_hass, mock_config_entry, mock_async_add_entities)
+    mock_async_add_entities = AsyncMock()
+    await async_setup_entry(MagicMock(), mock_config_entry, mock_async_add_entities)
     assert mock_async_add_entities.called
 
 
 @pytest.fixture
-def target_time_entity(mock_hass) -> None:
+def target_time_entity() -> None:
     """Fixture for creating a target time entity."""
-    coordinator = mock_hass.data[DOMAIN]["test@example.com"][DATA_COORDINATORS][
-        COORDINATOR_CHARGESESSIONS
-    ]
-    coordinator_schedules = mock_hass.data[DOMAIN]["test@example.com"][
-        DATA_COORDINATORS
-    ][COORDINATOR_SCHEDULES]
-    client = mock_hass.data[DOMAIN]["test@example.com"][DATA_CLIENT]
-    return TargetTime(coordinator, coordinator_schedules, mock_hass, client)
+    entity = TargetTime(AsyncMock(), AsyncMock(), AsyncMock(), AsyncMock())
+    entity.platform = AsyncMock()
+    return entity
 
 
 @pytest.mark.asyncio

@@ -4,30 +4,20 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from homeassistant.components.ohme import OhmeRuntimeData
 from homeassistant.components.ohme.button import (
     OhmeApproveChargeButton,
     async_setup_entry,
 )
-from homeassistant.components.ohme.const import (
-    COORDINATOR_CHARGESESSIONS,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
-)
 
 
 @pytest.fixture
-def mock_hass():
-    """Fixture for creating a mock Home Assistant instance."""
-    hass = MagicMock()
-    hass.data = {DOMAIN: {"test_account": {}}}
-    return hass
-
-
-@pytest.fixture
-def mock_config_entry():
+def mock_config_entry(mock_client, mock_coordinator):
     """Fixture for creating a mock config entry."""
-    return AsyncMock(data={"email": "test@example.com"})
+    return AsyncMock(
+        data={"email": "test@example.com"},
+        runtime_data=OhmeRuntimeData(mock_client, [mock_coordinator * 4], []),
+    )
 
 
 @pytest.fixture
@@ -47,34 +37,18 @@ def mock_coordinator():
     return coordinator
 
 
-@pytest.fixture
-def setup_hass(mock_hass, mock_config_entry, mock_client, mock_coordinator):
-    """Fixture for setting up Home Assistant."""
-    mock_hass.data = {
-        DOMAIN: {
-            "test@example.com": {
-                DATA_CLIENT: mock_client,
-                DATA_COORDINATORS: {COORDINATOR_CHARGESESSIONS: mock_coordinator},
-            }
-        }
-    }
-    return mock_hass
-
-
 @pytest.mark.asyncio
-async def test_async_setup_entry(setup_hass, mock_config_entry) -> None:
+async def test_async_setup_entry(mock_config_entry) -> None:
     """Test async_setup_entry."""
     async_add_entities = AsyncMock()
-    await async_setup_entry(setup_hass, mock_config_entry, async_add_entities)
+    await async_setup_entry(MagicMock(), mock_config_entry, async_add_entities)
     assert async_add_entities.call_count == 1
 
 
 @pytest.mark.asyncio
-async def test_ohme_approve_charge_button(
-    setup_hass, mock_client, mock_coordinator
-) -> None:
+async def test_ohme_approve_charge_button(mock_client, mock_coordinator) -> None:
     """Test OhmeApproveChargeButton."""
-    button = OhmeApproveChargeButton(mock_coordinator, setup_hass, mock_client)
+    button = OhmeApproveChargeButton(mock_coordinator, MagicMock(), mock_client)
     await button.async_press()
     mock_client.async_approve_charge.assert_called_once()
     mock_coordinator.async_refresh.assert_called_once()

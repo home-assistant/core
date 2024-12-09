@@ -11,13 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COORDINATOR_CHARGESESSIONS,
-    COORDINATOR_SCHEDULES,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
-)
+from .const import COORDINATOR_CHARGESESSIONS, COORDINATOR_SCHEDULES
 from .entity import OhmeEntity
 from .utils import session_in_progress
 
@@ -30,10 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches and configure coordinator."""
-    account_id = config_entry.data["email"]
 
-    coordinators = hass.data[DOMAIN][account_id][DATA_COORDINATORS]
-    client = hass.data[DOMAIN][account_id][DATA_CLIENT]
+    coordinators = config_entry.runtime_data.coordinators
+    client = config_entry.runtime_data.client
 
     numbers = [
         TargetTime(
@@ -74,7 +67,7 @@ class TargetTime(OhmeEntity, TimeEntity):
     async def async_set_value(self, value: dt_time) -> None:
         """Update the current value."""
         # If session in progress, update this session, if not update the first schedule
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             await self._client.async_apply_session_rule(
                 target_time=(int(value.hour), int(value.minute))
             )
@@ -92,7 +85,7 @@ class TargetTime(OhmeEntity, TimeEntity):
         """Get value from data returned from API by coordinator."""
         # Read with the same logic as setting
         target = None
-        if session_in_progress(self.hass, self._client.email, self.coordinator.data):
+        if session_in_progress(self.platform.config_entry, self.coordinator.data):
             target = self.coordinator.data["appliedRule"]["targetTime"]
         elif self.coordinator_schedules.data:
             target = self.coordinator_schedules.data["targetTime"]

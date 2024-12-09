@@ -4,13 +4,11 @@ import datetime
 from functools import reduce
 from zoneinfo import ZoneInfo
 
-from .const import DATA_OPTIONS, DOMAIN
 
-
-def next_slot(hass, account_id, data):
+def next_slot(config_entry, data):
     """Get the next charge slot start/end times."""
     slots = slot_list(data)
-    collapse_slots = not get_option(hass, account_id, "never_collapse_slots", False)
+    collapse_slots = config_entry.options.get("never_collapse_slots", False)
 
     start = None
     end = None
@@ -76,7 +74,7 @@ def slot_list(data):
     return slots
 
 
-def slot_list_str(hass, account_id, slots):
+def slot_list_str(config_entry, slots):
     """Convert slot list to string."""
 
     # Convert list to tuples of times
@@ -87,7 +85,7 @@ def slot_list_str(hass, account_id, slots):
 
     state = []
 
-    if not get_option(hass, account_id, "never_collapse_slots", False):
+    if not config_entry.options.get("never_collapse_slots", False):
         # Collapse slots so consecutive slots become one
         for _i, slot in enumerate(t_slots):
             if not state or state[-1][1] != slot[0]:
@@ -130,13 +128,13 @@ def time_next_occurs(hour, minute):
     return target
 
 
-def session_in_progress(hass, account_id, data):
+def session_in_progress(config_entry, data):
     """Is there a session in progress.
 
     Used to check if we should update the current session rather than the first schedule.
     """
     # If config option set, never update session specific schedule
-    if get_option(hass, account_id, "never_session_specific"):
+    if config_entry.options.get("never_session_specific", False):
         return False
 
     # Default to False with no data
@@ -148,8 +146,3 @@ def session_in_progress(hass, account_id, data):
         return False
 
     return True
-
-
-def get_option(hass, account_id, option, default=False):
-    """Return option value, with settable default."""
-    return hass.data[DOMAIN][account_id][DATA_OPTIONS].get(option, default)
