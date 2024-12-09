@@ -25,6 +25,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
+    websocket_api.async_register_command(hass, handle_create_with_stored_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
     websocket_api.async_register_command(hass, handle_subscribe_events)
@@ -172,6 +173,34 @@ async def handle_create(
         include_homeassistant=msg["include_homeassistant"],
         name=msg.get("name"),
         password=msg.get("password"),
+    )
+    connection.send_result(msg["id"], backup)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/generate_with_stored_settings",
+    }
+)
+@websocket_api.async_response
+async def handle_create_with_stored_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a backup with stored settings."""
+
+    config_data = hass.data[DATA_MANAGER].config.data
+    backup = await hass.data[DATA_MANAGER].async_initiate_backup(
+        agent_ids=config_data.create_backup.agent_ids,
+        include_addons=config_data.create_backup.include_addons,
+        include_all_addons=config_data.create_backup.include_all_addons,
+        include_database=config_data.create_backup.include_database,
+        include_folders=config_data.create_backup.include_folders,
+        include_homeassistant=True,  # always include HA
+        name=config_data.create_backup.name,
+        password=config_data.create_backup.password,
     )
     connection.send_result(msg["id"], backup)
 
