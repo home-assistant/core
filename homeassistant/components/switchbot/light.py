@@ -8,17 +8,14 @@ from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
@@ -77,10 +74,9 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         if (
             self.supported_color_modes
             and ColorMode.COLOR_TEMP in self.supported_color_modes
-            and ATTR_COLOR_TEMP in kwargs
+            and ATTR_COLOR_TEMP_KELVIN in kwargs
         ):
-            color_temp = kwargs[ATTR_COLOR_TEMP]
-            kelvin = max(2700, min(6500, color_temperature_mired_to_kelvin(color_temp)))
+            kelvin = max(2700, min(6500, kwargs[ATTR_COLOR_TEMP_KELVIN]))
             await self._device.set_color_temp(brightness, kelvin)
             return
         if ATTR_RGB_COLOR in kwargs:
