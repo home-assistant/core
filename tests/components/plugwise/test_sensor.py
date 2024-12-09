@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -158,13 +160,17 @@ async def test_p1_3ph_dsmr_sensor_entities(
     state = hass.states.get(entity_id)
     assert not state
 
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
 
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_p1_3ph_dsmr_sensor_entities_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_smile_p1_2: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test creation of disabled power related sensor entities."""
     state = hass.states.get("sensor.p1_voltage_phase_one")
+
     assert state
     assert float(state.state) == 233.2
 

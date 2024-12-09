@@ -77,8 +77,3 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     def device(self) -> GwEntityData:
         """Return data for this device."""
         return self.coordinator.data.devices[self._dev_id]
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self._handle_coordinator_update()
-        await super().async_added_to_hass()
