@@ -2,12 +2,8 @@ rules:
   ## Bronze
   config-flow: done
   test-before-configure: done
-  unique-config-entry:
-    status: todo
-    comment: Add tests preventing second entry for same device
-  config-flow-test-coverage:
-    status: todo
-    comment: Cover test_form and zeroconf
+  unique-config-entry: done
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
