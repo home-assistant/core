@@ -58,7 +58,7 @@ class MatterFan(MatterEntity, FanEntity):
 
     _last_known_preset_mode: str | None = None
     _last_known_percentage: int = 0
-    _enable_turn_on_off_backwards_compatibility = False
+
     _feature_map: int | None = None
     _platform_translation_key = "fan"
 

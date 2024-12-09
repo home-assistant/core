@@ -20,7 +20,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -56,7 +56,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices:
     status: exempt
     comment: |

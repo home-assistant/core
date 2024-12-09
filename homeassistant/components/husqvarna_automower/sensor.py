@@ -35,6 +35,8 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 

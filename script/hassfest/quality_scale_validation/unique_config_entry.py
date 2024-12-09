@@ -5,6 +5,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/u
 
 import ast
 
+from script.hassfest import ast_parse_module
 from script.hassfest.model import Integration
 
 
@@ -36,7 +37,7 @@ def validate(integration: Integration) -> list[str] | None:
         return None
 
     config_flow_file = integration.path / "config_flow.py"
-    config_flow = ast.parse(config_flow_file.read_text())
+    config_flow = ast_parse_module(config_flow_file)
 
     if not (
         _has_abort_entries_match(config_flow)

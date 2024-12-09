@@ -85,7 +85,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
     _away_mode_b: int | None = None
     _away_state_a = False
     _away_state_b = False
-    _enable_turn_on_off_backwards_compatibility = False
+
     _target_temperature: float | None = None
     _new_target_temperature: float | None = None
     entity_description: OpenThermClimateEntityDescription
