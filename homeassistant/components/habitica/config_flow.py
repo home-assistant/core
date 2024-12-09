@@ -35,6 +35,8 @@ from .const import (
     DOMAIN,
     FORGOT_PASSWORD_URL,
     HABITICANS_URL,
+    SECTION_REAUTH_API_KEY,
+    SECTION_REAUTH_LOGIN,
     SIGN_UP_URL,
     SITE_DATA_URL,
 )
@@ -67,7 +69,7 @@ STEP_LOGIN_DATA_SCHEMA = vol.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("reauth_login"): data_entry_flow.section(
+        vol.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_USERNAME): TextSelector(
@@ -86,7 +88,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
             ),
             {"collapsed": False},
         ),
-        vol.Required("reauth_api_key"): data_entry_flow.section(
+        vol.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_API_KEY): str,
@@ -202,11 +204,11 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input["reauth_login"].get(CONF_USERNAME) and user_input[
-                "reauth_login"
+            if user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME) and user_input[
+                SECTION_REAUTH_LOGIN
             ].get(CONF_PASSWORD):
                 errors, response = await self.validate_login(
-                    {**self.reauth_entry.data, **user_input["reauth_login"]}
+                    {**self.reauth_entry.data, **user_input[SECTION_REAUTH_LOGIN]}
                 )
                 if not errors and response is not None:
                     self._abort_if_unique_id_mismatch()
@@ -217,11 +219,11 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_API_KEY: response["apiToken"],
                         },
                     )
-            elif user_input["reauth_api_key"].get(CONF_API_KEY):
+            elif user_input[SECTION_REAUTH_API_KEY].get(CONF_API_KEY):
                 errors, response = await self.validate_api_key(
                     {
                         **self.reauth_entry.data,
-                        CONF_API_KEY: user_input["reauth_api_key"][CONF_API_KEY],
+                        CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][CONF_API_KEY],
                     }
                 )
                 if not errors and response is not None:
@@ -229,7 +231,9 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.reauth_entry,
                         data={
                             **self.reauth_entry.data,
-                            CONF_API_KEY: user_input["reauth_api_key"][CONF_API_KEY],
+                            CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][
+                                CONF_API_KEY
+                            ],
                         },
                     )
             else:
@@ -241,7 +245,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA,
                 suggested_values={
                     CONF_USERNAME: (
-                        user_input["reauth_login"].get(CONF_USERNAME)
+                        user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME)
                         if user_input
                         else None,
                     )
