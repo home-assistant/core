@@ -339,7 +339,7 @@ class ConfigSubentryDataWithId(ConfigSubentryData):
     subentry_id: str
 
 
-class SubentryFlowResult(FlowResult, total=False):
+class SubentryFlowResult(FlowResult[FlowContext, tuple[str, str]], total=False):
     """Typed result dict for subentry flow."""
 
     unique_id: str | None
@@ -389,7 +389,7 @@ class ConfigEntry(Generic[_DataT]):
     supports_remove_device: bool | None
     _supports_options: bool | None
     _supports_reconfigure: bool | None
-    _supports_subentries: bool | None
+    _supported_subentries: tuple[str, ...] | None
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
@@ -500,7 +500,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_supports_reconfigure", None)
 
         # Supports subentries
-        _setter(self, "_supports_subentries", None)
+        _setter(self, "_supported_subentries", None)
 
         # Listeners to call on update
         _setter(self, "update_listeners", [])
@@ -575,14 +575,16 @@ class ConfigEntry(Generic[_DataT]):
         return self._supports_reconfigure or False
 
     @property
-    def supports_subentries(self) -> bool:
-        """Return if entry supports adding and removing sub entries."""
-        if self._supports_subentries is None and (handler := HANDLERS.get(self.domain)):
-            # work out if handler has support for sub entries
+    def supported_subentries(self) -> tuple[str, ...]:
+        """Return supported subentries."""
+        if self._supported_subentries is None and (
+            handler := HANDLERS.get(self.domain)
+        ):
+            # work out sub entries supported by the handler
             object.__setattr__(
-                self, "_supports_subentries", handler.async_supports_subentries(self)
+                self, "_supported_subentries", handler.async_supported_subentries(self)
             )
-        return self._supports_subentries or False
+        return self._supported_subentries or ()
 
     def clear_state_cache(self) -> None:
         """Clear cached properties that are included in as_json_fragment."""
@@ -603,7 +605,7 @@ class ConfigEntry(Generic[_DataT]):
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
             "supports_reconfigure": self.supports_reconfigure,
-            "supports_subentries": self.supports_subentries,
+            "supported_subentries": self.supported_subentries,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -2745,15 +2747,17 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
     @staticmethod
     @callback
-    def async_get_subentry_flow(config_entry: ConfigEntry) -> ConfigSubentryFlow:
+    def async_get_subentry_flow(
+        config_entry: ConfigEntry, subentry_type: str
+    ) -> ConfigSubentryFlow:
         """Get the subentry flow for this handler."""
-        raise data_entry_flow.UnknownHandler
+        raise NotImplementedError
 
     @classmethod
     @callback
-    def async_supports_subentries(cls, config_entry: ConfigEntry) -> bool:
-        """Return subentry support for this handler."""
-        return cls.async_get_subentry_flow is not ConfigFlow.async_get_subentry_flow
+    def async_supported_subentries(cls, config_entry: ConfigEntry) -> tuple[str, ...]:
+        """Return subentries supported by this handler."""
+        return ()
 
     @callback
     def _async_abort_entries_match(
@@ -3209,7 +3213,8 @@ class _ConfigSubFlowManager:
 
 
 class ConfigSubentryFlowManager(
-    data_entry_flow.FlowManager[FlowContext, SubentryFlowResult], _ConfigSubFlowManager
+    data_entry_flow.FlowManager[FlowContext, SubentryFlowResult, tuple[str, str]],
+    _ConfigSubFlowManager,
 ):
     """Manage all the config subentry flows that are in progress."""
 
@@ -3217,7 +3222,7 @@ class ConfigSubentryFlowManager(
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: tuple[str, str],
         *,
         context: FlowContext | None = None,
         data: dict[str, Any] | None = None,
@@ -3226,13 +3231,20 @@ class ConfigSubentryFlowManager(
 
         The entry_id and the flow.handler is the same thing to map entry with flow.
         """
-        entry = self._async_get_config_entry(handler_key)
+        entry_id, subentry_type = handler_key
+        entry = self._async_get_config_entry(entry_id)
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
-        return handler.async_get_subentry_flow(entry)
+        if subentry_type not in handler.async_supported_subentries(entry):
+            raise data_entry_flow.UnknownHandler(
+                f"Config entry {entry.domain} does not support subentry {subentry_type}"
+            )
+        return handler.async_get_subentry_flow(entry, handler_key[1])
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[FlowContext, SubentryFlowResult],
+        flow: data_entry_flow.FlowHandler[
+            FlowContext, SubentryFlowResult, tuple[str, str]
+        ],
         result: SubentryFlowResult,
     ) -> SubentryFlowResult:
         """Finish a subentry flow and add a new subentry to the configuration entry.
@@ -3244,9 +3256,9 @@ class ConfigSubentryFlowManager(
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
-        entry = self.hass.config_entries.async_get_entry(flow.handler)
+        entry = self.hass.config_entries.async_get_entry(flow.handler[0])
         if entry is None:
-            raise UnknownEntry(flow.handler)
+            raise UnknownEntry(flow.handler[0])
 
         unique_id = result.get("unique_id")
         if unique_id is not None and not isinstance(unique_id, str):
@@ -3270,11 +3282,13 @@ class ConfigSubentryFlowManager(
         return result
 
 
-class ConfigSubentryFlow(data_entry_flow.FlowHandler[FlowContext, SubentryFlowResult]):
+class ConfigSubentryFlow(
+    data_entry_flow.FlowHandler[FlowContext, SubentryFlowResult, tuple[str, str]]
+):
     """Base class for config subentry flows."""
 
     _flow_result = SubentryFlowResult
-    handler: str
+    handler: tuple[str, str]
 
     @callback
     def async_create_entry(  # type: ignore[override]

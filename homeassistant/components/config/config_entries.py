@@ -306,12 +306,21 @@ class SubentryManagerFlowIndexView(
     @require_admin(
         error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     )
-    async def post(self, request: web.Request) -> web.Response:
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
+                vol.Optional("show_advanced_options", default=False): cv.boolean,
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request.
 
-        handler in request is entry_id.
+        handler in request is [entry_id, subentry_type].
         """
-        return await super().post(request)
+        return await super()._post_impl(request, data)
 
 
 class SubentryManagerFlowResourceView(

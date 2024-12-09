@@ -143,10 +143,10 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supported_subentries": [],
             "supports_options": True,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": True,
             "title": "Test 1",
         },
@@ -163,10 +163,10 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": "Unsupported API",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -183,10 +183,10 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -203,10 +203,10 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -223,10 +223,10 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla5",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -587,10 +587,10 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test Entry",
         },
@@ -673,10 +673,10 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "reason": None,
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "user-title",
             },
@@ -1110,7 +1110,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_subentry_flow(config_entry):
+        def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
                     schema = OrderedDict()
@@ -1126,6 +1126,11 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
 
             return SubentryFlowHandler()
 
+        @classmethod
+        @callback
+        def async_supported_subentries(cls, config_entry):
+            return ("test",)
+
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
     MockConfigEntry(
@@ -1137,7 +1142,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/subentries/flow"
-        resp = await client.post(url, json={"handler": entry.entry_id})
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -1145,7 +1150,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
     data.pop("flow_id")
     assert data == {
         "type": "form",
-        "handler": "test1",
+        "handler": ["test1", "test"],
         "step_id": "user",
         "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
         "description_placeholders": {"enabled": "Set to true to be true"},
@@ -1171,7 +1176,7 @@ async def test_subentry_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_subentry_flow(config_entry):
+        def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
                     schema = OrderedDict()
@@ -1183,6 +1188,11 @@ async def test_subentry_flow_unauth(
                     )
 
             return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(cls, config_entry):
+            return ("test",)
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
@@ -1211,7 +1221,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_subentry_flow(config_entry):
+        def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
                     return await self.async_step_finish()
@@ -1228,6 +1238,11 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 
             return SubentryFlowHandler()
 
+        @classmethod
+        @callback
+        def async_supported_subentries(cls, config_entry):
+            return ("test",)
+
     MockConfigEntry(
         domain="test",
         entry_id="test1",
@@ -1237,7 +1252,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/subentries/flow"
-        resp = await client.post(url, json={"handler": entry.entry_id})
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
@@ -1247,7 +1262,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
             "description_placeholders": None,
             "errors": None,
             "flow_id": flow_id,
-            "handler": "test1",
+            "handler": ["test1", "test"],
             "last_step": None,
             "preview": None,
             "step_id": "finish",
@@ -1270,7 +1285,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
             "description_placeholders": None,
             "description": None,
             "flow_id": flow_id,
-            "handler": "test1",
+            "handler": ["test1", "test"],
             "title": "Mock title",
             "type": "create_entry",
             "unique_id": "test",
@@ -1287,7 +1302,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_subentry_flow(config_entry):
+        def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
@@ -1308,6 +1323,11 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
 
             return SubentryFlowHandler()
 
+        @classmethod
+        @callback
+        def async_supported_subentries(cls, config_entry):
+            return ("test",)
+
     MockConfigEntry(
         domain="test",
         entry_id="test1",
@@ -1317,14 +1337,14 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/subentries/flow"
-        resp = await client.post(url, json={"handler": entry.entry_id})
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
             "type": "form",
-            "handler": "test1",
+            "handler": ["test1", "test"],
             "step_id": "finish",
             "data_schema": [
                 {
@@ -1389,10 +1409,10 @@ async def test_get_single(
         "reason": None,
         "source": "user",
         "state": "loaded",
+        "supported_subentries": [],
         "supports_options": False,
         "supports_reconfigure": False,
         "supports_remove_device": False,
-        "supports_subentries": False,
         "supports_unload": False,
         "title": "Mock Title",
     }
@@ -1751,10 +1771,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -1772,10 +1792,10 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -1793,10 +1813,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -1814,10 +1834,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -1835,10 +1855,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -1867,10 +1887,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         }
@@ -1898,10 +1918,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -1919,10 +1939,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -1950,10 +1970,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -1971,10 +1991,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -2008,10 +2028,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 1",
         },
@@ -2029,10 +2049,10 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 2",
         },
@@ -2050,10 +2070,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 3",
         },
@@ -2071,10 +2091,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 4",
         },
@@ -2092,10 +2112,10 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supported_subentries": [],
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
-            "supports_subentries": False,
             "supports_unload": False,
             "title": "Test 5",
         },
@@ -2201,10 +2221,10 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 1",
             },
@@ -2225,10 +2245,10 @@ async def test_subscribe_entries_ws(
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 2",
             },
@@ -2249,10 +2269,10 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
@@ -2279,10 +2299,10 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2310,10 +2330,10 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2340,10 +2360,10 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2432,10 +2452,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 1",
             },
@@ -2456,10 +2476,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
@@ -2488,10 +2508,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2516,10 +2536,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed too",
             },
@@ -2548,10 +2568,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
@@ -2578,10 +2598,10 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supported_subentries": [],
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
-                "supports_subentries": False,
                 "supports_unload": False,
                 "title": "changed",
             },
