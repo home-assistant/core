@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from kasa import Device, Module
 from kasa.smart.modules.alarm import Alarm
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    ATTR_DURATION,
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+    SirenEntity,
+    SirenEntityFeature,
+    SirenTurnOnServiceParameters,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,7 +41,13 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
     """Representation of a tplink hub alarm."""
 
     _attr_name = None
-    _attr_supported_features = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TONES
+        | SirenEntityFeature.DURATION
+        | SirenEntityFeature.VOLUME_SET
+    )
 
     def __init__(
         self,
@@ -48,7 +61,21 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        await self._alarm_module.play()
+        turn_on_params = cast(SirenTurnOnServiceParameters, kwargs)
+        if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
+            # The device has only three volume levels, so we do binning here
+            if volume < 0.33:
+                volume = "low"
+            elif volume < 0.66:
+                volume = "medium"
+            else:
+                volume = "high"
+
+        await self._alarm_module.play(
+            duration=turn_on_params.get(ATTR_DURATION),
+            volume=volume,
+            sound=kwargs.get(ATTR_TONE),
+        )
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -59,3 +86,7 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_is_on = self._alarm_module.active
+        # alarm_sounds returns list[str], so we need to widen the type
+        self._attr_available_tones = cast(
+            list[str | int], self._alarm_module.alarm_sounds
+        )
