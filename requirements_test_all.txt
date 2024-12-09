@@ -2378,6 +2378,9 @@ wallbox==0.7.0
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
 
+# homeassistant.components.watchyourlan
+watchyourlanclient==2024.1009a0
+
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.0.6
 
