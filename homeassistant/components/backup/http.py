@@ -12,6 +12,7 @@ from aiohttp.web import FileResponse, Request, Response, StreamResponse
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
 from .const import DATA_MANAGER
@@ -91,7 +92,12 @@ class UploadBackupView(HomeAssistantView):
             await manager.async_receive_backup(contents=contents, agent_ids=agent_ids)
         except OSError as err:
             return Response(
-                body=f"Can't write backup file {err}",
+                body=f"Can't write backup file: {err}",
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+        except HomeAssistantError as err:
+            return Response(
+                body=f"Can't upload backup file: {err}",
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
         except asyncio.CancelledError:

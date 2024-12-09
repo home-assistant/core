@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from io import StringIO
 import json
 from typing import Any
@@ -41,7 +42,7 @@ from .common import (
 )
 
 from tests.common import MockPlatform, mock_platform
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
     "test.txt",
@@ -480,6 +481,70 @@ async def test_receive_backup(
     assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
     assert remote_agent._backups == {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
     assert remote_agent._backup_data == upload_data.encode(encoding="utf-8")
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_receive_backup_busy_manager(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test receive backup with a busy manager."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    ws_client = await hass_ws_client(hass)
+
+    upload_data = "test"
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": "idle"}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    new_backup = NewBackup(backup_job_id="time-123")
+    backup_task: asyncio.Future[WrittenBackup] = asyncio.Future()
+    with patch(
+        "homeassistant.components.backup.manager.CoreBackupReaderWriter.async_create_backup",
+        return_value=(new_backup, backup_task),
+    ) as create_backup:
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": ["backup.local"]}
+        )
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": "create_backup",
+            "stage": None,
+            "state": "in_progress",
+        }
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        assert result["result"] == {"backup_job_id": "time-123"}
+
+    assert create_backup.call_count == 1
+
+    resp = await client.post(
+        "/api/backup/upload?agent_id=backup.local",
+        data={"file": StringIO(upload_data)},
+    )
+
+    assert resp.status == 500
+    assert (
+        await resp.text()
+        == "Can't upload backup file: Backup manager busy: create_backup"
+    )
+
+    # finish the backup
+    backup_task.set_result(
+        WrittenBackup(
+            backup=TEST_BACKUP_ABC123,
+            open_stream=AsyncMock(),
+            release_stream=AsyncMock(),
+        )
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
