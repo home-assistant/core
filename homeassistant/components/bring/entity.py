@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from bring_api.types import BringList
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringDataUpdateCoordinator
 
 
 class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
@@ -17,7 +19,7 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
+        bring_list: BringList,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -32,5 +34,14 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
             },
             manufacturer="Bring! Labs AG",
             model="Bring! Grocery Shopping List",
-            configuration_url=f"https://web.getbring.com/app/lists/{list(self.coordinator.data.keys()).index(self._list_uuid)}",
+            configuration_url=f"https://web.getbring.com/app/lists/{self.coordinator.lists.index(bring_list)}",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return false if list is no longer available."""
+
+        return super().available and any(
+            bring_list["listUuid"] == self._list_uuid
+            for bring_list in self.coordinator.lists
         )
