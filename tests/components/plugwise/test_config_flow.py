@@ -35,7 +35,7 @@ TEST_PASSWORD = "test_password"
 TEST_PORT = 81
 TEST_USERNAME = "smile"
 TEST_USERNAME2 = "stretch"
-TEST_SMILE_ID = "smile12345"
+MOCK_SMILE_ID = "smile12345"
 
 TEST_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_HOST),
@@ -129,7 +129,7 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1
 
-    assert result2["result"].unique_id == TEST_SMILE_ID
+    assert result2["result"].unique_id == MOCK_SMILE_ID
 
 
 @pytest.mark.parametrize(
@@ -175,7 +175,7 @@ async def test_zeroconf_flow(
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1
 
-    assert result2["result"].unique_id == TEST_SMILE_ID
+    assert result2["result"].unique_id == MOCK_SMILE_ID
 
 
 async def test_zeroconf_flow_stretch(
@@ -314,6 +314,41 @@ async def test_flow_errors(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 2
+
+
+async def test_user_abort_existing_anna(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_smile_config_flow: MagicMock,
+) -> None:
+    """Test the full user configuration flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CONF_NAME,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        unique_id=MOCK_SMILE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: TEST_HOST,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
 
 
 async def test_zeroconf_abort_existing_anna(
