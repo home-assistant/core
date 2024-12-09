@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from homeassistant.auth.models import RefreshFlowContext
 from homeassistant.core import HomeAssistant
 
 from . import async_setup_auth
@@ -36,7 +37,9 @@ async def async_get_code(
     client = await async_setup_auth(hass, aiohttp_client, config)
     user = await hass.auth.async_create_user(name="Hello")
     refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
-    access_token = hass.auth.async_create_access_token(refresh_token)
+    access_token = hass.auth.async_create_access_token(
+        refresh_token, RefreshFlowContext()
+    )
 
     # Now authenticate with the 2nd flow
     resp = await client.post(

@@ -1,6 +1,7 @@
 """Tests for the mfa setup flow."""
 
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.auth.models import RefreshFlowContext
 from homeassistant.components.auth import mfa_setup_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -45,7 +46,9 @@ async def test_ws_setup_depose_mfa(
     )
     await hass.auth.async_link_user(user, cred)
     refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
-    access_token = hass.auth.async_create_access_token(refresh_token)
+    access_token = hass.auth.async_create_access_token(
+        refresh_token, RefreshFlowContext()
+    )
 
     client = await hass_ws_client(hass, access_token)
 
