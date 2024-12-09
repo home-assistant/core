@@ -22,7 +22,6 @@ from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
 CURRENT_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
-UNIQUE_ID = "uid"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

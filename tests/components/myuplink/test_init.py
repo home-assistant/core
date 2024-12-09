@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
+from .const import UNIQUE_ID
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -123,9 +124,9 @@ async def test_migrate_config_entry(
             },
         },
         entry_id="myuplink_test",
-        unique_id="uid",
     )
 
     await setup_integration(hass, mock_entry_v1_1)
     assert mock_entry_v1_1.version == 1
     assert mock_entry_v1_1.minor_version == 2
+    assert mock_entry_v1_1.unique_id == UNIQUE_ID
