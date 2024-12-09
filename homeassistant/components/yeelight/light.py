@@ -20,7 +20,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     FLASH_LONG,
@@ -71,6 +70,7 @@ from .entity import YeelightEntity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MINUTES = "minutes"
+ATTR_KELVIN = "kelvin"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_MUSIC_MODE = "set_music_mode"
