@@ -15,7 +15,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_temperature_kelvin_to_mired
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
@@ -47,8 +46,8 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         """Initialize the Switchbot light."""
         super().__init__(coordinator)
         device = self._device
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(device.max_temp)
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(device.min_temp)
+        self._attr_max_color_temp_kelvin = device.max_temp
+        self._attr_min_color_temp_kelvin = device.min_temp
         self._attr_supported_color_modes = {
             SWITCHBOT_COLOR_MODE_TO_HASS[mode] for mode in device.color_modes
         }
@@ -61,7 +60,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         self._attr_is_on = self._device.on
         self._attr_brightness = max(0, min(255, round(device.brightness * 2.55)))
         if device.color_mode == SwitchBotColorMode.COLOR_TEMP:
-            self._attr_color_temp = color_temperature_kelvin_to_mired(device.color_temp)
+            self._attr_color_temp_kelvin = device.color_temp
             self._attr_color_mode = ColorMode.COLOR_TEMP
             return
         self._attr_rgb_color = device.rgb
