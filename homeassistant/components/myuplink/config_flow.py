@@ -17,7 +17,8 @@ class OAuth2FlowHandler(
 ):
     """Config flow to handle myUplink OAuth2 authentication."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @property

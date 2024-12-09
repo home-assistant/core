@@ -25,24 +25,6 @@ CURRENT_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
 UNIQUE_ID = "uid"
 
 
-@pytest.fixture
-async def access_token(hass: HomeAssistant) -> str:
-    """Return a valid access token."""
-    return config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "sub": UNIQUE_ID,
-            "aud": [],
-            "scp": [
-                "WRITESYSTEM",
-                "READSYSTEM",
-                "offline_access",
-            ],
-            "ou_code": "NA",
-        },
-    )
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,

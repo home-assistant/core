@@ -121,13 +121,19 @@ async def async_migrate_entry(
     """Migrate old entry."""
 
     # Use sub(ject) from access_token as unique_id
-    if config_entry.version == 1:
+    if config_entry.version == 1 and config_entry.minor_version == 1:
         token = jwt.decode(
             config_entry.data["token"]["access_token"],
             options={"verify_signature": False},
         )
         uid = token["sub"]
-        hass.config_entries.async_update_entry(config_entry, unique_id=uid, version=2)
-        _LOGGER.info("Migration to version %s successful", config_entry.version)
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=uid, minor_version=2
+        )
+        _LOGGER.info(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
 
     return True

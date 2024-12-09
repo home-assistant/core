@@ -15,10 +15,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID, CLIENT_SECRET, UNIQUE_ID
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -190,3 +191,21 @@ async def setup_platform(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant) -> str:
+    """Return a valid access token."""
+    return config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [
+                "WRITESYSTEM",
+                "READSYSTEM",
+                "offline_access",
+            ],
+            "ou_code": "NA",
+        },
+    )
