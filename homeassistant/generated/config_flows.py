@@ -665,6 +665,7 @@ FLOWS = {
         "wake_on_lan",
         "wallbox",
         "waqi",
+        "watergate",
         "watttime",
         "waze_travel_time",
         "weatherflow",
