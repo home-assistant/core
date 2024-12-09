@@ -94,7 +94,8 @@ async def test_service_call(
 
 
 @pytest.mark.parametrize(
-    ("status"), [HTTPStatus.NOT_FOUND, HTTPStatus.TOO_MANY_REQUESTS]
+    ("status"),
+    [HTTPStatus.NOT_FOUND, HTTPStatus.TOO_MANY_REQUESTS],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -114,6 +115,25 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_auth_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test config entry auth failed setup error."""
+
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        status=HTTPStatus.UNAUTHORIZED,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_update_failed(
