@@ -1,5 +1,6 @@
 """Test the slide_local config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from goslideapi.goslideapi import (
@@ -10,9 +11,9 @@ from goslideapi.goslideapi import (
 )
 import pytest
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,8 +22,20 @@ from .const import HOST
 
 from tests.common import MockConfigEntry
 
-MOCK_DHCP_DATA = DhcpServiceInfo(
-    ip="127.0.0.2", macaddress="001122334455", hostname="slide_123456"
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address("127.0.0.2"),
+    ip_addresses=[ip_address("127.0.0.2")],
+    hostname="Slide-1234567890AB.local.",
+    name="Slide-1234567890AB._http._tcp.local.",
+    port=80,
+    properties={
+        "id": "slide-1234567890AB",
+        "arch": "esp32",
+        "app": "slide",
+        "fw_version": "2.0.0-1683059251",
+        "fw_id": "20230502-202745",
+    },
+    type="mock_type",
 )
 
 
@@ -145,13 +158,13 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp(
+async def test_zeroconf(
     hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test starting a flow from discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -169,4 +182,21 @@ async def test_dhcp(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.2"
     assert result["data"][CONF_HOST] == "127.0.0.2"
-    assert result["result"].unique_id == "00:11:22:33:44:55"
+    assert result["result"].unique_id == "12:34:56:78:90:ab"
+
+
+async def test_zeroconf_duplicate_entry(
+    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test starting a flow from discovery."""
+
+    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries[0].data[CONF_HOST] == "127.0.0.2"

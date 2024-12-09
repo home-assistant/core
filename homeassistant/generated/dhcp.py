@@ -575,10 +575,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "64DBA0*",
     },
     {
-        "domain": "slide_local",
-        "hostname": "slide_*",
-    },
-    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*",

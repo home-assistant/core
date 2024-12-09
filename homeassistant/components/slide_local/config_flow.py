@@ -14,7 +14,7 @@ from goslideapi.goslideapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.helpers.device_registry import format_mac
@@ -50,7 +50,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _entry: SlideConfigEntry | None = None
     _mac: str = ""
-    _ip: str = ""
+    _host: str = ""
 
     VERSION = 1
     MINOR_VERSION = 1
@@ -96,13 +96,13 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         if user_input is not None and user_input.get(CONF_HOST) is not None:
-            self._ip = user_input[CONF_HOST]
+            self._host = user_input[CONF_HOST]
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._ip): str,
+                    vol.Required(CONF_HOST, default=self._host): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_API_VERSION, default="2"): API_VERSION_SELECTOR,
                     vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
@@ -111,15 +111,19 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by discovery."""
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+        """Handle zeroconf discovery."""
 
-        self._mac = format_mac(discovery_info.macaddress)
-        self._ip = discovery_info.ip
+        # id is in the format 'slide_000000000000'
+        self._mac = format_mac(str(discovery_info.properties.get("id"))[6:])
+
+        await self.async_set_unique_id(self._mac)
+
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
+        self._host = discovery_info.host
 
         return await self.async_step_user()
