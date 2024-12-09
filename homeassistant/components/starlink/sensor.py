@@ -19,6 +19,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfTime,
 )
@@ -121,6 +122,22 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
+    ),
+    StarlinkSensorEntityDescription(
+        key="upload",
+        translation_key="upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        value_fn=lambda data: data.usage["upload_usage"],
+    ),
+    StarlinkSensorEntityDescription(
+        key="download",
+        translation_key="download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        value_fn=lambda data: data.usage["download_usage"],
     ),
     StarlinkSensorEntityDescription(
         key="power",
