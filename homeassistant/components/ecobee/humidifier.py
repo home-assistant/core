@@ -32,13 +32,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee thermostat humidifier entity."""
     data = hass.data[DOMAIN]
-    entities = []
-    for index in range(len(data.ecobee.thermostats)):
-        thermostat = data.ecobee.get_thermostat(index)
-        if thermostat["settings"]["hasHumidifier"]:
-            entities.append(EcobeeHumidifier(data, index))
 
-    async_add_entities(entities, True)
+    assert data is not None
+
+    async_add_entities(
+        (
+            EcobeeHumidifier(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHumidifier"]
+        ),
+        True,
+    )
 
 
 class EcobeeHumidifier(HumidifierEntity):

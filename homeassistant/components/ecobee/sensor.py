@@ -78,16 +78,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up ecobee sensors."""
     data = hass.data[DOMAIN]
-    entities = [
-        EcobeeSensor(data, sensor["name"], index, description)
-        for index in range(len(data.ecobee.thermostats))
-        for sensor in data.ecobee.get_remote_sensors(index)
-        for item in sensor["capability"]
-        for description in SENSOR_TYPES
-        if description.key == item["type"]
-    ]
 
-    async_add_entities(entities, True)
+    assert data is not None
+
+    async_add_entities(
+        (
+            EcobeeSensor(data, sensor["name"], index, description)
+            for index in range(len(data.ecobee.thermostats))
+            for sensor in data.ecobee.get_remote_sensors(index)
+            for item in sensor["capability"]
+            for description in SENSOR_TYPES
+            if description.key == item["type"]
+        ),
+        True,
+    )
 
 
 class EcobeeSensor(SensorEntity):
