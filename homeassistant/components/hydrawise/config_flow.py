@@ -30,8 +30,9 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create the config entry."""
         # Verify that the provided credentials work."""
+        auth = pydrawise_auth.Auth(username, password)
         try:
-            auth = pydrawise_auth.Auth(username, password)
+            await auth.token()
         except NotAuthorizedError:
             return on_failure("invalid_auth")
         except TimeoutError:

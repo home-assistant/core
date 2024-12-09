@@ -21,6 +21,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_auth: AsyncMock,
     mock_pydrawise: AsyncMock,
     user: User,
 ) -> None:
@@ -46,11 +47,12 @@ async def test_form(
         CONF_PASSWORD: "__password__",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_pydrawise.get_user.assert_called_once_with(fetch_zones=False)
+    mock_auth.token.assert_awaited_once_with()
+    mock_pydrawise.get_user.assert_awaited_once_with(fetch_zones=False)
 
 
 async def test_form_api_error(
-    hass: HomeAssistant, mock_pydrawise: AsyncMock, user: User
+    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock, user: User
 ) -> None:
     """Test we handle API errors."""
     mock_pydrawise.get_user.side_effect = ClientError("XXX")
@@ -72,11 +74,10 @@ async def test_form_api_error(
 
 
 async def test_form_auth_connect_timeout(
-    hass: HomeAssistant,
-    mock_auth_cls: AsyncMock,
+    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock
 ) -> None:
     """Test we handle API errors."""
-    mock_auth_cls.side_effect = TimeoutError
+    mock_auth.token.side_effect = TimeoutError
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -88,9 +89,13 @@ async def test_form_auth_connect_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
 
+    mock_auth.token.reset_mock(side_effect=True)
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_client_connect_timeout(
-    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock
+    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock, user: User
 ) -> None:
     """Test we handle API errors."""
     mock_pydrawise.get_user.side_effect = TimeoutError
@@ -105,12 +110,17 @@ async def test_form_client_connect_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
 
+    mock_pydrawise.get_user.reset_mock(side_effect=True)
+    mock_pydrawise.get_user.return_value = user
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_not_authorized_error(
-    hass: HomeAssistant, mock_auth_cls: AsyncMock
+    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock
 ) -> None:
     """Test we handle API errors."""
-    mock_auth_cls.side_effect = NotAuthorizedError
+    mock_auth.token.side_effect = NotAuthorizedError
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,10 +132,15 @@ async def test_form_not_authorized_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    mock_auth.token.reset_mock(side_effect=True)
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth(
     hass: HomeAssistant,
     user: User,
+    mock_auth: AsyncMock,
     mock_pydrawise: AsyncMock,
 ) -> None:
     """Test that re-authorization works."""

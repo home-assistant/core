@@ -75,16 +75,10 @@ def mock_pydrawise(
 
 
 @pytest.fixture
-def mock_auth_cls() -> Generator[AsyncMock]:
-    """Mock pydrawise Auth class."""
-    with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
-        yield mock_auth
-
-
-@pytest.fixture
-def mock_auth(mock_auth_cls: AsyncMock) -> AsyncMock:
+def mock_auth() -> Generator[AsyncMock]:
     """Mock pydrawise Auth."""
-    return mock_auth_cls.return_value
+    with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
+        yield mock_auth.return_value
 
 
 @pytest.fixture
