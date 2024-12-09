@@ -545,7 +545,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
         """Update media attributes for the active queue item."""
-        # pylint: disable=too-many-statements
         self._attr_media_artist = None
         self._attr_media_album_artist = None
         self._attr_media_album_name = None
