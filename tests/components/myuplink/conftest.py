@@ -34,7 +34,7 @@ def mock_expires_at() -> float:
 def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
-        version=2,
+        minor_version=2,
         domain=DOMAIN,
         title="myUplink test",
         data={
