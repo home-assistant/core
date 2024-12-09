@@ -7,8 +7,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "Client ID",
-          "heating_type": "Heating type"
+          "client_id": "Client ID"
         }
       },
       "reauth_confirm": {
@@ -441,6 +440,28 @@
     },
     "program_not_deactivated": {
       "message": "Unable to deactivate ViCare program {program}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "heating_type": "Heating type"
+        }
+      }
+    }
+  },
+  "selector": {
+    "heating_type": {
+      "options": {
+        "auto": "auto detection",
+        "gas": "Gas",
+        "oil": "Oil",
+        "pellets": "Pellets",
+        "heatpump": "Heat pump",
+        "fuelcell": "Fuelcell",
+        "hybrid": "Hybrid"
+      }
     }
   },
   "services": {
