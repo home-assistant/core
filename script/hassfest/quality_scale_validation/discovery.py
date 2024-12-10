@@ -38,7 +38,9 @@ def _has_discovery_function(module: ast.Module) -> bool:
     )
 
 
-def validate(config: Config, integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration implements diagnostics."""
 
     config_flow_file = integration.path / "config_flow.py"

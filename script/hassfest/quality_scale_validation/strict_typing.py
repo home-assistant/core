@@ -24,7 +24,9 @@ def _strict_typing_components(strict_typing_file: Path) -> set[str]:
     )
 
 
-def validate(config: Config, integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration has strict typing enabled."""
     strict_typing_file = config.root / _STRICT_TYPING_FILE
 

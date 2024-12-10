@@ -6,7 +6,9 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/c
 from script.hassfest.model import Config, Integration
 
 
-def validate(config: Config, integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration implements config flow."""
 
     if not integration.config_flow:

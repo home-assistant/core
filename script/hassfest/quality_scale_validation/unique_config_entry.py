@@ -30,7 +30,9 @@ def _has_abort_unique_id_configured(module: ast.Module) -> bool:
     )
 
 
-def validate(config: Config, integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration prevents duplicate devices."""
 
     if integration.manifest.get("single_config_entry"):

@@ -173,7 +173,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.10
+aioacaia==0.1.11
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -735,7 +735,7 @@ debugpy==1.8.8
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==9.2.0
+deebot-client==9.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1030,7 +1030,7 @@ googlemaps==2.5.1
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
-gotailwind==0.2.4
+gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
@@ -1669,7 +1669,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.1.1
+pvo==2.2.0
 
 # homeassistant.components.aosmith
 py-aosmith==1.0.11
@@ -3011,7 +3011,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.20.2
+wled==0.21.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.15
