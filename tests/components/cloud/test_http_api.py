@@ -383,30 +383,60 @@ async def test_login_view_invalid_credentials(
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_login_view_mfa_required_totp_not_provided(
+async def test_login_view_mfa_required(
     cloud: MagicMock,
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test logging in when MFA is required and no code is provided."""
+    """Test logging in when MFA is required."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = MFARequired
+    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
 
     req = await cloud_client.post(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
     )
 
     assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
 
 
-async def test_login_view_invalid_totp_code(
+async def test_login_view_mfa_required_tokens_missing(
     cloud: MagicMock,
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test logging in when MFA is required and invalid code is provided."""
+    """Test logging in when MFA is required, code is provided, but session tokens are missing."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = InvalidTotpCode
+    cloud.login.side_effect = MFARequired(session_tokens={})
+
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get MFA expired error
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+    res = await req.json()
+    assert res["code"] == "mfaexpiredornotstarted"
+
+
+async def test_login_view_mfa_password_and_totp_provided(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when password and TOTP code provided at once."""
+    cloud_client = await hass_client()
 
     req = await cloud_client.post(
         "/api/cloud/login",
@@ -416,6 +446,36 @@ async def test_login_view_invalid_totp_code(
     assert req.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_login_view_invalid_totp_code(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required and invalid code is provided."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
+    cloud.login_verify_totp.side_effect = InvalidTotpCode
+
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get invalid TOTP code error
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+    res = await req.json()
+    assert res["code"] == "invalidtotpcode"
+
+
 async def test_login_view_valid_totp_provided(
     cloud: MagicMock,
     setup_cloud: None,
@@ -423,10 +483,21 @@ async def test_login_view_valid_totp_provided(
 ) -> None:
     """Test logging in with valid TOTP code."""
     cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
 
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get success response
     req = await cloud_client.post(
         "/api/cloud/login",
-        json={"email": "my_username", "password": "my_password", "code": "123346"},
+        json={"email": "my_username", "code": "123346"},
     )
 
     assert req.status == HTTPStatus.OK

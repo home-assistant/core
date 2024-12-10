@@ -9,6 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
+import time
 from typing import Any, Concatenate
 
 import aiohttp
@@ -39,6 +40,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
@@ -67,6 +69,10 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
         "Error making internal request",
     ),
 }
+
+
+class MFAExpiredOrNotStarted(auth.CloudError):
+    """Multi-factor authentication expired, or not started."""
 
 
 @callback
@@ -116,6 +122,10 @@ def async_setup(hass: HomeAssistant) -> None:
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
                 "Password change required.",
+            ),
+            MFAExpiredOrNotStarted: (
+                HTTPStatus.BAD_REQUEST,
+                "Multi-factor authentication expired, or not started. Please try again.",
             ),
         }
     )
@@ -211,6 +221,9 @@ class GoogleActionsSyncView(HomeAssistantView):
 class CloudLoginView(HomeAssistantView):
     """Login to Home Assistant cloud."""
 
+    session_tokens: dict[str, str] = {}
+    session_tokens_set_time: float = 0
+
     url = "/api/cloud/login"
     name = "api:cloud:login"
 
@@ -220,8 +233,8 @@ class CloudLoginView(HomeAssistantView):
         vol.Schema(
             {
                 vol.Required("email"): str,
-                vol.Required("password"): str,
-                vol.Optional("code"): str,
+                vol.Exclusive("password", "login"): str,
+                vol.Exclusive("code", "login"): str,
             }
         )
     )
@@ -229,7 +242,33 @@ class CloudLoginView(HomeAssistantView):
         """Handle login request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
-        await cloud.login(data["email"], data["password"], data.get("code"))
+
+        try:
+            email = data.get("email")
+            password = data.get("password")
+            code = data.get("code")
+
+            if email and password:
+                await cloud.login(email, password)
+
+            else:
+                if (
+                    not self.session_tokens
+                    or time.time() - self.session_tokens_set_time > LOGIN_MFA_TIMEOUT
+                ):
+                    raise MFAExpiredOrNotStarted
+
+                # Voluptuous should ensure that both are set
+                assert email is not None and code is not None
+
+                await cloud.login_verify_totp(email, code, self.session_tokens)
+                self.session_tokens = {}
+                self.session_tokens_set_time = 0
+
+        except auth.MFARequired as mfa_err:
+            self.session_tokens = mfa_err.session_tokens
+            self.session_tokens_set_time = time.time()
+            raise
 
         if "assist_pipeline" in hass.config.components:
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
