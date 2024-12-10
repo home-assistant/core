@@ -43,8 +43,8 @@
       }
     },
     "html5": {
-      "name": "Notifications 'Send a notification with html5'",
-      "description": "Sends a notification message using the html5 service.",
+      "name": "Notifications 'Send a notification with HTML5'",
+      "description": "Sends a notification message using the HTML5 service.",
       "fields": {
         "message": {
           "name": "Message",
@@ -52,15 +52,15 @@
         },
         "title": {
           "name": "Title",
-          "description": "The title of the message (optional)."
+          "description": "The title of the message."
         },
         "target": {
           "name": "Target",
-          "description": "The recipient of the notification (optional)."
+          "description": "The recipient of the notification."
         },
         "data": {
           "name": "Data",
-          "description": "Custom data to be sent with the notification (optional)."
+          "description": "Custom data to be sent with the notification."
         }
       }
     },
