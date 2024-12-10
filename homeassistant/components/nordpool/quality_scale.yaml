@@ -42,8 +42,11 @@ rules:
   parallel-updates: todo
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
-  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration has no options flow.
 
   # Gold
   entity-translations: done
