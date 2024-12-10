@@ -54,6 +54,7 @@ def mock_russound_client() -> Generator[AsyncMock]:
             int(k): Source.from_dict(v)
             for k, v in load_json_object_fixture("get_sources.json", DOMAIN).items()
         }
+        client.state = load_json_object_fixture("get_state.json", DOMAIN)
         for k, v in zones.items():
             v.device_str = zone_device_str(1, k)
             v.fetch_current_source = Mock(
