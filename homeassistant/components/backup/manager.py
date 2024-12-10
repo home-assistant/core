@@ -43,6 +43,7 @@ from .const import (
     LOGGER,
 )
 from .models import AgentBackup, Folder
+from .store import BackupStore
 from .util import make_backup_dir, read_backup
 
 
@@ -245,6 +246,7 @@ class BackupManager:
 
         self.config = BackupConfig(hass, self)
         self._reader_writer = reader_writer
+        self.store = BackupStore(hass, self)
 
         # Tasks and flags tracking backup and restore progress
         self._backup_task: asyncio.Task[WrittenBackup] | None = None
@@ -260,7 +262,9 @@ class BackupManager:
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
-        await self.config.load()
+        stored = await self.store.load()
+        if stored:
+            self.config.load(stored["config"])
         await self.load_platforms()
 
     @property

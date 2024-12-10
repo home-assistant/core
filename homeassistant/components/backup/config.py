@@ -13,11 +13,10 @@ from cronsim import CronSim
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 from .models import Folder
 
 if TYPE_CHECKING:
@@ -28,9 +27,6 @@ if TYPE_CHECKING:
 # Run the backup at 04:45.
 CRON_PATTERN_DAILY = "45 4 * * *"
 CRON_PATTERN_WEEKLY = "45 4 * * {}"
-STORE_DELAY_SAVE = 30
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
 
 
 class StoredBackupConfig(TypedDict):
@@ -100,27 +96,11 @@ class BackupConfig:
             schedule=BackupSchedule(),
         )
         self._manager = manager
-        self._store: Store[StoredBackupConfig] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY
-        )
 
-    async def load(self) -> None:
+    def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
-        stored = await self._store.async_load()
-        if stored:
-            self.data = BackupConfigData.from_dict(stored)
-
+        self.data = BackupConfigData.from_dict(stored_config)
         self.data.schedule.apply(self._manager)
-
-    @callback
-    def save(self) -> None:
-        """Save config."""
-        self._store.async_delay_save(self._data_to_save, STORE_DELAY_SAVE)
-
-    @callback
-    def _data_to_save(self) -> StoredBackupConfig:
-        """Return data to save."""
-        return self.data.to_dict()
 
     async def update(
         self,
@@ -143,7 +123,7 @@ class BackupConfig:
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
 
-        self.save()
+        self._manager.store.save()
 
 
 @dataclass(kw_only=True)
@@ -320,7 +300,7 @@ class BackupSchedule:
             else:
                 # create backup was successful, update last_automatic_backup
                 config_data.last_automatic_backup = dt_util.now()
-                manager.config.save()
+                manager.store.save()
 
             # delete old backups more numerous than copies
 
