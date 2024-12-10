@@ -158,8 +158,7 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Required to avoid breaking (#101042).
-# v2 has breaking changes (#99218).
+# ensure pydantic version does not float since it might have breaking changes 
 pydantic==2.10.3
 
 # Required for Python 3.12.4 compatibility (#119223).
