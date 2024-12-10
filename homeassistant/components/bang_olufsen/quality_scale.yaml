@@ -1,0 +1,85 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: This integration only provides entity service actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not need any authentication
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does provide configuration options
+  # Gold
+  entity-translations:
+    status: exempt
+    comment: This integration does not provide any entities that are suitable for translations. The media_player entity's name is simply the friendly name of the device.
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only provides a single entity that is enabled by default
+  discovery: done
+  stale-devices:
+    status: exempt
+    comment: No devices should be removed at this point.
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Reconfiguration not necessary.
+  dynamic-devices:
+    status: exempt
+    comment: No devices are dynamically added at this point.
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: Not necessary at this point.
+  docs-use-cases:
+    status: todo
+    comment: Could be better.
+  docs-supported-devices: done
+  docs-supported-functions:
+    status: todo
+    comment: Could be better.
+  docs-data-update: done
+  docs-known-limitations:
+    status: todo
+    comment: Is currently not described.
+  docs-troubleshooting:
+    status: todo
+    comment: Is currently not described, but may not be necessary?
+  docs-examples:
+    status: todo
+    comment: Action examples are provided but not any blueprints.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
