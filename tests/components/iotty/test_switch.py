@@ -25,7 +25,7 @@ from .conftest import test_ls_one_added, test_ls_one_removed
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_turn_on_ok(
+async def test_turn_on_light_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     local_oauth_impl: ClientSession,
@@ -64,7 +64,45 @@ async def test_turn_on_ok(
     assert state.state == STATUS_ON
 
 
-async def test_turn_off_ok(
+async def test_turn_on_outlet_ok(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_two_outlets,
+    mock_get_status_filled_off,
+    mock_command_fn,
+) -> None:
+    """Issue a turnon command."""
+
+    entity_id = "switch.test_outlet_0_test_serial_ou_0"
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_OFF
+
+    mock_get_status_filled_off.return_value = {RESULT: {STATUS: STATUS_ON}}
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    mock_command_fn.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_ON
+
+
+async def test_turn_off_light_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     local_oauth_impl: ClientSession,
@@ -75,6 +113,45 @@ async def test_turn_off_ok(
     """Issue a turnoff command."""
 
     entity_id = "switch.test_light_switch_0_test_serial_0"
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_ON
+
+    mock_get_status_filled.return_value = {RESULT: {STATUS: STATUS_OFF}}
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    mock_command_fn.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_OFF
+
+
+async def test_turn_off_outlet_ok(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_two_outlets,
+    mock_get_status_filled,
+    mock_command_fn,
+) -> None:
+    """Issue a turnoff command."""
+
+    entity_id = "switch.test_outlet_0_test_serial_ou_0"
 
     mock_config_entry.add_to_hass(hass)
 
