@@ -3,8 +3,7 @@
   "name": "Ohme",
   "codeowners": ["@dan-r"],
   "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/dan-r/HomeAssistant-Ohme",
+  "documentation": "https://www.home-assistant.io/integrations/ohme/",
   "iot_class": "cloud_polling",
   "requirements": ["ohme==1.0.5"]
 }

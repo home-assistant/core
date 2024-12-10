@@ -1,8 +1,9 @@
 """Component constants."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "ohme"
-CONFIG_VERSION = 1
-ENTITY_TYPES = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 COORDINATOR_CHARGESESSIONS = 0
 COORDINATOR_ADVANCED = 1

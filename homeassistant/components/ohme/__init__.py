@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONFIG_VERSION, ENTITY_TYPES
+from .const import PLATFORMS
 from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,14 +26,7 @@ class OhmeRuntimeData:
     coordinators: list[DataUpdateCoordinator]
 
 
-async def async_update_listener(hass, entry):
-    """Handle options flow credentials update."""
-
-    # Reload this instance
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry):
     """Set up Ohme from a config entry."""
 
     client = OhmeApiClient(entry.data["email"], entry.data["password"])
@@ -77,36 +70,12 @@ async def async_setup_entry(hass, entry):
     entry.runtime_data.coordinators = coordinators
 
     # Setup entities
-    await hass.config_entries.async_forward_entry_setups(entry, ENTITY_TYPES)
-
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, ENTITY_TYPES)
-
-
-async def async_migrate_entry(
-    hass: core.HomeAssistant, config_entry: ConfigEntry
-) -> bool:
-    """Migrate old entry."""
-    # Version number has gone backwards
-    if config_entry.version > CONFIG_VERSION:
-        _LOGGER.error("Backwards migration not possible. Please update the integration")
-        return False
-
-    # Version number has gone up
-    if config_entry.version < CONFIG_VERSION:
-        _LOGGER.debug("Migrating from version %s", config_entry.version)
-        new_data = config_entry.data
-
-        config_entry.version = CONFIG_VERSION
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
-
-        _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

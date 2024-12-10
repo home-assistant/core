@@ -12,7 +12,7 @@ from .const import DEFAULT_INTERVAL_ADVANCED, DEFAULT_INTERVAL_CHARGESESSIONS
 _LOGGER = logging.getLogger(__name__)
 
 
-class OhmeChargeSessionsCoordinator(DataUpdateCoordinator):
+class OhmeChargeSessionsCoordinator(DataUpdateCoordinator[list[dict]]):
     """Coordinator to pull main charge state and power/current draw."""
 
     def __init__(self, hass, config_entry):
