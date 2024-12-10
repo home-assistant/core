@@ -90,11 +90,12 @@ class QbusDataCoordinator:
 
         if config is not None:
             QbusConfigContainer.store_config(self._hass, config)
-            await self.async_update_config(config)
+            await self.async_update_device_config(config)
 
-    async def async_update_config(self, config: QbusDiscovery) -> None:
-        """Process the new config."""
+    async def async_update_device_config(self, config: QbusDiscovery) -> None:
+        """Update the device based on the config."""
         serial = self._entry.data.get(CONF_SERIAL_NUMBER, "")
+        _LOGGER.debug("Updating config for device %s", serial)
         device = config.get_device_by_serial(serial)
 
         if device is None:
