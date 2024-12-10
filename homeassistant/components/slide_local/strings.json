@@ -6,30 +6,23 @@
         "description": "Provide information to connect to the Slide device",
         "data": {
           "api_version": "API version",
-          "invert_position": "Invert position",
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "api_version": "1 or 2. 1 is pre Aug-2023 firmware. 2 is for Aug-2023 or later (default = 2)",
-          "invert_position": "Invert the position of the slide covers",
           "ip_address": "The hostname or IP address of your local Slide",
           "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). NOTE: With api_version 2 you can fill in anything here, it is not used by the local API."
         }
       },
       "zeroconf_confirm": {
-        "title": "Comfirm details for Slide (local API)",
-        "description": "Provide information to connect to the Slide device",
-        "data": {
-          "invert_position": "Invert position"
-        },
-        "data_description": {
-          "invert_position": "Invert the position of the slide covers"
-        }
+        "title": "Comfirm setup for Slide (local API)",
+        "description": "Do you want to setup {model}?"
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_connection_failed": "The setup of the discovered device failed. Please try to set it up manually."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

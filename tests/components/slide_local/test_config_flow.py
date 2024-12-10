@@ -56,7 +56,6 @@ async def test_user(
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
             CONF_API_VERSION: "2",
-            CONF_INVERT_POSITION: False,
         },
     )
 
@@ -65,7 +64,7 @@ async def test_user(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 2
-    assert result2["data"][CONF_INVERT_POSITION] is False
+    assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -119,7 +118,6 @@ async def test_form_exceptions(
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
             CONF_API_VERSION: "2",
-            CONF_INVERT_POSITION: False,
         },
     )
 
@@ -128,7 +126,7 @@ async def test_form_exceptions(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PASSWORD] == "pwd"
     assert result["data"][CONF_API_VERSION] == 2
-    assert result["data"][CONF_INVERT_POSITION] is False
+    assert not result["options"][CONF_INVERT_POSITION]
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
@@ -151,7 +149,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
             CONF_API_VERSION: "2",
-            CONF_INVERT_POSITION: False,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -171,15 +168,13 @@ async def test_zeroconf(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_INVERT_POSITION: True,
-        },
+        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.2"
     assert result["data"][CONF_HOST] == "127.0.0.2"
-    assert result["data"][CONF_INVERT_POSITION]
+    assert not result["options"][CONF_INVERT_POSITION]
     assert result["result"].unique_id == "12:34:56:78:90:ab"
 
 

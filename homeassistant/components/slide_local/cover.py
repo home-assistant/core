@@ -34,13 +34,6 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    if coordinator.data.get("mac") == "":
-        _LOGGER.error(
-            "Unable to setup Slide Local '%s', the MAC is missing in the slide response",
-            entry.data[CONF_HOST],
-        )
-        return
-
     async_add_entities(
         [
             SlideCoverLocal(
@@ -67,8 +60,8 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         """Initialize the cover."""
         super().__init__(coordinator)
 
-        self._attr_name = coordinator.data["device_name"]
-        self._invert = entry.data[CONF_INVERT_POSITION]
+        self._attr_name = None
+        self._invert = entry.options[CONF_INVERT_POSITION]
         self._attr_unique_id = coordinator.data["mac"]
 
     @property

@@ -44,7 +44,7 @@ rules:
   discovery: done
   stale-devices: todo
   diagnostics: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   dynamic-devices: todo

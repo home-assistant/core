@@ -30,8 +30,6 @@ from .const import CONF_INVERT_POSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-BOOLEAN_SELECTOR = BooleanSelector()
-
 API_VERSION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[
@@ -66,7 +64,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-            self._mac = result["mac"]
         except (ClientConnectionError, ClientTimeoutError):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
@@ -74,6 +71,8 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
+
+        self._mac = result["mac"]
 
         return {}
 
@@ -91,7 +90,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input |= {CONF_MAC: format_mac(self._mac)}
 
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                    options={CONF_INVERT_POSITION: False},
                 )
 
         if user_input is not None and user_input.get(CONF_HOST) is not None:
@@ -104,7 +105,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, default=self._host): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_API_VERSION, default="2"): API_VERSION_SELECTOR,
-                    vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
+                    vol.Required(
+                        CONF_INVERT_POSITION, default=False
+                    ): BooleanSelector(),
                 }
             ),
             errors=errors,
@@ -129,24 +132,27 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the zeroconf_confirm step."""
-        errors = {}
+        """Confirm discovery."""
+
         if user_input is not None:
-            user_input |= {CONF_HOST: self._host}
-            user_input |= {CONF_API_VERSION: 2}
-            user_input |= {CONF_MAC: format_mac(self._mac)}
+            user_input |= {
+                CONF_HOST: self._host,
+                CONF_API_VERSION: 2,
+                CONF_MAC: format_mac(self._mac),
+            }
 
-            if not (errors := await self.async_test_connection(user_input)):
+            if not await self.async_test_connection(user_input):
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                    options={CONF_INVERT_POSITION: False},
                 )
+            return self.async_abort(reason="discovery_connection_failed")
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_INVERT_POSITION, default=False): BOOLEAN_SELECTOR,
-                }
-            ),
-            errors=errors,
+            description_placeholders={
+                "host": self._host,
+            },
         )

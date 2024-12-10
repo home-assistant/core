@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_OFFSET, DOMAIN
@@ -60,20 +59,6 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.api_version,
         )
 
-        try:
-            data = await self.slide.slide_info(self.host)
-        except (ClientConnectionError, ClientTimeoutError) as ex:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="config_entry_not_ready",
-            ) from ex
-
-        if data is None or (data.get(CONF_MAC) is None and self.mac == ""):
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="config_entry_not_ready",
-            )
-
         _LOGGER.debug("Slide coordinator initialized")
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -90,7 +75,7 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_error",
+                translation_key="config_entry_not_ready",  # CENR translation_key, as CENR-Exception is not explicitly raised
             ) from ex
 
         if data is None:

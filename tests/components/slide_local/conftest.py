@@ -23,6 +23,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
             CONF_API_VERSION: 2,
+        },
+        options={
             CONF_INVERT_POSITION: False,
         },
         minor_version=1,
