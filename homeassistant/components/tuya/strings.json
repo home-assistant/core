@@ -196,6 +196,18 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "liquid_high_level": {
+        "name": "Liquid high level"
+      },
+      "liquid_low_level": {
+        "name": "Liquid low level"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "maximum_depth": {
+        "name": "Maximum depth"
       }
     },
     "select": {
@@ -637,6 +649,20 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "liquid_state": {
+        "name": "State",
+        "state": {
+          "normal": "Normal",
+          "lower_alarm": "Lower alarm",
+          "upper_alarm": "Upper alarm"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level_percent": {
+        "name": "Liquid level percent"
       }
     },
     "switch": {
