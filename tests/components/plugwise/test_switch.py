@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -44,7 +45,7 @@ async def test_adam_climate_switch_negative_testing(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": "switch.cv_pomp_relay"},
+            {ATTR_ENTITY_ID: "switch.cv_pomp_relay"},
             blocking=True,
         )
 
@@ -57,7 +58,7 @@ async def test_adam_climate_switch_negative_testing(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.fibaro_hc2_relay"},
+            {ATTR_ENTITY_ID: "switch.fibaro_hc2_relay"},
             blocking=True,
         )
 
@@ -74,7 +75,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {"entity_id": "switch.cv_pomp_relay"},
+        {ATTR_ENTITY_ID: "switch.cv_pomp_relay"},
         blocking=True,
     )
 
@@ -86,7 +87,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
-        {"entity_id": "switch.fibaro_hc2_relay"},
+        {ATTR_ENTITY_ID: "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -98,7 +99,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": "switch.fibaro_hc2_relay"},
+        {ATTR_ENTITY_ID: "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -128,7 +129,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {"entity_id": "switch.koelkast_92c4a_relay"},
+        {ATTR_ENTITY_ID: "switch.koelkast_92c4a_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 1
@@ -139,7 +140,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
-        {"entity_id": "switch.droger_52559_relay"},
+        {ATTR_ENTITY_ID: "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 2
@@ -150,7 +151,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": "switch.droger_52559_relay"},
+        {ATTR_ENTITY_ID: "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 3
