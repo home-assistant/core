@@ -29,25 +29,6 @@ for platform in Platform:  # based on EntityPlatformModule
         "async_setup_entry": 2,
     }
 
-_ANNOTATION_MATCH = re.compile(r"^[A-Za-z]+ConfigEntry$")
-_FUNCTIONS: dict[str, dict[str, int]] = {
-    "__init__": {  # based on ComponentProtocol
-        "async_migrate_entry": 2,
-        "async_remove_config_entry_device": 2,
-        "async_remove_entry": 2,
-        "async_setup_entry": 2,
-        "async_unload_entry": 2,
-    },
-    "diagnostics": {  # based on DiagnosticsProtocol
-        "async_get_config_entry_diagnostics": 2,
-        "async_get_device_diagnostics": 2,
-    },
-}
-for platform in Platform:  # based on EntityPlatformModule
-    _FUNCTIONS[platform.value] = {
-        "async_setup_entry": 2,
-    }
-
 
 def _sets_runtime_data(
     async_setup_entry_function: ast.AsyncFunctionDef, config_entry_argument: ast.arg
